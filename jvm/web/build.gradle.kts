@@ -18,6 +18,7 @@ val coreModules = listOf(
     ":core-machines",
     ":core-power",
     ":core-layout",
+    ":core-solver",
 )
 
 val teavmVersion = "0.16.0"

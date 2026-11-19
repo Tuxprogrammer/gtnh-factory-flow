@@ -25,12 +25,14 @@ done
 if [ ${#selected[@]} -eq 0 ]; then
   if [ "$all" = true ]; then
     selected=(website icons jvm web-core)
+    export CI_WEB_CORE_FULL=true
   else
     decision=$(tools/ci/changes.sh "${cargs[@]}") || { echo "CI-LOCAL: FAIL (changes)"; exit 1; }
     echo "[ci] changes: $(echo "$decision" | paste -sd' ' -)"
     [[ "$decision" == *website=true* ]] && selected+=(website)
     [[ "$decision" == *jvm=true* ]] && selected+=(jvm)
     [[ "$decision" == *web_core=true* ]] && selected+=(web-core)
+    [[ "$decision" == *web_core_full=true* ]] && export CI_WEB_CORE_FULL=true
     [[ "$decision" == *icons=true* ]] && selected+=(icons)
   fi
 fi

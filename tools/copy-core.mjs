@@ -35,6 +35,11 @@ function gradleBuild() {
     .filter((k) => /^JAVA_HOME_\d+_X64$/.test(k))
     .join(",");
   const args = ["--no-daemon", "--console=plain"];
+  // Extra Gradle options as a JSON array (tools/ci/website.sh passes the CI heap and network retry settings).
+  if (process.env.GTNH_GRADLE_ARGS) args.push(...JSON.parse(process.env.GTNH_GRADLE_ARGS));
+  // The two TeaVM builds run side by side in Gradle's JVM, whose default heap (512 MiB) runs out with the solver in: a
+  // caller that gave no heap of its own gets 3 GiB (what the CI jobs use).
+  if (!args.some((a) => a.startsWith("-Dorg.gradle.jvmargs="))) args.push("-Dorg.gradle.jvmargs=-Xmx3g -Dfile.encoding=UTF-8");
   if (envs) args.push(`-Porg.gradle.java.installations.fromEnv=${envs}`);
   args.push(":web:buildWasmGC", ":web:generateJavaScript");
   console.log(`[copy-core] gradle ${args.join(" ")}`);

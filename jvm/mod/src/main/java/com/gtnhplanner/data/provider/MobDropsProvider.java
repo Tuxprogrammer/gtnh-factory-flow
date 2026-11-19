@@ -109,9 +109,7 @@ public final class MobDropsProvider implements PropertyProvider {
         props.put(GTKeys.TOTAL_EU, (long) recipe.eut() * recipe.duration());
         props.put(EecCards.MOB, mob.key());
         props.put(EecCards.MOB_NAME, mob.name());
-        props.put(
-            EecCards.METADATA,
-            JsonTree.write(recipe.eec()));
+        props.put(EecCards.METADATA, JsonTree.write(recipe.eec()));
         props.put(EecCards.OUTPUT_IDS, String.join("\n", ids));
         if (!recipe.gated()
             .isEmpty()) props.put(EecCards.GATED, String.join(", ", recipe.gated()));

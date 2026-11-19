@@ -69,6 +69,66 @@ describe("the Tank recipe a dropped port fits", () => {
     expect(queryRecipeDatasetRecipes).not.toHaveBeenCalled();
   });
 
+  // The search pairs a fluid with its filled cell, so the Tank map's answer can hold the other direction's recipe.
+  // The game adds no emptying recipe for five molten metals (GTPostLoad skips Ruthenium, Rhodium, Osmium, Iridium
+  // and Platinum), so for them the filling recipe is all the map has, and a tank that empties must not take it.
+  const fillMoltenOsmium = {
+    id: "fill-osmium",
+    name: "Tank: Molten Osmium Cell",
+    recipeMap: "Tank",
+    inputs: [
+      { kind: "item", id: "ic2:itemcellempty", amount: 1 },
+      { kind: "fluid", id: "molten.osmium", amount: 144 },
+    ],
+    outputs: [{ kind: "item", id: "gregtech:gt.metaitem.99@83", amount: 1 }],
+  };
+
+  it("refuses a recipe that holds the resource on the wrong side: a tank giving a fluid never fills cells", async () => {
+    queryRecipeDatasetRecipes.mockResolvedValue({ recipes: [fillMoltenOsmium] });
+    expect(
+      await fetchFluidTankRecipe(version, { kind: "fluid", id: "molten.osmium" }, false),
+    ).toBeUndefined();
+    expect(getRecipeDatasetRecipe).not.toHaveBeenCalled();
+  });
+
+  it("refuses a recipe that makes the cell when the tank takes that cell in", async () => {
+    queryRecipeDatasetRecipes.mockResolvedValue({ recipes: [fillMoltenOsmium] });
+    expect(
+      await fetchFluidTankRecipe(version, { kind: "item", id: "gregtech:gt.metaitem.99@83" }, true),
+    ).toBeUndefined();
+  });
+
+  it("passes over the other direction's recipe for the one that fits", async () => {
+    const drainToluene = {
+      id: "drain-toluene",
+      name: "Tank: Empty Cell",
+      recipeMap: "Tank",
+      inputs: [{ kind: "item", id: "gregtech:gt.metaitem.01@30647", amount: 1 }],
+      outputs: [
+        { kind: "item", id: "ic2:itemcellempty", amount: 1 },
+        { kind: "fluid", id: "liquid_toluene", amount: 1000 },
+      ],
+    };
+    const fillToluene = {
+      id: "fill-toluene",
+      name: "Tank: Toluene Cell",
+      recipeMap: "Tank",
+      inputs: [
+        { kind: "item", id: "ic2:itemcellempty", amount: 1 },
+        { kind: "fluid", id: "liquid_toluene", amount: 1000 },
+      ],
+      outputs: [{ kind: "item", id: "gregtech:gt.metaitem.01@30647", amount: 1 }],
+    };
+    queryRecipeDatasetRecipes.mockResolvedValue({ recipes: [drainToluene, fillToluene] });
+    expect(
+      (await fetchFluidTankRecipe(version, { kind: "fluid", id: "liquid_toluene" }, true))?.id,
+    ).toBe("fill-toluene");
+    queryRecipeDatasetRecipes.mockResolvedValue({ recipes: [fillToluene, drainToluene] });
+    expect(
+      (await fetchFluidTankRecipe(version, { kind: "fluid", id: "liquid_toluene" }, false))?.id,
+    ).toBe("drain-toluene");
+  });
+
   it("refuses the drop when the lookup fails, never guessing a recipe", async () => {
     queryRecipeDatasetRecipes.mockRejectedValue(new Error("offline"));
     expect(await fetchFluidTankRecipe(version, { kind: "fluid", id: "water" }, false)).toBeUndefined();

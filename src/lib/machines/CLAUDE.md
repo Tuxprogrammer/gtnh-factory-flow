@@ -26,8 +26,9 @@ computes in float: replicate it.
   icons, tier lists). Table-less machines still run on scraped effect values
   (`machine-effects.ts`); don't trust those when adding an entry. Where the reference
   punts, follow the mod source; deliberate divergences are listed in `machine-table.test.ts`.
-- Still on scraped data on purpose: Nano Forge, PCB Factory, Component Assembly Line, QFT,
-  Eye of Harmony (their coefficients read recipe metadata).
+- Still on scraped data on purpose: Nano Forge, PCB Factory, QFT, Eye of Harmony (their
+  coefficients read recipe metadata). The Component Assembly Line has a row: its casing
+  speed reads the recipe's special value (`component-assembly-line.ts`).
 
 ## Overclocks and ticks (src/lib/solver/overclock.ts)
 
@@ -36,7 +37,9 @@ computes in float: replicate it.
   Hearth, Zyngen, Utupu-Tanuri). A special value of 0 can be a real heat requirement
   (dehydrators).
 - Recipes run in whole ticks. Over one tick GT truncates. Under one tick a multiblock
-  banks leftover speed as parallels and a singleblock wastes it (`canSubTick`). A recipe
+  banks leftover speed as parallels and a singleblock wastes it (`canSubTick`). Banked
+  parallels are capped at supply / ceil(per-parallel EU/t) while EU/t stays billed on the
+  unbanked ones (`capBankedParallels`, `subtick-power-cap.test.ts`). A recipe
   with no handlers gets an invented `kind: "single"` placeholder, which is not evidence.
 - `runtimeCalculation` in the dataset is `OverclockCalculator` alone (never saw
   `GTParallelHelper`), so it is not authoritative for multiblocks: `prefersCuratedMachineMath`.

@@ -36,6 +36,11 @@ import { neutronActivatorSpeed, quantiseNeutronActivatorDuration } from "./neutr
 import { quantiseSteamMultiblockDuration } from "./steam-multiblock";
 import { HILE_SOURCE_CONTROL, hileSourceAt, normalizeHileSettings } from "./hile";
 import { PRASS_NORMAL_CASING, PRASS_PRECISE_CASING, PRASS_MACHINE_CASING, prassInputVoltageLimit } from "./precise-assembler";
+import {
+  COAL_CASING,
+  COAL_CASING_CONTROL,
+  componentAssemblyLineSpeed,
+} from "./component-assembly-line";
 
 /**
  * How a machine spends each step of spare voltage, mirroring the reference's
@@ -598,11 +603,13 @@ const SPIN_FUEL_CONTROL = choiceControl(SPIN_FUEL, "Fuel", [
   "Kerosene",
   "Biocatalysed Propulsion Fluid",
 ]);
-const TURBINE_TIER_CONTROL = countControl(
-  TURBINE_TIER,
-  "Sum Turbine Tier",
-  [1, 2, 3, 4, 6, 8, 12, 16, 24, 32],
-);
+// MTESpinmatron.getSumRotorLevels: 2 rotor slots per structure tier (8 at tier 4), each adding its material's tool
+// quality (huge whole, large 3/4, normal 1/2, small 1/4, each floored), so any sum from 1 to 8 x 32 (Universium, the
+// highest). A typed number, which the card's settings sheet offers as a typed row.
+const TURBINE_TIER_CONTROL: MachineConfigControl = {
+  ...countControl(TURBINE_TIER, "Sum Turbine Tier", [1]),
+  numeric: { min: 1, max: 256 },
+};
 
 /**
  * Bronze or steel build, for the steam multiblocks. The dataset scrapes a
@@ -1043,6 +1050,17 @@ const MACHINES: Record<string, MachineBehaviour> = {
     parallels: (c) => c.voltageTier * 16,
     controls: [ITEM_PIPE_CONTROL],
     hidesControls: [PIPE],
+  },
+  // MTEComponentAssemblyLine, the only machine on its recipe map. Takes normal,
+  // multi-amp and laser hatches; setProcessingLogicPower hands the logic every
+  // hatch's voltage x working amps as one voltage at 1 A with unlimited tier
+  // skips, so the whole supply buys normal overclocks. One parallel.
+  "Component Assembly Line": {
+    overclock: OVERCLOCK.normal(),
+    speed: (c) => componentAssemblyLineSpeed(c.tier(COAL_CASING), c.recipeSpecialValue),
+    parallels: 1,
+    unlimitedTierSkip: true,
+    controls: [COAL_CASING_CONTROL],
   },
   // MTEPreciseAssembler's normal Assembler handler. Keep its dedicated
   // Precise Assembler recipe map separate: the two modes have different math.

@@ -153,6 +153,8 @@ export type SolverMessage =
   | "DRAWER_WIRED_IGNORED"
   | "DRAWER_ONLY_UPPER_BOUNDS"
   | "DRAWER_UNMET"
+  /** Website adapter only: a drawer whose ports all feed an earlier drawer on the same port gets nothing. */
+  | "DRAWER_PORT_TAKEN"
   | "DRAWER_LIMITED_BY"
   | "RULE_ANY"
   | "RULE_AT_LEAST"

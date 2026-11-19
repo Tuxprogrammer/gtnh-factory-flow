@@ -9,6 +9,10 @@ import type { FactoryProject, ThroughputResult } from "@/lib/model/types";
 
 const RETIRED_KEY = "gtnh-factory-flow.auto-solve.v1";
 
+// Each case loads solve-books and its imports afresh after a module reset: well under a
+// second alone, past the 5 s default when the machine is loaded.
+vi.setConfig({ testTimeout: 30_000 });
+
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.resetModules();

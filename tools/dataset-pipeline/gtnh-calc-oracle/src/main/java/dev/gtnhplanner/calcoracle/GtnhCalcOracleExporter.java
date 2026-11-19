@@ -188,6 +188,7 @@ public final class GtnhCalcOracleExporter {
                 exportedMap.put("id", safeString(map.unlocalizedName));
                 exportedMap.put("name", name);
                 exportedMap.put("sourceClass", map.getClass().getName());
+                exportedMap.put("amperage", Integer.valueOf(Math.max(1, map.getAmperage())));
                 List<Map<String, Object>> catalysts = recipeMapCatalysts(map);
                 if (!catalysts.isEmpty()) {
                     exportedMap.put("catalysts", catalysts);
@@ -250,7 +251,7 @@ public final class GtnhCalcOracleExporter {
                         putWearingInputs(exportedRecipe, recipe);
                     }
                     exportedRecipe.put("nonConsumedInputs", specialItems(recipe.mSpecialItems));
-                    exportedRecipe.put("runtimeCalculation", buildGtRuntimeCalculation(map.unlocalizedName, name, recipe));
+                    exportedRecipe.put("runtimeCalculation", buildGtRuntimeCalculation(map.unlocalizedName, name, recipe, Math.max(1, map.getAmperage())));
                     recipes.add(exportedRecipe);
                     index++;
                 }
@@ -2198,7 +2199,7 @@ public final class GtnhCalcOracleExporter {
         }
     }
 
-    private Map<String, Object> buildGtRuntimeCalculation(String recipeMapId, String recipeMapName, GTRecipe recipe) {
+    private Map<String, Object> buildGtRuntimeCalculation(String recipeMapId, String recipeMapName, GTRecipe recipe, int amperage) {
         Map<String, Object> out = map();
         out.put("sourceKind", "gregtech-overclock-calculator");
         out.put("sourceClass", "gregtech.api.util.OverclockCalculator");
@@ -2209,7 +2210,9 @@ public final class GtnhCalcOracleExporter {
         out.put("generatedAt", isoNow());
 
         List<List<Object>> variants = new ArrayList<List<Object>>();
-        int minimumTier = voltageTierForEu(recipe.mEUt);
+        // A map that runs on several amps (the Thermal Centrifuge takes 2) has its
+        // machine tier from EU/t per amp, the way NEI and the machine count it.
+        int minimumTier = voltageTierForEu(recipe.mEUt / amperage);
         String profile = gtRuntimeProfile(recipeMapId, recipeMapName);
         for (int tier = minimumTier; tier < GT_VOLTAGE_NAMES.length; tier++) {
             if ("blast-furnace-heat".equals(profile)) {
@@ -2221,6 +2224,7 @@ public final class GtnhCalcOracleExporter {
                     List<Object> variant = buildGtOverclockVariant(
                         recipe,
                         tier,
+                        amperage,
                         VariantProfile.ebfHeat(recipe.mSpecialValue, machineHeat)
                     );
                     if (variant != null) {
@@ -2234,6 +2238,7 @@ public final class GtnhCalcOracleExporter {
                     List<Object> variant = buildGtOverclockVariant(
                         recipe,
                         tier,
+                        amperage,
                         VariantProfile.pyrolyse(coil.coilTier)
                     );
                     if (variant != null) {
@@ -2247,6 +2252,7 @@ public final class GtnhCalcOracleExporter {
                     List<Object> variant = buildGtOverclockVariant(
                         recipe,
                         tier,
+                        amperage,
                         VariantProfile.oilCracker(coil.coilTier)
                     );
                     if (variant != null) {
@@ -2256,14 +2262,14 @@ public final class GtnhCalcOracleExporter {
                 continue;
             }
             if ("large-chemical-reactor-perfect".equals(profile)) {
-                List<Object> variant = buildGtOverclockVariant(recipe, tier, VariantProfile.perfectOc());
+                List<Object> variant = buildGtOverclockVariant(recipe, tier, amperage, VariantProfile.perfectOc());
                 if (variant != null) {
                     variants.add(compactRuntimeVariant(variant, "perfect-oc", null));
                 }
                 continue;
             }
 
-            List<Object> variant = buildGtOverclockVariant(recipe, tier, VariantProfile.standard());
+            List<Object> variant = buildGtOverclockVariant(recipe, tier, amperage, VariantProfile.standard());
             if (variant != null) {
                 variants.add(variant);
             }
@@ -2300,12 +2306,14 @@ public final class GtnhCalcOracleExporter {
         return maxHeat;
     }
 
-    private List<Object> buildGtOverclockVariant(GTRecipe recipe, int tier, VariantProfile profile) {
+    private List<Object> buildGtOverclockVariant(GTRecipe recipe, int tier, int amperage, VariantProfile profile) {
         try {
             Class<?> calculatorClass = Class.forName("gregtech.api.util.OverclockCalculator");
             Object calculator = calculatorClass.getConstructor().newInstance();
             callFluent(calculator, "setRecipeEUt", Long.TYPE, Long.valueOf(Math.max(0L, recipe.mEUt)));
-            callFluent(calculator, "setEUt", Long.TYPE, Long.valueOf(GT_VOLTAGES[tier]));
+            // The single-block machine hands the calculator tier voltage times the map's
+            // amperage (EUOverclockDescriber.createCalculator).
+            callFluent(calculator, "setEUt", Long.TYPE, Long.valueOf(amperageVoltage(GT_VOLTAGES[tier], amperage)));
             callFluent(calculator, "setDuration", Integer.TYPE, Integer.valueOf(Math.max(1, recipe.mDuration)));
             callFluent(calculator, "setParallel", Integer.TYPE, Integer.valueOf(1));
             if (profile.perfectOc) {
@@ -3019,7 +3027,30 @@ public final class GtnhCalcOracleExporter {
         if (resource != null) {
             resource.put("slotIndex", Integer.valueOf(slotIndex));
             inputs.add(resource);
+        } else if (isEmptyChoice(input)) {
+            // A slot whose oredict list holds no item (a GT recipe's "gemFlawlessFluix"
+            // when no such item exists). Forge never matches an empty list, so the
+            // recipe cannot be crafted and the normalizer needs to see it to drop it.
+            // Other inputs this exporter cannot read (AE2 ingredients, integers, empty
+            // stacks) belong to recipes that do craft, so they stay silently skipped.
+            Map<String, Object> missing = map();
+            missing.put("kind", "missing");
+            missing.put("slotIndex", Integer.valueOf(slotIndex));
+            inputs.add(missing);
         }
+    }
+
+    private boolean isEmptyChoice(Object input) {
+        if (input instanceof java.util.Collection) {
+            return ((java.util.Collection<?>) input).isEmpty();
+        }
+        return input != null && input.getClass().isArray() && java.lang.reflect.Array.getLength(input) == 0;
+    }
+
+    // The MAX tier is Long.MAX_VALUE volts: a plain product would wrap negative and
+    // turn that row into a recipe that never overclocks.
+    private static long amperageVoltage(long voltage, int amperage) {
+        return voltage > Long.MAX_VALUE / amperage ? Long.MAX_VALUE : voltage * amperage;
     }
 
     private Map<String, Object> resourceFromUnknown(Object input) {

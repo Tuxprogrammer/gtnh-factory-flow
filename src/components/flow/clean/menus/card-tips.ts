@@ -13,6 +13,7 @@ import { getMachineParallelMultiplier } from "@/lib/solver/machine-effects";
 import { PIN_RULE_LABEL } from "@/lib/model/pin-rule";
 import {
   formatSolvedMachines,
+  turbineEuText,
   type CleanCardView,
   type CleanChipView,
   type CleanFootView,
@@ -259,6 +260,45 @@ export function footTip(nodeId: string, foot: CleanFootView): TipSpec {
     notes.push({ text: "Set it to Up to and it runs what its inputs allow.", tone: "muted" });
     return { id: `${nodeId}|foot`, title: `Exactly ${n(f.capacity)} running`, rows, notes };
   }
+  if (f.reason === "FLOW" && f.turbine) {
+    const t = f.turbine;
+    const whole = (value: number) => Math.round(value).toLocaleString("en-US");
+    const flow = `${whole(t.flow)} ${t.unit}`;
+    const many = t.turbines > 1;
+    rows.push({
+      label: many ? "Each turbine gets" : "It gets",
+      value: `${flow} of ${whole(t.optimal)} (${Math.round((100 * t.flow) / t.optimal)}%)`,
+      tone: "warn",
+    });
+    if (many) rows.push({ label: "Turbines", value: String(t.turbines) });
+    rows.push({ label: "Makes", value: turbineEuText(t.euMade, t.tier), tone: "warn" });
+    rows.push({ label: "The plan counts", value: turbineEuText(t.euCounted, t.tier) });
+    notes.push({
+      text: `A turbine loses efficiency the further its flow is from optimal. Set its flow to Custom ${flow} to plan it exactly.`,
+      tone: "muted",
+    });
+    return {
+      id: `${nodeId}|foot`,
+      title: t.flow < t.optimal ? "Below optimal flow" : "Above optimal flow",
+      rows,
+      notes,
+    };
+  }
+  if (f.reason === "IDLE") {
+    const input = f.sentOut ?? "its input";
+    const output = f.resource ?? "an output";
+    rows.push({
+      label: "Sent out",
+      value: f.upstream[0] ? `${input} at ${f.upstream[0]}` : input,
+      tone: "warn",
+    });
+    rows.push({ label: "Would force out", value: output, tone: "warn" });
+    notes.push({
+      text: `Running it would force out ${output}, so the plan sends ${input} out instead. Give ${output} somewhere to go, or set a count.`,
+      tone: "muted",
+    });
+    return { id: `${nodeId}|foot`, title: "None running", rows, notes };
+  }
   const usage = f.capacity > 0 ? Math.min(100, (100 * f.running) / f.capacity) : 0;
   rows.push({ label: "Usage", value: `${formatCompact(usage)}%` });
   const all = f.running >= f.capacity - 0.000001;
@@ -338,6 +378,7 @@ export function stripTip(
   control: SettingControl | undefined,
   needK?: number,
 ): TipSpec {
+  if (chip.id === "parallel") return parallelTip(nodeId, chip);
   const rows: NonNullable<TipSpec["rows"]> = [
     { label: chip.reading ? "Reads" : "Set to", value: chip.value },
   ];
@@ -354,10 +395,34 @@ export function stripTip(
     actions: chip.reading
       ? []
       : [
-          { input: "left", label: "Choose" },
+          { input: "left", label: control?.numeric ? "Step up" : "Choose" },
           { input: "right", label: "Step back" },
           { input: "wheel", label: "Step" },
         ],
+  };
+}
+
+/**
+ * The Parallel reading's tip: what runs at once and what sets it. Below what the structure allows, the power supply is
+ * the limit, with both numbers and what lifts it.
+ */
+function parallelTip(nodeId: string, chip: CleanChipView): TipSpec {
+  const cap = chip.powerCap;
+  const rows: NonNullable<TipSpec["rows"]> = [{ label: "Running", value: chip.value }];
+  if (cap) rows.push({ label: "Structure allows", value: `×${formatCompact(cap.structure)}` });
+  return {
+    id: `${nodeId}|setting|${chip.id}`,
+    title: "Parallel",
+    rows,
+    notes: [
+      cap
+        ? {
+            text: `The power supply pays for ${formatCompact(cap.running)} at once, not all ${formatCompact(cap.structure)}. More amps or a higher tier runs more.`,
+            tone: "warn",
+          }
+        : { text: "Set by the machine and its configuration.", tone: "muted" },
+    ],
+    actions: [],
   };
 }
 

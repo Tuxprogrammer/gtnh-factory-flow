@@ -44,6 +44,7 @@ import {
   beeOutputMultiplier,
   beeProductionWithFrames,
 } from "@/lib/model/bee-maths";
+import { getGameRates } from "@/lib/model/game-rates";
 import { getVoltageTierForEuT, getVoltageTierIndex } from "@/lib/model/tiers";
 import { getHeatDiscountMultiplier } from "./heat";
 import { getEffectiveVoltageOrdinal, getNodeRunTier, getPowerPoolEuT } from "./power";
@@ -262,7 +263,11 @@ function getBeeGameOutputMultiplier(
     specialty: isBeeSpecialtyOutput(output),
     capped: !industrial,
   });
-  if (industrial) {
+  if (!industrial) {
+    // Forestry's housings go through Bee.produceStacks, which the rate mod multiplies per roll: after the cap above,
+    // so a roll that is certain still gives beesYield items. The Industrial Apiary uses getFinalChance directly.
+    multiplier *= getGameRates().beesYield;
+  } else {
     const accel = controls.find((control) => control.id === BEE_INDUSTRIAL_SPEED_CONTROL_ID);
     const lifespan = Number(recipe.metadata?.beeLifespan);
     multiplier *= beeIndustrialRateFraction(
@@ -494,6 +499,7 @@ function getPoweredParallelLimit(recipe: MachineEffectRecipe, node: MachineEffec
   // of them into the same hatch. The heat discount counts too:
   // `ParallelHelper.determineParallel` folds it into `tRecipeEUt` before
   // dividing the available EU, so a hot blast furnace runs more parallels.
+  // It divides by that cost rounded UP to whole EU/t.
   const recipeEuT =
     Math.abs(recipe.eut ?? 0) *
     getMachineEutMultiplier(recipe, node) *
@@ -507,7 +513,7 @@ function getPoweredParallelLimit(recipe: MachineEffectRecipe, node: MachineEffec
     return Number.POSITIVE_INFINITY;
   }
 
-  return Math.max(1, Math.floor(available / recipeEuT));
+  return Math.max(1, Math.floor(available / Math.ceil(recipeEuT)));
 }
 
 export function getMachineDurationMultiplier(

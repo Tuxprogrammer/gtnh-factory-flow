@@ -1,5 +1,6 @@
 import { calculateThroughput } from "@/lib/solver";
 import type { FactoryProject, ThroughputResult } from "@/lib/model/types";
+import { getGameRates } from "@/lib/model/game-rates";
 
 /**
  * The store's one door to the solver, sized to the board it is asked about.
@@ -144,7 +145,8 @@ export function solveBooks(project: FactoryProject): ThroughputResult {
  */
 function booksContentKey(project: FactoryProject): string {
   const { view: _view, ...solved } = project;
-  return JSON.stringify(solved);
+  // The dataset's rate factors move the books too, and a worker solve has to be sent them.
+  return JSON.stringify({ solved, rates: getGameRates() });
 }
 
 function workerAvailable(): boolean {
@@ -159,7 +161,7 @@ function scheduleSolve(request: SolveRequest) {
   }
   inFlight = request;
   try {
-    getWorker().postMessage({ key: request.key, project: request.project });
+    getWorker().postMessage({ key: request.key, project: request.project, rates: getGameRates() });
   } catch (error) {
     console.error("solve worker failed to start; solving on the main thread", error);
     workerBroken = true;

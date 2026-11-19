@@ -90,6 +90,8 @@ describe("compact viewport", () => {
     // Both columns open is ordinary advice from a plan built on a desktop. Obeyed
     // on a phone it would stack two full-height drawers over the board it is
     // trying to show off.
+    // The timeout is for the import below: plan-view loads the whole store afresh after
+    // each module reset, about a second alone and past the 5 s default on a loaded machine.
     stubMatchMedia(true);
 
     const { applyPlanView } = await import("./plan-view");
@@ -101,5 +103,5 @@ describe("compact viewport", () => {
     expect(workspace.rightPanelOpen).toBe(false);
     // Everything else the plan carries still lands.
     expect(workspace.favouritesOnly).toBe(true);
-  });
+  }, 30_000);
 });

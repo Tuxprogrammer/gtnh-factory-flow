@@ -1,7 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
-import type { FactoryNode, MachineConfigTierOption, Recipe } from "@/lib/model/types";
+import type {
+  FactoryNode,
+  MachineConfigTierOption,
+  MachineHandler,
+  Recipe,
+} from "@/lib/model/types";
 import {
   GT_OVERCLOCK_TIERS,
   applyMachineHandlerToRecipe,
@@ -32,6 +37,7 @@ import { getOverclockedRecipeStats } from "@/lib/solver/overclock";
 import {
   applyMachineOutputMultipliers,
   getMachineParallelMultiplier,
+  getMachineStructuralParallels,
 } from "@/lib/solver/machine-effects";
 import { getNodePowerReport, getNodeSteamReport, hasPowerReport } from "@/lib/solver/power-report";
 import { isMultiblockRecipe } from "@/lib/solver/power";
@@ -46,6 +52,12 @@ import type { PlanUpTo, UpToReason } from "@/lib/solver/plan/types";
 import { PIN_RULE_LABEL, pinRuleOf, withPinRule, type PinRule } from "@/lib/model/pin-rule";
 import { getMachineStructureArt } from "@/lib/power/structure-art";
 import { powerCardTier } from "@/lib/power/power-recipe";
+import {
+  mayTurbineFlow,
+  turbineFlowCheck,
+  turbinesFor,
+  type TurbineFlowCheck,
+} from "@/lib/power/turbine-flow";
 import { useFactoryStore, useRateDisplayUnits } from "@/store/factory-store";
 import { useWorkspaceView } from "@/lib/workspace-view";
 import { formatEnergyPerUnitParts, formatSlotRateBare, portReadsEnergy } from "../flow-explainers";
@@ -63,6 +75,7 @@ import { mixHex } from "./colors";
 import { UP_TO_COLOR } from "./up-to-reason";
 import { cardLoop, LOOP_WORD, type LoopTone } from "./loops";
 import { glanceBar, type GlanceBar } from "./glance";
+import { idleTradeOf, type IdleTrade } from "./idle-trade";
 import { isPinned, pinMachineKey, settingControls } from "./menus/settings-model";
 import { mcTextWidth, measureClean, measureRowFigure, measureRowName, useFontEpoch } from "./text-measure";
 
@@ -110,6 +123,8 @@ export interface CleanChipView {
   icon?: string;
   /** A reading is words only, no box. */
   reading?: boolean;
+  /** The Parallel reading when the power supply runs fewer than the structure allows: the structure's count. */
+  powerCap?: { running: number; structure: number };
   warn?: boolean;
   title: string;
   /** Computed layout, card-local px. */
@@ -188,7 +203,7 @@ export interface CleanFootView {
   ghost?: { left: number; width: number };
   /** For the tip. */
   facts: {
-    reason: UpToReason | null | "FORCED";
+    reason: UpToReason | null | "FORCED" | "IDLE" | "FLOW";
     /** The ring the card is in, when it is in one. */
     loop?: LoopTone;
     rule: PinRule;
@@ -203,7 +218,19 @@ export interface CleanFootView {
     upstream: string[];
     /** FORCED IN: each forced input, "720 L/s Oxygen". */
     forced: string[];
+    /** IDLE: the input that is sent out instead (`resource` is the output running it would send out). */
+    sentOut?: string;
+    /** FLOW: what its turbines really make at the flow each gets (turbine-flow.ts), and the card's power tier. */
+    turbine?: TurbineFoot;
   };
+}
+
+/** A turbine card's flow check with the tier its EU counts in under the Amps dial. */
+export type TurbineFoot = TurbineFlowCheck & { tier?: string };
+
+/** "342,636 EU/t", or amps of the card's tier under the Amps dial. */
+export function turbineEuText(eu: number, tier: string | undefined): string {
+  return `${formatPowerValue(powerDisplayFromEuT(eu, tier))} ${powerDisplaySuffix(tier)}`;
 }
 
 export interface CleanCardView {
@@ -501,11 +528,25 @@ export function cardPicture(
     isBeeProductionRecipe(recipe) || isCropProductionRecipe(recipe)
       ? undefined
       : (mapIcons.get(recipe.source?.recipeMap ?? recipe.machineType) as MachineHandlerIcon | undefined);
-  const machineIcon =
-    machineIconAtTier(machineIcons.get(face.selectedMachineHandler.id), pictureTier) ??
-    recipeMapIcon;
+  const ownIcon = machineIconAtTier(machineIcons.get(face.selectedMachineHandler.id), pictureTier);
+  const machineIcon = ownIcon ?? recipeMapIcon;
   const art = getMachineStructureArt(face.selectedMachineHandler.id);
-  return { machineIcon, art };
+  // The map's icon is the map's own machine: it may lend another machine its picture, never its name.
+  const mapName = runsOnMapMachine(recipe, face.selectedMachineHandler)
+    ? recipeMapIcon?.displayName
+    : undefined;
+  const name = ownIcon?.displayName ?? mapName ?? face.selectedMachineHandler.label;
+  return { machineIcon, art, name };
+}
+
+/**
+ * Whether a card runs on its recipe map's own machine. A dataset handler list starts with it; a list the planner
+ * synthesizes ends with it (a crafting map puts the Auto Workbench in front of the crafting table).
+ */
+function runsOnMapMachine(recipe: Recipe, selected: Pick<MachineHandler, "id">): boolean {
+  const handlers = getRecipeMachineHandlers(recipe);
+  const own = recipe.machineHandlers?.length ? handlers[0] : handlers[handlers.length - 1];
+  return own?.id === selected.id;
 }
 
 /** The count a card prints, as the card's count box and its glance face do. */
@@ -713,7 +754,8 @@ function resourceName(
 /**
  * The foot bar of a card, or nothing: an Up to card with its read-out, or an Exactly card with a forced input on one
  * of its rows. `ports` are the card's rows (every recipe's on a shared machine), `cardName` names a card by id. A card
- * in a ring (`loop`) says DEAD LOOP or CLOG LOCK in the ring's tone in place of its reason.
+ * in a ring (`loop`) says DEAD LOOP or CLOG LOCK in the ring's tone in place of its reason. A card on Any that runs
+ * none because its input is sent out instead (`idle`, idle-trade.ts) says IDLE and which input.
  */
 export function buildFootView(
   count: Pick<CleanCountView, "rule" | "set">,
@@ -721,8 +763,44 @@ export function buildFootView(
   ports: { inputs: readonly CleanPortView[]; outputs: readonly CleanPortView[] },
   cardName: (id: string) => string | undefined = () => undefined,
   loop?: LoopTone,
+  idle?: IdleTrade,
+  turbine?: TurbineFoot,
 ): CleanFootView | undefined {
   const fmt = formatSolvedMachines;
+  // A turbine fed off its set flow makes what that flow makes, not its share of the set flow's EU: say so before
+  // any read-out, since a turbine short of fuel is exactly this case.
+  if (turbine && !loop) {
+    const pct = `${Math.round((100 * turbine.flow) / turbine.optimal)}%`;
+    const eu = turbineEuText(turbine.euMade, turbine.tier);
+    const many = turbine.turbines > 1 ? `${turbine.turbines} at ` : "";
+    const word = "FLOW";
+    const room = FOOT_TEXT - measureClean(word, FOOT_SIZE) - FOOT_GAP;
+    return {
+      tone: "starved",
+      word,
+      say: fitLine(
+        [
+          `${many}${pct} of optimal, ${turbine.turbines > 1 ? "make" : "makes"} ${eu}`,
+          `${many}${pct} of optimal, ${eu}`,
+          `${many}${pct} of optimal`,
+          `${pct} of optimal`,
+        ],
+        room,
+      ),
+      frac: "",
+      fill: 0,
+      facts: {
+        reason: "FLOW",
+        rule: count.rule,
+        running: turbine.turbines,
+        capacity: turbine.turbines,
+        tied: [],
+        upstream: [],
+        forced: [],
+        turbine,
+      },
+    };
+  }
   if (count.rule === "upTo" && upTo) {
     const capacity = upTo.capacity > 0 ? upTo.capacity : (count.set ?? 0);
     const reached = Math.max(0, upTo.reached);
@@ -841,6 +919,33 @@ export function buildFootView(
       },
     };
   }
+  if (count.rule === "any" && idle) {
+    const input = resourceName(idle.input, ports.inputs)!;
+    const output = resourceName(idle.output, ports.outputs)!;
+    const word = "IDLE";
+    const room = FOOT_TEXT - measureClean(word, FOOT_SIZE) - FOOT_GAP;
+    return {
+      tone: "plain",
+      word,
+      say: fitLine(
+        [`${input} is sent out instead`, `${input} sent out`, "its input is sent out"],
+        room,
+      ),
+      frac: "",
+      fill: 0,
+      facts: {
+        reason: "IDLE",
+        rule: "any",
+        running: 0,
+        capacity: 0,
+        resource: output,
+        sentOut: input,
+        tied: [],
+        upstream: idle.makerId ? [cardName(idle.makerId) ?? "a card"] : [],
+        forced: [],
+      },
+    };
+  }
   return undefined;
 }
 
@@ -913,6 +1018,28 @@ export function reasonStripes(tone: FootTone): { body: string; stripe: string } 
   const hex = (UP_TO_COLOR as Record<string, string | undefined>)[tone.toUpperCase()];
   if (!hex) return undefined;
   return { body: mixHex(hex, CC.surface, 0.07), stripe: mixHex(hex, CC.surface, 0.13) };
+}
+
+/**
+ * The Parallel reading on the strip: what runs at once, when that is more than one or fewer than the structure allows.
+ * Fewer running than the structure allows on a powered machine means the power supply pays for no more (the game's
+ * ParallelHelper caps parallels at what the supply covers); the chip then carries both numbers for its tip.
+ */
+export function parallelReading(
+  running: number,
+  structure: number,
+  powered: boolean,
+): Omit<CleanChipView, "x" | "y" | "width"> | undefined {
+  const powerCap = powered && running < structure ? { running, structure } : undefined;
+  if (!(running > 1) && !powerCap) return undefined;
+  return {
+    id: "parallel",
+    label: "Parallel",
+    value: `×${formatCompact(running)}`,
+    reading: true,
+    powerCap,
+    title: "Operations at once. Set by the machine and its configuration.",
+  };
 }
 
 /** A card's name by id, for the bar's tip (the full cards upstream of a starved one). */
@@ -988,6 +1115,7 @@ export function useCleanCardModel(
       controls,
       overclockedRecipe,
       parallel: getMachineParallelMultiplier(effectiveRecipe, projectNode),
+      structuralParallel: getMachineStructuralParallels(effectiveRecipe, projectNode),
       circuit: getRecipeProgrammedCircuit(effectiveRecipe) as RecipeProgrammedCircuit | undefined,
     };
   }, [recipe, projectNode]);
@@ -1015,8 +1143,13 @@ export function useCleanCardModel(
 
   const { selectedMachineHandler, machineHandlers, tierControl, powerReport, steamReport } =
     derived;
-  const { machineIcon, art } = cardPicture(recipe, projectNode, derived, machineIcons, mapIcons);
-  const name = machineIcon?.displayName ?? selectedMachineHandler.label;
+  const { machineIcon, art, name } = cardPicture(
+    recipe,
+    projectNode,
+    derived,
+    machineIcons,
+    mapIcons,
+  );
 
   const hasPicker = machineHandlers.length > 1;
   const tierLabel = powerReport?.isMultiblock ? powerReport.tier : tierControl?.current;
@@ -1085,7 +1218,7 @@ export function useCleanCardModel(
       id: control.id,
       label: control.label,
       value: control.value,
-      steps: control.options.length > 1,
+      steps: control.options.length > 1 || control.numeric !== undefined,
     });
     if (!isPinned(liveProject, pinKey, control)) continue;
     rawChips.push({
@@ -1097,16 +1230,12 @@ export function useCleanCardModel(
       title: `${control.label}: ${control.value}`,
     });
   }
-  const parallels = powerReport?.parallels ?? steamReport?.parallels ?? derived.parallel;
-  if (parallels > 1) {
-    rawChips.push({
-      id: "parallel",
-      label: "Parallel",
-      value: `×${formatCompact(parallels)}`,
-      reading: true,
-      title: "Operations at once. Set by the machine and its configuration.",
-    });
-  }
+  const parallelChip = parallelReading(
+    powerReport?.parallels ?? steamReport?.parallels ?? derived.parallel,
+    derived.structuralParallel,
+    powerReport?.state === "ok",
+  );
+  if (parallelChip) rawChips.push(parallelChip);
   const strip = layoutStrip(rawChips);
 
   // The rows an Up to card's reason names are lit in its colour (only while the card is Up to: `upTo` is its own).
@@ -1124,12 +1253,25 @@ export function useCleanCardModel(
     countState.upTo,
   );
   const loop = cardLoop(plan?.loops, projectNode.id);
+  // On Any and running none: is it because its input is sent out instead of its output?
+  const idle =
+    count.rule === "any" && count.zero
+      ? idleTradeOf(plan, projectNode.id, new Set(inputs.map((port) => port.resourceKey)))
+      : undefined;
+  // A turbine card: what its whole turbines really make at the flow each gets.
+  const running = result?.theoreticalMachinesRequired ?? 0;
+  const turbines = turbinesFor(running, count.rule === "exact" ? count.set : undefined);
+  const turbineCheck = mayTurbineFlow(recipe, running, turbines)
+    ? turbineFlowCheck(recipe, projectNode.machineConfigTiers, running, turbines)
+    : undefined;
   const foot = buildFootView(
     count,
     countState.upTo,
     { inputs, outputs },
     (id) => cardNameIn(liveProject, id),
     loop,
+    idle,
+    turbineCheck ? { ...turbineCheck, tier: powerTier } : undefined,
   );
 
   const view: CleanCardView = {

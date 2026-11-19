@@ -1,6 +1,7 @@
 import { sectionOwnerId } from "../../../model/shared-machine";
 import { compareIds } from "../ids";
 import { makeLeftoverKey } from "../port-key";
+import { chainLinkFlows } from "./buffers";
 import type {
   Alternative,
   Alternatives,
@@ -73,7 +74,7 @@ export function readAnswer(model: PlanModel, answer: Answer): PlanReading {
         notes: [...answer.notes],
         openGates: 0,
         failure: answer.failure,
-        unmetDrawers: [...answer.drawers.unmet],
+        unmetDrawers: [...answer.drawers.unmet, ...model.unfed.map((d) => d.id)],
       },
     };
   }
@@ -102,6 +103,12 @@ export function readAnswer(model: PlanModel, answer: Answer): PlanReading {
       (e) => e.port.node === link.ref.node && e.port.port === link.ref.port && e.port.input === link.ref.input,
     );
     flowOf.set(link.edgeId, Math.max(0, at?.ratePerSecond ?? 0));
+  }
+
+  // Wires between a chain's drawers: what passes from one to the next.
+  for (const chain of model.chains) {
+    for (const [edgeId, flow] of chainLinkFlows(chain, (id) => flowOf.get(id) ?? 0))
+      flowOf.set(edgeId, flow);
   }
 
   // Wires to drawers: what the port makes (or takes) that its other wires do
@@ -153,6 +160,15 @@ export function readAnswer(model: PlanModel, answer: Answer): PlanReading {
     }));
 
   // What a maker puts into a buffer beyond what its takers take: the maker's forced row, totalled on the buffer.
+  // A chain's spill is drawn on the drawer the maker is wired to.
+  const chainDrawerOf = new Map<string, string>();
+  for (const chain of model.chains) {
+    for (const [edgeId, { drawer }] of chain.wires) {
+      const link = model.drawerEdges.get(edgeId);
+      const row = link && model.row(link.ref);
+      if (row) chainDrawerOf.set(`${chain.drawerId}|${row.portKey}`, drawer);
+    }
+  }
   const spills: PlanSpill[] = Object.entries(solution.drawers?.spills ?? {}).flatMap(([drawerId, list]) =>
     external(list, "out")
       .filter((e) => e.perSecond > DUST)
@@ -161,7 +177,7 @@ export function readAnswer(model: PlanModel, answer: Answer): PlanReading {
         portKey: e.portKey,
         resourceKey: e.resourceKey,
         perSecond: e.perSecond,
-        drawerId,
+        drawerId: chainDrawerOf.get(`${drawerId}|${e.portKey}`) ?? drawerId,
       })),
   );
 
@@ -201,7 +217,7 @@ export function readAnswer(model: PlanModel, answer: Answer): PlanReading {
   const loops = readLoops(model, solution.upToLoops ?? []);
   const shortfalls = readShortfalls(model, (solution.drawers ?? EMPTY_DRAWERS).shortfalls);
   const unneeded = solution.unneeded.filter((id) => model.machines.has(id) && !model.hidden.has(id));
-  const notes: Note[] = [...solution.notes, ...alternatives.notes];
+  const notes: Note[] = [...solution.notes, ...unfedNotes(model), ...alternatives.notes];
   const choiceNotes = notes.filter((n) => CHOICE_NOTES.has(n.message));
   const anchorKeys = (refs: PortRef[]): PortKey[] =>
     refs.flatMap((ref) => {
@@ -225,12 +241,25 @@ export function readAnswer(model: PlanModel, answer: Answer): PlanReading {
       terminals,
       notes,
       openGates: solution.openGates,
-      unmetDrawers: (solution.drawers ?? EMPTY_DRAWERS).unmet,
+      unmetDrawers: [...(solution.drawers ?? EMPTY_DRAWERS).unmet, ...model.unfed.map((d) => d.id)],
       chosen: anchorKeys(alternatives.chosen?.gateAnchors ?? solution.key.gateAnchors),
       alternativesComplete: alternatives.complete,
       choiceNotes,
     },
   };
+}
+
+/** A drawer whose ports all feed an earlier drawer gets nothing: its rule reads unmet at zero, and says why. */
+function unfedNotes(model: PlanModel): Note[] {
+  return model.unfed.map((d) => ({
+    message: "DRAWER_PORT_TAKEN",
+    args: [
+      d.label,
+      d.id,
+      { message: d.rule === "EXACTLY" ? "RULE_EXACTLY" : "RULE_AT_LEAST", args: [] },
+      d.rate,
+    ],
+  }));
 }
 
 /** The Up to read-outs by CARD id: a shared card's whole pool is one entry under the card's id. */

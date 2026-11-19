@@ -192,6 +192,26 @@ it("bar tip: usage, the reason in full and where to act", () => {
   expect(forced.title).toBe("Exactly 24 running");
   expect(forced.rows).toEqual([{ label: "Forced in", value: "720 L/s Oxygen", tone: "warn" }]);
   expect(footTip("n", facts({ reason: "UNUSED", running: 0 })).title).toBe("None running");
+  const idle = footTip(
+    "n",
+    facts({
+      reason: "IDLE",
+      rule: "any",
+      running: 0,
+      capacity: 0,
+      resource: "Quicklime Dust",
+      sentOut: "Bauxite Slag",
+      upstream: ["Large Chemical Reactor"],
+    }),
+  );
+  expect(idle.title).toBe("None running");
+  expect(idle.rows).toEqual([
+    { label: "Sent out", value: "Bauxite Slag at Large Chemical Reactor", tone: "warn" },
+    { label: "Would force out", value: "Quicklime Dust", tone: "warn" },
+  ]);
+  expect(idle.notes?.[0]?.text).toBe(
+    "Running it would force out Quicklime Dust, so the plan sends Bauxite Slag out instead. Give Quicklime Dust somewhere to go, or set a count.",
+  );
   const dead = footTip(
     "n",
     facts({ reason: "STARVED", loop: "dead", running: 0, resource: "Oxygen" }),
@@ -233,4 +253,36 @@ it("strip chip tip: Set to, coil need, pinned note, gestures", () => {
   ]);
   expect(tip.notes?.at(-1)?.text).toBe("Pinned to the card: unpin it in the settings.");
   expect(tip.actions?.map((a) => a.label)).toEqual(["Choose", "Step back", "Step"]);
+});
+
+it("parallel tip: what runs at once, and when the power supply is what caps it", () => {
+  const chip = (value: string, powerCap?: CleanChipView["powerCap"]): CleanChipView => ({
+    id: "parallel",
+    label: "Parallel",
+    value,
+    reading: true,
+    powerCap,
+    title: "",
+    x: 0,
+    y: 0,
+    width: 0,
+  });
+  const structure = stripTip("n", chip("×16"), undefined);
+  expect(structure.title).toBe("Parallel");
+  expect(structure.rows).toEqual([{ label: "Running", value: "×16" }]);
+  expect(structure.notes).toEqual([
+    { text: "Set by the machine and its configuration.", tone: "muted" },
+  ]);
+  expect(structure.actions).toEqual([]);
+  const capped = stripTip("n", chip("×21", { running: 21, structure: 136 }), undefined);
+  expect(capped.rows).toEqual([
+    { label: "Running", value: "×21" },
+    { label: "Structure allows", value: "×136" },
+  ]);
+  expect(capped.notes).toEqual([
+    {
+      text: "The power supply pays for 21 at once, not all 136. More amps or a higher tier runs more.",
+      tone: "warn",
+    },
+  ]);
 });

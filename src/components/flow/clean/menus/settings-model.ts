@@ -1,10 +1,11 @@
-import type { FactoryNode, FactoryProject, Recipe } from "@/lib/model/types";
+import type { FactoryNode, FactoryProject, MachineConfigControl, Recipe } from "@/lib/model/types";
 import {
   applyMachineHandlerToRecipe,
   applyRecipeInputOverrides,
   getRecipeCoilTierControl,
   getRecipeMachineConfigTierControls,
   getRecipeSpecialValue,
+  snapNumericSetting,
 } from "@/lib/model";
 import { rememberSetting, settingMemoryMachine } from "@/lib/model/setting-memory";
 import { getMachineBehaviour } from "@/lib/machines/machine-table";
@@ -35,6 +36,8 @@ export interface SettingControl {
   options: SettingOption[];
   currentKey: string;
   pinDefault: boolean;
+  /** A number the player types (the Neutron Activator's pipe height): one option, its current value. */
+  numeric?: MachineConfigControl["numeric"];
 }
 
 export const COIL_ID = "heatingCoil";
@@ -85,7 +88,7 @@ function computeControls(recipe: Recipe, node: FactoryNode): SettingControl[] {
   }
   for (const control of getRecipeMachineConfigTierControls(effective, node)) {
     if (control.id === COIL_ID || /^(machineParallel|voltageParallel)/.test(control.id)) continue;
-    if (control.tiers.length <= 1) continue;
+    if (control.tiers.length <= 1 && !control.numeric) continue;
     out.push({
       id: control.id,
       group: "Machine",
@@ -96,6 +99,7 @@ function computeControls(recipe: Recipe, node: FactoryNode): SettingControl[] {
       options: control.tiers.map((tier) => ({ key: tier.key, label: tier.label, icon: tier.resource?.iconPath })),
       currentKey: control.current.key,
       pinDefault: false,
+      ...(control.numeric ? { numeric: control.numeric } : {}),
     });
   }
   return out;
@@ -157,7 +161,44 @@ export function settingPatch(
 
 /** The next (or previous) option, wrapping, as a chip's click and wheel step. */
 export function steppedOption(control: SettingControl, direction: -1 | 1): SettingOption | undefined {
+  // A number steps by its step and stops at its limits rather than wrapping.
+  if (control.numeric) {
+    const step = control.numeric.step ?? 1;
+    const next = String(
+      snapNumericSetting(Number(control.currentKey) + direction * step, control.numeric),
+    );
+    return next === control.currentKey ? undefined : { key: next, label: next };
+  }
   if (control.options.length <= 1) return undefined;
   const index = Math.max(0, control.options.findIndex((option) => option.key === control.currentKey));
   return control.options[(index + direction + control.options.length) % control.options.length];
+}
+
+/**
+ * A numeric machine control as the sheet's typed row: what is typed is snapped to the control's step and clamped
+ * to its range, and anything that is not a number leaves the value as it was.
+ */
+export function numericSettingRow(
+  control: SettingControl,
+  choose: (key: string) => void,
+): NumberSetting | undefined {
+  const numeric = control.numeric;
+  if (!numeric) return undefined;
+  return {
+    id: control.id,
+    label: control.label,
+    value: control.value,
+    text: control.currentKey,
+    pinDefault: control.pinDefault,
+    commit: (text) => {
+      const typed = Number(text.trim());
+      if (text.trim() === "" || !Number.isFinite(typed)) return;
+      const key = String(snapNumericSetting(typed, numeric));
+      if (key !== control.currentKey) choose(key);
+    },
+    step: (direction) => {
+      const next = steppedOption(control, direction);
+      if (next) choose(next.key);
+    },
+  };
 }

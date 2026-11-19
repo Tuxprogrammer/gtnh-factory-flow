@@ -14,6 +14,8 @@ import {
 import { CC_GEOMETRY } from "../clean/tokens";
 import { cardLoop, type LoopTone } from "../clean/loops";
 import { glanceBar, type GlanceBar } from "../clean/glance";
+import { mayIdleTrade } from "../clean/idle-trade";
+import { mayTurbineFlow, turbinesFor } from "@/lib/power/turbine-flow";
 import { useDeviceSettings } from "@/lib/device-settings";
 import { estimateRecipeCardHeight } from "./card-shell";
 import { useMachineHandlerIconEntries, useRecipeMapIcons } from "../machine-icons";
@@ -115,10 +117,21 @@ export function useCardLayoutKey(data: RecipeNodeData): string {
   const forced = useFactoryStore((state) =>
     forcedKeyOf(state.lastResult?.plan as PlanLike | undefined, projectNode.id),
   );
+  // An Up to read-out, or the IDLE bar of a card on Any whose input is sent out instead (clean/idle-trade.ts).
   const readOut = useFactoryStore(
-    (state) => state.lastResult?.plan?.upTo?.[projectNode.id] !== undefined,
+    (state) =>
+      state.lastResult?.plan?.upTo?.[projectNode.id] !== undefined ||
+      mayIdleTrade(state.lastResult?.plan, projectNode.id),
   );
-  const rule = `${pinRuleOf(projectNode, recipe)}${readOut ? "+" : ""}`;
+  // A turbine card fed off its set flow per turbine bears the FLOW bar (power/turbine-flow.ts).
+  const running = result?.theoreticalMachinesRequired ?? 0;
+  const pinRule = pinRuleOf(projectNode, recipe);
+  const flowBar = mayTurbineFlow(
+    recipe,
+    running,
+    turbinesFor(running, pinRule === "exact" ? projectNode.solvePin : undefined),
+  );
+  const rule = `${pinRule}${readOut || flowBar ? "+" : ""}`;
   return `${recipe.id}#${stableNodeKey(projectNode)}#${pins}#${flowKeys(result?.inputs)}|${flowKeys(result?.outputs)}#${forced}#${rule}`;
 }
 

@@ -22,7 +22,7 @@ import {
 import { machineArtPixels } from "../../MachinePicker";
 import { FoldGlyph } from "../fold/FoldKey";
 import { BoardMenu, MenuRow } from "../menus/BoardMenu";
-import { useMachineHandlerIcons } from "../../machine-icons";
+import { useMachineHandlerIcons, useRecipeMapIcons } from "../../machine-icons";
 import { getFallbackFluidColor, ResourceIcon } from "@/components/nei/ResourceIcon";
 import { formatCompact } from "@/lib/model/resources";
 import { unitsFromMachines } from "@/lib/model/machine-list";
@@ -38,7 +38,7 @@ import { useFactoryStore, useRateDisplayUnits } from "@/store/factory-store";
 import { useWorkspaceView, writeWorkspaceView } from "@/lib/workspace-view";
 import { formatAmountWithSuffix, RULE_MARK, RULE_NAME, RULE_STEPS } from "../../rate-rule";
 import { AmpsChip, TierChip } from "../CleanCard";
-import { useCleanCardModel, wheelDraft } from "../clean-model";
+import { recipeMapPicture, useCleanCardModel, wheelDraft } from "../clean-model";
 import { powerPanelTip } from "../interaction/tips";
 import type { RecipeNodeData } from "../../RecipeNode";
 import { CC, tierChipColors } from "../tokens";
@@ -984,7 +984,16 @@ function RuleMenu({
 
 function MachineGlyph({ entry }: { entry: RailMachine }) {
   const icons = useMachineHandlerIcons();
-  const icon = entry.powerSourceId ? powerIcon(entry.powerSourceId) : icons.get(entry.handlerId);
+  const mapIcons = useRecipeMapIcons();
+  // The card's recipe (stable while the project is): a map with one machine keys no family icon, and the line falls
+  // back to the map's own machine as the card does.
+  const recipe = useFactoryStore((s) => {
+    const recipeId = s.project.nodes.find((n) => n.id === entry.nodeId)?.recipeId;
+    return s.project.recipes.find((r) => r.id === recipeId);
+  });
+  const icon = entry.powerSourceId
+    ? powerIcon(entry.powerSourceId)
+    : (icons.get(entry.handlerId) ?? (recipe ? recipeMapPicture(recipe, mapIcons) : undefined));
   if (!icon) return <span className="rail-icon" />;
   return (
     <span className="rail-icon">

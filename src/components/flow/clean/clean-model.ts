@@ -508,6 +508,23 @@ export function deriveCardFace(recipe: Recipe, projectNode: FactoryNode) {
   };
 }
 
+/**
+ * The recipe map's own machine item, the picture a card (and its Overview line) falls back to when its machine has no
+ * icon of its own: a map with one machine exports no handlers, and the handler minted from the map's name keys none.
+ */
+export function recipeMapPicture(
+  recipe: Recipe,
+  mapIcons: ReturnType<typeof useRecipeMapIcons>,
+): MachineHandlerIcon | undefined {
+  // A bee or crop map's icon is a specimen (the first species exported), not a machine: every bee card wore the
+  // Uranium bee and took its name. Those cards fall back to the housing or harvester's own name instead.
+  return isBeeProductionRecipe(recipe) || isCropProductionRecipe(recipe)
+    ? undefined
+    : (mapIcons.get(recipe.source?.recipeMap ?? recipe.machineType) as
+        | MachineHandlerIcon
+        | undefined);
+}
+
 /** The picture a card shows in its glance face and its picture column: the structure render, else the machine's item. */
 export function cardPicture(
   recipe: Recipe,
@@ -517,12 +534,7 @@ export function cardPicture(
   mapIcons: ReturnType<typeof useRecipeMapIcons>,
 ) {
   const pictureTier = (face.tierControl?.current ?? projectNode.overclockTier) as string;
-  // A bee or crop map's icon is a specimen (the first species exported), not a machine: every bee card wore the
-  // Uranium bee and took its name. Those cards fall back to the housing or harvester's own name instead.
-  const recipeMapIcon =
-    isBeeProductionRecipe(recipe) || isCropProductionRecipe(recipe)
-      ? undefined
-      : (mapIcons.get(recipe.source?.recipeMap ?? recipe.machineType) as MachineHandlerIcon | undefined);
+  const recipeMapIcon = recipeMapPicture(recipe, mapIcons);
   const ownIcon = machineIconAtTier(machineIcons.get(face.selectedMachineHandler.id), pictureTier);
   const machineIcon = ownIcon ?? recipeMapIcon;
   const art = getMachineStructureArt(face.selectedMachineHandler.id);

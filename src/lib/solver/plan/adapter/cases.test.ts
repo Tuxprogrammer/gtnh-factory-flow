@@ -317,7 +317,7 @@ describe("buffers", () => {
     expect(input.drawers.map((d) => [d.kind, d.rule, d.rate])).toEqual([["BUFFER", "ANY", 0]]);
   });
 
-  it("a buffer wired to another drawer is still joined away", () => {
+  it("buffers wired to each other are one buffer; every wire shows what passes", () => {
     const chained = project({
       recipes: [recipe("a", [], [["y", 4]]), recipe("b", [["y", 1]], [])],
       nodes: [node("a", "a", { solvePin: 1 }), node("b", "b")],
@@ -328,9 +328,59 @@ describe("buffers", () => {
         wire("z", "b2", "b", "y", {}, { fromDrawer: true }),
       ],
     });
-    const { input } = run(chained);
-    expect(input.edges).toHaveLength(1);
-    expect(input.drawers).toEqual([]);
+    const { input, result } = run(chained, () =>
+      solved({
+        extentsPerSecond: { a: 1, b: 4 },
+        machineCounts: { a: 1, b: 4 },
+        drawers: {
+          rates: { b1: 4 },
+          unmet: [],
+          shortfalls: [],
+          ports: {
+            b1: [
+              { port: { node: "a", port: 0, input: false }, ratePerSecond: 4 },
+              { port: { node: "b", port: 0, input: true }, ratePerSecond: 4 },
+            ],
+          },
+        },
+      }),
+    );
+    expect(input.edges).toHaveLength(0);
+    expect(input.drawers).toEqual([
+      {
+        id: "b1",
+        label: "y",
+        kind: "BUFFER",
+        rule: "ANY",
+        rate: 0,
+        links: [{ node: "a", port: 0 }],
+        takers: [{ node: "b", port: 0 }],
+      },
+    ]);
+    for (const id of ["x", "y", "z"]) {
+      expect(result.edges[id]!.transferredPerSecond).toBeCloseTo(4, 9);
+    }
+    expect(result.storages["b1"]!.producedPerSecond).toBeCloseTo(4, 9);
+    expect(result.storages["b2"]!.producedPerSecond).toBeCloseTo(4, 9);
+  });
+
+  it("a source feeding a buffer still covers its users' shortfall: the buffer is joined", () => {
+    const fed = project({
+      recipes: [recipe("a", [], [["y", 4]]), recipe("b", [["y", 1]], [])],
+      nodes: [node("a", "a", { solvePin: 1 }), node("b", "b")],
+      storages: [drawer("src", "y"), drawer("b1", "y"), drawer("b2", "y")],
+      edges: [
+        wire("s", "src", "b2", "y", {}, { fromDrawer: true, toDrawer: true }),
+        wire("x", "a", "b1", "y", {}, { toDrawer: true }),
+        wire("y", "b1", "b2", "y", {}, { fromDrawer: true, toDrawer: true }),
+        wire("z", "b2", "b", "y", {}, { fromDrawer: true }),
+      ],
+    });
+    const { input } = run(fed);
+    expect(input.edges.map((e) => [e.source, e.target])).toEqual([["a", "b"]]);
+    expect(input.drawers.map((d) => [d.id, d.kind, d.links])).toEqual([
+      ["src", "SOURCE", [{ node: "b", port: 0 }]],
+    ]);
   });
 });
 

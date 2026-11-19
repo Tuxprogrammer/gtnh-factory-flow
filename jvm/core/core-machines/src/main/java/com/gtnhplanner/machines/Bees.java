@@ -9,6 +9,8 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.machines.GameRates;
+
 /**
  * What a bee makes, worked from the game's code: Forestry 4.11.39's Bee.produceStacks, Bee.getFinalChance and
  * BeekeepingLogic (the Apiary, and MagicBees' Magic Apiary, which runs on them), and GregTech 5.09.54.205's
@@ -39,7 +41,12 @@ public final class Bees {
     // region Keys
 
     public static final String SPEED = "beeSpeedGene", CLIMATE = "beeEnvironment", FRAME = "beeFrameSlot",
-        AURA = "beeMagicAura", IA_SPEED = "beeIndustrialSpeed", IA_PRODUCTION = "beeIndustrialProduction";
+        AURA = "beeMagicAura", IA_SPEED = "beeIndustrialSpeed", IA_PRODUCTION = "beeIndustrialProduction",
+        AL_FRAMES = "beeAlvearyFrameHousing", AL_STIMULATOR = "beeAlvearyStimulator",
+        AL_SUPPORT = "beeAlvearySupport", JELLY = "beeMegaRoyalJelly";
+
+    /** The Mega Apiary's voltage tier (a tier name, LuV and up), as the mod keeps a GregTech card's: the website's node tier. */
+    public static final String VOLTAGE = "voltage";
 
     /** The housing: the website keeps it as the card's machineHandlerId, the mod as this setting. */
     public static final String HOUSING = "beeHousing";
@@ -47,10 +54,24 @@ public final class Bees {
     public static final int FRAME_SLOTS = 3;
 
     /** Every bee setting, as plans carry them. */
-    public static final Set<String> SETTING_KEYS = Set
-        .of(SPEED, CLIMATE, FRAME + 1, FRAME + 2, FRAME + 3, AURA, IA_SPEED, IA_PRODUCTION, HOUSING);
+    public static final Set<String> SETTING_KEYS = Set.of(
+        SPEED,
+        CLIMATE,
+        FRAME + 1,
+        FRAME + 2,
+        FRAME + 3,
+        AURA,
+        IA_SPEED,
+        IA_PRODUCTION,
+        AL_FRAMES,
+        AL_STIMULATOR,
+        AL_SUPPORT,
+        JELLY,
+        HOUSING);
 
     // endregion
+
+    private static final String NONE_KEY = "none";
 
     // region The game's constants
 
@@ -110,14 +131,75 @@ public final class Bees {
     public record Housing(String key, String label, float production, float t, boolean frames, boolean industrial) {}
 
     public static final Housing APIARY = new Housing("apiary", "Apiary", -0.9f, 1f, true, false);
-    /** MagicBees' TileEntityMagicApiary: -0.1, or 0.8 with a production aura. The website's default bee machine. */
+    /**
+     * Forestry's Bee House (TileBeehouse): no frame slots and one modifier, BeehouseBeeModifier, production -0.75
+     * (its lifespan x3 and mutation 0 reach no rate here).
+     */
+    public static final Housing BEE_HOUSE = new Housing("bee-house", "Bee House", -0.75f, 1f, false, false);
+    /** MagicBees' TileEntityMagicApiary: -0.1, or 0.8 with a production aura. */
     public static final Housing MAGIC_APIARY = new Housing("magic-apiary", "Magic Apiary", -0.1f, 1f, true, false);
+    /**
+     * Forestry's Alveary: AlvearyBeeModifier changes territory only, so its production comes from its frame housings
+     * and stimulators (ExtraBees' alveary parts, {@link #ALVEARY_FRAMES}, {@link #STIMULATORS}).
+     */
+    public static final Housing ALVEARY = new Housing("alveary", "Alveary", 0f, 1f, false, false);
     public static final Housing INDUSTRIAL = new Housing("industrial-apiary", "Industrial Apiary", 2f, 8f, false, true);
+    /**
+     * kubatech's Mega Apiary (MTEMegaIndustrialApiary), on the website's older scaling: a 100-tick batch of 6400 / 550
+     * bee cycles at (17.2 + 6 + its voltage tiers past LuV) over the Apiary's 0.1, each tier past LuV (up to three)
+     * four times the batch and the draw. Never jubilant-gated: it makes every specialty, its own included.
+     */
+    public static final Housing MEGA_APIARY = new Housing("mega-apiary", "Mega Apiary", 17.19926784f + 5f, 1f, false,
+        false);
 
-    public static final List<Housing> HOUSINGS = List.of(APIARY, MAGIC_APIARY, INDUSTRIAL);
+    /** The website's order: a card with no housing of its own runs in the first. */
+    public static final List<Housing> HOUSINGS = List
+        .of(APIARY, BEE_HOUSE, MAGIC_APIARY, ALVEARY, INDUSTRIAL, MEGA_APIARY);
 
     /** The Magic Apiary's production with an aura provider charged for production. */
     public static final float MAGIC_AURA_PRODUCTION = 0.8f;
+
+    /** An Alveary part as the website offers it: its key, its label, its item and what it adds to production. */
+    public record Part(String key, String label, @Nullable String itemId, float production) {}
+
+    /** The Alveary's frame housings: one Proven Frame (1), one Magic Frame (2), four Proven Frames (4). */
+    public static final List<Part> ALVEARY_FRAMES = List.of(
+        new Part(NONE_KEY, "None", null, 0),
+        new Part("proven", "1x Proven Frame", "ExtraBees:alveary@1", 1),
+        new Part("magic", "1x Magic Frame", "ExtraBees:alveary@1", 2),
+        new Part("four-proven", "4x Proven Frames", "ExtraBees:alveary@1", 4));
+    /** The Alveary's stimulators (ExtraBees' alveary stimulator on a low or high voltage circuit). */
+    public static final List<Part> STIMULATORS = List.of(
+        new Part(NONE_KEY, "None", null, 0),
+        new Part("low-voltage", "1x Low Voltage", "ExtraBees:alveary@4", 0.5f),
+        new Part("high-voltage", "1x High Voltage", "ExtraBees:alveary@4", 1.5f),
+        new Part("four-high-voltage", "4x High Voltage", "ExtraBees:alveary@4", 6));
+    /** The Alveary's utility blocks: none changes a rate. */
+    public static final List<Part> ALVEARY_SUPPORTS = List.of(
+        new Part("plain", "Plain", "Forestry:alveary", 0),
+        new Part("climate", "Climate", "Forestry:alveary@5", 0),
+        new Part("lighting-rain", "Light/Rain", "ExtraBees:alveary@2", 0),
+        new Part("sieve", "Sieve", "Forestry:alveary@7", 0));
+    /** The Mega Apiary's royal jelly: an output multiplier of 1, 2 or 3. */
+    public static final List<Part> JELLIES = List.of(
+        new Part(NONE_KEY, "None", null, 1),
+        new Part("partial", "Partial", "Forestry:royalJelly", 2),
+        new Part("full", "Full", "Forestry:royalJelly", 3));
+
+    /** The part under {@code key}, else the list's first. */
+    public static Part part(final List<Part> parts, @Nullable final String key) {
+        for (final Part p : parts) if (p.key()
+            .equals(key)) return p;
+        return parts.getFirst();
+    }
+
+    /** MEGA_APIARY_BATCH_CYCLES: a Mega Apiary batch is 6400 ticks of bee cycles. */
+    public static final double MEGA_BATCH_CYCLES = 6400.0 / 550;
+    /** The Mega Apiary's draw at LuV, and its batch. */
+    public static final long MEGA_EUT = 8110;
+    public static final int MEGA_TICKS = 100;
+    /** The Mega Apiary's production term at LuV: the Upgraded Acceleration's 17.2 plus 6. */
+    public static final double MEGA_TERM = 17.19926784 + 6;
 
     @Nullable
     public static Housing housing(@Nullable final String key) {
@@ -176,7 +258,7 @@ public final class Bees {
         }
     }
 
-    public static final String NONE = "none";
+    public static final String NONE = NONE_KEY;
 
     public static final List<Frame> FRAMES = List.of(
         new Frame("forestry:untreated", "Untreated Frame", "Forestry:frameUntreated", FrameRule.FORESTRY, 1, 0),
@@ -253,7 +335,16 @@ public final class Bees {
      * Apiary's aura, climate, and the Industrial Apiary's acceleration and production upgrades.
      */
     public record Setup(Housing housing, Allele speed, List<Frame> frames, boolean aura, Climate climate,
-        Acceleration acceleration, int productionUpgrades) {}
+        Acceleration acceleration, int productionUpgrades, Part alvearyFrames, Part stimulator, Part support,
+        Part jelly, int voltageTier) {}
+
+    /** The Mega Apiary's lowest tier, LuV (ordinal 6, ULV 0). */
+    public static final int MEGA_MIN_TIER = 6;
+
+    /** getBeeMegaApiaryVoltageOffset: tiers past LuV, at most three. */
+    public static int megaVoltageOffset(final int voltageTier) {
+        return Math.max(0, Math.min(3, voltageTier - MEGA_MIN_TIER));
+    }
 
     /** The card's settings, each unset one at its default: an Apiary, the species' own speed, preferred climate. */
     public static Setup setup(final Map<String, ?> settings, final Species species) {
@@ -273,7 +364,21 @@ public final class Bees {
             "production-aura".equals(string(settings, AURA)),
             climate(string(settings, CLIMATE)),
             acceleration(string(settings, IA_SPEED)),
-            production);
+            production,
+            part(ALVEARY_FRAMES, string(settings, AL_FRAMES)),
+            part(STIMULATORS, string(settings, AL_STIMULATOR)),
+            part(ALVEARY_SUPPORTS, string(settings, AL_SUPPORT)),
+            part(JELLIES, string(settings, JELLY)),
+            voltageTier(string(settings, VOLTAGE)));
+    }
+
+    private static final String[] TIER_NAMES = { "ULV", "LV", "MV", "HV", "EV", "IV", "LuV", "ZPM", "UV", "UHV",
+        "UEV", "UIV", "UMV", "UXV", "MAX" };
+
+    /** A voltage tier's ordinal (ULV 0), the Mega Apiary's LuV when unset or not a tier. */
+    private static int voltageTier(@Nullable final String name) {
+        for (int i = 0; i < TIER_NAMES.length; i++) if (TIER_NAMES[i].equals(name)) return i;
+        return MEGA_MIN_TIER;
     }
 
     @Nullable
@@ -296,6 +401,10 @@ public final class Bees {
                 .upgraded()) return UPGRADED_PRODUCTION;
             return s.productionUpgrades() > 0 ? 4.0f * (float) powInt(1.2, s.productionUpgrades()) : h.production();
         }
+        if (h == ALVEARY) return s.alvearyFrames()
+            .production()
+            + s.stimulator()
+                .production();
         float sum = h == MAGIC_APIARY && s.aura() ? MAGIC_AURA_PRODUCTION : h.production();
         if (h.frames()) for (final Frame f : s.frames()) if (f != null) sum += f.production(sum);
         return sum;
@@ -344,6 +453,7 @@ public final class Bees {
      * (MTEIndustrialApiary.checkRecipe).
      */
     public static Run run(final Setup s, final Species species) {
+        if (s.housing() == MEGA_APIARY) return megaRun(s, species);
         if (!s.housing()
             .industrial()) return new Run(CYCLE_TICKS, perCycle(s, species), 0, 1, 1, 1, 1);
         final float p = productionModifier(s), t = s.housing()
@@ -378,8 +488,37 @@ public final class Bees {
         return new Run(ticks, out, euPerTick(s), cycles, accel, d, factor);
     }
 
+    /**
+     * The Mega Apiary on the website's older scaling (machine-effects.ts, the bee path where the game's chance maths
+     * is not used): every product and specialty line comes out at its base chance times the speed gene's s^0.37, the
+     * royal jelly, ((17.2 + 6 + k) / 0.1)^0.52 and a batch of 6400 / 550 cycles x 4^k, k its voltage tiers past LuV
+     * (up to three); one batch is 100 ticks at 8110 x 4^k EU/t. Climate and jubilance do not reach it.
+     */
+    private static Run megaRun(final Setup s, final Species species) {
+        final double multiplier = megaMultiplier(s);
+        final Map<String, Double> out = new LinkedHashMap<>();
+        for (final Product pr : species.products())
+            out.merge(pr.id(), (double) pr.stack() * pr.chance() * multiplier, Double::sum);
+        return new Run(MEGA_TICKS, out, MEGA_EUT << (2 * megaVoltageOffset(s.voltageTier())), 1, 1, 1, 1);
+    }
+
+    /** The Mega Apiary's output multiplier on a base chance (the website's), for a product or a specialty alike. */
+    public static double megaMultiplier(final Setup s) {
+        final int k = megaVoltageOffset(s.voltageTier());
+        return Math.pow(
+            s.speed()
+                .value(),
+            0.37)
+            * s.jelly()
+                .production()
+            * Math.pow((MEGA_TERM + k) / 0.1, 0.52)
+            * MEGA_BATCH_CYCLES
+            * Math.pow(4, k);
+    }
+
     /** Whether the bee makes its specialties: working, jubilant, and not a species only a Mega Apiary pleases. */
     public static boolean jubilant(final Setup s, final Species species) {
+        if (s.housing() == MEGA_APIARY) return true;
         return s.climate()
             .works()
             && s.climate()
@@ -389,7 +528,8 @@ public final class Bees {
 
     /**
      * The expected items of each product a bee cycle, before any acceleration (by item id, in the species' order):
-     * every roll F, at most certain in Forestry's housings.
+     * every roll F, at most certain in Forestry's housings, where the pack's rate mod then multiplies each roll's
+     * stack by its bee yield (GTNHRates' ForestryBees mixin on Bee.produceStacks, {@link GameRates}).
      */
     public static Map<String, Double> perCycle(final Setup s, final Species species) {
         final float p = productionModifier(s), t = s.housing()
@@ -400,13 +540,15 @@ public final class Bees {
             .works(), jubilant = jubilant(s, species),
             capped = !s.housing()
                 .industrial();
+        final double yield = GameRates.active()
+            .beesYield();
         final Map<String, Double> out = new LinkedHashMap<>();
         for (final Product pr : species.products()) {
             double rolls = 0;
             if (works && pr.specialty()) rolls = jubilant ? roll(finalChance(pr.chance(), speed, p, t), capped) : 0;
             else if (works) rolls = roll(finalChance(pr.chance(), speed, p, t), capped)
                 + roll(finalChance(pr.chance() / 2.0F, speed, p, t), capped);
-            out.merge(pr.id(), rolls * pr.stack(), Double::sum);
+            out.merge(pr.id(), rolls * pr.stack() * (capped ? yield : 1), Double::sum);
         }
         return out;
     }
@@ -446,9 +588,25 @@ public final class Bees {
     public static List<FormulaLine> formulas(final Species species, final Setup s) {
         final List<FormulaLine> lines = new ArrayList<>();
         final Housing h = s.housing();
+        if (h == MEGA_APIARY) return megaFormulas(species, s);
         final float p = productionModifier(s);
         final List<Object> terms = new ArrayList<>();
-        if (h.industrial()) {
+        if (h == ALVEARY) {
+            terms.add("0 + ");
+            terms.add(
+                FormulaLine.knob(
+                    num(
+                        s.alvearyFrames()
+                            .production()),
+                    AL_FRAMES));
+            terms.add(" + ");
+            terms.add(
+                FormulaLine.knob(
+                    num(
+                        s.stimulator()
+                            .production()),
+                    AL_STIMULATOR));
+        } else if (h.industrial()) {
             if (s.acceleration()
                 .upgraded()) terms.add(FormulaLine.knob("17.2", IA_SPEED));
             else if (s.productionUpgrades() > 0) {
@@ -461,7 +619,7 @@ public final class Bees {
                     num(h == MAGIC_APIARY && s.aura() ? MAGIC_AURA_PRODUCTION : h.production()),
                     h == MAGIC_APIARY ? AURA : HOUSING));
             float sum = h == MAGIC_APIARY && s.aura() ? MAGIC_AURA_PRODUCTION : h.production();
-            for (int i = 0; i < s.frames()
+            if (h.frames()) for (int i = 0; i < s.frames()
                 .size(); i++) {
                 final Frame f = s.frames()
                     .get(i);
@@ -566,6 +724,53 @@ public final class Bees {
             }
             lines.add(FormulaLine.of("power", FormulaLine.number(run.euPerTick()) + " EU/t", power.toArray()));
         }
+        return lines;
+    }
+
+    /** The Mega Apiary's working: its batch and what multiplies a base chance. */
+    private static List<FormulaLine> megaFormulas(final Species species, final Setup s) {
+        final List<FormulaLine> lines = new ArrayList<>();
+        final int k = megaVoltageOffset(s.voltageTier());
+        lines.add(
+            FormulaLine.of(
+                "p + t",
+                num(MEGA_TERM + k),
+                "17.2 + 6 + ",
+                FormulaLine.knob(String.valueOf(k), VOLTAGE)));
+        lines.add(
+            FormulaLine.of(
+                "batch",
+                FormulaLine.number(MEGA_BATCH_CYCLES * Math.pow(4, k)) + " cycles",
+                "6400 / 550 · 4",
+                FormulaLine.sup(String.valueOf(k))));
+        lines.add(
+            FormulaLine.of(
+                "multiplier",
+                "x" + FormulaLine.number(megaMultiplier(s)),
+                FormulaLine.knob(
+                    num(
+                        s.speed()
+                            .value()),
+                    SPEED),
+                FormulaLine.sup("0.37"),
+                " · ",
+                FormulaLine.knob(
+                    num(
+                        s.jelly()
+                            .production()),
+                    JELLY),
+                " · (p + t / 0.1)",
+                FormulaLine.sup("0.52"),
+                " · batch"));
+        final Run run = run(s, species);
+        for (final Map.Entry<String, Double> e : run.perCraft()
+            .entrySet()) {
+            String name = e.getKey();
+            for (final Product pr : species.products()) if (pr.id()
+                .equals(e.getKey())) name = pr.name();
+            lines.add(FormulaLine.of("product", FormulaLine.number(e.getValue()) + " a batch", name));
+        }
+        lines.add(FormulaLine.of("power", FormulaLine.number(run.euPerTick()) + " EU/t", "8110·4", FormulaLine.sup(String.valueOf(k))));
         return lines;
     }
 

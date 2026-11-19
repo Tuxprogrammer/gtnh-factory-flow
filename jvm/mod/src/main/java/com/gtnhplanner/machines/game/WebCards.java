@@ -12,6 +12,7 @@ import net.minecraftforge.fluids.FluidStack;
 
 import com.google.gson.JsonObject;
 import com.gtnhplanner.api.RecipePropertyAPI;
+import com.gtnhplanner.core.machines.AlgaePond;
 import com.gtnhplanner.data.MachineConfig;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Port;
@@ -99,7 +100,8 @@ public final class WebCards {
         else if (!smelting) r.runtimeCalculation = RuntimeVariants.of(r.durationTicks, r.eut, r.outputs);
         r.machineConfigControls = HandlerData.recipeControls(entry, special);
         r.machineHandlers = HandlerData.handlers(entry, r.minimumTier, r.durationTicks, r.eut, r.machineConfigControls);
-        return r;
+        // The Algae Farm's recipes are registered at 0 EU/t: the recipe carries the draw of the hatch that grows it.
+        return AlgaePond.isRecipe(r) ? AlgaePond.enrich(r) : r;
     }
 
     /**

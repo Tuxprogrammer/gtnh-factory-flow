@@ -21,7 +21,6 @@ core/core-machines/src/main/java/com/gtnhplanner/machines/web/Hile.java string-f
 core/core-machines/src/main/java/com/gtnhplanner/machines/web/Js.java float-parse JavaScript Number(s) stand-in; becomes NumberText.parse
 core/core-machines/src/main/java/com/gtnhplanner/machines/web/Js.java float-text JavaScript String(n) stand-in; becomes NumberText.of
 core/core-machines/src/main/java/com/gtnhplanner/machines/web/MachineEffects.java float-parse a numeric setting key read as a number; becomes NumberText.parse
-core/core-machines/src/main/java/com/gtnhplanner/machines/web/PowerReport.java string-format a stall's EU/t printed with "%.1f"; becomes NumberText.fixed (the website uses toFixed)
 
 # core-view: card logic moved from the mod unchanged (view-b). BigDecimal.valueOf takes a double's shortest decimal
 # digits (the JDK's spelling: the shortest on the JDK 19+ the mod and the tests run on) before the display rounding.

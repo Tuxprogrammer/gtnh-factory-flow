@@ -104,9 +104,12 @@ public final class Overclock {
         final double raw = effective.durationTicks / Math.pow(rule.multiplier(), perfectSteps)
             / Math.pow(2, normalSteps)
             * durationMultiplier;
-        final double duration = behaviour != null && behaviour.quantiseDuration != null
-            ? behaviour.quantiseDuration.applyAsDouble(raw)
-            : quantiseDurationToTicks(raw, subTickCapable);
+        final double duration = capBankedParallels(
+            behaviour != null && behaviour.quantiseDuration != null ? behaviour.quantiseDuration.applyAsDouble(raw)
+                : quantiseDurationToTicks(raw, subTickCapable),
+            parallels,
+            machinePower,
+            Math.ceil(Math.abs(effective.eut) * eutMultiplier * heatDiscount));
         return new Stats(
             tier,
             minimumTier,
@@ -152,6 +155,20 @@ public final class Overclock {
         if (!Double.isFinite(durationTicks) || durationTicks <= 0) return 1;
         if (durationTicks > 1) return Math.floor(durationTicks);
         return subTickCapable ? 1 / Math.ceil(1 / durationTicks) : 1;
+    }
+
+    /**
+     * capBankedParallels: parallels banked from a run shorter than one tick still have to be paid for.
+     * ParallelHelper.determineParallel multiplies the machine's parallels by calculateMultiplierUnderOneTick, then caps
+     * the result at the available EU/t over ceil(recipe EU/t x EU modifier x heat discount), and the run takes one tick.
+     * The EU/t the game bills is still the unbanked parallels' (OverclockCalculator keeps the smaller count), so the card
+     * keeps its parallels and the cap stretches the duration instead: parallels / cap.
+     */
+    static double capBankedParallels(final double durationTicks, final double parallels, final double machinePower,
+        final double perParallelEuT) {
+        if (durationTicks >= 1 || !(perParallelEuT > 0) || !Double.isFinite(machinePower)) return durationTicks;
+        final double cap = Math.floor(machinePower / perParallelEuT);
+        return parallels / durationTicks > cap ? parallels / Math.max(cap, 1) : durationTicks;
     }
 
     /** resolveOverclockRule: the table's rule, heat's perfect-then-normal, or the dataset's perfect flag. */

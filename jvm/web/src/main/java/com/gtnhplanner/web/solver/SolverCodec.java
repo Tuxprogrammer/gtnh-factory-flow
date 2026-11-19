@@ -71,7 +71,7 @@ public final class SolverCodec {
                     ports(j.get("inputs")),
                     ports(j.get("outputs")),
                     Boolean.TRUE.equals(JsonTree.bool(j, "countFixed")),
-                    (int) JsonTree.num(j, "machineCount"),
+                    JsonTree.num(j, "machineCount"),
                     rates(j.get("targetOutputRates")),
                     Map.of(),
                     rates(j.get("targetInputRates"))));
@@ -250,6 +250,11 @@ public final class SolverCodec {
         j.put("ports", new LinkedHashMap<>(ports));
         // What a buffer banks only when the plan banks (Up to plans).
         if (d.banked() != null) j.put("banked", rateMap(d.banked()));
+        if (d.spills() != null) {
+            final TreeMap<String, Object> spills = new TreeMap<>();
+            for (final Map.Entry<Uuid, List<External>> e : d.spills().entrySet()) spills.put(e.getKey().toString(), externals(e.getValue()));
+            j.put("spills", new LinkedHashMap<>(spills));
+        }
         return j;
     }
 

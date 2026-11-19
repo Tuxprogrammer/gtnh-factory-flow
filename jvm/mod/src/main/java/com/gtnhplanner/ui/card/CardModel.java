@@ -97,6 +97,11 @@ public final class CardModel {
     /** Steam one machine burns, L/t (the website's getNodeSteamReport); 0 on anything but a steam machine. */
     public final double steamPerTick;
     private final boolean steam;
+    /**
+     * The same card as core-view's game-free model ({@link CardModels}): what the card's view rules in the core
+     * ({@code CardLayout}, {@code SettingControls}, {@code PowerTiles}) read.
+     */
+    public final com.gtnhplanner.core.view.card.CardModel core;
 
     /**
      * A power card's source and its model at the card's settings, with the stat lines to show: the model's own, then
@@ -140,6 +145,7 @@ public final class CardModel {
         this.web = web;
         this.steamPerTick = steamPerTick;
         this.steam = steam;
+        this.core = CardModels.core(this);
     }
 
     public boolean isPower() {

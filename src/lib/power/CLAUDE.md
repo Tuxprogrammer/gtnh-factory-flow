@@ -20,10 +20,19 @@
   fixes where it beats the workbook go in the extractor's "Java corrections" section;
   never hand-edit `power-planner-data.json`. Regenerate from
   `~/Downloads/Copy of GTNH Power Planner 2.9.xlsx` (the copy whose EOH sheet is "13. EOH").
+- The generated tables (`power-planner-data.json`, `resource-map.json`, `machine-icons.json`, and
+  `src/lib/machines/data/fusion-startups.json`) are copies: the core module's resources under
+  `jvm/core/core-power` and `jvm/core/core-machines` are the source. The extractors write there; run
+  `node tools/sync-core-tables.mjs --write` (also done by `predev` and `prebuild`) to refresh the
+  copies under `src/lib`. `tools/sync-core-tables.test.mjs` fails when one differs.
+- `conformance/power/power-goldens.jsonl.gz` holds what every source, the turbine flow check and the card
+  tier compute (`golden-records.ts`); `power-goldens.test.ts` fails on any change. After a deliberate one:
+  `npx tsx tools/audits/export-mod-power-goldens.ts --out conformance/power/power-goldens.jsonl.gz`, then
+  `node tools/conformance/manifest.mjs --write`. The core's `PowerGoldensTest` reads the same file.
 - New flow names resolve through `tools/power-resource-map.mjs` (`AUX_NAMES`); an
   unresolved name shows as a stat, not a port.
 - Retiring a select option key needs `legacyKeys`: shipped plans store the old key.
 - Exam: `power.test.ts`, `rotor-data.test.ts` and each `sources/*.test.ts` (Java values).
 - Railcraft's Water Tank and boiler (`sources/railcraft.ts`) follow Railcraft's own source (GTNH fork, tag
-  9.17.26), not the workbook; the mod pins the same values. The tank is the one source in the
+  9.17.36), not the workbook; the mod pins the same values. The tank is the one source in the
   "other" group, the picker's Other column after its planning cards.

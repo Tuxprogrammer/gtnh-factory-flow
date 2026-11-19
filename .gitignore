@@ -34,6 +34,10 @@
 /*.local.*
 !/vitest.local.config.ts
 
+# generated from jvm/core/core-view/tokens/tokens.json (tools/tokens/generate.mjs)
+/src/components/flow/clean/tokens.generated.ts
+/src/components/flow/clean/tokens.generated.css
+
 # next.js
 /.next/
 /out/

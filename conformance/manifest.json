@@ -16,6 +16,13 @@
       ],
       "generator": "number-text: node tools/conformance/core-base/gen-vectors.mjs; uuid: ./gradlew :core-base:test --tests '*UuidTest.writeVectors' -PwriteVectors (from jvm/); then node tools/conformance/manifest.mjs --write"
     },
+    "layout": {
+      "specifies": "The wire router: every router call the website's router tests make (router-tests.json: solves with boards in and routes out, IncrementalRouter step sequences, cardRimDocks vectors) and the reference boards (boards.json.gz: the layout benchmark's plans as boxes and wires, each routed fresh, its busiest box dragged three beats and dropped), all answered by the website's TypeScript router; the Java router (core-layout) must give the same routes and search work to the bit.",
+      "readers": [
+        "jvm: core-layout com.gtnhplanner.core.layout.RouterConformanceTest"
+      ],
+      "generator": "node tools/conformance/layout/generate.mjs [--boards jvm/mod/build/bench/versus/boards]"
+    },
     "live": {
       "specifies": "The live-plan op engine: every rule of put, patch, del, meta, apply, diff and invert as a vector (plan, ops, expected result), run by both engines.",
       "readers": [
@@ -43,6 +50,14 @@
         "mod: cloud/map/PlanSchemaTest (JSON Schema validation, and mod/ is regenerated and compared)"
       ],
       "generator": "website/: GTNH_WRITE_PLANS=1 npx vitest run plan-fixtures; mod/: ./gradlew :mod:test --tests '*PlanSchemaTest*' -PwritePlans (from jvm/); valid/ and invalid/ are hand-written; then node tools/conformance/manifest.mjs --write"
+    },
+    "power": {
+      "specifies": "The power sources as the website computes them: every source with its settings and option labels, its model (EU/t, flows with their alternatives, stats, warnings, the Amps tier) at its defaults and with each setting moved alone, the turbine flow check at several flow shares, and the voltage-tier boundaries. One JSON object per line, gzip.",
+      "readers": [
+        "website: src/lib/power/power-goldens.test.ts",
+        "core-power: power/PowerGoldensTest"
+      ],
+      "generator": "npx tsx tools/audits/export-mod-power-goldens.ts --out conformance/power/power-goldens.jsonl.gz (records in src/lib/power/golden-records.ts), then node tools/conformance/manifest.mjs --write"
     },
     "schema": {
       "specifies": "JSON Schema (draft 2020-12) for the data that crosses between the website and the mod: plan.schema.json (the plan file), board-selection.schema.json (a blueprint payload), dataset.schema.json and dataset-manifest.schema.json (the recipe dataset), solve-input.schema.json (the solver's input, as the corpus holds it) and solve-digest.schema.json (the solver's answer as both engines digest it, as the goldens and Up to plans hold it). Generated from the website's Zod schemas, which stay the source of truth; overlays add the limits Zod can only state as code. README.md in the directory says what the schema cannot express.",
@@ -96,6 +111,16 @@
       "area": "core-base",
       "bytes": 39121,
       "sha256": "23347b689fcef8d736c3e56f37bad34af5fe7efbde19cee759cd43cf827f39da"
+    },
+    "layout/boards.json.gz": {
+      "area": "layout",
+      "bytes": 355403,
+      "sha256": "df8629460a87d6e64533be8dbdd5af66aa0c50f1f901e2cad0acff53ee9296cd"
+    },
+    "layout/router-tests.json": {
+      "area": "layout",
+      "bytes": 1688373,
+      "sha256": "6dacfaedf0c5eb1744e2e4f774747b5c56b0bd246006f2ad73653697d2f385d7"
     },
     "live/live-vectors.json": {
       "area": "live",
@@ -296,6 +321,11 @@
       "area": "plans",
       "bytes": 19895,
       "sha256": "c72b45a8d789e732d174891ba4d0ebc41236ffb9b056452bda4437268467ac0c"
+    },
+    "power/power-goldens.jsonl.gz": {
+      "area": "power",
+      "bytes": 268201,
+      "sha256": "14dbdf7318bd43c48c9e61dd514a68fec7dfbb695b00d268934b612941d4ebab"
     },
     "schema/board-selection.schema.json": {
       "area": "schema",

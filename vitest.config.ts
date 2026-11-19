@@ -8,6 +8,8 @@ export default defineConfig({
     },
   },
   test: {
+    // The shared view tokens are generated, not committed (tools/tokens/generate.mjs).
+    globalSetup: ["tools/tokens/vitest-setup.mjs"],
     environment: "node",
     include: ["src/**/*.test.ts", "src/**/*.test.tsx", "tools/**/*.test.mjs"],
     // .local.test files are untracked scratch harnesses (corpus sweeps,

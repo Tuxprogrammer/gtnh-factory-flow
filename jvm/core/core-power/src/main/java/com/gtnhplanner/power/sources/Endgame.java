@@ -2,7 +2,6 @@ package com.gtnhplanner.power.sources;
 
 import static com.gtnhplanner.power.sources.Helpers.*;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +9,7 @@ import java.util.function.Predicate;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.power.PowerData;
 import com.gtnhplanner.power.PowerGroup;
 import com.gtnhplanner.power.PowerModel;
@@ -376,19 +376,12 @@ public final class Endgame {
 
     /** Number(string) for the plain decimal keys stored here; NaN when it does not parse. */
     private static double toNumber(final String text) {
-        final String trimmed = text.trim();
-        if (trimmed.isEmpty()) return 0;
-        try {
-            return Double.parseDouble(trimmed);
-        } catch (final NumberFormatException e) {
-            return Double.NaN;
-        }
+        return NumberText.parse(text);
     }
 
     /** JavaScript's String(number) for the plain values interpolated here: whole numbers print without ".0". */
     private static String js(final double value) {
-        if (value == Math.rint(value) && Math.abs(value) < 1e21) return new BigDecimal(value).toPlainString();
-        return Double.toString(value);
+        return NumberText.of(value);
     }
 
     private Endgame() {}

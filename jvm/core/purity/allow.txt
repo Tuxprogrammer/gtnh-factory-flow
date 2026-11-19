@@ -17,7 +17,6 @@ core/core-machines/src/main/java/com/gtnhplanner/machines/web/Hile.java string-f
 core/core-machines/src/main/java/com/gtnhplanner/machines/web/Js.java float-parse JavaScript Number(s) stand-in; becomes NumberText.parse
 core/core-machines/src/main/java/com/gtnhplanner/machines/web/Js.java float-text JavaScript String(n) stand-in; becomes NumberText.of
 core/core-machines/src/main/java/com/gtnhplanner/machines/web/MachineEffects.java float-parse a numeric setting key read as a number; becomes NumberText.parse
-core/core-machines/src/main/java/com/gtnhplanner/machines/web/PowerReport.java string-format a stall's EU/t printed with "%.1f"; becomes NumberText.fixed (the website uses toFixed)
 core/core-power/src/main/java/com/gtnhplanner/power/PowerData.java reflection the workbook tables bound by Gson into classes; becomes a tree-API read
 core/core-power/src/main/java/com/gtnhplanner/power/PowerSetting.java float-parse a stored number setting read with parseDouble; becomes NumberText.parse
 core/core-power/src/main/java/com/gtnhplanner/power/sources/Endgame.java float-parse a numeric option key read as a number; becomes NumberText.parse

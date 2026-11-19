@@ -2,6 +2,8 @@ package com.gtnhplanner.machines.web;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.NumberText;
+
 /**
  * Whether a build starts, from the game's own checks (src/lib/solver/power-report.ts): there is no slow mode in GT, so
  * a machine runs as reported or sits idle ("ok", "under-powered", "over-tier"), with the pool, the draw and a reason.
@@ -156,7 +158,7 @@ public final class PowerReport {
     }
 
     private static String formatBudget(final double euT) {
-        return euT == Math.rint(euT) ? Js.str(euT) : String.format(java.util.Locale.ROOT, "%.1f", euT);
+        return euT == Math.rint(euT) ? Js.str(euT) : NumberText.fixed(euT, 1);
     }
 
     /** NodeSteamReport: what a steam machine burns, in L/t. */

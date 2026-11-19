@@ -9,18 +9,3 @@ dependencies {
     testImplementation("com.google.code.gson:gson:2.2.4")
     testCompileOnly("com.google.code.findbugs:jsr305:3.0.2")
 }
-
-// The machine, bee and crop goldens and the reference coefficients still sit in the mod's test resources until the
-// conformance tree takes them; only those files are put on this module's test classpath.
-sourceSets.named("test") {
-    resources {
-        srcDir("../../mod/src/test/resources")
-        include(
-            "eec/**",
-            "machine-goldens.jsonl.gz",
-            "bee-goldens.jsonl.gz",
-            "crop-goldens.jsonl.gz",
-            "machines/reference-coefficients.json",
-        )
-    }
-}

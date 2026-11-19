@@ -14,21 +14,21 @@ import com.google.gson.JsonPrimitive;
 
 /**
  * The dots a player pins on a wire to steer it, the website's edge waypoints: board points, in order, that the wire's
- * route passes through ({@code layout/WireRouter}). An edge keeps its own ({@link Edge#waypoints}), a drawer's link its
- * own ({@link Drawer.Link#waypoints()}). Each point is {x, y} in board px on the router's lines, the middles of its
- * 10 px cells ({@link #onLine}); the website keeps them on the corners of its 20 px grid, so they are snapped each way
- * as they cross ({@link #toSite}, {@link #fromSite}).
+ * route passes through ({@code core.layout.GridEdgeRouter}, the one router both sides run). An edge keeps its own
+ * ({@link Edge#waypoints}), a drawer's link its own ({@link Drawer.Link#waypoints()}). Each point is {x, y} in board px
+ * on a corner of the router's 20 px grid ({@link #onLine}), as the website keeps them; a dot saved off the grid (the
+ * old router's cell middles) is snapped to the nearest corner by the router and on the way out ({@link #toSite}).
  */
 public final class Waypoints {
 
-    /** The router's cell, and the website's grid, in board px. */
-    public static final int CELL = 10, SITE_GRID = 20;
+    /** The router's grid, which is the website's, in board px. */
+    public static final int CELL = 20, SITE_GRID = 20;
 
     private Waypoints() {}
 
-    /** The line through the cell {@code v} (a board x or y) lies in: where the router runs a wire through it. */
+    /** The grid line nearest {@code v} (a board x or y): where the router runs a wire through it. */
     public static int onLine(final int v) {
-        return Math.floorDiv(v, CELL) * CELL + CELL / 2;
+        return toSite(v);
     }
 
     /** The points as plain {x, y} pairs, a malformed one left out; unmodifiable, empty for none. */

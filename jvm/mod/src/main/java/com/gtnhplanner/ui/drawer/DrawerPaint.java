@@ -1,5 +1,6 @@
 package com.gtnhplanner.ui.drawer;
 
+import com.gtnhplanner.core.view.Tokens;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.ui.card.CardLayout;
 import com.gtnhplanner.ui.card.CardPaint;
@@ -16,7 +17,7 @@ public final class DrawerPaint {
      * The bar along the top it is moved by (its last pixel the hairline under it), then a card's port row, as wide as
      * its striped box: the whole drawer.
      */
-    public static final int BAR = 8, W = CardLayout.RAIL_W + 4, H = BAR + CardLayout.BOX_H;
+    public static final int BAR = Tokens.Drawer.BAR_MOD, W = CardLayout.RAIL_W + 4, H = BAR + CardLayout.BOX_H;
     /** Where a card's row starts on the drawer: its box fills the drawer under the bar, a pixel inside the row. */
     public static final int ROW_Y = BAR - CardLayout.BOX_Y;
     /** The shape's corners at this share of its full size, as a card's forced rows have them. */
@@ -33,10 +34,10 @@ public final class DrawerPaint {
     private static final float TANK = 9, CRATE = 3, BIN = 6, CUT = 7;
 
     /** A buffer's colour: teal, the one drawer inside the plan (the website's {@code --cd-buffer}). */
-    public static final int BUFFER_INK = 0xFF2E9C8F;
+    public static final int BUFFER_INK = Tokens.Palette.BUFFER;
 
     /** A rate at nothing, and what trash takes (always grey, as on the website). */
-    public static final int IDLE_INK = 0xFFA8AFBB, TRASH_INK = 0xFFB9C0CD;
+    public static final int IDLE_INK = Tokens.Palette.IDLE, TRASH_INK = Tokens.Palette.TRASH_INK;
 
     private DrawerPaint() {}
 
@@ -47,7 +48,7 @@ public final class DrawerPaint {
         return switch (kind) {
             case SOURCE -> Hyb.SOURCE_INK;
             case PRODUCT, BYPRODUCT -> Hyb.PRODUCT_INK;
-            case TRASH -> 0xFF8A93A6;
+            case TRASH -> Tokens.Palette.TRASH;
             case BUFFER -> BUFFER_INK;
         };
     }

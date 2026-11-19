@@ -3,6 +3,7 @@ package com.gtnhplanner.ui.card;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.gtnhplanner.core.view.Tokens;
 import com.gtnhplanner.ui.theme.Hyb;
 
 /**
@@ -16,23 +17,23 @@ import com.gtnhplanner.ui.theme.Hyb;
  */
 public final class CardLayout {
 
-    public static final int W = 320;
+    public static final int W = Tokens.Card.CARD_WIDTH;
     /** Where the content starts inside the frame. */
     public static final int PAD = 6;
     /** The header band: its chips (and keys) {@link #HEAD} high, as far from its top as from the card's right edge. */
     public static final int HEAD_Y = 6;
-    public static final int HEAD = 20;
+    public static final int HEAD = Tokens.Card.HEAD_CHIP_HEIGHT;
     public static final int HEADER = HEAD_Y * 2 + HEAD;
     /**
      * A port row: its icon spanning it, 32 px (twice the game's, so its pixels stay whole), at the card's edge; its
      * rate, its name and, under them, its rule key and rate box (as a drawer's).
      */
-    public static final int ROW = 42;
-    public static final int ICON = 32;
-    public static final int ICON_X = 3;
+    public static final int ROW = Tokens.Card.PORT_ROW_HEIGHT_MOD;
+    public static final int ICON = Tokens.Card.ICON_SIZE;
+    public static final int ICON_X = Tokens.Card.ICON_INSET_MOD;
     public static final int ICON_Y = (ROW - ICON) / 2;
     /** A side's column, and where a port's words start (from the side's outer edge) and how wide they may be. */
-    public static final int RAIL_W = 112;
+    public static final int RAIL_W = Tokens.Card.RAIL_WIDTH;
     public static final int TEXT_X = ICON_X + ICON + 4;
     public static final int TEXT_W = RAIL_W - TEXT_X - 2;
     /** A port's rule key and rate box: their height, the key's width, the gap between them, and the box's width. */
@@ -43,17 +44,17 @@ public final class CardLayout {
      */
     public static final int BOX_Y = 1, BOX_H = ROW - 2;
     /** The machine's picture: square, in its well, over the count. */
-    public static final int PICTURE = 80;
+    public static final int PICTURE = Tokens.Card.PICTURE_ART_MAX_MOD;
     /** A single block's item in the picture: four times the game's 16, so its pixels stay whole. */
     public static final int ITEM = 64;
     /**
      * The rails' least height: the machine's well (its picture over what runs and what is set, a pixel clear above
      * and below), six board cells as on the website.
      */
-    public static final int PICTURE_MIN = 120;
+    public static final int PICTURE_MIN = Tokens.Card.PICTURE_MIN_HEIGHT_MOD;
 
     public static final int RAILS_Y = HEADER + 6;
-    public static final int IN_RAIL_X = 4;
+    public static final int IN_RAIL_X = Tokens.Card.RAIL_INSET;
     public static final int OUT_RAIL_X = W - 4 - RAIL_W;
     public static final int PICTURE_X = IN_RAIL_X + RAIL_W;
     public static final int PICTURE_W = OUT_RAIL_X - PICTURE_X;
@@ -68,10 +69,11 @@ public final class CardLayout {
     /** The bar along an Up to card's foot: its height, a pixel clear above it and three below. */
     public static final int FOOT_H = 16;
     /** The recipe's circuit, a badge in the well's top left corner (the website's 24 px). */
-    public static final int CIRCUIT = 24;
+    public static final int CIRCUIT = Tokens.Card.CIRCUIT_SIZE;
 
     /** The settings strip: a chip's height, a row's, and the room inside a chip. */
-    public static final int CHIP = 18, CHIP_ROW = 22, CHIP_PAD = 5;
+    public static final int CHIP = Tokens.Card.SETTINGS_CHIP_HEIGHT, CHIP_ROW = Tokens.Card.SETTINGS_ROW_PITCH_MOD,
+        CHIP_PAD = 5;
 
     /** On a shared machine, the rule row over each recipe's rails, and the gap before every recipe after the first. */
     public static final int SECTION_RULE = 16, SECTION_GAP = 8;

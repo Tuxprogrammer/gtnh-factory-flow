@@ -7,6 +7,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.power.PowerData;
 import com.gtnhplanner.power.PowerData.Fuel;
 import com.gtnhplanner.power.PowerGroup;
@@ -126,10 +127,9 @@ public final class Engines {
                 .defaultFuel("Creosote Oil"));
     }
 
-    /** A raw number in a JavaScript template string: integers without ".0". */
+    /** A raw number in a JavaScript template string: String(value). */
     private static String js(final double value) {
-        return value == Math.rint(value) && Math.abs(value) < 1e15 ? Long.toString((long) value)
-            : Double.toString(value);
+        return NumberText.of(value);
     }
 
     private static double or(@Nullable final Double value, final double fallback) {

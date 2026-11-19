@@ -1,71 +1,51 @@
 import { GT_TIER_COLORS } from "../tier-colors";
 import { contrastInk, mixHex } from "./colors";
+import { TOKEN_COLORS, TOKEN_GEOMETRY, TOKEN_KIND_MIXES, TOKEN_PULSE } from "./tokens.generated";
 
 /**
  * Tokens of the clean look, as TypeScript for code that needs a value (a mix,
  * a measurement) and as the same numbers in `clean.css` for everything else.
- * Hex is exact from the mod (`Hyb.java`, `CardPaint.java`, `DrawerPaint.java`).
+ * The values are generated from `jvm/core/core-view/tokens/tokens.json`, the one source the mod reads too.
  * Other clean-look packages read this file; the card package owns it.
  */
-export const CC = {
-  surface: "#23252A",
-  edge: "#34363C",
-  hair: "#2C2E34",
-  ink: "#E8E9EE",
-  muted: "#9A9CA4",
-  gold: "#FFD257",
-  select: "#22D3EE",
-  red: "#E05252",
-  amber: "#E0A63A",
-  ok: "#5EE9B5",
-  source: "#78B6F4",
-  product: "#F59A5C",
-  trash: "#8A93A6",
-  /** A buffer: teal, the one drawer inside the plan (the mod's `DrawerPaint.BUFFER_INK`). */
-  buffer: "#2E9C8F",
-  idle: "#A8AFBB",
-  accept: "#4ADE80",
-  wireGo: "#22C55E",
-  wireNo: "#EF4444",
-  key: "#26282D",
-  keyHover: "#2D2F35",
-  keyEdge: "#111317",
-  keyHi: "#4A4C54",
-  keyLo: "#17191D",
-  canvas: "#141414",
-  canvasDot: "#26282D",
-  /** The text colour of a prompt in its off half-beat. */
-  promptOff: "#6F737C",
-} as const;
+export const CC = TOKEN_COLORS.palette;
 
-/** Geometry in CSS px at zoom 1: the mod's card exactly, 320 wide (16 cells), 112 rails, 32 icons; rows stay two cells. */
+/**
+ * Geometry in CSS px at zoom 1: the mod's card exactly, 320 wide (16 cells), 112 rails, 32 icons; rows stay two
+ * cells. The values are tokens.json's (the website's where the hosts differ by design).
+ */
+const CARD = TOKEN_GEOMETRY.card;
 export const CC_GEOMETRY = {
-  cardWidth: 320,
-  cell: 20,
-  headHeight: 40,
-  rowHeight: 40,
-  railWidth: 112,
-  railInset: 4,
-  pictureWidth: 88,
-  pictureMinHeight: 100,
-  pictureArtMax: 88,
-  iconSize: 32,
-  iconInset: 4,
-  wordsX: 40,
-  wordsWidth: 70,
-  keySize: 20,
-  chipWidth: 48,
-  chipHeight: 20,
-  stripGap: 6,
-  stripPad: 4,
-  stripChipHeight: 18,
-  stripPitch: 20,
-  stripChipGap: 4,
-  stripInset: 8,
+  cardWidth: CARD.CARD_WIDTH,
+  cell: TOKEN_GEOMETRY.grid.BOARD_GRID,
+  headHeight: CARD.HEAD_HEIGHT_WEB,
+  rowHeight: CARD.PORT_ROW_HEIGHT_WEB,
+  railWidth: CARD.RAIL_WIDTH,
+  railInset: CARD.RAIL_INSET,
+  pictureWidth: CARD.PICTURE_WIDTH,
+  pictureMinHeight: CARD.PICTURE_MIN_HEIGHT_WEB,
+  pictureArtMax: CARD.PICTURE_ART_MAX_WEB,
+  iconSize: CARD.ICON_SIZE,
+  iconInset: CARD.ICON_INSET_WEB,
+  wordsX: CARD.WORDS_X_WEB,
+  wordsWidth: CARD.WORDS_WIDTH_WEB,
+  keySize: CARD.KEY_SIZE_WEB,
+  chipWidth: CARD.CHIP_WIDTH_WEB,
+  chipHeight: CARD.HEAD_CHIP_HEIGHT,
+  stripGap: CARD.STRIP_GAP_WEB,
+  stripPad: CARD.STRIP_PAD_WEB,
+  stripChipHeight: CARD.SETTINGS_CHIP_HEIGHT,
+  stripPitch: CARD.SETTINGS_ROW_PITCH_WEB,
+  stripChipGap: CARD.STRIP_CHIP_GAP_WEB,
+  stripInset: CARD.STRIP_INSET_WEB,
 } as const;
 
 /** Mod pulse periods (seconds). */
-export const CC_PULSE = { glow: 1.9, accept: 1.43, prompt: 1 } as const;
+export const CC_PULSE = {
+  glow: TOKEN_PULSE.GLOW,
+  accept: TOKEN_PULSE.ACCEPT,
+  prompt: TOKEN_PULSE.PROMPT,
+} as const;
 
 export interface TierChipColors {
   background: string;
@@ -98,18 +78,5 @@ export function tierChipColors(tier: string): TierChipColors | undefined {
 export type DrawerKind = "source" | "product" | "trash" | "buffer";
 
 export function drawerMixes(kind: DrawerKind) {
-  const tint =
-    kind === "source" ? CC.source : kind === "product" ? CC.product : kind === "buffer" ? CC.buffer : CC.trash;
-  return {
-    tint,
-    edge: mixHex(tint, CC.edge, 0.55),
-    frameEdge: mixHex(tint, CC.edge, 0.4),
-    barFill: mixHex(tint, CC.surface, 0.2),
-    barFillHot: mixHex(tint, CC.surface, 0.32),
-    bodyFill: mixHex(tint, CC.surface, 0.07),
-    stripe: mixHex(tint, CC.surface, 0.13),
-    glanceFill: mixHex(tint, CC.surface, 0.1),
-    numberInk: mixHex(tint, CC.ink, 0.75),
-    nameInk: mixHex(tint, CC.muted, 0.45),
-  };
+  return TOKEN_KIND_MIXES[kind];
 }

@@ -8,7 +8,7 @@
  *
  * (the 2.9 copy whose EOH sheet is "13. EOH"; the later copies renumber it)
  *
- * Writes src/lib/power/data/power-planner-data.json. Deterministic: same
+ * Writes jvm/core/core-power/src/main/resources/assets/gtnhplanner/power/power-planner-data.json (the source; node tools/sync-core-tables.mjs --write copies it to src/lib/power/data/). Deterministic: same
  * workbook, same output. No dependencies - the zip reader below handles the
  * stored/deflated entries an xlsx actually uses.
  */
@@ -23,7 +23,19 @@ if (!xlsxPath) {
   process.exit(1);
 }
 const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
-const outPath = path.join(repoRoot, "src", "lib", "power", "data", "power-planner-data.json");
+const outPath = path.join(
+  repoRoot,
+  "jvm",
+  "core",
+  "core-power",
+  "src",
+  "main",
+  "resources",
+  "assets",
+  "gtnhplanner",
+  "power",
+  "power-planner-data.json",
+);
 
 // ---------------------------------------------------------------- zip reader
 
@@ -285,7 +297,10 @@ const data = {
         ["Hot Coolant", "CU"],
         ["Hot Solar Salt", "DA"],
       ]) {
-        const row = rangeRows(fuelData, `${startCol}${entry.row}:${offsetColumn(startCol, 4)}${entry.row}`)[0];
+        const row = rangeRows(
+          fuelData,
+          `${startCol}${entry.row}:${offsetColumn(startCol, 4)}${entry.row}`,
+        )[0];
         const [threshold, max, throttle, underRatio, overRatio] = row;
         if (typeof threshold === "number" && threshold > 0) {
           fluids[fluid] = { threshold, max, throttle, underRatio, overRatio };
@@ -314,16 +329,29 @@ const data = {
     .filter((entry) => typeof entry.name === "string" && entry.name.trim() !== ""),
 
   rotors: rangeRows(rotorData, "B6:G171")
-    .map((row, index) => ({ row: 6 + index, name: row[0], tier: row[1], unlock: row[2], durability: row[4], overflowTier: row[5] }))
+    .map((row, index) => ({
+      row: 6 + index,
+      name: row[0],
+      tier: row[1],
+      unlock: row[2],
+      durability: row[4],
+      overflowTier: row[5],
+    }))
     .filter((entry) => typeof entry.name === "string" && entry.name.trim() !== "")
     .map((entry) => ({
       name: entry.name.trim(),
-      unlock: typeof entry.unlock === "string" ? entry.unlock.split("-")[1]?.trim() ?? entry.unlock : entry.unlock,
+      unlock:
+        typeof entry.unlock === "string"
+          ? (entry.unlock.split("-")[1]?.trim() ?? entry.unlock)
+          : entry.unlock,
       durability: entry.durability,
       overflowTier: entry.overflowTier,
       steam: rotorClass(entry.row, "Z", "AT", "AE", "AY"),
       gas: rotorClass(entry.row, "BN", "CH", "BS", "CM"),
-      plasma: { ...rotorClass(entry.row, "DB", "DV", "DG", "EA"), euAtOptimalTight: rangeRows(rotorData, `DL${entry.row}:DO${entry.row}`)[0] },
+      plasma: {
+        ...rotorClass(entry.row, "DB", "DV", "DG", "EA"),
+        euAtOptimalTight: rangeRows(rotorData, `DL${entry.row}:DO${entry.row}`)[0],
+      },
     })),
   rotorSizes: rangeRows(rotorData, "B174:E177").map((row) => ({
     name: row[0],
@@ -387,8 +415,14 @@ function offsetColumn(letters, offset) {
 
 function rotorClass(row, effTight, effLoose, optTight, optLoose) {
   return {
-    efficiencyTight: rangeRows(rotorData, `${effTight}${row}:${offsetColumn(effTight, 3)}${row}`)[0],
-    efficiencyLoose: rangeRows(rotorData, `${effLoose}${row}:${offsetColumn(effLoose, 3)}${row}`)[0],
+    efficiencyTight: rangeRows(
+      rotorData,
+      `${effTight}${row}:${offsetColumn(effTight, 3)}${row}`,
+    )[0],
+    efficiencyLoose: rangeRows(
+      rotorData,
+      `${effLoose}${row}:${offsetColumn(effLoose, 3)}${row}`,
+    )[0],
     optimalTight: rangeRows(rotorData, `${optTight}${row}:${offsetColumn(optTight, 3)}${row}`)[0],
     optimalLoose: rangeRows(rotorData, `${optLoose}${row}:${offsetColumn(optLoose, 3)}${row}`)[0],
   };
@@ -482,9 +516,14 @@ function turbineStats(stats, sizeIndex) {
  * sum for a compound or mixture).
  */
 function werkstoffToolStats({ protons, mass, meltingPoint, contentCount }) {
-  const quality = Math.trunc(f32(f32(15 * f32(f32(protons / 188) + f32(meltingPoint / 10801))) / contentCount));
+  const quality = Math.trunc(
+    f32(f32(15 * f32(f32(protons / 188) + f32(meltingPoint / 10801))) / contentCount),
+  );
   const sum = f32(f32(-mass + f32(f32(0.1) * meltingPoint)) + protons);
-  const speed = Math.max(1, f32(f32(f32(f32(f32(2 * sum) * f32(0.1)) / contentCount) * f32(0.1)) * quality));
+  const speed = Math.max(
+    1,
+    f32(f32(f32(f32(f32(2 * sum) * f32(0.1)) / contentCount) * f32(0.1)) * quality),
+  );
   const durability = Math.trunc(f32(f32(f32(f32(0.01) * meltingPoint) * mass) / contentCount));
   return { quality, speed, durability };
 }
@@ -512,7 +551,12 @@ function correctRotors() {
   const javaStats = {
     // WerkstoffLoader.HDCS, a mixture of 12 Tungstensteel, 9 HSS-E, 6 HSS-G,
     // 3 Ruridit, 2 Magneto Resonatic and 1 Plutonium: 5552 protons, mass 107.
-    "High Durability Compound Steel": werkstoffToolStats({ protons: 5552, mass: 107, meltingPoint: 9000, contentCount: 33 }),
+    "High Durability Compound Steel": werkstoffToolStats({
+      protons: 5552,
+      mass: 107,
+      meltingPoint: 9000,
+      contentCount: 33,
+    }),
     // GGMaterial.atomicSeparationCatalyst, a compound of 2 Orundum (120 protons,
     // mass 196), 1 Plutonium (94, 246) and 2 Naquadah (130, 330).
     "Atomic Separation Catalyst": werkstoffToolStats({
@@ -563,7 +607,10 @@ function correctSteamMakers() {
   }
   // LargeBoilerFuelBackend.ALLOWED_FUELS: the superheated boilers refuse any other fluid.
   const refusedBySuperheated = ["Naquadah Gas", "Nefarious Gas", "Nitrobenzene"];
-  data.boilerFuels.titaniumLiquid = withoutNames(data.boilerFuels.titaniumLiquid, refusedBySuperheated);
+  data.boilerFuels.titaniumLiquid = withoutNames(
+    data.boilerFuels.titaniumLiquid,
+    refusedBySuperheated,
+  );
   data.boilerFuels.tungstensteelLiquid = withoutNames(
     data.boilerFuels.tungstensteelLiquid,
     refusedBySuperheated,

@@ -1,5 +1,7 @@
 // Run after the updated GTNH oracle: node tools/audits/extract-fusion-startups.mjs
 // <oracle-export.json or fusion-only extract.json> <output.json>
+// The output is the core-machines file (jvm/core/core-machines/src/main/resources/assets/gtnhplanner/machines/fusion-startups.json);
+// node tools/sync-core-tables.mjs --write then copies it to src/lib/machines/data/.
 // Only exact recipe shapes are retained; fresh metadata supersedes this snapshot.
 import fs from "node:fs";
 const [input, output] = process.argv.slice(2);

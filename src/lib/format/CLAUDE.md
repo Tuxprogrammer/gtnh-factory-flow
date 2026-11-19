@@ -19,12 +19,15 @@ Java, and everything a player reads off it is spelled here, in TypeScript.
   do not solve.
 - Display dials repaint numbers only. They never re-solve.
 
-## The mod spells numbers too
+## The core spells numbers too
 
-The mod has its own formatters (`Fmt` in core-view, and the recipe overlay's `GuiHelper`).
-They are not meant to match this directory everywhere. `conformance/format/` runs one value
-list through both and keeps the answers (`COMPARISON.md` is the table, `README.md` the list of
-differences and what to decide). Change a formatter here and the answer file moves with it:
+The shared Java core has the same formatters (`Format` in `jvm/core/core-base`), and the mod prints through it (`Fmt` in
+core-view is its facade). They are a translation of `numbers.ts` and `rate-unit.ts` and must print the same characters:
+`conformance/format/` runs one value list through the website's formatters and keeps the answers
+(`website-out.json`); the core is held to that file on the JVM (`FormatGoldenTest`) and in Node on both web targets
+(`tools/web-core/format.mjs`). So a change to what a number reads here is a change in the core too: update `Format`, the
+value list if it needs a new case, and the answer files. `COMPARISON.md` is the table and `README.md` says what still
+differs on purpose (the mod's width-fitting `Fmt.brief`, the recipe overlay's own spelling).
 
 ```bash
 GTNH_WRITE_GOLDEN=1 npx vitest run src/test-support/format-conformance.test.ts

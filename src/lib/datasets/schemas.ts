@@ -78,6 +78,13 @@ export const machineHandlerIconEntrySchema = z.object({
     .optional(),
 });
 
+const rateFactor = z.number().positive().finite().optional();
+export const gameRatesSchema = z.object({
+  beesYield: rateFactor,
+  ic2CropsYield: rateFactor,
+  recipeDurationDivisor: rateFactor,
+});
+
 export const recipeDatasetSchema = z.object({
   schemaVersion: z.literal(1),
   datasetVersionId: z.string().min(1),
@@ -90,6 +97,7 @@ export const recipeDatasetSchema = z.object({
   recipeMaps: z.array(z.string()),
   recipeMapIcons: z.array(recipeMapIconEntrySchema).optional(),
   machineHandlerIcons: z.array(machineHandlerIconEntrySchema).optional(),
+  gameRates: gameRatesSchema.optional(),
   generatedAt: z.string(),
 });
 
@@ -105,6 +113,7 @@ export const datasetVersionSchema = z.object({
   recipeLookupIndexPath: z.string().optional(),
   checksumSha256: z.string().optional(),
   sourceInfo: datasetSourceInfoSchema,
+  gameRates: gameRatesSchema.optional(),
 });
 
 export const datasetManifestSchema = z.object({

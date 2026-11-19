@@ -2,6 +2,7 @@ import { calculateThroughput } from "@/lib/solver";
 import { initLpEngine } from "@/lib/solver/lp-engine";
 import { attachClogLocks } from "@/components/flow/clog-lock";
 import type { FactoryProject } from "@/lib/model/types";
+import { setActiveGameRates, type ActiveGameRates } from "@/lib/model/game-rates";
 
 // HiGHS loads once at worker startup, and every solve waits for the load to
 // settle: a board routed here is slow by definition, so a one-time wasm
@@ -25,16 +26,21 @@ const engineSettled = Promise.race([
 ]);
 
 /**
- * The solver, off the main thread. One message in (a plan and the content key
+ * The solver, off the main thread. One message in (a plan, the dataset's rates and the content key
  * that names it), one message out (the same key and the finished books). The
  * scheduling - coalescing rapid edits, dropping superseded solves, deciding
  * which result is still current - all lives on the store side in
  * `solve-books.ts`; this file stays a dumb calculator on purpose.
  */
-self.onmessage = async (event: MessageEvent<{ key: string; project: FactoryProject }>) => {
-  const { key, project } = event.data;
+self.onmessage = async (
+  event: MessageEvent<{ key: string; project: FactoryProject; rates?: ActiveGameRates }>,
+) => {
+  const { key, project, rates } = event.data;
   try {
     await engineSettled;
+    // The worker is its own module scope: the dataset's rate factors reach it with each plan, set after the wait so
+    // a later message cannot swap them under this solve.
+    setActiveGameRates(rates);
     const started = performance.now();
     const result = calculateThroughput(project);
     // The clog-lock proof is a second LP over the same board, and on a plan

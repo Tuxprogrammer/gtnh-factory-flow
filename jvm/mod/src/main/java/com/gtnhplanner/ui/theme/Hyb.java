@@ -87,6 +87,7 @@ public final class Hyb {
         }
         return out;
     }
+
     private static final Tier NO_TIER = new Tier("OFF", 0xFF4A4C54, 0xFF1D1F23, 0xFFE8E9EE, false);
 
     private Hyb() {}

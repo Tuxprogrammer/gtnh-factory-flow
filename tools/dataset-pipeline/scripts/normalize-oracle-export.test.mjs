@@ -908,3 +908,35 @@ describe("a chanced input (the Boldarnator's leaves, inputChances(1000))", () =>
     expect(normalize(leaves(1000)).recipes[0].id).toBe(normalize(leaves()).recipes[0].id);
   });
 });
+
+describe("Thaumcraft arcane crafting", () => {
+  const aspect = (tag, amount) => ({ kind: "aspect", id: `thaumcraft:aspect:${tag}`, tag, amount, displayName: tag });
+  const arcane = (components) => normalize({
+    domains: [{ id: "thaumcraft", recipes: [{
+      id: "arcane-1", type: "arcane", className: "thaumcraft.api.crafting.ShapedArcaneRecipe", research: "ALEMBIC",
+      output: item("thaumcraft:blockmetaldevice@1", 1, "Arcane Alembic"),
+      components,
+      aspects: [aspect("aqua", 10), aspect("aer", 5), aspect("ignis", 5)],
+      durationTicks: 1,
+    }] }],
+  }).recipes[0];
+
+  it("lists the grid materials ahead of the aspects, each at its workbench cell", () => {
+    const recipe = arcane([
+      { ...item("gregtech:plate", 1, "Thaumium Plate"), gridSlot: 0 },
+      { ...item("gregtech:pipe", 1, "Steel Fluid Pipe"), gridSlot: 4 },
+      { ...item("gregtech:tank", 1, "Low Pressure Boiler Tank"), gridSlot: 7 },
+    ]);
+    expect(recipe.inputs.map((input) => input.displayName)).toEqual([
+      "Thaumium Plate", "Steel Fluid Pipe", "Low Pressure Boiler Tank", "aqua", "aer", "ignis",
+    ]);
+    const itemSlots = recipe.nei.slots.filter((slot) => slot.side === "input" && slot.kind === "item");
+    expect(itemSlots.map((slot) => [slot.x, slot.y])).toEqual([[48, 33], [76, 60], [76, 87]]);
+  });
+
+  it("keeps a raw export without grid cells in reading order", () => {
+    const recipe = arcane([item("gregtech:plate", 1, "Thaumium Plate"), item("gregtech:pipe", 1, "Steel Fluid Pipe")]);
+    const itemSlots = recipe.nei.slots.filter((slot) => slot.kind === "item" && slot.side === "input");
+    expect(itemSlots.map((slot) => [slot.x, slot.y])).toEqual([[48, 33], [75, 33]]);
+  });
+});

@@ -5,6 +5,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.Float32Ops;
 import com.gtnhplanner.core.view.Json;
 
 /**
@@ -76,14 +77,14 @@ public final class NoteLookBuilder {
 
     /** {@code a} mixed into {@code b}, {@code share} of a, per channel rounded half up in float32. */
     static int mix(final int a, final int b, final float share) {
-        final float rest = 1 - share;
+        final float rest = Float32Ops.sub(1f, share);
         return channel(a >> 16 & 0xFF, b >> 16 & 0xFF, share, rest) << 16
             | channel(a >> 8 & 0xFF, b >> 8 & 0xFF, share, rest) << 8
             | channel(a & 0xFF, b & 0xFF, share, rest);
     }
 
     private static int channel(final int a, final int b, final float share, final float rest) {
-        return Math.round(a * share + b * rest);
+        return Math.round(Float32Ops.add(Float32Ops.mul(Float32Ops.of(a), share), Float32Ops.mul(Float32Ops.of(b), rest)));
     }
 
     private static String hex(final int rgb) {

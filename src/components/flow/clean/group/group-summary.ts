@@ -105,7 +105,10 @@ export function computeGroupSummaries(
     }
 
     // What each flow is, as the first card to name it gave it.
-    const meta = new Map<string, { kind: ResourceKind; resourceId: string; resource: RailResource }>();
+    const meta = new Map<
+      string,
+      { kind: ResourceKind; resourceId: string; resource: RailResource; name: string }
+    >();
     if (answered) {
       for (const node of Object.values(result!.nodes)) {
         if (!node.enabled) continue;
@@ -123,18 +126,17 @@ export function computeGroupSummaries(
           for (const flow of Object.values(list)) {
             if (!meta.has(flow.key)) {
               const known = lookup.get(flow.key);
+              const name = known?.displayName ?? flow.displayName ?? flow.resourceId;
               meta.set(flow.key, {
                 kind: flow.kind,
                 resourceId: flow.resourceId,
-                resource: {
-                  ...(known ?? { kind: flow.kind, id: flow.resourceId }),
-                  displayName: known?.displayName ?? flow.displayName ?? flow.resourceId,
-                },
+                resource: { ...(known ?? { kind: flow.kind, id: flow.resourceId }), displayName: name },
+                name,
               });
             }
             flows.push({
               key: flow.key,
-              name: meta.get(flow.key)!.resource.displayName,
+              name: meta.get(flow.key)!.name,
               perSecond: sign * flow.amountPerSecond * running,
             });
           }

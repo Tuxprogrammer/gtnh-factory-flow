@@ -115,6 +115,7 @@ normalizeCropsNhCrops(findDomain("cropsNhCrops"));
 normalizeMobDrops(findDomain("mobDrops"));
 normalizeMining(findDomain("mining"));
 overrideFurnaceRecipeMapIcon();
+fillRecipeMapIconsFromCatalog();
 
 const dataset = {
   schemaVersion: 1,
@@ -525,6 +526,26 @@ function overrideFurnaceRecipeMapIcon() {
   recipeMapIcons.set("Furnace", furnaceIcon);
   // The synthetic vanilla-furnace handler has no catalyst to take a face from.
   machineHandlerIcons.set("furnace", furnaceIcon);
+}
+
+/**
+ * A map icon is a stack the normalizer built or took from a catalyst, and the card reads its
+ * picture straight off the dataset entry. When the entry itself carries none (a stack written
+ * by hand, or one first seen without a rendered icon), take the picture the catalog already
+ * has for the same item.
+ */
+function fillRecipeMapIconsFromCatalog() {
+  for (const icon of recipeMapIcons.values()) {
+    if (icon.iconPath) {
+      continue;
+    }
+    const known = resources.get(`${icon.kind}:${icon.id}`);
+    if (!known?.iconPath) {
+      continue;
+    }
+    icon.iconPath = known.iconPath;
+    icon.dominantColor ??= known.dominantColor;
+  }
 }
 
 function normalizeThaumcraft(domain) {
@@ -2362,6 +2383,9 @@ function thaumcraftMachineType(type) {
   return "Thaumcraft";
 }
 
+// Ids are the exporter's own: a meta-0 stack has no "@0", so a hand-written "@0" names an
+// item no recipe holds and the tab keeps no picture. Arcane crafting is the Arcane
+// Worktable at meta 15 (the stack NEI lists as that tab's catalyst), not the plain table.
 function thaumcraftRecipeMapIcon(type) {
   if (type === "infusion") {
     return {
@@ -2374,7 +2398,7 @@ function thaumcraftRecipeMapIcon(type) {
   if (type === "crucible") {
     return {
       kind: "item",
-      id: "Thaumcraft:blockMetalDevice@0",
+      id: "Thaumcraft:blockMetalDevice",
       displayName: "Crucible",
       modId: "Thaumcraft",
     };
@@ -2382,7 +2406,7 @@ function thaumcraftRecipeMapIcon(type) {
   if (type === "arcane") {
     return {
       kind: "item",
-      id: "Thaumcraft:blockTable@0",
+      id: "Thaumcraft:blockTable@15",
       displayName: "Arcane Worktable",
       modId: "Thaumcraft",
     };
@@ -2390,7 +2414,7 @@ function thaumcraftRecipeMapIcon(type) {
   if (type === "essentiaSmelting") {
     return {
       kind: "item",
-      id: "Thaumcraft:blockStoneDevice@0",
+      id: "Thaumcraft:blockStoneDevice",
       displayName: "Alchemical Furnace",
       modId: "Thaumcraft",
     };

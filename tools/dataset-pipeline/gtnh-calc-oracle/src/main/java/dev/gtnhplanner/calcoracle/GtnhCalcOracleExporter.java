@@ -193,6 +193,10 @@ public final class GtnhCalcOracleExporter {
                 if (!catalysts.isEmpty()) {
                     exportedMap.put("catalysts", catalysts);
                     exportedMap.put("icon", catalysts.get(0).get("resource"));
+                } else {
+                    // A map no machine runs (Cauldron, Nuclear Fission) names its NEI tab
+                    // face itself, in its handler info.
+                    putIfPresent(exportedMap, "icon", recipeMapHandlerInfoIcon(map));
                 }
 
                 List<Map<String, Object>> recipes = new ArrayList<Map<String, Object>>();
@@ -2442,6 +2446,29 @@ public final class GtnhCalcOracleExporter {
         }
         List<Map<String, Object>> catalysts = recipeMapCatalystsById.get(safeString(target.unlocalizedName));
         return catalysts == null ? Collections.<Map<String, Object>>emptyList() : catalysts;
+    }
+
+    /**
+     * The display stack GT gives the map's NEI tab through {@code neiHandlerInfo}, built the way
+     * NEIGTConfig builds the tab: the map's handler-info creator applied to a fresh builder.
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> recipeMapHandlerInfoIcon(RecipeMap<?> target) {
+        try {
+            Object properties = readField(target.getFrontend(), "neiProperties");
+            Object creator = readField(properties, "handlerInfoCreator");
+            if (!(creator instanceof java.util.function.UnaryOperator)) {
+                return null;
+            }
+            Object builder = Class.forName("codechicken.nei.recipe.HandlerInfo$Builder")
+                .getConstructor(String.class, String.class, String.class)
+                .newInstance(target.unlocalizedName, "GregTech", "gregtech");
+            Object applied = ((java.util.function.UnaryOperator<Object>) creator).apply(builder);
+            Object stack = invokeBest(invokeBest(applied, "build", new Object[0]), "getItemStack", new Object[0]);
+            return stack instanceof ItemStack ? itemStack((ItemStack) stack) : null;
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 
     private Map<String, List<Map<String, Object>>> buildRecipeMapCatalystCache() {

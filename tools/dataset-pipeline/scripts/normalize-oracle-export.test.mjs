@@ -941,6 +941,42 @@ describe("Thaumcraft arcane crafting", () => {
   });
 });
 
+describe("the picture on a recipe map's icon", () => {
+  const aspect = (tag, amount) => ({ kind: "aspect", id: `thaumcraft:aspect:${tag}`, tag, amount, displayName: tag });
+  const mapIcon = (dataset, recipeMap) => dataset.recipeMapIcons.find((entry) => entry.recipeMap === recipeMap)?.resource;
+
+  it("names the stacks the exporter does, so the Thaumcraft tabs take the catalog's picture", () => {
+    // The exporter writes a meta-0 stack without "@0", and the Arcane Worktable is meta 15.
+    const stacks = [
+      ["Thaumcraft Arcane Crafting", "arcane", "thaumcraft:blocktable@15"],
+      ["Thaumcraft Crucible", "crucible", "thaumcraft:blockmetaldevice"],
+      ["Thaumcraft Essentia Smelting", "essentiaSmelting", "thaumcraft:blockstonedevice"],
+    ];
+    const dataset = normalize({ domains: [{ id: "thaumcraft", recipes: stacks.map(([, type, id]) => ({
+      id: `r-${type}`, type, className: "thaumcraft.api.crafting.ShapedArcaneRecipe", research: "TEST",
+      output: item("thaumcraft:itemresource@16", 1, "Thaumium Ingot"),
+      // Each type reads the machine item from a different field; only the catalog needs to hold it.
+      components: [{ ...item(id, 1, "Machine"), iconPath: `icons/${type}.png` }],
+      catalyst: { ...item(id, 1, "Machine"), iconPath: `icons/${type}.png` },
+      input: { ...item(id, 1, "Machine"), iconPath: `icons/${type}.png` },
+      aspects: [aspect("aqua", 1)], durationTicks: 1,
+    })) }] });
+    for (const [recipeMap, type, id] of stacks) {
+      expect(mapIcon(dataset, recipeMap)).toMatchObject({ id, iconPath: `icons/${type}.png` });
+    }
+  });
+
+  it("is the one the catalog holds for the same item when the entry has none", () => {
+    const dataset = normalize({ domains: [{ id: "gregtech", recipeMaps: [{
+      id: "gt.recipe.cauldron", name: "Cauldron", icon: item("minecraft:cauldron", 1, "Cauldron"),
+      recipes: [{ id: "wash", durationTicks: 20, eut: 0,
+        itemInputs: [{ ...item("minecraft:cauldron", 1, "Cauldron"), iconPath: "icons/cauldron.png" }],
+        itemOutputs: [item("a:out", 1, "Out")] }],
+    }] }] });
+    expect(mapIcon(dataset, "Cauldron")).toMatchObject({ id: "minecraft:cauldron", iconPath: "icons/cauldron.png" });
+  });
+});
+
 describe("Thaumcraft recipes with no output item", () => {
   const aspect = (tag, amount) => ({ kind: "aspect", id: `thaumcraft:aspect:${tag}`, tag, amount, displayName: tag });
   const raw = (id, fields) => ({

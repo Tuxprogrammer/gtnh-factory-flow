@@ -36,9 +36,29 @@ function maceratorRecipe(runtime: boolean): Recipe {
     outputs: PLANT_OUTPUTS,
     source: { recipeMap: "Macerator" },
     machineHandlers: [
-      { id: "macerator", label: "Macerator", machineType: "Macerator", kind: "single", minimumTier: "LV", maximumTier: "UMV", availableTiers: TIERS },
-      { id: "steam-macerator", label: "Steam Macerator", machineType: "Steam Macerator", kind: "single", minimumTier: "LV" },
-      { id: "industrial-maceration-stack", label: "Industrial Maceration Stack", machineType: "Industrial Maceration Stack", kind: "multiblock", minimumTier: "LV" },
+      {
+        id: "macerator",
+        label: "Macerator",
+        machineType: "Macerator",
+        kind: "single",
+        minimumTier: "LV",
+        maximumTier: "UMV",
+        availableTiers: TIERS,
+      },
+      {
+        id: "steam-macerator",
+        label: "Steam Macerator",
+        machineType: "Steam Macerator",
+        kind: "single",
+        minimumTier: "LV",
+      },
+      {
+        id: "industrial-maceration-stack",
+        label: "Industrial Maceration Stack",
+        machineType: "Industrial Maceration Stack",
+        kind: "multiblock",
+        minimumTier: "LV",
+      },
     ],
     ...(runtime
       ? {
@@ -54,7 +74,12 @@ function maceratorRecipe(runtime: boolean): Recipe {
               durationTicks: Math.max(1, 20 / 2 ** step),
               eut: 2 * 4 ** step,
               parallel: 1,
-              outputs: PLANT_OUTPUTS.map(({ kind, id, amount, chance }) => ({ kind, id, amount, chance })),
+              outputs: PLANT_OUTPUTS.map(({ kind, id, amount, chance }) => ({
+                kind,
+                id,
+                amount,
+                chance,
+              })),
             })),
           },
         }
@@ -69,25 +94,48 @@ function plantMassPerCraft(recipe: Recipe, tier: MachineTier, machineHandlerId =
     name: "Output slots",
     recipes: [recipe],
     nodes: [
-      { id: "mac", recipeId: recipe.id, machineCount: 1, parallel: 1, overclockTier: tier, machineHandlerId, enabled: true, position: { x: 0, y: 0 } },
+      {
+        id: "mac",
+        recipeId: recipe.id,
+        machineCount: 1,
+        parallel: 1,
+        overclockTier: tier,
+        machineHandlerId,
+        enabled: true,
+        position: { x: 0, y: 0 },
+      },
     ],
     edges: [],
     fuelProfiles: gtnhFuelProfiles,
     selectedFuelProfileId: "biodiesel",
   };
   const node = calculateThroughput(project, { generatedAt: "fixed" }).nodes.mac;
-  return node.outputs["item:dreamcraft:maceratedplantmass"].amountPerSecond / node.operationRatePerSecond;
+  return (
+    node.outputs["item:dreamcraft:maceratedplantmass"].amountPerSecond / node.operationRatePerSecond
+  );
 }
 
 describe("single-block item output slots", () => {
   it("follows the macerator's slots by tier (MTEBasicMachineWithRecipeBuilder setSlotsCount)", () => {
     const macerator = { machineType: "Macerator" };
-    expect(["LV", "MV", "HV", "EV", "IV", "UMV"].map((tier) => singleblockItemOutputSlots(macerator, tier as "LV"))).toEqual([1, 1, 2, 3, 4, 4]);
+    expect(
+      ["LV", "MV", "HV", "EV", "IV", "UMV"].map((tier) =>
+        singleblockItemOutputSlots(macerator, tier as "LV"),
+      ),
+    ).toEqual([1, 1, 2, 3, 4, 4]);
     expect(singleblockItemOutputSlots({ machineType: "Mixer" }, "MV")).toBe(1);
     expect(singleblockItemOutputSlots({ machineType: "Mixer" }, "HV")).toBe(4);
     expect(singleblockItemOutputSlots({ machineType: "Steam Macerator" }, "LV")).toBe(1);
     expect(singleblockItemOutputSlots({ machineType: "Bending Machine" }, "LV")).toBeUndefined();
-    expect(singleblockItemOutputSlots({ machineType: "Macerator", machineProfile: { machineType: "Macerator", minimumTier: "LV", kind: "multiblock" } }, "LV")).toBeUndefined();
+    expect(
+      singleblockItemOutputSlots(
+        {
+          machineType: "Macerator",
+          machineProfile: { machineType: "Macerator", minimumTier: "LV", kind: "multiblock" },
+        },
+        "LV",
+      ),
+    ).toBeUndefined();
   });
 
   it("credits an LV macerator with plantball's first output only, from the runtime variants", () => {
@@ -117,8 +165,14 @@ describe("single-block item output slots", () => {
     };
     const effective = applyMachineHandlerToRecipe(ore, { machineHandlerId: "macerator" });
     const lv = applyMachineOutputMultipliers(effective, {}, "LV").outputs;
-    expect(lv.map((output) => [output.id, output.amount])).toEqual([["crushed", 2], ["stone-dust", 0]]);
+    expect(lv.map((output) => [output.id, output.amount])).toEqual([
+      ["crushed", 2],
+      ["stone-dust", 0],
+    ]);
     const hv = applyMachineOutputMultipliers(effective, {}, "HV").outputs;
-    expect(hv.map((output) => [output.id, output.amount])).toEqual([["crushed", 2], ["stone-dust", 1]]);
+    expect(hv.map((output) => [output.id, output.amount])).toEqual([
+      ["crushed", 2],
+      ["stone-dust", 1],
+    ]);
   });
 });

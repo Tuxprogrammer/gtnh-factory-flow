@@ -80,8 +80,7 @@ export function selectRuntimeCalculationVariant(
 }
 
 export function getRuntimeCalculationOutputs(
-  recipe: Pick<Recipe, "runtimeCalculation" | "outputs"> & { machineType?: string } &
-    Partial<Pick<Recipe, "machineProfile">>,
+  recipe: Pick<Recipe, "runtimeCalculation" | "outputs"> & { machineType?: string },
   node: Pick<FactoryNode, "machineHandlerId" | "overclockTier" | "coilTier" | "machineConfigTiers">,
 ): RecipeOutput[] | undefined {
   const variant = selectRuntimeCalculationVariant(recipe, node);

@@ -16,14 +16,35 @@ type VoltageTier = Exclude<MachineTier, "DEMO">;
  * Families whose slots cover every recipe on their map are left out.
  */
 const ITEM_OUTPUT_SLOTS: Record<string, Array<[VoltageTier, number]>> = {
-  Macerator: [["LV", 1], ["HV", 2], ["EV", 3], ["IV", 4]],
+  Macerator: [
+    ["LV", 1],
+    ["HV", 2],
+    ["EV", 3],
+    ["IV", 4],
+  ],
   "Steam Macerator": [["ULV", 1]],
   "High Pressure Steam Macerator": [["ULV", 1]],
-  "Arc Furnace": [["LV", 4], ["EV", 9]],
-  "Cutting Machine": [["LV", 2], ["HV", 4]],
-  Mixer: [["LV", 1], ["HV", 4]],
-  "Chemical Bath": [["LV", 3], ["HV", 6]],
-  Autoclave: [["LV", 2], ["HV", 3], ["EV", 4]],
+  "Arc Furnace": [
+    ["LV", 4],
+    ["EV", 9],
+  ],
+  "Cutting Machine": [
+    ["LV", 2],
+    ["HV", 4],
+  ],
+  Mixer: [
+    ["LV", 1],
+    ["HV", 4],
+  ],
+  "Chemical Bath": [
+    ["LV", 3],
+    ["HV", 6],
+  ],
+  Autoclave: [
+    ["LV", 2],
+    ["HV", 3],
+    ["EV", 4],
+  ],
   Centrifuge: [["LV", 6]],
   "Forge Hammer": [["LV", 1]],
   "Steam Forge Hammer": [["ULV", 1]],
@@ -34,7 +55,10 @@ const ITEM_OUTPUT_SLOTS: Record<string, Array<[VoltageTier, number]>> = {
 type SlotRecipe = Partial<Pick<Recipe, "machineType" | "machineProfile">>;
 
 /** The machine's item output slots at this tier, or undefined when it has room for every recipe. */
-export function singleblockItemOutputSlots(recipe: SlotRecipe, tier: VoltageTier): number | undefined {
+export function singleblockItemOutputSlots(
+  recipe: SlotRecipe,
+  tier: VoltageTier,
+): number | undefined {
   if (recipe.machineProfile?.kind === "multiblock") {
     return undefined;
   }
@@ -67,10 +91,11 @@ export function hasItemOutputSlot(
     return true;
   }
   const slots = singleblockItemOutputSlots(recipe, tier);
-  const itemIndex = recipe.outputs
-    ?.filter((entry) => entry.kind === "item")
-    .indexOf(output);
-  return slots === undefined || itemIndex === undefined || itemIndex < 0 || itemIndex < slots;
+  if (slots === undefined) {
+    return true;
+  }
+  const itemIndex = recipe.outputs?.filter((entry) => entry.kind === "item").indexOf(output);
+  return itemIndex === undefined || itemIndex < slots;
 }
 
 /** The outputs with the ones past the machine's item slots set to zero; ports stay, amounts go. */

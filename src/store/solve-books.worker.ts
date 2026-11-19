@@ -1,5 +1,6 @@
 import { calculateThroughput } from "@/lib/solver";
 import { initLpEngine } from "@/lib/solver/lp-engine";
+import { warmSolveCore } from "@/lib/core/solve-adopt";
 import { attachClogLocks } from "@/components/flow/clog-lock";
 import type { FactoryProject } from "@/lib/model/types";
 import { setActiveGameRates, type ActiveGameRates } from "@/lib/model/game-rates";
@@ -21,7 +22,10 @@ const engineReady = initLpEngine({
  */
 const ENGINE_WAIT_MS = 20_000;
 const engineSettled = Promise.race([
-  engineReady,
+  // The compiled core's solver loads beside HiGHS (src/lib/core/solve-adopt.ts; nothing when the solve area is off).
+  // HiGHS stays: the clog-lock proof below and every solve the core does not take run on it. The first solve waits
+  // for both, so the first answer comes from the engine every later one does.
+  Promise.all([engineReady, warmSolveCore()]),
   new Promise<boolean>((resolve) => setTimeout(() => resolve(false), ENGINE_WAIT_MS)),
 ]);
 

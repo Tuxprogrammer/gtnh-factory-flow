@@ -531,6 +531,52 @@ public final class MachineControls {
 
     // endregion
 
+    // region Component Assembly Line
+
+    /**
+     * COAL_CASING: MTEComponentAssemblyLine's casing, Component Assembly Line Casing metas 0 (LV) through 13 (MAX)
+     * setting casingTier. A recipe's special value is the casing it needs counted from LV = 1 (validateRecipe rejects
+     * mSpecialValue > casingTier + 1), so the ladder starts at that casing.
+     */
+    public static final String COAL_CASING = "componentAssemblyLineCasing";
+
+    public static final Web.Control COAL_CASING_CONTROL;
+
+    static {
+        final String[] tiers = { "LV", "MV", "HV", "EV", "IV", "LuV", "ZPM", "UV", "UHV", "UEV", "UIV", "UMV", "UXV",
+            "MAX" };
+        final Web.Control control = new Web.Control();
+        control.id = COAL_CASING;
+        control.label = "Casing";
+        control.minimumKey = "lv";
+        control.defaultKey = "lv";
+        control.minimumFromSpecialValue = true;
+        control.tiers = new ArrayList<>();
+        for (int index = 0; index < tiers.length; index++) {
+            final Web.TierOption tier = new Web.TierOption();
+            tier.key = tiers[index].toLowerCase(Locale.ROOT);
+            tier.label = tiers[index];
+            tier.resource = item(
+                "goodgenerator:componentassemblylinecasing" + (index > 0 ? "@" + index : ""),
+                "Component Assembly Line Casing (" + tiers[index] + ")",
+                List.of("Halves recipe time per casing tier above the recipe's own."),
+                false);
+            control.tiers.add(tier);
+        }
+        COAL_CASING_CONTROL = control;
+    }
+
+    /**
+     * componentAssemblyLineSpeed: createOverclockCalculator sets the duration modifier to 2^-(casingTier + 1 -
+     * mSpecialValue), so each casing tier above the recipe's halves its time. {@code casingTier} is the casing's
+     * position on the full LV..MAX ladder; a recipe with no special value counts as 1.
+     */
+    public static double componentAssemblyLineSpeed(final int casingTier, @Nullable final Integer specialValue) {
+        return Math.pow(2, casingTier + 1 - (specialValue != null ? specialValue : 1));
+    }
+
+    // endregion
+
     // region Neutron Activator
 
     /** NEUTRON_PIPE_CONTROL: checkMachine accepts any pipe height >= 4; it never imposes a top rung. */

@@ -409,6 +409,16 @@ final class MachineTableEntries {
                 .parallels(c -> c.voltageTier * 16)
                 .controls(ITEM_PIPE_CONTROL)
                 .hidesControls(PIPE));
+        // MTEComponentAssemblyLine, the only machine on its recipe map. Takes normal, multi-amp and laser hatches;
+        // setProcessingLogicPower hands the logic every hatch's voltage x working amps as one voltage at 1 A with
+        // unlimited tier skips, so the whole supply buys normal overclocks. One parallel.
+        machines.put(
+            "Component Assembly Line",
+            machine().overclock(normal())
+                .speed(c -> componentAssemblyLineSpeed(c.tier(COAL_CASING), c.recipeSpecialValue))
+                .parallels(1)
+                .unlimitedTierSkip()
+                .controls(COAL_CASING_CONTROL));
         // MTEPreciseAssembler's normal Assembler handler; its dedicated Precise Assembler map has different math.
         machines.put(
             "Precise Auto-Assembler MT-3662",

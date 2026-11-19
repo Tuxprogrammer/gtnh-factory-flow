@@ -33,7 +33,7 @@ import java.util.zip.ZipOutputStream;
  * spell differently from JDK 19+. Without this the solver's scaling, tolerances and coefficients (ojAlgo works in
  * BigDecimal) would differ between the mod, a player's JDK and the browser. Direct calls,
  * method references and method handles in the constant pool are all rewritten; nothing else in the jar changes (entries
- * keep their order, names and bytes). Run by Gradle (jvm/build.gradle.kts, an artifact transform) on the JDK 25
+ * keep their order, names and bytes). Run by Gradle (build.gradle.kts beside this file, task ojalgoExactMath) on the JDK 25
  * toolchain for the class-file API, as a single-file program:
  *
  * <pre>

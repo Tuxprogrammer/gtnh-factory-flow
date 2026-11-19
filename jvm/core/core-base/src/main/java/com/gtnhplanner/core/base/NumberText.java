@@ -119,7 +119,7 @@ public final class NumberText {
      * {@code BigDecimal.valueOf(x)} as JDK 19 and later answer it: the decimal {@link #javaString} spells. The same on
      * every JVM and target: Java 8 and 17 spell some doubles with more digits than needed, and the web compile's
      * {@code Double.toString} approximates, so their {@code BigDecimal.valueOf} is another number. ojAlgo turns every
-     * coefficient into a BigDecimal this way (its jar is rewritten to call this, jvm/core/exact-math/RewriteMath.java).
+     * coefficient into a BigDecimal this way (its jar is rewritten to call this, jvm/core/core-ojalgo/RewriteMath.java).
      *
      * @throws NumberFormatException for NaN and the infinities, as the JDK does.
      */

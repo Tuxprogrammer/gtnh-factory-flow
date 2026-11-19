@@ -224,7 +224,8 @@ public final class BaseExports {
     /**
      * Java's order of double operations, where TeaVM's JavaScript printer dropped the brackets (the build plugin puts
      * them back): form 0 {@code a + (b + c)}, 1 {@code a + (b - c)}, 2 {@code a * (b * c)}, 3 {@code a * (b / c)},
-     * 4 {@code (a - b) + (b * c + a)}.
+     * 4 {@code (a - b) + (b * c + a)}, 5 {@code a += b + c + a} (the shape of a running total, as core-layout's
+     * Optimize.total has it).
      */
     @JSExport
     public static double javaOrder(final int form, final double a, final double b, final double c) {
@@ -234,6 +235,11 @@ public final class BaseExports {
             case 2: return a * (b * c);
             case 3: return a * (b / c);
             case 4: return (a - b) + (b * c + a);
+            case 5: {
+                double sum = a;
+                sum += b + c + a;
+                return sum;
+            }
             default: throw new IllegalArgumentException("no form " + form);
         }
     }

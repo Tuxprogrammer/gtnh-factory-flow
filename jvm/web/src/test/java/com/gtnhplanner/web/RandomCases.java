@@ -370,14 +370,15 @@ public final class RandomCases {
                     digits, mode)) + "]\n");
             }
             for (int i = 0; i < 20_000 * scale; i++) {
-                final int form = i % 5;
+                final int form = i % 6;
                 final double a = number(r), b = number(r), c = r.nextBoolean() ? number(r) : r.nextDouble() * 3;
                 final double v = switch (form) {
                     case 0 -> a + (b + c);
                     case 1 -> a + (b - c);
                     case 2 -> a * (b * c);
                     case 3 -> a * (b / c);
-                    default -> (a - b) + (b * c + a);
+                    case 4 -> (a - b) + (b * c + a);
+                    default -> a + (b + c + a);
                 };
                 w.write("[\"assoc\"," + form + ",\"" + hex(a) + "\",\"" + hex(b) + "\",\"" + hex(c) + "\",\"" + hex(v)
                     + "\"]\n");

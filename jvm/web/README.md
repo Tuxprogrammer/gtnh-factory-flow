@@ -183,8 +183,8 @@ TeaVM's `java.math.BigDecimal` itself is replaced (`src/main/java/org/teavm/clas
 `overrides.txt`): TeaVM's file with exact digit counts where it estimated them (`precision()`, the text constructor's
 precision, `aproxPrecision`, rounding's carry) and a `divide(divisor, MathContext)` that rounds the magnitudes'
 quotient, so `round`, `plus`, `divide` and `multiply` with a MathContext, which ojAlgo uses on every coefficient, give
-the JDK's answers. On the JVM, ojAlgo's own jar is rewritten the same way at build time (core-solver's
-`ojalgoExactMath` task, `jvm/core/exact-math/RewriteMath.java`), so the mod, the tests and the web build all run one
+the JDK's answers. ojAlgo's own jar is rewritten the same way at build time for every runtime (module
+`:core-ojalgo`, `jvm/core/core-ojalgo/`, core-solver's api), so the mod, the tests and the web build all run one
 ojAlgo arithmetic.
 
 `tools/web-core/exact-math.mjs` proves each rewrite on both targets (`exact-math/*` against

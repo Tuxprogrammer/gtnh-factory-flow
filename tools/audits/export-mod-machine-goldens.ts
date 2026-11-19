@@ -33,36 +33,13 @@ import {
   getRecipeMachineConfigTierControls,
   getRecipeMachineHandlers,
 } from "../../src/lib/model/recipe-rules";
-import { applyRecipeInputOverrides } from "../../src/lib/model/recipe-input-overrides";
 import {
   GT_VOLTAGE_TIERS,
   getRecipeMinimumVoltageTier,
   getVoltageTierIndex,
 } from "../../src/lib/model/tiers";
-import { getOverclockedRecipeStats } from "../../src/lib/solver/overclock";
-import {
-  getMachineDurationMultiplier,
-  getMachineEutMultiplier,
-  getMachineOutputMultiplier,
-  getMachineParallelMultiplier,
-  getMachineStructuralParallels,
-} from "../../src/lib/solver/machine-effects";
-import {
-  getRuntimeCalculationOutputs,
-  selectRuntimeCalculationVariant,
-} from "../../src/lib/solver/runtime-calculation";
-import {
-  getEffectiveVoltageOrdinal,
-  getNodePowerAmps,
-  getNodeRunTier,
-  isMultiblockRecipe,
-} from "../../src/lib/solver/power";
-import { getHeatDiscountMultiplier } from "../../src/lib/solver/heat";
-import {
-  getNodePowerReport,
-  getNodeSteamReport,
-  hasPowerReport,
-} from "../../src/lib/solver/power-report";
+import { isMultiblockRecipe } from "../../src/lib/solver/power";
+import { machineReadout as expectedFor } from "../../src/lib/machines/readout";
 import { getDatasetRecipe } from "../../src/lib/server/dataset-query";
 import { getGameRates, setActiveGameRates } from "../../src/lib/model/game-rates";
 
@@ -105,91 +82,6 @@ const MAX_OPTIONS = 8;
 function arg(name: string): string | undefined {
   const at = process.argv.indexOf(`--${name}`);
   return at > 0 ? process.argv[at + 1] : undefined;
-}
-
-/** What MachineGoldensTest reads, computed as the website computes a card. */
-function expectedFor(recipe: Recipe, node: Node) {
-  const card = node as FactoryNode;
-  const stats = getOverclockedRecipeStats(recipe, card);
-  const effective = applyMachineHandlerToRecipe(recipe, card);
-  const runtime = selectRuntimeCalculationVariant(effective, card);
-  const multipliers = effective.outputs.map((output) =>
-    getMachineOutputMultiplier(effective, card, output, stats.tier),
-  );
-  const runtimeOutputs = getRuntimeCalculationOutputs(effective, card);
-  const runTier = getNodeRunTier(effective, card);
-  const voltageOrdinal = getEffectiveVoltageOrdinal(effective, card, runTier);
-  const expected: Record<string, unknown> = {
-    tier: stats.tier,
-    minimumTier: stats.minimumTier,
-    overclockSteps: stats.overclockSteps,
-    perfectOverclockSteps: stats.perfectOverclockSteps,
-    perfectSpeedFactor: stats.perfectSpeedFactor,
-    perfectEuFactor: stats.perfectEuFactor,
-    durationTicks: stats.durationTicks,
-    eut: stats.eut,
-    parallels: runtime?.parallel ?? getMachineParallelMultiplier(effective, card),
-    structuralParallels: getMachineStructuralParallels(effective, card),
-    durationMultiplier: getMachineDurationMultiplier(effective, card),
-    eutMultiplier: getMachineEutMultiplier(effective, card),
-    outputMultipliers: multipliers,
-    chances: effective.outputs.map((output) => output.chance ?? 1),
-    ...(runtimeOutputs
-      ? {
-          runtimeOutputs: runtimeOutputs.map(({ kind, id, amount, chance }) => ({
-            kind,
-            id,
-            amount,
-            chance,
-          })),
-        }
-      : {}),
-    outputAmounts: runtimeOutputs
-      ? runtimeOutputs.map((output) => output.amount)
-      : effective.outputs.map((output, index) => output.amount * multipliers[index]),
-    inputAmounts: applyRecipeInputOverrides(recipe, card).inputs.map((input) => ({
-      amount: input.amount,
-      consumed: input.consumed !== false,
-    })),
-    machineType: effective.machineType,
-    multiblock: isMultiblockRecipe(effective),
-    runTier,
-    amps: getNodePowerAmps(effective, card),
-    voltageOrdinal,
-    heatDiscount: getHeatDiscountMultiplier(effective, card, runTier, voltageOrdinal),
-  };
-  if (hasPowerReport(recipe, card)) {
-    const report = getNodePowerReport(recipe, card);
-    expected.powerState = report.state;
-    if (report.recipeGateReason !== undefined) expected.recipeGateReason = report.recipeGateReason;
-    expected.poolEuT = report.poolEuT;
-    expected.singleDrawEuT = report.singleDrawEuT;
-  }
-  const steam = getNodeSteamReport(recipe, card);
-  if (steam) {
-    expected.steam = {
-      perTick: steam.drawSteamPerTick,
-      singlePerTick: steam.singleDrawSteamPerTick,
-      parallels: steam.parallels,
-      multiblock: steam.isMultiblock,
-      highPressure: steam.highPressure,
-    };
-  }
-  const coil = getRecipeCoilTierControl(effective, card);
-  expected.controls = [
-    ...getRecipeMachineConfigTierControls(effective, card),
-    ...(coil ? [{ ...coil, coil: true }] : []),
-  ].map((control) => ({
-    id: control.id,
-    label: control.label,
-    minimumKey: control.minimum.key,
-    currentKey: control.current.key,
-    minimumIndex: control.minimumIndex,
-    tiers: control.tiers.map((option) => option.key),
-    ...(control.numeric ? { numeric: control.numeric } : {}),
-    ...("coil" in control ? { coil: true } : {}),
-  }));
-  return { expected, runtimeVariant: runtime !== undefined };
 }
 
 function sample<T>(values: T[]): T[] {

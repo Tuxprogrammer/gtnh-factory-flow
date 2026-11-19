@@ -31,12 +31,7 @@ import type { PlanUpTo, UpToReason } from "@/lib/solver/plan/types";
 import { PIN_RULE_LABEL, pinRuleOf, withPinRule, type PinRule } from "@/lib/model/pin-rule";
 import { getMachineStructureArt } from "@/lib/power/structure-art";
 import { powerCardTier } from "@/lib/power/power-recipe";
-import {
-  mayTurbineFlow,
-  turbineFlowCheck,
-  turbinesFor,
-  type TurbineFlowCheck,
-} from "@/lib/power/turbine-flow";
+import { turbineCard, type TurbineFlowCheck } from "@/lib/power/turbine-flow";
 import { useFactoryStore, useRateDisplayUnits } from "@/store/factory-store";
 import { useWorkspaceView } from "@/lib/workspace-view";
 import { formatEnergyPerUnitParts, formatSlotRateBare, portReadsEnergy } from "../flow-explainers";
@@ -1243,10 +1238,12 @@ export function useCleanCardModel(
       : undefined;
   // A turbine card: what its whole turbines really make at the flow each gets.
   const running = result?.theoreticalMachinesRequired ?? 0;
-  const turbines = turbinesFor(running, count.rule === "exact" ? count.set : undefined);
-  const turbineCheck = mayTurbineFlow(recipe, running, turbines)
-    ? turbineFlowCheck(recipe, projectNode.machineConfigTiers, running, turbines)
-    : undefined;
+  const turbineCheck = turbineCard(
+    recipe,
+    projectNode.machineConfigTiers,
+    running,
+    count.rule === "exact" ? count.set : undefined,
+  ).check;
   const foot = buildFootView(
     count,
     countState.upTo,

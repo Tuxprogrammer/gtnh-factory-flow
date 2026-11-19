@@ -1,8 +1,5 @@
 package com.gtnhplanner.machines.web;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -13,11 +10,8 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.gtnhplanner.core.base.JsMath;
+import com.gtnhplanner.core.base.JsonTree;
 
 /**
  * The website's machine data per recipe map ({@code assets/gtnhplanner/machines/handlers.json}, written by its
@@ -194,9 +188,9 @@ public final class HandlerData {
             h.maximumTier = t.maximumTier;
             h.availableTiers = t.availableTiers;
             if (t.durationMultiplier != null)
-                h.durationTicks = Math.max(1, Js.round(durationTicks * t.durationMultiplier));
-            if (t.eutMultiplier != null) h.eut = Math.max(0, Js.round(eut * t.eutMultiplier * 100) / 100);
-            if (t.durationTicks != null) h.durationTicks = Math.max(1, Js.round(t.durationTicks));
+                h.durationTicks = Math.max(1, JsMath.round(durationTicks * t.durationMultiplier));
+            if (t.eutMultiplier != null) h.eut = Math.max(0, JsMath.round(eut * t.eutMultiplier * 100) / 100);
+            if (t.durationTicks != null) h.durationTicks = Math.max(1, JsMath.round(t.durationTicks));
             if (t.eut != null) h.eut = Math.max(0, t.eut);
             if (t.perfectOverclock) h.perfectOverclock = true;
             if (t.controls != null) {
@@ -232,42 +226,32 @@ public final class HandlerData {
         final List<String> names = new ArrayList<>();
         final List<String> recipeNames = new ArrayList<>();
         final List<Double> recipeVoltages = new ArrayList<>();
-        try (InputStream in = HandlerData.class.getResourceAsStream("/assets/gtnhplanner/machines/handlers.json")) {
-            if (in != null) {
-                final Gson gson = new Gson();
-                final JsonObject root = new JsonParser().parse(new InputStreamReader(in, StandardCharsets.UTF_8))
-                    .getAsJsonObject();
-                for (final JsonElement e : root.getAsJsonArray("tiers")) names.add(e.getAsString());
-                if (root.has("recipeTiers")) for (final JsonElement e : root.getAsJsonArray("recipeTiers")) {
-                    recipeNames.add(
-                        e.getAsJsonArray()
-                            .get(0)
-                            .getAsString());
-                    recipeVoltages.add(
-                        e.getAsJsonArray()
-                            .get(1)
-                            .getAsDouble());
+        try {
+            final String text = ResourceText.read("/assets/gtnhplanner/machines/handlers.json");
+            if (text != null) {
+                final Map<String, Object> root = JsonTree.object(JsonTree.parse(text));
+                for (final Object e : JsonTree.array(root.get("tiers"))) names.add((String) e);
+                if (root.containsKey("recipeTiers")) for (final Object e : JsonTree.array(root.get("recipeTiers"))) {
+                    final List<Object> pair = JsonTree.array(e);
+                    recipeNames.add((String) pair.get(0));
+                    recipeVoltages.add((Double) pair.get(1));
                 }
-                for (final JsonElement e : root.getAsJsonArray("coils")) {
-                    final JsonObject c = e.getAsJsonObject();
+                for (final Object e : JsonTree.array(root.get("coils"))) {
+                    final Map<String, Object> c = JsonTree.object(e);
                     coilList.add(
                         new Coil(
-                            c.get("key")
-                                .getAsString(),
-                            c.get("label")
-                                .getAsString(),
-                            c.get("heat")
-                                .getAsDouble()));
+                            (String) c.get("key"),
+                            (String) c.get("label"),
+                            (Double) c.get("heat")));
                 }
-                for (final Map.Entry<String, JsonElement> e : root.getAsJsonObject("controls")
-                    .entrySet()) byRef.put(e.getKey(), control(gson.fromJson(e.getValue(), CompactControl.class)));
-                final JsonArray list = root.getAsJsonArray("maps");
-                for (final JsonElement e : list) {
-                    final MapEntry m = gson.fromJson(e, MapEntry.class);
+                for (final Map.Entry<String, Object> e : JsonTree.object(root.get("controls"))
+                    .entrySet()) byRef.put(e.getKey(), control(compactControl(JsonTree.object(e.getValue()))));
+                for (final Object e : JsonTree.array(root.get("maps"))) {
+                    final MapEntry m = mapEntry(JsonTree.object(e));
                     byId.put(m.id, m);
                 }
             }
-        } catch (final Exception ignored) {
+        } catch (final RuntimeException ignored) {
             // Without the file every recipe falls back to a machine named for its map, as the website's would.
         }
         tierNames = names.isEmpty() ? List.of(Tiers.NAMES) : names;
@@ -280,6 +264,80 @@ public final class HandlerData {
         coils = coilList;
         controls = byRef;
         maps = byId;
+    }
+
+    private static MapEntry mapEntry(final Map<String, Object> o) {
+        final MapEntry m = new MapEntry();
+        m.id = JsonTree.str(o, "id");
+        m.name = JsonTree.str(o, "name");
+        m.handlersOnRecipes = WebJson.flag(o, "handlersOnRecipes");
+        m.handlers = WebJson.list(o, "handlers", HandlerData::template);
+        m.controls = WebJson.strings(o, "controls");
+        m.coilFromSpecialValue = WebJson.flag(o, "coilFromSpecialValue");
+        m.app = WebJson.list(o, "app", HandlerData::appHandler);
+        return m;
+    }
+
+    private static Template template(final Map<String, Object> o) {
+        final Template t = new Template();
+        t.id = JsonTree.str(o, "id");
+        t.label = JsonTree.str(o, "label");
+        t.kind = JsonTree.str(o, "kind");
+        t.primary = WebJson.flag(o, "primary");
+        t.minimumTier = JsonTree.str(o, "minimumTier");
+        t.maximumTier = JsonTree.str(o, "maximumTier");
+        t.availableTiers = WebJson.strings(o, "availableTiers");
+        t.perfectOverclock = WebJson.flag(o, "perfectOverclock");
+        t.durationMultiplier = JsonTree.boxed(o, "durationMultiplier");
+        t.eutMultiplier = JsonTree.boxed(o, "eutMultiplier");
+        t.durationTicks = JsonTree.boxed(o, "durationTicks");
+        t.eut = JsonTree.boxed(o, "eut");
+        t.controls = WebJson.strings(o, "controls");
+        t.items = WebJson.strings(o, "items");
+        return t;
+    }
+
+    private static AppHandler appHandler(final Map<String, Object> o) {
+        final AppHandler h = new AppHandler();
+        h.id = JsonTree.str(o, "id");
+        h.label = JsonTree.str(o, "label");
+        h.machineType = JsonTree.str(o, "machineType");
+        h.kind = JsonTree.str(o, "kind");
+        h.durationTicks = JsonTree.boxed(o, "durationTicks");
+        h.eut = JsonTree.boxed(o, "eut");
+        h.table = JsonTree.str(o, "table");
+        h.multiblock = WebJson.flag(o, "multiblock");
+        h.items = WebJson.strings(o, "items");
+        return h;
+    }
+
+    private static CompactControl compactControl(final Map<String, Object> o) {
+        final CompactControl c = new CompactControl();
+        c.id = JsonTree.str(o, "id");
+        c.label = JsonTree.str(o, "label");
+        c.minimumKey = JsonTree.str(o, "minimumKey");
+        c.defaultKey = JsonTree.str(o, "defaultKey");
+        c.numeric = o.get("numeric") instanceof Map ? WebJson.numeric(JsonTree.object(o.get("numeric"))) : null;
+        c.minimumFromSpecialValue = JsonTree.bool(o, "minimumFromSpecialValue");
+        c.minimumHeatFromSpecialValue = JsonTree.bool(o, "minimumHeatFromSpecialValue");
+        c.tiers = WebJson.list(o, "tiers", HandlerData::compactOption);
+        return c;
+    }
+
+    private static CompactOption compactOption(final Map<String, Object> o) {
+        final CompactOption c = new CompactOption();
+        c.key = JsonTree.str(o, "key");
+        c.label = JsonTree.str(o, "label");
+        c.icon = JsonTree.str(o, "icon");
+        c.name = JsonTree.str(o, "name");
+        c.heat = JsonTree.boxed(o, "heat");
+        c.durationMultiplier = JsonTree.boxed(o, "durationMultiplier");
+        c.eutMultiplier = JsonTree.boxed(o, "eutMultiplier");
+        c.outputMultiplier = JsonTree.boxed(o, "outputMultiplier");
+        c.parallelMultiplier = JsonTree.boxed(o, "parallelMultiplier");
+        c.parallelPerVoltageTier = JsonTree.boxed(o, "parallelPerVoltageTier");
+        c.parallelVoltageBase = JsonTree.boxed(o, "parallelVoltageBase");
+        return c;
     }
 
     private static Web.Control control(final CompactControl c) {

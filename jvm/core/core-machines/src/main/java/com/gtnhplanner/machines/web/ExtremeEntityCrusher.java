@@ -8,11 +8,9 @@ import java.util.Objects;
 
 import javax.annotation.Nullable;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import com.gtnhplanner.core.base.Float32;
+import com.gtnhplanner.core.base.JsonTree;
+import com.gtnhplanner.core.base.NumberText;
 
 /**
  * kubatech's Extreme Entity Crusher as the website models it (src/lib/machines/extreme-entity-crusher.ts, after
@@ -54,8 +52,6 @@ public final class ExtremeEntityCrusher {
     private static final double MIN_ULTRA_MODIFIERS = 5;
     private static final double MIN_INFERNO_MODIFIERS = 8;
     private static final double MOB_MOD_HEALTH_FACTOR = 1.8;
-
-    private static final Gson GSON = new Gson();
 
     // region Metadata
 
@@ -153,11 +149,57 @@ public final class ExtremeEntityCrusher {
     @Nullable
     public static Metadata metadata(final Web.Recipe recipe) {
         if (!MACHINE_TYPE.equals(recipe.machineType)) return null;
-        final JsonElement eec = recipe.metadata == null ? null : recipe.metadata.get("eec");
-        if (!(eec instanceof final JsonObject object) || !(object.get("outputs") instanceof JsonArray)) return null;
-        if (!(object.get("maxHealth") instanceof final JsonPrimitive health && health.isNumber()
-            && health.getAsDouble() > 0)) return null;
-        return GSON.fromJson(object, Metadata.class);
+        final Object eec = recipe.metadata == null ? null : recipe.metadata.get("eec");
+        if (!(eec instanceof final Map<?, ?> map) || !(map.get("outputs") instanceof List)) return null;
+        if (!(map.get("maxHealth") instanceof final Double health && health > 0)) return null;
+        return bind(JsonTree.object(eec));
+    }
+
+    /** The metadata a {@code metadata.eec} object holds; a field it lacks keeps its default. */
+    private static Metadata bind(final Map<String, Object> o) {
+        final Metadata m = new Metadata();
+        m.mob = JsonTree.str(o, "mob");
+        if (JsonTree.boxed(o, "maxHealth") != null) m.maxHealth = JsonTree.num(o, "maxHealth");
+        if (JsonTree.boxed(o, "baseEut") != null) m.baseEut = JsonTree.num(o, "baseEut");
+        m.alwaysInfernal = JsonTree.bool(o, "alwaysInfernal");
+        m.infernalityAllowed = JsonTree.bool(o, "infernalityAllowed");
+        m.spawnInterval = JsonTree.boxed(o, "spawnInterval");
+        m.spikesDamage = JsonTree.boxed(o, "spikesDamage");
+        m.maxLooting = JsonTree.boxed(o, "maxLooting");
+        if (o.get("infernal") instanceof Map) {
+            final Map<String, Object> i = JsonTree.object(o.get("infernal"));
+            final Infernal n = new Infernal();
+            n.eliteRarity = JsonTree.boxed(i, "eliteRarity");
+            n.ultraRarity = JsonTree.boxed(i, "ultraRarity");
+            n.infernoRarity = JsonTree.boxed(i, "infernoRarity");
+            n.minEliteModifiers = JsonTree.boxed(i, "minEliteModifiers");
+            n.minUltraModifiers = JsonTree.boxed(i, "minUltraModifiers");
+            n.minInfernoModifiers = JsonTree.boxed(i, "minInfernoModifiers");
+            n.mobModHealthFactor = JsonTree.boxed(i, "mobModHealthFactor");
+            m.infernal = n;
+        }
+        m.outputs = new ArrayList<>();
+        for (final Object item : JsonTree.array(o.get("outputs"))) {
+            final Map<String, Object> out = JsonTree.object(item);
+            final OutputMeta meta = new OutputMeta();
+            meta.xp = JsonTree.bool(out, "xp");
+            meta.refLooting = JsonTree.boxed(out, "refLooting");
+            if (out.get("drops") instanceof List) {
+                meta.drops = new ArrayList<>();
+                for (final Object d : JsonTree.array(out.get("drops"))) {
+                    final Map<String, Object> drop = JsonTree.object(d);
+                    final Drop r = new Drop();
+                    if (JsonTree.boxed(drop, "amount") != null) r.amount = JsonTree.num(drop, "amount");
+                    if (JsonTree.boxed(drop, "c0") != null) r.c0 = JsonTree.num(drop, "c0");
+                    r.cL = JsonTree.boxed(drop, "cL");
+                    r.lootable = JsonTree.bool(drop, "lootable");
+                    r.voidable = JsonTree.bool(drop, "voidable");
+                    meta.drops.add(r);
+                }
+            }
+            m.outputs.add(meta);
+        }
+        return m;
     }
 
     /** isEecRecipe. */
@@ -175,8 +217,8 @@ public final class ExtremeEntityCrusher {
 
     /** getEecSettings: the card's machine settings read under the website's keys; null reads as no settings. */
     public static Settings settings(@Nullable final Map<String, String> settings) {
-        final double weapon = Js.number(settings == null ? null : settings.get(WEAPON_DAMAGE));
-        final double looting = Js.number(settings == null ? null : settings.get(LOOTING));
+        final double weapon = NumberText.parse(settings == null ? null : settings.get(WEAPON_DAMAGE));
+        final double looting = NumberText.parse(settings == null ? null : settings.get(LOOTING));
         return new Settings(
             Double.isFinite(weapon) && weapon > 0 ? weapon : 0,
             Double.isFinite(looting) ? Math.max(0, trunc(looting)) : 0,
@@ -453,7 +495,7 @@ public final class ExtremeEntityCrusher {
 
     /** {@code Math.fround}: to the nearest float. */
     private static double fround(final double value) {
-        return (float) value;
+        return Float32.round(value);
     }
 
     // endregion

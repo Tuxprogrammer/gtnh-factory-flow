@@ -10,17 +10,6 @@ core/core-layout/src/main/java/com/gtnhplanner/layout/arrange/Arrange.java host-
 core/core-layout/src/main/java/com/gtnhplanner/layout/arrange/Arrange.java string-format the printf of that bench timing; one Arrange (W5) takes it out
 core/core-layout/src/main/java/com/gtnhplanner/layout/arrange/Arrange.java float-text two tried-set keys spelled from doubles, only ever compared within one run; W5 spells them with NumberText
 
-# core-machines and core-power: moved from the mod unchanged (no rewrite on a move). Each goes when its site moves to
-# core-base's NumberText or JsMath, the display formatters, or a tree-API reader; the machines stream owns them.
-core/core-machines/src/main/java/com/gtnhplanner/machines/BacterialVat.java float-parse settings read as numbers; becomes NumberText.parse
-core/core-machines/src/main/java/com/gtnhplanner/machines/FormulaLine.java java-text worked-formula numbers grouped with DecimalFormat; becomes the shared display formatter
-core/core-machines/src/main/java/com/gtnhplanner/machines/TreeGrowthSimulator.java float-text a Forestry gene value printed with Float.toString; becomes NumberText.of
-core/core-machines/src/main/java/com/gtnhplanner/machines/web/ExtremeEntityCrusher.java reflection the recipe's eec metadata bound by Gson into a class; becomes a tree-API read
-core/core-machines/src/main/java/com/gtnhplanner/machines/web/HandlerData.java reflection handlers.json bound by Gson into classes; becomes a tree-API read
-core/core-machines/src/main/java/com/gtnhplanner/machines/web/Hile.java string-format laser source amps grouped with "%,d"; becomes the shared display formatter
-core/core-machines/src/main/java/com/gtnhplanner/machines/web/Js.java float-parse JavaScript Number(s) stand-in; becomes NumberText.parse
-core/core-machines/src/main/java/com/gtnhplanner/machines/web/Js.java float-text JavaScript String(n) stand-in; becomes NumberText.of
-core/core-machines/src/main/java/com/gtnhplanner/machines/web/MachineEffects.java float-parse a numeric setting key read as a number; becomes NumberText.parse
 
 # core-view: card logic moved from the mod unchanged (view-b). BigDecimal.valueOf takes a double's shortest decimal
 # digits (the JDK's spelling: the shortest on the JDK 19+ the mod and the tests run on) before the display rounding.

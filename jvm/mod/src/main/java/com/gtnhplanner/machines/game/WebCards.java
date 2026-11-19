@@ -12,6 +12,7 @@ import net.minecraftforge.fluids.FluidStack;
 
 import com.google.gson.JsonObject;
 import com.gtnhplanner.api.RecipePropertyAPI;
+import com.gtnhplanner.core.base.JsonTree;
 import com.gtnhplanner.core.machines.AlgaePond;
 import com.gtnhplanner.data.MachineConfig;
 import com.gtnhplanner.data.flowchart.Node;
@@ -81,11 +82,11 @@ public final class WebCards {
         r.nei.additionalInfo = List.of("Special value: " + (long) special);
         r.source = new Web.Source();
         r.source.recipeMap = entry.name;
-        r.metadata = new JsonObject();
-        r.metadata.addProperty("recipeMapId", entry.id);
-        r.metadata.addProperty("specialValue", special);
+        r.metadata = new LinkedHashMap<>();
+        r.metadata.put("recipeMapId", entry.id);
+        r.metadata.put("specialValue", special);
         if (node.properties.get(GTProvider.FUSION_THRESHOLD) instanceof final Number startup)
-            r.metadata.addProperty("fusionStartupEu", startup.doubleValue());
+            r.metadata.put("fusionStartupEu", startup.doubleValue());
         r.inputs = resources(node.inputs);
         r.outputs = resources(node.outputs);
         final JsonObject eec = EecCards.metadata(node);
@@ -94,7 +95,7 @@ public final class WebCards {
             r.name = com.gtnhplanner.machines.MobDrops.MACHINE_TYPE + ": " + EecCards.mobName(node);
             r.category = com.gtnhplanner.machines.MobDrops.MAP_ID;
             r.source.rawRecipeId = EecCards.mob(node);
-            r.metadata.add("eec", eec);
+            r.metadata.put("eec", JsonTree.parse(eec.toString()));
         }
         // The game's own ladder, as the website's oracle runs it for every GregTech map recipe.
         else if (!smelting) r.runtimeCalculation = RuntimeVariants.of(r.durationTicks, r.eut, r.outputs);

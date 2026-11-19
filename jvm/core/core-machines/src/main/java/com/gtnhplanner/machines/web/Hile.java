@@ -8,6 +8,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.gtnhplanner.core.base.NumberText;
+import com.gtnhplanner.machines.FormulaLine;
+
 /**
  * The Hyper-Intensity Laser Engraver's laser source (hile.ts): every registered laser source hatch (tectech's
  * MachineLoader: IV starts at 256A, each tier adds one four-times-larger hatch, through UXV's 16,777,216A, plus the
@@ -52,7 +55,7 @@ public final class Hile {
             .key();
         final List<Web.TierOption> tiers = new ArrayList<>();
         for (final Source source : SOURCES) {
-            final String amps = String.format(Locale.US, "%,d", source.amps());
+            final String amps = FormulaLine.grouped(source.amps());
             final boolean legendary = source.amps() == LEGENDARY_AMPS;
             final Web.TierOption tier = new Web.TierOption();
             tier.key = source.key();
@@ -95,7 +98,7 @@ public final class Hile {
             .equals(saved)) return settings;
         final Matcher old = LEGACY_AMPS.matcher(saved != null ? saved : "");
         final String legacyAmperage = settings.get("laserAmperage");
-        final double amps = Js.number(old.matches() ? old.group(1) : legacyAmperage != null ? legacyAmperage : "256");
+        final double amps = NumberText.parse(old.matches() ? old.group(1) : legacyAmperage != null ? legacyAmperage : "256");
         Source found = null;
         for (final Source entry : SOURCES) if (entry.amps() >= amps) {
             found = entry;

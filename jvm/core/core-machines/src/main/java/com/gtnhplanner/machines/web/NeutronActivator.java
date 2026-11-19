@@ -1,5 +1,7 @@
 package com.gtnhplanner.machines.web;
 
+import com.gtnhplanner.core.base.Float32;
+
 /**
  * The Neutron Activator's speed and tick rounding (neutron-activator.ts, after MTENeutronActivator's
  * createProcessingLogic at GT5U 8e23867): 0.9f per pipe layer past four, whole ticks rounded up, and under one tick
@@ -15,7 +17,7 @@ public final class NeutronActivator {
      */
     public static double speed(final double height) {
         double exponent = Math.max(0, trunc(height) - 4);
-        double base = (double) 0.9f;
+        double base = Float32.round(0.9);
         double duration = 1;
         while (exponent > 0) {
             if (exponent % 2 == 1) duration *= base;

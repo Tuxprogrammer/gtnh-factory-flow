@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.gtnhplanner.core.base.JsonTree;
 
 /**
  * extreme-entity-crusher.test.ts, the cases on this module's own functions (transcribed there from kubatech
@@ -79,8 +81,8 @@ class ExtremeEntityCrusherTest {
             resource("item", "minecraft:iron_sword", 0.0013, null, null),
             resource("item", "ForbiddenMagic:NetherShard@5", 0.05, null, null),
             resource("fluid", "xpjuice", 120, null, null));
-        r.metadata = new JsonObject();
-        r.metadata.add("eec", eec);
+        r.metadata = new LinkedHashMap<>();
+        r.metadata.put("eec", JsonTree.parse(eec.toString()));
         return r;
     }
 

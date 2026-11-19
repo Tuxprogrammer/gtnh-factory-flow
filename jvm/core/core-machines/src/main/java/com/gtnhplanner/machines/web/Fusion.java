@@ -1,8 +1,5 @@
 package com.gtnhplanner.machines.web;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,9 +9,8 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.gtnhplanner.core.base.JsonTree;
+import com.gtnhplanner.core.base.NumberText;
 
 /**
  * The fusion reactors as the website models them (src/lib/machines/fusion.ts): GT5U's fusion overclock describers
@@ -74,14 +70,14 @@ public final class Fusion {
         return slots(recipe.inputs) + "|"
             + slots(recipe.outputs)
             + "|"
-            + Js.str(recipe.durationTicks)
+            + NumberText.of(recipe.durationTicks)
             + "|"
-            + Js.str(recipe.eut);
+            + NumberText.of(recipe.eut);
     }
 
     private static String slots(@Nullable final List<Web.Resource> entries) {
         final List<String> out = new ArrayList<>();
-        if (entries != null) for (final Web.Resource r : entries) out.add(r.kind + ":" + r.id + "@" + Js.str(r.amount));
+        if (entries != null) for (final Web.Resource r : entries) out.add(r.kind + ":" + r.id + "@" + NumberText.of(r.amount));
         Collections.sort(out);
         return String.join(";", out);
     }
@@ -90,11 +86,8 @@ public final class Fusion {
     @Nullable
     public static Double startupEu(final Web.Recipe recipe) {
         if (recipe.metadata != null) {
-            final JsonElement exported = recipe.metadata.get("fusionStartupEu");
-            if (exported != null && exported.isJsonPrimitive()
-                && exported.getAsJsonPrimitive()
-                    .isNumber()) {
-                final double v = exported.getAsDouble();
+            if (recipe.metadata.get("fusionStartupEu") instanceof final Number exported) {
+                final double v = exported.doubleValue();
                 if (Double.isFinite(v) && v >= 0) return v;
             }
         }
@@ -195,17 +188,17 @@ public final class Fusion {
     private static synchronized Map<String, Double> snapshot() {
         if (snapshot != null) return snapshot;
         final Map<String, Double> out = new HashMap<>();
-        try (InputStream in = Fusion.class.getResourceAsStream("/assets/gtnhplanner/machines/fusion-startups.json")) {
-            if (in != null) {
-                final JsonObject recipes = new JsonParser().parse(new InputStreamReader(in, StandardCharsets.UTF_8))
-                    .getAsJsonObject()
-                    .getAsJsonObject("recipes");
-                for (final Map.Entry<String, JsonElement> e : recipes.entrySet()) out.put(
+        try {
+            final String text = ResourceText.read("/assets/gtnhplanner/machines/fusion-startups.json");
+            if (text != null) {
+                final Map<String, Object> recipes = JsonTree.object(
+                    JsonTree.object(JsonTree.parse(text))
+                        .get("recipes"));
+                for (final Map.Entry<String, Object> e : recipes.entrySet()) out.put(
                     e.getKey(),
-                    e.getValue()
-                        .getAsDouble());
+                    ((Number) e.getValue()).doubleValue());
             }
-        } catch (final Exception ignored) {
+        } catch (final RuntimeException ignored) {
             // No snapshot: recipes without their own startup stay unknown, as on the website without its data.
         }
         snapshot = out;

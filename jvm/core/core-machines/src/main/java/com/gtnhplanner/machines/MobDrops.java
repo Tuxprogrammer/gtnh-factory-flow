@@ -8,8 +8,6 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.gtnhplanner.machines.web.ExtremeEntityCrusher;
 
 /**
@@ -216,7 +214,7 @@ public final class MobDrops {
      * never make in a plain crusher (by name), its EU/t (eight times the base for a mob that is always infernal) and
      * its ticks.
      */
-    public record Recipe(List<Output> outputs, JsonObject eec, List<String> gated, int eut, int duration) {}
+    public record Recipe(List<Output> outputs, Map<String, Object> eec, List<String> gated, int eut, int duration) {}
 
     /** normalizeMobDrops for one mob: the outputs, gated drops and metadata the website's dataset gives it. */
     public static Recipe recipe(final Mob mob, final Machine machine) {
@@ -244,7 +242,7 @@ public final class MobDrops {
         }
         // A mob whose every drop is gated still gives the crusher its Liquid XP.
         final List<Output> outputs = new ArrayList<>();
-        final JsonArray metas = new JsonArray();
+        final List<Object> metas = new ArrayList<>();
         for (final Group g : groups.values()) {
             // The static figure is what drops with no weapon, or with Looting I for a drop that only a Looting weapon
             // makes (Forbidden Magic's greed shards).
@@ -257,40 +255,39 @@ public final class MobDrops {
                     g.first,
                     single ? first.amount : roundExpected(expected(g.drops, reference)),
                     single && first.c0 < 10000 ? first.c0 / 10000 : null));
-            final JsonObject meta = new JsonObject();
-            if (reference != 0) meta.addProperty("refLooting", reference);
-            final JsonArray drops = new JsonArray();
+            final Map<String, Object> meta = new LinkedHashMap<>();
+            if (reference != 0) meta.put("refLooting", (double) reference);
+            final List<Object> drops = new ArrayList<>();
             for (final ExtremeEntityCrusher.Drop d : g.drops) drops.add(drop(d));
-            meta.add("drops", drops);
+            meta.put("drops", drops);
             metas.add(meta);
         }
         outputs.add(new Output(XP_FLUID, -1, XP_PER_KILL, null));
-        final JsonObject xp = new JsonObject();
-        xp.addProperty("xp", true);
+        final Map<String, Object> xp = new LinkedHashMap<>();
+        xp.put("xp", true);
         metas.add(xp);
 
         final int baseEut = mob.eut() > 0 ? mob.eut() : 1920;
         final double health = Double.isFinite(mob.maxHealth()) ? mob.maxHealth() : 20;
-        final JsonObject eec = new JsonObject();
-        eec.addProperty("mob", mob.key());
-        if (mob.entityName() != null) eec.addProperty("entityName", mob.entityName());
-        eec.addProperty("maxHealth", health);
-        if (mob.alwaysInfernal()) eec.addProperty("alwaysInfernal", true);
-        if (!mob.infernalityAllowed()) eec.addProperty("infernalityAllowed", false);
-        if (mob.peacefulAllowed()) eec.addProperty("peacefulAllowed", true);
-        eec.addProperty("baseEut", baseEut);
-        if (finite(machine.spawnInterval())) eec.addProperty("spawnInterval", machine.spawnInterval());
-        if (finite(machine.spikesDamage())) eec.addProperty("spikesDamage", machine.spikesDamage());
-        if (finite(machine.maxLooting())) eec.addProperty("maxLooting", machine.maxLooting());
-        final JsonObject infernal = new JsonObject();
+        final Map<String, Object> eec = new LinkedHashMap<>();
+        eec.put("mob", mob.key());
+        if (mob.entityName() != null) eec.put("entityName", mob.entityName());
+        eec.put("maxHealth", health);
+        if (mob.alwaysInfernal()) eec.put("alwaysInfernal", true);
+        if (!mob.infernalityAllowed()) eec.put("infernalityAllowed", false);
+        if (mob.peacefulAllowed()) eec.put("peacefulAllowed", true);
+        eec.put("baseEut", (double) baseEut);
+        if (finite(machine.spawnInterval())) eec.put("spawnInterval", machine.spawnInterval());
+        if (finite(machine.spikesDamage())) eec.put("spikesDamage", machine.spikesDamage());
+        if (finite(machine.maxLooting())) eec.put("maxLooting", machine.maxLooting());
+        final Map<String, Object> infernal = new LinkedHashMap<>();
         for (final String key : Machine.INFERNAL_KEYS) {
             final Double value = machine.infernal()
                 .get(key);
-            if (finite(value)) infernal.addProperty(key, value);
+            if (finite(value)) infernal.put(key, value);
         }
-        if (!infernal.entrySet()
-            .isEmpty()) eec.add("infernal", infernal);
-        eec.add("outputs", metas);
+        if (!infernal.isEmpty()) eec.put("infernal", infernal);
+        eec.put("outputs", metas);
         return new Recipe(
             outputs,
             eec,
@@ -317,13 +314,13 @@ public final class MobDrops {
         }
     }
 
-    private static JsonObject drop(final ExtremeEntityCrusher.Drop d) {
-        final JsonObject o = new JsonObject();
-        o.addProperty("amount", d.amount);
-        o.addProperty("c0", d.c0);
-        if (d.cL != null) o.addProperty("cL", d.cL);
-        if (d.lootable != null) o.addProperty("lootable", d.lootable);
-        if (d.voidable != null) o.addProperty("voidable", d.voidable);
+    private static Map<String, Object> drop(final ExtremeEntityCrusher.Drop d) {
+        final Map<String, Object> o = new LinkedHashMap<>();
+        o.put("amount", d.amount);
+        o.put("c0", d.c0);
+        if (d.cL != null) o.put("cL", d.cL);
+        if (d.lootable != null) o.put("lootable", d.lootable);
+        if (d.voidable != null) o.put("voidable", d.voidable);
         return o;
     }
 

@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "latestStableVersion": {
+      "type": "string"
+    },
+    "latestDailyVersion": {
+      "type": "string"
+    },
+    "versions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/DatasetVersion"
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "versions"
+  ],
+  "$defs": {
+    "DatasetVersion": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "gtnhVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "channel": {
+          "type": "string",
+          "enum": [
+            "stable",
+            "daily",
+            "experimental"
+          ]
+        },
+        "publishedAt": {
+          "type": "string"
+        },
+        "manifestPath": {
+          "type": "string"
+        },
+        "recipeDatasetPath": {
+          "type": "string"
+        },
+        "resourceIndexPath": {
+          "type": "string"
+        },
+        "recipeIndexPath": {
+          "type": "string"
+        },
+        "recipeLookupIndexPath": {
+          "type": "string"
+        },
+        "checksumSha256": {
+          "type": "string"
+        },
+        "sourceInfo": {
+          "$ref": "#/$defs/DatasetSourceInfo"
+        },
+        "gameRates": {
+          "$ref": "#/$defs/GameRates"
+        }
+      },
+      "required": [
+        "id",
+        "gtnhVersion",
+        "channel",
+        "publishedAt",
+        "manifestPath",
+        "recipeDatasetPath",
+        "sourceInfo"
+      ]
+    },
+    "DatasetSourceInfo": {
+      "type": "object",
+      "properties": {
+        "sourceId": {
+          "type": "string",
+          "enum": [
+            "nesql",
+            "recex",
+            "nerd",
+            "gtnh-oracle",
+            "unknown"
+          ]
+        },
+        "sourceVersion": {
+          "type": "string"
+        },
+        "generatedAt": {
+          "type": "string"
+        },
+        "gitCommit": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "sourceId",
+        "generatedAt"
+      ]
+    },
+    "GameRates": {
+      "type": "object",
+      "properties": {
+        "beesYield": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "ic2CropsYield": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "recipeDurationDivisor": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    }
+  },
+  "title": "Recipe dataset manifest"
+}

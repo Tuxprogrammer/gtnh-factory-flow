@@ -1,0 +1,688 @@
+{
+  "schemaVersion": 1,
+  "id": "mod-corpus-hv-diesel",
+  "name": "corpus hv-diesel",
+  "description": "Made in the game",
+  "icon": {
+    "kind": "item",
+    "resourceId": "minecraft:iron_ingot",
+    "displayName": "minecraft:iron_ingot"
+  },
+  "solveMode": true,
+  "planMode": true,
+  "recipes": [
+    {
+      "id": "gtnhplanner:860692c4-ca29-45a7-b9b5-8e8714487b50",
+      "name": "item|Sulfuric Heavy Fuel",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:1126",
+      "minimumTier": "LV",
+      "durationTicks": 32,
+      "eut": 1920,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Oil",
+          "displayName": "Oil",
+          "amount": 1000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Sulfuric Heavy Fuel",
+          "displayName": "Sulfuric Heavy Fuel",
+          "amount": 300
+        },
+        {
+          "kind": "item",
+          "id": "Sulfuric Light Fuel",
+          "displayName": "Sulfuric Light Fuel",
+          "amount": 1000
+        },
+        {
+          "kind": "item",
+          "id": "Sulfuric Naphtha",
+          "displayName": "Sulfuric Naphtha",
+          "amount": 400
+        },
+        {
+          "kind": "item",
+          "id": "Naphthenic Acid",
+          "displayName": "Naphthenic Acid",
+          "amount": 50
+        },
+        {
+          "kind": "item",
+          "id": "Sulfuric Gas",
+          "displayName": "Sulfuric Gas",
+          "amount": 1200
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:9af84517-e69f-4aaa-b6c9-869176650845",
+      "name": "item|Sulfur Dust",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:372",
+      "minimumTier": "LV",
+      "durationTicks": 72,
+      "eut": 120,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Hydrogen Sulfide",
+          "displayName": "Hydrogen Sulfide",
+          "amount": 1000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Sulfur Dust",
+          "displayName": "Sulfur Dust",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Hydrogen",
+          "displayName": "Hydrogen",
+          "amount": 2000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:fae9d377-be9e-4682-b363-31e3f747dd95",
+      "name": "item|Light Fuel",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:1169",
+      "minimumTier": "LV",
+      "durationTicks": 10,
+      "eut": 480,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Sulfuric Light Fuel",
+          "displayName": "Sulfuric Light Fuel",
+          "amount": 12000
+        },
+        {
+          "kind": "item",
+          "id": "Hydrogen",
+          "displayName": "Hydrogen",
+          "amount": 2000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Light Fuel",
+          "displayName": "Light Fuel",
+          "amount": 12000
+        },
+        {
+          "kind": "item",
+          "id": "Hydrogen Sulfide",
+          "displayName": "Hydrogen Sulfide",
+          "amount": 1000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:024057c5-7d50-4b1e-9301-68543214a7a4",
+      "name": "item|Heavy Fuel",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:1169",
+      "minimumTier": "LV",
+      "durationTicks": 10,
+      "eut": 480,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Sulfuric Heavy Fuel",
+          "displayName": "Sulfuric Heavy Fuel",
+          "amount": 8000
+        },
+        {
+          "kind": "item",
+          "id": "Hydrogen",
+          "displayName": "Hydrogen",
+          "amount": 2000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Heavy Fuel",
+          "displayName": "Heavy Fuel",
+          "amount": 8000
+        },
+        {
+          "kind": "item",
+          "id": "Hydrogen Sulfide",
+          "displayName": "Hydrogen Sulfide",
+          "amount": 1000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:29c05102-a7e5-4736-99f3-d8fa505bf531",
+      "name": "item|Diesel",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:1169",
+      "minimumTier": "LV",
+      "durationTicks": 100,
+      "eut": 480,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Light Fuel",
+          "displayName": "Light Fuel",
+          "amount": 20000
+        },
+        {
+          "kind": "item",
+          "id": "Heavy Fuel",
+          "displayName": "Heavy Fuel",
+          "amount": 4000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Diesel",
+          "displayName": "Diesel",
+          "amount": 24000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:63af1774-294e-4b6f-bc25-a3908a5a0bd9",
+      "name": "item|EU",
+      "kind": "gregtech_machine",
+      "machineType": "Combustion Generator",
+      "minimumTier": "LV",
+      "durationTicks": 20,
+      "eut": 0,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Diesel",
+          "displayName": "Diesel",
+          "amount": 26
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "EU",
+          "displayName": "EU",
+          "amount": 10240
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "860692c4-ca29-45a7-b9b5-8e8714487b50",
+      "recipeId": "gtnhplanner:860692c4-ca29-45a7-b9b5-8e8714487b50",
+      "machineCount": 4.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "machineConfigTiers": {
+        "circuit": "3"
+      },
+      "solvePin": 4.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 154,
+        "y": 240
+      },
+      "portRates": {
+        "input:item:Oil": 2.5
+      },
+      "pocketId": "pocket-imported-smelting"
+    },
+    {
+      "id": "9af84517-e69f-4aaa-b6c9-869176650845",
+      "recipeId": "gtnhplanner:9af84517-e69f-4aaa-b6c9-869176650845",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 398,
+        "y": 41
+      }
+    },
+    {
+      "id": "fae9d377-be9e-4682-b363-31e3f747dd95",
+      "recipeId": "gtnhplanner:fae9d377-be9e-4682-b363-31e3f747dd95",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "position": {
+        "x": 759,
+        "y": 41
+      }
+    },
+    {
+      "id": "024057c5-7d50-4b1e-9301-68543214a7a4",
+      "recipeId": "gtnhplanner:024057c5-7d50-4b1e-9301-68543214a7a4",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "position": {
+        "x": 1120,
+        "y": 41
+      }
+    },
+    {
+      "id": "29c05102-a7e5-4736-99f3-d8fa505bf531",
+      "recipeId": "gtnhplanner:29c05102-a7e5-4736-99f3-d8fa505bf531",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "position": {
+        "x": 1481,
+        "y": 41
+      }
+    },
+    {
+      "id": "63af1774-294e-4b6f-bc25-a3908a5a0bd9",
+      "recipeId": "gtnhplanner:63af1774-294e-4b6f-bc25-a3908a5a0bd9",
+      "machineCount": 118.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 118.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1234,
+        "y": -567
+      }
+    }
+  ],
+  "storages": [
+    {
+      "id": "89900894-2d26-4cce-bf9c-5990a995078e",
+      "kind": "item",
+      "resourceId": "naphthenic acid",
+      "displayName": "naphthenic acid",
+      "drainMode": "trash",
+      "position": {
+        "x": 220,
+        "y": 324
+      },
+      "pocketId": "pocket-adc0f4b4-62bd-3459-a06e-05f92980340c"
+    },
+    {
+      "id": "9275d439-13d9-4bda-8bea-2a7217b7b0c6",
+      "kind": "item",
+      "resourceId": "sulfur dust",
+      "displayName": "sulfur dust",
+      "drainMode": "trash",
+      "position": {
+        "x": -303,
+        "y": 110
+      }
+    },
+    {
+      "id": "99d5d115-b6e0-4ba6-b2c4-b0b4f0eeaa25",
+      "kind": "item",
+      "resourceId": "sulfuric naphtha",
+      "displayName": "sulfuric naphtha",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 207
+      }
+    },
+    {
+      "id": "bec295da-446c-4412-bafa-ffd302e2155f",
+      "kind": "item",
+      "resourceId": "sulfuric gas",
+      "displayName": "sulfuric gas",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 304
+      }
+    },
+    {
+      "id": "fdb3e9e7-8e31-4efd-808c-bb32fffb6ba8",
+      "kind": "item",
+      "resourceId": "diesel",
+      "displayName": "diesel",
+      "position": {
+        "x": -303,
+        "y": 401
+      }
+    },
+    {
+      "id": "2682c2ea-e240-43ab-8ef7-85ccb658f873",
+      "kind": "item",
+      "resourceId": "diesel",
+      "displayName": "diesel",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 498
+      }
+    },
+    {
+      "id": "3a5cc1ca-1df5-4162-9218-658b75f47bf5",
+      "kind": "item",
+      "resourceId": "eu",
+      "displayName": "eu",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 595
+      }
+    }
+  ],
+  "annotations": [
+    {
+      "id": "c0879553-b2a6-3193-ada4-a27fec8cd29e",
+      "kind": "zone",
+      "colorTag": "lime",
+      "position": {
+        "x": 1503,
+        "y": -91
+      },
+      "size": {
+        "width": 203,
+        "height": 117
+      },
+      "points": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 203,
+          "y": 13
+        },
+        {
+          "x": 97,
+          "y": 117
+        }
+      ],
+      "style": {
+        "marks": "hatch"
+      }
+    },
+    {
+      "id": "0280c6ba-dfbb-3cf0-a52c-de2068ca09a1",
+      "kind": "arrow",
+      "colorTag": "magenta",
+      "position": {
+        "x": 60,
+        "y": 56
+      },
+      "size": {
+        "width": 163,
+        "height": 0
+      },
+      "arrowDirection": "up-left",
+      "arrowHeads": "both",
+      "arrowWidth": 4,
+      "pocketId": "pocket-imported-smelting"
+    },
+    {
+      "id": "3a11e410-5fbb-337f-b3ab-a1e18e1e7754",
+      "kind": "image",
+      "text": "The finished line",
+      "position": {
+        "x": 2011,
+        "y": 733
+      },
+      "size": {
+        "width": 160,
+        "height": 90
+      },
+      "imageUrl": "https://example.com/line.png"
+    },
+    {
+      "id": "47e6e046-3130-3df7-8490-a763b96450a6",
+      "kind": "box",
+      "colorTag": "orange",
+      "position": {
+        "x": 112,
+        "y": 78
+      },
+      "size": {
+        "width": 377,
+        "height": 151
+      },
+      "style": {
+        "border": "dashed",
+        "borderColor": "red",
+        "fillColor": "light_blue",
+        "fill": "solid",
+        "marks": "graph"
+      },
+      "pocketId": "pocket-adc0f4b4-62bd-3459-a06e-05f92980340c"
+    },
+    {
+      "id": "7bd49103-37ec-3618-82b3-1699a15bd225",
+      "kind": "text",
+      "colorTag": "lime",
+      "text": "Feed it\nfrom the ME system",
+      "position": {
+        "x": 16,
+        "y": 122
+      },
+      "size": {
+        "width": 213,
+        "height": 131
+      },
+      "fontSize": 18,
+      "pocketId": "pocket-imported-smelting"
+    }
+  ],
+  "pockets": [
+    {
+      "id": "pocket-adc0f4b4-62bd-3459-a06e-05f92980340c",
+      "name": "Ore line",
+      "colorTag": "orange",
+      "position": {
+        "x": -523,
+        "y": -311
+      },
+      "expanded": true,
+      "size": {
+        "width": 2741,
+        "height": 1307
+      },
+      "theme": "blueprint",
+      "pattern": "dots"
+    },
+    {
+      "id": "pocket-imported-smelting",
+      "name": "Smelting",
+      "parentPocketId": "pocket-adc0f4b4-62bd-3459-a06e-05f92980340c",
+      "position": {
+        "x": 406,
+        "y": 112
+      },
+      "expanded": false,
+      "size": {
+        "width": 613,
+        "height": 421
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "915cf560-9467-493e-8bfb-c4c241e8b295",
+      "source": "9af84517-e69f-4aaa-b6c9-869176650845",
+      "target": "fae9d377-be9e-4682-b363-31e3f747dd95",
+      "sourceHandle": "output:item:Hydrogen",
+      "targetHandle": "input:item:Hydrogen",
+      "resourceKind": "item",
+      "resourceId": "Hydrogen"
+    },
+    {
+      "id": "a6b2185a-2e2c-47f9-ace5-7210b4eb8432",
+      "source": "fae9d377-be9e-4682-b363-31e3f747dd95",
+      "target": "29c05102-a7e5-4736-99f3-d8fa505bf531",
+      "sourceHandle": "output:item:Light%20Fuel",
+      "targetHandle": "input:item:Light%20Fuel",
+      "resourceKind": "item",
+      "resourceId": "Light Fuel"
+    },
+    {
+      "id": "fd014994-0f36-4c51-9ac0-71e3b0d00f51",
+      "source": "024057c5-7d50-4b1e-9301-68543214a7a4",
+      "target": "29c05102-a7e5-4736-99f3-d8fa505bf531",
+      "sourceHandle": "output:item:Heavy%20Fuel",
+      "targetHandle": "input:item:Heavy%20Fuel",
+      "resourceKind": "item",
+      "resourceId": "Heavy Fuel"
+    },
+    {
+      "id": "37c6e70b-45cb-4d0e-b8bb-6ba93d5ef110",
+      "source": "860692c4-ca29-45a7-b9b5-8e8714487b50",
+      "target": "fae9d377-be9e-4682-b363-31e3f747dd95",
+      "sourceHandle": "output:item:Sulfuric%20Light%20Fuel",
+      "targetHandle": "input:item:Sulfuric%20Light%20Fuel",
+      "resourceKind": "item",
+      "resourceId": "Sulfuric Light Fuel"
+    },
+    {
+      "id": "4df6badb-7879-4bf5-9a69-726347d1f372",
+      "source": "860692c4-ca29-45a7-b9b5-8e8714487b50",
+      "target": "024057c5-7d50-4b1e-9301-68543214a7a4",
+      "sourceHandle": "output:item:Sulfuric%20Heavy%20Fuel",
+      "targetHandle": "input:item:Sulfuric%20Heavy%20Fuel",
+      "resourceKind": "item",
+      "resourceId": "Sulfuric Heavy Fuel"
+    },
+    {
+      "id": "58e1f4bb-0cc4-42e2-a105-261d76af64bf",
+      "source": "9af84517-e69f-4aaa-b6c9-869176650845",
+      "target": "024057c5-7d50-4b1e-9301-68543214a7a4",
+      "sourceHandle": "output:item:Hydrogen",
+      "targetHandle": "input:item:Hydrogen",
+      "resourceKind": "item",
+      "resourceId": "Hydrogen"
+    },
+    {
+      "id": "62e59286-3292-4f40-91ac-c630f9415bf9",
+      "source": "024057c5-7d50-4b1e-9301-68543214a7a4",
+      "target": "9af84517-e69f-4aaa-b6c9-869176650845",
+      "sourceHandle": "output:item:Hydrogen%20Sulfide",
+      "targetHandle": "input:item:Hydrogen%20Sulfide",
+      "resourceKind": "item",
+      "resourceId": "Hydrogen Sulfide"
+    },
+    {
+      "id": "7b609571-2601-489c-913b-adc471c43d31",
+      "source": "fae9d377-be9e-4682-b363-31e3f747dd95",
+      "target": "9af84517-e69f-4aaa-b6c9-869176650845",
+      "sourceHandle": "output:item:Hydrogen%20Sulfide",
+      "targetHandle": "input:item:Hydrogen%20Sulfide",
+      "resourceKind": "item",
+      "resourceId": "Hydrogen Sulfide"
+    },
+    {
+      "id": "89900894-2d26-4cce-bf9c-5990a995078e:860692c4-ca29-45a7-b9b5-8e8714487b50:3",
+      "source": "860692c4-ca29-45a7-b9b5-8e8714487b50",
+      "target": "89900894-2d26-4cce-bf9c-5990a995078e",
+      "sourceHandle": "output:item:naphthenic%20acid",
+      "targetHandle": "input:item:naphthenic%20acid",
+      "resourceKind": "item",
+      "resourceId": "naphthenic acid"
+    },
+    {
+      "id": "9275d439-13d9-4bda-8bea-2a7217b7b0c6:9af84517-e69f-4aaa-b6c9-869176650845:0",
+      "source": "9af84517-e69f-4aaa-b6c9-869176650845",
+      "target": "9275d439-13d9-4bda-8bea-2a7217b7b0c6",
+      "sourceHandle": "output:item:sulfur%20dust",
+      "targetHandle": "input:item:sulfur%20dust",
+      "resourceKind": "item",
+      "resourceId": "sulfur dust"
+    },
+    {
+      "id": "99d5d115-b6e0-4ba6-b2c4-b0b4f0eeaa25:860692c4-ca29-45a7-b9b5-8e8714487b50:2",
+      "source": "860692c4-ca29-45a7-b9b5-8e8714487b50",
+      "target": "99d5d115-b6e0-4ba6-b2c4-b0b4f0eeaa25",
+      "sourceHandle": "output:item:sulfuric%20naphtha",
+      "targetHandle": "input:item:sulfuric%20naphtha",
+      "resourceKind": "item",
+      "resourceId": "sulfuric naphtha"
+    },
+    {
+      "id": "bec295da-446c-4412-bafa-ffd302e2155f:860692c4-ca29-45a7-b9b5-8e8714487b50:4",
+      "source": "860692c4-ca29-45a7-b9b5-8e8714487b50",
+      "target": "bec295da-446c-4412-bafa-ffd302e2155f",
+      "sourceHandle": "output:item:sulfuric%20gas",
+      "targetHandle": "input:item:sulfuric%20gas",
+      "resourceKind": "item",
+      "resourceId": "sulfuric gas"
+    },
+    {
+      "id": "fdb3e9e7-8e31-4efd-808c-bb32fffb6ba8:63af1774-294e-4b6f-bc25-a3908a5a0bd9:0",
+      "source": "fdb3e9e7-8e31-4efd-808c-bb32fffb6ba8",
+      "target": "63af1774-294e-4b6f-bc25-a3908a5a0bd9",
+      "sourceHandle": "output:item:diesel",
+      "targetHandle": "input:item:diesel",
+      "resourceKind": "item",
+      "resourceId": "diesel"
+    },
+    {
+      "id": "2682c2ea-e240-43ab-8ef7-85ccb658f873:29c05102-a7e5-4736-99f3-d8fa505bf531:0",
+      "source": "29c05102-a7e5-4736-99f3-d8fa505bf531",
+      "target": "2682c2ea-e240-43ab-8ef7-85ccb658f873",
+      "sourceHandle": "output:item:diesel",
+      "targetHandle": "input:item:diesel",
+      "resourceKind": "item",
+      "resourceId": "diesel"
+    },
+    {
+      "id": "3a5cc1ca-1df5-4162-9218-658b75f47bf5:63af1774-294e-4b6f-bc25-a3908a5a0bd9:0",
+      "source": "63af1774-294e-4b6f-bc25-a3908a5a0bd9",
+      "target": "3a5cc1ca-1df5-4162-9218-658b75f47bf5",
+      "sourceHandle": "output:item:eu",
+      "targetHandle": "input:item:eu",
+      "resourceKind": "item",
+      "resourceId": "eu"
+    }
+  ],
+  "fuelProfiles": [],
+  "metadata": {
+    "source": "GTNH Planner"
+  }
+}

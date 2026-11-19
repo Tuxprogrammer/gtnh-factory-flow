@@ -1,0 +1,6 @@
+# Classes in this module that replace a class on TeaVM's classpath (a classlib class or a library class). One line each:
+# <fully qualified name> <why, in words>. check/OverrideCheck.java (task checkOverrides*) fails when this list and the
+# classes that really shadow another class differ, and when a listed one is not first on the classpath TeaVM compiles.
+# A class is added here in the same commit that adds the override; a plugin upgrade that renames the replaced class
+# shows up as a listed class that replaces nothing.
+org.teavm.classlib.java.lang.TRuntime adds maxMemory (TeaVM's has none; ojAlgo's Hardware calls it): 4 GiB; read back by the webCoreRuntimeMaxMemory export

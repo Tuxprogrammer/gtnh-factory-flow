@@ -367,8 +367,9 @@ function normalizeCrafting(domain) {
     if (!output) {
       continue;
     }
-    // A slot the exporter could not resolve to any item means the game's recipe
-    // asks for something that does not exist, so it can never be crafted.
+    // The exporter marks a slot whose oredict list is empty: Forge never matches
+    // one, so the game's recipe asks for something that does not exist and can
+    // never be crafted.
     if ((rawRecipe.inputs ?? []).some((entry) => entry?.kind === "missing")) {
       continue;
     }

@@ -3027,15 +3027,24 @@ public final class GtnhCalcOracleExporter {
         if (resource != null) {
             resource.put("slotIndex", Integer.valueOf(slotIndex));
             inputs.add(resource);
-        } else if (input != null) {
-            // A filled slot that names no real item (a GT recipe's "gemFlawlessFluix"
-            // when no such item exists). The recipe cannot be crafted, so the
-            // normalizer needs to see it and drop the recipe.
+        } else if (isEmptyChoice(input)) {
+            // A slot whose oredict list holds no item (a GT recipe's "gemFlawlessFluix"
+            // when no such item exists). Forge never matches an empty list, so the
+            // recipe cannot be crafted and the normalizer needs to see it to drop it.
+            // Other inputs this exporter cannot read (AE2 ingredients, integers, empty
+            // stacks) belong to recipes that do craft, so they stay silently skipped.
             Map<String, Object> missing = map();
             missing.put("kind", "missing");
             missing.put("slotIndex", Integer.valueOf(slotIndex));
             inputs.add(missing);
         }
+    }
+
+    private boolean isEmptyChoice(Object input) {
+        if (input instanceof java.util.Collection) {
+            return ((java.util.Collection<?>) input).isEmpty();
+        }
+        return input != null && input.getClass().isArray() && java.lang.reflect.Array.getLength(input) == 0;
     }
 
     private Map<String, Object> resourceFromUnknown(Object input) {

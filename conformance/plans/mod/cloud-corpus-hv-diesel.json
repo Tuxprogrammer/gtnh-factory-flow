@@ -1,0 +1,1380 @@
+{
+  "schemaVersion": 1,
+  "name": "hv-diesel",
+  "description": "Made in the game",
+  "icon": {
+    "kind": "item",
+    "resourceId": "minecraft:iron_ingot",
+    "displayName": "minecraft:iron_ingot"
+  },
+  "solveMode": true,
+  "planMode": true,
+  "primaryView": "plan",
+  "metadata": {
+    "source": "GTNH Planner"
+  },
+  "gtnhplanner": {
+    "v": 1,
+    "game": {
+      "balanceMode": "AUTO",
+      "settingPins": {
+        "item:gregtech:gt.blockmachines:1000": [
+          "voltage",
+          "amp"
+        ]
+      },
+      "groups": [
+        {
+          "machineCapacity": 1,
+          "pinned": true,
+          "exact": true,
+          "sections": [
+            "fae9d377-be9e-4682-b363-31e3f747dd95",
+            "024057c5-7d50-4b1e-9301-68543214a7a4",
+            "29c05102-a7e5-4736-99f3-d8fa505bf531"
+          ],
+          "width": 300,
+          "height": 200,
+          "color": 2140282728,
+          "collapsed": false,
+          "clampNodes": false,
+          "coverChildren": false,
+          "children": {},
+          "nodeIds": [
+            "fae9d377-be9e-4682-b363-31e3f747dd95",
+            "29c05102-a7e5-4736-99f3-d8fa505bf531",
+            "024057c5-7d50-4b1e-9301-68543214a7a4"
+          ],
+          "id": "c348c2be-60e1-372f-8714-8241e0c81e8a",
+          "x": 0,
+          "y": 0,
+          "header": "Machine Group",
+          "type": "machine_group"
+        },
+        {
+          "width": 700,
+          "height": 400,
+          "color": 2134075033,
+          "collapsed": false,
+          "clampNodes": false,
+          "coverChildren": false,
+          "children": {},
+          "nodeIds": [
+            "860692c4-ca29-45a7-b9b5-8e8714487b50"
+          ],
+          "id": "654ea48f-6c1f-3ec1-9642-e74f9a0aca45",
+          "x": 5,
+          "y": 6,
+          "header": "Ore line",
+          "type": "group"
+        }
+      ],
+      "icon": "item:minecraft:iron_ingot:0"
+    },
+    "sum": "81a512ade358df27"
+  },
+  "id": "mod-corpus-hv-diesel",
+  "nodes": [
+    {
+      "id": "860692c4-ca29-45a7-b9b5-8e8714487b50",
+      "recipeId": "gtnhplanner:860692c4-ca29-45a7-b9b5-8e8714487b50",
+      "machineCount": 4.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "machineConfigTiers": {
+        "circuit": "3"
+      },
+      "solvePin": 4.0,
+      "solvePinExact": true,
+      "portRates": {
+        "input:item:Oil": 2.5
+      },
+      "position": {
+        "x": 154,
+        "y": 240
+      },
+      "pocketId": "d7e3b3af-6612-3c0a-8974-228f6075d323",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:1126",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 4,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputTargets": {
+            "0": 2.5
+          },
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "machines": 4,
+              "tick_modifier": 150,
+              "machine:circuit": "3"
+            }
+          },
+          "worlds": {
+            "": [
+              [
+                0,
+                100,
+                64,
+                -200,
+                2
+              ]
+            ]
+          }
+        },
+        "sum": "5bcd95642ce325c0"
+      }
+    },
+    {
+      "id": "9af84517-e69f-4aaa-b6c9-869176650845",
+      "recipeId": "gtnhplanner:9af84517-e69f-4aaa-b6c9-869176650845",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 398,
+        "y": 41
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:372",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "680640ec44ce810a"
+      }
+    },
+    {
+      "id": "fae9d377-be9e-4682-b363-31e3f747dd95",
+      "recipeId": "gtnhplanner:fae9d377-be9e-4682-b363-31e3f747dd95",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "position": {
+        "x": 759,
+        "y": 41
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:1169",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "f688e9ba903d3bec"
+      }
+    },
+    {
+      "id": "024057c5-7d50-4b1e-9301-68543214a7a4",
+      "recipeId": "gtnhplanner:024057c5-7d50-4b1e-9301-68543214a7a4",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "position": {
+        "x": 1120,
+        "y": 41
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:1169",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "337efa499fae80ec"
+      }
+    },
+    {
+      "id": "29c05102-a7e5-4736-99f3-d8fa505bf531",
+      "recipeId": "gtnhplanner:29c05102-a7e5-4736-99f3-d8fa505bf531",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "position": {
+        "x": 1481,
+        "y": 41
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:1169",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "35292bb57a22b15a"
+      }
+    },
+    {
+      "id": "63af1774-294e-4b6f-bc25-a3908a5a0bd9",
+      "recipeId": "gtnhplanner:63af1774-294e-4b6f-bc25-a3908a5a0bd9",
+      "machineCount": 118.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 118.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1234,
+        "y": -567
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "Combustion Generator",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 118,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 0.9728507
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "machines": 118
+            }
+          }
+        },
+        "sum": "07c858ff5b2a034c"
+      }
+    }
+  ],
+  "storages": [
+    {
+      "id": "89900894-2d26-4cce-bf9c-5990a995078e",
+      "kind": "item",
+      "resourceId": "naphthenic acid",
+      "displayName": "naphthenic acid",
+      "drainMode": "trash",
+      "position": {
+        "x": 220,
+        "y": 324
+      },
+      "pocketId": "adc0f4b4-62bd-3459-a06e-05f92980340c",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "TRASH",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:naphthenic acid:0",
+          "label": "Naphthenic Acid",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "cb8155564c8da719"
+      }
+    },
+    {
+      "id": "9275d439-13d9-4bda-8bea-2a7217b7b0c6",
+      "kind": "item",
+      "resourceId": "sulfur dust",
+      "displayName": "sulfur dust",
+      "drainMode": "trash",
+      "position": {
+        "x": -303,
+        "y": 110
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "TRASH",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:sulfur dust:0",
+          "label": "Sulfur Dust",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "dfebffa9c927296f"
+      }
+    },
+    {
+      "id": "99d5d115-b6e0-4ba6-b2c4-b0b4f0eeaa25",
+      "kind": "item",
+      "resourceId": "sulfuric naphtha",
+      "displayName": "sulfuric naphtha",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 207
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "PRODUCT",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:sulfuric naphtha:0",
+          "label": "Sulfuric Naphtha",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "651eebc5cd6b61ee"
+      }
+    },
+    {
+      "id": "bec295da-446c-4412-bafa-ffd302e2155f",
+      "kind": "item",
+      "resourceId": "sulfuric gas",
+      "displayName": "sulfuric gas",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 304
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "PRODUCT",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:sulfuric gas:0",
+          "label": "Sulfuric Gas",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "68adbcceae3cf585"
+      }
+    },
+    {
+      "id": "fdb3e9e7-8e31-4efd-808c-bb32fffb6ba8",
+      "kind": "item",
+      "resourceId": "diesel",
+      "displayName": "diesel",
+      "position": {
+        "x": -303,
+        "y": 401
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "SOURCE",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:diesel:0",
+          "label": "Fuel",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "7aa936bb9c3fbe65"
+      }
+    },
+    {
+      "id": "2682c2ea-e240-43ab-8ef7-85ccb658f873",
+      "kind": "item",
+      "resourceId": "diesel",
+      "displayName": "diesel",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 498
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "PRODUCT",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:diesel:0",
+          "label": "Fuel",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "fc5b94904e6a50a7"
+      }
+    },
+    {
+      "id": "3a5cc1ca-1df5-4162-9218-658b75f47bf5",
+      "kind": "item",
+      "resourceId": "eu",
+      "displayName": "eu",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 595
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "PRODUCT",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:eu:0",
+          "label": "EU",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "3ffd4646bbfbfa8a"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "89900894-2d26-4cce-bf9c-5990a995078e:860692c4-ca29-45a7-b9b5-8e8714487b50:3",
+      "source": "860692c4-ca29-45a7-b9b5-8e8714487b50",
+      "target": "89900894-2d26-4cce-bf9c-5990a995078e",
+      "sourceHandle": "output:item:naphthenic%20acid",
+      "targetHandle": "input:item:naphthenic%20acid",
+      "resourceKind": "item",
+      "resourceId": "naphthenic acid",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 3
+        },
+        "sum": "396f1f963489659c"
+      }
+    },
+    {
+      "id": "9275d439-13d9-4bda-8bea-2a7217b7b0c6:9af84517-e69f-4aaa-b6c9-869176650845:0",
+      "source": "9af84517-e69f-4aaa-b6c9-869176650845",
+      "target": "9275d439-13d9-4bda-8bea-2a7217b7b0c6",
+      "sourceHandle": "output:item:sulfur%20dust",
+      "targetHandle": "input:item:sulfur%20dust",
+      "resourceKind": "item",
+      "resourceId": "sulfur dust",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 0
+        },
+        "sum": "c42df7b22d397ed2"
+      }
+    },
+    {
+      "id": "99d5d115-b6e0-4ba6-b2c4-b0b4f0eeaa25:860692c4-ca29-45a7-b9b5-8e8714487b50:2",
+      "source": "860692c4-ca29-45a7-b9b5-8e8714487b50",
+      "target": "99d5d115-b6e0-4ba6-b2c4-b0b4f0eeaa25",
+      "sourceHandle": "output:item:sulfuric%20naphtha",
+      "targetHandle": "input:item:sulfuric%20naphtha",
+      "resourceKind": "item",
+      "resourceId": "sulfuric naphtha",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 2
+        },
+        "sum": "5906787f1ee223b1"
+      }
+    },
+    {
+      "id": "bec295da-446c-4412-bafa-ffd302e2155f:860692c4-ca29-45a7-b9b5-8e8714487b50:4",
+      "source": "860692c4-ca29-45a7-b9b5-8e8714487b50",
+      "target": "bec295da-446c-4412-bafa-ffd302e2155f",
+      "sourceHandle": "output:item:sulfuric%20gas",
+      "targetHandle": "input:item:sulfuric%20gas",
+      "resourceKind": "item",
+      "resourceId": "sulfuric gas",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 4
+        },
+        "sum": "199526e53ece340a"
+      }
+    },
+    {
+      "id": "fdb3e9e7-8e31-4efd-808c-bb32fffb6ba8:63af1774-294e-4b6f-bc25-a3908a5a0bd9:0",
+      "source": "fdb3e9e7-8e31-4efd-808c-bb32fffb6ba8",
+      "target": "63af1774-294e-4b6f-bc25-a3908a5a0bd9",
+      "sourceHandle": "output:item:diesel",
+      "targetHandle": "input:item:diesel",
+      "resourceKind": "item",
+      "resourceId": "diesel",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 0
+        },
+        "sum": "07cc82856c3b5576"
+      }
+    },
+    {
+      "id": "2682c2ea-e240-43ab-8ef7-85ccb658f873:29c05102-a7e5-4736-99f3-d8fa505bf531:0",
+      "source": "29c05102-a7e5-4736-99f3-d8fa505bf531",
+      "target": "2682c2ea-e240-43ab-8ef7-85ccb658f873",
+      "sourceHandle": "output:item:diesel",
+      "targetHandle": "input:item:diesel",
+      "resourceKind": "item",
+      "resourceId": "diesel",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 0
+        },
+        "sum": "3b804396c4eb03c2"
+      }
+    },
+    {
+      "id": "3a5cc1ca-1df5-4162-9218-658b75f47bf5:63af1774-294e-4b6f-bc25-a3908a5a0bd9:0",
+      "source": "63af1774-294e-4b6f-bc25-a3908a5a0bd9",
+      "target": "3a5cc1ca-1df5-4162-9218-658b75f47bf5",
+      "sourceHandle": "output:item:eu",
+      "targetHandle": "input:item:eu",
+      "resourceKind": "item",
+      "resourceId": "eu",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 0
+        },
+        "sum": "6b2cc085187f5e31"
+      }
+    },
+    {
+      "id": "915cf560-9467-493e-8bfb-c4c241e8b295",
+      "source": "9af84517-e69f-4aaa-b6c9-869176650845",
+      "target": "fae9d377-be9e-4682-b363-31e3f747dd95",
+      "sourceHandle": "output:item:Hydrogen",
+      "targetHandle": "input:item:Hydrogen",
+      "resourceKind": "item",
+      "resourceId": "Hydrogen",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 1,
+          "dstIn": 1
+        },
+        "sum": "066269b212d0d4c5"
+      }
+    },
+    {
+      "id": "a6b2185a-2e2c-47f9-ace5-7210b4eb8432",
+      "source": "fae9d377-be9e-4682-b363-31e3f747dd95",
+      "target": "29c05102-a7e5-4736-99f3-d8fa505bf531",
+      "sourceHandle": "output:item:Light%20Fuel",
+      "targetHandle": "input:item:Light%20Fuel",
+      "resourceKind": "item",
+      "resourceId": "Light Fuel",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "279b346dba804db7"
+      }
+    },
+    {
+      "id": "fd014994-0f36-4c51-9ac0-71e3b0d00f51",
+      "source": "024057c5-7d50-4b1e-9301-68543214a7a4",
+      "target": "29c05102-a7e5-4736-99f3-d8fa505bf531",
+      "sourceHandle": "output:item:Heavy%20Fuel",
+      "targetHandle": "input:item:Heavy%20Fuel",
+      "resourceKind": "item",
+      "resourceId": "Heavy Fuel",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 1
+        },
+        "sum": "235af4bf03d1c978"
+      }
+    },
+    {
+      "id": "37c6e70b-45cb-4d0e-b8bb-6ba93d5ef110",
+      "source": "860692c4-ca29-45a7-b9b5-8e8714487b50",
+      "target": "fae9d377-be9e-4682-b363-31e3f747dd95",
+      "sourceHandle": "output:item:Sulfuric%20Light%20Fuel",
+      "targetHandle": "input:item:Sulfuric%20Light%20Fuel",
+      "resourceKind": "item",
+      "resourceId": "Sulfuric Light Fuel",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 1,
+          "dstIn": 0
+        },
+        "sum": "1de6d4d9431be7e3"
+      }
+    },
+    {
+      "id": "4df6badb-7879-4bf5-9a69-726347d1f372",
+      "source": "860692c4-ca29-45a7-b9b5-8e8714487b50",
+      "target": "024057c5-7d50-4b1e-9301-68543214a7a4",
+      "sourceHandle": "output:item:Sulfuric%20Heavy%20Fuel",
+      "targetHandle": "input:item:Sulfuric%20Heavy%20Fuel",
+      "resourceKind": "item",
+      "resourceId": "Sulfuric Heavy Fuel",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "1474edf8e212a717"
+      }
+    },
+    {
+      "id": "58e1f4bb-0cc4-42e2-a105-261d76af64bf",
+      "source": "9af84517-e69f-4aaa-b6c9-869176650845",
+      "target": "024057c5-7d50-4b1e-9301-68543214a7a4",
+      "sourceHandle": "output:item:Hydrogen",
+      "targetHandle": "input:item:Hydrogen",
+      "resourceKind": "item",
+      "resourceId": "Hydrogen",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 1,
+          "dstIn": 1
+        },
+        "sum": "13e9b26b79dc79be"
+      }
+    },
+    {
+      "id": "62e59286-3292-4f40-91ac-c630f9415bf9",
+      "source": "024057c5-7d50-4b1e-9301-68543214a7a4",
+      "target": "9af84517-e69f-4aaa-b6c9-869176650845",
+      "sourceHandle": "output:item:Hydrogen%20Sulfide",
+      "targetHandle": "input:item:Hydrogen%20Sulfide",
+      "resourceKind": "item",
+      "resourceId": "Hydrogen Sulfide",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 1,
+          "dstIn": 0
+        },
+        "sum": "b94e70d9f92678dd"
+      }
+    },
+    {
+      "id": "7b609571-2601-489c-913b-adc471c43d31",
+      "source": "fae9d377-be9e-4682-b363-31e3f747dd95",
+      "target": "9af84517-e69f-4aaa-b6c9-869176650845",
+      "sourceHandle": "output:item:Hydrogen%20Sulfide",
+      "targetHandle": "input:item:Hydrogen%20Sulfide",
+      "resourceKind": "item",
+      "resourceId": "Hydrogen Sulfide",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 1,
+          "dstIn": 0
+        },
+        "sum": "f316792ab672cec9"
+      }
+    }
+  ],
+  "annotations": [
+    {
+      "id": "c0879553-b2a6-3193-ada4-a27fec8cd29e",
+      "kind": "zone",
+      "colorTag": "lime",
+      "size": {
+        "width": 203,
+        "height": 117
+      },
+      "points": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 203,
+          "y": 13
+        },
+        {
+          "x": 97,
+          "y": 117
+        }
+      ],
+      "style": {
+        "marks": "hatch"
+      },
+      "position": {
+        "x": 1503,
+        "y": -91
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [],
+          "width": 203,
+          "height": 117,
+          "color": "lime",
+          "fontSize": 14,
+          "kind": "zone",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              203,
+              13
+            ],
+            [
+              97,
+              117
+            ]
+          ],
+          "arrowWidth": 0,
+          "marks": "hatch",
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "819ad432df23d256"
+      }
+    },
+    {
+      "id": "0280c6ba-dfbb-3cf0-a52c-de2068ca09a1",
+      "kind": "arrow",
+      "colorTag": "magenta",
+      "size": {
+        "width": 163,
+        "height": 0
+      },
+      "arrowDirection": "up-left",
+      "arrowHeads": "both",
+      "arrowWidth": 4,
+      "position": {
+        "x": 60,
+        "y": 56
+      },
+      "pocketId": "d7e3b3af-6612-3c0a-8974-228f6075d323",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [],
+          "width": 163,
+          "height": 0,
+          "color": "magenta",
+          "fontSize": 14,
+          "kind": "arrow",
+          "arrowDirection": "up-left",
+          "arrowHeads": "both",
+          "arrowWidth": 4,
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "cb3d611f8425ebb5"
+      }
+    },
+    {
+      "id": "3a11e410-5fbb-337f-b3ab-a1e18e1e7754",
+      "kind": "image",
+      "text": "The finished line",
+      "size": {
+        "width": 160,
+        "height": 90
+      },
+      "imageUrl": "https://example.com/line.png",
+      "position": {
+        "x": 2011,
+        "y": 733
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [
+            "The finished line"
+          ],
+          "width": 160,
+          "height": 90,
+          "color": "",
+          "fontSize": 14,
+          "kind": "image",
+          "arrowWidth": 0,
+          "imageUrl": "https://example.com/line.png",
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "a95809388b5323ed"
+      }
+    },
+    {
+      "id": "47e6e046-3130-3df7-8490-a763b96450a6",
+      "kind": "box",
+      "colorTag": "orange",
+      "size": {
+        "width": 377,
+        "height": 151
+      },
+      "style": {
+        "border": "dashed",
+        "borderColor": "red",
+        "fillColor": "light_blue",
+        "fill": "solid",
+        "marks": "graph"
+      },
+      "position": {
+        "x": 112,
+        "y": 78
+      },
+      "pocketId": "adc0f4b4-62bd-3459-a06e-05f92980340c",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [],
+          "width": 377,
+          "height": 151,
+          "color": "orange",
+          "fontSize": 14,
+          "kind": "box",
+          "arrowWidth": 0,
+          "border": "dashed",
+          "borderColor": "red",
+          "fillColor": "light_blue",
+          "fill": "solid",
+          "marks": "graph",
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "c985286b48435569"
+      }
+    },
+    {
+      "id": "7bd49103-37ec-3618-82b3-1699a15bd225",
+      "kind": "text",
+      "colorTag": "lime",
+      "text": "Feed it\nfrom the ME system",
+      "size": {
+        "width": 213,
+        "height": 131
+      },
+      "fontSize": 18,
+      "position": {
+        "x": 16,
+        "y": 122
+      },
+      "pocketId": "d7e3b3af-6612-3c0a-8974-228f6075d323",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [
+            "Feed it",
+            "from the ME system"
+          ],
+          "width": 213,
+          "height": 131,
+          "color": "lime",
+          "fontSize": 18,
+          "arrowWidth": 0,
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "e2d210a0ba956741"
+      }
+    }
+  ],
+  "pockets": [
+    {
+      "id": "adc0f4b4-62bd-3459-a06e-05f92980340c",
+      "name": "Ore line",
+      "colorTag": "orange",
+      "expanded": true,
+      "size": {
+        "width": 2741,
+        "height": 1307
+      },
+      "theme": "blueprint",
+      "pattern": "dots",
+      "position": {
+        "x": -523,
+        "y": -311
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "name": "Ore line",
+          "color": "orange",
+          "width": 2741,
+          "height": 1307,
+          "collapsed": false,
+          "theme": "blueprint",
+          "pattern": "dots"
+        },
+        "sum": "4f0dbf1a01c52180"
+      }
+    },
+    {
+      "id": "d7e3b3af-6612-3c0a-8974-228f6075d323",
+      "name": "Smelting",
+      "expanded": false,
+      "size": {
+        "width": 613,
+        "height": 421
+      },
+      "position": {
+        "x": 406,
+        "y": 112
+      },
+      "parentPocketId": "adc0f4b4-62bd-3459-a06e-05f92980340c",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "ffId": "pocket-imported-smelting",
+          "name": "Smelting",
+          "width": 613,
+          "height": 421,
+          "collapsed": true
+        },
+        "sum": "65fff173ed680acb"
+      }
+    }
+  ],
+  "fuelProfiles": [],
+  "tasks": [
+    {
+      "id": "t1",
+      "title": "Build hv-diesel",
+      "text": "Two lines first.",
+      "status": "doing",
+      "order": "a0",
+      "assignees": [
+        "11111111-1111-4111-8111-111111111111"
+      ],
+      "links": [
+        {
+          "plan": "11111111-1111-4111-8111-111111111111:plan",
+          "node": "860692c4-ca29-45a7-b9b5-8e8714487b50"
+        }
+      ],
+      "createdBy": "11111111-1111-4111-8111-111111111111",
+      "createdAt": "2026-10-14T10:00:00.000Z"
+    },
+    {
+      "id": "t1b",
+      "title": "Power hv-diesel",
+      "status": "todo",
+      "order": "a1",
+      "blockedBy": [
+        "t1"
+      ]
+    }
+  ],
+  "taskItems": [
+    {
+      "id": "i1",
+      "taskId": "t1",
+      "text": "Place the machines",
+      "done": false,
+      "order": "a0",
+      "link": {
+        "plan": "11111111-1111-4111-8111-111111111111:plan",
+        "node": "860692c4-ca29-45a7-b9b5-8e8714487b50"
+      }
+    },
+    {
+      "id": "i2",
+      "taskId": "t1",
+      "kind": "location",
+      "text": "Ore field at 1 64 -2 in Overworld",
+      "done": true,
+      "order": "a1",
+      "place": {
+        "x": 1,
+        "y": 64,
+        "z": -2,
+        "dim": 0,
+        "dimName": "Overworld",
+        "world": "server:0123456789abcdef",
+        "label": "Ore field"
+      }
+    },
+    {
+      "id": "i3",
+      "taskId": "t1",
+      "kind": "picture",
+      "text": "Screenshot",
+      "done": false,
+      "order": "a2",
+      "picture": {
+        "thumb": "data:image/jpeg;base64,/9j/AA==",
+        "w": 1920,
+        "h": 1080,
+        "takenAt": "2026-10-15T09:00:00.000Z"
+      }
+    },
+    {
+      "id": "i4",
+      "taskId": "t1",
+      "kind": "quest",
+      "text": "Steam Age",
+      "done": false,
+      "order": "a3",
+      "quest": {
+        "id": "0f2a43a5-6c1e-4d7a-9b3b-6a8f3b0e2c11",
+        "name": "Steam Age",
+        "icon": "item:IC2:itemToolBronzePickaxe:0",
+        "line": "Tier 1 - Steam"
+      }
+    }
+  ],
+  "taskComments": [
+    {
+      "id": "c1",
+      "taskId": "t1",
+      "by": "11111111-1111-4111-8111-111111111111",
+      "byName": "ann",
+      "at": "2026-10-14T10:05:00Z",
+      "text": "On it"
+    }
+  ],
+  "recipes": [
+    {
+      "id": "gtnhplanner:860692c4-ca29-45a7-b9b5-8e8714487b50",
+      "name": "item|Sulfuric Heavy Fuel",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:1126",
+      "minimumTier": "LV",
+      "durationTicks": 32,
+      "eut": 1920,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Oil",
+          "displayName": "Oil",
+          "amount": 1000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Sulfuric Heavy Fuel",
+          "displayName": "Sulfuric Heavy Fuel",
+          "amount": 300
+        },
+        {
+          "kind": "item",
+          "id": "Sulfuric Light Fuel",
+          "displayName": "Sulfuric Light Fuel",
+          "amount": 1000
+        },
+        {
+          "kind": "item",
+          "id": "Sulfuric Naphtha",
+          "displayName": "Sulfuric Naphtha",
+          "amount": 400
+        },
+        {
+          "kind": "item",
+          "id": "Naphthenic Acid",
+          "displayName": "Naphthenic Acid",
+          "amount": 50
+        },
+        {
+          "kind": "item",
+          "id": "Sulfuric Gas",
+          "displayName": "Sulfuric Gas",
+          "amount": 1200
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:9af84517-e69f-4aaa-b6c9-869176650845",
+      "name": "item|Sulfur Dust",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:372",
+      "minimumTier": "LV",
+      "durationTicks": 72,
+      "eut": 120,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Hydrogen Sulfide",
+          "displayName": "Hydrogen Sulfide",
+          "amount": 1000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Sulfur Dust",
+          "displayName": "Sulfur Dust",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Hydrogen",
+          "displayName": "Hydrogen",
+          "amount": 2000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:fae9d377-be9e-4682-b363-31e3f747dd95",
+      "name": "item|Light Fuel",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:1169",
+      "minimumTier": "LV",
+      "durationTicks": 10,
+      "eut": 480,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Sulfuric Light Fuel",
+          "displayName": "Sulfuric Light Fuel",
+          "amount": 12000
+        },
+        {
+          "kind": "item",
+          "id": "Hydrogen",
+          "displayName": "Hydrogen",
+          "amount": 2000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Light Fuel",
+          "displayName": "Light Fuel",
+          "amount": 12000
+        },
+        {
+          "kind": "item",
+          "id": "Hydrogen Sulfide",
+          "displayName": "Hydrogen Sulfide",
+          "amount": 1000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:024057c5-7d50-4b1e-9301-68543214a7a4",
+      "name": "item|Heavy Fuel",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:1169",
+      "minimumTier": "LV",
+      "durationTicks": 10,
+      "eut": 480,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Sulfuric Heavy Fuel",
+          "displayName": "Sulfuric Heavy Fuel",
+          "amount": 8000
+        },
+        {
+          "kind": "item",
+          "id": "Hydrogen",
+          "displayName": "Hydrogen",
+          "amount": 2000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Heavy Fuel",
+          "displayName": "Heavy Fuel",
+          "amount": 8000
+        },
+        {
+          "kind": "item",
+          "id": "Hydrogen Sulfide",
+          "displayName": "Hydrogen Sulfide",
+          "amount": 1000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:29c05102-a7e5-4736-99f3-d8fa505bf531",
+      "name": "item|Diesel",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:1169",
+      "minimumTier": "LV",
+      "durationTicks": 100,
+      "eut": 480,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Light Fuel",
+          "displayName": "Light Fuel",
+          "amount": 20000
+        },
+        {
+          "kind": "item",
+          "id": "Heavy Fuel",
+          "displayName": "Heavy Fuel",
+          "amount": 4000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Diesel",
+          "displayName": "Diesel",
+          "amount": 24000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:63af1774-294e-4b6f-bc25-a3908a5a0bd9",
+      "name": "item|EU",
+      "kind": "gregtech_machine",
+      "machineType": "Combustion Generator",
+      "minimumTier": "LV",
+      "durationTicks": 20,
+      "eut": 0,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Diesel",
+          "displayName": "Diesel",
+          "amount": 26
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "EU",
+          "displayName": "EU",
+          "amount": 10240
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    }
+  ]
+}

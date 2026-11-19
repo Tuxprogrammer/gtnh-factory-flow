@@ -7,22 +7,24 @@ import java.util.Set;
 
 import net.minecraftforge.common.config.Configuration;
 
+import com.gtnhplanner.core.view.ViewSettings;
+
 public final class Config {
 
     /** Dev diagnostic: log a headless repro of every arrow-routing recompute. */
-    public static boolean debugRouteDump = false;
+    public static boolean debugRouteDump = ViewSettings.DEBUG_ROUTE_DUMP_DEFAULT;
 
     /**
      * Drops the summary's Machine Counts section entirely rather than folding it: a fold is "not on
      * this chart" and lives per slot, this is "never" and lives with the install.
      */
-    public static boolean hideMachineCountsSection = false;
+    public static boolean hideMachineCountsSection = ViewSettings.HIDE_MACHINE_COUNTS_SECTION_DEFAULT;
 
     /**
      * Ingredients nobody plumbs, so the wiring diagnostics stay quiet about them. Display names
      * rather than registry ids: this is a nuisance filter the user edits by hand.
      */
-    private static final String[] DEFAULT_FREE_INGREDIENTS = { "Water" };
+    private static final String[] DEFAULT_FREE_INGREDIENTS = ViewSettings.FREE_INGREDIENTS_DEFAULT;
 
     /** {@link #DEFAULT_FREE_INGREDIENTS} folded to lower case for lookup. */
     private static Set<String> freeIngredients = lowercased(DEFAULT_FREE_INGREDIENTS);
@@ -64,10 +66,10 @@ public final class Config {
      * its whole budget freezes the GUI for it, and 40 seconds is already past what anyone would
      * read as anything but a hang.
      */
-    public static int solverEffortPercent = 100;
+    public static int solverEffortPercent = ViewSettings.SOLVER_EFFORT_PERCENT_DEFAULT;
 
-    public static final int SOLVER_EFFORT_MIN = 25;
-    public static final int SOLVER_EFFORT_MAX = 200;
+    public static final int SOLVER_EFFORT_MIN = ViewSettings.SOLVER_EFFORT_PERCENT_MIN;
+    public static final int SOLVER_EFFORT_MAX = ViewSettings.SOLVER_EFFORT_PERCENT_MAX;
 
     /**
      * {@link #solverEffortPercent} as the solver reads it. Clamped rather than trusted: Forge
@@ -82,15 +84,15 @@ public final class Config {
         final Configuration configuration = new Configuration(configFile);
 
         debugRouteDump = configuration.getBoolean(
-            "debugRouteDump",
+            ViewSettings.DEBUG_ROUTE_DUMP_KEY,
             "debug",
-            false,
+            ViewSettings.DEBUG_ROUTE_DUMP_DEFAULT,
             "Log a replayable dump of the arrow-routing input on every route recompute");
 
         hideMachineCountsSection = configuration.getBoolean(
-            "hideMachineCountsSection",
+            ViewSettings.HIDE_MACHINE_COUNTS_SECTION_KEY,
             "gui",
-            false,
+            ViewSettings.HIDE_MACHINE_COUNTS_SECTION_DEFAULT,
             "Leave the Machine Counts section (per-machine operation counts, and the ops/cycle"
                 + " totals) out of the summary panel altogether, instead of folding it away");
 
@@ -98,7 +100,7 @@ public final class Config {
             configuration
                 .get(
                     "solver",
-                    "freeIngredients",
+                    ViewSettings.FREE_INGREDIENTS_KEY,
                     DEFAULT_FREE_INGREDIENTS,
                     "Ingredients the solver never suggests wiring up. Display names, case"
                         + " insensitive. Anything effectively free in the pack belongs here:"
@@ -107,9 +109,9 @@ public final class Config {
                 .getStringList());
 
         solverEffortPercent = configuration.getInt(
-            "solverEffortPercent",
+            ViewSettings.SOLVER_EFFORT_PERCENT_KEY,
             "solver",
-            100,
+            ViewSettings.SOLVER_EFFORT_PERCENT_DEFAULT,
             SOLVER_EFFORT_MIN,
             SOLVER_EFFORT_MAX,
             "How long AUTO balancing may spend looking for a better answer, as a percentage of the"

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "plan-1",
+  "name": "Fuel by the bucket",
+  "recipes": [],
+  "nodes": [],
+  "edges": [],
+  "fuelProfiles": [
+    {
+      "id": "f1",
+      "name": "Diesel",
+      "fuelFluidId": "fluid:gregtech:diesel",
+      "euPerBucket": 1500000
+    },
+    {
+      "id": "f2",
+      "name": "Naphtha",
+      "fuelFluidId": "fluid:gregtech:naphtha",
+      "euPerLiter": 1500,
+      "euPerBucket": 1500000,
+      "isDemo": true,
+      "notes": "both spellings"
+    }
+  ]
+}

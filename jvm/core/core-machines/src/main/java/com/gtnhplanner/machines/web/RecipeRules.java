@@ -9,10 +9,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
+
+import com.gtnhplanner.core.machines.GameRates;
+import com.gtnhplanner.core.machines.SteamRecipeLimits;
 
 /**
  * What runs a recipe and how its settings resolve, as the website does it (src/lib/model/recipe-rules.ts): the
@@ -30,7 +34,10 @@ public final class RecipeRules {
 
     // region Handlers
 
-    /** getRecipeMachineHandlers: one handler per family, the map's primary machine first. */
+    /**
+     * getRecipeMachineHandlers: one handler per family, the map's primary machine first. A steam machine that cannot run
+     * the recipe (over 32 EU/t, or a fluid input it has no hatch for) is not offered ({@link SteamRecipeLimits}).
+     */
     public static List<Web.Handler> machineHandlers(final Web.Recipe recipe) {
         final Map<String, Web.Handler> byFamily = new LinkedHashMap<>();
         final Integer fusionMark = Fusion.isRecipe(recipe) ? Fusion.recipeMark(recipe) : null;
@@ -38,6 +45,7 @@ public final class RecipeRules {
             final Web.Handler normalized = Fusion.normalizeHandler(normalizeHandler(handler), recipe);
             final Fusion.Machine fusion = Fusion.machine(normalized.machineType);
             if (fusion != null && fusionMark != null && fusion.mark() < fusionMark) continue;
+            if (isSteamHandler(normalized) && !SteamRecipeLimits.runs(normalized, recipe)) continue;
             final String familyId = (normalized.kind != null ? normalized.kind : "single") + ":"
                 + slug(normalized.label);
             byFamily.putIfAbsent(familyId, normalized);
@@ -115,11 +123,68 @@ public final class RecipeRules {
             .matches();
     }
 
-    /** A bronze steam singleblock runs twice the LV duration; a high pressure one the LV duration. */
+    /**
+     * GT_FURNACE_BACKEND_MACHINES: machines whose smelting goes through FurnaceBackend.overwriteFindRecipe, so they run
+     * its 128-tick recipe as the rate mod leaves it: the Electric Furnace, the Steam Hearth, the Industrial Arc Furnace
+     * in furnace mode (kubatech MTEIndustrialArcFurnace) and the Helioflare's smelting module (tectech
+     * MTESmeltingModule), the last two switching their recipe map to furnaceRecipes.
+     */
+    private static final Set<String> GT_FURNACE_BACKEND_MACHINES = Set
+        .of("Electric Furnace", "Steam Hearth", "Industrial Arc Furnace", "Helioflare Power Forge");
+
+    /**
+     * gtFurnaceDurationTicks: the one place GT furnace timing is set, the ticks a GT furnace takes for a smelt before
+     * its own speed math. The GT_FURNACE_BACKEND_MACHINES run FurnaceBackend's fixed recipe; the bronze and steel steam
+     * furnaces set 256 and 128 ticks in their checkRecipe. The pack's rate mod (GTNHRates' GTFurnaces mixin) divides
+     * all of those, after the steam furnace's x2, as max(1, ceil(ticks / divisor)). The Multi Smelter (MTEMultiFurnace)
+     * runs its own fixed 128 ticks outside that backend, so the rate mod never reaches it. Other handlers keep their
+     * own numbers (null).
+     */
+    @Nullable
+    public static Double gtFurnaceDurationTicks(final Web.Recipe recipe, final Web.Handler handler) {
+        if (!isSmeltingRecipeMap(recipe)) return null;
+        if ("Multi Smelter".equals(handler.machineType)) return GT_FURNACE_RECIPE_TICKS;
+        final boolean steamSingle = !"multiblock".equals(handler.kind) && isSteamHandler(handler);
+        final Double rated = handler.machineType != null && GT_FURNACE_BACKEND_MACHINES.contains(handler.machineType)
+            ? Double.valueOf(GT_FURNACE_RECIPE_TICKS)
+            : steamSingle ? Double.valueOf(GT_FURNACE_RECIPE_TICKS * (isHighPressureSteamHandler(handler) ? 1 : 2))
+                : null;
+        return rated == null ? null
+            : Math.max(
+                1,
+                Math.ceil(
+                    rated / GameRates.active()
+                        .recipeDurationDivisor()));
+    }
+
+    /**
+     * GT_FURNACE_EUT_MACHINES: electric multiblocks that smelt at 4 EU/t per parallel before their own EU math: the
+     * Multi Smelter's own RECIPE_EUT (MTEMultiFurnace), and FurnaceBackend's recipe in the Industrial Arc Furnace's
+     * furnace mode and the Helioflare's smelting module.
+     */
+    private static final Set<String> GT_FURNACE_EUT_MACHINES = Set
+        .of("Multi Smelter", "Industrial Arc Furnace", "Helioflare Power Forge");
+
+    /**
+     * gtFurnaceEut: the EU/t per parallel of a smelt on a GT_FURNACE_EUT_MACHINES multiblock, where the vanilla map and
+     * the handler say 0. Other handlers keep their own EU (null).
+     */
+    @Nullable
+    public static Double gtFurnaceEut(final Web.Recipe recipe, final Web.Handler handler) {
+        return isSmeltingRecipeMap(recipe) && handler.machineType != null
+            && GT_FURNACE_EUT_MACHINES.contains(handler.machineType) ? Double.valueOf(GT_FURNACE_RECIPE_EUT) : null;
+    }
+
+    /**
+     * steamSingleblockDurationTicks: steam singleblocks run the LV recipe, a bronze one twice its duration and a high
+     * pressure one the LV duration; a smelt is GT's furnace timing (gtFurnaceDurationTicks).
+     */
     @Nullable
     private static Double steamSingleblockDurationTicks(final Web.Recipe recipe, final Web.Handler handler) {
         if ("multiblock".equals(handler.kind) || !isSteamHandler(handler)) return null;
-        final double base = isSmeltingRecipeMap(recipe) ? GT_FURNACE_RECIPE_TICKS : recipe.durationTicks;
+        final Double furnace = gtFurnaceDurationTicks(recipe, handler);
+        if (furnace != null) return furnace;
+        final double base = recipe.durationTicks;
         return isHighPressureSteamHandler(handler) ? base : base * 2;
     }
 
@@ -165,11 +230,14 @@ public final class RecipeRules {
         final String minimumTier = behaviour != null && behaviour.recipeTierFromBase ? recipe.minimumTier
             : handler.minimumTier;
         final Integer cycle = machineCycleTicks(handler.machineType);
+        final Double furnace = gtFurnaceDurationTicks(recipe, handler);
         final Double handlerDurationTicks = cycle != null ? Double.valueOf(cycle)
-            : seedsFromBase ? steamSingleblockDurationTicks(recipe, handler)
-                : handler.durationTicks != null ? handler.durationTicks
-                    : steamSingleblockDurationTicks(recipe, handler);
-        final Double handlerEut = seedsFromBase ? null : handler.eut;
+            : furnace != null ? furnace
+                : seedsFromBase ? steamSingleblockDurationTicks(recipe, handler)
+                    : handler.durationTicks != null ? handler.durationTicks
+                        : steamSingleblockDurationTicks(recipe, handler);
+        final Double furnaceEut = gtFurnaceEut(recipe, handler);
+        final Double handlerEut = furnaceEut != null ? furnaceEut : seedsFromBase ? null : handler.eut;
         final boolean tgs = TGS_MACHINE_TYPE.equals(handler.machineType);
         final double eut = tgs ? tgsEuPerTick(1)
             : isSteamHandler(handler) ? 0 : handlerEut != null ? handlerEut : recipe.eut;

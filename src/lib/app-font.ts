@@ -17,6 +17,8 @@
  * value matches no CSS rule and falls through to the default.
  */
 
+import { VIEW_SETTINGS } from "@/lib/view-settings.generated";
+
 export type AppFontId =
   | "minecraft"
   | "inter"
@@ -98,10 +100,10 @@ export const APP_FONTS: readonly AppFontOption[] = [
  * The default is the one choice not stored; every other choice, the pixel
  * font included, is, so a player's pick outlives a change of default.
  */
-export const DEFAULT_APP_FONT: AppFontId = "inter";
+export const DEFAULT_APP_FONT: AppFontId = VIEW_SETTINGS.font.default;
 
 /** Shared with the inline boot script in layout.tsx. */
-export const APP_FONT_STORAGE_KEY = "gtnh-app-font";
+export const APP_FONT_STORAGE_KEY: string = VIEW_SETTINGS.font.key;
 
 export function isAppFontId(value: unknown): value is AppFontId {
   return APP_FONTS.some((option) => option.id === value);

@@ -7,6 +7,8 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.machines.GameRates;
+
 /**
  * A CropsNH crop and what harvests it, as the website models them (its passive-production.ts, the cropsNh functions;
  * transcribed from TileEntityCropSticks, MTECropManager and MTEIndustrialFarm in the GTNH 2.9 pack): how fast it grows
@@ -330,10 +332,15 @@ public final class CropsNh {
             * Math.pow(2, setup.overclocks());
     }
 
-    /** What multiplies the drop rounds: 1 + 0.05 x tier for the manager, the seed bed and units for the farm. */
+    /**
+     * What multiplies the drop rounds: 1 + 0.05 x tier for the manager, which the pack's rate mod multiplies again (its
+     * IC2 crop yield, GTNHRates' CropsNH mixin on TileEntityCropSticks.harvest; {@link GameRates}); the seed bed and
+     * units for the farm, which the rate mod does not touch.
+     */
     public static double harvestRoundMultiplier(final Setup setup) {
         if (handPicked(setup)) return 1;
-        if (!setup.farm()) return 1 + MANAGER_HARVEST_BONUS_PER_TIER * setup.tier();
+        if (!setup.farm()) return (1 + MANAGER_HARVEST_BONUS_PER_TIER * setup.tier()) * GameRates.active()
+            .ic2CropsYield();
         final double additive = 1 + SEED_BED_HARVEST_ROUND_BONUS_PER_TIER * setup.tier()
             + setup.fertilizerUnits() * FERTILIZER_UNIT_HARVEST_ROUND_BONUS;
         return additive * (1 + setup.harvestUnits() * HARVEST_UNIT_ROUND_MULTIPLIER);
@@ -495,7 +502,11 @@ public final class CropsNh {
                 FormulaLine.sup(String.valueOf(env.gain())),
                 "*(1+0.05*",
                 FormulaLine.knob(setup.tier(), MANAGER_TIER),
-                ")"));
+                GameRates.active()
+                    .ic2CropsYield() == 1 ? ")"
+                        : ")*" + FormulaLine.number(
+                            GameRates.active()
+                                .ic2CropsYield())));
         final int machines = machineCount(setup, seeds);
         final String machineWord = farm ? (machines == 1 ? " farm" : " farms")
             : (machines == 1 ? " manager" : " managers");

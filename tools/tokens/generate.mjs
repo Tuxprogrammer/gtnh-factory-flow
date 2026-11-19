@@ -10,6 +10,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { run as runSettings } from "../settings/generate.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const tokensDir = path.join(root, "jvm", "core", "core-view", "tokens");
@@ -136,6 +137,8 @@ export function run(accept = false) {
   if (accept) fs.writeFileSync(expectedFile, `${JSON.stringify(mixes, null, 2)}\n`);
   writeIfChanged(path.join(outDir, "tokens.generated.ts"), `${ts}`);
   writeIfChanged(path.join(outDir, "tokens.generated.css"), css);
+  // The settings schema and sound table sit beside the tokens and are generated with them.
+  runSettings();
 }
 
 if (process.argv[1] && fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url))) {

@@ -22,9 +22,8 @@ import codechicken.nei.recipe.RecipeHandlerRef;
  */
 public final class CardDefaults {
 
-    /** GregTech's tiers in setting order (the voltage setting also accepts "OFF"). */
-    public static final String[] TIERS = { "ULV", "LV", "MV", "HV", "EV", "IV", "LuV", "ZPM", "UV", "UHV", "UEV", "UIV",
-        "UMV", "UXV", "MAX" };
+    /** GregTech's tiers in setting order (the voltage setting also accepts "OFF"): the core's card tiers. */
+    public static final String[] TIERS = com.gtnhplanner.core.view.card.CardTiers.TIERS;
 
     private CardDefaults() {}
 
@@ -109,8 +108,7 @@ public final class CardDefaults {
     }
 
     public static int tierIndex(final String name) {
-        for (int i = 0; i < TIERS.length; i++) if (TIERS[i].equalsIgnoreCase(name)) return i;
-        return -1;
+        return com.gtnhplanner.core.view.card.CardTiers.tierIndex(name);
     }
 
     public static ItemStack firstCatalyst(final Node node) {

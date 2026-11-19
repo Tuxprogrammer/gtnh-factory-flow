@@ -1,0 +1,272 @@
+{
+  "schemaVersion": 1,
+  "id": "mod-corpus-benzene",
+  "name": "corpus benzene",
+  "description": "Made in the game",
+  "icon": {
+    "kind": "item",
+    "resourceId": "minecraft:iron_ingot",
+    "displayName": "minecraft:iron_ingot"
+  },
+  "solveMode": true,
+  "planMode": true,
+  "recipes": [
+    {
+      "id": "gtnhplanner:6bcdde86-54bd-44b7-935c-d857ee18e9a5",
+      "name": "item|Distilled Water",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:1169",
+      "minimumTier": "LV",
+      "durationTicks": 1,
+      "eut": 7864320,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Hydrogen",
+          "displayName": "Hydrogen",
+          "amount": 16000
+        },
+        {
+          "kind": "item",
+          "id": "Oxygen",
+          "displayName": "Oxygen",
+          "amount": 8000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Distilled Water",
+          "displayName": "Distilled Water",
+          "amount": 8000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "6bcdde86-54bd-44b7-935c-d857ee18e9a5",
+      "recipeId": "gtnhplanner:6bcdde86-54bd-44b7-935c-d857ee18e9a5",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "machineConfigTiers": {
+        "circuit": "3"
+      },
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1351,
+        "y": -368
+      },
+      "portRates": {
+        "input:item:Hydrogen": 2.5
+      },
+      "pocketId": "pocket-imported-smelting"
+    }
+  ],
+  "storages": [
+    {
+      "id": "df46d804-c0fa-4b59-bf6c-742fc0d53161",
+      "kind": "item",
+      "resourceId": "oxygen",
+      "displayName": "oxygen",
+      "position": {
+        "x": 220,
+        "y": 324
+      },
+      "pocketId": "pocket-137ed548-f4a6-35cd-bfc9-488da178a695"
+    },
+    {
+      "id": "2e50eeda-7d71-44da-adde-0aadaf2a69ec",
+      "kind": "item",
+      "resourceId": "distilled water",
+      "displayName": "distilled water",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 110
+      }
+    },
+    {
+      "id": "781a9079-2392-4d4b-99d8-c00f100d928b",
+      "kind": "item",
+      "resourceId": "hydrogen",
+      "displayName": "hydrogen",
+      "position": {
+        "x": -303,
+        "y": 207
+      }
+    }
+  ],
+  "annotations": [
+    {
+      "id": "adaef16f-a0bc-3836-b117-fc26f195d020",
+      "kind": "image",
+      "text": "The finished line",
+      "position": {
+        "x": 2011,
+        "y": 733
+      },
+      "size": {
+        "width": 160,
+        "height": 90
+      },
+      "imageUrl": "https://example.com/line.png"
+    },
+    {
+      "id": "bb4ee3c4-a25c-3c87-98cc-b87dbb1d8e61",
+      "kind": "text",
+      "colorTag": "lime",
+      "text": "Feed it\nfrom the ME system",
+      "position": {
+        "x": 16,
+        "y": 122
+      },
+      "size": {
+        "width": 213,
+        "height": 131
+      },
+      "fontSize": 18,
+      "pocketId": "pocket-imported-smelting"
+    },
+    {
+      "id": "e66b7490-de22-37f8-bde4-55f0d44605a9",
+      "kind": "zone",
+      "colorTag": "lime",
+      "position": {
+        "x": 1503,
+        "y": -91
+      },
+      "size": {
+        "width": 203,
+        "height": 117
+      },
+      "points": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 203,
+          "y": 13
+        },
+        {
+          "x": 97,
+          "y": 117
+        }
+      ],
+      "style": {
+        "marks": "hatch"
+      }
+    },
+    {
+      "id": "f9f4c47c-1da0-3664-bcfa-be8dbd6f2ac6",
+      "kind": "arrow",
+      "colorTag": "magenta",
+      "position": {
+        "x": 60,
+        "y": 56
+      },
+      "size": {
+        "width": 163,
+        "height": 0
+      },
+      "arrowDirection": "up-left",
+      "arrowHeads": "both",
+      "arrowWidth": 4,
+      "pocketId": "pocket-imported-smelting"
+    },
+    {
+      "id": "7a3a0561-74f8-3ac2-8989-2a3b74086692",
+      "kind": "box",
+      "colorTag": "orange",
+      "position": {
+        "x": 112,
+        "y": 78
+      },
+      "size": {
+        "width": 377,
+        "height": 151
+      },
+      "style": {
+        "border": "dashed",
+        "borderColor": "red",
+        "fillColor": "light_blue",
+        "fill": "solid",
+        "marks": "graph"
+      },
+      "pocketId": "pocket-137ed548-f4a6-35cd-bfc9-488da178a695"
+    }
+  ],
+  "pockets": [
+    {
+      "id": "pocket-137ed548-f4a6-35cd-bfc9-488da178a695",
+      "name": "Ore line",
+      "colorTag": "orange",
+      "position": {
+        "x": -523,
+        "y": -311
+      },
+      "expanded": true,
+      "size": {
+        "width": 2741,
+        "height": 1307
+      },
+      "theme": "blueprint",
+      "pattern": "dots"
+    },
+    {
+      "id": "pocket-imported-smelting",
+      "name": "Smelting",
+      "parentPocketId": "pocket-137ed548-f4a6-35cd-bfc9-488da178a695",
+      "position": {
+        "x": 406,
+        "y": 112
+      },
+      "expanded": false,
+      "size": {
+        "width": 613,
+        "height": 421
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "df46d804-c0fa-4b59-bf6c-742fc0d53161:6bcdde86-54bd-44b7-935c-d857ee18e9a5:1",
+      "source": "df46d804-c0fa-4b59-bf6c-742fc0d53161",
+      "target": "6bcdde86-54bd-44b7-935c-d857ee18e9a5",
+      "sourceHandle": "output:item:oxygen",
+      "targetHandle": "input:item:oxygen",
+      "resourceKind": "item",
+      "resourceId": "oxygen"
+    },
+    {
+      "id": "2e50eeda-7d71-44da-adde-0aadaf2a69ec:6bcdde86-54bd-44b7-935c-d857ee18e9a5:0",
+      "source": "6bcdde86-54bd-44b7-935c-d857ee18e9a5",
+      "target": "2e50eeda-7d71-44da-adde-0aadaf2a69ec",
+      "sourceHandle": "output:item:distilled%20water",
+      "targetHandle": "input:item:distilled%20water",
+      "resourceKind": "item",
+      "resourceId": "distilled water"
+    },
+    {
+      "id": "781a9079-2392-4d4b-99d8-c00f100d928b:6bcdde86-54bd-44b7-935c-d857ee18e9a5:0",
+      "source": "781a9079-2392-4d4b-99d8-c00f100d928b",
+      "target": "6bcdde86-54bd-44b7-935c-d857ee18e9a5",
+      "sourceHandle": "output:item:hydrogen",
+      "targetHandle": "input:item:hydrogen",
+      "resourceKind": "item",
+      "resourceId": "hydrogen"
+    }
+  ],
+  "fuelProfiles": [],
+  "metadata": {
+    "source": "GTNH Planner"
+  }
+}

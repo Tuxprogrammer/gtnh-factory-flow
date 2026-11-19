@@ -13,35 +13,46 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.gtnhplanner.conformance.Conformance;
+import com.gtnhplanner.core.machines.GameRates;
 
 /**
- * Bees against the website's own bee functions (passive-production.ts, machine-effects.ts), written by
- * tools/dev/bees: a card in each modelled housing on every speed gene, climate, frame set, aura and Industrial Apiary
- * upgrade. The website scales a base chance by (term / 0.1)^0.52 x speed^0.37 and gates a specialty on the climate; the
- * model's term (the housing's production modifier plus t), speed gene, frames, upgrades and jubilance must give the
- * same, and the Industrial Apiary the same acceleration. (Where the two part ways, how a chance becomes items and how
- * fast, is the game's, checked in BeesTest; docs/design/bees.md lists it.)
+ * Bees against the website's own bee functions (passive-production.ts, machine-effects.ts, bee-maths.ts), written by
+ * jvm/mod/tools/dev/bees: a card in every housing on every speed gene, climate, frame set, aura, Alveary part, Mega
+ * Apiary jelly and tier, and Industrial Apiary upgrade, at the pack's bee yield of 1 and 4. The website's output
+ * multiplier on a base chance must be what the model makes of it: in Forestry's housings the expected items a bee
+ * cycle (two rolls for a product, one for a specialty, each at most certain, times the bee yield) over the chance; in
+ * the Industrial Apiary the uncapped rolls times the share of its acceleration a queen's life allows; in the Mega
+ * Apiary the website's older scaling. The Industrial Apiary's acceleration must also give the same duration.
  */
 class BeesGoldensTest {
 
     private static final String FILE = "machines/bee-goldens.jsonl.gz";
 
-    /** A pure-bred bee with one product and one specialty, as the goldens' recipe has them. */
+    /**
+     * A pure-bred bee with one product and one specialty, as the goldens' recipe has them; its lifespan the website's
+     * Normal gene (40 cycles), which it uses when the recipe carries none.
+     */
     private static final Bees.Species SPECIES = new Bees.Species(
         "gregtech.bee.speciesPulsatingiron",
         "Pulsating Iron",
         0.6f,
-        30,
+        40,
         false,
         List.of(
             new Bees.Product("forestry:beecombs@7", "Parched Comb", 1, 0.3f, false),
             new Bees.Product("gregtech:gt.comb@18", "Pulsating Iron Comb", 1, 0.15f, true)));
+
+    @AfterEach
+    void noRates() {
+        GameRates.install(GameRates.NONE);
+    }
 
     @Test
     void matchesTheWebsite() throws Exception {
@@ -65,7 +76,7 @@ class BeesGoldensTest {
             }
         }
         assertTrue(cases > 20000, "cases: " + cases);
-        assertEquals(3, byHousing.size(), "housings: " + byHousing);
+        assertEquals(Bees.HOUSINGS.size(), byHousing.size(), "housings: " + byHousing);
         assertEquals(
             List.of(),
             mismatches.subList(0, Math.min(20, mismatches.size())),
@@ -83,47 +94,51 @@ class BeesGoldensTest {
         final String housing = c.get("housing")
             .getAsString();
         settings.put(Bees.HOUSING, housing);
+        if (c.has("tier")) settings.put(
+            Bees.VOLTAGE,
+            c.get("tier")
+                .getAsString());
+        GameRates.install(new GameRates(c.has("beesYield") ? c.get("beesYield").getAsDouble() : 1, 1, 1));
         final Bees.Setup s = Bees.setup(settings, SPECIES);
-        final String at = housing + " " + c.getAsJsonObject("tiers");
+        final String at = housing + " " + c.getAsJsonObject("tiers") + (c.has("beesYield") ? " yield " + c.get("beesYield") : "");
         if (!s.housing()
             .key()
             .equals(housing)) mismatches.add(at + ": housing " + s.housing());
 
-        // The website adds every frame's number as it is; the game stops an ExtraBees frame's boost at its ceiling
-        // (BeeModifierLogic), which a Chocolate Frame meets after a Proven one in an aura-charged Magic Apiary. Only
-        // there
-        // may the two differ.
-        double additive = Bees.term(s);
-        if (!s.housing()
+        // A term of nothing (a Gentle and two Necrotic frames in an Apiary) is a hair either side of 0 in floats and in
+        // doubles: no bees on either side, but not the same hair.
+        if (s.housing() != Bees.MEGA_APIARY && Math.abs(Bees.term(s)) < 1e-5) return;
+        final Bees.Product product = SPECIES.products()
+            .get(0), special = SPECIES.products()
+                .get(1);
+        final double productMultiplier, specialtyMultiplier;
+        if (s.housing() == Bees.MEGA_APIARY) {
+            productMultiplier = specialtyMultiplier = Bees.megaMultiplier(s);
+        } else if (s.housing()
             .industrial()) {
-            additive = (s.housing() == Bees.MAGIC_APIARY && s.aura() ? Bees.MAGIC_AURA_PRODUCTION
-                : s.housing()
-                    .production())
-                + s.housing()
-                    .t();
-            boolean ceiling = false;
-            for (final Bees.Frame f : s.frames()) if (f != null) {
-                additive += f.value();
-                ceiling |= f.rule() == Bees.FrameRule.CEILING && f.value() > 0;
-            }
-            if (Math.abs(additive - Bees.term(s)) > 1e-6 * Math.max(1, Math.abs(additive)) && !ceiling)
-                mismatches.add(at + ": term " + Bees.term(s) + " against " + additive + " with no ceiling met");
+            // Per bee cycle, as the website counts it: the rolls uncapped, times the share of the acceleration the
+            // queen's life allows (a short life stops at 100 ticks and makes up only whole multiples).
+            final Bees.Run run = Bees.run(s, SPECIES);
+            final double share = (double) run.divisor() * run.factor() / run.acceleration();
+            final float p = Bees.productionModifier(s), t = s.housing()
+                .t(),
+                speed = s.speed()
+                    .value();
+            productMultiplier = s.climate()
+                .works()
+                    ? (Bees.finalChance(product.chance(), speed, p, t)
+                        + Bees.finalChance(product.chance() / 2f, speed, p, t)) / product.chance() * share
+                    : 0;
+            specialtyMultiplier = Bees.jubilant(s, SPECIES)
+                ? Bees.finalChance(special.chance(), speed, p, t) / special.chance() * share
+                : 0;
+        } else {
+            final Map<String, Double> cycle = Bees.perCycle(s, SPECIES);
+            productMultiplier = cycle.get(product.id()) / product.chance();
+            specialtyMultiplier = cycle.get(special.id()) / special.chance();
         }
-
-        // The website's multiplier on a base chance, from the model's term, gene and gates. A term of nothing (a
-        // Gentle and two Necrotic frames in an Apiary) is a hair either side of 0 in floats and in doubles: no bees.
-        final double term = additive;
-        if (Math.abs(term) < 1e-5) return;
-        final double scale = term <= 0 ? 0
-            : Math.pow(term / 0.1, 0.52) * Math.pow(
-                s.speed()
-                    .value(),
-                0.37);
-        final double product = s.climate()
-            .works() ? scale : 0;
-        final double specialty = Bees.jubilant(s, SPECIES) ? scale : 0;
-        near(at + " product", c.get("product"), product, mismatches);
-        near(at + " specialty", c.get("specialty"), specialty, mismatches);
+        near(at + " product", c.get("product"), productMultiplier, mismatches);
+        near(at + " specialty", c.get("specialty"), specialtyMultiplier, mismatches);
 
         // The Industrial Apiary's acceleration: the website's duration multiplier is one over it.
         final double duration = s.housing()

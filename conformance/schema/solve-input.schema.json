@@ -1,0 +1,340 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "mode": {
+      "type": "string",
+      "const": "AUTO"
+    },
+    "choice": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PortRef"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "machines": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/MachineIn"
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/EdgeIn"
+      }
+    },
+    "pools": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PoolIn"
+      }
+    },
+    "drawers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/DrawerIn"
+      }
+    },
+    "extentPins": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "number"
+      }
+    },
+    "spares": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string"
+        },
+        "additionalProperties": {
+          "type": "number"
+        }
+      }
+    }
+  },
+  "required": [
+    "mode",
+    "machines",
+    "edges",
+    "pools",
+    "drawers",
+    "extentPins",
+    "spares"
+  ],
+  "$defs": {
+    "PortRef": {
+      "type": "object",
+      "properties": {
+        "node": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "input": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "node",
+        "port",
+        "input"
+      ]
+    },
+    "MachineIn": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "durationTicks": {
+          "type": "number"
+        },
+        "energyPerTick": {
+          "type": "number"
+        },
+        "throughputFactor": {
+          "type": "number"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PortIn"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PortIn"
+          }
+        },
+        "countFixed": {
+          "type": "boolean"
+        },
+        "machineCount": {
+          "type": "number"
+        },
+        "targetOutputRates": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^\\d+$"
+          },
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "targetInputRates": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^\\d+$"
+          },
+          "additionalProperties": {
+            "type": "number"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "durationTicks",
+        "energyPerTick",
+        "throughputFactor",
+        "inputs",
+        "outputs",
+        "countFixed",
+        "machineCount",
+        "targetOutputRates",
+        "targetInputRates"
+      ]
+    },
+    "PortIn": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "type": "number"
+        },
+        "chance": {
+          "type": "number"
+        },
+        "multiplier": {
+          "type": "number"
+        },
+        "resource": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "name": {
+          "type": "string"
+        },
+        "free": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "amount",
+        "chance",
+        "multiplier",
+        "resource",
+        "name",
+        "free"
+      ]
+    },
+    "EdgeIn": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "sourceOutput": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "target": {
+          "type": "string"
+        },
+        "targetInput": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "id",
+        "source",
+        "sourceOutput",
+        "target",
+        "targetInput"
+      ]
+    },
+    "PoolIn": {
+      "type": "object",
+      "properties": {
+        "machines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "capacity": {
+          "type": "number"
+        },
+        "exact": {
+          "type": "boolean"
+        },
+        "upTo": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "machines",
+        "capacity",
+        "exact"
+      ]
+    },
+    "DrawerIn": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/DrawerKind"
+        },
+        "rule": {
+          "$ref": "#/$defs/DrawerRule"
+        },
+        "rate": {
+          "type": "number"
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DrawerLink"
+          }
+        },
+        "takers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DrawerLink"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "kind",
+        "rule",
+        "rate",
+        "links"
+      ]
+    },
+    "DrawerKind": {
+      "type": "string",
+      "enum": [
+        "SOURCE",
+        "PRODUCT",
+        "BYPRODUCT",
+        "TRASH",
+        "BUFFER"
+      ]
+    },
+    "DrawerRule": {
+      "type": "string",
+      "enum": [
+        "ANY",
+        "AT_LEAST",
+        "EXACTLY",
+        "AT_MOST"
+      ]
+    },
+    "DrawerLink": {
+      "type": "object",
+      "properties": {
+        "node": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "node",
+        "port"
+      ]
+    }
+  },
+  "title": "Solver input (SolveInput)"
+}

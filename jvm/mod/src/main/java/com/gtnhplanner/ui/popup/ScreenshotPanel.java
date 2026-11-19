@@ -364,7 +364,7 @@ public final class ScreenshotPanel extends Widget<ScreenshotPanel> implements In
                 for (int i = 0; i < DETAILS.length; i++) if (in(detailRect(i), mx, my) && i != o.detail()
                     .ordinal()) {
                         chosen = new PlanPicture.Options(PlanPicture.Detail.values()[i], o.name(), o.flows());
-                        Sfx.TICK.play(i > 0 ? 1.12f : 0.9f);
+                        Sfx.TICK.play(i > 0 ? Sfx.WHEEL_UP : Sfx.WHEEL_DOWN);
                     }
             } else if (row == 1) {
                 chosen = new PlanPicture.Options(o.detail(), !o.name(), o.flows());

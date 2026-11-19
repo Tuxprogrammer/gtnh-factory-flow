@@ -188,6 +188,24 @@ public final class MachineControls {
         ITEM_PIPE_CONTROL = choiceControl(ITEM_PIPE, "Item Pipe Casing", options);
     }
 
+    /**
+     * SOLENOID_CONTROL: superconducting solenoids (gregtech:gt.blockcasings.cyclotron_coils metas 0-10, MV-UMV);
+     * BlockCyclotronCoils.getVoltageTier is meta + 2, so the option's position + 2 is the solenoid's voltage tier. Keys
+     * and labels match the dataset's own solenoid knob, so a saved pick carries straight over.
+     */
+    public static final Web.Control SOLENOID_CONTROL;
+
+    static {
+        final String[] labels = { "MV", "HV", "EV", "IV", "LuV", "ZPM", "UV", "UHV", "UEV", "UIV", "UMV" };
+        final List<Option> options = new ArrayList<>();
+        for (int meta = 0; meta < labels.length; meta++) options.add(
+            new Option(
+                labels[meta],
+                meta == 0 ? "gregtech:gt.blockcasings.cyclotron_coils" : "gregtech:gt.blockcasings.cyclotron_coils@" + meta,
+                labels[meta] + " Superconducting Solenoid"));
+        SOLENOID_CONTROL = choiceControl(SOLENOID, "Solenoid", options);
+    }
+
     private static final String[] FLUID_PIPE_LABELS = { "Bronze", "Steel", "Titanium", "Tungstensteel" };
 
     /**

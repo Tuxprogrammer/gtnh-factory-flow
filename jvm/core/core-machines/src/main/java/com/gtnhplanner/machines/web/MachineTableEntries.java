@@ -173,7 +173,9 @@ final class MachineTableEntries {
             machine().overclock(normal())
                 .speed(c -> 2.5 + 0.05 * c.tier(COIL))
                 .power(c -> 0.8 * Math.pow(0.95, c.tier(COIL)))
-                .parallels(c -> c.voltageTier * 8 + (c.tier(SOLENOID) + 2) * 2));
+                .parallels(c -> c.voltageTier * 8 + (c.tier(SOLENOID) + 2) * 2)
+                // Its dataset handler has no solenoid knob either.
+                .controls(SOLENOID_CONTROL));
 
         // -- Flat multiblocks --
         machines.put("Alloy Blast Smelter", machine().overclock(normal()));
@@ -330,7 +332,9 @@ final class MachineTableEntries {
             "Industrial Sledgehammer",
             machine().overclock(normal())
                 .speed(2)
-                .parallels(c -> c.voltageTier * (c.tier(SOLENOID) + 2) * 6));
+                .parallels(c -> c.voltageTier * (c.tier(SOLENOID) + 2) * 6)
+                // The dataset gives its handler no solenoid knob.
+                .controls(SOLENOID_CONTROL));
         // MTEMultiLathe: 8 parallels per ITEM pipe casing tier (tin = 1); the scraped fluid pipes are hidden.
         machines.put(
             "Industrial Precision Lathe",

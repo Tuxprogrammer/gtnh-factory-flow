@@ -650,16 +650,10 @@ final class MachineTableEntries {
         machines.put("Steam Presser", STEAM_MULTIBLOCK);
         machines.put("Steam Blender", STEAM_MULTIBLOCK);
         machines.put("Steam Fuser", STEAM_MULTIBLOCK);
-        // MTESteamFurnaceMulti: its map is vanilla smelting (200 ticks) while the machine runs GT's 128t furnace
-        // recipe; 200 / (128 x 1.6) = 0.9765625 lands on the game's own 205 ticks basic and 103 high pressure (128 x
-        // 1.6 and 128 x 0.8, rounded up).
-        machines.put(
-            "Steam Hearth",
-            machine().overclock(none())
-                .parallels(8)
-                .speed(c -> 0.9765625 * (c.tier(STEAM_PRESSURE) + 1))
-                .quantiseDuration(MachineTableEntries::quantiseSteamMultiblockDuration)
-                .controls(STEAM_PRESSURE_CONTROL));
+        // MTESteamFurnaceMulti, same logic as its seven siblings. Its map is vanilla smelting, but the machine runs
+        // GT's furnace recipe: RecipeRules.gtFurnaceDurationTicks seeds it (128 ticks, divided by the pack's rate mod),
+        // so the stock game's 205 ticks basic and 103 high pressure come from the shared coefficients.
+        machines.put("Steam Hearth", STEAM_MULTIBLOCK);
 
         // MTESpinmatron: light mode 4x, standard and heavy 3x; heavy pays 16x EU and divides parallels by 32.
         // Parallels floor at each step like the code.

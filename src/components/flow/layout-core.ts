@@ -26,7 +26,7 @@ import type { IncrementalStats, RouterSnapshot } from "./incremental-router";
 import type { RouterTuning } from "./router-tuning";
 
 /** Stand-in for adopt.ts's `layout` line: whether routing and Arrange go through the core when it is loaded. */
-export const LAYOUT_ADOPTED = false;
+export const LAYOUT_ADOPTED = true;
 
 // adopt.ts keeps its dev overrides in this record on globalThis; reading it here means one override governs both.
 const ADOPT_OVERRIDES = Symbol.for("gtnh.core.adopt");

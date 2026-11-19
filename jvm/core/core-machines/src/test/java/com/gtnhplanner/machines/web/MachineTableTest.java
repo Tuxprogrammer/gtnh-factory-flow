@@ -75,7 +75,8 @@ class MachineTableTest {
     @Test
     void hasEveryEntryOfTheWebsitesTableInItsOrder() {
         final List<String> names = MachineTable.names();
-        assertEquals(96, names.size());
+        // The website's 96, the Component Assembly Line and the Algae Pond.
+        assertEquals(98, names.size());
         assertEquals("Blast Furnace", names.get(0));
         assertEquals("Extreme Heat Exchanger", names.get(names.size() - 1));
     }
@@ -273,7 +274,9 @@ class MachineTableTest {
             // MTEPreciseAssembler's dedicated precise mode.
             "Precise Assembler",
             // kubatech's MTEExtremeEntityCrusher.
-            "Extreme Entity Crusher")) sourceVerified.add(MachineTable.normalizeMachineName(name));
+            "Extreme Entity Crusher",
+            // gregtech's MTEAlgaePond; the reference never covered it.
+            "Algae Pond")) sourceVerified.add(MachineTable.normalizeMachineName(name));
 
         // Every entry traces back to a reference definition or a direct source transcription, under its own name or
         // an alias: nothing is invented.
@@ -297,7 +300,8 @@ class MachineTableTest {
     @Test
     void runsTheSteamMultiblocksAt62Point5PercentBasicAnd125HighPressure() {
         // Table side of the website's case: the speed is 0.625 per pressure step (duration x 1.6 / tierMachine), 8
-        // fixed parallels, no overclocking; the Steam Hearth's 0.9765625 lands its 200-tick base on 204.8 and 102.4.
+        // fixed parallels, no overclocking. The Steam Hearth runs the same multipliers on GT's 128-tick furnace recipe,
+        // which RecipeRules.gtFurnaceDurationTicks seeds: 204.8 and 102.4 ticks.
         final MachineTable.Behaviour grinder = MachineTable.behaviour("Steam Grinder");
         final MachineTable.Context bronze = ctx(1, 0, 0);
         final MachineTable.Context highPressure = ctx(1, 1, 0);
@@ -307,8 +311,8 @@ class MachineTableTest {
         assertEquals(MachineTable.none(), MachineTable.overclockSpec(grinder, ctx(1, 0, 0)));
 
         final MachineTable.Behaviour hearth = MachineTable.behaviour("Steam Hearth");
-        assertEquals(204.8, 200 * (1 / MachineTable.resolve(hearth.speed, bronze, 1)), 1e-10);
-        assertEquals(102.4, 200 * (1 / MachineTable.resolve(hearth.speed, highPressure, 1)), 1e-10);
+        assertEquals(204.8, 128 * (1 / MachineTable.resolve(hearth.speed, bronze, 1)), 1e-10);
+        assertEquals(102.4, 128 * (1 / MachineTable.resolve(hearth.speed, highPressure, 1)), 1e-10);
     }
 
     @Test

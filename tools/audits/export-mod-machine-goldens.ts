@@ -5,18 +5,21 @@
  *
  *   npx tsx tools/audits/export-mod-machine-goldens.ts --out <file.jsonl.gz> [--dataset <version id>]
  *   npx tsx tools/audits/export-mod-machine-goldens.ts --out <file.jsonl.gz> --replay <goldens.jsonl.gz>
+ *   ... --rates recipeDurationDivisor=64,beesYield=4,ic2CropsYield=4
  *
  * Dataset mode reads public/datasets/gtnh (the manifest's latest stable version unless --dataset names one): per
  * recipe map the recipes at its extremes (least and most EU/t, shortest and longest, least energy, lowest and highest
  * tier, largest special value), every recipe of the fusion, Extreme Entity Crusher, Precise Assembler and Neutron
  * Activator maps, and per recipe every machine that runs it, across tiers, hatches and amps, coils and every option
  * of every control. Replay mode keeps another golden file's recipes and cards and recomputes only the answers, so a
- * difference is the code's alone.
+ * difference is the code's alone. --rates sets the pack's rate-mod factors (each 1 unless given) in place of the
+ * dataset manifest's gameRates record; every line carries the factors it was computed with.
  *
  * FORMAT: gzip, UTF-8, one JSON object per line:
  *   { case, group ("map:<map>" or a special machine), why (the tags that picked the recipe), variant (a label),
  *     recipe (the client recipe, on the recipe's first case only), recipeId, node (the card's fields),
- *     runtimeVariant (the game's ladder answered), expected: { the numbers MachineGoldensTest compares } }
+ *     runtimeVariant (the game's ladder answered), gameRates (the rate-mod factors in force),
+ *     expected: { the numbers MachineGoldensTest compares } }
  * Numbers are JSON numbers, except non-finite ones, which are the strings "Infinity", "-Infinity" and "NaN".
  */
 import fs from "node:fs";
@@ -61,6 +64,7 @@ import {
   hasPowerReport,
 } from "../../src/lib/solver/power-report";
 import { getDatasetRecipe } from "../../src/lib/server/dataset-query";
+import { getGameRates, setActiveGameRates } from "../../src/lib/model/game-rates";
 
 type Tier = (typeof GT_VOLTAGE_TIERS)[number]["tier"];
 type Node = Partial<FactoryNode> & {
@@ -325,9 +329,8 @@ async function datasetCases(): Promise<Case[]> {
   const versionId: string = arg("dataset") ?? manifest.latestStableVersion;
   const version = manifest.versions.find((entry: { id: string }) => entry.id === versionId);
   if (!version) throw new Error(`No dataset ${versionId} in ${root}`);
-  // The pack's rate-mod factors, as the store sets them for this dataset (not present before the record existed).
-  const rates = await import("../../src/lib/model/game-rates").catch(() => undefined);
-  rates?.setActiveGameRates(version.gameRates);
+  // The pack's rate-mod factors, as the store sets them for this dataset, unless --rates names them.
+  if (!arg("rates")) setActiveGameRates(version.gameRates);
   const index = JSON.parse(
     zlib
       .gunzipSync(fs.readFileSync(path.join(root, versionId, "recipe-index.json.gz")))
@@ -395,7 +398,19 @@ async function main() {
   const out = arg("out");
   if (!out) throw new Error("Expected --out <file.jsonl.gz>");
   const replay = arg("replay");
+  const rates = arg("rates");
+  if (rates) {
+    setActiveGameRates(
+      Object.fromEntries(
+        rates.split(",").map((pair) => {
+          const [key, value] = pair.split("=");
+          return [key.trim(), Number(value)];
+        }),
+      ),
+    );
+  }
   const cases = replay ? await replayCases(replay) : await datasetCases();
+  const gameRates = getGameRates();
   const seen = new Set<string>();
   const lines: string[] = [];
   const failed: string[] = [];
@@ -413,6 +428,7 @@ async function main() {
         recipeId: entry.recipe.id,
         node: entry.node,
         runtimeVariant,
+        gameRates,
         expected,
       };
       lines.push(JSON.stringify(line, finite));

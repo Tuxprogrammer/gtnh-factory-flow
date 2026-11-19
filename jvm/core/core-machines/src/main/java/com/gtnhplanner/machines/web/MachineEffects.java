@@ -7,6 +7,8 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.machines.OutputSlots;
+
 /**
  * What a machine and its settings do to a recipe (src/lib/solver/machine-effects.ts): the context its table entry
  * reads, its parallels (structure, capped by what the power pays for), and its duration, EU/t and output multipliers.
@@ -61,9 +63,13 @@ public final class MachineEffects {
         return -1;
     }
 
-    /** getMachineOutputMultiplier: every setting's output multiplier, multiplied. */
+    /**
+     * getMachineOutputMultiplier: every setting's output multiplier, multiplied; nothing for an item output the machine
+     * has no slot for ({@link OutputSlots}).
+     */
     public static double outputMultiplier(final Web.Recipe recipe, final Web.Node node, final Web.Resource output,
         final String tier) {
+        if (!OutputSlots.hasItemOutputSlot(recipe, output, tier)) return 0;
         if (ExtremeEntityCrusher.isRecipe(recipe)) return ExtremeEntityCrusher
             .outputMultiplier(recipe, output, ExtremeEntityCrusher.settings(node.machineConfigTiers));
         double multiplier = 1;
@@ -102,7 +108,8 @@ public final class MachineEffects {
 
     /**
      * getPoweredParallelLimit: how many parallels the pool carries. Energy and heat discounts land first
-     * (ParallelHelper folds them into the recipe's draw), so a discounted recipe fits more.
+     * (ParallelHelper folds them into the recipe's draw), so a discounted recipe fits more. It divides by that cost
+     * rounded up to whole EU/t.
      */
     private static double poweredParallelLimit(final Web.Recipe recipe, final Web.Node node) {
         final String runTier = Power.runTier(recipe, node);
@@ -111,7 +118,7 @@ public final class MachineEffects {
         final double recipeEuT = Math.abs(recipe.eut) * eutMultiplier(recipe, node)
             * Heat.discount(recipe, node, runTier, Power.effectiveVoltageOrdinal(recipe, node, runTier));
         if (!(recipeEuT > 0)) return Double.POSITIVE_INFINITY;
-        return Math.max(1, Math.floor(available / recipeEuT));
+        return Math.max(1, Math.floor(available / Math.ceil(recipeEuT)));
     }
 
     /** getMachineDurationMultiplier: the table's speed inverted, else the coil's and settings' multipliers. */

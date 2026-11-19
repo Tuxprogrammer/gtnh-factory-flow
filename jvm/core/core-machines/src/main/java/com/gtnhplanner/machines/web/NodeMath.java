@@ -48,7 +48,7 @@ public final class NodeMath {
         final double machineParallels = runtime != null && runtime.parallel != null ? runtime.parallel
             : MachineEffects.parallelMultiplier(effective, node);
         final List<Web.Resource> runtimeOutputs = RuntimeCalculation.outputs(effective, node);
-        final PowerReport.Report power = PowerReport.has(recipe) ? PowerReport.report(recipe, node) : null;
+        final PowerReport.Report power = PowerReport.has(recipe, node) ? PowerReport.report(recipe, node) : null;
         final String stall = power != null && power.stalled() ? PowerReport.describeStall(power) : null;
         final double rate = machineCount * parallel * machineParallels * 20 / stats.durationTicks();
 

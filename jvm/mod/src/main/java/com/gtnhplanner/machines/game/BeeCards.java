@@ -185,14 +185,24 @@ public final class BeeCards {
         return species == null ? node.machineName : species.name() + " Bee";
     }
 
-    /** The housings' items: Forestry's Apiary, MagicBees' Magic Apiary, GregTech's Industrial Apiary. */
+    /**
+     * The housings' items: Forestry's Apiary and Bee House (BlockApicultureType metas 0 and 2) and its plain Alveary,
+     * MagicBees' Magic Apiary, GregTech's Industrial Apiary, kubatech's Mega Apiary (MetaTileEntityIDs
+     * ExtremeIndustrialApiaryController).
+     */
     private static final Map<String, String[]> HOUSING_ITEMS = Map.of(
         Bees.APIARY.key(),
         new String[] { "Forestry", "apiculture", "0" },
+        Bees.BEE_HOUSE.key(),
+        new String[] { "Forestry", "apiculture", "2" },
         Bees.MAGIC_APIARY.key(),
         new String[] { "MagicBees", "magicApiary", "0" },
+        Bees.ALVEARY.key(),
+        new String[] { "Forestry", "alveary", "0" },
         Bees.INDUSTRIAL.key(),
-        new String[] { "gregtech", "gt.blockmachines", "9399" });
+        new String[] { "gregtech", "gt.blockmachines", "9399" },
+        Bees.MEGA_APIARY.key(),
+        new String[] { "gregtech", "gt.blockmachines", "14202" });
 
     /** A housing's item; null when its mod is missing. */
     @Nullable
@@ -306,6 +316,23 @@ public final class BeeCards {
                     new Option(Bees.NONE, "None", null),
                     new Option("production-aura", "Production aura", item("MagicBees", "visAuraProvider", 0))),
                 false));
+        if (s.housing() == Bees.ALVEARY) {
+            out.add(parts(Bees.AL_FRAMES, "Frame housings", Bees.ALVEARY_FRAMES, s.alvearyFrames()));
+            out.add(parts(Bees.AL_STIMULATOR, "Stimulators", Bees.STIMULATORS, s.stimulator()));
+            out.add(parts(Bees.AL_SUPPORT, "Utility blocks", Bees.ALVEARY_SUPPORTS, s.support()));
+        }
+        if (s.housing() == Bees.MEGA_APIARY) {
+            out.add(parts(Bees.JELLY, "Royal Jelly", Bees.JELLIES, s.jelly()));
+            final List<Option> tiers = new ArrayList<>();
+            for (final String t : MEGA_TIERS) tiers.add(new Option(t, t, null));
+            out.add(
+                choice(
+                    Bees.VOLTAGE,
+                    "Voltage",
+                    MEGA_TIERS.get(Math.max(0, Math.min(MEGA_TIERS.size() - 1, s.voltageTier() - Bees.MEGA_MIN_TIER))),
+                    tiers,
+                    false));
+        }
         if (s.housing()
             .industrial()) {
             final List<Option> speedUps = new ArrayList<>();
@@ -332,6 +359,39 @@ public final class BeeCards {
                     false));
         }
         return out;
+    }
+
+    /** The Mega Apiary's voltage tiers: LuV and up; past UHV it gains nothing more. */
+    private static final List<String> MEGA_TIERS = List
+        .of("LuV", "ZPM", "UV", "UHV", "UEV", "UIV", "UMV", "UXV", "MAX");
+
+    /** A choice of Alveary parts or royal jelly, each with its item where it has one. */
+    private static Setting parts(final String key, final String label, final List<Bees.Part> parts,
+        final Bees.Part now) {
+        final List<Option> options = new ArrayList<>();
+        for (final Bees.Part p : parts) options.add(new Option(p.key(), p.label(), partStack(p)));
+        return choice(key, label, now.key(), options, false);
+    }
+
+    @Nullable
+    private static ItemStack partStack(final Bees.Part p) {
+        if (p.itemId() == null) return null;
+        final int colon = p.itemId()
+            .indexOf(':'),
+            at = p.itemId()
+                .indexOf('@');
+        return item(
+            p.itemId()
+                .substring(0, colon),
+            p.itemId()
+                .substring(
+                    colon + 1,
+                    at < 0 ? p.itemId()
+                        .length() : at),
+            at < 0 ? 0
+                : Integer.parseInt(
+                    p.itemId()
+                        .substring(at + 1)));
     }
 
     private static final Map<String, ItemStack> FRAME_ICONS = new HashMap<>();

@@ -8,6 +8,6 @@ mod 900
 core-base 5
 core-machines 100
 core-power 8
-core-view 4
+core-view 20
 web 3
 core-solver 150

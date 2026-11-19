@@ -188,6 +188,24 @@ public final class MachineControls {
         ITEM_PIPE_CONTROL = choiceControl(ITEM_PIPE, "Item Pipe Casing", options);
     }
 
+    /**
+     * SOLENOID_CONTROL: superconducting solenoids (gregtech:gt.blockcasings.cyclotron_coils metas 0-10, MV-UMV);
+     * BlockCyclotronCoils.getVoltageTier is meta + 2, so the option's position + 2 is the solenoid's voltage tier. Keys
+     * and labels match the dataset's own solenoid knob, so a saved pick carries straight over.
+     */
+    public static final Web.Control SOLENOID_CONTROL;
+
+    static {
+        final String[] labels = { "MV", "HV", "EV", "IV", "LuV", "ZPM", "UV", "UHV", "UEV", "UIV", "UMV" };
+        final List<Option> options = new ArrayList<>();
+        for (int meta = 0; meta < labels.length; meta++) options.add(
+            new Option(
+                labels[meta],
+                meta == 0 ? "gregtech:gt.blockcasings.cyclotron_coils" : "gregtech:gt.blockcasings.cyclotron_coils@" + meta,
+                labels[meta] + " Superconducting Solenoid"));
+        SOLENOID_CONTROL = choiceControl(SOLENOID, "Solenoid", options);
+    }
+
     private static final String[] FLUID_PIPE_LABELS = { "Bronze", "Steel", "Titanium", "Tungstensteel" };
 
     /**
@@ -459,19 +477,21 @@ public final class MachineControls {
         "Fuel",
         "Kerosene",
         "Biocatalysed Propulsion Fluid");
-    public static final Web.Control TURBINE_TIER_CONTROL = countControl(
-        TURBINE_TIER,
-        "Sum Turbine Tier",
-        1,
-        2,
-        3,
-        4,
-        6,
-        8,
-        12,
-        16,
-        24,
-        32);
+    /**
+     * TURBINE_TIER_CONTROL: MTESpinmatron.getSumRotorLevels: 2 rotor slots per structure tier (8 at tier 4), each adding
+     * its material's tool quality (huge whole, large 3/4, normal 1/2, small 1/4, each floored), so any sum from 1 to 8
+     * x 32 (Universium, the highest). A typed number.
+     */
+    public static final Web.Control TURBINE_TIER_CONTROL;
+
+    static {
+        final Web.Control control = countControl(TURBINE_TIER, "Sum Turbine Tier", 1);
+        final Web.Numeric numeric = new Web.Numeric();
+        numeric.min = 1;
+        numeric.max = 256.0;
+        control.numeric = numeric;
+        TURBINE_TIER_CONTROL = control;
+    }
 
     // endregion
 
@@ -507,6 +527,52 @@ public final class MachineControls {
             null);
         control.tiers = List.of(normal, high);
         STEAM_PRESSURE_CONTROL = control;
+    }
+
+    // endregion
+
+    // region Component Assembly Line
+
+    /**
+     * COAL_CASING: MTEComponentAssemblyLine's casing, Component Assembly Line Casing metas 0 (LV) through 13 (MAX)
+     * setting casingTier. A recipe's special value is the casing it needs counted from LV = 1 (validateRecipe rejects
+     * mSpecialValue > casingTier + 1), so the ladder starts at that casing.
+     */
+    public static final String COAL_CASING = "componentAssemblyLineCasing";
+
+    public static final Web.Control COAL_CASING_CONTROL;
+
+    static {
+        final String[] tiers = { "LV", "MV", "HV", "EV", "IV", "LuV", "ZPM", "UV", "UHV", "UEV", "UIV", "UMV", "UXV",
+            "MAX" };
+        final Web.Control control = new Web.Control();
+        control.id = COAL_CASING;
+        control.label = "Casing";
+        control.minimumKey = "lv";
+        control.defaultKey = "lv";
+        control.minimumFromSpecialValue = true;
+        control.tiers = new ArrayList<>();
+        for (int index = 0; index < tiers.length; index++) {
+            final Web.TierOption tier = new Web.TierOption();
+            tier.key = tiers[index].toLowerCase(Locale.ROOT);
+            tier.label = tiers[index];
+            tier.resource = item(
+                "goodgenerator:componentassemblylinecasing" + (index > 0 ? "@" + index : ""),
+                "Component Assembly Line Casing (" + tiers[index] + ")",
+                List.of("Halves recipe time per casing tier above the recipe's own."),
+                false);
+            control.tiers.add(tier);
+        }
+        COAL_CASING_CONTROL = control;
+    }
+
+    /**
+     * componentAssemblyLineSpeed: createOverclockCalculator sets the duration modifier to 2^-(casingTier + 1 -
+     * mSpecialValue), so each casing tier above the recipe's halves its time. {@code casingTier} is the casing's
+     * position on the full LV..MAX ladder; a recipe with no special value counts as 1.
+     */
+    public static double componentAssemblyLineSpeed(final int casingTier, @Nullable final Integer specialValue) {
+        return Math.pow(2, casingTier + 1 - (specialValue != null ? specialValue : 1));
     }
 
     // endregion

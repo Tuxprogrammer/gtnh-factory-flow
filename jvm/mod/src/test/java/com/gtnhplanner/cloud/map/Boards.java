@@ -210,7 +210,7 @@ public final class Boards {
         groups(g, first, note);
         final Group frame = Serializer.GSON.fromJson(
             "{\"id\":\"" + UUID.nameUUIDFromBytes((g.getName() + ":frame").getBytes(StandardCharsets.UTF_8))
-                + "\",\"type\":\"group\",\"x\":5,\"y\":6,\"width\":700,\"height\":400,\"header\":\"Ore line\"}",
+                + "\",\"type\":\"group\",\"x\":5,\"y\":6,\"width\":700,\"height\":400,\"color\":2134075033,\"header\":\"Ore line\"}",
             Group.class);
         frame.getNodeIds()
             .add(first.id);

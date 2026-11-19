@@ -146,6 +146,11 @@ class ArrangeConformanceTest {
 
     private final List<String> differences = new ArrayList<>();
 
+    /** What sameResult found so far, for the other conformance tests of the package. */
+    List<String> differences() {
+        return differences;
+    }
+
     private void differ(final String where, final Object want, final Object got) {
         differences.add(where + ": website " + want + ", java " + got);
     }

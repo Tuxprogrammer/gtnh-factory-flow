@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import vectorFile from "./live-vectors.json";
+import { readConformanceJson } from "@/test-support/conformance";
 import { LiveClientState } from "./client-state";
 import {
   applyOps,
@@ -15,6 +15,8 @@ import {
   type LiveOp,
   type LivePlan,
 } from "./ops";
+
+const vectorFile = readConformanceJson("live", "live-vectors.json");
 
 type Vector = Record<string, unknown> & { kind: string; name: string; rule: string };
 type Step = Record<string, unknown> & { do: string; expect?: Record<string, unknown> };

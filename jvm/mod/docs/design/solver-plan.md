@@ -65,7 +65,7 @@ Tools (all in `src/test/java/com/gtnhplanner/solver/`, tagged `bench`, outside t
 - `SolverCorpus`: 14 real plans exported from the game (`call 'solvedump?dir=...'`, `dev/SolveInputJson`), the
   gtnh-flow charts, and platline tiled 4 and 10 times (unconnected copies).
 - `SolverGoldenTest`: every corpus answer (the solution, alternatives, notes and splits) compared against goldens
-  recorded from the solver before any of this work (`solver-corpus/goldens/`), to 1e-6 relative. Run with
+  recorded from the solver before any of this work (`conformance/solver/corpus/goldens/`), to 1e-6 relative. Run with
   `Budget.timeless(true)`: no wall-clock limit fires, so a run is reproducible whatever the machine is doing.
 - `SolverBench`: least wall and CPU time over several runs. `SolverCensus`: every model each plan's chain runs.
 - Profiles: `-Pjfr` writes `build/bench/profile.jfr`.

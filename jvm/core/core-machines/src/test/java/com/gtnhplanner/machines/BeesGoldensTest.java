@@ -1,7 +1,6 @@
 package com.gtnhplanner.machines;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.BufferedReader;
@@ -19,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.gtnhplanner.conformance.Conformance;
 
 /**
  * Bees against the website's own bee functions (passive-production.ts, machine-effects.ts), written by
@@ -30,7 +30,7 @@ import com.google.gson.JsonParser;
  */
 class BeesGoldensTest {
 
-    private static final String FILE = "/bee-goldens.jsonl.gz";
+    private static final String FILE = "machines/bee-goldens.jsonl.gz";
 
     /** A pure-bred bee with one product and one specialty, as the goldens' recipe has them. */
     private static final Bees.Species SPECIES = new Bees.Species(
@@ -45,8 +45,7 @@ class BeesGoldensTest {
 
     @Test
     void matchesTheWebsite() throws Exception {
-        final InputStream raw = BeesGoldensTest.class.getResourceAsStream(FILE);
-        assertNotNull(raw, FILE);
+        final InputStream raw = Conformance.open(FILE);
         int cases = 0;
         final Map<String, Integer> byHousing = new HashMap<>();
         final List<String> mismatches = new ArrayList<>();

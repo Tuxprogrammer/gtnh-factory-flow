@@ -494,6 +494,7 @@ function getPoweredParallelLimit(recipe: MachineEffectRecipe, node: MachineEffec
   // of them into the same hatch. The heat discount counts too:
   // `ParallelHelper.determineParallel` folds it into `tRecipeEUt` before
   // dividing the available EU, so a hot blast furnace runs more parallels.
+  // It divides by that cost rounded UP to whole EU/t.
   const recipeEuT =
     Math.abs(recipe.eut ?? 0) *
     getMachineEutMultiplier(recipe, node) *
@@ -507,7 +508,7 @@ function getPoweredParallelLimit(recipe: MachineEffectRecipe, node: MachineEffec
     return Number.POSITIVE_INFINITY;
   }
 
-  return Math.max(1, Math.floor(available / recipeEuT));
+  return Math.max(1, Math.floor(available / Math.ceil(recipeEuT)));
 }
 
 export function getMachineDurationMultiplier(

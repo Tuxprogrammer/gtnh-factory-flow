@@ -36,7 +36,9 @@ computes in float: replicate it.
   Hearth, Zyngen, Utupu-Tanuri). A special value of 0 can be a real heat requirement
   (dehydrators).
 - Recipes run in whole ticks. Over one tick GT truncates. Under one tick a multiblock
-  banks leftover speed as parallels and a singleblock wastes it (`canSubTick`). A recipe
+  banks leftover speed as parallels and a singleblock wastes it (`canSubTick`). Banked
+  parallels are capped at supply / ceil(per-parallel EU/t) while EU/t stays billed on the
+  unbanked ones (`capBankedParallels`, `subtick-power-cap.test.ts`). A recipe
   with no handlers gets an invented `kind: "single"` placeholder, which is not evidence.
 - `runtimeCalculation` in the dataset is `OverclockCalculator` alone (never saw
   `GTParallelHelper`), so it is not authoritative for multiblocks: `prefersCuratedMachineMath`.

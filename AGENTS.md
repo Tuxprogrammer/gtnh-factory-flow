@@ -11,19 +11,19 @@ This file is the always-loaded core. Each area keeps its own rules in a `CLAUDE.
 beside its code, which Claude Code loads when you open files there. Read the area file
 before changing that area; it names the tests that pin its behaviour.
 
-| Area | Notes |
-|---|---|
-| Board: cards, drawers, boards, wires, routing, arrange, board perf | `src/components/flow/CLAUDE.md` |
-| App UI: interface scale, compact mode, recipe search, inspector, sounds | `src/components/CLAUDE.md` |
-| Pool worksheet | `src/components/pool/CLAUDE.md` |
-| Solver: LP books, Build/Solve/Pool, drawers, shared machines, verdicts | `src/lib/solver/CLAUDE.md` |
-| Machine math: overclocks, parallels, curated machine table, special machines | `src/lib/machines/CLAUDE.md` |
-| Domain model: resources, cells vs fluids, oredict context, sections, boards | `src/lib/model/CLAUDE.md` |
-| Power generation | `src/lib/power/CLAUDE.md` |
-| Designs, tabs, saving, account sync, plan import/export, public view | `src/store/CLAUDE.md` |
-| Server, recipe API, Supabase, cloud plans, local database | `src/lib/server/CLAUDE.md` |
-| Live service: live plan editing over WebSockets | `src/live/CLAUDE.md`, `docs/live.md` |
-| Dataset pipeline: export, normalize, rebuild, publish | `tools/dataset-pipeline/CLAUDE.md` |
+| Area                                                                         | Notes                                |
+| ---------------------------------------------------------------------------- | ------------------------------------ |
+| Board: cards, drawers, boards, wires, routing, arrange, board perf           | `src/components/flow/CLAUDE.md`      |
+| App UI: interface scale, compact mode, recipe search, inspector, sounds      | `src/components/CLAUDE.md`           |
+| Pool worksheet                                                               | `src/components/pool/CLAUDE.md`      |
+| Solver: LP books, Build/Solve/Pool, drawers, shared machines, verdicts       | `src/lib/solver/CLAUDE.md`           |
+| Machine math: overclocks, parallels, curated machine table, special machines | `src/lib/machines/CLAUDE.md`         |
+| Domain model: resources, cells vs fluids, oredict context, sections, boards  | `src/lib/model/CLAUDE.md`            |
+| Power generation                                                             | `src/lib/power/CLAUDE.md`            |
+| Designs, tabs, saving, account sync, plan import/export, public view         | `src/store/CLAUDE.md`                |
+| Server, recipe API, Supabase, cloud plans, local database                    | `src/lib/server/CLAUDE.md`           |
+| Live service: live plan editing over WebSockets                              | `src/live/CLAUDE.md`, `docs/live.md` |
+| Dataset pipeline: export, normalize, rebuild, publish                        | `tools/dataset-pipeline/CLAUDE.md`   |
 
 Longer references, read on demand: `docs/solver-equations.md` (solver doctrine),
 `docs/power-planner-math.md` (the decoded power workbook), `docs/COMMUNITY.md`.
@@ -147,7 +147,7 @@ Scratch harnesses are `*.local.test.ts` (excluded from the suite); run one with
 - Playwright (`playwright-core` is a devDependency), always headless: a headed run takes
   over the owner's screen. Use `waitUntil: "load"`. Write probes into `scratch/probes/`.
   Install its browser with `node node_modules/playwright-core/cli.js install --only-shell
-  chromium`.
+chromium`.
 - A hidden browser pane never fires `requestAnimationFrame`; shim it. A fresh profile
   lands on the Welcome tab. A production build has no `window.__gtnhFlow`.
 - The board pane is a million px square under the scroll camera: aim at the `.react-flow`

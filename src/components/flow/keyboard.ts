@@ -15,6 +15,11 @@ export function isEditableKeyboardTarget(target: EventTarget | null) {
   return Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
 }
 
+/** A dialog or menu has the keyboard: board-wide keys such as Ctrl+A are its to leave alone. */
+export function isDialogKeyboardTarget(target: EventTarget | null) {
+  return target instanceof HTMLElement && Boolean(target.closest("[role='dialog'], [role='menu']"));
+}
+
 /**
  * Something lies over the board and has the keyboard: the recipe search (a bare Backspace walks its pages back, as
  * in NEI), the Library, Welcome, or a task board. The board's keys do nothing then: they would act on cards the

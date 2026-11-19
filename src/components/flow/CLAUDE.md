@@ -181,6 +181,9 @@ The board must stay smooth with 100+ cards on weak PCs.
 - Delete and Backspace take React Flow's selection only, never the store's `selectedNodeId` (never drawn), and do
   nothing while the recipe search, Library, Welcome or a task board covers the board (`isBoardCovered`); the search
   walks back on a bare Backspace. Escape lets go of the selection. Exam: `board-delete-key.test.ts`.
+- Ctrl+A (or Cmd+A) selects every node the board shows (cards, drawers, groups, frames, notes; wires follow their
+  cards). It leaves the key to typing fields, a dialog or menu with the keyboard, a covered board and an empty board.
+  Exam: `board-select-all-key.test.ts`.
 - One right-click menu, `BoardContextMenu.tsx`. A control with its own right click calls
   `preventDefault`; board handlers skip prevented events.
 - Calm mode is session-only and never stored: a stored flag once stranded players with no

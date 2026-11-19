@@ -2,7 +2,9 @@
  * Records what the website's router tests ask the router and what it answers, for the Java router's conformance
  * run (conformance/layout). Loaded as a vitest setup file by capture.config.ts only: every solveGridRoutes call
  * (from a test or from inside IncrementalRouter), every IncrementalRouter step and every cardRimDocks call is written,
- * inputs as they were before the call and answers as they came back, to $LAYOUT_CAPTURE_OUT/<test file>.json.
+ * inputs as they were before the call and answers as they came back, to $LAYOUT_CAPTURE_OUT/<test file>.json. The
+ * same for every arrangeBoard and arrangeBoardColumns call the website's arrange tests make (none of them has a
+ * judge; the judged arrange is captured on the reference boards by arrange.capture.ts).
  */
 import { afterAll, expect, vi } from "vitest";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -12,13 +14,36 @@ type Json = unknown;
 const clone = (value: Json): Json =>
   value === undefined ? undefined : JSON.parse(JSON.stringify(value));
 const testName = () => expect.getState().currentTestName ?? "(outside a test)";
-/** The reference boards write their own, smaller answers (boards.capture.ts). */
-const recording = () => !testName().startsWith("reference boards");
+/** The reference boards write their own, smaller answers (boards.capture.ts, arrange.capture.ts). */
+const recording = () =>
+  !testName().startsWith("reference boards") && !testName().startsWith("arrange boards");
 
 const solves: Json[] = [];
 const sequences = new Map<number, { name: string; steps: Json[] }>();
 const rimDocks: Json[] = [];
+const arranges: Json[] = [];
 let routerCount = 0;
+
+vi.mock("@/lib/board-arrange", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@/lib/board-arrange")>();
+  const recorded =
+    (name: "arrangeBoard" | "arrangeBoardColumns") =>
+    (input: Parameters<typeof original.arrangeBoard>[0]) => {
+      const { judge, onProgress, ...rest } = input;
+      const before = clone(rest);
+      const result = original[name](input);
+      if (recording() && !judge) {
+        void onProgress;
+        arranges.push({ name: testName(), call: name, input: before, result: clone(result) });
+      }
+      return result;
+    };
+  return {
+    ...original,
+    arrangeBoard: recorded("arrangeBoard"),
+    arrangeBoardColumns: recorded("arrangeBoardColumns"),
+  };
+});
 
 vi.mock("@/components/flow/grid-edge-router", async (importOriginal) => {
   const original = await importOriginal<typeof import("@/components/flow/grid-edge-router")>();
@@ -128,6 +153,6 @@ afterAll(() => {
   const file = basename(expect.getState().testPath ?? "unknown").replace(/\.test\.ts$/, "");
   writeFileSync(
     join(out, `${file}.json`),
-    JSON.stringify({ solves, sequences: [...sequences.values()], rimDocks }),
+    JSON.stringify({ solves, sequences: [...sequences.values()], rimDocks, arranges }),
   );
 });

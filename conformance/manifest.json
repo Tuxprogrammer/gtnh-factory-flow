@@ -9,9 +9,10 @@
       "generator": "mod-answers.json: tools/parity/s1/README.md (S1ParityTest, a throwaway JUnit run in a mod checkout)"
     },
     "layout": {
-      "specifies": "The wire router: every router call the website's router tests make (router-tests.json: solves with boards in and routes out, IncrementalRouter step sequences, cardRimDocks vectors) and the reference boards (boards.json.gz: the layout benchmark's plans as boxes and wires, each routed fresh, its busiest box dragged three beats and dropped), all answered by the website's TypeScript router; the Java router (core-layout) must give the same routes and search work to the bit.",
+      "specifies": "The wire router: every router call the website's router tests make (router-tests.json: solves with boards in and routes out, IncrementalRouter step sequences, cardRimDocks vectors) and the reference boards (boards.json.gz: the layout benchmark's plans as boxes and wires, each routed fresh, its busiest box dragged three beats and dropped), all answered by the website's TypeScript router; the Java router (core-layout) must give the same routes and search work to the bit; and the arrange (arrange.json.gz: every arrange call the website's arrange tests make, and the reference boards up to 80 wires arranged with the router judge, stage by stage and whole, answered by the website's Arrange); the Java Arrange (core-layout) must give the same positions, islands and steering stops to the bit.",
       "readers": [
-        "jvm: core-layout com.gtnhplanner.core.layout.RouterConformanceTest"
+        "jvm: core-layout com.gtnhplanner.core.layout.RouterConformanceTest",
+        "jvm: core-layout com.gtnhplanner.core.layout.arrange.ArrangeConformanceTest"
       ],
       "generator": "node tools/conformance/layout/generate.mjs [--boards jvm/mod/build/bench/versus/boards]"
     },
@@ -77,6 +78,11 @@
       "area": "board",
       "bytes": 29350,
       "sha256": "0fa167c57c6b686b695d8d6125f20fc04ee6a7ac8740e5fab34f9ae1550e1512"
+    },
+    "layout/arrange.json.gz": {
+      "area": "layout",
+      "bytes": 130053,
+      "sha256": "ef6c4a3f7c4e8ab950cf90e8e4813e5d9658b892f1971342f611c571edbce70d"
     },
     "layout/boards.json.gz": {
       "area": "layout",

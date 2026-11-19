@@ -10466,7 +10466,7 @@
    }
   },
   {
-   "name": "power: peak bills every machine it has",
+   "name": "power: peak bills whole machines",
    "input": {
     "dials": {
      "rate": "SECOND",
@@ -10628,7 +10628,7 @@
      }
     ],
     "power": {
-     "number": "1.15k",
+     "number": "1.44k",
      "unit": "EU/t",
      "name": "Power",
      "stalled": false,
@@ -10657,6 +10657,469 @@
     "selected": false,
     "cannotRun": false,
     "unset": false,
+    "menu": [
+     {
+      "id": "clone",
+      "label": "Clone node",
+      "danger": false
+     },
+     {
+      "id": "addRecipe",
+      "label": "Add another recipe",
+      "danger": false
+     },
+     {
+      "id": "replace",
+      "label": "Replace the recipe",
+      "danger": false
+     },
+     {
+      "id": "delete",
+      "label": "Delete node",
+      "danger": true
+     }
+    ]
+   }
+  },
+  {
+   "name": "power: peak bills the count set, or what the solve needs when more",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": false
+    },
+    "card": {
+     "nodeId": "n",
+     "name": "Chemical Reactor",
+     "hasPicker": false,
+     "tier": "HV",
+     "tierFixed": false,
+     "hatchControl": false,
+     "power": {
+      "ok": true,
+      "tier": "HV",
+      "amps": 1,
+      "drawEuT": 480,
+      "parallels": 1,
+      "multiblock": false
+     },
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "glanceArt": "icons/chemical_reactor.png",
+     "product": {
+      "icon": "icons/sulfuric_acid.png",
+      "fluid": true
+     },
+     "inputs": [
+      {
+       "key": "input:oxygen",
+       "handleId": "input:fluid:oxygen",
+       "output": false,
+       "name": "Oxygen",
+       "kind": "fluid",
+       "resourceId": "oxygen",
+       "perSecond": 720,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      },
+      {
+       "key": "input:sulfur_dust",
+       "handleId": "input:item:sulfur_dust",
+       "output": false,
+       "name": "Sulfur Dust",
+       "kind": "item",
+       "resourceId": "sulfur_dust",
+       "perSecond": 6,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "outputs": [
+      {
+       "key": "output:sulfuric_acid",
+       "handleId": "output:fluid:sulfuric_acid",
+       "output": true,
+       "name": "Sulfuric Acid",
+       "kind": "fluid",
+       "resourceId": "sulfuric_acid",
+       "perSecond": 720,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "EXACT",
+      "needed": 3.2,
+      "nodeParallel": 1,
+      "customRate": false,
+      "unset": false,
+      "pin": 2
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": false,
+      "emptyCropFarm": false,
+      "tasks": false
+     }
+    }
+   },
+   "view": {
+    "nodeId": "n",
+    "name": "Chemical Reactor",
+    "nameStep": 0,
+    "hasPicker": false,
+    "tier": {
+     "label": "HV",
+     "fixed": false,
+     "title": "Tier HV. Click up, right click down."
+    },
+    "inputs": [
+     {
+      "key": "input:oxygen",
+      "handleId": "input:fluid:oxygen",
+      "output": false,
+      "number": "720",
+      "unit": "L/s",
+      "name": "Oxygen",
+      "title": "Oxygen",
+      "zero": false,
+      "gold": false,
+      "numberSmall": false,
+      "nameSmall": false,
+      "nameClipped": false,
+      "wired": true,
+      "choice": false,
+      "resourceKey": "fluid:oxygen",
+      "free": false
+     },
+     {
+      "key": "input:sulfur_dust",
+      "handleId": "input:item:sulfur_dust",
+      "output": false,
+      "number": "6",
+      "unit": "/s",
+      "name": "Sulfur Dust",
+      "title": "Sulfur Dust",
+      "zero": false,
+      "gold": false,
+      "numberSmall": false,
+      "nameSmall": false,
+      "nameClipped": false,
+      "wired": true,
+      "choice": false,
+      "resourceKey": "item:sulfur_dust",
+      "free": false
+     }
+    ],
+    "outputs": [
+     {
+      "key": "output:sulfuric_acid",
+      "handleId": "output:fluid:sulfuric_acid",
+      "output": true,
+      "number": "720",
+      "unit": "L/s",
+      "name": "Sulfuric Acid",
+      "title": "Sulfuric Acid",
+      "zero": false,
+      "gold": false,
+      "numberSmall": false,
+      "nameSmall": true,
+      "nameClipped": true,
+      "wired": true,
+      "choice": false,
+      "resourceKey": "fluid:sulfuric_acid",
+      "free": false
+     }
+    ],
+    "power": {
+     "number": "1.54k",
+     "unit": "EU/t",
+     "name": "Power",
+     "stalled": false,
+     "title": "HV machine, 1A"
+    },
+    "glanceArt": "icons/chemical_reactor.png",
+    "glanceProduct": {
+     "icon": "icons/sulfuric_acid.png",
+     "fluid": true
+    },
+    "count": {
+     "text": "×2",
+     "value": 2,
+     "pinned": true,
+     "rule": "EXACT",
+     "ruleWord": "Exactly",
+     "ruleFixed": false,
+     "set": 2,
+     "setText": "2",
+     "box": "2",
+     "prompt": false,
+     "zero": false,
+     "title": "Runs exactly this many. A gap shows as a forced flow."
+    },
+    "chips": [],
+    "stripHeight": 0,
+    "selected": false,
+    "cannotRun": false,
+    "unset": false,
+    "menu": [
+     {
+      "id": "clone",
+      "label": "Clone node",
+      "danger": false
+     },
+     {
+      "id": "addRecipe",
+      "label": "Add another recipe",
+      "danger": false
+     },
+     {
+      "id": "replace",
+      "label": "Replace the recipe",
+      "danger": false
+     },
+     {
+      "id": "delete",
+      "label": "Delete node",
+      "danger": true
+     }
+    ]
+   }
+  },
+  {
+   "name": "power: peak bills an Up to card's count",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": false
+    },
+    "card": {
+     "nodeId": "n",
+     "name": "Chemical Reactor",
+     "hasPicker": false,
+     "tier": "HV",
+     "tierFixed": false,
+     "hatchControl": false,
+     "power": {
+      "ok": true,
+      "tier": "HV",
+      "amps": 1,
+      "drawEuT": 480,
+      "parallels": 1,
+      "multiblock": false
+     },
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "glanceArt": "icons/chemical_reactor.png",
+     "product": {
+      "icon": "icons/sulfuric_acid.png",
+      "fluid": true
+     },
+     "inputs": [
+      {
+       "key": "input:oxygen",
+       "handleId": "input:fluid:oxygen",
+       "output": false,
+       "name": "Oxygen",
+       "kind": "fluid",
+       "resourceId": "oxygen",
+       "perSecond": 720,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      },
+      {
+       "key": "input:sulfur_dust",
+       "handleId": "input:item:sulfur_dust",
+       "output": false,
+       "name": "Sulfur Dust",
+       "kind": "item",
+       "resourceId": "sulfur_dust",
+       "perSecond": 6,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "outputs": [
+      {
+       "key": "output:sulfuric_acid",
+       "handleId": "output:fluid:sulfuric_acid",
+       "output": true,
+       "name": "Sulfuric Acid",
+       "kind": "fluid",
+       "resourceId": "sulfuric_acid",
+       "perSecond": 720,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "UP_TO",
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": false,
+      "unset": false,
+      "pin": 4
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": false,
+      "emptyCropFarm": false,
+      "tasks": false
+     },
+     "upTo": {
+      "capacity": 4,
+      "reached": 1,
+      "reason": "LIMITED",
+      "tied": [],
+      "upstream": []
+     }
+    }
+   },
+   "view": {
+    "nodeId": "n",
+    "name": "Chemical Reactor",
+    "nameStep": 0,
+    "hasPicker": false,
+    "tier": {
+     "label": "HV",
+     "fixed": false,
+     "title": "Tier HV. Click up, right click down."
+    },
+    "inputs": [
+     {
+      "key": "input:oxygen",
+      "handleId": "input:fluid:oxygen",
+      "output": false,
+      "number": "720",
+      "unit": "L/s",
+      "name": "Oxygen",
+      "title": "Oxygen",
+      "zero": false,
+      "gold": false,
+      "numberSmall": false,
+      "nameSmall": false,
+      "nameClipped": false,
+      "wired": true,
+      "choice": false,
+      "resourceKey": "fluid:oxygen",
+      "free": false
+     },
+     {
+      "key": "input:sulfur_dust",
+      "handleId": "input:item:sulfur_dust",
+      "output": false,
+      "number": "6",
+      "unit": "/s",
+      "name": "Sulfur Dust",
+      "title": "Sulfur Dust",
+      "zero": false,
+      "gold": false,
+      "numberSmall": false,
+      "nameSmall": false,
+      "nameClipped": false,
+      "wired": true,
+      "choice": false,
+      "resourceKey": "item:sulfur_dust",
+      "free": false
+     }
+    ],
+    "outputs": [
+     {
+      "key": "output:sulfuric_acid",
+      "handleId": "output:fluid:sulfuric_acid",
+      "output": true,
+      "number": "720",
+      "unit": "L/s",
+      "name": "Sulfuric Acid",
+      "title": "Sulfuric Acid",
+      "zero": false,
+      "gold": false,
+      "numberSmall": false,
+      "nameSmall": true,
+      "nameClipped": true,
+      "wired": true,
+      "choice": false,
+      "resourceKey": "fluid:sulfuric_acid",
+      "free": false
+     }
+    ],
+    "power": {
+     "number": "1.92k",
+     "unit": "EU/t",
+     "name": "Power",
+     "stalled": false,
+     "title": "HV machine, 1A"
+    },
+    "glanceArt": "icons/chemical_reactor.png",
+    "glanceProduct": {
+     "icon": "icons/sulfuric_acid.png",
+     "fluid": true
+    },
+    "count": {
+     "text": "×1",
+     "value": 1,
+     "pinned": true,
+     "rule": "UP_TO",
+     "ruleWord": "Up to",
+     "ruleFixed": false,
+     "set": 4,
+     "setText": "4",
+     "box": "4",
+     "prompt": false,
+     "zero": false,
+     "title": "Runs as many as the plan lets it. Never more than you set."
+    },
+    "foot": {
+     "tone": "LIMITED",
+     "word": "LIMITED",
+     "say": "the plan holds it back",
+     "frac": "1 / 4",
+     "fill": 77,
+     "facts": {
+      "reason": "LIMITED",
+      "rule": "UP_TO",
+      "running": 1,
+      "capacity": 4,
+      "tied": [],
+      "upstream": [],
+      "forced": []
+     }
+    },
+    "glance": {
+     "tone": "LIMITED",
+     "fill": 0.25,
+     "word": "LIMITED"
+    },
+    "chips": [],
+    "stripHeight": 0,
+    "selected": false,
+    "cannotRun": false,
+    "unset": false,
+    "frame": "LIMITED",
     "menu": [
      {
       "id": "clone",

@@ -45,7 +45,7 @@ describe("the card's conformance files", () => {
 describe("the website's card builders over the shared cases", () => {
   const { measure, cases } = readViewCases<CardCaseInput, unknown>("card", "cases");
   it("are measured six px a character", () => expect(measure).toBe("six-px"));
-  it("has the cases the builder tests cover", () => expect(cases.length).toBeGreaterThanOrEqual(80));
+  it("has the cases the builder tests cover", () => expect(cases.length).toBeGreaterThanOrEqual(98));
   it.each(cases.map((c) => [c.name, c] as const))("%s", (_name, c) => {
     expect(cardViewJson(websiteCardView(c.input), c.input)).toEqual(c.view);
   });

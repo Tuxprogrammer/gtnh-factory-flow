@@ -149,8 +149,8 @@ public final class CardViews {
 
     /**
      * The power row: a machine's draw, or a steam machine's litres. An Up to card bills its count averaged by how full
-     * it got of it; under Peak a card that runs at all bills every machine it has (the count set, else the solved
-     * count) times one machine's draw.
+     * it got of it; under Peak a card that runs at all bills every machine built (the count set, or what the solve
+     * needs when that is more; with none, whole machines) times one machine's draw.
      */
     @Nullable
     static CardView.PowerView powerRow(final CardInput in, final CountView count, @Nullable final CardInput.UpTo upTo,
@@ -167,9 +167,12 @@ public final class CardViews {
                             : in.count()
                                 .utilization()));
         final double drawScale = dials.averageDraw() ? usage : usage > 0 ? 1 : 0;
-        final double machines = (count.set() != null ? count.set()
-            : in.count()
-                .needed())
+        // Averaged, the count set (fractions and all; else the solved count) by its use; at its peak, every machine
+        // built, as the overview bills it (RailMath.peakCount).
+        final double needed = in.count()
+            .needed();
+        final double machines = (dials.averageDraw() ? count.set() != null ? count.set() : needed
+            : RailMath.peakCount(needed, count.set(), false))
             * Math.max(
                 1,
                 in.count()

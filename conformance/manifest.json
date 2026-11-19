@@ -1110,8 +1110,8 @@
     },
     "view/card/cases.json": {
       "area": "view",
-      "bytes": 471726,
-      "sha256": "81b17ef3ef9227be3ab8e357a8320f88c6dc7c490f04a358cf94fdf25b553fc2"
+      "bytes": 481868,
+      "sha256": "fb9875ffaf203a17eb9c2454a67069efb3be1f49c89cf916abd2b527305c4e64"
     },
     "view/card/count.json": {
       "area": "view",

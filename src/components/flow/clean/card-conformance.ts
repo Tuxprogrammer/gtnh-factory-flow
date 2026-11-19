@@ -416,7 +416,16 @@ export function cardCases(): Array<{ name: string; input: CardCaseInput }> {
 
   // The power row.
   add("power: amps of its tier on the Amps dial", card(() => {}, { ...EU, power: "amps" }));
-  add("power: peak bills every machine it has", card((c) => (c.count.utilization = 0.5), { ...EU, averageDraw: false }));
+  add("power: peak bills whole machines", card((c) => (c.count.utilization = 0.5), { ...EU, averageDraw: false }));
+  add("power: peak bills the count set, or what the solve needs when more", card((c) => {
+    pin(c, 2, true);
+    c.count.needed = 3.2;
+  }, { ...EU, averageDraw: false }));
+  add("power: peak bills an Up to card's count", card((c) => {
+    pin(c, 4);
+    c.upTo = upTo(1, 4, "LIMITED");
+    c.count.needed = 1;
+  }, { ...EU, averageDraw: false }));
   add("power: average bills its use", card((c) => (c.count.utilization = 0.5)));
   add("power: an Up to card's use is reached over its count", card((c) => {
     pin(c, 4);

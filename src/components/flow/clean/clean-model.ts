@@ -29,6 +29,7 @@ import { makePortKey, parsePortKey } from "@/lib/solver/plan/port-key";
 import { parseSectionNodeId, sectionHandleId } from "@/lib/model/shared-machine";
 import type { PlanUpTo, UpToReason } from "@/lib/solver/plan/types";
 import { PIN_RULE_LABEL, pinRuleOf, withPinRule, type PinRule } from "@/lib/model/pin-rule";
+import { peakCount } from "@/lib/model/peak-count";
 import { getMachineStructureArt } from "@/lib/power/structure-art";
 import { powerCardTier } from "@/lib/power/power-recipe";
 import {
@@ -1118,10 +1119,14 @@ export function cleanCardView(facts: CleanCardFacts): CleanCardView {
       : 0
     : Math.min(1, Math.max(0, result?.utilization ?? 1));
   const drawScale = facts.averageDraw ? usage : usage > 0 ? 1 : 0;
-  // The card's demand is the machines it has (the count set, fractions and all; else the solved count) times one
-  // machine's draw, as the mod prints it; averaged by its use (an Up to card's reached over its count).
+  // The card's demand is the machines it has times one machine's draw, as the mod prints it. Averaged, the count set
+  // (fractions and all; else the solved count) by its use (an Up to card's reached over its count); at its peak, every
+  // machine built (`peakCount`: the count set or what the solve needs when more, else whole machines), as the overview
+  // bills it.
   const solvedNeeded = result?.theoreticalMachinesRequired ?? 0;
-  const machines = (count.set ?? solvedNeeded) * Math.max(1, projectNode.parallel);
+  const machines =
+    (facts.averageDraw ? (count.set ?? solvedNeeded) : peakCount(solvedNeeded, count.set, false)) *
+    Math.max(1, projectNode.parallel);
   let power: CleanPowerView | undefined;
   if (powerReport) {
     const stalled = powerReport.state !== "ok";

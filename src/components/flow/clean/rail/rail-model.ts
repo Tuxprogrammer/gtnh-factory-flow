@@ -7,6 +7,7 @@ import {
 } from "@/lib/model/machine-list";
 import { pinRuleOf, type PinRule } from "@/lib/model/pin-rule";
 import type { PlanUpTo } from "@/lib/solver/plan/types";
+import { powerCardTier } from "@/lib/power/power-recipe";
 import { makeResourceKey } from "@/lib/model/resources";
 import { getStorageRoles, type StorageRole } from "@/lib/model/storage-role";
 import { hasStorageTarget, storageTargetMode, type TargetMode } from "@/lib/model/storage-target";
@@ -97,6 +98,8 @@ export interface RailMachine extends MachineListEntry {
   pin?: number;
   /** The solver's read-out for an Up to card, when it gave one. */
   upTo?: PlanUpTo;
+  /** A generator's tier for its made EU under the Amps dial, the one its card's EU row counts in. */
+  madeTier?: string;
 }
 
 export interface RailModel {
@@ -252,6 +255,7 @@ export function buildRailModel(
         rule,
         ...(pinned ? { pin: machinesFromUnits(entry, pin) } : {}),
         ...(upTo ? { upTo } : {}),
+        madeTier: powerCardTier(recipes.get(node?.recipeId ?? "")),
       };
     });
   const machineName = new Map(machineEntries.map((entry) => [entry.nodeId, entry.label]));

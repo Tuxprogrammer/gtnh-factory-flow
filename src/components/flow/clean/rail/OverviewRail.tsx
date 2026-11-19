@@ -473,8 +473,9 @@ const ItemView = memo(function ItemView({
   euText: string;
   peak: boolean;
 }) {
-  // A memoised row reads the rate unit from a module singleton: it must subscribe or it keeps its old text.
+  // A memoised row reads the rate and power units from module singletons: it must subscribe or it keeps its old text.
   useFactoryStore((s) => s.rateUnit);
+  useFactoryStore((s) => s.powerDisplayUnit);
   const { item } = placed;
   switch (item.t) {
     case "section":
@@ -1097,6 +1098,8 @@ const MachineRow = memo(function MachineRow({
   state: RailState;
 }) {
   useFontEpoch();
+  // Memoised: it reads the power dial from a module singleton, so it must subscribe or keep its old text.
+  useRateDisplayUnits();
   const railWidth = useContext(RailWidthContext);
   const [hot, setHot] = useState(false);
   // The count as it was when its box opened: Escape puts it back, as the box sets as it goes.
@@ -1131,10 +1134,16 @@ const MachineRow = memo(function MachineRow({
   let eu = "";
   if (tooLow) eu = "TIER!";
   else if (made !== undefined && made > 0)
-    eu = withUnit(`+${formatCompact(powerDisplayFromEuT(made))}`, powerDisplaySuffix());
+    eu = withUnit(
+      `+${formatCompact(powerDisplayFromEuT(made, entry.madeTier))}`,
+      powerDisplaySuffix(entry.madeTier),
+    );
   else if (steam !== undefined) eu = withUnit(formatCompact(steam), "L/s");
   else if (used !== undefined)
-    eu = withUnit(formatCompact(powerDisplayFromEuT(used)), powerDisplaySuffix());
+    eu = withUnit(
+      formatCompact(powerDisplayFromEuT(used, entry.tier)),
+      powerDisplaySuffix(entry.tier),
+    );
   // The box counts machines; a crop card's pin is seeds, so what it sets is the seeds those machines fill.
   const setCount = (machines: number) => pinCount(entry.nodeId, unitsFromMachines(entry, machines));
   const togglePin = () => stepPinRule(entry.nodeId, unitsFromMachines(entry, base));

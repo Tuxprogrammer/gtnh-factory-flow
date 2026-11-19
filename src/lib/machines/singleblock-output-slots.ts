@@ -52,13 +52,28 @@ const ITEM_OUTPUT_SLOTS: Record<string, Array<[VoltageTier, number]>> = {
   "Precision Laser Engraver": [["LV", 1]],
 };
 
+/**
+ * Multiblocks that override `IVoidable.getItemOutputLimit`. `ParallelHelper`
+ * hands only `mOutputs[0..limit)` (its truncatedItemOutputs) to
+ * `calculateItemOutputs`, so later outputs are voided at every parallel and
+ * every tier. The Steam Grinder (`MTESteamMacerator`) and bartworks'
+ * `MTEWindmill` both return 1.
+ */
+const MULTIBLOCK_ITEM_OUTPUT_LIMIT: Record<string, number> = {
+  "Steam Grinder": 1,
+  Windmill: 1,
+};
+
 type SlotRecipe = Partial<Pick<Recipe, "machineType" | "machineProfile">>;
 
-/** The machine's item output slots at this tier, or undefined when it has room for every recipe. */
-export function singleblockItemOutputSlots(
-  recipe: SlotRecipe,
-  tier: VoltageTier,
-): number | undefined {
+/**
+ * The machine's item output slots at this tier (a multiblock's output limit),
+ * or undefined when it has room for every recipe.
+ */
+export function itemOutputSlots(recipe: SlotRecipe, tier: VoltageTier): number | undefined {
+  if (Object.hasOwn(MULTIBLOCK_ITEM_OUTPUT_LIMIT, recipe.machineType ?? "")) {
+    return MULTIBLOCK_ITEM_OUTPUT_LIMIT[recipe.machineType ?? ""];
+  }
   if (recipe.machineProfile?.kind === "multiblock") {
     return undefined;
   }
@@ -90,7 +105,7 @@ export function hasItemOutputSlot(
   if (output.kind !== "item") {
     return true;
   }
-  const slots = singleblockItemOutputSlots(recipe, tier);
+  const slots = itemOutputSlots(recipe, tier);
   if (slots === undefined) {
     return true;
   }
@@ -104,7 +119,7 @@ export function zeroUnslottedOutputs(
   outputs: RecipeOutput[],
   tier: VoltageTier,
 ): RecipeOutput[] {
-  const slots = singleblockItemOutputSlots(recipe, tier);
+  const slots = itemOutputSlots(recipe, tier);
   if (slots === undefined) {
     return outputs;
   }

@@ -25,13 +25,15 @@
       "generator": "website-out.json: GTNH_WRITE_GOLDEN=1 vitest run src/test-support/format-conformance.test.ts; mod-out.json: ./gradlew :core-view:test --tests '*FmtConformanceTest*' -PwriteVectors; mod-recipe-overlay-out.json: ./gradlew :mod:test --tests '*RecipeOverlayFormatTest*' -PwriteVectors; COMPARISON.md: node tools/conformance/format/compare.mjs; then node tools/conformance/manifest.mjs --write"
     },
     "layout": {
-      "specifies": "The wire router: every router call the website's router tests make (router-tests.json: solves with boards in and routes out, IncrementalRouter step sequences, cardRimDocks vectors) and the reference boards (boards.json.gz: the layout benchmark's plans as boxes and wires, each routed fresh, its busiest box dragged three beats and dropped), all answered by the website's TypeScript router; the Java router (core-layout) must give the same routes and search work to the bit; and the arrange (arrange.json.gz: every arrange call the website's arrange tests make, and the reference boards up to 80 wires arranged with the router judge, stage by stage and whole, answered by the website's Arrange, plus the optimiser's searches, free placements and proxy scores as it calls them); the Java Arrange (core-layout) must give the same positions, islands and steering stops to the bit.",
+      "specifies": "The wire router: every router call the website's router tests make (router-tests.json: solves with boards in and routes out, IncrementalRouter step sequences, cardRimDocks vectors) and the reference boards (boards.json.gz: the layout benchmark's plans as boxes and wires, each routed fresh, its busiest box dragged three beats and dropped), all answered by the website's TypeScript router; the Java router (core-layout) must give the same routes and search work to the bit; and the arrange (arrange.json.gz: every arrange call the website's arrange tests make, and the reference boards up to 80 wires arranged with the router judge, stage by stage and whole, answered by the website's Arrange, plus the optimiser's searches, free placements and proxy scores as it calls them); the Java Arrange (core-layout) must give the same positions, islands and steering stops to the bit. js-sort.json pins JavaScript's Array.prototype.sort as V8 runs it (consistent orders, equal keys and comparators that are no order at all, written by Node); core-layout's JsSort, through which every list sort of the router and the Arrange goes, must give the same order. tie-board.json.gz is a website board (a grid of 484 cards, 200 wires) whose dock order ties in cycles; the website routes it through the TypeScript and the compiled core on both targets and requires the same routes.",
       "readers": [
         "jvm: core-layout com.gtnhplanner.core.layout.RouterConformanceTest",
         "jvm: core-layout com.gtnhplanner.core.layout.arrange.ArrangeConformanceTest",
-        "jvm: core-layout com.gtnhplanner.core.layout.arrange.ArrangePartsConformanceTest"
+        "jvm: core-layout com.gtnhplanner.core.layout.arrange.ArrangePartsConformanceTest",
+        "jvm: core-layout com.gtnhplanner.core.layout.JsSortTest",
+        "vitest: src/components/flow/layout-core.test.ts"
       ],
-      "generator": "node tools/conformance/layout/generate.mjs [--boards jvm/mod/build/bench/versus/boards]"
+      "generator": "node tools/conformance/layout/generate.mjs [--boards jvm/mod/build/bench/versus/boards] ; node tools/conformance/layout/js-sort.mjs"
     },
     "live": {
       "specifies": "The live-plan op engine: every rule of put, patch, del, meta, apply, diff and invert as a vector (plan, ops, expected result), run by both engines.",
@@ -181,10 +183,20 @@
       "bytes": 355403,
       "sha256": "df8629460a87d6e64533be8dbdd5af66aa0c50f1f901e2cad0acff53ee9296cd"
     },
+    "layout/js-sort.json": {
+      "area": "layout",
+      "bytes": 540029,
+      "sha256": "dea1356ed128c5ab5854f04c26efd6e8c6247f4873bfe61628f9dc2efe54dc82"
+    },
     "layout/router-tests.json": {
       "area": "layout",
       "bytes": 1688373,
       "sha256": "6dacfaedf0c5eb1744e2e4f774747b5c56b0bd246006f2ad73653697d2f385d7"
+    },
+    "layout/tie-board.json.gz": {
+      "area": "layout",
+      "bytes": 36172,
+      "sha256": "3b40ff396076bab48dd61058a12759ef1b78021d5f4ddfc108485e240cf6c3ae"
     },
     "live/live-vectors.json": {
       "area": "live",

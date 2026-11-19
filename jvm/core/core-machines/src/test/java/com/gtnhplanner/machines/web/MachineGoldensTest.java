@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.gson.Gson;
@@ -22,10 +23,12 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.gtnhplanner.conformance.Conformance;
+import com.gtnhplanner.core.machines.GameRates;
 
 /**
  * The website's own functions run over real dataset recipes and a spread of nodes (machine-goldens.jsonl.gz, written
- * by its {@code tools/audits/export-mod-machine-data.mjs}): the port must give every number the same, the runtime
+ * by its {@code tools/audits/export-mod-machine-goldens.ts}; the command and dataset are in conformance/manifest.json),
+ * at the pack's rate-mod factors each case carries: the port must give every number the same, the runtime
  * variants the recipes carry included (the game computes its own in play, machines/game/RuntimeVariants). The Tree
  * Growth Simulator and Bacterial Vat are checked against nothing here: the mod's own models in machines/ are matched to
  * the website on their own.
@@ -86,6 +89,7 @@ class MachineGoldensTest {
                     .getAsJsonObject();
                 final String recipeId = c.get("recipeId")
                     .getAsString();
+                GameRates.install(rates(c));
                 if (c.has("recipe")) recipes.put(recipeId, gson.fromJson(c.get("recipe"), Web.Recipe.class));
                 final String group = c.get("group")
                     .getAsString();
@@ -117,6 +121,23 @@ class MachineGoldensTest {
         if (dump == null) for (int i = 0; i < Math.min(40, failures.size()); i++) report.append("\n")
             .append(failures.get(i));
         return report.toString();
+    }
+
+    /** The pack's rate-mod factors the case was computed with: its gameRates, each 1 where it has none. */
+    private static GameRates rates(final JsonObject c) {
+        if (!c.has("gameRates")) return GameRates.NONE;
+        final JsonObject r = c.getAsJsonObject("gameRates");
+        return new GameRates(factor(r, "beesYield"), factor(r, "ic2CropsYield"), factor(r, "recipeDurationDivisor"));
+    }
+
+    private static double factor(final JsonObject r, final String key) {
+        return r.has(key) ? r.get(key)
+            .getAsDouble() : 1;
+    }
+
+    @AfterEach
+    void noRates() {
+        GameRates.install(GameRates.NONE);
     }
 
     private void check(final JsonObject c, final Web.Recipe recipe, final String group) {

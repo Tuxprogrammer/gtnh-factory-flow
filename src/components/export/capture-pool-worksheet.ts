@@ -1,6 +1,7 @@
 "use client";
 
 import { toBlob, toSvg } from "html-to-image";
+import { EXPORT_IMAGE_PLACEHOLDER } from "@/lib/import-export/export-image-placeholder";
 import { resolveExportFontCss } from "@/lib/import-export/export-fonts";
 import {
   dataUrlToText,
@@ -98,6 +99,7 @@ export async function capturePoolWorksheet(
         transformOrigin: "top left",
       },
       skipFonts: true,
+      imagePlaceholder: EXPORT_IMAGE_PLACEHOLDER,
       fontEmbedCSS: await resolveExportFontCss(worksheet),
     };
     const capture: FlowExportCapture = {

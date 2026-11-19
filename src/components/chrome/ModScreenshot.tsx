@@ -7,6 +7,7 @@ import "./screenshot.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { toBlob } from "html-to-image";
+import { EXPORT_IMAGE_PLACEHOLDER } from "@/lib/import-export/export-image-placeholder";
 import { computeCommunityPlanStats } from "@/lib/community/plan-stats";
 import { serializeFactoryProject } from "@/lib/import-export";
 import {
@@ -207,6 +208,7 @@ export function ModScreenshot({ onClose }: { onClose: () => void }) {
             height: layout.footerHeight,
             pixelRatio: layout.footerScale * capture.pixelRatio,
             skipFonts: true,
+            imagePlaceholder: EXPORT_IMAGE_PLACEHOLDER,
             fontEmbedCSS,
           })) ?? undefined)
         : undefined;

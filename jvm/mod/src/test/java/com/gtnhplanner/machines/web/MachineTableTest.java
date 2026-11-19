@@ -24,6 +24,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import com.gtnhplanner.conformance.Conformance;
 
 /**
  * machine-table.test.ts: the table's own cases, and the table side of the ones that go through the solver
@@ -98,8 +99,7 @@ class MachineTableTest {
     }
 
     private static JsonObject reference() throws Exception {
-        try (InputStream in = MachineTableTest.class.getResourceAsStream("/machines/reference-coefficients.json")) {
-            assertNotNull(in, "reference-coefficients.json on the test classpath");
+        try (InputStream in = Conformance.open("machines/reference-coefficients.json")) {
             return new JsonParser().parse(new InputStreamReader(in, StandardCharsets.UTF_8))
                 .getAsJsonObject();
         }

@@ -1,7 +1,6 @@
 package com.gtnhplanner.machines.web;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -22,6 +21,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import com.gtnhplanner.conformance.Conformance;
 
 /**
  * The website's own functions run over real dataset recipes and a spread of nodes (machine-goldens.jsonl.gz, written
@@ -32,7 +32,7 @@ import com.google.gson.JsonPrimitive;
  */
 class MachineGoldensTest {
 
-    private static final String FILE = "/machine-goldens.jsonl.gz";
+    private static final String FILE = "machines/machine-goldens.jsonl.gz";
     /** Relative tolerance for EU/t and multipliers; ticks, steps and tiers must be exact. */
     private static final double REL = 1e-9;
 
@@ -43,8 +43,7 @@ class MachineGoldensTest {
 
     @Test
     void portMatchesTheWebsite() throws Exception {
-        final InputStream raw = MachineGoldensTest.class.getResourceAsStream(FILE);
-        assumeTrue(raw != null, "no " + FILE);
+        final InputStream raw = Conformance.open(FILE);
         final Map<String, Web.Recipe> recipes = new HashMap<>();
         try (BufferedReader in = new BufferedReader(
             new InputStreamReader(new GZIPInputStream(raw), StandardCharsets.UTF_8))) {

@@ -283,7 +283,7 @@ The plan is the website's `FactoryProject`. Its arrays of things with an `id` ar
 - The inverse of a batch, computed against the plan before it: `put` becomes `del`, `del` becomes `put` of the old
   thing, `patch` becomes a `patch` restoring the old values of exactly those fields (deleting the ones that were
   absent), `meta` likewise.
-- Both engines ship the same test vectors (`live-vectors.json`: plan, batch, expected plan; plan pair, expected diff),
+- Both engines ship the same test vectors (`conformance/live/live-vectors.json`: plan, batch, expected plan; plan pair, expected diff),
   checked in on each side.
 
 ## Game mapping

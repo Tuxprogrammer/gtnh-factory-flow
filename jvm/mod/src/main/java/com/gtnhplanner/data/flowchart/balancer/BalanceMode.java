@@ -3,8 +3,7 @@ package com.gtnhplanner.data.flowchart.balancer;
 import java.util.Locale;
 import java.util.Set;
 
-import net.minecraft.util.StatCollector;
-
+import com.gtnhplanner.core.base.Text;
 import com.gtnhplanner.data.flowchart.balancer.stages.ExtentMinStage;
 import com.gtnhplanner.data.flowchart.balancer.stages.FastPathStage;
 import com.gtnhplanner.data.flowchart.balancer.stages.FlowMinStage;
@@ -72,8 +71,9 @@ public enum BalanceMode {
     }
 
     public String displayName() {
-        return StatCollector.translateToLocal(
-            "gtnhplanner.gui.balancer_mode." + this.name()
-                .toLowerCase(Locale.ROOT));
+        return Text.get()
+            .translate(
+                "gtnhplanner.gui.balancer_mode." + this.name()
+                    .toLowerCase(Locale.ROOT));
     }
 }

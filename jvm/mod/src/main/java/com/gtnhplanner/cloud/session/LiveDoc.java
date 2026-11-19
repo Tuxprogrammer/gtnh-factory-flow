@@ -14,13 +14,13 @@ import javax.annotation.Nullable;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.gtnhplanner.GtnhPlanner;
 import com.gtnhplanner.cloud.map.CloudPlans;
 import com.gtnhplanner.cloud.net.LiveClient;
 import com.gtnhplanner.cloud.store.CloudCache;
 import com.gtnhplanner.cloud.sync.LiveOp;
 import com.gtnhplanner.cloud.sync.LiveOps;
 import com.gtnhplanner.cloud.sync.LiveState;
+import com.gtnhplanner.core.base.Log;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.importer.ImportReport;
 import com.gtnhplanner.library.PlanExport;
@@ -125,7 +125,8 @@ public final class LiveDoc {
         saved.add("pending", batches);
         final LiveState state = LiveState.restore(saved);
         if (state != null) return state;
-        GtnhPlanner.LOG.warn("The waiting edits of {} did not read; it opens as last confirmed", key);
+        Log.get()
+            .warn("The waiting edits of {} did not read; it opens as last confirmed", key);
         return new LiveState(seq, plan);
     }
 
@@ -362,18 +363,19 @@ public final class LiveDoc {
     private void warnTooBig() {
         final List<LiveOp> big = state.takeTooBig();
         if (big.isEmpty()) return;
-        for (final LiveOp op : big) GtnhPlanner.LOG.warn(
-            "An edit to {} is too big for the live service ({} bytes of {} allowed) and was not sent: {} {}",
-            key,
-            LiveState.size(op),
-            maxOpBytes(),
-            op.toJson()
-                .get("o"),
-            op.toJson()
-                .has("id")
-                    ? op.toJson()
-                        .get("id")
-                    : "");
+        for (final LiveOp op : big) Log.get()
+            .warn(
+                "An edit to {} is too big for the live service ({} bytes of {} allowed) and was not sent: {} {}",
+                key,
+                LiveState.size(op),
+                maxOpBytes(),
+                op.toJson()
+                    .get("o"),
+                op.toJson()
+                    .has("id")
+                        ? op.toJson()
+                            .get("id")
+                        : "");
         session.notice("A card is too big to share and stays on this device only");
     }
 
@@ -494,8 +496,8 @@ public final class LiveDoc {
             }
             final CompletableFuture<Void> k = keeping.get(cid);
             if (k != null && !k.isDone()) return;
-            if (k != null && k.isCompletedExceptionally())
-                GtnhPlanner.LOG.warn("An edit to {} could not be kept on disk; it is sent anyway", key);
+            if (k != null && k.isCompletedExceptionally()) Log.get()
+                .warn("An edit to {} could not be kept on disk; it is sent anyway", key);
             if (!client.sendOps(key, state.seq(), cid, LiveOp.toJson(b.ops()))) return;
             keeping.remove(cid);
             unsent.pollFirst();
@@ -566,7 +568,8 @@ public final class LiveDoc {
         final LiveState.Batch sent = b.cid()
             .isEmpty() ? null : pendingBatch(b.cid());
         if (r.ops() == null) {
-            GtnhPlanner.LOG.warn("A batch for {} did not read ({}); joining again", key, r.error());
+            Log.get()
+                .warn("A batch for {} did not read ({}); joining again", key, r.error());
             session.rejoin(this);
             return;
         }

@@ -9,12 +9,11 @@ import javax.annotation.Nullable;
 import net.minecraft.tileentity.TileEntityFurnace;
 
 import com.gtnhplanner.api.RecipePropertyAPI;
+import com.gtnhplanner.core.base.CoreSettings;
 import com.gtnhplanner.data.Settings;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Port;
-import com.gtnhplanner.nei.NEIPlanConfig;
 
-import codechicken.nei.NEIClientConfig;
 import codechicken.nei.PositionedStack;
 import codechicken.nei.recipe.IRecipeHandler;
 
@@ -39,8 +38,8 @@ public interface PropertyProvider {
         final List<PositionedStack> others = handler.getOtherStacks(recipeIndex);
         for (final PositionedStack ps : others) {
             if (ps != null && ps.item != null) {
-                if (NEIClientConfig.getSetting(NEIPlanConfig.ConfigBurnableOverride.KEY)
-                    .getIntValue(NEIPlanConfig.ConfigBurnableOverride.OFF) == NEIPlanConfig.ConfigBurnableOverride.ON) {
+                if (CoreSettings.get()
+                    .burnableOverride()) {
                     if (node.machineConfig.getString(Settings.BURNABLE_OVERRIDE.key())
                         .equals("IN")) {
                         node.inputs.add(new Port<>(RecipePropertyAPI.ITEM, ps.item.copy(), 1.f));

@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.gtnhplanner.conformance.Conformance;
 import com.gtnhplanner.dev.SolveInputJson;
 import com.gtnhplanner.harness.GtnhFlowLoader;
 
@@ -32,8 +33,11 @@ class AnswerAudit {
     @Test
     void audit() throws IOException {
         GtnhFlowLoader.ensureDefaultMachineProfile();
-        final String dirs = System.getProperty("gtnhplanner.audit", "src/test/resources/solver-corpus/goldens");
-        final Path corpus = Path.of("src/test/resources/solver-corpus");
+        final String dirs = System.getProperty(
+            "gtnhplanner.audit",
+            Conformance.path("solver/corpus/goldens")
+                .toString());
+        final Path corpus = Conformance.path("solver/corpus/inputs");
         for (final String dir : dirs.split(",")) {
             System.out.println("[audit] ===== " + dir);
             try (var files = Files.list(Path.of(dir))) {

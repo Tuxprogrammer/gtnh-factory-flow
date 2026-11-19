@@ -93,7 +93,7 @@ ported to `balancer/`, name for name where the Java already mirrored it:
 
 - `UpToTest` is the website's `upto.test.ts` case for case, on the same plans (`UpToPlans`, ids hashed as the website's
   export hashes them). `SolverPathTest` (reversed variables) and `SolverIslandTest` take Up to plans too.
-- `UpToParityTest` solves every plan under `src/test/resources/solver-corpus-upto/` and compares its whole answer with
+- `UpToParityTest` solves every plan under `conformance/solver/up-to/` and compares its whole answer with
   the website's by the golden rules; `upTo`, `upToLoops` and `banked` are in the digest only when present, so the
   goldens did not move. The website writes the folder: `UPTO_EXPORT_DIR=<this folder> npx vitest run up-to-export` on `up-to-card`
   (`parity/up-to-export.test.ts`: every hand-built Up to plan, and every corpus plan with each exact count Up to). Three

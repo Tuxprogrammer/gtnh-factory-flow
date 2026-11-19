@@ -14,8 +14,8 @@ import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.gtnhplanner.Config;
-import com.gtnhplanner.GtnhPlanner;
+import com.gtnhplanner.core.base.CoreSettings;
+import com.gtnhplanner.core.base.Log;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.balancer.alternatives.Alternative;
 import com.gtnhplanner.data.flowchart.balancer.alternatives.Alternatives;
@@ -418,7 +418,10 @@ public final class Balancer {
         }
 
         private static Object keyOf(final SolveInput island) {
-            return List.of(island, Config.solverEffort());
+            return List.of(
+                island,
+                CoreSettings.get()
+                    .solverEffort());
         }
     }
 
@@ -567,9 +570,9 @@ public final class Balancer {
             if (reason != null && reason.message() == SolverMessage.NO_PIN) {
                 // Expected state, not an error: an unpinned chart is just wiring, so it gets no
                 // quantities at all rather than numbers derived from an anchor nobody set.
-                GtnhPlanner.LOG.debug("{} balance idle: {}", mode, reason.describe());
+                Log.get().debug("{} balance idle: {}", mode, reason.describe());
             } else {
-                GtnhPlanner.LOG.warn(
+                Log.get().warn(
                     "{} balance failed ({}); showing the chart without solve-derived quantities",
                     mode,
                     reason == null ? "no point" : reason.describe());
@@ -585,7 +588,7 @@ public final class Balancer {
         }
         final Answer.Solved solved = (Answer.Solved) answer;
         final SolutionView view = solved.solution();
-        GtnhPlanner.LOG.debug(
+        Log.get().debug(
             "{} balance: {} machines, {} open gates, {}ms, notes {}",
             mode,
             view.machineCounts.size(),

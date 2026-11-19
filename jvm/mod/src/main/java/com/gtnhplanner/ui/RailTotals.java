@@ -1,0 +1,120 @@
+package com.gtnhplanner.ui;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.ToDoubleFunction;
+
+/**
+ * The overview's lists, worked out from what every card makes and uses (the website's {@code rail-model.ts}): what
+ * the plan brings in, sends out and keeps inside, each biggest first, and the machines it lists. Pure: the session
+ * gives it the numbers and makes the lines ({@link BoardSession#totals()}).
+ */
+final class RailTotals {
+
+    /** Below this a rate (per second) is solver noise, not a flow worth a line. */
+    static final double EPS = 1e-6;
+
+    private RailTotals() {}
+
+    /** The three lists of resource lines. */
+    record Lines<L> (List<L> inputs, List<L> outputs, List<L> internal) {}
+
+    /**
+     * The resource lines. {@code flow} is per canonical key what is made ([0]) and used ([1]), in the order the plan
+     * met them; {@code trashed} what trash voids of it. A resource an unwired port takes ({@code openIn}) or makes
+     * ({@code openOut}) is listed on its side at 0 when nothing else lists it there, so it can be set from the
+     * overview;
+     * so is one a drawer holds ({@code sourceDrawers}, {@code productDrawers}, after the ports). One card's unwired
+     * output that another card's unwired input takes nets out of both sides' amounts, but both lines stay.
+     * {@code line} makes a line of a key and its amount, {@code keyOf} reads it back.
+     */
+    static <L> Lines<L> lines(final Map<String, double[]> flow, final Map<String, Double> trashed,
+        final Set<String> openIn, final Set<String> openOut, final List<String> sourceDrawers,
+        final List<String> productDrawers, final java.util.function.BiFunction<String, Double, L> line,
+        final Function<L, String> keyOf, final ToDoubleFunction<L> amountOf) {
+        final List<L> in = new ArrayList<>(), out = new ArrayList<>(), internal = new ArrayList<>();
+        for (final Map.Entry<String, double[]> e : flow.entrySet()) {
+            final double made = e.getValue()[0], used = e.getValue()[1];
+            final double leaves = made - used - trashed.getOrDefault(e.getKey(), 0.0);
+            if (used - made > EPS) in.add(line.apply(e.getKey(), used - made));
+            if (leaves > EPS) out.add(line.apply(e.getKey(), leaves));
+            if (Math.min(made, used) > EPS) internal.add(line.apply(e.getKey(), Math.min(made, used)));
+        }
+        // Biggest first; equal amounts keep the order the plan met them in (the sort is stable).
+        final Comparator<L> byAmount = (a, b) -> Double.compare(amountOf.applyAsDouble(b), amountOf.applyAsDouble(a));
+        in.sort(byAmount);
+        out.sort(byAmount);
+        internal.sort(byAmount);
+        atZero(in, openIn, line, keyOf);
+        atZero(out, openOut, line, keyOf);
+        atZero(in, sourceDrawers, line, keyOf);
+        atZero(out, productDrawers, line, keyOf);
+        return new Lines<>(in, out, internal);
+    }
+
+    /** Adds a line at 0 for each key the list does not have yet, in the keys' order. */
+    private static <L> void atZero(final List<L> list, final java.util.Collection<String> keys,
+        final java.util.function.BiFunction<String, Double, L> line, final Function<L, String> keyOf) {
+        if (keys.isEmpty()) return;
+        final Set<String> have = new HashSet<>();
+        for (final L l : list) have.add(keyOf.apply(l));
+        for (final String key : keys) if (have.add(key)) list.add(line.apply(key, 0.0));
+    }
+
+    /**
+     * The machine lines, as the website's machine list has them: every card once, at zero too, whatever its rule, but a
+     * fluid tank (free and instant: nothing to build). A shared machine is one card and one line: its recipes come
+     * together, in plan order, where the first of them stands. {@code machineOf} is the shared machine a card is a
+     * recipe of (null for a card of its own).
+     */
+    static <C> List<List<C>> machines(final List<C> cards, final Predicate<C> tank,
+        final Function<C, Object> machineOf) {
+        final Map<Object, List<C>> shared = new HashMap<>();
+        final List<List<C>> out = new ArrayList<>();
+        for (final C c : cards) {
+            if (tank.test(c)) continue;
+            final Object m = machineOf.apply(c);
+            if (m == null) {
+                out.add(List.of(c));
+                continue;
+            }
+            final List<C> recipes = shared.get(m);
+            if (recipes != null) recipes.add(c);
+            else {
+                final List<C> first = new ArrayList<>();
+                first.add(c);
+                shared.put(m, first);
+                out.add(first);
+            }
+        }
+        return out;
+    }
+
+    /**
+     * The steam a machine line burns, L/s (the website's machine-list {@code steamLs}, {@code avgSteamLs}), from each
+     * of
+     * its recipes' steam per machine a tick ({@code perTick}) and how many machines it runs ({@code machines}). Peak:
+     * the most any of them burns, on every whole machine the line builds; else what they burn on average. NaN when
+     * none of them burns steam.
+     */
+    static double steamPerSecond(final double[] perTick, final double[] machines, final boolean peak) {
+        double most = 0, built = 0, average = 0;
+        boolean steam = false;
+        for (int i = 0; i < perTick.length; i++) {
+            if (!(perTick[i] > 0)) continue;
+            steam = true;
+            most = Math.max(most, perTick[i]);
+            average += perTick[i] * 20 * machines[i];
+        }
+        if (!steam) return Double.NaN;
+        for (final double m : machines) built += m;
+        return peak ? most * 20 * Math.ceil(built - 1e-9) : average;
+    }
+}

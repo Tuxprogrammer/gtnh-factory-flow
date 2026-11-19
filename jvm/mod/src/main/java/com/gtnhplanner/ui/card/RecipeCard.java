@@ -1,0 +1,3078 @@
+package com.gtnhplanner.ui.card;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import net.minecraft.item.ItemStack;
+
+import org.jetbrains.annotations.Nullable;
+
+import com.cleanroommc.modularui.api.UpOrDown;
+import com.cleanroommc.modularui.api.widget.IDraggable;
+import com.cleanroommc.modularui.api.widget.Interactable;
+import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
+import com.cleanroommc.modularui.theme.WidgetThemeEntry;
+import com.cleanroommc.modularui.widget.ParentWidget;
+import com.cleanroommc.modularui.widget.sizer.Area;
+import com.gtnhplanner.data.MachineConfig;
+import com.gtnhplanner.data.SettingDef;
+import com.gtnhplanner.data.flowchart.Node;
+import com.gtnhplanner.data.provider.GTKeys;
+import com.gtnhplanner.ui.BoardSession;
+import com.gtnhplanner.ui.PlannerSettings;
+import com.gtnhplanner.ui.canvas.BoardCanvas;
+import com.gtnhplanner.ui.gt.GtCoils;
+import com.gtnhplanner.ui.gt.GtMachines;
+import com.gtnhplanner.ui.gt.MultiblockPictures;
+import com.gtnhplanner.ui.popup.NumberPopup;
+import com.gtnhplanner.ui.popup.PickList;
+import com.gtnhplanner.ui.popup.Popup;
+import com.gtnhplanner.ui.popup.Tip;
+import com.gtnhplanner.ui.theme.Fmt;
+import com.gtnhplanner.ui.theme.Hyb;
+
+/**
+ * One recipe on the board, drawn as Factory Flow's recipe card in Solve mode: head (actions, machine, amps, tier),
+ * rails of NEI slots with names and rates, the machine, settings, and a footer with power and the solved machine
+ * count. Lives in world space inside the canvas; dragging its body moves the recipe, its controls edit it.
+ */
+public final class RecipeCard extends ParentWidget<RecipeCard> implements Interactable, IDraggable {
+
+    /** The parts of a card that react to the mouse. */
+    public enum Part {
+        ACTIONS,
+        /** The key that places the card on a block in the world. */
+        PLACE,
+        MACHINE,
+        AMPS,
+        TIER,
+        /** The gear key, which opens the card's settings. */
+        SETTINGS,
+        /** The count's rule word under the machine ("up to", "exactly"): a click opens Any, Up to, Exactly. */
+        RULE,
+        /** The bar along the foot: an Up to card's reason, an Exactly card's FORCED IN. */
+        FOOT,
+        /** The count under the machine: what runs and what is set. */
+        MACHINES,
+        POWER,
+        CIRCUIT,
+        /** A key on a shared machine's recipe rule: up, down or off. */
+        SECTION,
+        /** A setting pinned to the card, as a chip. */
+        CHIP,
+        /** An empty crop farm's Pick a crop key. */
+        PICK,
+        BODY
+    }
+
+    private static final int CHIP_Y = CardLayout.HEAD_Y;
+    private static final int CHIP_H = CardLayout.HEAD;
+    private static final int KEY_X = CardLayout.HEAD_Y;
+    private static final int KEY_W = CardLayout.HEAD;
+    /** The chips stand as far from the card's right edge as from its top. */
+    private static final int RIGHT = CardLayout.W - CardLayout.HEAD_Y;
+    /** A multiblock's amps and tier chips, two apart; a single block's lone tier chip. */
+    private static final int CHIP_W = 48;
+    private static final int SINGLE_TIER_W = 42;
+    private static final int AMPS_X = RIGHT - 2 * CHIP_W - 2;
+    private static final int PLACE_X = KEY_X + KEY_W + 2;
+    private static final int GEAR_X = PLACE_X + KEY_W + 2;
+    /** Where the machine's name starts, after the keys. */
+    private static final int BAR_X = GEAR_X + KEY_W + 8;
+
+    private final BoardSession session;
+    /** The card's own node: the recipe it was made for, the first on a shared machine. */
+    public final UUID nodeId;
+    private CardModel model;
+    /** Every recipe on the card, top first, and their models: one, or several on a shared machine. */
+    private List<UUID> sections = List.of();
+    private List<CardModel> models = List.of();
+    private CardLayout layout;
+
+    private boolean moving;
+
+    public RecipeCard(final BoardSession session, final UUID nodeId) {
+        this.session = session;
+        this.nodeId = nodeId;
+        refresh();
+        for (int s = 0; s < models.size(); s++) {
+            final CardModel m = models.get(s);
+            for (int i = 0; i < m.inputs.size(); i++) child(new PortSlot(this, s, false, i));
+            for (int i = 0; i < m.outputs.size(); i++) child(new PortSlot(this, s, true, i));
+        }
+        if (emptyHolder()) {
+            child(new SocketSlot(this, false));
+            child(new SocketSlot(this, true));
+        }
+    }
+
+    /** A custom rate card or fluid tank holding nothing yet: it shows its two sockets instead of ports. */
+    public boolean emptyHolder() {
+        return model != null && com.gtnhplanner.power.Holders.is(model.node)
+            && model.inputs.isEmpty()
+            && model.outputs.isEmpty();
+    }
+
+    /**
+     * The port on one side at a card-local height, {section, index}: the row under it, else the side's only port when
+     * it has just one; null for none.
+     */
+    public int[] portAt(final boolean output, final float y) {
+        int count = 0, onlySection = -1, only = -1;
+        for (int s = 0; s < models.size(); s++) {
+            final List<CardModel.PortView> ports = output ? models.get(s).outputs : models.get(s).inputs;
+            for (int i = 0; i < ports.size(); i++) {
+                count++;
+                onlySection = s;
+                only = i;
+                final int top = layout.rowY(s, output, i);
+                if (y >= top && y < top + layout.rowH(s, output, i)) return new int[] { s, i };
+            }
+        }
+        return count == 1 ? new int[] { onlySection, only } : null;
+    }
+
+    public CardModel model() {
+        return model;
+    }
+
+    /** A recipe's model, by its place on the card. */
+    public CardModel modelOf(final int section) {
+        return section >= 0 && section < models.size() ? models.get(section) : null;
+    }
+
+    /** A recipe's node id, by its place on the card. */
+    public UUID sectionId(final int section) {
+        return section >= 0 && section < sections.size() ? sections.get(section) : nodeId;
+    }
+
+    /** Where a recipe is on the card; -1 when it is not on it. */
+    public int sectionOf(final UUID id) {
+        return sections.indexOf(id);
+    }
+
+    public boolean shared() {
+        return models.size() > 1;
+    }
+
+    /** Where a wire meets the card for one recipe's port. */
+    public int anchorY(final UUID node, final boolean output, final int port) {
+        return layout.anchorY(Math.max(0, sectionOf(node)), output, port);
+    }
+
+    public BoardSession session() {
+        return session;
+    }
+
+    public CardLayout layout() {
+        return layout;
+    }
+
+    /** Re-reads the models after a solve; resizes when the card's shape changed. */
+    public void refresh() {
+        final List<UUID> ids = session.sectionsOf(nodeId);
+        final List<CardModel> next = new ArrayList<>(ids.size());
+        for (final UUID id : ids) {
+            final CardModel m = session.model(id);
+            if (m == null) return;
+            next.add(m);
+        }
+        if (next.isEmpty()) return;
+        sections = ids;
+        models = next;
+        model = next.get(0);
+        foot = buildFoot(session.rateUnit());
+        footUnit = session.rateUnit();
+        final CardLayout nextLayout = new CardLayout(next, session.graph(), foot != null);
+        if (layout == null || layout.height != nextLayout.height || !nextLayout.sameRows(layout)) {
+            layout = nextLayout;
+            size(CardLayout.W, layout.height);
+            scheduleResize();
+            final BoardCanvas board = canvas();
+            if (board != null) board.cardResized();
+            for (final com.cleanroommc.modularui.api.widget.IWidget child : getChildren()) {
+                if (child instanceof final PortSlot slot) slot.place(layout);
+            }
+        } else {
+            layout = nextLayout;
+        }
+        pos(model.node.x, model.node.y);
+    }
+
+    /** True when the recipes or their port counts no longer match the slot widgets. */
+    public boolean shapeChanged() {
+        final List<UUID> ids = session.sectionsOf(nodeId);
+        if (!ids.equals(sections)) return true;
+        for (int s = 0; s < ids.size(); s++) {
+            final CardModel next = session.model(ids.get(s)), was = models.get(s);
+            if (next != null && (next.inputs.size() != was.inputs.size() || next.outputs.size() != was.outputs.size()))
+                return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void onUpdate() {
+        super.onUpdate();
+        syncModels();
+        if (model != null) commitWheel();
+    }
+
+    /**
+     * Takes up the models the last solve made, and the pinned settings: every tick while the card is in view, and from
+     * the board when they change while it is not.
+     */
+    public void syncModels() {
+        boolean changed = false;
+        for (int s = 0; s < sections.size() && !changed; s++) changed = session.model(sections.get(s)) != models.get(s);
+        if (changed || sections.isEmpty()) refresh();
+        if (layout != null && layout.pinsVersion != SettingPins.version()) refresh();
+    }
+
+    /** The machines the card runs: all its recipes' together on a shared machine. */
+    private double machinesTotal() {
+        double total = 0;
+        for (final CardModel m : models) total += m.machines;
+        return total;
+    }
+
+    /** The machines it builds: its count, or for a crop card (whose count is crops planted) the harvesters. */
+    private double buildsTotal() {
+        double total = 0;
+        for (final CardModel m : models) total += com.gtnhplanner.machines.game.CropCards.builds(m.node, m.machines);
+        return total;
+    }
+
+    /** What the card draws, as the board's power switches say: all its recipes' together. */
+    private double powerTotal() {
+        double total = 0;
+        for (final CardModel m : models) total += session.power(m);
+        return total;
+    }
+
+    /** Steam the card's steam machines burn, L/s, at the solved count. */
+    private double steamTotal() {
+        double total = 0;
+        for (final CardModel m : models) total += m.steamPerTick * 20 * m.machines;
+        return total;
+    }
+
+    /** Whether a machine count is set (Up to or Exactly): the node's, or a shared machine's own. */
+    private boolean pinned() {
+        return session.rule(model.node) != com.gtnhplanner.data.flowchart.PinRule.ANY;
+    }
+
+    // region The count's rule and the bar along the foot (docs/design/up-to.md)
+
+    /** The bar along the foot as last built, and the rate unit its words were built in. */
+    private CardFace.Foot foot;
+    private Fmt.RateUnit footUnit;
+
+    /** A custom rate card: its count is always Exactly (its dial), so its rule word has no menu. */
+    private boolean ruleFixed() {
+        return model != null && com.gtnhplanner.power.CustomRate.is(model.node);
+    }
+
+    /**
+     * The count under the machine: what runs (an Up to card's read-out, else the solved count) and what is set; a
+     * count being wheeled shows at once, before the solve catches up.
+     */
+    public CardFace.Count face() {
+        final com.gtnhplanner.data.flowchart.balancer.UpToReadout readout = session.upTo(nodeId);
+        final boolean unset = session.unset(nodeId);
+        // Asked every frame it is drawn: kept until the model, the wheel, the read-out or the prompt changes.
+        if (face != null && faceFor == model
+            && facePending == (pendingUnpin ? -1 : pendingCount)
+            && faceReadout == readout
+            && faceUnset == unset) return face;
+        com.gtnhplanner.data.flowchart.PinRule rule = session.rule(model.node);
+        double set = session.setCount(model.node);
+        if (pendingUnpin) {
+            rule = com.gtnhplanner.data.flowchart.PinRule.ANY;
+            set = 0;
+        } else if (pendingCount > 0) {
+            rule = CardFace.ruleForCount(rule, ruleFixed());
+            set = pendingCount;
+        }
+        face = CardFace.count(rule, set, machinesTotal(), readout, unset, crop(), ruleFixed());
+        faceFor = model;
+        facePending = pendingUnpin ? -1 : pendingCount;
+        faceReadout = readout;
+        faceUnset = unset;
+        return face;
+    }
+
+    /** The count as last worked out, and what it was worked out from. */
+    private CardFace.Count face;
+    private CardModel faceFor;
+    private long facePending;
+    private com.gtnhplanner.data.flowchart.balancer.UpToReadout faceReadout;
+    private boolean faceUnset;
+
+    /** The bar along the foot, in the board's rate unit; null when the card has nothing to say there. */
+    public CardFace.Foot foot() {
+        if (model == null) return null;
+        if (footUnit != session.rateUnit()) {
+            foot = buildFoot(session.rateUnit());
+            footUnit = session.rateUnit();
+        }
+        return foot;
+    }
+
+    /**
+     * An Up to card's bar from its read-out, or an Exactly card's FORCED IN from the inputs the plan forces in at its
+     * rows (every recipe's on a shared machine).
+     */
+    private CardFace.Foot buildFoot(final Fmt.RateUnit unit) {
+        if (model == null || countless()) return null;
+        final List<CardFace.Forced> forced = new ArrayList<>();
+        for (final CardModel m : models) for (final CardModel.PortView p : m.inputs) if (p.hasExtra() && !p.isPower())
+            forced.add(new CardFace.Forced(p.name(), Fmt.rate(p.extra(), unit, p.isFluid())));
+        return CardFace.foot(
+            session.rule(model.node),
+            session.setCount(model.node),
+            session.upTo(nodeId),
+            forced,
+            this::portName,
+            id -> {
+                final CardModel m = session.model(id);
+                return m == null ? null : m.machineName;
+            },
+            Hyb::width,
+            session.loopOf(nodeId));
+    }
+
+    /**
+     * The tone a row is lit in when the card is Up to and its reason names the row (STARVED's short input, CLOGGED's
+     * or UNUSED's output, and the rows tied with it); null for any other row. {@code node} is the row's recipe (on a
+     * shared machine, its section).
+     */
+    @javax.annotation.Nullable
+    public CardFace.Tone why(final UUID node, final boolean output, final int index) {
+        if (model == null || countless()) return null;
+        return CardFace.why(face().rule(), session.upTo(nodeId), node, output, index);
+    }
+
+    /** The colour of the card's 1 px frame: its bar's problem when the gear's Problem outlines is on; 0 for plain. */
+    private int frameEdge() {
+        return CardFace.edge(foot(), com.gtnhplanner.ui.PlannerSettings.problemOutlines());
+    }
+
+    /** The name of one of the card's rows, by the solver's port. */
+    private String portName(final com.gtnhplanner.data.flowchart.balancer.PortRef ref) {
+        for (final CardModel m : models) {
+            if (!m.node.id.equals(ref.nodeId())) continue;
+            for (final CardModel.PortView p : ref.input() ? m.inputs : m.outputs)
+                if (p.index() == ref.portIndex()) return p.name();
+        }
+        return null;
+    }
+
+    /**
+     * What the card's machines build: what runs (an Up to card's read-out) or the solved count; a crop's harvesters.
+     */
+    public double builds() {
+        final com.gtnhplanner.data.flowchart.balancer.UpToReadout r = session.upTo(nodeId);
+        if (r != null && !shared() && session.rule(model.node) == com.gtnhplanner.data.flowchart.PinRule.UP_TO)
+            return com.gtnhplanner.machines.game.CropCards.builds(model.node, Math.max(0, r.reached()));
+        return buildsTotal();
+    }
+
+    /**
+     * A middle-click that did not pan the board (the board hands it on, as the screen takes the middle press for its
+     * pan): it clears what is set where it lands, with the unpin sound once, and nothing when nothing was set. On the
+     * count or its rule word, back to Any; on a port's rule key or rate box, its rate goes (and a box being typed into
+     * closes). False when it was on neither.
+     */
+    public boolean middleClick() {
+        final Part part = partUnderMouse();
+        // Far out nothing is drawn to clear.
+        if (part == null || glance()) return false;
+        if (part == Part.MACHINES || part == Part.RULE) {
+            if (pinned()) session.pin(model.node, 0);
+            return true;
+        }
+        for (final com.cleanroommc.modularui.api.widget.IWidget child : getChildren()) {
+            if (!(child instanceof final PortSlot slot) || !slot.overRate()) continue;
+            final CardModel m = modelOf(slot.section);
+            final BoardCanvas board = canvas();
+            if (board != null && board.edit()
+                .editing(BoardCanvas.portEditKey(slot.node(), slot.output, slot.index)))
+                board.edit()
+                    .cancel();
+            if (m != null && session.portTarget(m.node, slot.output, slot.index) != null)
+                session.setPortTarget(m.node, slot.output, slot.index, 0);
+            return true;
+        }
+        return false;
+    }
+
+    /** The rule word's menu: Any, Up to, Exactly, the one in use ticked (the website's CountRuleMenu). */
+    private void openRule() {
+        final CardFace.Count c = face();
+        if (c.ruleFixed()) return;
+        final int[] r = partRect(Part.RULE);
+        if (r == null) return;
+        final Node node = model.node;
+        final List<PickList.Entry> rows = new ArrayList<>();
+        for (final com.gtnhplanner.data.flowchart.PinRule rule : com.gtnhplanner.data.flowchart.PinRule.values())
+            rows.add(new PickList.Entry(null, rule.label, switch (rule) {
+            case ANY -> "the plan picks";
+            case UP_TO -> "what you have";
+            case EXACT -> "no matter what";
+            },
+                Hyb.INK,
+                rule == c.rule(),
+                () -> { if (rule != c.rule()) session.setRule(node, rule, CardFace.ruleCount(c.set(), c.value())); }));
+        Popup.open(
+            session.panel(),
+            PickList.popup("gtnhplanner_count_rule", "MACHINE COUNT", rows, false, 160),
+            screenX(r[0]),
+            screenY(r[1] + r[3] + 2));
+    }
+
+    /** The count's tip: what runs against what is set, or what the plan needs and how busy its machines are. */
+    private Tip countTip(final CardModel m) {
+        final CardFace.Count c = face();
+        final Tip tip;
+        final String times = (crop() ? "" : "×");
+        if (c.pinned()) {
+            tip = Tip.of(c.rule().label + " " + c.setText())
+                .row("Running", c.run())
+                .row(c.rule().label, times + c.setText());
+            if (c.rule() == com.gtnhplanner.data.flowchart.PinRule.UP_TO && c.set() > 0)
+                tip.row("Usage", CardFace.usage(c.value(), c.set()));
+        } else {
+            tip = Tip.of(crop() ? "Crops planted" : "Required machines")
+                .row("Calculated", c.run());
+            final double whole = Math.ceil(c.value() - 1e-9);
+            if (!crop() && c.value() > 0 && whole != c.value()) tip.row("Whole machines", "×" + (long) whole)
+                .row("Average utilization", Fmt.compact(100 * c.value() / whole) + "%");
+        }
+        if (crop()) tip.row(
+            com.gtnhplanner.machines.game.CropCards.isFarm(m.machineStack) ? "Industrial Farms" : "Crop Managers",
+            "×" + Fmt.machines(builds()));
+        if (c.pinned()) tip.muted(c.title());
+        else if (c.value() <= 0) tip.muted(
+            m.isPower() ? "Not sized yet: set a machine count, or set a rate on its EU drawer."
+                : crop() ? "No rate or set count in the plan needs this crop yet."
+                    : "No rate or set count in the plan needs this machine yet.");
+        if (shared()) tip.muted("The total for all its recipes, which share the machines.");
+        tip.action(Tip.Input.LEFT, c.pinned() ? "Type a count" : "Set a count")
+            .action(Tip.Input.WHEEL, c.pinned() ? "+1 / -1" : "Up to what runs");
+        if (c.pinned()) tip.action(Tip.Input.MIDDLE, "Let the plan decide");
+        return tip;
+    }
+
+    /** The rule word's tip: what the rule does, and that a click changes it. */
+    private Tip ruleTip() {
+        final CardFace.Count c = face();
+        final Tip tip = Tip.of(c.rule().label)
+            .muted(
+                c.rule() == com.gtnhplanner.data.flowchart.PinRule.EXACT
+                    ? c.ruleFixed() ? "A custom rate always runs at its dial."
+                        : "Always this many. A gap comes in or goes out forced."
+                    : "As many as the plan lets it run. Never more.");
+        if (!c.ruleFixed()) tip.action(Tip.Input.LEFT, "Any, Up to, Exactly");
+        return tip.action(Tip.Input.MIDDLE, "Let the plan decide");
+    }
+
+    /** The bar's tip: how much runs, the reason in full, and where to act. */
+    private Tip footTip() {
+        final CardFace.Foot f = foot();
+        if (f == null) return null;
+        final CardFace.Facts facts = f.facts();
+        final Tip tip = Tip.of(CardFace.footTitle(facts));
+        if (facts.forced()) {
+            for (final String line : facts.forcedIn()) tip.row("Forced in", line, Hyb.AMBER_INK);
+            return tip.muted("Set it to Up to and it runs what its inputs allow.");
+        }
+        tip.row("Usage", CardFace.usage(facts.running(), facts.capacity()));
+        // A ring: what it is short of or backs up with, and that the ring stops itself.
+        if (facts.loop() != null) {
+            final boolean dead = facts.loop() == com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind.DEAD_LOOP;
+            if (facts.resource() != null) tip.row(dead ? "Short of" : "Backs up", facts.resource(), Hyb.AMBER_INK);
+            for (final String n : facts.tied()) tip.row(dead ? "Also short of" : "Also backs up", n, Hyb.AMBER_INK);
+            return tip.muted(CardFace.loopNote(facts.loop()));
+        }
+        if (facts.reason() == null) return tip.muted("Why it runs less was not worked out in time.");
+        switch (facts.reason()) {
+            case FULL -> tip.muted("Nothing around it would use more.");
+            case BOTTLENECK -> {
+                if (facts.wants() != null) tip.row("Wants", "×" + Fmt.machines(facts.wants()), Hyb.RED_INK)
+                    .note(
+                        Fmt.machines(facts.wants() - facts.capacity()) + " more here would let the line run faster.",
+                        Hyb.RED_INK);
+            }
+            case STARVED -> {
+                if (facts.resource() != null) tip.row("Short of", facts.resource(), Hyb.AMBER_INK);
+                for (final String n : facts.tied()) tip.row("Also short of", n, Hyb.AMBER_INK);
+                for (final String n : facts.upstream()) tip.row("Full upstream", n);
+                tip.muted(
+                    facts.upstream()
+                        .isEmpty() ? "More of this input would let it run faster." : "Build more upstream first.");
+            }
+            case CLOGGED -> {
+                if (facts.resource() != null) tip.row("Backs up", facts.resource(), Hyb.AMBER_INK);
+                for (final String n : facts.tied()) tip.row("Also backs up", n, Hyb.AMBER_INK);
+                tip.muted("What takes it is full. Add machines after it or a drawer.");
+            }
+            case UNUSED -> {
+                if (facts.resource() != null) tip.row("Nothing takes", facts.resource(), Hyb.AMBER_INK);
+                tip.muted("Wire its output or give it a rate.");
+            }
+            case LIMITED -> tip.muted("Another count or rate in the plan holds it back.");
+        }
+        return tip;
+    }
+
+    // endregion
+
+    /** Whether a coil too cold stops any of the card's recipes. */
+    private boolean coilTooCold() {
+        for (final CardModel m : models) if (SettingControls.coilTooCold(m)) return true;
+        return false;
+    }
+
+    private boolean anyTierTooLow() {
+        for (final CardModel m : models) if (m.tierTooLow()) return true;
+        return false;
+    }
+
+    /** ModularUI only counts a parent widget as hovered when it has a background or tooltip; the card draws itself. */
+    @Override
+    public boolean canHover() {
+        return true;
+    }
+
+    // region Geometry and hit testing
+
+    /** The tier chip: beside the amps on a multiblock, alone on a single block, none outside GregTech. */
+    private int tierW() {
+        return model != null && model.multiblock ? CHIP_W : SINGLE_TIER_W;
+    }
+
+    private int tierX() {
+        return RIGHT - tierW();
+    }
+
+    /** The power card's tier select, stepped by the head's tier chip; null when it has none or is a recipe card. */
+    private com.gtnhplanner.power.PowerSetting.Select powerTier() {
+        return model != null && model.isPower() ? PowerTiles.tierSetting(model.power.source()) : null;
+    }
+
+    /** Whether the head has a tier chip: a GregTech recipe's voltage, a generator's tier, or a crop's harvester's. */
+    private boolean hasTier() {
+        return model != null && (model.gregtech && !model.steam() || powerTier() != null || crop());
+    }
+
+    /** Whether the card grows a crop (its machine is a harvester, picked by a setting; CropCards). */
+    private boolean crop() {
+        return model != null && com.gtnhplanner.machines.game.CropCards.isCrop(model.node);
+    }
+
+    /** Whether the card is an Extreme Entity Crusher killing a mob (named for the mob, which its name key picks). */
+    private boolean eec() {
+        return model != null && com.gtnhplanner.machines.game.EecCards.isEec(model.node);
+    }
+
+    /** Whether the card is an empty crop farm, which shows its Pick a crop key instead of ports. */
+    private boolean emptyCropFarm() {
+        return model != null && com.gtnhplanner.power.CropFarm.is(model.node);
+    }
+
+    /** The Pick a crop key: across the output rail's first row, where the crop's drops will be. */
+    private static int[] pickRect() {
+        return new int[] { CardLayout.railX(true) + 2, SocketSlot.Y, CardLayout.RAIL_W - 4, SocketSlot.H };
+    }
+
+    /** The name on the card's head: a crusher's is the mob in its spawner, any other its machine's. */
+    private static String headName(final CardModel m) {
+        final String mob = com.gtnhplanner.machines.game.EecCards.mobName(m.node);
+        return mob != null ? mob : m.machineName;
+    }
+
+    /** An empty crop farm's Pick a crop key, dashed as an empty holder's sockets are. */
+    private void drawPickCrop(final boolean hot) {
+        final int[] r = pickRect();
+        Hyb.rect(r[0], r[1], r[2], r[3], hot ? 0x26FFFFFF : 0x14FFFFFF);
+        Hyb.dashed(r[0], r[1], r[2], r[3], hot ? Hyb.GOLD : 0xFF6A6D78);
+        final String label = "PICK A CROP";
+        Hyb.text(label, r[0] + (r[2] - Hyb.width(label)) / 2f, r[1] + (r[3] - 8) / 2f, hot ? Hyb.GOLD : Hyb.MUTED);
+        final String hint = "what this farm plants";
+        Hyb.text(hint, r[0] + (r[2] - Hyb.width(hint)) / 2f, r[1] + r[3] + 6, 0xFF6A6D78);
+    }
+
+    /** The mobs the crusher's spawner can hold, under its name key. */
+    private void openMobs() {
+        RecipePicks.mobs(
+            session,
+            model.node,
+            screenX(partRect(Part.MACHINE)[0]),
+            screenY(partRect(Part.MACHINE)[1] + partRect(Part.MACHINE)[3] + 2));
+    }
+
+    /** The crops this card can plant: under its Pick a crop key when empty, else under its name key. */
+    private void openCrops() {
+        final int[] r = emptyCropFarm() ? pickRect() : partRect(Part.MACHINE);
+        RecipePicks.crops(session, model.node, screenX(r[0]), screenY(r[1] + r[3] + 2));
+    }
+
+    /** Whether the card keeps bees (its machine is their housing, picked by a setting; BeeCards). */
+    private boolean bee() {
+        return model != null && com.gtnhplanner.machines.game.BeeCards.isBee(model.node);
+    }
+
+    private int barRight() {
+        // A recipe outside GregTech has no voltage: no tier chip, and the name runs to the edge.
+        if (model != null && !hasTier()) return RIGHT;
+        return (model != null && model.multiblock ? AMPS_X : tierX()) - 8;
+    }
+
+    private BoardCanvas canvas() {
+        // Once the board has rebuilt it away it has no parent to ask for (ModularUI throws): it is on no board.
+        return isValid() && getParent() instanceof final BoardCanvas c ? c : null;
+    }
+
+    /** The mouse in card coordinates (GUI pixels at zoom 1), from the absolute mouse. */
+    private float localX() {
+        final BoardCanvas c = canvas();
+        return c == null ? -1 : c.worldX(getContext().getAbsMouseX()) - model.node.x;
+    }
+
+    private float localY() {
+        final BoardCanvas c = canvas();
+        return c == null ? -1 : c.worldY(getContext().getAbsMouseY()) - model.node.y;
+    }
+
+    private static boolean in(final float x, final float y, final int rx, final int ry, final int rw, final int rh) {
+        return x >= rx && y >= ry && x < rx + rw && y < ry + rh;
+    }
+
+    public Part partAt(final float x, final float y) {
+        if (model == null) return null;
+        // Far out the controls are not drawn, so nothing invisible answers a click or the wheel.
+        if (glance()) return Part.BODY;
+        if (sectionKeyAt(x, y) != null) return Part.SECTION;
+        if (layout.chipAt(x, y) >= 0) return Part.CHIP;
+        for (final Part part : Part.values()) {
+            if (part == Part.BODY || part == Part.SECTION) continue;
+            final int[] r = partRect(part);
+            if (r != null && in(x, y, r[0], r[1], r[2], r[3])) return part;
+        }
+        return Part.BODY;
+    }
+
+    /** The part under the mouse, or null when the mouse is off the card. */
+    public Part partUnderMouse() {
+        if (model == null) return null;
+        final float x = localX(), y = localY();
+        return x < 0 || y < 0 || x >= CardLayout.W || y >= layout.height ? null : partAt(x, y);
+    }
+
+    /** Card-local rectangle {x, y, w, h} of a part, or null when this card has none (no amps on a single block). */
+    public int[] partRect(final Part part) {
+        if (model == null) return null;
+        return switch (part) {
+            case ACTIONS -> new int[] { KEY_X, CHIP_Y, KEY_W, CHIP_H };
+            case PLACE -> new int[] { PLACE_X, CHIP_Y, KEY_W, CHIP_H };
+            case TIER -> hasTier() ? new int[] { tierX(), CHIP_Y, tierW(), CHIP_H } : null;
+            case AMPS -> model.multiblock ? new int[] { AMPS_X, CHIP_Y, CHIP_W, CHIP_H } : null;
+            case MACHINE -> new int[] { BAR_X, CHIP_Y, barRight() - BAR_X, CHIP_H };
+            case SETTINGS -> new int[] { GEAR_X, CHIP_Y, KEY_W, CHIP_H };
+            case POWER -> layout.powerRowY >= 0
+                ? new int[] { CardLayout.IN_RAIL_X, layout.powerRowY, CardLayout.RAIL_W, CardLayout.ROW }
+                : null;
+            case MACHINES -> countless() ? null : CardPaint.countParts(face(), layout.picture())[0];
+            case RULE -> countless() ? null : CardPaint.countParts(face(), layout.picture())[1];
+            case FOOT -> foot() == null ? null : layout.foot();
+            case CIRCUIT -> model.circuit == null || shared() || model.isPower() ? null
+                : CardLayout.circuit(layout.well());
+            case PICK -> emptyCropFarm() ? pickRect() : null;
+            case SECTION, CHIP -> null;
+            case BODY -> new int[] { 0, 0, CardLayout.W, layout.height };
+        };
+    }
+
+    /**
+     * A card with no count to show or set: the fluid tank, free and instant, which keeps up with whatever the plan
+     * needs (the owner, 2026-10-13: its cells a second was a number nobody plans by), and an empty crop farm, which
+     * plants
+     * nothing yet.
+     */
+    private boolean countless() {
+        return model != null
+            && (com.gtnhplanner.power.FluidTank.is(model.node) || com.gtnhplanner.power.CropFarm.is(model.node));
+    }
+
+    /** Screen point of a card-local point, for anchoring popups. */
+    private int screenX(final int localX) {
+        final BoardCanvas c = canvas();
+        return c == null ? 0 : c.screenX(model.node.x + localX);
+    }
+
+    private int screenY(final int localY) {
+        final BoardCanvas c = canvas();
+        return c == null ? 0 : c.screenY(model.node.y + localY);
+    }
+
+    // endregion
+
+    // region Drawing
+
+    @Override
+    public void draw(final ModularGuiContext context, final WidgetThemeEntry<?> widgetTheme) {
+        if (!com.gtnhplanner.dev.DevPerf.on()) {
+            drawCard(context, widgetTheme);
+            drawLinkMode();
+            return;
+        }
+        final long started = System.nanoTime();
+        drawCard(context, widgetTheme);
+        drawLinkMode();
+        com.gtnhplanner.dev.DevPerf.time("cards", System.nanoTime() - started);
+    }
+
+    /**
+     * Linking a machine from the world: a card whose recipe runs on it is ringed (gold when it is the card the machine
+     * is on now), the rest are dimmed.
+     */
+    private void drawLinkMode() {
+        if (!com.gtnhplanner.ui.world.LinkTarget.active() || model == null || layout == null) return;
+        final int h = layout.height;
+        final Node node = model.node;
+        if (com.gtnhplanner.ui.world.LinkTarget.holds(node)) Hyb.ring(-3, -3, CardLayout.W + 6, h + 6, 2, Hyb.LIT);
+        else if (com.gtnhplanner.ui.world.LinkTarget.fits(session.graph(), node))
+            Hyb.ring(-4, -4, CardLayout.W + 8, h + 8, 3, Hyb.mix(Hyb.SELECTION, 0xFFFFFF, 0.3f + 0.7f * breathe()));
+        else Hyb.rect(0, 0, CardLayout.W, h, 0xC0101114);
+    }
+
+    /** A click on the card while linking a machine from the world: this card is the pick. */
+    void chooseForLink() {
+        if (model != null) com.gtnhplanner.ui.world.LinkTarget.choose(session.graph(), model.node);
+    }
+
+    private void drawCard(final ModularGuiContext context, final WidgetThemeEntry<?> widgetTheme) {
+        final CardModel m = model;
+        if (m == null) return;
+        final float z = context.getCurrentDrawingZ();
+        if (glanceAt(
+            session.graph()
+                .getZoom())) {
+            drawGlance(m, z);
+            return;
+        }
+        final Part hover = isHovering() ? partAt(localX(), localY()) : null;
+        final int w = CardLayout.W, h = layout.height;
+        if (canvas() != null && canvas().isCarried(nodeId)) {
+            // Lifted while it is carried: a soft shadow under it.
+            Hyb.rect(5, 7, w, h, 0x50000000);
+            Hyb.rect(3, 4, w, h, 0x40000000);
+        } else Hyb.dropShadow(0, 0, w, h);
+        if (session.showsSelected(nodeId)) Hyb.ring(-2, -2, w + 4, h + 4, 2, Hyb.SELECTION);
+        // While a wire is in hand, a card that would take it glows green, its outline and its whole face, breathing;
+        // steady and brighter where it would go now.
+        final BoardCanvas board = canvas();
+        final boolean accepts = board != null && (board.cardAcceptsDrag(nodeId) || board.cardTakesSpare(nodeId));
+        final boolean there = accepts
+            && (nodeId.equals(board.dragSnappedTo()) || nodeId.equals(board.spareTargetCard()));
+        final float breath = there ? 1
+            : 0.65f + 0.35f * (float) Math.sin(System.currentTimeMillis() / 1000.0 * Math.PI * 1.4);
+        if (accepts) {
+            Hyb.ring(0, 0, w, h, there ? 2 : 1, there ? CardPaint.ACCEPT : alpha(0x4ADE80, 0.75f * breath));
+            for (int i = 1; i <= 4; i++) Hyb.ring(
+                -i - (there ? 1 : 0),
+                -i - (there ? 1 : 0),
+                w + 2 * i + (there ? 2 : 0),
+                h + 2 * i + (there ? 2 : 0),
+                1,
+                alpha(0x4ADE80, (there ? 0.28f : 0.18f * breath) * (5 - i) / 5f));
+        }
+        // A card with a problem its bar shows (an Up to reason short of full, FORCED IN) wears its frame in the bar's
+        // colour (unless the gear's Problem outlines is off); the selection and cannot-run rings stay outside it.
+        CardPaint.surface(w, h, frameEdge());
+        // In a dead loop or a clog lock: a 2 px outline in the ring's tone, dimming in the prompt clock's grey half.
+        final com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind loop = session.loopOf(nodeId);
+        if (loop != null) Hyb.ring(2, 2, w - 4, h - 4, 2, CardPaint.loopFrame(loop));
+        if (accepts) Hyb.rect(1, 1, w - 2, h - 2, alpha(0x4ADE80, there ? 0.1f : 0.06f * breath));
+        if (anyTierTooLow() || coilTooCold()) {
+            // Can't run: the tier is below the recipe's (the power row says TIER!) or the coil is too cold (the gear
+            // key
+            // is red). A red ring outside the card.
+            Hyb.rect(-2, -2, w + 4, 2, Hyb.RED_INK);
+            Hyb.rect(-2, h, w + 4, 2, Hyb.RED_INK);
+            Hyb.rect(-2, 0, 2, h, Hyb.RED_INK);
+            Hyb.rect(w, 0, 2, h, Hyb.RED_INK);
+        }
+        drawHead(m, hover);
+        CardPaint.hair(CardLayout.HEADER);
+        final int[] key = shared() ? sectionKeyAt(localX(), localY()) : null;
+        for (int s = 0; s < models.size(); s++) {
+            drawRail(s, models.get(s).inputs, false, z);
+            drawRail(s, models.get(s).outputs, true, z);
+            if (shared()) drawSectionRule(s, z, isHovering() && key != null && key[0] == s ? key[1] : -1);
+        }
+        // After the rails: on a shared machine the well stands over the later recipes' rule lines.
+        drawPicture(m, z, hover);
+        if (layout.powerRowY >= 0) drawPowerRow(m, hover == Part.POWER);
+        if (emptyHolder()) drawSockets();
+        if (emptyCropFarm()) drawPickCrop(hover == Part.PICK);
+        drawStrip(m, z, hover);
+        final CardFace.Foot f = foot();
+        if (f != null && layout.footY >= 0) CardPaint.foot(f, layout.foot());
+    }
+
+    /**
+     * An empty custom rate card's two sockets, dashed: "Drain any" (takes an output) on the left, "Supply any" (feeds
+     * an
+     * input) on the right. They light gold while a wire is in hand that the card would take.
+     */
+    private void drawSockets() {
+        final boolean inHand = canvas() != null && canvas().draggingFor(nodeId);
+        for (final boolean supply : new boolean[] { false, true }) {
+            final int[] r = SocketSlot.rect(supply);
+            final boolean hot = isHovering() && localX() >= r[0]
+                && localX() < r[0] + r[2]
+                && localY() >= r[1]
+                && localY() < r[1] + r[3];
+            Hyb.rect(r[0], r[1], r[2], r[3], inHand ? 0x30FFD257 : hot ? 0x26FFFFFF : 0x14FFFFFF);
+            Hyb.dashed(r[0], r[1], r[2], r[3], inHand || hot ? Hyb.GOLD : 0xFF6A6D78);
+            // A fluid tank takes cells and fluids only.
+            final boolean tank = com.gtnhplanner.power.FluidTank.is(model.node);
+            final String label = tank ? supply ? "GIVE CELL/FLUID" : "TAKE CELL/FLUID"
+                : supply ? "SUPPLY ANY" : "DRAIN ANY";
+            Hyb.text(
+                label,
+                r[0] + (r[2] - Hyb.width(label)) / 2f,
+                r[1] + (r[3] - 8) / 2f,
+                inHand ? Hyb.GOLD : Hyb.MUTED);
+            final String hint = supply ? "feeds an input" : "takes an output";
+            Hyb.text(hint, r[0] + (r[2] - Hyb.width(hint)) / 2f, r[1] + r[3] + 6, 0xFF6A6D78);
+        }
+    }
+
+    /** The custom rate card's own colour: the website paints it blue. */
+    static final int CUSTOM_RATE_INK = 0xFFAEBCEB;
+
+    /**
+     * At this zoom and below the card shows the glance view instead (the website's NODE_GLANCE_ENTER_ZOOM, 0.65; it was
+     * 0.42): with the Up to bar along its foot the glance face says how hard each machine runs, so it comes in sooner,
+     * at the first wheel step under two thirds (0.57). The website comes back only above 0.67, against the flicker of
+     * a free zoom; the board's wheel steps (0.57, 0.66, 0.76) are fixed and its eases go one way, and 0.66 lies in that
+     * gap, so one threshold keeps every step showing one face whichever way it was reached. The player moves it in the
+     * settings ("Zoomed-out view", {@link PlannerSettings#zoomedOutAt()}); a screenshot keeps the default, so its
+     * Detailed and Simple pictures are what they say.
+     */
+    public static final float GLANCE_ZOOM = PlannerSettings.ZOOMED_OUT_DEFAULT / 100f;
+
+    /** Whether the board at {@code zoom} shows the glance view: below the zoom the settings set. */
+    public static boolean glanceAt(final float zoom) {
+        return zoom < (com.gtnhplanner.ui.canvas.PlanPicture.drawing() ? GLANCE_ZOOM : PlannerSettings.zoomedOutAt());
+    }
+
+    /** The Up to bar along a zoomed-out card's foot, in card pixels (the website's 36), and its track. */
+    private static final int GLANCE_BAR_H = 36, GLANCE_TRACK = 0xFF17191D;
+
+    /**
+     * The zoomed-out count's font pixel: in board pixels on screen (the website's 20 px face, digits about 17 px, over
+     * our 7 font pixels), and at most in card pixels (its 90 px cap).
+     */
+    private static final float GLANCE_COUNT = 17 / 7f, GLANCE_COUNT_MAX = 76 / 7f;
+
+    private boolean glance() {
+        return glanceAt(
+            session.graph()
+                .getZoom());
+    }
+
+    /**
+     * The zoomed-out card: the machine, its name and tier, and the two numbers that matter, in type large enough to
+     * read at half zoom or less. Ports stay where they are so wires still meet the card.
+     */
+    private void drawGlance(final CardModel m, final float z) {
+        final int w = CardLayout.W, h = layout.height;
+        final float zoom = session.graph()
+            .getZoom();
+        // The clean card's surface, its edge holding two screen pixels however far out (in a ring's tone, pulsing, for
+        // a card in a dead loop or a clog lock), and the machine large on it.
+        Hyb.dropShadow(0, 0, w, h);
+        final float rim = Math.max(2, 1 / zoom);
+        final com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind loop = session.loopOf(nodeId);
+        final int edge = loop != null ? CardPaint.loopFrame(loop) : frameEdge();
+        Hyb.rect(0, 0, w, h, edge != 0 ? edge : CardPaint.EDGE);
+        Hyb.rect(rim, rim, w - 2 * rim, h - 2 * rim, CardPaint.SURFACE);
+        if (m.tierTooLow()) Hyb.ring(-rim, -rim, w + 2 * rim, h + 2 * rim, rim, Hyb.RED_INK);
+        if (session.showsSelected(nodeId))
+            Hyb.ring(-3 * rim, -3 * rim, w + 6 * rim, h + 6 * rim, 2 * rim, Hyb.SELECTION);
+        // An Up to card's bar along the foot (the website's glance face): the machine sits in the room above it.
+        final CardFace.Glance bar = countless() ? null : CardFace.glance(foot());
+        final int above = bar == null ? h : h - GLANCE_BAR_H;
+        // The machine, big and centred: the whole structure where there is a picture of it.
+        // As large as the card allows either way: a tall card (a shared machine) is no wider for it.
+        final float side = Math.min(w, above) - 2 * rim - 12;
+        if (com.gtnhplanner.power.CustomRate.is(m.node)) {
+            // The custom rate card's dial, as big as its picture would be.
+            final float scale = side / 9f;
+            org.lwjgl.opengl.GL11.glPushMatrix();
+            org.lwjgl.opengl.GL11.glTranslatef((w - 9 * scale) / 2f, (above - 8 * scale) / 2f, 0);
+            org.lwjgl.opengl.GL11.glScalef(scale, scale, 1);
+            com.gtnhplanner.ui.power.PowerPicker.gauge(0, 0, CUSTOM_RATE_INK);
+            org.lwjgl.opengl.GL11.glPopMatrix();
+        } else drawMachineArt(m, (w - side) / 2f, (above - side) / 2f, side, side, side, z, true);
+        if (bar != null) drawGlanceBar(bar, w, h);
+        // On a task: its dot in the top left corner, ten screen pixels across while that is small beside the card.
+        final com.gtnhplanner.data.flowchart.Tasks.Status task = com.gtnhplanner.ui.canvas.PlanPicture.drawing() ? null
+            : session.taskStatus(nodeId);
+        if (task != null) {
+            final float d = Math.min(w / 6f, 10 / zoom);
+            com.gtnhplanner.ui.task.TaskLook
+                .dot(rim + d / 2, rim + d / 2, d, com.gtnhplanner.ui.task.TaskLook.colour(task));
+        }
+        if (countless()) {
+            if (canvas() != null) canvas().labelCard(headName(m), m.node.x, m.node.y, w, h);
+            return;
+        }
+        // How many, in white in the corner, at whole screen pixels per font pixel so it stays sharp. Machines: a crop
+        // card's harvesters, beside their picture; an Up to card's what runs.
+        final double builds = builds();
+        final String count = "×" + Fmt.machines(builds);
+        // The website's count: its 20 px face held at 20 board px on screen (digits about 17 of them, ours 7 font
+        // pixels tall) and never above its 90 card px, on whole screen pixels so it stays sharp, and narrower than
+        // most of the card.
+        final float[] g = screenGrid();
+        final float perUnit = g[0] * g[4];
+        float sp = Math.max(1, Math.round(Math.min(GLANCE_COUNT / zoom, GLANCE_COUNT_MAX) * perUnit));
+        while (sp > 1 && Hyb.width(count) * sp / perUnit > w * 0.8f) sp--;
+        final float cs = sp / perUnit;
+        final float tw = Hyb.width(count) * cs, th = 7 * cs;
+        // In the bottom right corner as the website sets it (2 + 6 and 2 + 4 board px in), over an Up to bar just
+        // above it.
+        final float bottom = (bar == null ? h : h - GLANCE_BAR_H) - 2 - 4 / zoom;
+        Hyb.text(
+            count,
+            snap(w - 2 - 6 / zoom - tw, g[0], g[1], g[4]),
+            snap(bottom - th, g[2], g[3], g[4]),
+            cs,
+            builds <= 0 ? Hyb.MUTED : Hyb.INK);
+        if (canvas() != null) canvas().labelCard(headName(m), m.node.x, m.node.y, w, h);
+    }
+
+    /**
+     * The Up to bar along a zoomed-out card's foot, across the whole card (the website's glance face): the track, the
+     * fill to what runs in the reason's tone (45% of it over the track), and the reason's word in its tone on the bar
+     * while it reads: three card pixels a font pixel (the website's 24 px), on the screen's own pixels, left out once
+     * even one screen pixel a font pixel is too tall for the bar. In card pixels.
+     */
+    private static void drawGlanceBar(final CardFace.Glance bar, final int w, final int h) {
+        final int tone = bar.tone().colour, top = h - GLANCE_BAR_H;
+        Hyb.beginBatch();
+        Hyb.rect(0, top, w, GLANCE_BAR_H, GLANCE_TRACK);
+        if (bar.fill() > 0)
+            Hyb.rect(0, top, (float) (w * bar.fill()), GLANCE_BAR_H, Hyb.mix(tone, GLANCE_TRACK, 0.45f));
+        Hyb.endBatch();
+        if (bar.word()
+            .isEmpty()) return;
+        final float[] g = screenGrid();
+        final float perUnit = g[0] * g[4];
+        final float s = Math.max(1, Math.round(3 * perUnit)) / perUnit;
+        if (7 * s > GLANCE_BAR_H - 4 || Hyb.width(bar.word()) * s > w - 24) return;
+        Hyb.text(
+            bar.word(),
+            snap(12, g[0], g[1], g[4]),
+            snap(top + (GLANCE_BAR_H - 7 * s) / 2f, g[2], g[3], g[4]),
+            s,
+            tone,
+            false);
+    }
+
+    /**
+     * Zoomed out, hovering a card shows the card itself as it is zoomed in, the clean card at full size beside the
+     * pointer (as the minimap and the plan over the world draw it, from the board's snapshot), in the screen's
+     * foreground. False when the card is not in the glance view or not in the snapshot yet (the ordinary tooltip
+     * applies).
+     */
+    public boolean drawReveal(final int mouseX, final int mouseY, final int right, final int bottom) {
+        if (model == null || !glance() || !isHovering()) return false;
+        final com.gtnhplanner.ui.world.PlanSnapshot snap = com.gtnhplanner.ui.world.PlanSnapshot.latest();
+        final com.gtnhplanner.ui.world.PlanSnapshot.Card card = snap == null || snap.graph() != session.graph() ? null
+            : snap.cardOf(nodeId);
+        if (card == null) return false;
+        final int w = CleanCardView.width(), h = CleanCardView.height(card);
+        int x = mouseX + 14, y = mouseY + 14;
+        if (x + w > right) x = Math.max(2, mouseX - 14 - w);
+        if (y + h > bottom) y = Math.max(2, bottom - h);
+        Tip.beginPanel();
+        org.lwjgl.opengl.GL11.glPushMatrix();
+        org.lwjgl.opengl.GL11.glTranslatef(x, y, 0);
+        CleanCardView.draw(card, session.rateUnit(), false);
+        org.lwjgl.opengl.GL11.glPopMatrix();
+        Tip.endPanel();
+        return true;
+    }
+
+    /** Rounds to the nearest half pixel: one screen pixel at the game's GUI scale 2, so text stays crisp. */
+    public static float crisp(final float v) {
+        return Math.round(v * 2) / 2f;
+    }
+
+    /**
+     * Factory Flow's breathing: 0 to 1 and back over 1.9 s, for what wants attention (a card a block could link to).
+     */
+    private static float breathe() {
+        // A picture of the plan holds still.
+        if (com.gtnhplanner.ui.canvas.PlanPicture.drawing()) return 0;
+        final double t = (System.currentTimeMillis() % 1900L) / 1900.0;
+        return (float) (0.5 - 0.5 * Math.cos(2 * Math.PI * t));
+    }
+
+    private static int alpha(final int rgb, final float a) {
+        return Math.round(Math.max(0, Math.min(1, a)) * 255) << 24 | rgb & 0xFFFFFF;
+    }
+
+    /**
+     * The header: the actions key and the place key on the left, the machine's name large after them (a menu, with its
+     * chevron), the amps and tier chips on the right.
+     */
+    private void drawHead(final CardModel m, final Part hover) {
+        final int y = CHIP_Y;
+        Hyb.bevel(
+            KEY_X + 1,
+            y + 1,
+            KEY_W - 2,
+            CHIP_H - 2,
+            hover == Part.ACTIONS ? Hyb.KEY_HOVER : Hyb.KEY,
+            Hyb.KEY_HI,
+            Hyb.KEY_LO,
+            Hyb.KEY_EDGE,
+            1);
+        for (int i = 0; i < 3; i++) Hyb.rect(KEY_X + 5, y + 5 + i * 4, 10, 2, Hyb.INK);
+        // The place key: a map pin, gold once the card is on a block in the world.
+        Hyb.bevel(
+            PLACE_X + 1,
+            y + 1,
+            KEY_W - 2,
+            CHIP_H - 2,
+            hover == Part.PLACE ? Hyb.KEY_HOVER : Hyb.KEY,
+            Hyb.KEY_HI,
+            Hyb.KEY_LO,
+            Hyb.KEY_EDGE,
+            1);
+        keyIcon(true, PLACE_X + KEY_W / 2f, y + CHIP_H / 2f, placed() || listed() ? Hyb.GOLD : Hyb.INK);
+        // The settings key: a gear, red when a setting stops the recipe (a coil too cold).
+        Hyb.bevel(
+            GEAR_X + 1,
+            y + 1,
+            KEY_W - 2,
+            CHIP_H - 2,
+            hover == Part.SETTINGS ? Hyb.KEY_HOVER : Hyb.KEY,
+            Hyb.KEY_HI,
+            Hyb.KEY_LO,
+            Hyb.KEY_EDGE,
+            1);
+        keyIcon(false, GEAR_X + KEY_W / 2f, y + CHIP_H / 2f, coilTooCold() ? Hyb.RED_INK : Hyb.INK);
+
+        // The chips are buttons: held down, the one pressed sinks (a tier that cannot change never does).
+        final ChipState tierState = pressedOn(Part.TIER) && !tierFixed() ? ChipState.PRESSED : ChipState.RAISED;
+        if (m.gregtech && !m.steam()) {
+            // Amps wear the tier's colours too: together they read as one figure, 16A UV.
+            final Hyb.Tier tier = Hyb.tier(m.tier);
+            if (m.multiblock) {
+                final BoardCanvas board = canvas();
+                final boolean typing = board != null && board.edit()
+                    .editing(ampsEditKey());
+                chip(
+                    AMPS_X,
+                    y,
+                    CHIP_W,
+                    CHIP_H,
+                    tier,
+                    Fmt.compact(pendingAmps > 0 ? pendingAmps : m.amps) + "A",
+                    false,
+                    hover == Part.AMPS,
+                    true,
+                    typing ? ChipState.EDITING : pressedOn(Part.AMPS) ? ChipState.PRESSED : ChipState.RAISED);
+                // Typed into, the chip keeps its width: what is typed stands in its label's place.
+                if (typing) board.edit()
+                    .drawText(AMPS_X + 3, CHIP_W - 6, y + 3, CHIP_H - 6, Hyb.contrastInk(tier.bg()));
+            }
+            chip(tierX(), y, tierW(), CHIP_H, tier, tier.name(), tier.underline(), hover == Part.TIER, true, tierState);
+        } else if (powerTier() != null) {
+            final Hyb.Tier tier = Hyb.tier(powerTier().value(m.node.powerSettings.get("tier")));
+            chip(tierX(), y, tierW(), CHIP_H, tier, tier.name(), tier.underline(), hover == Part.TIER, true, tierState);
+        } else if (crop()) {
+            final Hyb.Tier tier = Hyb.tier(com.gtnhplanner.machines.game.CropCards.tierName(m.node));
+            chip(tierX(), y, tierW(), CHIP_H, tier, tier.name(), tier.underline(), hover == Part.TIER, true, tierState);
+        }
+
+        // The name is the machine menu: a faint plate under it while the mouse is on it, and its chevron. A generator
+        // has no other machine to pick: its name alone, in the power wing's amber.
+        final boolean menu = !m.isPower() || emptyCropFarm();
+        if (hover == Part.MACHINE && menu) Hyb.rect(BAR_X - 4, y, barRight() - BAR_X + 4, CHIP_H, 0x14FFFFFF);
+        // On a task: a dot in its column's colour before the name (the most pressing task's, when on several).
+        final com.gtnhplanner.data.flowchart.Tasks.Status task = com.gtnhplanner.ui.canvas.PlanPicture.drawing() ? null
+            : session.taskStatus(nodeId);
+        if (task != null) com.gtnhplanner.ui.task.TaskLook
+            .dot(BAR_X, y + (CHIP_H - 9) / 2f, 9, com.gtnhplanner.ui.task.TaskLook.colour(task));
+        final float end = CardPaint.name(
+            headName(m),
+            BAR_X + (task != null ? 14 : 0),
+            barRight() - (menu ? 12 : 0),
+            com.gtnhplanner.power.Holders.is(m.node) ? CUSTOM_RATE_INK : m.isPower() ? 0xFFFEF3C7 : Hyb.INK);
+        if (menu) chevron(Math.round(end + 5), y + 9, hover == Part.MACHINE ? Hyb.INK : Hyb.MUTED);
+    }
+
+    /**
+     * A key's icon, the place key's map pin or the settings key's gear, centred on a point: drawn as a shape, not
+     * pixels,
+     * so it stays sharp at any zoom, over a shadow one screen pixel down and right, as the game shades its text.
+     */
+    private static void keyIcon(final boolean mapPin, final float cx, final float cy, final int color) {
+        final float px = 0.5f;
+        if (mapPin) {
+            mapPin(cx + px, cy + px, 0xFF16181C);
+            mapPin(cx, cy, color);
+        } else {
+            gear(cx + px, cy + px, 0xFF16181C);
+            gear(cx, cy, color);
+        }
+    }
+
+    /** The map pin of the place key, with its shadow, for other lists (the overview's pin keys, the pin list). */
+    public static void pinIcon(final float cx, final float cy, final int color) {
+        keyIcon(true, cx, cy, color);
+    }
+
+    /** A gear: a ring with a hole in it and eight tapered teeth. */
+    private static void gear(final float cx, final float cy, final int color) {
+        final float hole = 2.0f, body = 4.5f, root = 4.2f, tip = 6.6f;
+        ring(cx, cy, hole, body, color);
+        for (int k = 0; k < 8; k++) {
+            final double a = k * Math.PI / 4;
+            final float[] b0 = polar(cx, cy, root, a - 0.32), b1 = polar(cx, cy, root, a + 0.32),
+                t0 = polar(cx, cy, tip, a - 0.21), t1 = polar(cx, cy, tip, a + 0.21);
+            Hyb.triangle(b0[0], b0[1], t0[0], t0[1], t1[0], t1[1], color);
+            Hyb.triangle(b0[0], b0[1], t1[0], t1[1], b1[0], b1[1], color);
+        }
+    }
+
+    /** A map pin: a round head with a hole in it, on a point. */
+    private static void mapPin(final float cx, final float cy, final int color) {
+        final float hx = cx, hy = cy - 2.2f, head = 3.6f;
+        ring(hx, hy, 1.3f, head, color);
+        Hyb.triangle(hx - 3.1f, cy - 0.7f, hx + 3.1f, cy - 0.7f, hx, cy + 5.6f, color);
+    }
+
+    /** A filled ring between two radii. */
+    private static void ring(final float cx, final float cy, final float inner, final float outer, final int color) {
+        final int seg = 28;
+        for (int i = 0; i < seg; i++) {
+            final double a0 = 2 * Math.PI * i / seg, a1 = 2 * Math.PI * (i + 1) / seg;
+            final float c0 = (float) Math.cos(a0), s0 = (float) Math.sin(a0), c1 = (float) Math.cos(a1),
+                s1 = (float) Math.sin(a1);
+            Hyb.triangle(
+                cx + inner * c0,
+                cy + inner * s0,
+                cx + outer * c0,
+                cy + outer * s0,
+                cx + outer * c1,
+                cy + outer * s1,
+                color);
+            Hyb.triangle(
+                cx + inner * c0,
+                cy + inner * s0,
+                cx + outer * c1,
+                cy + outer * s1,
+                cx + inner * c1,
+                cy + inner * s1,
+                color);
+        }
+    }
+
+    private static float[] polar(final float cx, final float cy, final float r, final double a) {
+        return new float[] { cx + r * (float) Math.cos(a), cy + r * (float) Math.sin(a) };
+    }
+
+    /** The power wing's amber (the website's text-amber-400). */
+    private static final int POWER_AMBER = 0xFFFBBF24;
+
+    /** How a head chip stands: raised, held down by the mouse, or sunk while its box is typed into. */
+    enum ChipState {
+        RAISED,
+        PRESSED,
+        EDITING
+    }
+
+    /**
+     * A chip in a voltage tier's colours, as Factory Flow draws its amps and tier: a raised face, the label large,
+     * underlined from UV up.
+     */
+    static void chip(final int x, final int y, final int w, final int h, final Hyb.Tier tier, final String label,
+        final boolean underline, final boolean hover) {
+        chip(x, y, w, h, tier, label, underline, hover, false);
+    }
+
+    /**
+     * A chip; {@code snapped} sets its label on the screen's own pixels at a size where every font pixel is a whole
+     * number of them (up to the usual 1.5 board pixels), so every stroke is as wide as every other at any zoom.
+     */
+    static void chip(final int x, final int y, final int w, final int h, final Hyb.Tier tier, final String label,
+        final boolean underline, final boolean hover, final boolean snapped) {
+        chip(x, y, w, h, tier, label, underline, hover, snapped, ChipState.RAISED);
+    }
+
+    /**
+     * A chip as a button (the website's .cc-chip): the tier's edge and face, the label in black or white (whichever
+     * reads on it), raised by the old card's bevel (two pixels light top and left, dark bottom and right); pressed, the
+     * face darkens, the bevel turns over and the label sinks a pixel; typed into ({@link ChipState#EDITING}), it sinks
+     * and draws no label (the box draws what is typed).
+     */
+    static void chip(final int x, final int y, final int w, final int h, final Hyb.Tier tier, final String label,
+        final boolean underline, final boolean hover, final boolean snapped, final ChipState state) {
+        final boolean own = !Hyb.batching();
+        if (own) Hyb.beginBatch();
+        Hyb.rect(x, y, w, h, tier.border());
+        Hyb.rect(
+            x + 1,
+            y + 1,
+            w - 2,
+            h - 2,
+            state == ChipState.PRESSED ? Hyb.mix(tier.bg(), 0xFF000000, 0.92f)
+                : hover ? Hyb.mix(tier.bg(), 0xFFFFFF, 0.88f) : tier.bg());
+        chipBevel(x + 1, y + 1, w - 2, h - 2, state);
+        if (own) Hyb.endBatch();
+        if (state == ChipState.EDITING) return;
+        final int ink = Hyb.contrastInk(tier.bg());
+        float s = 1.5f;
+        float[] g = null;
+        if (snapped) {
+            g = screenGrid();
+            // The nearest whole number of screen pixels a font pixel to the usual 1.5, short of overflowing the chip.
+            final float perUnit = g[0] * g[4];
+            final float most = Math.min((w - 6f) / Math.max(1, Hyb.width(label) - 1), (h - 4f) / 7f);
+            s = Math.max(1, Math.min(Math.round(1.5f * perUnit), (int) Math.floor(most * perUnit + 1e-3f))) / perUnit;
+        }
+        final float tw = (Hyb.width(label) - 1) * s;
+        float tx = crisp(x + (w - tw) / 2f), ty = crisp(y + (h - 7 * s) / 2f) + (state == ChipState.PRESSED ? 1 : 0);
+        if (g != null) {
+            tx = snap(tx, g[0], g[1], g[4]);
+            ty = snap(ty, g[2], g[3], g[4]);
+        }
+        Hyb.text(label, tx, ty, s, ink, false);
+        if (underline) Hyb.rect(tx, ty + 8 * s, tw, 1, ink);
+    }
+
+    /**
+     * A chip's bevel inside its edge, two pixels a side (the website's inset shadows): the light band over the dark
+     * where they cross, as the first shadow lies over the second.
+     */
+    private static void chipBevel(final float x, final float y, final float w, final float h, final ChipState state) {
+        final int light = 0x8CFFFFFF, dark = 0x73000000;
+        final int topLeft = state == ChipState.RAISED ? light : dark;
+        final int bottomRight = state == ChipState.RAISED ? dark : state == ChipState.PRESSED ? light : 0x4DFFFFFF;
+        Hyb.rect(x, y + h - 2, w, 2, bottomRight);
+        Hyb.rect(x + w - 2, y, 2, h - 2, bottomRight);
+        Hyb.rect(x, y, w, 2, topLeft);
+        Hyb.rect(x, y + 2, 2, h - 2, topLeft);
+    }
+
+    private static final java.nio.FloatBuffer MATRIX = org.lwjgl.BufferUtils.createFloatBuffer(16);
+
+    /**
+     * The current drawing against the screen's pixels: {x scale, x offset, y scale, y offset} in GUI units, then screen
+     * pixels per GUI unit.
+     */
+    private static float[] screenGrid() {
+        MATRIX.clear();
+        org.lwjgl.opengl.GL11.glGetFloat(org.lwjgl.opengl.GL11.GL_MODELVIEW_MATRIX, MATRIX);
+        final int gui = new net.minecraft.client.gui.ScaledResolution(
+            net.minecraft.client.Minecraft.getMinecraft(),
+            net.minecraft.client.Minecraft.getMinecraft().displayWidth,
+            net.minecraft.client.Minecraft.getMinecraft().displayHeight).getScaleFactor();
+        final float sx = Math.abs(MATRIX.get(0)), sy = Math.abs(MATRIX.get(5));
+        return new float[] { sx > 0 ? sx : 1, MATRIX.get(12), sy > 0 ? sy : 1, MATRIX.get(13), gui };
+    }
+
+    /** A drawing coordinate moved onto the nearest screen pixel. */
+    private static float snap(final float v, final float scale, final float offset, final float perUnit) {
+        return (Math.round((v * scale + offset) * perUnit) / perUnit - offset) / scale;
+    }
+
+    private static void chevron(final int x, final int y, final int color) {
+        Hyb.rect(x, y, 7, 1, color);
+        Hyb.rect(x + 1, y + 1, 5, 1, color);
+        Hyb.rect(x + 2, y + 2, 3, 1, color);
+        Hyb.rect(x + 3, y + 3, 1, 1, color);
+    }
+
+    /**
+     * A side's ports: each its icon at the card's edge, how much in large type and its name small under it, a thin line
+     * between rows. A port still to wire has its icon ringed with a dashed line that breathes. A row lights up under the
+     * mouse, glows while its resource is the one under the mouse, and turns cyan where a dragged wire would land. On a
+     * shared machine a recipe with nothing on one side says so.
+     */
+    private void drawRail(final int section, final List<CardModel.PortView> ports, final boolean output,
+        final float z) {
+        final int x = CardLayout.railX(output), w = CardLayout.RAIL_W, h = CardLayout.ROW;
+        final Fmt.RateUnit unit = session.rateUnit();
+        final PortSlot hoveredSlot = getContext().getHovered() instanceof final PortSlot s && s.card() == this ? s
+            : null;
+        if (ports.isEmpty() && shared()) {
+            final int y = layout.railsY(section);
+            final String none = output ? "No output" : "No input";
+            Hyb.text(none, crisp(x + (w - Hyb.width(none)) / 2f), y + 12, 0xB39A9CA4);
+            return;
+        }
+        final BoardCanvas board = canvas();
+        for (final CardModel.PortView p : ports) {
+            final int y = layout.rowY(section, output, p.index());
+            // What the game gives for nothing (the Rock Breaker's lava): shown greyed, nothing to wire or set.
+            if (com.gtnhplanner.data.provider.FreeInputs.isFree(models.get(section).node, output, p.index())) {
+                CardPaint.giftRow(p, y, z);
+                continue;
+            }
+            final boolean hot = hoveredSlot != null && hoveredSlot.section == section
+                && hoveredSlot.output == output
+                && hoveredSlot.index == p.index();
+            // Unwired but running (a pinned machine runs whatever is wired to it): it takes from outside the plan, or
+            // gives out of it, as a spare does, and is drawn as one; nothing is missing, so it does not pulse.
+            // A port picked up off the card as a drawer shows as it will be once placed: wired.
+            final boolean lifted = board != null && board.lifted(sectionId(section), output, p.index());
+            final boolean open = !lifted && isOpen(p);
+            final Double wheeled = session.wheeledPortRate(models.get(section).node, output, p.index());
+            final Double target = wheeled != null ? wheeled
+                : session.portTarget(models.get(section).node, output, p.index());
+            final boolean set = !lifted && target != null;
+            final boolean controls = !lifted && showsControls(section, p);
+            // The row an Up to card's reason names is striped in the reason's tone, its edge and name in it.
+            final CardFace.Tone why = why(sectionId(section), output, p.index());
+            // The rate key on EU: what each unit through the port cost, where that says something (not EU itself).
+            final double each = session.energyView() ? session.euEach(models.get(section), p) : Double.NaN;
+            if (open) CardPaint.openRow(p, unit, y, z, set, why, each);
+            else {
+                // Every port is a tile of one shape (the website's pass 3), lighter under the mouse.
+                if (why != null) CardPaint.whyTile(output, y, why);
+                else CardPaint.portTile(output, y, hot);
+                CardPaint.icon(p.item(), p.fluid(), p.isPower(), output, y, z);
+                if (!Double.isNaN(each)) CardPaint.energyWords(
+                    each,
+                    p.isFluid(),
+                    p.name(),
+                    output,
+                    y,
+                    controls,
+                    why != null ? why.colour : Hyb.MUTED);
+                else CardPaint.flowWords(
+                    p.hasExtra() ? p.wiredPerSecond() : p.perSecond(),
+                    p.isPower(),
+                    p.isFluid(),
+                    p.name(),
+                    unit,
+                    output,
+                    y,
+                    set,
+                    controls,
+                    why != null ? why.colour : Hyb.MUTED);
+            }
+            if (!output && p.index() < models.get(section).node.inputs.size()
+                && models.get(section).node.inputs.get(p.index())
+                    .hasChoices()) CardPaint.choiceMark(y);
+            if (controls) {
+                final boolean here = hoveredSlot != null && hoveredSlot.section == section
+                    && hoveredSlot.output == output
+                    && hoveredSlot.index == p.index();
+                CardPaint.portControls(
+                    output,
+                    y,
+                    set ? Fmt.compact(target * unit.perSecond) : null,
+                    (p.isFluid() ? " L" : "") + unit.suffix,
+                    here && hoveredSlot.overKey(),
+                    here && hoveredSlot.overBox(),
+                    session.unset(sectionId(section)),
+                    board != null && board.edit()
+                        .editing(BoardCanvas.portEditKey(sectionId(section), output, p.index())) ? board.edit()
+                            : null);
+            }
+            if (layout.hasExtra(section, output, p.index())) CardPaint.extraRow(
+                p,
+                unit,
+                y + h,
+                z,
+                board == null ? 0 : board.carriedFrom(sectionId(section), output, p.index()),
+                why);
+            // Lit, one glow round the port and its extra row (part of the port: what it forces out or in).
+            if (session.lit()
+                .port(sectionId(section), output, p.index(), p.key()))
+                glow(x, y, w, layout.hasExtra(section, output, p.index()) ? 2 * h : h);
+            // What is in hand could go here: green, brighter where it would go if let go now (or home, put back).
+            if (board != null) {
+                final UUID id = sectionId(section);
+                if (board.portSnapped(id, output, p.index())) acceptGlow(x, y, w, h, true);
+                else if (board.portTakesDrag(id, output, p.index(), p.key())) acceptGlow(x, y, w, h, false);
+            }
+        }
+    }
+
+    /**
+     * A green glow round a port row that would take what is in hand, breathing so the eye finds every one;
+     * {@code there}: where it would go now, steady and brighter.
+     */
+    private static void acceptGlow(final float x, final float y, final float w, final float h, final boolean there) {
+        final float breath = there ? 1
+            : 0.65f + 0.35f * (float) Math.sin(System.currentTimeMillis() / 1000.0 * Math.PI * 1.4);
+        Hyb.rect(x, y, w, h, alpha(0x4ADE80, (there ? 0.16f : 0.1f) * breath));
+        Hyb.ring(x, y, w, h, 1, there ? CardPaint.ACCEPT : alpha(0x4ADE80, 0.75f * breath));
+        for (int i = 1; i <= 3; i++) Hyb.ring(
+            x - i,
+            y - i,
+            w + 2 * i,
+            h + 2 * i,
+            1,
+            alpha(0x4ADE80, (there ? 0.3f : 0.24f * breath) * (4 - i) / 4f));
+    }
+
+    /**
+     * Whether a port has no wire and no drawer yet the plan runs through it: what it takes then comes in from outside
+     * the plan, and what it makes leaves it. EU is not one (only drawers take it; a machine's draw is its power).
+     */
+    public static boolean isOpen(final CardModel.PortView p) {
+        return !p.wired() && !p.isPower() && p.perSecond() > CardModel.EXTRA_EPS;
+    }
+
+    /**
+     * Whether a port carries its own rule key and rate box: an open end of the plan (no wire, no drawer), which is a
+     * drawer in all but name; a wired port's rate is what it is wired to (a drawer has its own key and box), and a
+     * rate set on a port goes when it is wired ({@link BoardSession#edit}). Never power.
+     */
+    public boolean showsControls(final int section, final CardModel.PortView p) {
+        return !p.isPower() && !p.wired();
+    }
+
+    /** EU's icon: the power wing's bolt, at a whole scale, on a dark amber square filling the icon's box. */
+    public static void euIcon(final float x, final float y, final float size) {
+        Hyb.rect(x, y, size, size, 0xFF2A2210);
+        Hyb.ring(x, y, size, size, 1, 0xFF6B5418);
+        final float s = Math.max(1, (int) ((size - 2) / 11));
+        org.lwjgl.opengl.GL11.glPushMatrix();
+        org.lwjgl.opengl.GL11.glTranslatef(crisp(x + (size - 7 * s) / 2f), crisp(y + (size - 11 * s) / 2f), 0);
+        org.lwjgl.opengl.GL11.glScalef(s, s, 1);
+        com.gtnhplanner.ui.power.PowerPicker.bolt(0, 0, POWER_AMBER);
+        org.lwjgl.opengl.GL11.glPopMatrix();
+    }
+
+    // region Shared machine sections
+
+    /** The keys on a recipe's rule row, from the right: take it off, move it down, move it up. */
+    private static final int SECTION_KEY = 12;
+    private static final int KEY_OFF_X = RIGHT - SECTION_KEY;
+    private static final int KEY_DOWN_X = KEY_OFF_X - 6 - SECTION_KEY;
+    private static final int KEY_UP_X = KEY_DOWN_X - 2 - SECTION_KEY;
+
+    /** {section, key} under a card-local point (key 0 up, 1 down, 2 off), or null. */
+    private int[] sectionKeyAt(final float x, final float y) {
+        if (layout == null || !shared() || glance()) return null;
+        for (int s = 0; s < models.size(); s++) {
+            final int ky = layout.ruleY(s) + 2;
+            if (y < ky || y >= ky + SECTION_KEY) continue;
+            if (in(x, y, KEY_UP_X, ky, SECTION_KEY, SECTION_KEY)) return new int[] { s, 0 };
+            if (in(x, y, KEY_DOWN_X, ky, SECTION_KEY, SECTION_KEY)) return new int[] { s, 1 };
+            if (in(x, y, KEY_OFF_X, ky, SECTION_KEY, SECTION_KEY)) return new int[] { s, 2 };
+        }
+        return null;
+    }
+
+    /**
+     * A recipe's rule row on a shared machine. On the left its share: what part of the machine's time it takes and its
+     * own machines (or why it takes none); on the right its programmed circuit and the keys that move it up, down, or
+     * off the machine.
+     */
+    private void drawSectionRule(final int s, final float z, final int hotKey) {
+        final CardModel m = models.get(s);
+        final int y = layout.ruleY(s), h = CardLayout.SECTION_RULE;
+        // The share: what part of the machine's time, then its own machines.
+        final double total = machinesTotal();
+        final String pct = total > 0 ? Math.round(100 * m.machines / total) + "%" : "0%";
+        final String word = m.machines <= 0 ? "UNUSED" : "×" + Fmt.machines(m.machines);
+        final int wordColor = Hyb.MUTED;
+        final int tx = CardLayout.IN_RAIL_X + 4;
+        CardPaint.hair(y);
+        Hyb.text(pct, tx, y + 4, Hyb.INK);
+        Hyb.text(word, tx + 6 + Hyb.width(pct), y + 4, wordColor);
+        // The recipe's circuit, then its keys.
+        if (m.circuit != null) com.gtnhplanner.ui.gt.CircuitIcons.draw(m.circuit, CardLayout.OUT_RAIL_X, y, 16, z);
+        final int ky = y + 2;
+        sectionKey(KEY_UP_X, ky, 0, s > 0, hotKey == 0);
+        sectionKey(KEY_DOWN_X, ky, 1, s < models.size() - 1, hotKey == 1);
+        sectionKey(KEY_OFF_X, ky, 2, true, hotKey == 2);
+    }
+
+    private static void sectionKey(final int x, final int y, final int kind, final boolean enabled, final boolean hot) {
+        final int ink = !enabled ? 0x4D9A9CA4 : hot ? 0xFFFFFFFF : Hyb.MUTED;
+        if (hot && enabled) Hyb.rect(x, y, SECTION_KEY, SECTION_KEY, 0x1AFFFFFF);
+        final int cx = x + SECTION_KEY / 2, cy = y + SECTION_KEY / 2;
+        switch (kind) {
+            case 0 -> {
+                for (int i = 0; i < 3; i++) Hyb.rect(cx - i - 1, cy - 2 + i, 2 * i + 2, 1, ink);
+            }
+            case 1 -> {
+                for (int i = 0; i < 3; i++) Hyb.rect(cx - i - 1, cy + 1 - i, 2 * i + 2, 1, ink);
+            }
+            default -> {
+                for (int i = -3; i <= 2; i++) {
+                    Hyb.rect(cx + i, cy + i, 1, 1, ink);
+                    Hyb.rect(cx + i, cy - 1 - i, 1, 1, ink);
+                }
+            }
+        }
+    }
+
+    // endregion
+
+    /** The highlight around a tile whose resource is the one under the mouse: a thin ring and a faint halo. */
+    private static void glow(final float x, final float y, final float w, final float h) {
+        Hyb.ring(x, y, w, h, 1, alpha(Hyb.LIT & 0xFFFFFF, 0.75f));
+        for (int i = 1; i <= 3; i++)
+            Hyb.ring(x - i, y - i, w + 2 * i, h + 2 * i, 1, alpha(Hyb.LIT & 0xFFFFFF, 0.24f * (4 - i) / 4f));
+    }
+
+    /**
+     * The machine in the middle column; the circuit on the picture's bottom left corner (unless it is a row of its
+     * own),
+     * how many on its bottom right.
+     */
+    private void drawPicture(final CardModel m, final float z, final Part hover) {
+        final int[] well = layout.well();
+        CardPaint.well(well);
+        final int[] box = layout.picture();
+        if (com.gtnhplanner.power.CustomRate.is(m.node)) {
+            // A dial for the card that is one: the picker key's gauge, four times over.
+            org.lwjgl.opengl.GL11.glPushMatrix();
+            org.lwjgl.opengl.GL11.glTranslatef(box[0] + (box[2] - 36) / 2f, box[1] + (box[2] - 32) / 2f, 0);
+            org.lwjgl.opengl.GL11.glScalef(4, 4, 1);
+            com.gtnhplanner.ui.power.PowerPicker.gauge(0, 0, CUSTOM_RATE_INK);
+            org.lwjgl.opengl.GL11.glPopMatrix();
+        } else drawMachineArt(m, box[0], box[1], box[2], box[2], CardLayout.ITEM, z, true);
+        // The recipe's circuit, its own icon with its number, in the well's top left corner (a shared machine's
+        // recipes each show theirs on their rule row).
+        if (m.circuit != null && !shared() && !m.isPower()) CardPaint.circuitBadge(m.circuit, well, z);
+        if (countless()) return;
+        // Under the picture: what runs, and what is set (or, with nothing set, the prompt to set it).
+        final CardFace.Count c = face();
+        CardPaint
+            .count(c, box, c.prompt() ? CardPaint.prompt() : Hyb.MUTED, hover == Part.MACHINES, hover == Part.RULE);
+        final BoardCanvas board = canvas();
+        if (board != null && board.edit()
+            .editing(countEditKey())) CardPaint.countBox(c, box, board.edit());
+    }
+
+    /**
+     * What the machine draws, one more row after its inputs (plans do not wire machine power): the bolt, the power
+     * large
+     * (the amps, by the board's power key), "Power" small; TIER! in red when the tier is too low to run it.
+     */
+    private void drawPowerRow(final CardModel m, final boolean hover) {
+        final int y = layout.powerRowY;
+        if (shared()) CardPaint.hair(y - 3);
+        // Power is a tile among the inputs, as every port is (without a wire).
+        CardPaint.portTile(false, y, hover);
+        if (m.steam()) {
+            // A steam machine burns steam, not EU: its row bills litres, as the website's steam cell.
+            final net.minecraftforge.fluids.FluidStack steam = net.minecraftforge.fluids.FluidRegistry
+                .getFluidStack("steam", 1000);
+            if (steam != null) Hyb.fluid(steam, CardLayout.iconX(false), y + CardLayout.ICON_Y, CardLayout.ICON, 0);
+            CardPaint.words(Fmt.compact(steamTotal()), " L/s", "Steam", Hyb.INK, false, y);
+            return;
+        }
+        euIcon(CardLayout.iconX(false), y + CardLayout.ICON_Y, CardLayout.ICON);
+        final double eu = powerTotal();
+        final int tierIdx = CardDefaults.tierIndex(m.tier);
+        final boolean amps = session.powerKey() == BoardSession.PowerKey.AMPS && m.gregtech && tierIdx >= 0;
+        if (anyTierTooLow()) CardPaint.words("TIER!", "", "Power", Hyb.RED_INK, false, y);
+        else if (amps)
+            CardPaint.words(Fmt.compact(eu / (8L << (2 * tierIdx))), "A " + m.tier, "Power", Hyb.INK, false, y);
+        else CardPaint.words(Fmt.power(eu), " EU/t", "Power", eu <= 0 ? 0xFFA8AFBB : Hyb.INK, false, y);
+    }
+
+    /**
+     * The machine in a box: a multiblock with a bundled render shows the whole structure (fitted, keeping its shape:
+     * the power plants are not square); any other GregTech multiblock its structure rendered in game (built once, then
+     * cached); anything else its block, at most {@code itemSize}. {@code shadow}: the art casts Factory Flow's shadow.
+     */
+    private static void drawMachineArt(final CardModel m, final float x, final float y, final float w, final float h,
+        final float itemSize, final float z, final boolean shadow) {
+        drawMachineArt(
+            m.isPower() ? m.node.powerSource : m.machineName,
+            m.machineStack,
+            x,
+            y,
+            w,
+            h,
+            itemSize,
+            z,
+            shadow);
+    }
+
+    /**
+     * {@link #drawMachineArt(CardModel, float, float, float, float, float, float, boolean)} by machine name and item.
+     */
+    private static void drawMachineArt(final String artName, final ItemStack machineStack, final float x, final float y,
+        final float w, final float h, final float itemSize, final float z, final boolean shadow) {
+        final StructureArt.Art art = StructureArt.forMachine(artName);
+        if (art != null) {
+            final float scale = Math.min(w / art.width(), h / art.height());
+            final float pw = art.width() * scale, ph = art.height() * scale;
+            final float px = x + (w - pw) / 2f, py = y + (h - ph) / 2f;
+            if (shadow) {
+                // Factory Flow's 5px 7px 6px at 60%: offset with the picture's size, its blur baked into the mask.
+                final float side = Math.min(pw, ph), pad = StructureArt.SHADOW_PAD * scale;
+                Hyb.texture(
+                    art.shadow(),
+                    px + side * 0.045f - pad,
+                    py + side * 0.06f - pad,
+                    pw + 2 * pad,
+                    ph + 2 * pad,
+                    0x7A000000);
+            }
+            Hyb.texture(art.location(), px, py, pw, ph);
+            return;
+        }
+        // Rendered in game on the well's own background: opaque, so it casts no shadow of its own, and a pixel in from
+        // the box so the well's edge shows round it.
+        final MultiblockPictures.Picture structure = MultiblockPictures.get(machineStack);
+        if (structure != null) structure.draw(x + 1, y + 1, w - 2, h - 2);
+        else if (machineStack != null) {
+            final float side = Math.min(itemSize, Math.min(w, h));
+            final float ix = x + (w - side) / 2f, iy = y + (h - side) / 2f;
+            if (shadow) Hyb.iconShadow(machineStack, null, ix, iy, side);
+            Hyb.item(machineStack, ix, iy, side, z);
+        }
+    }
+
+    // region Settings strip
+
+    /**
+     * The settings strip along the bottom: a hairline, then a chip for each setting pinned to the card
+     * ({@link SettingPins}), lit under the mouse where a click changes it; a power card's warnings under it, amber.
+     */
+    private void drawStrip(final CardModel m, final float z, final Part hover) {
+        if (!layout.chips.isEmpty()) CardPaint.hair(layout.stripY);
+        final int hot = hover == Part.CHIP ? layout.chipAt(localX(), localY()) : -1;
+        for (int i = 0; i < layout.chips.size(); i++) {
+            final SettingControls.Control c = layout.chips.get(i);
+            final int[] r = layout.chipRect(i);
+            final boolean reading = c.type() == SettingControls.Type.READING;
+            CardPaint.chip(
+                r[0],
+                r[1],
+                r[2],
+                c.label(),
+                c.value(),
+                c.icon(),
+                c.warn(),
+                reading,
+                !reading && c.enabled() && hot == i,
+                z);
+        }
+        for (int k = 0; k < layout.warningLines.size(); k++)
+            Hyb.text(layout.warningLines.get(k), CardLayout.PAD + 2, layout.warningsY + k * 9, Hyb.AMBER_INK);
+    }
+
+    /**
+     * A click on a setting, from its chip or the settings sheet: the left button flips a switch, asks for a number, or
+     * lists the choices (flips one of two); the right steps it back. Popups open at the screen point given.
+     */
+    void pressSetting(final SettingControls.Control c, final int mouseButton, final int sx, final int sy) {
+        if (model == null || !c.enabled() || c.type() == SettingControls.Type.READING) return;
+        if (mouseButton == 1 && c.type() != SettingControls.Type.TOGGLE) {
+            stepSetting(c, -1);
+            return;
+        }
+        if (c.type() == SettingControls.Type.COIL) {
+            openCoils(sx, sy);
+            return;
+        }
+        if (c.key()
+            .startsWith("power:")) {
+            pressPower(c.key(), sx, sy);
+            return;
+        }
+        if (c.key()
+            .startsWith(SettingControls.MACHINE_PREFIX)) {
+            pressMachine(
+                c.key()
+                    .substring(SettingControls.MACHINE_PREFIX.length()),
+                sx,
+                sy);
+            return;
+        }
+        final SettingDef<?> def = SettingControls.def(model, c.key());
+        if (def == null) return;
+        final Node node = model.node;
+        final MachineConfig cfg = node.machineConfig;
+        switch (c.type()) {
+            case TOGGLE -> changeSetting(node, c.key(), !CardDefaults.boolSetting(cfg, c.key()));
+            case NUMBER -> Popup.open(
+                session.panel(),
+                NumberPopup.create(
+                    def.label,
+                    def.minInt + " to " + def.maxInt,
+                    CardDefaults.intSetting(cfg, c.key()),
+                    def.minInt,
+                    def.maxInt,
+                    v -> changeSetting(node, c.key(), (int) Math.max(def.minInt, Math.min(def.maxInt, Math.round(v))))),
+                sx,
+                sy);
+            case CHOICE -> {
+                final String now = CardDefaults.stringSetting(cfg, c.key());
+                final List<PickList.Entry> rows = new ArrayList<>();
+                for (final String option : def.options) rows.add(
+                    new PickList.Entry(
+                        null,
+                        option,
+                        "",
+                        Hyb.INK,
+                        option.equals(now),
+                        () -> changeSetting(node, c.key(), option)));
+                Popup.open(
+                    session.panel(),
+                    PickList.popup("gtnhplanner_setting_choice", null, rows, rows.size() > 10, 150),
+                    sx,
+                    sy);
+            }
+            default -> {}
+        }
+    }
+
+    /** One step along a setting: the wheel on its chip or row, and the right button. */
+    void stepSetting(final SettingControls.Control c, final int step) {
+        if (model == null || !c.enabled() || c.type() == SettingControls.Type.READING) return;
+        if (c.type() == SettingControls.Type.COIL) {
+            stepCoil(step);
+            return;
+        }
+        if (c.key()
+            .startsWith("power:")) {
+            final com.gtnhplanner.power.PowerSource source = model.power.source();
+            final com.gtnhplanner.power.PowerSetting setting = source == null ? null
+                : source.setting(
+                    c.key()
+                        .substring(6));
+            if (setting != null) stepPower(setting, step);
+            return;
+        }
+        if (c.key()
+            .startsWith(SettingControls.MACHINE_PREFIX)) {
+            stepMachine(
+                c.key()
+                    .substring(SettingControls.MACHINE_PREFIX.length()),
+                step);
+            return;
+        }
+        final SettingDef<?> def = SettingControls.def(model, c.key());
+        if (def == null) return;
+        final Node node = model.node;
+        final MachineConfig cfg = node.machineConfig;
+        switch (c.type()) {
+            case TOGGLE -> changeSetting(node, c.key(), step > 0);
+            case NUMBER -> {
+                final int next = Math
+                    .max(def.minInt, Math.min(def.maxInt, CardDefaults.intSetting(cfg, c.key()) + step));
+                if (next != CardDefaults.intSetting(cfg, c.key())) changeSetting(node, c.key(), next);
+            }
+            case CHOICE -> {
+                final int i = def.options.indexOf(CardDefaults.stringSetting(cfg, c.key()));
+                final int n = def.options.size();
+                changeSetting(node, c.key(), def.options.get(((i + step) % n + n) % n));
+            }
+            default -> {}
+        }
+    }
+
+    // region Modelled machines (machines/game/MachineModels)
+
+    @javax.annotation.Nullable
+    private com.gtnhplanner.machines.game.MachineModels.Setting machineSetting(final String key) {
+        for (final com.gtnhplanner.machines.game.MachineModels.Setting s : com.gtnhplanner.machines.game.MachineModels
+            .settings(model.node))
+            if (s.key()
+                .equals(key)) return s;
+        return null;
+    }
+
+    /** A modelled machine's setting pressed: a number to type, two choices to switch, or a list (with icons). */
+    private void pressMachine(final String key, final int sx, final int sy) {
+        final com.gtnhplanner.machines.game.MachineModels.Setting s = machineSetting(key);
+        if (s == null) return;
+        if (s.number()) {
+            Popup.open(
+                session.panel(),
+                NumberPopup.create(
+                    s.label(),
+                    plainNumber(s.min()) + (s.max() < Double.MAX_VALUE ? " to " + plainNumber(s.max()) : " or more"),
+                    Double.parseDouble(s.value()),
+                    s.min(),
+                    s.max(),
+                    v -> changeMachine(key, plainNumber(snap(s, v)))),
+                sx,
+                sy);
+            return;
+        }
+        final String now = currentOption(s);
+        if (s.options()
+            .size() <= 2) {
+            for (final com.gtnhplanner.machines.game.MachineModels.Option o : s.options()) if (!o.key()
+                .equals(now)) changeMachine(key, o.key());
+            return;
+        }
+        final List<PickList.Entry> rows = new ArrayList<>();
+        for (final com.gtnhplanner.machines.game.MachineModels.Option o : s.options()) rows.add(
+            new PickList.Entry(
+                o.icon(),
+                o.label(),
+                "",
+                Hyb.INK,
+                o.key()
+                    .equals(now),
+                () -> changeMachine(key, o.key())));
+        Popup.open(
+            session.panel(),
+            PickList.popup("gtnhplanner_machine_setting", null, rows, rows.size() > 10, 190),
+            sx,
+            sy);
+    }
+
+    /** One step along a modelled machine's setting: the next choice, or one more or less. */
+    private void stepMachine(final String key, final int step) {
+        final com.gtnhplanner.machines.game.MachineModels.Setting s = machineSetting(key);
+        if (s == null) return;
+        if (s.number()) {
+            changeMachine(key, plainNumber(snap(s, Double.parseDouble(s.value()) + step * s.step())));
+            return;
+        }
+        final List<com.gtnhplanner.machines.game.MachineModels.Option> options = s.options();
+        int i = 0;
+        final String now = currentOption(s);
+        for (int k = 0; k < options.size(); k++) if (options.get(k)
+            .key()
+            .equals(now)) i = k;
+        final int n = options.size();
+        changeMachine(
+            key,
+            options.get(((i + step) % n + n) % n)
+                .key());
+    }
+
+    /** The key of the option a setting shows (its value is the option's label). */
+    private static String currentOption(final com.gtnhplanner.machines.game.MachineModels.Setting s) {
+        for (final com.gtnhplanner.machines.game.MachineModels.Option o : s.options()) if (o.label()
+            .equals(s.value())) return o.key();
+        return "";
+    }
+
+    /** A typed or stepped number on the setting's steps, within its range. */
+    private static double snap(final com.gtnhplanner.machines.game.MachineModels.Setting s, final double v) {
+        final double stepped = s.step() > 0 ? Math.round(v / s.step()) * s.step() : v;
+        return Math.max(s.min(), Math.min(s.max(), stepped));
+    }
+
+    private static String plainNumber(final double v) {
+        return java.math.BigDecimal.valueOf(Math.round(v * 1e6) / 1e6)
+            .stripTrailingZeros()
+            .toPlainString();
+    }
+
+    /** Changes a modelled machine's setting; a tree's tools are remembered for its next card, as other settings. */
+    private void changeMachine(final String key, final String value) {
+        final Node node = model.node;
+        if (com.gtnhplanner.machines.game.CropCards.isCrop(node)) {
+            // A farm unit writes the whole normalized set of units; every crop setting is remembered for the next.
+            final java.util.Map<String, String> writes = com.gtnhplanner.machines.game.CropCards
+                .change(node, key, value);
+            session.setSettings(node, writes);
+            for (final java.util.Map.Entry<String, String> w : writes.entrySet())
+                SettingMemory.remember(node, w.getKey(), w.getValue());
+            return;
+        }
+        if (com.gtnhplanner.machines.game.BeeCards.isBee(node)) {
+            // The upgrades, frames and climate carry to the next bee card; the housing comes from the plan menu.
+            session.setSetting(node, key, value);
+            if (com.gtnhplanner.machines.game.BeeCards.remembered(key)) SettingMemory.remember(node, key, value);
+            return;
+        }
+        if (key.startsWith("tgs") || com.gtnhplanner.machines.game.WebSettings.isKey(key))
+            changeSetting(node, key, value);
+        else session.setSetting(node, key, value);
+    }
+
+    // endregion
+
+    /** Changes a machine setting, and remembers it for the machine's next card. */
+    private void changeSetting(final Node node, final String key, final Object value) {
+        session.setSetting(node, key, value);
+        SettingMemory.remember(node, key, value);
+    }
+
+    /** Changes a power card's setting, and remembers it for its source's next card. */
+    private void changePower(final String settingId, final String value) {
+        session.setPowerSetting(model.node, settingId, value);
+        SettingMemory.rememberPower(model.node.powerSource, settingId, value);
+    }
+
+    /** A left click on a power card's setting: flips a toggle or one of two, lists the choices, asks a number. */
+    private void pressPower(final String key, final int sx, final int sy) {
+        final com.gtnhplanner.power.PowerSource source = model.power.source();
+        final java.util.Map<String, String> values = model.node.powerSettings;
+        final com.gtnhplanner.power.PowerSetting setting = source == null ? null : source.setting(key.substring(6));
+        if (setting == null || !PowerTiles.enabled(source, setting, values)) return;
+        switch (setting) {
+            case com.gtnhplanner.power.PowerSetting.Toggle toggle -> changePower(setting.id(), toggle.value(values.get(setting.id())) ? "0" : "1");
+            case com.gtnhplanner.power.PowerSetting.Select select -> {
+                if (select.options()
+                    .size() <= 2) {
+                    final String now = select.value(values.get(setting.id()));
+                    for (final com.gtnhplanner.power.PowerSetting.Option o : select.options())
+                        if (!o.key()
+                            .equals(now)) changePower(setting.id(), o.key());
+                } else openPowerOptions(sx, sy, select);
+            }
+            case com.gtnhplanner.power.PowerSetting.Number number -> Popup.open(
+                session.panel(),
+                NumberPopup.create(
+                    PowerTiles.caption(number),
+                    PowerTiles.plain(number.min()) + " to " + PowerTiles.plain(number.max()),
+                    number.value(values.get(setting.id())),
+                    number.min(),
+                    number.max(),
+                    v -> changePower(
+                        number.id(),
+                        PowerTiles.plain(Math.max(number.min(), Math.min(number.max(), v))))),
+                sx,
+                sy);
+        }
+    }
+
+    /** One step along a power setting; false when it is already at that end. */
+    private boolean stepPower(final com.gtnhplanner.power.PowerSetting setting, final int step) {
+        final java.util.Map<String, String> values = model.node.powerSettings;
+        final String next = PowerTiles.step(setting, values, step);
+        if (next.equals(PowerTiles.value(setting, values))) return false;
+        changePower(setting.id(), next);
+        return true;
+    }
+
+    private void openPowerOptions(final int sx, final int sy, final com.gtnhplanner.power.PowerSetting.Select select) {
+        final String now = select.value(model.node.powerSettings.get(select.id()));
+        final List<PickList.Entry> rows = new ArrayList<>();
+        for (final com.gtnhplanner.power.PowerSetting.Option option : select.options()) rows.add(
+            new PickList.Entry(
+                null,
+                option.label(),
+                "",
+                Hyb.INK,
+                option.key()
+                    .equals(now),
+                () -> changePower(select.id(), option.key())));
+        Popup.open(
+            session.panel(),
+            PickList.popup(
+                "gtnhplanner_power_setting",
+                select.label()
+                    .toUpperCase(java.util.Locale.ROOT),
+                rows,
+                rows.size() > 10,
+                150),
+            sx,
+            sy);
+    }
+
+    /** The head's tier chip on a generator: its tier select, a step at a time. */
+    private void stepPowerTier(final int step) {
+        final com.gtnhplanner.power.PowerSetting.Select tier = powerTier();
+        if (tier != null) stepPower(tier, step);
+    }
+
+    // endregion
+
+    /** "Kanthal Coil Block" reads as "Kanthal" in the well, as on the website. */
+    public static String shortCoilName(final String name) {
+        for (final String tail : new String[] { " Coil Block", " Coil" }) {
+            if (name.endsWith(tail)) return name.substring(0, name.length() - tail.length());
+        }
+        return name;
+    }
+
+    /** The power panel's figures, worked out once for the model they were taken from. */
+    private PowerPanel.Facts powerFacts;
+    private CardModel powerFactsFor;
+
+    /** Whether the part under the mouse answers with the power panel: a multiblock's amps, tier or POWER tile. */
+    private boolean showsPower(final Part part) {
+        return model != null && model.multiblock
+            && model.gregtech
+            && CardDefaults.tierIndex(model.tier) >= 0
+            && (part == Part.AMPS || part == Part.TIER || part == Part.POWER);
+    }
+
+    /**
+     * Factory Flow's POWER INPUT panel, while the mouse is on a multiblock's amps, tier or POWER tile: above the card,
+     * right edges aligned (below it when there is no room), with the guide to the chips beside it. Drawn in screen
+     * space; false when it does not apply.
+     */
+    public boolean drawPower(final int right, final int bottom) {
+        if (model == null || !isHovering() || glance()) return false;
+        final Part part = partAt(localX(), localY());
+        if (!showsPower(part)) return false;
+        final BoardCanvas c = canvas();
+        if (c == null) return false;
+        if (powerFactsFor != model) {
+            powerFacts = PowerPanel.facts(model, powerTotal(), shared());
+            powerFactsFor = model;
+        }
+        final int w = PowerPanel.W, h = PowerPanel.height(powerFacts);
+        final int gw = PowerPanel.GUIDE_W, gh = PowerPanel.guideHeight();
+        final int top = c.screenY(model.node.y), under = c.screenY(model.node.y + layout.height);
+        int x = Math.min(c.screenX(model.node.x + CardLayout.W) - w, right - w - 4 - gw);
+        x = Math.max(2, x);
+        // Above the card, or below it; failing both, beside the part under the mouse so it stays in sight.
+        int y = top - 6 - h;
+        if (y < 2) {
+            final int[] r = partRect(part);
+            final int partTop = c.screenY(model.node.y + r[1]), partBottom = c.screenY(model.node.y + r[1] + r[3]);
+            if (under + 6 + h <= bottom) y = under + 6;
+            else if (partTop - 4 - h >= 2) y = partTop - 4 - h;
+            else y = Math.min(partBottom + 4, bottom - h);
+            y = Math.max(2, y);
+        }
+        PowerPanel.draw(powerFacts, x, y);
+        final int gx = x + w + 4 + gw <= right ? x + w + 4 : Math.max(2, x - 4 - gw);
+        PowerPanel.drawGuide(gx, y + h - gh, part);
+        return true;
+    }
+
+    /** The tooltip for the part under the mouse, Factory Flow style: what it is, its figures, what the mouse does. */
+    public Tip tip() {
+        if (model == null || !isHovering()) return null;
+        final Part part = partAt(localX(), localY());
+        if (part == null || showsPower(part)) return null;
+        final CardModel m = model;
+        if (m.isPower()) return powerTip(part);
+        return switch (part) {
+            case PLACE -> placeTip();
+            case ACTIONS -> Tip.of("Card actions")
+                .action(Tip.Input.LEFT, "Clone, add a recipe, settings, delete");
+            case SECTION -> {
+                final int[] key = sectionKeyAt(localX(), localY());
+                if (key == null) yield null;
+                yield switch (key[1]) {
+                    case 0 -> Tip.of("Move this recipe up");
+                    case 1 -> Tip.of("Move this recipe down");
+                    default -> Tip.of("Remove this recipe from the card")
+                        .muted("Its wires are removed too.");
+                };
+            }
+            case MACHINE -> {
+                if (crop()) yield cropTip(m);
+                if (eec()) yield mobTip(m);
+                final Tip tip = Tip.of(m.machineName)
+                    .sub(
+                        bee() && m.machineStack != null ? m.machineStack.getDisplayName()
+                            : m.multiblock ? "Multiblock" : "Machine");
+                countRows(tip);
+                if (shared()) tip.row("Recipes", Integer.toString(models.size()));
+                if (m.gregtech && !m.steam()) tip.row("Configured tier", m.tier);
+                tip.row("Time per operation", Fmt.compact(m.durationTicks / 20.0) + " s");
+                if (m.steam()) tip.row("Steam per machine", Fmt.compact(m.steamPerTick * 20) + " L/s");
+                else tip.row("Draw per machine", Fmt.power(m.euPerTick) + " EU/t");
+                if (m.parallels > 1) tip.row("Parallel operations", Integer.toString(m.parallels));
+                if (shared()) tip.muted("One machine runs these recipes in turns.");
+                if (machineChoices().size() > 1)
+                    tip.action(Tip.Input.LEFT, shared() ? "Machines that run them all" : "Machines that run it")
+                        .action(Tip.Input.WHEEL, "Next machine");
+                yield tip;
+            }
+            case TIER -> {
+                if (crop()) yield Tip
+                    .of(
+                        com.gtnhplanner.machines.game.CropCards.isFarm(m.machineStack) ? "Seed bed tier"
+                            : "Crop Manager tier")
+                    .row("Configured tier", com.gtnhplanner.machines.game.CropCards.tierName(m.node))
+                    .row(
+                        "Crops per machine",
+                        Integer.toString(com.gtnhplanner.machines.game.CropCards.cropsPerHarvester(m.node)))
+                    .action(Tip.Input.LEFT, "Up")
+                    .action(Tip.Input.RIGHT, "Down")
+                    .action(Tip.Input.WHEEL, "Step");
+                final Tip tip = Tip.of("Voltage tier")
+                    .row("Configured tier", m.tier);
+                if (m.node.properties.get(GTKeys.EU_PER_TICK) instanceof final Number eu && eu.longValue() > 0)
+                    tip.row("Recipe tier", CardDefaults.TIERS[CardDefaults.recipeTier(eu.longValue())]);
+                tip.row("Time per operation", Fmt.compact(m.durationTicks / 20.0) + " s")
+                    .row("Draw per machine", Fmt.power(m.euPerTick) + " EU/t");
+                if (m.tierTooLow()) tip.note("Below the recipe's tier: it cannot run.", Hyb.RED_INK);
+                yield tip.action(Tip.Input.LEFT, "Up")
+                    .action(Tip.Input.RIGHT, "Down")
+                    .action(Tip.Input.WHEEL, "Step");
+            }
+            case AMPS -> Tip.of("Energy hatch amps")
+                .row("Amps", Fmt.compact(m.amps) + "A");
+            case POWER -> m.steam() ? Tip.of("Steam")
+                .row("Steam per machine", Fmt.compact(m.steamPerTick * 20) + " L/s")
+                .row("Steam for this card", Fmt.compact(steamTotal()) + " L/s")
+                .muted("Not wired in plans.")
+                : Tip.of("Power")
+                    .row("Draw per machine", Fmt.power(m.euPerTick) + " EU/t")
+                .row("Demand for this card", Fmt.power(session.power(m)) + " EU/t")
+                .muted("Not wired in plans.");
+            case SETTINGS -> settingsTip();
+            case CHIP -> chipTip();
+            case MACHINES -> countTip(m);
+            case RULE -> ruleTip();
+            case FOOT -> footTip();
+            case CIRCUIT -> Tip.of("Circuit " + m.circuit.getItemDamage());
+            default -> {
+                // Far out the card answers with its reveal panel; close in, the body says nothing.
+                yield null;
+            }
+        };
+    }
+
+    /** A generator's tooltips: what it is, its tier, a setting or reading, what it makes, how many. */
+    /** The custom rate card's name: what it does with what it holds (the website's title hover). */
+    private Tip customRateTip() {
+        final com.gtnhplanner.data.flowchart.Node n = model.node;
+        final String key = com.gtnhplanner.power.CustomRate.resource(n);
+        final Tip tip = Tip.of("Custom Rate");
+        if (key == null) return tip.muted("Wire any port to this and it adopts that resource.");
+        final String name = com.gtnhplanner.ui.Resources.name(key);
+        final String rate = com.gtnhplanner.power.sources.Helpers.formatAmount(com.gtnhplanner.power.CustomRate.rate(n))
+            + " "
+            + com.gtnhplanner.power.CustomRate.unit(key);
+        return (com.gtnhplanner.power.CustomRate.supply(n) ? tip.sub("Supplies " + name)
+            .muted("Makes " + name + " at the dialed rate for anything that asks.")
+            : tip.sub("Requests " + name)
+                .muted("Constantly drains " + name + " at the dialed rate.")).row("Dialed rate", rate)
+                    .row(pinned() ? "Exactly" : "Calculated", "×" + Fmt.machines(machinesTotal()));
+    }
+
+    /** The count's rows in a name's tip: what runs (or what the plan needs), and what is set under its rule. */
+    private void countRows(final Tip tip) {
+        final CardFace.Count c = face();
+        tip.row(c.pinned() ? "Running machines" : "Required machines", c.run());
+        if (c.pinned()) tip.row(c.rule().label, "×" + c.setText());
+    }
+
+    /** The fluid tank's name: what it empties or fills, and how much a cell holds. */
+    private Tip tankTip() {
+        final com.gtnhplanner.data.flowchart.Node n = model.node;
+        final Tip tip = Tip.of("Fluid Tank");
+        final com.gtnhplanner.power.FluidTank.Pair p = com.gtnhplanner.power.FluidTank
+            .pair(com.gtnhplanner.power.FluidTank.cell(n));
+        if (p == null)
+            return tip.muted("Wire a cell or a fluid to it: it empties cells, or fills them, free and instant.");
+        final String cell = p.cell()
+            .getDisplayName();
+        return (com.gtnhplanner.power.FluidTank.emptying(n) ? tip.sub("Empties " + cell) : tip.sub("Fills " + cell))
+            .muted("Free and instant: as much as the plan needs.")
+            .row(
+                "Holds",
+                Fmt.compact(p.fluid().amount) + " L of "
+                    + p.fluid()
+                        .getLocalizedName());
+    }
+
+    private Tip powerTip(final Part part) {
+        final CardModel m = model;
+        final com.gtnhplanner.power.PowerSource source = m.power.source();
+        final com.gtnhplanner.power.PowerModel pm = m.power.model();
+        final double each = pm == null ? 0 : pm.euPerTick();
+        return switch (part) {
+            case PLACE -> placeTip();
+            case ACTIONS -> Tip.of("Card actions")
+                .action(Tip.Input.LEFT, "Clone, delete");
+            case PICK -> Tip.of("Pick a crop")
+                .muted("Click to pick what this farm plants.");
+            case MACHINE -> {
+                if (com.gtnhplanner.power.CustomRate.is(m.node)) yield customRateTip();
+                if (emptyCropFarm()) yield Tip.of(m.machineName)
+                    .muted("Pick a crop to start producing.")
+                    .action(Tip.Input.LEFT, "Pick a crop");
+                if (com.gtnhplanner.power.FluidTank.is(m.node)) yield tankTip();
+                final Tip tip = Tip.of(m.machineName)
+                    .sub(
+                        "Non-recipe machine"
+                            + (source != null ? ", " + source.group().title.toLowerCase(java.util.Locale.ROOT) : ""));
+                if (source != null) tip.muted(source.blurb());
+                if (source == null)
+                    tip.note("Unknown machine: this version of GTNH Planner doesn't have it.", Hyb.RED_INK);
+                tip.row(each < 0 ? "Draws per machine" : "Makes per machine", Fmt.power(Math.abs(each)) + " EU/t");
+                if (!com.gtnhplanner.power.FluidTank.is(m.node)) countRows(tip);
+                if (source != null && source.unlock() != null) tip.row("Unlocks at", source.unlock());
+                yield tip;
+            }
+            case TIER -> Tip.of("Tier")
+                .row("Configured tier", powerTier() == null ? "" : powerTier().value(m.node.powerSettings.get("tier")))
+                .row("Makes per machine", Fmt.power(each) + " EU/t")
+                .action(Tip.Input.LEFT, "Up")
+                .action(Tip.Input.RIGHT, "Down")
+                .action(Tip.Input.WHEEL, "Step");
+            case SETTINGS -> settingsTip();
+            case CHIP -> chipTip();
+            case POWER -> Tip.of(each < 0 ? "Power drawn" : "Power made")
+                .row(each < 0 ? "Draws per machine" : "Makes per machine", Fmt.power(Math.abs(each)) + " EU/t")
+                .row("All its machines", Fmt.power(Math.abs(each) * machinesTotal()) + " EU/t")
+                .muted(
+                    each < 0 ? "Added to the plan's power use."
+                        : "To size it, wire its EU output to a drawer and set a rate, or set a machine count.");
+            case MACHINES -> countTip(m);
+            case RULE -> ruleTip();
+            case FOOT -> footTip();
+            default -> null;
+        };
+    }
+
+    /** The gear key's tooltip: what it opens, and what stops the recipe. */
+    private Tip settingsTip() {
+        final Tip tip = Tip.of("Machine settings")
+            .muted("Pin a setting there to show it on the card.");
+        if (coilTooCold()) tip.note("The coil is too cold for this recipe: it cannot run.", Hyb.RED_INK);
+        return tip.action(Tip.Input.LEFT, "Open");
+    }
+
+    /** A pinned setting's chip: what it is set to, why it is moot, how to change it. */
+    private Tip chipTip() {
+        final int i = layout.chipAt(localX(), localY());
+        if (i < 0) return null;
+        final SettingControls.Control c = layout.chips.get(i);
+        final Tip tip = Tip.of(c.label())
+            .row(c.type() == SettingControls.Type.READING ? "Reads" : "Set to", c.value());
+        if (c.type() == SettingControls.Type.COIL && model.recipeHeat > 0)
+            tip.row("Recipe needs", model.recipeHeat + " K");
+        if (c.warn()) tip.note("Too cold for this recipe: it cannot run.", Hyb.RED_INK);
+        if (!c.enabled()) {
+            final com.gtnhplanner.power.PowerSource source = model.power == null ? null : model.power.source();
+            final com.gtnhplanner.power.PowerSetting s = source == null ? null
+                : source.setting(
+                    c.key()
+                        .substring(6));
+            if (s != null && s.enabledWhen() != null) {
+                final com.gtnhplanner.power.PowerSetting.Condition when = s.enabledWhen();
+                final com.gtnhplanner.power.PowerSetting other = source.setting(when.settingId());
+                tip.muted(
+                    "Only used when " + (other == null ? when.settingId() : other.label())
+                        + " is "
+                        + optionLabel(other, when.equals())
+                        + ".");
+            }
+        } else if (c.type() != SettingControls.Type.READING) {
+            tip.action(Tip.Input.LEFT, switch (c.type()) {
+                case TOGGLE -> "Switch";
+                case NUMBER -> "Type a value";
+                default -> "Choose";
+            })
+                .action(Tip.Input.RIGHT, c.type() == SettingControls.Type.TOGGLE ? "Switch" : "Step back")
+                .action(Tip.Input.WHEEL, "Step");
+        }
+        return tip.muted("Pinned to the card: unpin it in the settings.");
+    }
+
+    /** An option's label for a setting's stored key (the key itself for anything but a select). */
+    private static String optionLabel(final com.gtnhplanner.power.PowerSetting setting, final String key) {
+        if (setting instanceof final com.gtnhplanner.power.PowerSetting.Select select) {
+            final com.gtnhplanner.power.PowerSetting.Option option = select.option(key);
+            if (option != null) return option.label();
+        }
+        if (setting instanceof com.gtnhplanner.power.PowerSetting.Toggle) return "1".equals(key) ? "on" : "off";
+        return key;
+    }
+
+    // endregion
+
+    // region Controls
+
+    /**
+     * The part a left press went down on, and where (card-local): let go without moving, it is a click on that part;
+     * moved, it carries the card, whatever part it was on.
+     */
+    private Part pressed;
+    private float pressedX, pressedY;
+
+    /** Whether the left button is held down on a part and has not carried the card off: it draws pressed. */
+    private boolean pressedOn(final Part part) {
+        if (pressed != part || com.gtnhplanner.ui.canvas.PlanPicture.drawing()) return false;
+        final BoardCanvas c = canvas();
+        return c == null || !c.isCarried(nodeId);
+    }
+
+    /**
+     * Whether the tier chip cannot change anything: a single block that comes in no other tier that runs the recipe.
+     * Such a chip never presses.
+     */
+    private boolean tierFixed() {
+        if (model == null || !isSingle(model.machineStack)) return false;
+        final int now = GtMachines.of(model.machineStack)
+            .tier();
+        for (final ItemStack m : machineChoices()) if (isSingle(m) && GtMachines.of(m)
+            .tier() != now) return false;
+        return true;
+    }
+
+    /** The key of the amps chip's box on the board's one inline editor. */
+    private String ampsEditKey() {
+        return "amps:" + nodeId;
+    }
+
+    /** The key of the count's box on the board's one inline editor. */
+    private String countEditKey() {
+        return "count:" + nodeId;
+    }
+
+    @Override
+    public Result onMousePressed(final int mouseButton) {
+        if (model == null) return Result.IGNORE;
+        if (com.gtnhplanner.ui.world.LinkTarget.active()) {
+            if (mouseButton == 0) chooseForLink();
+            return Result.ACCEPT;
+        }
+        if (mouseButton == 0) {
+            pressed = partAt(localX(), localY());
+            pressedX = localX();
+            pressedY = localY();
+            return Result.ACCEPT;
+        }
+        return act(partAt(localX(), localY()), mouseButton, localX(), localY());
+    }
+
+    /**
+     * What a click on a part does: a left one when it is let go without moving, the others when they go down. At
+     * {@code x, y} on the card.
+     */
+    private Result act(final Part part, final int mouseButton, final float x, final float y) {
+        final Node node = model.node;
+        switch (part) {
+            case ACTIONS -> {
+                if (mouseButton == 0) openActions();
+            }
+            case PLACE -> {
+                if (mouseButton == 0) openPlaceMenu(screenX(PLACE_X), screenY(CHIP_Y + CHIP_H + 2));
+                else if (mouseButton == 1) clearPins();
+            }
+            case SECTION -> {
+                final int[] key = sectionKeyAt(x, y);
+                if (mouseButton == 0 && key != null) {
+                    final UUID section = sectionId(key[0]);
+                    if (key[1] == 2) session.removeSection(section);
+                    else session.moveSection(section, key[1] == 0 ? -1 : 1);
+                }
+            }
+            case MACHINE -> {
+                if (emptyCropFarm()) {
+                    if (mouseButton == 0) openCrops();
+                    else return act(Part.BODY, mouseButton, x, y);
+                    Hyb.click();
+                    return Result.SUCCESS;
+                }
+                if (model.isPower()) return act(Part.BODY, mouseButton, x, y);
+                if (mouseButton == 0 && eec()) openMobs();
+                else if (mouseButton == 0) openMachines();
+            }
+            case TIER -> {
+                if (model.isPower()) stepPowerTier(mouseButton == 1 ? -1 : 1);
+                else stepTier(mouseButton == 1 ? -1 : 1);
+            }
+            case CHIP -> {
+                final int i = layout.chipAt(x, y);
+                if (i < 0 || mouseButton > 1) return act(Part.BODY, mouseButton, x, y);
+                final int[] r = layout.chipRect(i);
+                pressSetting(layout.chips.get(i), mouseButton, screenX(r[0]), screenY(r[1] + CardLayout.CHIP + 2));
+            }
+            case SETTINGS -> {
+                if (mouseButton == 0) openSheet();
+            }
+            case PICK -> {
+                if (mouseButton == 0) openCrops();
+                else return act(Part.BODY, mouseButton, x, y);
+            }
+            case AMPS -> {
+                if (mouseButton == 1) session.setSetting(node, "amp", Math.max(1, model.amps - 1));
+                else openAmps();
+            }
+            case MACHINES -> {
+                if (mouseButton == 0) openPin();
+                // The middle button goes back to Any: the plan decides the count again.
+                else if (mouseButton == 2 && pinned()) session.pin(model.node, 0);
+            }
+            case RULE -> {
+                if (mouseButton == 0) openRule();
+                else if (mouseButton == 2 && pinned()) session.pin(model.node, 0);
+            }
+            case FOOT -> {
+                return act(Part.BODY, mouseButton, x, y);
+            }
+            default -> {
+                // The body: a click selects it (Shift adds); the right button opens its actions, as the key does
+                // (docs/design/groups.md, Menus).
+                if (mouseButton == 1) {
+                    openActionsAt(getContext().getAbsMouseX(), getContext().getAbsMouseY());
+                    return Result.SUCCESS;
+                }
+                if (mouseButton != 0) return Result.IGNORE;
+                if (canvas() != null) canvas().clickSelect(nodeId);
+                return Result.SUCCESS;
+            }
+        }
+        Hyb.click();
+        return Result.SUCCESS;
+    }
+
+    /**
+     * A count or amps being wheeled: shown on the card at once and solved at once, notch by notch; the spin becomes one
+     * undo step once the wheel has been still for {@value #WHEEL_COMMIT_MS} ms ({@link BoardSession#live}). 0 for none.
+     */
+    private long pendingCount;
+    /** The wheel took a pinned count below one: it unpins when the wheel goes still. */
+    private boolean pendingUnpin;
+    private int pendingAmps;
+    private long wheelAt;
+    private static final long WHEEL_COMMIT_MS = 500;
+
+    /**
+     * The model the card showed when a wheeled value was committed, or null while none is. The value stays on the card
+     * until a newer answer has come back from the solver, so it never flicks back to the old one in between.
+     */
+    private CardModel committedOver;
+
+    /** Lets go of a wheeled count or amps once the wheel has gone still and the solve has caught up with it. */
+    private void commitWheel() {
+        if (committedOver != null) {
+            if (model != committedOver && !session.solving()) {
+                committedOver = null;
+                pendingCount = 0;
+                pendingUnpin = false;
+                pendingAmps = 0;
+            }
+            return;
+        }
+        if (pendingCount <= 0 && pendingAmps <= 0 && !pendingUnpin
+            || System.currentTimeMillis() - wheelAt < WHEEL_COMMIT_MS) return;
+        committedOver = model;
+    }
+
+    @Override
+    public boolean onMouseScroll(final UpOrDown direction, final int amount) {
+        if (model == null) return false;
+        // While a leftover is carried the wheel is the board's: how much is in hand.
+        if (canvas() != null && canvas().carryingSpare()) return false;
+        // With "Scroll changes values" off nothing here takes it: the board zooms.
+        if (!PlannerSettings.scrollChangesValues()) return false;
+        final int step = direction == UpOrDown.UP ? 1 : -1;
+        final Node node = model.node;
+        switch (partAt(localX(), localY())) {
+            case TIER -> {
+                if (model.isPower()) stepPowerTier(step);
+                else stepTier(step);
+            }
+            case CHIP -> {
+                final int i = layout.chipAt(localX(), localY());
+                if (i < 0) return false;
+                stepSetting(layout.chips.get(i), step);
+            }
+            case AMPS -> {
+                com.gtnhplanner.ui.sound.Sfx.TICK.play(step > 0 ? 1.12f : 0.9f);
+                pendingAmps = stepAmps(pendingAmps > 0 ? pendingAmps : model.amps, step);
+                wheelAt = System.currentTimeMillis();
+                committedOver = null;
+                session.wheelSetting(node, "amp", pendingAmps);
+            }
+            case MACHINE -> stepMachine(step);
+            case MACHINES, RULE -> wheelCount(step);
+            default -> {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * The wheel on the machine count (the card's, or its line in the overview), as on the website: from Any, Up to at
+     * what runs rounded up; else a machine more or fewer than is set, the rule kept; below one, back to Any. Set once
+     * the wheel goes still, as a drawer's rate wheeled to nothing clears it.
+     */
+    public void wheelCount(final int step) {
+        if (model == null || countless()) return;
+        // Each notch ticks for itself, a note up or down the scale (never a random take that lands the other way);
+        // the set count's own pin sound comes once the wheel is still (BoardSession.live).
+        com.gtnhplanner.ui.sound.Sfx.TICK.playDegree(1f, step > 0 ? 1 : -1);
+        final CardFace.Count c = face();
+        final Long next = CardFace.wheel(c.rule(), c.set(), c.value(), step);
+        if (next == null) {
+            pendingUnpin = pinned() || pendingCount > 0;
+            pendingCount = 0;
+        } else {
+            pendingUnpin = false;
+            pendingCount = next;
+        }
+        wheelAt = System.currentTimeMillis();
+        committedOver = null;
+        session.wheelPin(model.node, pendingUnpin ? 0 : pendingCount);
+    }
+
+    /** A count being wheeled and not set yet, to show at once: the count, 0 when it will unpin; -1 for none. */
+    public long wheeledCount() {
+        return pendingUnpin ? 0 : pendingCount > 0 ? pendingCount : -1;
+    }
+
+    // region The overview's machine line wears this card's tier and amps chips (the website's TierChip and AmpsChip)
+
+    /** The tier the head's chip reads (a recipe's voltage, a generator's tier, a crop's harvester's); null for none. */
+    @Nullable
+    public Hyb.Tier headTier() {
+        if (model == null || !hasTier()) return null;
+        if (model.gregtech && !model.steam()) return Hyb.tier(model.tier);
+        if (powerTier() != null) return Hyb.tier(powerTier().value(model.node.powerSettings.get("tier")));
+        return Hyb.tier(com.gtnhplanner.machines.game.CropCards.tierName(model.node));
+    }
+
+    /** The amps the head's chip reads, a wheeled value first; 0 when it has none (only a GregTech multiblock does). */
+    public int headAmps() {
+        if (model == null || !model.gregtech || model.steam() || !model.multiblock) return 0;
+        return pendingAmps > 0 ? pendingAmps : model.amps;
+    }
+
+    /** A press on the line's tier or amps chip, as on the card's: the tier up or down (right), the amps one fewer. */
+    public void pressChip(final Part part, final int mouseButton) {
+        if (model == null) return;
+        if (part == Part.TIER) {
+            if (model.isPower()) stepPowerTier(mouseButton == 1 ? -1 : 1);
+            else stepTier(mouseButton == 1 ? -1 : 1);
+        } else if (part == Part.AMPS && mouseButton == 1)
+            session.setSetting(model.node, "amp", Math.max(1, model.amps - 1));
+    }
+
+    /** The wheel on the line's tier or amps chip, as on the card's. */
+    public void wheelChip(final Part part, final int step) {
+        if (model == null) return;
+        if (part == Part.TIER) {
+            if (model.isPower()) stepPowerTier(step);
+            else stepTier(step);
+        } else if (part == Part.AMPS && headAmps() > 0) {
+            com.gtnhplanner.ui.sound.Sfx.TICK.play(step > 0 ? 1.12f : 0.9f);
+            pendingAmps = stepAmps(pendingAmps > 0 ? pendingAmps : model.amps, step);
+            wheelAt = System.currentTimeMillis();
+            committedOver = null;
+            session.wheelSetting(model.node, "amp", pendingAmps);
+        }
+    }
+
+    /** Amps typed for the card: 1 to the most a hatch takes, as the amps box sets them. */
+    public void setAmps(final double amps) {
+        if (model != null)
+            session.setSetting(model.node, "amp", (int) Math.max(1, Math.min(PowerPanel.MAX_AMPS, Math.round(amps))));
+    }
+
+    /** The head's chip as the card draws it, for the line's: flat in the tier's colours, its label on whole pixels. */
+    public static void drawChip(final int x, final int y, final int w, final int h, final Hyb.Tier tier,
+        final String label, final boolean underline, final boolean hover) {
+        chip(x, y, w, h, tier, label, underline, hover, true);
+    }
+
+    // endregion
+
+    /**
+     * The wheel on the amps chip, as on the website: one at a time, ten with Ctrl, a thousand with Ctrl and Shift, and
+     * Shift alone walks the powers of four (a hatch tier's worth at a time).
+     */
+    private static int stepAmps(final int amps, final int step) {
+        final boolean ctrl = org.lwjgl.input.Keyboard.isKeyDown(org.lwjgl.input.Keyboard.KEY_LCONTROL)
+            || org.lwjgl.input.Keyboard.isKeyDown(org.lwjgl.input.Keyboard.KEY_RCONTROL);
+        final boolean shift = org.lwjgl.input.Keyboard.isKeyDown(org.lwjgl.input.Keyboard.KEY_LSHIFT)
+            || org.lwjgl.input.Keyboard.isKeyDown(org.lwjgl.input.Keyboard.KEY_RSHIFT);
+        final long next;
+        if (shift && !ctrl) next = step > 0 ? amps * 4L : amps / 4;
+        else next = amps + (long) step * (ctrl ? shift ? 1000 : 10 : 1);
+        return (int) Math.max(1, Math.min(PowerPanel.MAX_AMPS, next));
+    }
+
+    private void stepTier(final int step) {
+        if (crop()) {
+            // The Crop Manager's tier (each its own machine), or the Industrial Farm's seed bed.
+            final java.util.Map.Entry<String, String> next = com.gtnhplanner.machines.game.CropCards
+                .stepTier(model.node, step);
+            if (next == null) return;
+            com.gtnhplanner.ui.sound.Sfx.tier(Integer.parseInt(next.getValue()));
+            changeMachine(next.getKey(), next.getValue());
+            return;
+        }
+        if (!model.gregtech || model.steam()) return;
+        if (isSingle(model.machineStack)) {
+            // Each tier of a single block is its own machine: step to the next one there is, and it brings its tier.
+            final int now = GtMachines.of(model.machineStack)
+                .tier();
+            ItemStack next = null;
+            int nextTier = step > 0 ? Integer.MAX_VALUE : -1;
+            for (final ItemStack m : machineChoices()) {
+                if (!isSingle(m)) continue;
+                final int t = GtMachines.of(m)
+                    .tier();
+                if (step > 0 ? t > now && t < nextTier : t < now && t > nextTier) {
+                    next = m;
+                    nextTier = t;
+                }
+            }
+            if (next != null) {
+                com.gtnhplanner.ui.sound.Sfx.tier(nextTier);
+                session.chooseMachine(model.node, next, true);
+            }
+            return;
+        }
+        int i = CardDefaults.tierIndex(model.tier);
+        if (i < 0) i = CardDefaults.recipeTier(model.euPerTick);
+        else i = Math.max(0, Math.min(CardDefaults.TIERS.length - 1, i + step));
+        if (i != CardDefaults.tierIndex(model.tier)) com.gtnhplanner.ui.sound.Sfx.tier(i);
+        session.setVoltage(model.node, CardDefaults.TIERS[i]);
+    }
+
+    private void stepCoil(final int step) {
+        final List<GtCoils.Coil> coils = GtCoils.all();
+        if (coils.isEmpty()) return;
+        final GtCoils.Coil now = GtCoils.forHeat(model.coilHeat);
+        int i = now == null ? -1 : coils.indexOf(now);
+        i = Math.max(0, Math.min(coils.size() - 1, i + step));
+        setCoil(coils.get(i));
+    }
+
+    private void setCoil(final GtCoils.Coil coil) {
+        com.gtnhplanner.ui.sound.Sfx.ADJUST.playStep(
+            Math.max(
+                0,
+                GtCoils.all()
+                    .indexOf(coil)),
+            0.8f,
+            1.05f);
+        session.editMachine(model.node, () -> {
+            final MachineConfig cfg = model.node.machineConfig;
+            cfg.setBoolean("gt_multiblock", true);
+            cfg.setInt("machine_heat", coil.heat());
+        });
+        SettingMemory.remember(model.node, "machine_heat", coil.heat());
+    }
+
+    /**
+     * The machines the card's menu offers: GregTech's single blocks as one (each tier is its own machine, and the tier
+     * chip moves between them), the card's own when it is one, else the lowest tier that runs the recipe; then the
+     * rest.
+     */
+    private List<ItemStack> machineMenu() {
+        final List<ItemStack> all = machineChoices(), out = new ArrayList<>();
+        ItemStack single = isSingle(model.machineStack) ? model.machineStack : null;
+        if (single == null) {
+            final Object eut = model.node.properties.get(GTKeys.EU_PER_TICK);
+            final int recipe = CardDefaults.recipeTier(eut instanceof final Number n ? n.longValue() : 0);
+            int best = -1;
+            for (final ItemStack m : all) {
+                if (!isSingle(m)) continue;
+                final int t = GtMachines.of(m)
+                    .tier();
+                if (single == null || (t >= recipe != best >= recipe ? t >= recipe : t >= recipe ? t < best : t > best)) {
+                    single = m;
+                    best = t;
+                }
+            }
+        }
+        boolean added = false;
+        for (final ItemStack m : all) {
+            if (!isSingle(m)) out.add(m);
+            else if (!added && single != null) {
+                out.add(single);
+                added = true;
+            }
+        }
+        return out;
+    }
+
+    /** Whether a machine is one of GregTech's electric single blocks: one tier of a machine that comes in many. */
+    private boolean isSingle(final ItemStack machine) {
+        if (machine == null || model == null) return false;
+        // The Auto Workbench on a crafting card is one too, on the crafting table as on itself.
+        if (!model.gregtech && !com.gtnhplanner.machines.game.AutoWorkbench.is(machine)) return false;
+        final GtMachines.Kind kind = GtMachines.of(machine);
+        return kind != null && !kind.multiblock() && !kind.steam() && kind.tier() >= 0;
+    }
+
+    /** The machines the card can run on: its recipe's, or on a shared machine those that run every recipe on it. */
+    private List<ItemStack> machineChoices() {
+        return shared() ? session.commonMachines(sections) : model.catalysts;
+    }
+
+    private void stepMachine(final int step) {
+        final List<ItemStack> machines = machineMenu();
+        if (machines.size() < 2) return;
+        int i = 0;
+        for (int k = 0; k < machines.size(); k++) if (ItemStack.areItemStacksEqual(machines.get(k), model.machineStack)
+            || isSingle(machines.get(k)) && isSingle(model.machineStack)) i = k;
+        i = (i + step + machines.size()) % machines.size();
+        com.gtnhplanner.ui.sound.Sfx.ADJUST.play();
+        chooseMachine(machines.get(i));
+    }
+
+    /** Runs the recipe on a machine; a crop's harvester and a bee's housing are settings of the card. */
+    private void chooseMachine(final ItemStack machine) {
+        if (crop()) changeMachine(
+            com.gtnhplanner.machines.CropsNh.HARVESTER,
+            com.gtnhplanner.machines.game.CropCards.isFarm(machine) ? com.gtnhplanner.machines.CropsNh.FARM
+                : com.gtnhplanner.machines.CropsNh.MANAGER);
+        else if (bee()) {
+            final com.gtnhplanner.machines.Bees.Housing h = com.gtnhplanner.machines.game.BeeCards.housingOf(machine);
+            if (h != null) changeMachine(com.gtnhplanner.machines.Bees.HOUSING, h.key());
+        } else session.chooseMachine(model.node, machine, model.gregtech);
+    }
+
+    /**
+     * The pin key's menu, here and on the overview's machine lines: place the card on a block in the world, put it on
+     * the pin list shown on screen while playing (or take it off), or add it to a task.
+     */
+    public void openPlaceMenu(final int screenX, final int screenY) {
+        if (model == null) return;
+        final Node node = model.node;
+        final boolean listed = session.graph().pinList.contains(nodeId);
+        final List<PickList.Entry> rows = new ArrayList<>();
+        rows.add(
+            new PickList.Entry(
+                null,
+                placed() ? "Place again in the world" : "Place in the world",
+                "",
+                Hyb.INK,
+                false,
+                this::placeInWorld));
+        if (placed()) rows.add(
+            PickList.Entry
+                .of("Remove from the world", () -> com.gtnhplanner.ui.world.WorldLinks.clear(session.graph(), node)));
+        rows.add(
+            new PickList.Entry(
+                null,
+                listed ? "Unpin from the screen" : "Pin to the screen",
+                "",
+                Hyb.INK,
+                false,
+                () -> session.togglePinList(nodeId)));
+        rows.add(
+            PickList.Entry.of(
+                "Add to a task",
+                () -> com.gtnhplanner.ui.task.TaskActions
+                    .addMenu(session, session.panel(), List.of(nodeId), screenX, screenY)));
+        Popup.open(session.panel(), PickList.popup("gtnhplanner_place", null, rows, false, 150), screenX, screenY);
+    }
+
+    /**
+     * Starts placing the card in the world, one click a machine: the planner closes and its ghost follows the
+     * crosshair.
+     */
+    public void placeInWorld() {
+        if (model == null) return;
+        com.gtnhplanner.ui.world.LinkPicker.start(
+            session.graph(),
+            model.node.id,
+            placeName(),
+            model.machineStack,
+            CardModel.structureNeeds(models),
+            // A spot for each machine it builds: a crop card's harvesters, never one per crop.
+            (int) Math.min(64, Math.ceil(buildsTotal() - 1e-9)));
+    }
+
+    /** The pin key's right-click: off the block in the world and off the pin list, as one undo step. */
+    public void clearPins() {
+        if (!pinnedAnywhere()) return;
+        com.gtnhplanner.ui.sound.Sfx.TOGGLE_OFF.play();
+        session.editLayout(() -> {
+            model.node.worldLinks.clear();
+            session.graph().pinList.remove(nodeId);
+        });
+    }
+
+    /** Whether the card is placed in the world or on the pin list: its pin key is gold. */
+    public boolean pinnedAnywhere() {
+        return placed() || listed();
+    }
+
+    /** Whether the card is on the pin list shown while playing. */
+    private boolean listed() {
+        return model != null && session.graph().pinList.contains(nodeId);
+    }
+
+    /** Whether the card is placed on a block in the world. */
+    private boolean placed() {
+        return model != null && !model.node.worldLinks.isEmpty();
+    }
+
+    private String placeName() {
+        return model.machineName;
+    }
+
+    /** A crop's harvester: the crops planted (the card's count), the machines they fill, the harvest and the draw. */
+    private Tip cropTip(final CardModel m) {
+        final double crops = machinesTotal();
+        final boolean farm = com.gtnhplanner.machines.game.CropCards.isFarm(m.machineStack);
+        final CardFace.Count c = face();
+        final Tip tip = Tip.of(m.machineName)
+            .sub(farm ? "Multiblock" : "Machine")
+            .row("Crops planted", Fmt.machines(c.value()));
+        if (c.pinned()) tip.row(c.rule().label, c.setText());
+        tip.row(
+            "Crops per machine",
+            Integer.toString(com.gtnhplanner.machines.game.CropCards.cropsPerHarvester(m.node)))
+            .row(
+                farm ? "Industrial Farms" : "Crop Managers",
+                "×" + com.gtnhplanner.machines.game.CropCards.harvesters(m.node, crops))
+            .row("Harvest every", Fmt.compact(m.durationTicks / 20.0) + " s")
+            .row("Draw", Fmt.power(com.gtnhplanner.machines.game.CropCards.drawEut(m.node, crops)) + " EU/t");
+        if (machineChoices().size() > 1) tip.action(Tip.Input.LEFT, "Machines that harvest it")
+            .action(Tip.Input.WHEEL, "Next machine");
+        return tip;
+    }
+
+    /** A crusher card's name: the mob in its spawner, the kill's figures, and what a click does. */
+    private Tip mobTip(final CardModel m) {
+        final Tip tip = Tip.of(headName(m))
+            .sub("In the " + m.machineName + "'s spawner");
+        countRows(tip);
+        if (m.gregtech) tip.row("Configured tier", m.tier);
+        tip.row("Time per kill", Fmt.compact(m.durationTicks / 20.0) + " s")
+            .row("Draw per machine", Fmt.power(m.euPerTick) + " EU/t");
+        final String gated = com.gtnhplanner.machines.game.EecCards.gated(m.node);
+        if (!gated.isEmpty()) tip.muted("Never drops here: " + gated + ".");
+        return tip.action(Tip.Input.LEFT, "Put in another mob");
+    }
+
+    private Tip placeTip() {
+        Tip tip = Tip.of(placed() ? "Placed in the world" : listed() ? "Pinned to the screen" : "Pin");
+        if (placed()) {
+            final int[] at = model.node.worldLinks.get(0);
+            tip = tip.sub("On the block at " + at[1] + ", " + at[2] + ", " + at[3]);
+        }
+        if (placed() && listed()) tip = tip.sub("On your pin list while playing");
+        if (!pinnedAnywhere()) return tip.sub("Place it in the world, or list it on screen while playing")
+            .action(Tip.Input.LEFT, "Choose");
+        return tip.action(Tip.Input.LEFT, "Choose")
+            .action(Tip.Input.RIGHT, "Unpin it everywhere");
+    }
+
+    private void openActions() {
+        openActionsAt(screenX(KEY_X), screenY(CHIP_Y + CHIP_H + 2));
+    }
+
+    /** The card's actions (its key's menu, and a right click on it) at a screen point. */
+    private void openActionsAt(final int sx, final int sy) {
+        final Node node = model.node;
+        final List<PickList.Entry> rows = new ArrayList<>();
+        rows.add(PickList.Entry.of("Clone node", () -> session.cloneNode(node)));
+        // What it runs on: a crusher's mob, a crop card's crop.
+        if (eec()) rows.add(PickList.Entry.of("Put in another mob", () -> RecipePicks.mobs(session, node, sx, sy)));
+        if (crop()) rows.add(PickList.Entry.of("Pick another crop", () -> RecipePicks.crops(session, node, sx, sy)));
+        // Into a task, with every card selected with it: a machine thing each.
+        final List<UUID> taskCards = session.isSelected(nodeId) ? session.cardsIn(session.selection())
+            : List.of(nodeId);
+        rows.add(
+            PickList.Entry.of(
+                "Add to a task",
+                () -> com.gtnhplanner.ui.task.TaskActions.addMenu(session, session.panel(), taskCards, sx, sy)));
+        // Its place in the world, once it has one.
+        if (placed()) {
+            rows.add(
+                PickList.Entry
+                    .of("Show in the world", () -> com.gtnhplanner.ui.world.WorldView.show(session.graph(), node.id)));
+            rows.add(
+                PickList.Entry.of(
+                    "Remove from the world",
+                    () -> com.gtnhplanner.ui.world.WorldLinks.clear(session.graph(), node)));
+        }
+        rows.add(PickList.Entry.rule());
+        rows.add(new PickList.Entry(null, "Delete node", "", Hyb.RED_INK, false, () -> session.delete(node)));
+        Popup.open(session.panel(), PickList.popup("gtnhplanner_actions", null, rows, false, 150), sx, sy);
+    }
+
+    private void openMachines() {
+        final List<PickList.Entry> rows = new ArrayList<>();
+        for (final ItemStack machine : machineMenu()) {
+            String detail = "";
+            if (model.gregtech || com.gtnhplanner.machines.game.AutoWorkbench.is(machine)) {
+                final GtMachines.Kind kind = GtMachines.of(machine);
+                if (kind != null) detail = kind.multiblock() ? "Multiblock"
+                    : kind.steam() ? "Steam" : isSingle(machine) ? "Single block, tier by the chip" : "";
+            }
+            final boolean farm = com.gtnhplanner.machines.game.CropCards.isFarm(machine);
+            if (crop()) detail = farm ? "Multiblock, seed bed by the chip" : "Single block, tier by the chip";
+            final boolean current = crop() ? farm == com.gtnhplanner.machines.game.CropCards.isFarm(model.machineStack)
+                : bee()
+                    ? com.gtnhplanner.machines.game.BeeCards.housingOf(machine)
+                        == com.gtnhplanner.machines.game.BeeCards.housingOf(model.machineStack)
+                    : ItemStack.areItemStacksEqual(machine, model.machineStack)
+                        || isSingle(machine) && isSingle(model.machineStack);
+            final String name = crop() && !farm ? "Crop Manager" : machine.getDisplayName();
+            rows.add(new PickList.Entry(machine, name, detail, Hyb.INK, current, () -> {
+                if (!current) {
+                    com.gtnhplanner.ui.sound.Sfx.ADJUST.play();
+                    chooseMachine(machine);
+                }
+            }));
+        }
+        Popup.open(
+            session.panel(),
+            PickList.popup(
+                "gtnhplanner_machines",
+                crop() ? "MACHINES THAT HARVEST THIS CROP"
+                    : bee() ? "MACHINES THAT KEEP THIS BEE"
+                        : shared() ? "MACHINES THAT RUN EVERY RECIPE ON THIS CARD" : "MACHINES THAT RUN THIS RECIPE",
+                rows,
+                rows.size() > 8,
+                240),
+            screenX(BAR_X),
+            screenY(CHIP_Y + CHIP_H + 2));
+    }
+
+    private void openCoils(final int sx, final int sy) {
+        final List<PickList.Entry> rows = new ArrayList<>();
+        final GtCoils.Coil now = GtCoils.forHeat(model.coilHeat);
+        for (final GtCoils.Coil coil : GtCoils.all()) {
+            if (coil.heat() < model.recipeHeat) continue;
+            rows.add(
+                new PickList.Entry(
+                    coil.stack(),
+                    coil.name(),
+                    coil.heat() + " K",
+                    Hyb.INK,
+                    coil == now,
+                    () -> setCoil(coil)));
+        }
+        if (rows.isEmpty()) return;
+        Popup.open(session.panel(), PickList.popup("gtnhplanner_coils", null, rows, true, 200), sx, sy);
+    }
+
+    /**
+     * Types the amps straight into their chip, as the website's: the chip keeps its width and sinks while the box is
+     * open; Enter or a click elsewhere sets it (1 or more), Escape leaves it. Off the board, a number box.
+     */
+    private void openAmps() {
+        final BoardCanvas c = canvas();
+        if (c != null) {
+            final Node node = model.node;
+            c.edit()
+                .start(
+                    ampsEditKey(),
+                    model.amps,
+                    v -> {
+                        if (v >= 1) session
+                            .setSetting(node, "amp", (int) Math.max(1, Math.min(PowerPanel.MAX_AMPS, Math.round(v))));
+                    });
+            getContext().focus(c);
+            return;
+        }
+        Popup.open(
+            session.panel(),
+            NumberPopup.create(
+                "Energy hatch amps",
+                "amps, 1 or more",
+                model.amps,
+                1,
+                PowerPanel.MAX_AMPS,
+                v -> session
+                    .setSetting(model.node, "amp", (int) Math.max(1, Math.min(PowerPanel.MAX_AMPS, Math.round(v))))),
+            screenX(AMPS_X),
+            screenY(CHIP_Y + CHIP_H + 2));
+    }
+
+    /**
+     * Types the count straight into its line, as the website's: a box where the set number is (under what runs with
+     * nothing set), about as wide as the number; Enter or a click elsewhere sets it, empty goes back to Any, Escape
+     * leaves it. The rule is kept, Any becomes Up to. Off the board, a number box.
+     */
+    private void openPin() {
+        final BoardCanvas board = canvas();
+        if (board != null && model != null && !countless()) {
+            final CardFace.Count c = face();
+            final Node node = model.node;
+            board.edit()
+                .start(countEditKey(), c.pinned() ? c.set() : 0, v -> session.pin(node, v));
+            if (!c.pinned()) board.edit()
+                .setText("");
+            getContext().focus(board);
+            return;
+        }
+        openPin(
+            screenX(partRect(Part.MACHINES)[0]),
+            screenY(partRect(Part.MACHINES)[1] + partRect(Part.MACHINES)[3] + 2));
+    }
+
+    /**
+     * The box to type a count in, at a screen point (the overview's count line opens it too): the rule is kept, Any
+     * becomes Up to; empty goes back to Any.
+     */
+    public void openPin(final int screenX, final int screenY) {
+        if (model == null || countless()) return;
+        final CardFace.Count c = face();
+        final com.gtnhplanner.data.flowchart.PinRule rule = CardFace.ruleForCount(c.rule(), c.ruleFixed());
+        Popup.open(
+            session.panel(),
+            NumberPopup.create(
+                (rule == com.gtnhplanner.data.flowchart.PinRule.EXACT ? "Exactly" : "Up to") + " how many "
+                    + (crop() ? "crops" : "machines"),
+                crop() ? "crops" : "machines",
+                "Empty lets the plan decide",
+                c.pinned() ? c.set() : 0,
+                0,
+                100_000,
+                v -> session.pin(model.node, v)),
+            screenX,
+            screenY);
+    }
+
+    /** Every setting the machine's profile offers, as rows: toggles flip, lists step, numbers ask. */
+    /** The card's settings, under its gear key. */
+    private void openSheet() {
+        SettingsSheet.open(this, canvas(), screenX(GEAR_X), screenY(CHIP_Y + CHIP_H + 2));
+    }
+
+    // endregion
+
+    // region Moving the card
+
+    @Override
+    public boolean onDragStart(final int button) {
+        if (button != 0 || model == null || canvas() == null) return false;
+        // Pressed anywhere, it may be moved: the board moves it once the mouse goes, with the rest of the selection
+        // when it is selected. Let go first, it is a click on what was pressed.
+        canvas().beginMove(nodeId);
+        return true;
+    }
+
+    @Override
+    public void onDrag(final int mouseButton, final long timeSinceLastClick) {
+        if (canvas() != null) canvas().dragMove();
+    }
+
+    @Override
+    public void onDragEnd(final boolean successful) {
+        final Part part = pressed;
+        pressed = null;
+        if (canvas() == null || !canvas().endMove(successful) || part == null || model == null) return;
+        act(part, 0, pressedX, pressedY);
+    }
+
+    @Override
+    public void drawMovingState(final ModularGuiContext context, final float partialTicks) {}
+
+    @Override
+    public @Nullable Area getMovingArea() {
+        return null;
+    }
+
+    @Override
+    public boolean isMoving() {
+        return moving;
+    }
+
+    @Override
+    public void setMoving(final boolean moving) {
+        this.moving = moving;
+    }
+
+    // endregion
+}

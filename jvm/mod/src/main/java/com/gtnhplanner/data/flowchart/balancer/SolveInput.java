@@ -1,0 +1,391 @@
+package com.gtnhplanner.data.flowchart.balancer;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.annotation.Nullable;
+
+import net.minecraft.item.ItemStack;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.oredict.OreDictionary;
+
+import com.gtnhplanner.Config;
+import com.gtnhplanner.data.MachineConfig;
+import com.gtnhplanner.data.effect.EffectResult;
+import com.gtnhplanner.data.flowchart.Drawer;
+import com.gtnhplanner.data.flowchart.Edge;
+import com.gtnhplanner.data.flowchart.Graph;
+import com.gtnhplanner.data.flowchart.Group;
+import com.gtnhplanner.data.flowchart.MachineGroup;
+import com.gtnhplanner.data.flowchart.Node;
+import com.gtnhplanner.data.flowchart.PinRule;
+import com.gtnhplanner.data.flowchart.Port;
+import com.gtnhplanner.data.properties.RecipeProperty;
+
+/**
+ * Everything one solve reads, copied out of a {@link Graph} so the solve can run on another thread.
+ *
+ * <p>
+ * Built on the client thread by {@link #of(Graph)}: that is where the machine effects are computed
+ * (the GregTech overclock calculator keeps shared mutable state and writes into the node, so it
+ * must never run anywhere else), where ingredient names are resolved, and where ports are grouped
+ * into ingredients with {@link com.gtnhplanner.data.flowchart.Port#canConnect}. What comes out
+ * is plain data - numbers, strings, UUIDs and enums in unmodifiable collections - so
+ * {@link Balancer#solve(SolveInput)} touches no Minecraft, NEI, localization or {@code Plan} code
+ * and a snapshot can be handed to any thread. Notes still carry keys and arguments; rendering
+ * them ({@link Note#render()}) stays on the client.
+ *
+ * <p>
+ * A snapshot never changes, and editing the graph afterwards does not reach it: submit a new one.
+ *
+ * @param mode       the balance mode to solve in.
+ * @param choice     a stored excess choice to honour, or null for the solver's own answer.
+ * @param machines   one per node, in the graph's (id) order.
+ * @param edges      every drawn edge, in the graph's (id) order.
+ * @param pools      the capped machine groups.
+ * @param drawers    every drawer, in the graph's (id) order.
+ * @param extentPins per-node extent pins in crafts per second, beyond what the nodes carry.
+ * @param spares     the plan's stored spare splits: per leftover, each bearer's share ({@link Spares}).
+ */
+public record SolveInput(BalanceMode mode, @Nullable ChoiceKey choice, List<Machine> machines, List<EdgeIn> edges,
+    List<PoolIn> pools, List<DrawerIn> drawers, Map<UUID, Double> extentPins, Map<String, Map<String, Double>> spares) {
+
+    public SolveInput {
+        machines = List.copyOf(machines);
+        edges = List.copyOf(edges);
+        pools = List.copyOf(pools);
+        drawers = List.copyOf(drawers);
+        extentPins = Collections.unmodifiableMap(new LinkedHashMap<>(extentPins));
+        final Map<String, Map<String, Double>> copy = new LinkedHashMap<>();
+        for (final Map.Entry<String, Map<String, Double>> e : spares.entrySet())
+            copy.put(e.getKey(), Collections.unmodifiableMap(new LinkedHashMap<>(e.getValue())));
+        spares = Collections.unmodifiableMap(copy);
+    }
+
+    /** A snapshot with no stored spare splits. */
+    public SolveInput(final BalanceMode mode, @Nullable final ChoiceKey choice, final List<Machine> machines,
+        final List<EdgeIn> edges, final List<PoolIn> pools, final List<DrawerIn> drawers,
+        final Map<UUID, Double> extentPins) {
+        this(mode, choice, machines, edges, pools, drawers, extentPins, Map.of());
+    }
+
+    /**
+     * One port of a machine.
+     *
+     * @param amount     units per craft, before chance (fractional for a generator's exact flows).
+     * @param chance     the chance the units appear (1 for a plain port).
+     * @param multiplier the node's own consumption / productivity multiplier on this port.
+     * @param resource   the ingredient, as a number shared by every port of the same snapshot that
+     *                   {@code canConnect}s to it; equal numbers mean the same ingredient.
+     * @param name       the ingredient's display name, resolved when the snapshot was taken.
+     * @param free       whether the pack gives this ingredient away ({@link Config#isFreeIngredient}).
+     */
+    public record PortIn(double amount, float chance, double multiplier, int resource, String name, boolean free) {}
+
+    /**
+     * One machine (node) with its effect already computed.
+     *
+     * @param durationTicks     ticks per craft after overclocking and tick modifiers, exactly.
+     * @param energyPerTick     energy per tick of one craft, exactly.
+     * @param throughputFactor  how many crafts one machine runs at once (parallels).
+     * @param countFixed        whether the machine count is pinned.
+     * @param machineCount      the configured machine count (the pin when {@code countFixed}).
+     * @param targetOutputRates the node's target output rates, units/s by output index.
+     * @param properties        the node's numeric recipe properties, for the per-run totals.
+     * @param targetInputRates  the node's target input rates, units/s by input index.
+     */
+    public record Machine(UUID id, String name, double durationTicks, double energyPerTick, int throughputFactor,
+        List<PortIn> inputs, List<PortIn> outputs, boolean countFixed, int machineCount,
+        Map<Integer, Double> targetOutputRates, Map<RecipeProperty<?>, Number> properties,
+        Map<Integer, Double> targetInputRates) {
+
+        public Machine {
+            inputs = List.copyOf(inputs);
+            outputs = List.copyOf(outputs);
+            targetOutputRates = Collections.unmodifiableMap(new LinkedHashMap<>(targetOutputRates));
+            properties = Collections.unmodifiableMap(new LinkedHashMap<>(properties));
+            targetInputRates = Collections.unmodifiableMap(new LinkedHashMap<>(targetInputRates));
+        }
+
+        /** A machine with no input targets. */
+        public Machine(final UUID id, final String name, final double durationTicks, final double energyPerTick,
+            final int throughputFactor, final List<PortIn> inputs, final List<PortIn> outputs, final boolean countFixed,
+            final int machineCount, final Map<Integer, Double> targetOutputRates,
+            final Map<RecipeProperty<?>, Number> properties) {
+            this(
+                id,
+                name,
+                durationTicks,
+                energyPerTick,
+                throughputFactor,
+                inputs,
+                outputs,
+                countFixed,
+                machineCount,
+                targetOutputRates,
+                properties,
+                Map.of());
+        }
+
+        public List<PortIn> ports(final boolean input) {
+            return input ? inputs : outputs;
+        }
+    }
+
+    /** One drawn edge, by node id and port index. */
+    public record EdgeIn(UUID id, UUID source, int sourceOutput, UUID target, int targetInput) {}
+
+    /**
+     * A machine group: its member node ids and how many machines it is. A cap by default (the recipes fit in that many
+     * machines); {@code exact}, the count is pinned and the recipes' machine time adds up to exactly that many, as a
+     * pinned shared machine on Factory Flow's board.
+     *
+     * @param capacity how many machines: a whole number from the board, fractional only in a plan a test or the
+     *                 website wrote ({@code SolveInputJson} reads both).
+     * @param upTo     the Up to rule (docs/design/up-to.md), read only when {@code exact} is false: the machines run
+     *                 as hard as the plan lets them, never above {@code capacity}, and no forced flow makes up what
+     *                 they cannot do. Anchors its part of the plan. A one-card pool is how a single card's Up to count
+     *                 reaches the solver. False: a plain cap.
+     */
+    public record PoolIn(List<UUID> machines, double capacity, boolean exact, boolean upTo) {
+
+        public PoolIn {
+            machines = List.copyOf(machines);
+        }
+
+        public PoolIn(final List<UUID> machines, final double capacity, final boolean exact) {
+            this(machines, capacity, exact, false);
+        }
+
+        public PoolIn(final List<UUID> machines, final double capacity) {
+            this(machines, capacity, false);
+        }
+    }
+
+    /**
+     * One drawer. {@code rule} is what the solver applies ({@link Drawer#effectiveRule()}), and
+     * {@code label} the name its notes use: the drawer's label, else its resource key. A buffer's {@code links} are the
+     * output ports feeding it and its {@code takers} the input ports it feeds; {@code takers} is empty for every other
+     * kind.
+     */
+    public record DrawerIn(UUID id, String label, Drawer.Kind kind, Drawer.Rule rule, double rate,
+        List<Drawer.Link> links, List<Drawer.Link> takers) {
+
+        public DrawerIn {
+            links = List.copyOf(links);
+            takers = List.copyOf(takers);
+        }
+
+        /** A drawer with no takers: every kind but a buffer. */
+        public DrawerIn(final UUID id, final String label, final Drawer.Kind kind, final Drawer.Rule rule,
+            final double rate, final List<Drawer.Link> links) {
+            this(id, label, kind, rule, rate, links, List.of());
+        }
+
+        /** Every port the drawer is linked to, makers' and users' alike (for joining islands). */
+        public List<Drawer.Link> allLinks() {
+            if (takers.isEmpty()) return links;
+            final List<Drawer.Link> all = new ArrayList<>(links);
+            all.addAll(takers);
+            return all;
+        }
+    }
+
+    /** The graph in its own balance mode, honouring the stored excess choice. Client thread only. */
+    public static SolveInput of(final Graph graph) {
+        return of(graph, graph.getBalanceMode(), graph.getExcessChoice(), Map.of());
+    }
+
+    /** The graph in the given mode. Client thread only. */
+    public static SolveInput of(final Graph graph, final BalanceMode mode, @Nullable final ChoiceKey choice) {
+        return of(graph, mode, choice, Map.of());
+    }
+
+    /**
+     * The graph in the given mode with extra per-node extent pins (crafts/s). Client thread only:
+     * this computes every node's effect and resolves every ingredient's name.
+     */
+    public static SolveInput of(final Graph graph, final BalanceMode mode, @Nullable final ChoiceKey choice,
+        final Map<UUID, Double> extentPins) {
+        final Ingredients ingredients = new Ingredients();
+        final List<Machine> machines = new ArrayList<>(graph.nodes.size());
+        final List<PoolIn> pools = new ArrayList<>();
+        // The count rules are AUTO's; the older modes read every set count as a pin, as they always did.
+        final boolean auto = mode == BalanceMode.AUTO;
+        for (final Node node : graph.getNodes()) {
+            if (!auto) {
+                machines.add(machineOf(node, ingredients, node.isMachineCountFixed()));
+                continue;
+            }
+            final PinRule rule = PinRule.of(node);
+            final int count = node.machineConfig.getMachineCount();
+            // An Up to count is a one-machine pool: the solver finds how many run, never above it (docs/design/up-to.md).
+            // Exactly is the fixed count it always was.
+            if (rule == PinRule.UP_TO && count > 0) pools.add(new PoolIn(List.of(node.id), count, false, true));
+            machines.add(machineOf(node, ingredients, rule == PinRule.EXACT));
+        }
+        final List<EdgeIn> edges = new ArrayList<>(graph.edges.size());
+        for (final Edge edge : graph.getEdges()) {
+            edges.add(
+                new EdgeIn(
+                    edge.id,
+                    edge.sourceNodeId,
+                    edge.sourceOutputIndex,
+                    edge.targetNodeId,
+                    edge.targetInputIndex));
+        }
+        for (final Group group : graph.getGroups()) {
+            if (group instanceof final MachineGroup machineGroup && machineGroup.getMachineCapacity() > 0
+                && !group.getNodeIds()
+                    .isEmpty()) {
+                // Sorted: the group's id set is a HashSet, and the pool's member order should be the chart's.
+                final List<UUID> members = new ArrayList<>(group.getNodeIds());
+                members.sort(UUID::compareTo);
+                // A set count is Up to or Exactly; a capacity nobody set stays the plain cap.
+                final PinRule rule = PinRule.of(machineGroup);
+                final boolean exact = auto ? rule == PinRule.EXACT : machineGroup.isPinned();
+                pools.add(new PoolIn(members, machineGroup.getMachineCapacity(), exact, auto && rule == PinRule.UP_TO));
+            }
+        }
+        // By first machine, as the website orders them: the same plan is the same input on both sides.
+        pools.sort(
+            (a, b) -> a.machines()
+                .get(0)
+                .compareTo(
+                    b.machines()
+                        .get(0)));
+        final List<DrawerIn> drawers = new ArrayList<>(graph.drawers.size());
+        for (final Drawer drawer : graph.getDrawers()) {
+            drawers.add(
+                new DrawerIn(
+                    drawer.getId(),
+                    drawer.getLabel()
+                        .isEmpty() ? drawer.getResourceKey() : drawer.getLabel(),
+                    drawer.getKind(),
+                    drawer.effectiveRule(),
+                    drawer.getRate(),
+                    drawer.getLinks(),
+                    drawer.getTakers()));
+        }
+        return new SolveInput(mode, choice, machines, edges, pools, drawers, extentPins, graph.spareShares);
+    }
+
+    private static Machine machineOf(final Node node, final Ingredients ingredients, final boolean exact) {
+        final MachineConfig cfg = node.machineConfig;
+        final EffectResult effect = node.isPower() ? null : cfg.computeEffect(node.properties);
+        final List<PortIn> inputs = new ArrayList<>(node.inputs.size());
+        for (int i = 0; i < node.inputs.size(); i++) {
+            inputs.add(
+                ingredients.portOf(
+                    node.inputs.get(i),
+                    cfg.inputMultiplier(i) * (effect == null ? 1 : effect.inputMultiplier(i))));
+        }
+        final List<PortIn> outputs = new ArrayList<>(node.outputs.size());
+        for (int i = 0; i < node.outputs.size(); i++) {
+            outputs.add(
+                ingredients.portOf(
+                    node.outputs.get(i),
+                    cfg.outputMultiplier(i) * (effect == null ? 1 : effect.outputMultiplier(i))));
+        }
+        final Map<RecipeProperty<?>, Number> properties = new LinkedHashMap<>();
+        for (final Map.Entry<RecipeProperty<?>, Object> e : node.properties.entrySet()) {
+            if (e.getValue() instanceof final Number n) properties.put(e.getKey(), n);
+        }
+        final Map<Integer, Double> targets = new LinkedHashMap<>(), inputTargets = new LinkedHashMap<>();
+        for (final Map.Entry<Integer, Double> t : node.targetOutputRates.entrySet()) {
+            if (t.getKey() != null && t.getValue() != null) targets.put(t.getKey(), t.getValue());
+        }
+        for (final Map.Entry<Integer, Double> t : node.targetInputRates.entrySet()) {
+            if (t.getKey() != null && t.getValue() != null) inputTargets.put(t.getKey(), t.getValue());
+        }
+        // A non-recipe machine (a generator) runs one craft a second at its exact rates, draws through no overclock,
+        // and its EU is an output port: nothing here for the effect to compute.
+        final boolean power = node.isPower();
+        return new Machine(
+            node.id,
+            node.machineName == null ? "" : node.machineName,
+            power ? 20 : effect.duration(),
+            power ? 0 : effect.energy(),
+            power ? 1 : effect.throughputFactor(),
+            inputs,
+            outputs,
+            exact,
+            cfg.getMachineCount(),
+            targets,
+            properties,
+            inputTargets);
+    }
+
+    /**
+     * Numbers the ingredients of one snapshot: a port takes the number of the first ingredient it connects to, else a
+     * new one. Each ingredient is filed under every key a port connecting to it must share (an item's id and damage
+     * and each of its ore dictionary ids; a fluid; any other kind as a whole), so a port is only tested against the
+     * ingredients filed under its own keys, in order: the same numbers as testing every ingredient, without the plan
+     * squared.
+     */
+    private static final class Ingredients {
+
+        private final List<Port<?>> representatives = new ArrayList<>();
+        private final Map<Object, List<Integer>> filed = new HashMap<>();
+
+        PortIn portOf(final Port<?> port, final double multiplier) {
+            final String name = port.getDisplayName();
+            return new PortIn(
+                port.amount(),
+                port.getChance(),
+                multiplier,
+                resourceOf(port),
+                name == null ? "" : name,
+                name != null && Config.isFreeIngredient(name));
+        }
+
+        private int resourceOf(final Port<?> port) {
+            final List<Object> keys = keysOf(port);
+            int found = Integer.MAX_VALUE;
+            for (final Object key : keys) {
+                final List<Integer> candidates = filed.get(key);
+                if (candidates == null) continue;
+                for (final int i : candidates) {
+                    if (i >= found) break;
+                    if (representatives.get(i)
+                        .canConnect(port)) {
+                        found = i;
+                        break;
+                    }
+                }
+            }
+            if (found != Integer.MAX_VALUE) return found;
+            final int index = representatives.size();
+            representatives.add(port);
+            for (final Object key : keys) filed.computeIfAbsent(key, k -> new ArrayList<>())
+                .add(index);
+            return index;
+        }
+
+        /**
+         * Every key a port that connects to this one shares with it: {@code RecipePropertyAPI}'s item rule (same item and
+         * damage, or a shared ore dictionary id) and fluid rule (same fluid), recognised by their keys so that nothing
+         * here loads the fluid registry; any other kind is filed whole.
+         */
+        private static List<Object> keysOf(final Port<?> port) {
+            final String kind = port.getType()
+                .getKey();
+            if ("item".equals(kind) && port.getValue() instanceof final ItemStack stack) {
+                if (stack.getItem() == null) return List.of(); // connects to nothing
+                final List<Object> keys = new ArrayList<>();
+                keys.add(List.of(stack.getItem(), stack.getItemDamage()));
+                for (final int ore : OreDictionary.getOreIDs(stack)) keys.add(ore);
+                return keys;
+            }
+            if ("fluid".equals(kind) && port.getValue() instanceof final FluidStack fluid) {
+                return Collections.singletonList(fluid.getFluid());
+            }
+            return List.of(port.getType());
+        }
+    }
+}

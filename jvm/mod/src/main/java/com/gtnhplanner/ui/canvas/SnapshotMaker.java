@@ -1,0 +1,165 @@
+package com.gtnhplanner.ui.canvas;
+
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import com.gtnhplanner.data.flowchart.Drawer;
+import com.gtnhplanner.data.flowchart.Edge;
+import com.gtnhplanner.data.flowchart.Graph;
+import com.gtnhplanner.data.flowchart.Node;
+import com.gtnhplanner.ui.BoardSession;
+import com.gtnhplanner.ui.card.CardModel;
+import com.gtnhplanner.ui.card.RecipeCard;
+import com.gtnhplanner.ui.card.StructureArt;
+import com.gtnhplanner.ui.drawer.DrawerCard;
+import com.gtnhplanner.ui.drawer.DrawerModel;
+import com.gtnhplanner.ui.world.PlanSnapshot;
+
+/** Takes the board as drawn into a {@link PlanSnapshot} for the minimap and the world views. */
+final class SnapshotMaker {
+
+    private SnapshotMaker() {}
+
+    static PlanSnapshot make(final BoardSession session, final Map<UUID, RecipeCard> cards,
+        final Map<UUID, DrawerCard> drawers, final List<WireLayer.Wire> wires, final float viewX, final float viewY,
+        final List<PlanSnapshot.GroupBox> groups) {
+        final Graph graph = session.graph();
+        final List<PlanSnapshot.Card> outCards = new ArrayList<>();
+        for (final RecipeCard card : new LinkedHashSet<>(cards.values())) {
+            final CardModel m = card.model();
+            if (m == null || card.layout() == null) continue;
+            final List<UUID> ids = session.sectionsOf(card.nodeId);
+            final List<PlanSnapshot.Flow> ins = new ArrayList<>(), outs = new ArrayList<>();
+            double machines = 0, builds = 0, eu = 0, made = 0;
+            final List<CardModel> models = new ArrayList<>();
+            for (final UUID id : ids) {
+                final CardModel s = session.model(id);
+                if (s == null) continue;
+                models.add(s);
+                machines += s.machines;
+                builds += com.gtnhplanner.machines.game.CropCards.builds(s.node, s.machines);
+                eu += session.power(s);
+                made += s.madeEuPerTick();
+                for (final CardModel.PortView p : s.inputs) ins.add(flow(p, card.why(id, false, p.index())));
+                for (final CardModel.PortView p : s.outputs) outs.add(flow(p, card.why(id, true, p.index())));
+            }
+            final Node n = m.node;
+            final StructureArt.Art art = StructureArt.forMachine(m.isPower() ? n.powerSource : m.machineName);
+            final int tint = art != null ? art.tint()
+                : m.machineStack != null ? com.gtnhplanner.client.IngredientColors.itemColor(m.machineStack) : -1;
+            // What runs and what is set, as the board's card says them (an Up to card builds what runs).
+            final com.gtnhplanner.ui.card.CardFace.Count count = com.gtnhplanner.power.FluidTank.is(n) ? null
+                : card.face();
+            final boolean upTo = count != null && count.rule() == com.gtnhplanner.data.flowchart.PinRule.UP_TO
+                && session.upTo(card.nodeId) != null;
+            if (upTo) {
+                machines = count.value();
+                builds = card.builds();
+            }
+            outCards.add(
+                new PlanSnapshot.Card(
+                    card.nodeId,
+                    List.copyOf(ids),
+                    n.x,
+                    n.y,
+                    com.gtnhplanner.ui.card.CardLayout.W,
+                    card.layout().height,
+                    m.machineName,
+                    m.machineStack,
+                    art,
+                    tint,
+                    machines,
+                    session.rule(n) != com.gtnhplanner.data.flowchart.PinRule.ANY,
+                    ins,
+                    outs,
+                    eu,
+                    made,
+                    copyLinks(n.worldLinks),
+                    m.gregtech && m.tier != null ? m.tier : "",
+                    m.multiblock ? m.amps : 0,
+                    m.isPower() ? null : m.circuit,
+                    settings(session, m),
+                    CardModel.structureNeeds(models),
+                    builds,
+                    com.gtnhplanner.machines.game.CropCards.isCrop(n),
+                    com.gtnhplanner.power.FluidTank.is(n),
+                    count,
+                    card.foot()));
+        }
+        final List<PlanSnapshot.Box> boxes = new ArrayList<>();
+        for (final Drawer d : graph.getDrawers()) {
+            final DrawerModel m = session.drawerModel(d.getId());
+            if (m == null) continue;
+            boxes.add(
+                new PlanSnapshot.Box(
+                    d.getId(),
+                    d.getX(),
+                    d.getY(),
+                    DrawerCard.W,
+                    DrawerCard.H,
+                    m.label,
+                    m.item,
+                    m.fluid,
+                    m.isPower(),
+                    m.kind,
+                    m.rate));
+        }
+        final List<PlanSnapshot.Line> lines = new ArrayList<>(wires.size());
+        for (final WireLayer.Wire w : wires) {
+            if (w.path() == null || w.path()
+                .size() < 2) continue;
+            final Edge e = w.edge();
+            lines.add(
+                new PlanSnapshot.Line(
+                    w.path(),
+                    w.color(),
+                    w.width(),
+                    w.perSecond() > 0,
+                    w.resource(),
+                    e == null ? null : e.sourceNodeId,
+                    e == null ? null : e.targetNodeId));
+        }
+        return new PlanSnapshot(
+            graph,
+            graph.getName(),
+            graph.version(),
+            outCards,
+            boxes,
+            lines,
+            viewX,
+            viewY,
+            session.rateUnit(),
+            List.copyOf(graph.pinList),
+            groups);
+    }
+
+    private static PlanSnapshot.Flow flow(final CardModel.PortView p,
+        @javax.annotation.Nullable final com.gtnhplanner.ui.card.CardFace.Tone why) {
+        return new PlanSnapshot.Flow(p.name(), p.item(), p.fluid(), p.isPower(), p.perSecond(), p.key(), why);
+    }
+
+    private static List<int[]> copyLinks(final List<int[]> links) {
+        final List<int[]> out = new ArrayList<>(links.size());
+        for (final int[] l : links) out.add(l.clone());
+        return out;
+    }
+
+    /** The settings pinned to the card, as the board's card shows them. */
+    private static List<PlanSnapshot.Setting> settings(final BoardSession session,
+        final com.gtnhplanner.ui.card.CardModel m) {
+        final List<PlanSnapshot.Setting> out = new ArrayList<>();
+        for (final com.gtnhplanner.ui.card.SettingControls.Control c : com.gtnhplanner.ui.card.SettingControls
+            .pinned(session.graph(), m))
+            out.add(
+                new PlanSnapshot.Setting(
+                    c.label(),
+                    c.value(),
+                    c.icon(),
+                    c.warn(),
+                    c.type() == com.gtnhplanner.ui.card.SettingControls.Type.READING));
+        return out;
+    }
+}

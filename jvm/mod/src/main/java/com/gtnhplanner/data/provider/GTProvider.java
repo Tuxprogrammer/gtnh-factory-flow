@@ -1,0 +1,305 @@
+package com.gtnhplanner.data.provider;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import net.minecraft.item.ItemStack;
+import net.minecraftforge.fluids.FluidStack;
+
+import com.gtnhplanner.Compat;
+import com.gtnhplanner.api.RecipePropertyAPI;
+import com.gtnhplanner.data.MachineProfile;
+import com.gtnhplanner.data.MachineProfileRegistry;
+import com.gtnhplanner.data.RecipeHandlerAccess;
+import com.gtnhplanner.data.SettingDef;
+import com.gtnhplanner.data.Settings;
+import com.gtnhplanner.data.effect.Effects;
+import com.gtnhplanner.data.effect.steps.GTOverclockStep;
+import com.gtnhplanner.data.flowchart.Node;
+import com.gtnhplanner.data.flowchart.Port;
+import com.gtnhplanner.data.properties.PropertyProvider;
+import com.gtnhplanner.data.properties.RecipeProperty;
+
+import codechicken.nei.PositionedStack;
+import codechicken.nei.recipe.FurnaceRecipeHandler;
+import codechicken.nei.recipe.IRecipeHandler;
+import codechicken.nei.recipe.TemplateRecipeHandler;
+import gregtech.api.recipe.RecipeMap;
+import gregtech.api.recipe.RecipeMaps;
+import gregtech.api.recipe.RecipeMetadataKey;
+import gregtech.api.recipe.maps.FuelBackend;
+import gregtech.api.recipe.maps.LargeBoilerFuelBackend;
+import gregtech.api.util.GTRecipe;
+import gregtech.api.util.GTRecipeConstants;
+import gregtech.api.util.recipe.Sievert;
+import gregtech.common.items.ItemFluidDisplay;
+import gregtech.nei.GTNEIDefaultHandler;
+import gregtech.nei.GTNEIDefaultHandler.CachedDefaultRecipe;
+import gregtech.nei.formatter.HeatingCoilSpecialValueFormatter;
+
+public class GTProvider implements PropertyProvider {
+
+    // Vanilla furnace: base cook time of 200 ticks (10 seconds)
+    private static final int FURNACE_COOK_TICKS = 200;
+
+    /** GT5u stores a chance as 1..10000, where 10000 is 100%. */
+    private static final float GT_CHANCE_SCALE = 10_000f;
+
+    public static final RecipeProperty<Integer> SPECIAL_VALUE = RecipeProperty.<Integer>builder("gt.special_value", 0)
+        .build();
+    public static final RecipeProperty<Integer> GLASS_TIER = RecipeProperty
+        .<Integer>builder("gt.bartworks.glass_tier", 3)
+        .build();
+    public static final RecipeProperty<Integer> SIEVERT = RecipeProperty.<Integer>builder("gt.bartworks.sievert", 0)
+        .build();
+    public static final RecipeProperty<Boolean> SIEVERT_EXACT = RecipeProperty
+        .<Boolean>builder("gt.bartworks.sievert_exact", false)
+        .build();
+    public static final RecipeProperty<Integer> MASS = RecipeProperty.<Integer>builder("gt.bartworks.mass", 0)
+        .build();
+
+    public static final RecipeProperty<Long> TOTAL_EU = GTKeys.TOTAL_EU;
+    public static final RecipeProperty<Long> EU_PER_TICK = GTKeys.EU_PER_TICK;
+
+    public static final RecipeProperty<Integer> COIL_HEAT = GTKeys.COIL_HEAT;
+    public static final RecipeProperty<Long> FUSION_THRESHOLD = RecipeProperty.<Long>builder("gt.fusion_threshold", 0L)
+        .build();
+
+    public static final RecipeProperty<RecipeMap<?>> RECIPE_MAP = RecipeProperty
+        .<RecipeMap<?>>builder("gt.recipe_map", null)
+        .build();
+
+    @Override
+    public void register() {
+        RecipePropertyAPI.registerExtractor(FurnaceRecipeHandler.class, this);
+        if (Compat.EFR.isLoaded) {
+            EFRProvider.registerHandlers(this);
+        }
+
+        RecipePropertyAPI.registerExtractor(GTNEIDefaultHandler.class, this);
+
+        MachineProfileRegistry.register(PROFILE);
+        new GTSteamProvider().register();
+        // The modelled machines (machines/): their multipliers and the radio hatch's burn, after every refresh.
+        Node.afterRefresh = node -> {
+            com.gtnhplanner.machines.game.WebEffect.forget(node);
+            com.gtnhplanner.machines.game.MachineModels.afterRefresh(node);
+        };
+        // Every other GregTech card runs on the website's machine maths (machines/web).
+        com.gtnhplanner.data.MachineConfig.nodeEffect = com.gtnhplanner.machines.game.WebEffect::effect;
+    }
+
+    /**
+     * Every GregTech recipe: the tier and amps (the card's own chips), the machine count, whether the chosen machine is
+     * a multiblock, the website's coil and energy hatch type (machines/game/WebCards; each machine's own settings are
+     * kept as {@code machine:<id>}, which the serializer keeps too), and the modelled machines' settings. The numbers
+     * come from the website's machine maths (WebEffect, through MachineConfig.nodeEffect); this effect only runs for
+     * the recipes those do not cover: GT's plain overclocks, then the Tree Growth Simulator's and Bacterial Vat's
+     * models.
+     */
+    private static final MachineProfile PROFILE = withModelledMachines(
+        MachineProfile.builder("gregtech:unified", "GT Unified")).setting(Settings.VOLTAGE.def())
+            .setting(Settings.AMP.def())
+            .setting(Settings.MACHINES.def())
+            .setting(Settings.GT_MULTIBLOCK.def())
+            .setting(SettingDef.enumDef(com.gtnhplanner.machines.game.WebCards.COIL, "", List.of(), (v, c) -> null))
+            .setting(
+                SettingDef.enumDef(com.gtnhplanner.machines.game.WebCards.HATCH_TYPE, "", List.of(), (v, c) -> null))
+            .effect(
+                Effects.durationFromHandler()
+                    .andThen(GTOverclockStep.create())
+                    .andThen(new com.gtnhplanner.machines.game.MachineModelStep()))
+            .build();
+
+    /** The modelled machines' settings, kept under the website's keys (MachineModels). */
+    private static MachineProfile.Builder withModelledMachines(final MachineProfile.Builder builder) {
+        for (final SettingDef<String> def : com.gtnhplanner.machines.game.MachineModels.SETTINGS) builder.setting(def);
+        return builder;
+    }
+
+    @Override
+    public boolean canCraft(final IRecipeHandler handler, final int recipeIndex) {
+        if (handler instanceof FurnaceRecipeHandler) return true;
+        return handler instanceof GTNEIDefaultHandler;
+    }
+
+    @Override
+    @Nullable
+    public String getProfileId(final IRecipeHandler handler, final int recipeIndex) {
+        if (handler instanceof FurnaceRecipeHandler) return PROFILE.id();
+        if (handler instanceof GTNEIDefaultHandler) return PROFILE.id();
+        return null;
+    }
+
+    private static <T> void extractMD(final Map<RecipeProperty<?>, Object> props, final GTRecipe r,
+        final RecipeProperty<T> prop, final RecipeMetadataKey<T> key, final T defaultVal) {
+        final T val = r.getMetadataOrDefault(key, defaultVal);
+        if (!Objects.equals(val, defaultVal)) {
+            props.put(prop, val);
+        }
+    }
+
+    @Override
+    @Nonnull
+    public Map<RecipeProperty<?>, Object> extract(final Node node, final IRecipeHandler handler,
+        final int recipeIndex) {
+        return extractGTRecipe(node, handler, recipeIndex);
+    }
+
+    public static Map<RecipeProperty<?>, Object> extractGTRecipe(final Node node, final IRecipeHandler handler,
+        final int recipeIndex) {
+        final Map<RecipeProperty<?>, Object> props = new HashMap<>();
+        GTRecipe r;
+        RecipeMap<?> gthMap = null;
+
+        if (handler instanceof final FurnaceRecipeHandler fh) {
+            final List<TemplateRecipeHandler.CachedRecipe> fRecipes = RecipeHandlerAccess.getArecipes(fh);
+            props.put(RecipePropertyAPI.DURATION_TICKS, FURNACE_COOK_TICKS);
+
+            if (recipeIndex < 0 || recipeIndex >= fRecipes.size()) {
+                return props;
+            }
+            final TemplateRecipeHandler.CachedRecipe cr = fRecipes.get(recipeIndex);
+            if (cr == null) {
+                return props;
+            }
+            final List<PositionedStack> ingredients = cr.getIngredients();
+            if (ingredients == null || ingredients.isEmpty() || ingredients.getFirst().item == null) {
+                return props;
+            }
+
+            final String overlay = fh.getOverlayIdentifier();
+            final RecipeMap<?> recipeMap;
+            if (EFRProvider.SMOKER_OVERLAY.equals(overlay)) {
+                recipeMap = RecipeMaps.efrSmokingRecipes;
+            } else if (EFRProvider.BLAST_FURNACE_OVERLAY.equals(overlay)) {
+                recipeMap = RecipeMaps.efrBlastingRecipes;
+            } else {
+                recipeMap = RecipeMaps.furnaceRecipes;
+            }
+
+            r = recipeMap.findRecipeQuery()
+                .items(ingredients.getFirst().item)
+                .find();
+            if (r == null) {
+                return props;
+            }
+
+        } else if (handler instanceof final GTNEIDefaultHandler gth) {
+            final List<TemplateRecipeHandler.CachedRecipe> recipes = RecipeHandlerAccess.getArecipes(gth);
+            if (recipeIndex < 0 || recipeIndex >= recipes.size()) return props;
+
+            final CachedDefaultRecipe cached = (CachedDefaultRecipe) recipes.get(recipeIndex);
+            r = cached.mRecipe;
+            if (r == null) return props;
+
+            gthMap = gth.getRecipeMap();
+
+        } else {
+            return props;
+        }
+
+        props.put(RecipePropertyAPI.DURATION_TICKS, r.mDuration);
+        props.put(EU_PER_TICK, (long) r.mEUt);
+        props.put(TOTAL_EU, (long) r.mEUt * r.mDuration);
+
+        if (gthMap != null && (gthMap.getBackend() instanceof FuelBackend
+            || gthMap.getBackend() instanceof LargeBoilerFuelBackend)) {
+            props.put(EU_PER_TICK, 0L);
+            props.put(TOTAL_EU, 0L);
+        }
+
+        extractMD(props, r, GLASS_TIER, GTRecipeConstants.GLASS, 3);
+        extractMD(props, r, COIL_HEAT, GTRecipeConstants.COIL_HEAT, 0);
+
+        if (gthMap != null && !props.containsKey(COIL_HEAT)
+            && gthMap.getFrontend().getNEIProperties().neiSpecialInfoFormatter instanceof HeatingCoilSpecialValueFormatter
+            && r.mSpecialValue > 0) {
+            props.put(COIL_HEAT, r.mSpecialValue);
+        }
+
+        if (gthMap != null) {
+            props.put(RECIPE_MAP, gthMap);
+        }
+
+        extractMD(props, r, FUSION_THRESHOLD, GTRecipeConstants.FUSION_THRESHOLD, 0L);
+
+        final Sievert sievert = r.getMetadataOrDefault(GTRecipeConstants.SIEVERT, new Sievert(0, false));
+        if (sievert.sievert > 0 || sievert.isExact) {
+            props.put(SIEVERT, sievert.sievert);
+            if (sievert.isExact) props.put(SIEVERT_EXACT, true);
+        }
+
+        extractMD(props, r, MASS, GTRecipeConstants.MASS, 0);
+
+        if (r.mSpecialValue != 0) {
+            props.put(SPECIAL_VALUE, r.mSpecialValue);
+        }
+
+        // Reset everything to not ignore burnables
+        node.inputs.clear();
+        node.outputs.clear();
+
+        // Copies, never GT's own stacks: Node.deduplicate merges ports by writing the summed amount
+        // into the first one, which on an aliased stack rewrites the recipe itself (and grows it
+        // again on every refresh).
+        for (int i = 0; i < r.mInputs.length; i++) {
+            if (r.mInputs[i].stackSize <= 0) continue;
+            final ItemStack in = copyOf(r.mInputs[i]);
+            // The Rock Breaker's lava placeholder (FreeInputs): kept on the card, an amount of 0 so nothing asks for it.
+            if (FreeInputs.isFree(in)) in.stackSize = 0;
+            node.inputs.add(
+                new Port<>(
+                    RecipePropertyAPI.ITEM,
+                    in,
+                    r.mInputChances != null ? r.mInputChances[i] / GT_CHANCE_SCALE : 1.f));
+        }
+        for (int i = 0; i < r.mOutputs.length; i++) {
+            node.outputs.add(
+                new Port<>(
+                    RecipePropertyAPI.ITEM,
+                    copyOf(r.mOutputs[i]),
+                    r.mOutputChances != null ? r.mOutputChances[i] / GT_CHANCE_SCALE : 1.f));
+        }
+        for (int i = 0; i < r.mFluidInputs.length; i++) {
+            if (r.mFluidInputs[i].amount <= 0) continue;
+            node.inputs.add(
+                new Port<>(
+                    RecipePropertyAPI.FLUID,
+                    copyOf(r.mFluidInputs[i]),
+                    r.mFluidInputChances != null ? r.mFluidInputChances[i] / GT_CHANCE_SCALE : 1.f));
+        }
+        for (int i = 0; i < r.mFluidOutputs.length; i++) {
+            node.outputs.add(
+                new Port<>(
+                    RecipePropertyAPI.FLUID,
+                    copyOf(r.mFluidOutputs[i]),
+                    r.mFluidOutputChances != null ? r.mFluidOutputChances[i] / GT_CHANCE_SCALE : 1.f));
+        }
+
+        node.inputs.removeIf(p -> p.getValue() instanceof ItemStack stack && stack.getItem() instanceof ItemFluidDisplay);
+        node.outputs.removeIf(p -> p.getValue() instanceof ItemStack stack && stack.getItem() instanceof ItemFluidDisplay);
+
+        // The Tree Growth Simulator: NEI's outputs by mode (a mode the tree lacks is null) and the sapling's genes.
+        if (com.gtnhplanner.machines.game.MachineModels.isTgs(props))
+            com.gtnhplanner.machines.game.MachineModels.readTgs(node, r, props);
+
+        return props;
+    }
+
+    @Nullable
+    private static ItemStack copyOf(@Nullable final ItemStack stack) {
+        return stack == null ? null : stack.copy();
+    }
+
+    @Nullable
+    private static FluidStack copyOf(@Nullable final FluidStack stack) {
+        return stack == null ? null : stack.copy();
+    }
+
+}

@@ -1,0 +1,162 @@
+package com.gtnhplanner.ui.theme;
+
+/**
+ * The planner's small pictures, 9 by 9 in GUI pixels and one colour each (strokes two pixels thick, as the game's
+ * own icons are, so they hold up beside its font). Drawn from rows of text: '#' in the colour, '.' left clear. On a
+ * key, {@link #centred} puts them in its middle on whole pixels, level with a label's letters.
+ */
+public final class Icons {
+
+    public static final int SIZE = 9;
+
+    private Icons() {}
+
+    /** A hooked arrow, its head pointing left and its tail curling under. */
+    public static void undo(final int x, final int y, final int c) {
+        draw(UNDO, x, y, c, false);
+    }
+
+    /** The undo arrow turned the other way. */
+    public static void redo(final int x, final int y, final int c) {
+        draw(UNDO, x, y, c, true);
+    }
+
+    /** A beetle: antennae, a head, a back split down the middle, three legs a side. */
+    public static void bug(final int x, final int y, final int c) {
+        draw(BUG, x, y, c, false);
+    }
+
+    /** A cog of eight teeth round a hub. */
+    public static void gear(final int x, final int y, final int c) {
+        draw(GEAR, x, y, c, false);
+    }
+
+    /** A question mark. */
+    public static void help(final int x, final int y, final int c) {
+        draw(HELP, x, y, c, false);
+    }
+
+    /** A light bulb on its screw. */
+    public static void bulb(final int x, final int y, final int c) {
+        draw(BULB, x, y, c, false);
+    }
+
+    /** A tick, for a checklist. */
+    public static void check(final int x, final int y, final int c) {
+        draw(CHECK, x, y, c, false);
+    }
+
+    /** A speech bubble, for comments. */
+    public static void comment(final int x, final int y, final int c) {
+        draw(COMMENT, x, y, c, false);
+    }
+
+    /** A card with its header, for the cards a task is about. */
+    public static void card(final int x, final int y, final int c) {
+        draw(CARD, x, y, c, false);
+    }
+
+    /** A map pin, for a spot in a world. */
+    public static void pin(final int x, final int y, final int c) {
+        draw(PIN, x, y, c, false);
+    }
+
+    /** A camera, for a screenshot. */
+    public static void camera(final int x, final int y, final int c) {
+        draw(CAMERA, x, y, c, false);
+    }
+
+    /** An open book, for a quest. */
+    public static void book(final int x, final int y, final int c) {
+        draw(BOOK, x, y, c, false);
+    }
+
+    /** A plus, for adding. */
+    public static void plus(final int x, final int y, final int c) {
+        draw(PLUS, x, y, c, false);
+    }
+
+    /** A pencil, its point at the bottom left: the board's annotations (sticky notes, boxes, arrows). */
+    public static void pencil(final int x, final int y, final int c) {
+        draw(PENCIL, x, y, c, false);
+    }
+
+    /** Four squares: every plan (the top bar's Plans, short of room). */
+    public static void plans(final int x, final int y, final int c) {
+        draw(PLANS, x, y, c, false);
+    }
+
+    /** An arrow up out of a tray: sharing (the top bar's Share, short of room). */
+    public static void share(final int x, final int y, final int c) {
+        draw(SHARE, x, y, c, false);
+    }
+
+    /** A person: the account (the top bar's Sign in, short of room). */
+    public static void account(final int x, final int y, final int c) {
+        draw(ACCOUNT, x, y, c, false);
+    }
+
+    /**
+     * Where an icon goes on a key {@code w} by {@code h}: the middle of its lit face (the dark edge right and below
+     * melts into the bar), its rows level with a label's letters. Exact on a key of even width and height.
+     */
+    public static int[] centred(final int x, final int y, final int w, final int h) {
+        return new int[] { x + (w - 1 - SIZE) / 2, y + (h - 1 - SIZE) / 2 };
+    }
+
+    private static final String[] UNDO = { "..#......", ".##......", "#######..", "########.", ".##...##.", "..#...##.",
+        "......##.", "..#####..", "..####..." };
+    private static final String[] BUG = { ".#.....#.", "..#...#..", "...###...", "#.#####.#", ".###.###.", "#.##.##.#",
+        ".###.###.", "#.##.##.#", "..##.##.." };
+    private static final String[] GEAR = { "..##.##..", "..#####..", "#########", "###...###", ".##...##.", "###...###",
+        "#########", "..#####..", "..##.##.." };
+    private static final String[] HELP = { "..#####..", ".##...##.", "......##.", ".....##..", "....##...", "....##...",
+        ".........", "....##...", "....##..." };
+    private static final String[] BULB = { "...###...", "..##.##..", ".##...##.", ".##...##.", "..##.##..", "...###...",
+        ".........", "...###...", "...###..." };
+    private static final String[] CHECK = { ".........", ".......##", "......###", ".....###.", "##..###..",
+        "######...", ".####....", "..##.....", "........." };
+    private static final String[] COMMENT = { ".#######.", "#########", "##.....##", "##.....##", "#########",
+        ".#######.", "..##.....", ".##......", "........." };
+    private static final String[] CARD = { "#########", "#########", "#.......#", "#########", "#.......#", "#.......#",
+        "#.......#", "#########", "........." };
+
+    private static final String[] PIN = { "..#####..", ".#######.", ".##...##.", ".##...##.", ".#######.", "..#####..",
+        "...###...", "...###...", "....#...." };
+    private static final String[] CAMERA = { ".........", "...###...", "#########", "###...###", "##.....##",
+        "###...###", "#########", ".........", "........." };
+    private static final String[] BOOK = { ".........", "##.....##", "####.####", "####.####", "####.####", "####.####",
+        "####.####", ".##...##.", "........." };
+    private static final String[] PLUS = { ".........", "...##....", "...##....", ".######..", ".######..", "...##....",
+        "...##....", ".........", "........." };
+    private static final String[] PENCIL = { "......##.", ".....###.", "....###..", "...###...", "..###....",
+        ".###.....", "####.....", "###......", "........." };
+    // The website's pixel icons (pixel-icons.tsx).
+    private static final String[] PLANS = { "####.####", "####.####", "####.####", "####.####", ".........",
+        "####.####", "####.####", "####.####", "####.####" };
+    private static final String[] SHARE = { "...##....", "..####...", ".######..", "...##....", "##.##.##.",
+        "##....##.", "##....##.", "########.", "########." };
+    private static final String[] ACCOUNT = { "...###...", "..#####..", "..#####..", "...###...", ".........",
+        ".#######.", "#########", "#########", "#########" };
+
+    private static void draw(final String[] rows, final int x, final int y, final int c, final boolean mirror) {
+        final boolean own = !Hyb.batching();
+        if (own) Hyb.beginBatch();
+        for (int row = 0; row < rows.length; row++) {
+            final String r = rows[row];
+            // Runs of set pixels, one rectangle each.
+            int col = 0;
+            while (col < r.length()) {
+                if (r.charAt(col) != '#') {
+                    col++;
+                    continue;
+                }
+                final int from = col;
+                while (col < r.length() && r.charAt(col) == '#') col++;
+                final int left = mirror ? r.length() - col : from;
+                Hyb.rect(x + left, y + row, col - from, 1, c);
+            }
+        }
+        if (own) Hyb.endBatch();
+    }
+}

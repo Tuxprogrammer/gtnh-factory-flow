@@ -1,0 +1,227 @@
+package com.gtnhplanner.ui.card;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import javax.annotation.Nullable;
+
+import net.minecraft.item.ItemStack;
+
+import com.gtnhplanner.data.MachineConfig;
+import com.gtnhplanner.data.RecipeContext;
+import com.gtnhplanner.data.SettingDef;
+import com.gtnhplanner.power.PowerSetting;
+import com.gtnhplanner.power.PowerSource;
+import com.gtnhplanner.ui.gt.GtCoils;
+
+/**
+ * A card's settings as the settings sheet lists them and its chips show them: on a recipe card the machine's
+ * settings (the coil among them on a heat recipe), grouped; on a power card its settings and then its readings. The
+ * amps, tier and machine count are left out: the card has its own controls for them.
+ */
+public final class SettingControls {
+
+    /** How a setting is changed: switched, stepped or typed, picked from a list, or not at all. */
+    public enum Type {
+        TOGGLE,
+        NUMBER,
+        CHOICE,
+        COIL,
+        READING
+    }
+
+    /**
+     * A setting: its key ({@code machine_heat} for the coil, {@code power:<id>} on a power card,
+     * {@code reading:<label>}
+     * for a reading), its group's heading, label and value as shown, its icon (the coil), whether it stops the recipe
+     * (a coil too cold), whether another setting makes it moot, and whether it shows on the card until pins are set.
+     */
+    public record Control(String key, String group, String label, String value, @Nullable ItemStack icon, boolean warn,
+        boolean enabled, Type type, boolean pinDefault) {}
+
+    /** A modelled machine's setting (MachineModels): {@code machine:<the website's key>}. */
+    public static final String MACHINE_PREFIX = "machine:";
+
+    /** The card's own controls: never listed. */
+    private static final Set<String> OWN = Set.of("voltage", "amp", "machines");
+    private static final Set<String> OVERCLOCKING = Set.of(
+        "perfect_oc",
+        "laser_oc",
+        "no_overclock",
+        "max_overclocks",
+        "max_regular_oc",
+        "max_tier_skips",
+        "unlimited_skips",
+        "eut_discount",
+        "eut_increase_per_oc",
+        "duration_decrease_per_oc");
+    private static final Set<String> HEAT = Set.of("heat_oc", "recipe_heat", "heat_discount", "heat_discount_mult");
+    private static final String[] GROUPS = { "MACHINE", "OVERCLOCKING", "HEAT" };
+
+    private SettingControls() {}
+
+    /** Every setting of the card, in the sheet's order. */
+    public static List<Control> of(final CardModel m) {
+        return m.isPower() ? power(m) : recipe(m);
+    }
+
+    /** The settings the card shows as chips, as the plan has them pinned. */
+    public static List<Control> pinned(final com.gtnhplanner.data.flowchart.Graph plan, final CardModel m) {
+        final List<Control> out = new ArrayList<>();
+        for (final Control c : of(m)) if (SettingPins.pinned(plan, m, c)) out.add(c);
+        return out;
+    }
+
+    /** A recipe setting's definition, by key; null when the machine has no such setting. */
+    @Nullable
+    public static SettingDef<?> def(final CardModel m, final String key) {
+        final MachineConfig cfg = m.node.machineConfig;
+        if (cfg == null || cfg.getProfile() == null) return null;
+        for (final SettingDef<?> d : cfg.getProfile()
+            .visibleSettings(new RecipeContext(m.node.properties), cfg.settings)) if (d.key.equals(key)) return d;
+        return null;
+    }
+
+    /** Whether the card's coil stops its recipe: none picked, or too cold. */
+    public static boolean coilTooCold(final CardModel m) {
+        if (!m.usesHeat) return false;
+        // The website's maths: only a heat machine's recipe asks heat of the coil; elsewhere (the Multi Smelter, the
+        // cracker, the pyrolyse oven) the coil buys parallels, speed or a discount and stops nothing.
+        if (m.web != null) return com.gtnhplanner.machines.web.Heat.tooCold(m.coilHeat, m.recipeHeat);
+        final GtCoils.Coil coil = m.coilHeat > 0 ? GtCoils.forHeat(m.coilHeat) : null;
+        return coil == null || m.recipeHeat > coil.heat();
+    }
+
+    private static List<Control> recipe(final CardModel m) {
+        final List<Control> out = new ArrayList<>();
+        final MachineConfig cfg = m.node.machineConfig;
+        if (cfg == null || cfg.getProfile() == null) return out;
+        final List<SettingDef<?>> defs = cfg.getProfile()
+            .visibleSettings(new RecipeContext(m.node.properties), cfg.settings);
+        // A modelled machine's own setup first (the TGS's tools and genes, the vat's glass, hatch and radiation),
+        // under the website's keys: "machine:<key>", changed through MachineModels.
+        // A crop's settings come in sections (machine, crop, surroundings, the farm's units), most pinned from the
+        // start.
+        final boolean crop = com.gtnhplanner.machines.game.CropCards.isCrop(m.node);
+        // What the recipe decides of the machine, read-only: the Dangote Distillus runs in its recipe's mode.
+        final String mode = m.web == null ? null
+            : com.gtnhplanner.machines.web.DangoteDistillus.mode(m.web.effectiveRecipe());
+        if (mode != null)
+            out.add(new Control("reading:mode", "SETTINGS", "Mode", mode, null, false, true, Type.READING, false));
+        for (final com.gtnhplanner.machines.game.MachineModels.Setting s : com.gtnhplanner.machines.game.MachineModels
+            .settings(m.node)) {
+            final String group = crop ? com.gtnhplanner.machines.game.CropCards.group(s.key()) : "SETTINGS";
+            // The farm's slots, read-only, close the units it shares them between.
+            if (crop && com.gtnhplanner.machines.game.CropCards.FARM_UNITS.equals(group)
+                && out.stream()
+                    .noneMatch(
+                        c -> c.group()
+                            .equals(group)))
+                out.add(
+                    new Control(
+                        "reading:slots",
+                        group,
+                        "Upgrade slots",
+                        com.gtnhplanner.machines.game.CropCards.slots(m.node),
+                        null,
+                        false,
+                        true,
+                        Type.READING,
+                        false));
+            out.add(
+                new Control(
+                    MACHINE_PREFIX + s.key(),
+                    group,
+                    s.label(),
+                    s.value(),
+                    s.icon(),
+                    s.warn(),
+                    // A number with nowhere to go (a farm unit with no slot left, overclocks below ZPM) is greyed.
+                    !crop || !s.number() || s.max() > s.min() || Double.parseDouble(s.value()) > s.min(),
+                    s.number() ? Type.NUMBER : Type.CHOICE,
+                    crop ? com.gtnhplanner.machines.game.CropCards.pinnedByDefault(s.key())
+                        : com.gtnhplanner.machines.game.WebSettings.COIL.equals(s.key())));
+        }
+        // A modelled machine runs by the game's own rules (machines/): the TGS 100 ticks at VP[t], the vat GT's normal
+        // overclocks. The generic speed, parallel and overclock knobs could only make numbers the game never does.
+        if (com.gtnhplanner.machines.game.MachineModels.isModelled(m.node) || m.web != null) return out;
+        for (final String group : GROUPS) {
+            // The coil first, at the top of the machine's settings.
+            if ("MACHINE".equals(group) && m.usesHeat) {
+                final GtCoils.Coil coil = m.coilHeat > 0 ? GtCoils.forHeat(m.coilHeat) : null;
+                out.add(
+                    new Control(
+                        "machine_heat",
+                        group,
+                        "Coil",
+                        coil == null ? "None" : RecipeCard.shortCoilName(coil.name()),
+                        coil == null ? null : coil.stack(),
+                        coilTooCold(m),
+                        true,
+                        Type.COIL,
+                        true));
+            }
+            for (final SettingDef<?> d : defs) {
+                if (OWN.contains(d.key) || "machine_heat".equals(d.key) || !group.equals(groupOf(d.key))) continue;
+                final Type type = d.type == Boolean.class ? Type.TOGGLE
+                    : d.type == Integer.class ? Type.NUMBER
+                        : d.options != null && !d.options.isEmpty() ? Type.CHOICE : null;
+                if (type == null) continue;
+                final String value = switch (type) {
+                    case TOGGLE -> CardDefaults.boolSetting(cfg, d.key) ? "On" : "Off";
+                    case NUMBER -> Integer.toString(CardDefaults.intSetting(cfg, d.key));
+                    default -> CardDefaults.stringSetting(cfg, d.key);
+                };
+                out.add(new Control(d.key, group, d.label, value, null, false, true, type, false));
+            }
+        }
+        return out;
+    }
+
+    private static String groupOf(final String key) {
+        return OVERCLOCKING.contains(key) ? "OVERCLOCKING" : HEAT.contains(key) ? "HEAT" : "MACHINE";
+    }
+
+    private static List<Control> power(final CardModel m) {
+        final List<Control> out = new ArrayList<>();
+        final PowerSource source = m.power.source();
+        // The custom rate card shows its dial on itself: both its settings are pinned until unpinned.
+        final boolean custom = com.gtnhplanner.power.CustomRate.is(m.node);
+        for (final PowerTiles.Tile t : PowerTiles.of(m)) {
+            if (t.isSetting()) {
+                final PowerSetting s = t.setting();
+                final String caption = custom && s == com.gtnhplanner.power.CustomRate.RATE_SETTING ? s.label() + " ("
+                    + com.gtnhplanner.power.CustomRate.unit(com.gtnhplanner.power.CustomRate.resource(m.node))
+                    + ")" : PowerTiles.caption(s);
+                final Type type = s instanceof PowerSetting.Toggle ? Type.TOGGLE
+                    : s instanceof PowerSetting.Number ? Type.NUMBER : Type.CHOICE;
+                out.add(
+                    new Control(
+                        "power:" + s.id(),
+                        "SETTINGS",
+                        caption,
+                        PowerTiles.shown(s, m.node.powerSettings),
+                        null,
+                        false,
+                        source != null && PowerTiles.enabled(source, s, m.node.powerSettings),
+                        type,
+                        custom));
+            } else out.add(
+                new Control(
+                    "reading:" + t.stat()
+                        .label(),
+                    "READINGS",
+                    t.stat()
+                        .label(),
+                    t.stat()
+                        .value(),
+                    null,
+                    false,
+                    true,
+                    Type.READING,
+                    false));
+        }
+        return out;
+    }
+}

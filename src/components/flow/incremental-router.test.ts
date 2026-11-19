@@ -8,6 +8,16 @@ import {
 } from "./grid-edge-router";
 import { IncrementalRouter, rectDifference, type IncrementalStats } from "./incremental-router";
 import { DEFAULT_ROUTER_TUNING } from "./router-tuning";
+import { layoutTargets, ShadowRouter } from "./layout-shadow.test-support";
+
+// Each scenario runs on the TypeScript router, then again with every solve also routed through the compiled core on
+// each target, which must answer the same (layout-shadow.test-support.ts).
+const routerKinds: Array<[string, () => IncrementalRouter]> = [
+  ["TypeScript", () => new IncrementalRouter()],
+  ...(await layoutTargets()).map(
+    ([target, layout]): [string, () => IncrementalRouter] => [`TypeScript and core ${target}`, () => new ShadowRouter(layout)],
+  ),
+];
 
 function card(id: string, x: number, y: number, width = 360, height = 160): GridObstacle {
   return { id, left: x, top: y, right: x + width, bottom: y + height };
@@ -52,9 +62,9 @@ function solveWith(router: IncrementalRouter, scene: { cards: GridObstacle[]; wi
 
 const pointsOf = (route: GridRoutedEdge | undefined) => JSON.stringify(route?.points);
 
-describe("IncrementalRouter", () => {
+describe.each(routerKinds)("IncrementalRouter (%s)", (_kind, newRouter) => {
   it("routes the whole board the first time, the same as a full solve", () => {
-    const router = new IncrementalRouter();
+    const router = newRouter();
     const scene = board();
     const { routes, stats } = solveWith(router, scene);
     expect(stats.fresh).toBe(true);
@@ -65,7 +75,7 @@ describe("IncrementalRouter", () => {
   });
 
   it("routes again only the wire at a card that moved, and keeps the rest exactly", () => {
-    const router = new IncrementalRouter();
+    const router = newRouter();
     const before = solveWith(router, board()).routes;
     const { routes, stats } = solveWith(router, board(200));
     expect(stats.fresh).toBe(false);
@@ -78,7 +88,7 @@ describe("IncrementalRouter", () => {
   });
 
   it("routes again a kept wire that a card now stands across", () => {
-    const router = new IncrementalRouter();
+    const router = newRouter();
     const scene = board();
     solveWith(router, scene);
     // A new card dropped right between a0 and b0, on their wire's line.
@@ -98,7 +108,7 @@ describe("IncrementalRouter", () => {
   });
 
   it("routes again a kept wire that hugged a card that left", () => {
-    const router = new IncrementalRouter();
+    const router = newRouter();
     const scene = board();
     const blocker = card("x", 440, 0, 200, 160);
     solveWith(router, { cards: [...scene.cards, blocker], wires: scene.wires });
@@ -107,7 +117,7 @@ describe("IncrementalRouter", () => {
   });
 
   it("routes rough wires again on the thorough solve that follows, even with nothing moved", () => {
-    const router = new IncrementalRouter();
+    const router = newRouter();
     solveWith(router, board());
     solveWith(router, board(200), false);
     const { stats } = solveWith(router, board(200), true);
@@ -116,7 +126,7 @@ describe("IncrementalRouter", () => {
   });
 
   it("solves afresh when most of the board moved, or the dials changed", () => {
-    const router = new IncrementalRouter();
+    const router = newRouter();
     const scene = board();
     solveWith(router, scene);
     const shifted = {
@@ -134,7 +144,7 @@ describe("IncrementalRouter", () => {
   });
 
   it("routes again a wire whose request changed, and forgets wires that are gone", () => {
-    const router = new IncrementalRouter();
+    const router = newRouter();
     const scene = board();
     solveWith(router, scene);
     const wires = scene.wires
@@ -146,10 +156,10 @@ describe("IncrementalRouter", () => {
   });
 
   it("starts from a stored state: the same board routes nothing again", () => {
-    const first = new IncrementalRouter();
+    const first = newRouter();
     const before = solveWith(first, board()).routes;
     const stored = JSON.parse(JSON.stringify(first.snapshot()));
-    const second = new IncrementalRouter();
+    const second = newRouter();
     second.restore(stored);
     const { routes, stats } = solveWith(second, board());
     expect(stats.fresh).toBe(false);
@@ -158,7 +168,7 @@ describe("IncrementalRouter", () => {
   });
 
   it("keeps a route whose width changed, drawn at the new width", () => {
-    const router = new IncrementalRouter();
+    const router = newRouter();
     const scene = board();
     const before = solveWith(router, scene).routes;
     const wires = scene.wires.map((w) => (w.edgeId === "w1" ? { ...w, strokeWidth: 8 } : w));

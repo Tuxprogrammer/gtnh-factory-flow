@@ -303,6 +303,7 @@ import {
   setRouteSolveSink,
   type RouteSolveResult,
 } from "./grid-route-solve";
+import { coreLiveDrag, loadLayoutCore, type LiveDragGate } from "./layout-core";
 import {
   CUSTOM_RATE_ANY_RESOURCE_ID,
   getCustomRateSlot,
@@ -2900,10 +2901,26 @@ export function FactoryFlow() {
   // The smallest wire count a mid-drag solve has ever blown the frame budget
   // at. Following stays off until the board shrinks well below it.
   const liveDragSlowAtEdgeCountRef = useRef(Infinity);
+  // The live-drag rule from the compiled core (layout-core.ts) when the
+  // layout area is on and the core has loaded; it then replaces the gate,
+  // throttle and meter kept in the refs above. Taken at a drag's start.
+  const liveDragGateRef = useRef<LiveDragGate | null>(null);
+  useEffect(() => {
+    void loadLayoutCore();
+    return () => {
+      liveDragGateRef.current?.dispose();
+      liveDragGateRef.current = null;
+    };
+  }, []);
   // Times one live solve through to the frame it painted, and marks the
   // board size as too slow to follow if it blew the budget.
   const meterLiveDragSolve = useCallback((edgeCount: number, startedAt: number) => {
     window.requestAnimationFrame(() => {
+      const gate = liveDragGateRef.current;
+      if (gate) {
+        gate.meter(edgeCount, performance.now() - startedAt);
+        return;
+      }
       if (performance.now() - startedAt > LIVE_DRAG_BUDGET_MS) {
         liveDragSlowAtEdgeCountRef.current = Math.min(
           liveDragSlowAtEdgeCountRef.current,
@@ -2935,6 +2952,38 @@ export function FactoryFlow() {
     // frame, so this fingerprint does NOT change again after the drag ends.
     if (draggingNodeRef.current) {
       const edgeCount = publishedGridRouteEdges.length;
+      const gate = liveDragGateRef.current;
+      if (gate) {
+        // The core's rule (core.layout.LiveDrag): the same gate and throttle.
+        const frameAt = performance.now();
+        const beat = gate.frame(edgeCount, dragMovesObstaclesRef.current, frameAt);
+        if (beat === "hold") return;
+        if (beat === "wait") {
+          window.clearTimeout(liveDragTrailingTimerRef.current);
+          const trailing = () => {
+            if (!draggingNodeRef.current) {
+              return; // the drop already published
+            }
+            const trailingStart = performance.now();
+            const again = gate.frame(edgeCount, dragMovesObstaclesRef.current, trailingStart);
+            if (again === "wait") {
+              liveDragTrailingTimerRef.current = window.setTimeout(trailing, Math.max(0, gate.dueAt() - trailingStart));
+              return;
+            }
+            if (again === "hold") return;
+            publishBoardGeometry();
+            liveDragSolve(edgeCount, trailingStart);
+          };
+          liveDragTrailingTimerRef.current = window.setTimeout(
+            trailing,
+            Math.max(0, gate.dueAt() - frameAt),
+          );
+          return;
+        }
+        publishBoardGeometry();
+        liveDragSolve(edgeCount, frameAt);
+        return;
+      }
       if (
         !dragMovesObstaclesRef.current ||
         edgeCount > LIVE_DRAG_ROUTE_EDGE_LIMIT ||
@@ -5902,6 +5951,8 @@ export function FactoryFlow() {
     // A fresh drag's first cell change solves immediately; the throttle only
     // paces the changes after it.
     lastLiveDragSolveAtRef.current = 0;
+    liveDragGateRef.current ??= coreLiveDrag();
+    liveDragGateRef.current?.start();
     draggingNodeRef.current = true;
     routeDragActive = true;
     // The card-over-wires layering during the drag is pure CSS: the

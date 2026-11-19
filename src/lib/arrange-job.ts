@@ -23,6 +23,7 @@ import {
 import { makeRouteJudge } from "./route-judge";
 import type { GridObstacle, GridRouteRequest } from "@/components/flow/grid-edge-router";
 import type { RouterTuning } from "@/components/flow/router-tuning";
+import { layoutCore, runArrangeJobOnCore } from "@/components/flow/layout-core";
 
 export interface ArrangeJudgeInput {
   obstacles: GridObstacle[];
@@ -90,6 +91,9 @@ export function runArrangeJob(
   job: ArrangeJob,
   onProgress?: (progress: ArrangeProgress) => void,
 ): ArrangeJobResult {
+  // The compiled core's Arrange when the layout area is on and the core is loaded on this thread (layout-core.ts).
+  const layout = layoutCore();
+  if (layout) return runArrangeJobOnCore(layout, job, onProgress);
   const started = performance.now();
   const judge = job.judgeInput
     ? makeRouteJudge(job.judgeInput.obstacles, job.judgeInput.requests, job.judgeInput.tuning, job.judgeInput.riders)

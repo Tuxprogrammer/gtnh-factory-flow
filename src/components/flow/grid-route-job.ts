@@ -6,6 +6,7 @@ import {
   type GridSide,
 } from "./grid-edge-router";
 import { IncrementalRouter, type RouterSnapshot } from "./incremental-router";
+import { CoreBoardRouter, layoutCore } from "./layout-core";
 import { DEFAULT_ROUTER_TUNING, type RouterTuning } from "./router-tuning";
 
 /**
@@ -193,22 +194,33 @@ export function decodeRouteSolveJob(encoded: EncodedRouteSolveJob): RouteSolveJo
  * that plan's job before (`IncrementalRouter`), and switching back to a plan
  * finds its routes waiting. The worker and the main thread each have their own.
  */
-const routers = new Map<string, IncrementalRouter>();
+const routers = new Map<string, IncrementalRouter | CoreBoardRouter>();
 /** How many plans' routers a thread keeps; the least recently used go first. */
 const MAX_ROUTERS = 6;
 
-function routerFor(boardKey: string): IncrementalRouter {
+/**
+ * A plan's router: the compiled core's when the layout area is on and the core is loaded on this thread
+ * (`layout-core.ts`), else the TypeScript one. A plan keeps the router it started with.
+ */
+function routerFor(boardKey: string): IncrementalRouter | CoreBoardRouter {
   let router = routers.get(boardKey);
   if (router) {
     routers.delete(boardKey);
   } else {
-    router = new IncrementalRouter();
+    const layout = layoutCore();
+    router = layout ? new CoreBoardRouter(layout) : new IncrementalRouter();
   }
   routers.set(boardKey, router);
   while (routers.size > MAX_ROUTERS) {
-    routers.delete(routers.keys().next().value!);
+    const oldest = routers.keys().next().value!;
+    dispose(routers.get(oldest));
+    routers.delete(oldest);
   }
   return router;
+}
+
+function dispose(router: IncrementalRouter | CoreBoardRouter | undefined) {
+  if (router instanceof CoreBoardRouter) router.dispose();
 }
 
 /** Whether this thread still holds a router for the plan. */
@@ -228,6 +240,7 @@ export function restoreBoardRouter(boardKey: string, snapshot: RouterSnapshot) {
 
 /** Forgets every plan's board: the next job routes every wire. */
 export function resetBoardRouters() {
+  for (const router of routers.values()) dispose(router);
   routers.clear();
 }
 

@@ -477,19 +477,21 @@ public final class MachineControls {
         "Fuel",
         "Kerosene",
         "Biocatalysed Propulsion Fluid");
-    public static final Web.Control TURBINE_TIER_CONTROL = countControl(
-        TURBINE_TIER,
-        "Sum Turbine Tier",
-        1,
-        2,
-        3,
-        4,
-        6,
-        8,
-        12,
-        16,
-        24,
-        32);
+    /**
+     * TURBINE_TIER_CONTROL: MTESpinmatron.getSumRotorLevels: 2 rotor slots per structure tier (8 at tier 4), each adding
+     * its material's tool quality (huge whole, large 3/4, normal 1/2, small 1/4, each floored), so any sum from 1 to 8
+     * x 32 (Universium, the highest). A typed number.
+     */
+    public static final Web.Control TURBINE_TIER_CONTROL;
+
+    static {
+        final Web.Control control = countControl(TURBINE_TIER, "Sum Turbine Tier", 1);
+        final Web.Numeric numeric = new Web.Numeric();
+        numeric.min = 1;
+        numeric.max = 256.0;
+        control.numeric = numeric;
+        TURBINE_TIER_CONTROL = control;
+    }
 
     // endregion
 

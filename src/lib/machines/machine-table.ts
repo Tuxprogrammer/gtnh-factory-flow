@@ -599,12 +599,11 @@ const SPIN_FUEL_CONTROL = choiceControl(SPIN_FUEL, "Fuel", [
 ]);
 // MTESpinmatron.getSumRotorLevels: 2 rotor slots per structure tier (8 at tier 4), each adding its material's tool
 // quality (huge whole, large 3/4, normal 1/2, small 1/4, each floored), so any sum from 1 to 8 x 32 (Universium, the
-// highest). A list, not a typed number: the card's settings sheet lists a control's options, and its filter finds one.
-const TURBINE_TIER_CONTROL = countControl(
-  TURBINE_TIER,
-  "Sum Turbine Tier",
-  Array.from({ length: 256 }, (_, index) => index + 1),
-);
+// highest). A typed number, which the card's settings sheet offers as a typed row.
+const TURBINE_TIER_CONTROL: MachineConfigControl = {
+  ...countControl(TURBINE_TIER, "Sum Turbine Tier", [1]),
+  numeric: { min: 1, max: 256 },
+};
 
 /**
  * Bronze or steel build, for the steam multiblocks. The dataset scrapes a

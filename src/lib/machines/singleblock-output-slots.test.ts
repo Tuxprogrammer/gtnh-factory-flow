@@ -66,7 +66,13 @@ function maceratorRecipe(runtime: boolean): Recipe {
         kind: "multiblock",
         minimumTier: "LV",
       },
-      { id: "windmill", label: "Windmill", machineType: "Windmill", kind: "multiblock", minimumTier: "LV" },
+      {
+        id: "windmill",
+        label: "Windmill",
+        machineType: "Windmill",
+        kind: "multiblock",
+        minimumTier: "LV",
+      },
     ],
     ...(runtime
       ? {
@@ -127,9 +133,7 @@ describe("single-block item output slots", () => {
   it("follows the macerator's slots by tier (MTEBasicMachineWithRecipeBuilder setSlotsCount)", () => {
     const macerator = { machineType: "Macerator" };
     expect(
-      ["LV", "MV", "HV", "EV", "IV", "UMV"].map((tier) =>
-        itemOutputSlots(macerator, tier as "LV"),
-      ),
+      ["LV", "MV", "HV", "EV", "IV", "UMV"].map((tier) => itemOutputSlots(macerator, tier as "LV")),
     ).toEqual([1, 1, 2, 3, 4, 4]);
     expect(itemOutputSlots({ machineType: "Mixer" }, "MV")).toBe(1);
     expect(itemOutputSlots({ machineType: "Mixer" }, "HV")).toBe(4);

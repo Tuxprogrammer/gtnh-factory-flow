@@ -1164,6 +1164,10 @@
   {
    "name": "Amount (UXV)",
    "tier": 12
+  },
+  {
+   "name": "Amount (MAX)",
+   "tier": 13
   }
  ],
  "ucfeFuels": [

@@ -473,6 +473,10 @@ function correctEngineFuels() {
   if (!data.lneRobotArms.some((row) => row.tier === 0)) {
     data.lneRobotArms.unshift({ name: "Amount (LV)", tier: 0 });
   }
+  // ...through index 13, the MAX arm (the sheet stops at UXV).
+  if (!data.lneRobotArms.some((row) => row.tier === 13)) {
+    data.lneRobotArms.push({ name: "Amount (MAX)", tier: 13 });
+  }
   // useBooster: each hydroxide dust lasts this many ticks, then one more tick to reload.
   const boostTicks = {
     "Sodium Hydroxide": 20,

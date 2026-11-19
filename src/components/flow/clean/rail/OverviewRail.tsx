@@ -472,6 +472,8 @@ const ItemView = memo(function ItemView({
   euText: string;
   peak: boolean;
 }) {
+  // A memoised row reads the rate unit from a module singleton: it must subscribe or it keeps its old text.
+  useFactoryStore((s) => s.rateUnit);
   const { item } = placed;
   switch (item.t) {
     case "section":
@@ -595,6 +597,7 @@ const LineRow = memo(function LineRow({
   state: RailState;
 }) {
   const { line, section, amount, setters } = item;
+  useFactoryStore((s) => s.rateUnit);
   const [hot, setHot] = useState(false);
   const setHovered = useFactoryStore((s) => s.setHoveredFlowResourceKey);
   const ink = INK[section.toUpperCase()] ?? CC.ink;

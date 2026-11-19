@@ -329,28 +329,6 @@ class CardFaceTest {
     // region The overview and the notices
 
     @Test
-    void aShortfallNamesWhatHoldsItBack() {
-        final UUID tower = UUID.randomUUID(), electrolyzer = UUID.randomUUID(), mixer = UUID.randomUUID(),
-            other = UUID.randomUUID();
-        final Map<UUID, String> names = Map
-            .of(tower, "Distillation Tower", electrolyzer, "Electrolyzer", mixer, "Mixer");
-        final Map<UUID, PinRule> rules = Map
-            .of(tower, PinRule.UP_TO, electrolyzer, PinRule.EXACT, mixer, PinRule.UP_TO);
-        final Map<UUID, UpToReason> reasons = Map.of(tower, UpToReason.BOTTLENECK, mixer, UpToReason.STARVED);
-        assertEquals(
-            " The Distillation Tower is full. The Electrolyzer is set exactly. The Mixer is starved."
-                + " The Benzene drawer's rate holds it back.",
-            CardFace.holders(
-                List.of(tower, electrolyzer, mixer),
-                List.of(other),
-                names::get,
-                rules::get,
-                reasons::get,
-                id -> "Benzene"));
-        assertEquals("", CardFace.holders(List.of(), List.of(), names::get, rules::get, reasons::get, id -> ""));
-    }
-
-    @Test
     void reasonsReadInTheOverview() {
         assertEquals("Starved", CardFace.word(UpToReason.STARVED));
         assertEquals(0xFFE8E9EE, CardFace.railColour(UpToReason.FULL, 0xFFE8E9EE), "full is the quiet case");

@@ -248,6 +248,10 @@ public enum Sfx {
     public static final float WHEEL_UP = (float) ViewSounds.WHEEL_UP, WHEEL_DOWN = (float) ViewSounds.WHEEL_DOWN;
     public static final float SELECT_VOLUME = (float) ViewSounds.SELECT_VOLUME,
         SELECT_PITCH = (float) ViewSounds.SELECT_PITCH;
+    /** A card set down into a group (higher), out of one (lower, quieter), and a group dissolved. */
+    public static final float GROUP_IN_PITCH = (float) ViewSounds.GROUP_IN_PITCH,
+        GROUP_OUT_VOLUME = (float) ViewSounds.GROUP_OUT_VOLUME, GROUP_OUT_PITCH = (float) ViewSounds.GROUP_OUT_PITCH,
+        UNGROUP_VOLUME = (float) ViewSounds.UNGROUP_VOLUME, UNGROUP_PITCH = (float) ViewSounds.UNGROUP_PITCH;
 
     /** No sounds for a moment: a plan loading, a tab switching (its cards are not landing, they were there). */
     public static void quietFor(final long ms) {

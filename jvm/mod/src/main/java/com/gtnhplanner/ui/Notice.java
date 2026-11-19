@@ -1,7 +1,5 @@
 package com.gtnhplanner.ui;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -47,21 +45,5 @@ public record Notice(Severity severity, String text, List<UUID> focus, @Nullable
     @Nullable
     public String tag() {
         return loop == null ? null : Loops.tag(loop);
-    }
-
-    /**
-     * Where a notice goes in the list, lowest first (the website's noticeRank): a failed solve, then alarms, then
-     * warnings, then the rest.
-     */
-    public int rank() {
-        if (severity == Severity.ERROR) return loop != null ? 1 : 0;
-        return severity == Severity.WARN ? 2 : 3;
-    }
-
-    /** Most pressing first; notices of one rank keep their order (the website's byUrgency). */
-    public static List<Notice> byUrgency(final List<Notice> list) {
-        final List<Notice> out = new ArrayList<>(list);
-        out.sort(Comparator.comparingInt(Notice::rank));
-        return out;
     }
 }

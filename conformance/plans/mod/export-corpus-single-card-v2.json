@@ -1,0 +1,205 @@
+{
+  "schemaVersion": 1,
+  "id": "mod-corpus-single-card-v2",
+  "name": "corpus single-card-v2",
+  "description": "Made in the game",
+  "icon": {
+    "kind": "item",
+    "resourceId": "minecraft:iron_ingot",
+    "displayName": "minecraft:iron_ingot"
+  },
+  "solveMode": true,
+  "planMode": true,
+  "recipes": [
+    {
+      "id": "gtnhplanner:24f5a8bf-a88d-468b-8037-6ec0476c1cfc",
+      "name": "item|EU",
+      "kind": "gregtech_machine",
+      "machineType": "Steam Turbine",
+      "minimumTier": "LV",
+      "durationTicks": 20,
+      "eut": 0,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Steam",
+          "displayName": "Steam",
+          "amount": 1540
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "EU",
+          "displayName": "EU",
+          "amount": 640
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "24f5a8bf-a88d-468b-8037-6ec0476c1cfc",
+      "recipeId": "gtnhplanner:24f5a8bf-a88d-468b-8037-6ec0476c1cfc",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "machineConfigTiers": {
+        "circuit": "3"
+      },
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1351,
+        "y": -368
+      },
+      "portRates": {
+        "input:item:Steam": 2.5
+      },
+      "pocketId": "pocket-imported-smelting"
+    }
+  ],
+  "storages": [],
+  "annotations": [
+    {
+      "id": "b21be61e-a919-36b4-a8aa-4fd29676594e",
+      "kind": "text",
+      "colorTag": "lime",
+      "text": "Feed it\nfrom the ME system",
+      "position": {
+        "x": 16,
+        "y": 122
+      },
+      "size": {
+        "width": 213,
+        "height": 131
+      },
+      "fontSize": 18,
+      "pocketId": "pocket-imported-smelting"
+    },
+    {
+      "id": "c5fb13a5-fd7e-3725-bfa0-40b796234526",
+      "kind": "box",
+      "colorTag": "orange",
+      "position": {
+        "x": 112,
+        "y": 78
+      },
+      "size": {
+        "width": 377,
+        "height": 151
+      },
+      "style": {
+        "border": "dashed",
+        "borderColor": "red",
+        "fillColor": "light_blue",
+        "fill": "solid",
+        "marks": "graph"
+      },
+      "pocketId": "pocket-0936f5e0-27e1-3008-aaa3-6089d83cc3e5"
+    },
+    {
+      "id": "2da440dd-6624-3b21-9d16-ef5e66406e4f",
+      "kind": "image",
+      "text": "The finished line",
+      "position": {
+        "x": 2011,
+        "y": 733
+      },
+      "size": {
+        "width": 160,
+        "height": 90
+      },
+      "imageUrl": "https://example.com/line.png"
+    },
+    {
+      "id": "3667b4f8-6159-3254-9259-645e5d6f293a",
+      "kind": "arrow",
+      "colorTag": "magenta",
+      "position": {
+        "x": 60,
+        "y": 56
+      },
+      "size": {
+        "width": 163,
+        "height": 0
+      },
+      "arrowDirection": "up-left",
+      "arrowHeads": "both",
+      "arrowWidth": 4,
+      "pocketId": "pocket-imported-smelting"
+    },
+    {
+      "id": "6361508e-2eea-345b-b09a-7919053d1843",
+      "kind": "zone",
+      "colorTag": "lime",
+      "position": {
+        "x": 1503,
+        "y": -91
+      },
+      "size": {
+        "width": 203,
+        "height": 117
+      },
+      "points": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 203,
+          "y": 13
+        },
+        {
+          "x": 97,
+          "y": 117
+        }
+      ],
+      "style": {
+        "marks": "hatch"
+      }
+    }
+  ],
+  "pockets": [
+    {
+      "id": "pocket-0936f5e0-27e1-3008-aaa3-6089d83cc3e5",
+      "name": "Ore line",
+      "colorTag": "orange",
+      "position": {
+        "x": -523,
+        "y": -311
+      },
+      "expanded": true,
+      "size": {
+        "width": 2741,
+        "height": 1307
+      },
+      "theme": "blueprint",
+      "pattern": "dots"
+    },
+    {
+      "id": "pocket-imported-smelting",
+      "name": "Smelting",
+      "parentPocketId": "pocket-0936f5e0-27e1-3008-aaa3-6089d83cc3e5",
+      "position": {
+        "x": 406,
+        "y": 112
+      },
+      "expanded": false,
+      "size": {
+        "width": 613,
+        "height": 421
+      }
+    }
+  ],
+  "edges": [],
+  "fuelProfiles": [],
+  "metadata": {
+    "source": "GTNH Planner"
+  }
+}

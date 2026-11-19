@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { VIEW_SETTINGS } from "@/lib/view-settings.generated";
 import {
   DEFAULT_CANVAS_THEME_ID,
   isCanvasThemeId,
@@ -91,19 +92,19 @@ export interface BoardView {
   glanceMode: GlanceMode;
 }
 
-const BOARD_VIEW_STORAGE_KEY = "gtnh-factory-flow-board-view";
+const BOARD_VIEW_STORAGE_KEY: string = VIEW_SETTINGS.canvasPattern.key;
 
 export const DEFAULT_BOARD_VIEW: BoardView = {
-  canvasPattern: "dots",
+  canvasPattern: VIEW_SETTINGS.canvasPattern.default,
   canvasTheme: DEFAULT_CANVAS_THEME_ID,
-  fixedEdgeWidth: false,
+  fixedEdgeWidth: VIEW_SETTINGS.fixedEdgeWidth.default,
   // RETIRED: a full-board canvas redrawn every frame is too expensive (in
   // Firefox a dirty canvas re-renders every board tile under it) and reads
   // the camera a frame late, sliding against the wires during pans. The field
   // stays so stored views and shared plans still parse; it is never true.
   linePulseMode: false,
   calmMode: false,
-  glanceMode: "identity",
+  glanceMode: VIEW_SETTINGS.glanceMode.default,
 };
 
 let boardViewState: BoardView = DEFAULT_BOARD_VIEW;

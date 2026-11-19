@@ -49,7 +49,8 @@ public final class CleanCardView {
         final List<int[]> at = new ArrayList<>();
         int x = CardLayout.PAD, y = top + 4;
         for (final PlanSnapshot.Setting s : c.settings()) {
-            final int w = CardLayout.chipW(s.label(), s.value(), s.icon() != null);
+            final int w = CardLayout
+                .chipW(com.gtnhplanner.ui.theme.HybMeasure.INSTANCE, s.label(), s.value(), s.icon() != null);
             if (x > CardLayout.PAD && x + w > W - CardLayout.PAD) {
                 x = CardLayout.PAD;
                 y += CardLayout.CHIP_ROW;

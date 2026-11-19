@@ -17,4 +17,13 @@ core/core-machines/src/main/java/com/gtnhplanner/machines/web/Hile.java string-f
 core/core-machines/src/main/java/com/gtnhplanner/machines/web/Js.java float-parse JavaScript Number(s) stand-in; becomes NumberText.parse
 core/core-machines/src/main/java/com/gtnhplanner/machines/web/Js.java float-text JavaScript String(n) stand-in; becomes NumberText.of
 core/core-machines/src/main/java/com/gtnhplanner/machines/web/MachineEffects.java float-parse a numeric setting key read as a number; becomes NumberText.parse
-core/core-machines/src/main/java/com/gtnhplanner/machines/web/PowerReport.java string-format a stall's EU/t printed with "%.1f"; becomes NumberText.fixed (the website uses toFixed)
+
+# core-view: card logic moved from the mod unchanged (view-b). BigDecimal.valueOf takes a double's shortest decimal
+# digits (the JDK's spelling: the shortest on the JDK 19+ the mod and the tests run on) before the display rounding.
+# Fmt formats the figures the mod's board draws every frame, and NumberText costs about 3 us a non-whole number
+# (kernel's measure), so the swap waits for NumberText's fast path. Swapping changes nothing the player sees:
+# DecimalsAgreeTest (core-view) holds new BigDecimal(NumberText.of(v)) equal in value to BigDecimal.valueOf(v) for
+# every normal double (a subnormal, which both round to 0, can differ), and every use rounds or strips the value,
+# never prints the spelling.
+core/core-view/src/main/java/com/gtnhplanner/ui/theme/Fmt.java float-text display rounding starts from BigDecimal.valueOf; becomes new BigDecimal(NumberText.of(v)) once NumberText has its fast path
+core/core-view/src/main/java/com/gtnhplanner/ui/card/PowerTiles.java float-text a number setting stored as BigDecimal.valueOf to ten places; becomes new BigDecimal(NumberText.of(v)) with Fmt

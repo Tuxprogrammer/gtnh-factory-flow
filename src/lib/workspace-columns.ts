@@ -10,21 +10,26 @@
  *
  * All lengths are SHELL px.
  */
-export const ITEMS_WIDTH = 256;
+import { VIEW_SETTINGS } from "./view-settings.generated";
+
+const OVERVIEW = VIEW_SETTINGS.overviewWidth;
+const ITEMS = VIEW_SETTINGS.itemsWidth;
+
+export const ITEMS_WIDTH: number = ITEMS.default;
 export const INSPECTOR_WIDTH = 234;
 /** Wide enough for one 24px button plus its border. */
 export const PANEL_RAIL_WIDTH = 26;
 
 /** The overview's width unless the player drags it: the mod's rail. */
-export const OVERVIEW_DEFAULT_WIDTH = 336;
+export const OVERVIEW_DEFAULT_WIDTH: number = OVERVIEW.default;
 /** Two thirds of the default: its rows (a rule key, a rate box, a name) still read. */
-export const OVERVIEW_MIN_WIDTH = 224;
-export const OVERVIEW_MAX_WIDTH = 480;
+export const OVERVIEW_MIN_WIDTH: number = OVERVIEW.min;
+export const OVERVIEW_MAX_WIDTH: number = OVERVIEW.max;
 /** The items list's default; its fixed width on a phone's drawer and on classic boards. */
 export const ITEMS_DEFAULT_WIDTH = ITEMS_WIDTH;
 /** Three item columns (3 slots of 32 and the 6 px margins), which is also the least its page keys need. */
-export const ITEMS_MIN_WIDTH = 108;
-export const ITEMS_MAX_WIDTH = 420;
+export const ITEMS_MIN_WIDTH: number = ITEMS.min;
+export const ITEMS_MAX_WIDTH: number = ITEMS.max;
 /**
  * The least the board keeps while a side column can still give way: the board toolbar on one row with its labels
  * (303 toolbar px: Non-recipe, undo, redo, Arrange, Fit, the rate, EU/t and the pencil, 1.7094 shell px each). Measure

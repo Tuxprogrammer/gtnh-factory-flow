@@ -41,6 +41,7 @@ import com.gtnhplanner.nei.NodeLookupContext;
 import com.gtnhplanner.ui.card.CardDefaults;
 import com.gtnhplanner.ui.card.CardFace;
 import com.gtnhplanner.ui.card.CardLayout;
+import com.gtnhplanner.ui.card.CardLayouts;
 import com.gtnhplanner.ui.card.CardModel;
 import com.gtnhplanner.ui.card.MachineChoices;
 import com.gtnhplanner.ui.drawer.DrawerCard;
@@ -853,7 +854,9 @@ public final class BoardSession {
         if (node == null || portHasDrawer(fromNode, output, port)) return false;
         // Dropped nearly level with the port: make it level, so the wire runs straight instead of jogging.
         final CardModel card = models.get(fromNode);
-        final int portY = card == null ? worldY : node.y + new CardLayout(card, graph()).anchorY(output, port);
+        final int portY = card == null ? worldY
+            : node.y + CardLayouts.of(card, graph())
+                .anchorY(output, port);
         return dropPortAsDrawer(
             fromNode,
             output,
@@ -949,7 +952,8 @@ public final class BoardSession {
                     .equals(key)) continue;
                 x = source ? card.node.x - DrawerCard.W - 60 : card.node.x + CardLayout.W + 60;
                 // Its wire runs straight: the drawer's anchor level with the port's.
-                y = card.node.y + new CardLayout(card, graph()).anchorY(!source, i) - DrawerCard.ANCHOR_Y;
+                y = card.node.y + CardLayouts.of(card, graph())
+                    .anchorY(!source, i) - DrawerCard.ANCHOR_Y;
                 break search;
             }
         }
@@ -1047,11 +1051,9 @@ public final class BoardSession {
             () -> drawer.setKind(
                 drawer.getKind()
                     .next()));
-        Sfx.ADJUST.playStep(
+        Sfx.drawerRule(
             drawer.getKind()
-                .ordinal(),
-            0.9f,
-            1.12f);
+                .ordinal());
     }
 
     /** Rates being wheeled, per drawer (per second), shown at once and set once the wheel is still; null for none. */
@@ -1063,7 +1065,7 @@ public final class BoardSession {
     public void wheelDrawerRate(final Drawer drawer, final double perSecond) {
         if (wheeledRates == null) wheeledRates = new HashMap<>();
         final Double was = wheeledRates.get(drawer.getId());
-        Sfx.TICK.play(perSecond >= (was == null ? drawer.getRate() : was) ? 1.12f : 0.9f);
+        Sfx.TICK.play(perSecond >= (was == null ? drawer.getRate() : was) ? Sfx.WHEEL_UP : Sfx.WHEEL_DOWN);
         wheeledRates.put(drawer.getId(), perSecond);
         live(() -> applyDrawerRate(drawer, perSecond), perSecond > 0 ? Sfx.PIN : Sfx.UNPIN);
     }
@@ -1075,7 +1077,7 @@ public final class BoardSession {
 
     public void setDrawerRule(final Drawer drawer, final Drawer.Rule rule) {
         edit(() -> drawer.setRule(rule));
-        Sfx.ADJUST.playStep(rule.ordinal(), 0.9f, 1.12f);
+        Sfx.drawerRule(rule.ordinal());
     }
 
     /**
@@ -1585,7 +1587,7 @@ public final class BoardSession {
 
     /** Selects a card or drawer; {@code add} keeps the others (Shift), and toggles this one. */
     public void select(final UUID id, final boolean add) {
-        Sfx.CLICK.play(0.6f, 1.15f);
+        Sfx.CLICK.play(Sfx.SELECT_VOLUME, Sfx.SELECT_PITCH);
         if (!add) {
             selection.clear();
             selection.add(id);
@@ -1634,7 +1636,7 @@ public final class BoardSession {
                 selection.add(n.getId());
         for (final com.gtnhplanner.data.flowchart.BoardGroup g : graph.boardGroups.values())
             if (com.gtnhplanner.data.flowchart.Groups.shows(graph, g)) selection.add(g.getId());
-        Sfx.CLICK.play(0.6f, 1.15f);
+        Sfx.CLICK.play(Sfx.SELECT_VOLUME, Sfx.SELECT_PITCH);
     }
 
     /** Deletes every selected card, drawer and note as one undoable step. */
@@ -2275,7 +2277,7 @@ public final class BoardSession {
         final int i = sections.indexOf(nodeId), j = i + step;
         if (i < 0 || j < 0 || j >= sections.size()) return;
         editLayout(() -> java.util.Collections.swap(sections, i, j));
-        Sfx.TICK.play(step < 0 ? 1.12f : 0.9f);
+        Sfx.TICK.play(step < 0 ? Sfx.WHEEL_UP : Sfx.WHEEL_DOWN);
     }
 
     /**
@@ -2672,7 +2674,7 @@ public final class BoardSession {
         if (wheeledPorts == null) wheeledPorts = new HashMap<>();
         final Double was = wheeledPortRate(node, output, index);
         final Double set = was != null ? was : portTarget(node, output, index);
-        Sfx.TICK.play(perSecond >= (set == null ? 0 : set) ? 1.12f : 0.9f);
+        Sfx.TICK.play(perSecond >= (set == null ? 0 : set) ? Sfx.WHEEL_UP : Sfx.WHEEL_DOWN);
         wheeledPorts.put(portKey(node.id, output, index), new Object[] { node, output, index, perSecond });
         live(() -> applyPortTarget(node, output, index, perSecond), perSecond > 0 ? Sfx.PIN : Sfx.UNPIN);
     }
@@ -2746,7 +2748,7 @@ public final class BoardSession {
      */
     private int[] clearSpotUnder(final Node node) {
         final CardModel model = models.get(node.id);
-        final int h = model == null ? 150 : new CardLayout(model, graph()).height;
+        final int h = model == null ? 150 : CardLayouts.of(model, graph()).height;
         final int x0 = node.x, y0 = node.y + h + 40, step = 20;
         if (!NewCards.overlapsAnything(graph, x0, y0, CardLayout.W, h, null)) return new int[] { x0, y0 };
         for (int r = 1; r <= 40; r++) {

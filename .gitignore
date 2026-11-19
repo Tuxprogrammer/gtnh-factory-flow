@@ -38,6 +38,10 @@
 /src/components/flow/clean/tokens.generated.ts
 /src/components/flow/clean/tokens.generated.css
 
+# generated from jvm/core/core-view/settings/*.json (tools/settings/generate.mjs)
+/src/lib/view-settings.generated.ts
+/src/lib/view-sounds.generated.ts
+
 # next.js
 /.next/
 /out/

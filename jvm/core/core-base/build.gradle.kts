@@ -7,8 +7,8 @@ dependencies {
 }
 
 tasks.named<Test>("test") {
-    // -PwriteVectors rewrites src/test/resources/uuid/uuid-vectors.json from java.util.UUID (UuidTest.writeVectors).
+    // -PwriteVectors rewrites conformance/core-base/uuid/uuid-vectors.json from java.util.UUID (UuidTest.writeVectors).
     if (providers.gradleProperty("writeVectors").isPresent) {
-        systemProperty("gtnh.writeVectors", file("src/test/resources").absolutePath)
+        systemProperty("gtnh.writeVectors", "true")
     }
 }

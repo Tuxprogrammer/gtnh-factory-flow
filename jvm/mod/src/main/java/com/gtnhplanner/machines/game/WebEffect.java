@@ -17,7 +17,8 @@ import com.gtnhplanner.ui.card.CardModel;
 /**
  * A GregTech card's numbers from the website's machine maths ({@link NodeMath}), as the engine reads them: the
  * duration and the machine's draw exactly, its parallels, each output's productivity, and why it would not start. A
- * multiblock's sub-tick duration 1/n runs as one tick with n times the parallels, its draw unchanged. Kept per card
+ * multiblock's sub-tick duration runs as one tick with parallels / duration parallels, its draw unchanged. Kept per
+ * card
  * until its recipe, machine or settings change.
  */
 public final class WebEffect {
@@ -43,9 +44,11 @@ public final class WebEffect {
             .eut() * parallels;
         final EffectResult out;
         if (duration < 1) {
-            // GT's calculateMultiplierUnderOneTick: whole recipes a tick, banked as parallels.
-            final double perTick = Math.round(1 / duration);
-            out = new EffectResult(1, 0, (int) Math.min(Integer.MAX_VALUE, parallels * perTick)).exact(1, draw);
+            // GT's calculateMultiplierUnderOneTick: whole recipes a tick, banked as parallels, as many as the supply
+            // pays
+            // for (the core stretches a capped run to parallels / cap, so parallels / duration is the cap).
+            out = new EffectResult(1, 0, (int) Math.min(Integer.MAX_VALUE, Math.round(parallels / duration)))
+                .exact(1, draw);
         } else out = new EffectResult(1, 0, (int) parallels).exact(duration, draw);
         final double[] outputs = new double[r.outputMultipliers()
             .size()];

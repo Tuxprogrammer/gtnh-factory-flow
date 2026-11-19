@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "id": "plan-1",
+  "name": "Pins",
+  "recipes": [],
+  "nodes": [
+    {
+      "id": "n1",
+      "recipeId": "r1",
+      "machineCount": 1,
+      "parallel": 2.4,
+      "overclockTier": "LV",
+      "enabled": true,
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "solvePin": 3.5,
+      "portRates": {
+        "in:item:x": 0.25
+      }
+    }
+  ],
+  "edges": [],
+  "fuelProfiles": [],
+  "settingPins": {
+    "Large Chemical Reactor": [
+      "tgsHeight"
+    ]
+  },
+  "spareShares": {
+    "item:x": {
+      "item:y": 0.5
+    }
+  },
+  "poolMode": true,
+  "solveMode": false,
+  "assumeBoundaries": true,
+  "targetRate": {
+    "kind": "item",
+    "resourceId": "item:x",
+    "amountPerSecond": 2.5
+  }
+}

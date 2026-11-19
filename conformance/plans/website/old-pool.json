@@ -1,0 +1,344 @@
+{
+  "schemaVersion": 1,
+  "id": "old-pool",
+  "name": "Old Pool plan",
+  "targetRate": {
+    "kind": "fluid",
+    "resourceId": "biodiesel",
+    "amountPerSecond": 100,
+    "displayName": "Biodiesel"
+  },
+  "solveMode": true,
+  "poolMode": true,
+  "recipes": [
+    {
+      "id": "demo-fish-catcher",
+      "name": "Fish Catcher -> Fish",
+      "machineType": "Fish Catcher",
+      "minimumTier": "DEMO",
+      "durationTicks": 200,
+      "eut": 16,
+      "inputs": [],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "fish",
+          "amount": 1,
+          "displayName": "Fish"
+        }
+      ],
+      "notes": "Demo data, not authoritative GTNH data.",
+      "isDemo": true
+    },
+    {
+      "id": "demo-fluid-extractor-fish-oil",
+      "name": "Fluid Extractor -> Fish Oil",
+      "machineType": "Fluid Extractor",
+      "minimumTier": "DEMO",
+      "durationTicks": 100,
+      "eut": 30,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "fish",
+          "amount": 1,
+          "displayName": "Fish"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "fluid",
+          "id": "fish_oil",
+          "amount": 50,
+          "displayName": "Fish Oil"
+        }
+      ],
+      "notes": "Demo data, not authoritative GTNH data.",
+      "isDemo": true
+    },
+    {
+      "id": "demo-methane-source",
+      "name": "Methane source -> Methane",
+      "machineType": "Demo Source Hatch",
+      "minimumTier": "DEMO",
+      "durationTicks": 20,
+      "eut": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "kind": "fluid",
+          "id": "methane",
+          "amount": 120,
+          "displayName": "Methane"
+        }
+      ],
+      "notes": "Demo data, not authoritative GTNH data.",
+      "isDemo": true
+    },
+    {
+      "id": "demo-electrolyzer-hydrogen-carbon",
+      "name": "Electrolyzer -> Hydrogen + Carbon",
+      "machineType": "Electrolyzer",
+      "minimumTier": "DEMO",
+      "durationTicks": 100,
+      "eut": 120,
+      "inputs": [
+        {
+          "kind": "fluid",
+          "id": "methane",
+          "amount": 100,
+          "displayName": "Methane"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "fluid",
+          "id": "hydrogen",
+          "amount": 400,
+          "displayName": "Hydrogen"
+        },
+        {
+          "kind": "item",
+          "id": "carbon_dust",
+          "amount": 1,
+          "displayName": "Carbon Dust",
+          "byproduct": true
+        }
+      ],
+      "notes": "Demo data, not authoritative GTNH data.",
+      "isDemo": true
+    },
+    {
+      "id": "demo-chemical-carbon-monoxide",
+      "name": "Chemical Reactor -> Carbon Monoxide",
+      "machineType": "Chemical Reactor",
+      "minimumTier": "DEMO",
+      "durationTicks": 200,
+      "eut": 120,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "carbon_dust",
+          "amount": 1,
+          "displayName": "Carbon Dust"
+        },
+        {
+          "kind": "fluid",
+          "id": "oxygen",
+          "amount": 1000,
+          "displayName": "Oxygen"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "fluid",
+          "id": "carbon_monoxide",
+          "amount": 1000,
+          "displayName": "Carbon Monoxide"
+        }
+      ],
+      "programmedCircuit": "demo circuit 1",
+      "notes": "Demo data, not authoritative GTNH data. Oxygen is intentionally left as an external input.",
+      "isDemo": true
+    },
+    {
+      "id": "demo-chemical-methanol",
+      "name": "Chemical Reactor -> Methanol",
+      "machineType": "Chemical Reactor",
+      "minimumTier": "DEMO",
+      "durationTicks": 200,
+      "eut": 240,
+      "inputs": [
+        {
+          "kind": "fluid",
+          "id": "carbon_monoxide",
+          "amount": 1000,
+          "displayName": "Carbon Monoxide"
+        },
+        {
+          "kind": "fluid",
+          "id": "hydrogen",
+          "amount": 2000,
+          "displayName": "Hydrogen"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "fluid",
+          "id": "methanol",
+          "amount": 1000,
+          "displayName": "Methanol"
+        }
+      ],
+      "programmedCircuit": "demo circuit 2",
+      "notes": "Demo data, not authoritative GTNH data.",
+      "isDemo": true
+    },
+    {
+      "id": "demo-chemical-biodiesel",
+      "name": "Chemical Reactor -> Biodiesel + Glycerol",
+      "machineType": "Chemical Reactor",
+      "minimumTier": "DEMO",
+      "durationTicks": 200,
+      "eut": 480,
+      "inputs": [
+        {
+          "kind": "fluid",
+          "id": "methanol",
+          "amount": 1000,
+          "displayName": "Methanol"
+        },
+        {
+          "kind": "fluid",
+          "id": "fish_oil",
+          "amount": 1000,
+          "displayName": "Fish Oil"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "fluid",
+          "id": "biodiesel",
+          "amount": 1000,
+          "displayName": "Biodiesel"
+        },
+        {
+          "kind": "fluid",
+          "id": "glycerol",
+          "amount": 100,
+          "displayName": "Glycerol",
+          "byproduct": true
+        }
+      ],
+      "programmedCircuit": "demo circuit 24",
+      "notes": "Demo data, not authoritative GTNH data.",
+      "isDemo": true
+    }
+  ],
+  "nodes": [
+    {
+      "id": "node-fish-catcher",
+      "recipeId": "demo-fish-catcher",
+      "machineCount": 20,
+      "parallel": 1,
+      "overclockTier": "DEMO",
+      "enabled": true,
+      "position": {
+        "x": -900,
+        "y": -220
+      }
+    },
+    {
+      "id": "node-fish-oil",
+      "recipeId": "demo-fluid-extractor-fish-oil",
+      "machineCount": 10,
+      "parallel": 1,
+      "overclockTier": "DEMO",
+      "enabled": true,
+      "position": {
+        "x": -580,
+        "y": -220
+      }
+    },
+    {
+      "id": "node-methane-source",
+      "recipeId": "demo-methane-source",
+      "machineCount": 1,
+      "parallel": 1,
+      "overclockTier": "DEMO",
+      "enabled": true,
+      "position": {
+        "x": -900,
+        "y": 120
+      }
+    },
+    {
+      "id": "node-electrolyzer",
+      "recipeId": "demo-electrolyzer-hydrogen-carbon",
+      "machineCount": 3,
+      "parallel": 1,
+      "overclockTier": "DEMO",
+      "enabled": true,
+      "position": {
+        "x": -580,
+        "y": 120
+      }
+    },
+    {
+      "id": "node-carbon-monoxide",
+      "recipeId": "demo-chemical-carbon-monoxide",
+      "machineCount": 1,
+      "parallel": 1,
+      "overclockTier": "DEMO",
+      "enabled": true,
+      "position": {
+        "x": -240,
+        "y": 20
+      }
+    },
+    {
+      "id": "node-methanol",
+      "recipeId": "demo-chemical-methanol",
+      "machineCount": 1,
+      "parallel": 1,
+      "overclockTier": "DEMO",
+      "enabled": true,
+      "position": {
+        "x": 120,
+        "y": 20
+      }
+    },
+    {
+      "id": "node-biodiesel",
+      "recipeId": "demo-chemical-biodiesel",
+      "machineCount": 1,
+      "parallel": 1,
+      "overclockTier": "DEMO",
+      "targetOutput": {
+        "kind": "fluid",
+        "resourceId": "biodiesel",
+        "amountPerSecond": 100,
+        "displayName": "Biodiesel"
+      },
+      "enabled": true,
+      "position": {
+        "x": 480,
+        "y": -80
+      }
+    }
+  ],
+  "storages": [],
+  "annotations": [],
+  "pockets": [],
+  "edges": [],
+  "fuelProfiles": [
+    {
+      "id": "benzene",
+      "name": "Benzene",
+      "fuelFluidId": "benzene",
+      "euPerLiter": 32000,
+      "notes": "GTNH generator fuel value."
+    },
+    {
+      "id": "biodiesel",
+      "name": "Biodiesel",
+      "fuelFluidId": "biodiesel",
+      "euPerLiter": 12800,
+      "notes": "GTNH generator fuel value."
+    },
+    {
+      "id": "steam",
+      "name": "Steam",
+      "fuelFluidId": "steam",
+      "euPerLiter": 16,
+      "notes": "GTNH steam turbine value."
+    }
+  ],
+  "selectedFuelProfileId": "biodiesel",
+  "notes": "Demo data, not authoritative GTNH data. Values are approximate placeholders for validating the MVP workflow.",
+  "metadata": {
+    "isDemo": true,
+    "source": "Manual GTNH Factory Flow MVP demo, not an authoritative GTNH dataset.",
+    "createdAt": "2026-05-19T00:00:00.000Z"
+  }
+}

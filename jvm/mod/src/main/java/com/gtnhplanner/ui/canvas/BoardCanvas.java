@@ -1867,7 +1867,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
         final double have = carry.shares()[carry.from()];
         final double step = (net.minecraft.client.gui.GuiScreen.isShiftKeyDown() ? 0.02 : 0.1) * steps;
         carryPortion = Math.max(Math.min(0.02, have), Math.min(have, carryPortion + step));
-        Sfx.TICK.play(steps > 0 ? 1.12f : 0.9f);
+        Sfx.TICK.play(steps > 0 ? Sfx.WHEEL_UP : Sfx.WHEEL_DOWN);
     }
 
     /** Whether a card would take the leftover in hand (one of its places is on it). */

@@ -849,11 +849,17 @@ public final class PlanExport {
             final com.gtnhplanner.machines.Bees.Species bee = crop ? null : world.bee(n);
             final String handler = siteHandler(world, n);
             if (handler != null) o.addProperty("machineHandlerId", handler);
-            // A bee's housing has no voltage to pick: the Industrial Apiary's own tier, else none.
+            // A bee's housing has no voltage to pick: the Industrial Apiary's own tier, the Mega Apiary's set one (LuV
+            // and up), else none.
             if (bee != null) o.addProperty(
                 "overclockTier",
                 com.gtnhplanner.machines.Bees.INDUSTRIAL.key()
-                    .equals(handler) ? "MV" : "NONE");
+                    .equals(handler) ? "MV"
+                        : com.gtnhplanner.machines.Bees.MEGA_APIARY.key()
+                            .equals(handler)
+                                ? FfSettings.TIERS[com.gtnhplanner.machines.Bees.setup(cfg, bee)
+                                    .voltageTier()]
+                                : "NONE");
             // The machine's options under the website's own ids: the modelled machines' (machines/) as they are kept,
             // every other machine's from machine:<id>. The website's speed gene unset is Normal, ours the species'.
             final JsonObject settings = new JsonObject();

@@ -9,6 +9,7 @@ import { MenuPortal, anchorOf, type MenuAnchor } from "./MenuPortal";
 import { OptionListMenu } from "./OptionListMenu";
 import {
   isPinned,
+  numericSettingRow,
   pinMachineKey,
   settingControls,
   settingPatch,
@@ -120,6 +121,14 @@ export function SettingsSheet({
     const next = steppedOption(control, direction);
     if (next) choose(control, next.key);
   };
+  // Numbers the player types: the card's own (a crop card's harvesters), then the machine's numeric controls.
+  const typed = [
+    ...numbers,
+    ...controls.flatMap(
+      (control) => numericSettingRow(control, (key) => choose(control, key)) ?? [],
+    ),
+  ];
+  const listed = controls.filter((control) => !control.numeric);
   const openControl = open ? controls.find((entry) => entry.id === open.id) : undefined;
   const none = controls.length === 0 && numbers.length === 0;
   // Every pinnable setting goes to the toggle, or pinning one would unpin those left out.
@@ -130,7 +139,7 @@ export function SettingsSheet({
   const commitDraft = () => {
     if (!draft) return;
     setDraft(undefined);
-    if (!locked) numbers.find((entry) => entry.id === draft.id)?.commit(draft.text);
+    if (!locked) typed.find((entry) => entry.id === draft.id)?.commit(draft.text);
   };
   const wide = formulas.length > 0;
 
@@ -142,7 +151,7 @@ export function SettingsSheet({
             <div className="cs-col" style={{ flex: wide ? "0 0 auto" : "1 1 auto", minWidth: wide ? (none ? 220 : 250) : 0 }}>
               <div className="cs-title">Settings</div>
               {none ? <div className="cs-none">{NONE}</div> : null}
-              {numbers.map((setting) => {
+              {typed.map((setting) => {
                 const pinned = isPinned(project, machine, setting);
                 return (
                   <div
@@ -202,7 +211,7 @@ export function SettingsSheet({
                   </div>
                 );
               })}
-              {controls.map((control) => {
+              {listed.map((control) => {
                 const pinned = isPinned(project, machine, control);
                 return (
                   <div

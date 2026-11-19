@@ -43,18 +43,16 @@ describe("Spinmatron rotor level sum", () => {
     expect(sumControl(sum).current.key).toBe(sum);
   });
 
-  it("lists 1 to 256 in the card's settings sheet, so its filter finds a typed sum", () => {
+  it("is a typed number 1 to 256 in the card's settings sheet", () => {
     const control = settingControls(recipe, node({ sumTurbineTier: "240" }) as FactoryNode).find(
       (entry) => entry.id === "sumTurbineTier",
     )!;
-    expect(control.options.map((option) => option.key)).toEqual(
-      Array.from({ length: 256 }, (_, index) => String(index + 1)),
-    );
+    expect(control.numeric).toEqual({ min: 1, max: 256 });
     expect(control.currentKey).toBe("240");
   });
 
-  it("reads a sum past the list as the default", () => {
-    expect(sumControl("300").current.key).toBe("1");
+  it("clamps a sum past 256 to 256", () => {
+    expect(sumControl("300").current.key).toBe("256");
   });
 
   it("gives 4 parallels per level, x1.25 on Biocatalysed Propulsion Fluid, /32 in heavy mode", () => {

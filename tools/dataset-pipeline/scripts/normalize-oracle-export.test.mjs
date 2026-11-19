@@ -49,6 +49,48 @@ it("retains long fusion thresholds independently of legacy specialValue", () => 
   expect(dataset.recipes[0].metadata).toMatchObject({ fusionStartupEu: 6_000_000_000, specialValue: 0 });
 });
 
+describe("a recipe map that runs on several amps", () => {
+  // The Thermal Centrifuge map takes 2 amps: NEI names a 48 EU/t recipe LV
+  // (24 EU/t per amp), so the machine tier follows EU/t per amp, not raw EU/t.
+  const tierOf = (amperage, eut) => normalize({ domains: [{ id: "gregtech", recipeMaps: [{
+    id: "gt.recipe.thermalcentrifuge", name: "Thermal Centrifuge", amperage,
+    recipes: [{ id: "r", durationTicks: 500, eut,
+      itemInputs: [item("a:in", 1, "In")], itemOutputs: [item("a:out", 1, "Out")] }],
+  }] }] }).recipes[0].minimumTier;
+
+  it("names the tier by EU/t per amp", () => {
+    expect(tierOf(2, 48)).toBe("LV");
+    expect(tierOf(2, 30)).toBe("LV");
+    expect(tierOf(2, 480)).toBe("HV");
+  });
+
+  it("keeps the whole EU/t for a one-amp map or an older export that names no amps", () => {
+    expect(tierOf(1, 48)).toBe("MV");
+    expect(tierOf(undefined, 48)).toBe("MV");
+  });
+});
+
+describe("a crafting recipe with an ingredient that names nothing", () => {
+  // GregTech registers "hammer + gemFlawlessFluix -> 2 Fluix Crystal" although no
+  // such gem exists; the exporter marks the empty slot and the recipe cannot be made.
+  const crafting = inputs => normalize({ domains: [
+    { id: "gregtech", recipeMaps: [{ id: "gt.recipe.macerator", name: "Macerator", recipes: [{
+      id: "anchor", durationTicks: 20, eut: 2,
+      itemInputs: [item("a:in", 1, "In")], itemOutputs: [item("a:out", 1, "Out")] }] }] },
+    { id: "crafting", recipes: [{ id: "c", type: "shaped", output: item("a:crystal", 2, "Crystal"), inputs }] },
+  ] }).recipes.filter(recipe => recipe.category === "crafting");
+  const hammer = { kind: "item", id: "a:hammer", amount: 1, displayName: "Hammer", slotIndex: 0 };
+
+  it("drops the recipe rather than leaving it with the tool alone", () => {
+    expect(crafting([hammer, { kind: "missing", slotIndex: 1 }])).toHaveLength(0);
+  });
+
+  it("keeps a recipe whose slots all resolved", () => {
+    const [recipe] = crafting([hammer, { ...hammer, id: "a:gem", slotIndex: 1 }]);
+    expect(recipe.inputs).toHaveLength(2);
+  });
+});
+
 it("retains real furnace tiers and separates the Ore Washing Plant controller across maps", () => {
   const dataset = normalize({ domains: [
     { id: "gregtech", recipeMaps: singleblockCatalysts

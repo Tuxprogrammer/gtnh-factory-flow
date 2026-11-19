@@ -5,6 +5,7 @@ import { parseResourceHandleId } from "../../resource-handles";
 import {
   buildResourceLookup,
   canonicalOf,
+  oredictName,
   splitResultNodeId,
   type RailModel,
   type RailResource,
@@ -96,7 +97,10 @@ export function buildSpares(
         nodeId: cardId,
         handle: parsed.handle,
         output: parsed.side === "o",
-        name: resource.displayName ?? handle.resourceId,
+        name:
+          oredictName(project, handle.kind, handle.resourceId) ??
+          resource.displayName ??
+          handle.resourceId,
         machine:
           machineName.get(cardId) ?? recipes.get(node?.recipeId ?? "")?.machineType ?? cardId,
         resourceKey: canonicalOf(rail.aliases, key),

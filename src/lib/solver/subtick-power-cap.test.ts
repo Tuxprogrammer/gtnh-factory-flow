@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { FactoryNode, MachineTier, Recipe, RuntimeCalculation } from "@/lib/model/types";
 import { getOverclockedRecipeStats } from "./overclock";
 import { getNodePowerReport } from "./power-report";
+import { describePowerWorking } from "./power-working";
 
 // The game's rule for a multiblock run (ProcessingLogic -> ParallelHelper.determineParallel
 // -> OverclockCalculator), worked by hand for every expectation below:
@@ -132,5 +133,14 @@ describe("parallels banked under one tick are capped by the power supply", () =>
     const node = { overclockTier: "IV", machineHandlerId: "macerator" } as unknown as FactoryNode;
     expect(getOverclockedRecipeStats(macerator, node).durationTicks).toBe(1);
     expect(run(macerator, node)).toMatchObject({ parallels: 1, perTick: 1, perSecond: 20 });
+  });
+
+  it("writes a capped run's time as a decimal, a whole fraction only when it is one", () => {
+    const time = (node: FactoryNode, budget: number) =>
+      describePowerWorking(chisel, node, budget).rows.find((row) => row.id === "time")?.supplied;
+    // 64 parallels at 170 a tick: 64 / 170 = 0.376 ticks, not "1/3 t".
+    expect(time(hatch("EV", 1), 2048)).toBe("0.38 t");
+    // Four EV hatches: one overclock past a third of a tick, six a tick.
+    expect(time(hatch("EV", 4), 8192)).toBe("1/6 t");
   });
 });

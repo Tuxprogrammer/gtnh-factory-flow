@@ -43,7 +43,39 @@ class MachineGoldensTest {
 
     @Test
     void portMatchesTheWebsite() throws Exception {
-        final InputStream raw = Conformance.open(FILE);
+        // GOLDENS_IN=<file.jsonl.gz>[,<file>...] checks other golden files instead (a fresh generator run), each one's
+        // failing records written beside it as <file>.fail.jsonl. Gradle does not see the environment: run with --rerun.
+        final String other = System.getenv("GOLDENS_IN");
+        if (other != null && !other.isEmpty()) {
+            final StringBuilder all = new StringBuilder();
+            int failed = 0;
+            for (final String path : other.split(",")) {
+                final MachineGoldensTest run = new MachineGoldensTest();
+                try (java.io.PrintWriter dump = new java.io.PrintWriter(
+                    new java.io.OutputStreamWriter(
+                        new java.io.FileOutputStream(path + ".fail.jsonl"),
+                        StandardCharsets.UTF_8))) {
+                    run.dump = dump;
+                    all.append(path)
+                        .append(": ")
+                        .append(run.check(new java.io.FileInputStream(path)))
+                        .append("\n");
+                }
+                failed += run.failures.size();
+            }
+            System.out.println(all);
+            assertTrue(failed == 0, all.toString());
+            return;
+        }
+        final String report = check(Conformance.open(FILE));
+        System.out.println(report);
+        assertTrue(failures.isEmpty(), report);
+    }
+
+    /** Where each failing case goes as one JSON line, when set. */
+    private java.io.PrintWriter dump;
+
+    private String check(final InputStream raw) throws Exception {
         final Map<String, Web.Recipe> recipes = new HashMap<>();
         try (BufferedReader in = new BufferedReader(
             new InputStreamReader(new GZIPInputStream(raw), StandardCharsets.UTF_8))) {
@@ -62,7 +94,18 @@ class MachineGoldensTest {
                     skipped++;
                     continue;
                 }
+                final int before = failures.size();
                 check(c, recipe, group);
+                if (dump != null && failures.size() > before) {
+                    final JsonObject o = new JsonObject();
+                    o.add("case", c.get("case"));
+                    o.addProperty("group", group);
+                    o.add("variant", c.get("variant"));
+                    o.addProperty("recipeId", recipeId);
+                    o.add("node", c.get("node"));
+                    o.addProperty("diffs", failures.get(failures.size() - 1));
+                    dump.println(o);
+                }
             }
         }
         final StringBuilder report = new StringBuilder(
@@ -71,10 +114,9 @@ class MachineGoldensTest {
             .append(e.getKey())
             .append(": ")
             .append(e.getValue());
-        for (int i = 0; i < Math.min(40, failures.size()); i++) report.append("\n")
+        if (dump == null) for (int i = 0; i < Math.min(40, failures.size()); i++) report.append("\n")
             .append(failures.get(i));
-        System.out.println(report);
-        assertTrue(failures.isEmpty(), report.toString());
+        return report.toString();
     }
 
     private void check(final JsonObject c, final Web.Recipe recipe, final String group) {

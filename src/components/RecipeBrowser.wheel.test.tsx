@@ -20,14 +20,19 @@ const datasetVersion: DatasetVersion = {
   sourceInfo: { sourceId: "recex", generatedAt: "2026-05-25T00:00:00.000Z" },
 };
 
-const woods = ["Oak Log", "Birch Log", "Spruce Log", "Jungle Log", "Acacia Log", "Dark Oak Log"].map(
-  (displayName, index) => ({
-    kind: "item" as const,
-    id: `minecraft:log@${index}`,
-    amount: 1,
-    displayName,
-  }),
-);
+const woods = [
+  "Oak Log",
+  "Birch Log",
+  "Spruce Log",
+  "Jungle Log",
+  "Acacia Log",
+  "Dark Oak Log",
+].map((displayName, index) => ({
+  kind: "item" as const,
+  id: `minecraft:log@${index}`,
+  amount: 1,
+  displayName,
+}));
 
 const cokeOven: Recipe = {
   id: "coke-oven-charcoal",

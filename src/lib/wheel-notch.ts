@@ -6,7 +6,11 @@
  */
 export const WHEEL_NOTCH_GAP_MS = 60;
 
-export type WheelNotch = (event: { deltaX: number; deltaY: number; timeStamp: number }) => 1 | -1 | 0;
+export type WheelNotch = (event: {
+  deltaX: number;
+  deltaY: number;
+  timeStamp: number;
+}) => 1 | -1 | 0;
 
 /** One gate per control. Returns 1 (next), -1 (previous) or 0 (not a step: no movement, or the rest of a notch). */
 export function createWheelNotch(gapMs: number = WHEEL_NOTCH_GAP_MS): WheelNotch {

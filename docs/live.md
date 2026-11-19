@@ -10,7 +10,7 @@ this file is the website's side of it.
 | Part | Where | What it does |
 |---|---|---|
 | Plan additions | `src/lib/model/schemas.ts`, `types.ts` | `gtnhplanner` (the game's own data, opaque, 64 KB a thing), `primaryView`, `tasks`, `taskItems`, `taskComments` |
-| Op engine | `src/lib/live/ops.ts` | put / patch / del / meta, apply, diff, invert, JSON equality; `live-vectors.json` pins every rule and the game runs the same file |
+| Op engine | `src/lib/live/ops.ts` | put / patch / del / meta, apply, diff, invert, JSON equality; `conformance/live/live-vectors.json` pins every rule and the game runs the same file |
 | Client engine | `src/lib/live/client-state.ts` | confirmed + pending, echoes, resync after a reconnect, undo by inverse |
 | Protocol | `src/lib/live/protocol.ts` | frame types, doc keys, limits, colours, `liveSocketUrl` |
 | Batch checks | `src/lib/live/validate.ts`, `src/live/batch.ts` | each thing a batch puts or patches must pass its collection's schema, plan fields their field's; what is stored is the schema's output |

@@ -1,7 +1,7 @@
 // Runs bee-goldens.local.test.ts against the website's own source without adding anything to its checkout: the
 // website is the root (its "@" alias, its node_modules), the writer stays here. From the website's checkout:
 //
-//   BEE_GOLDENS_OUT=<mod>/src/test/resources/bee-goldens.jsonl.gz \
+//   BEE_GOLDENS_OUT=<repo>/conformance/machines/bee-goldens.jsonl.gz \
 //     node node_modules/vitest/vitest.mjs run --config <mod>/tools/dev/bees/vitest.bees.config.mjs
 //
 // FACTORY_FLOW names the website's checkout when it is not this repository's root.

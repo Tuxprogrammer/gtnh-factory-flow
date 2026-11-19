@@ -25,6 +25,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.gtnhplanner.conformance.Conformance;
 
 /**
  * The shared test vectors ({@code live-vectors.json}, the website's {@code src/lib/live/}): the game's engine must
@@ -34,7 +35,7 @@ import com.google.gson.JsonParser;
 class LiveVectorsTest {
 
     private static JsonObject file() {
-        try (InputStream in = LiveVectorsTest.class.getResourceAsStream("/live/live-vectors.json")) {
+        try (InputStream in = Conformance.open("live/live-vectors.json")) {
             assertNotNull(in, "live-vectors.json");
             return new JsonParser().parse(new InputStreamReader(in, StandardCharsets.UTF_8))
                 .getAsJsonObject();

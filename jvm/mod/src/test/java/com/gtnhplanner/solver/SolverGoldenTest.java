@@ -20,6 +20,7 @@ import org.junit.jupiter.api.TestFactory;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import com.gtnhplanner.conformance.Conformance;
 import com.gtnhplanner.data.flowchart.balancer.Balancer;
 import com.gtnhplanner.harness.GtnhFlowLoader;
 
@@ -31,7 +32,7 @@ import com.gtnhplanner.harness.GtnhFlowLoader;
 class SolverGoldenTest {
 
     private static final boolean WRITE = Boolean.getBoolean("gtnhplanner.solver.writeGoldens");
-    private static final Path GOLDENS = Path.of("src/test/resources/solver-corpus/goldens");
+    private static final Path GOLDENS = Conformance.path("solver/corpus/goldens");
 
     @BeforeAll
     static void profile() {
@@ -86,8 +87,7 @@ class SolverGoldenTest {
             return;
         }
         final JsonElement golden;
-        try (InputStream in = SolverGoldenTest.class
-            .getResourceAsStream("/solver-corpus/goldens/" + c.name() + ".json")) {
+        try (InputStream in = Conformance.open("solver/corpus/goldens/" + c.name() + ".json")) {
             assertTrue(in != null, "no golden for " + c.name() + " (run with -PwriteGoldens)");
             golden = new JsonParser().parse(new InputStreamReader(in, StandardCharsets.UTF_8));
         }

@@ -16,14 +16,13 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.gtnhplanner.conformance.Conformance;
 
 /** Order keys: the website's recorded answers (shared vectors), and keys that always land between their neighbours. */
 class OrderKeysTest {
 
     private static JsonObject vectors() throws Exception {
-        try (Reader r = new InputStreamReader(
-            OrderKeysTest.class.getResourceAsStream("/tasks/order-key-vectors.json"),
-            StandardCharsets.UTF_8)) {
+        try (Reader r = new InputStreamReader(Conformance.open("tasks/order-key-vectors.json"), StandardCharsets.UTF_8)) {
             return new JsonParser().parse(r)
                 .getAsJsonObject();
         }

@@ -24,7 +24,7 @@
  * coverage is safe. Add entries only once verified; do not guess.
  *
  * `machine-table.test.ts` checks every entry against
- * `__fixtures__/reference-coefficients.json` (the reference's definitions
+ * `conformance/machines/reference-coefficients.json` (the reference's definitions
  * evaluated over a grid of tiers and choices); that test says how to
  * regenerate it.
  */

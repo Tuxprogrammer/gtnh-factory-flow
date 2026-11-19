@@ -9,9 +9,8 @@ website at `docs/cross-repo-features.md`; change both together.
 
 - **The solver is one program in two languages.** The website's `src/lib/solver/plan/` is a line-for-line port of the
   mod's `data/flowchart/balancer/`. Both solve the same `SolveInput` and must give the same answer to 1e-6, ties
-  included. The proof is the shared corpus: the mod's `src/test/resources/solver-corpus/` (inputs and `goldens/`) is
-  copied into the website's `src/lib/solver/plan/__fixtures__/corpus/` (`inputs/`, `goldens/`), and both suites
-  compare every answer to the same golden files.
+  included. The proof is the shared corpus: `conformance/solver/corpus/` (inputs and `goldens/`), one copy that
+  both suites read, and both compare every answer to the same golden files.
 - **The plan JSON is the website's.** The mod reads and writes Factory Flow's project JSON (`importer/`,
   `library/PlanExport`); the website stores it natively (`src/lib/model/types.ts`, `schemas.ts`). A feature that must
   travel between them has to have a shape in that JSON first.
@@ -70,7 +69,7 @@ Times are what buffer drawers took (about 4 hours end to end, half of it discove
    `dev/SolveInputJson` (write new fields only when non-empty so every older dump reads the same). Compile errors at
    every `switch` over an enum are a free checklist of places to visit: keep the switches exhaustive.
 3. **A corpus case, written by a mod test (15 min).** Build the `SolveInput` in a test (`BufferDrawerTest.input()`),
-   assert the hand-worked numbers, and have the same test write it to `solver-corpus/<case>.json` under
+   assert the hand-worked numbers, and have the same test write it to `conformance/solver/corpus/inputs/<case>.json` under
    `-PwriteGoldens` and otherwise check the file still matches. Add the name to `SolverCorpus.PLANS`. Then
    `./gradlew test --tests '*SolverGoldenTest*' -PwriteGoldens` and read `git diff` of the goldens: only what you meant
    may move. The bench case `platline-x10` is not rewritten by that run; patch it by hand if the digest gained a field.
@@ -136,9 +135,8 @@ Times are what buffer drawers took (about 4 hours end to end, half of it discove
 
 Ranked by payoff for effort.
 
-1. **One corpus, two readers (small, high).** Keep `solver-corpus/` in one place (a git submodule or a tiny shared
-   repo both check out) instead of copying files; a script that copies and checks hashes is the cheap version. Today
-   every new case is copied by hand and the counts in `harness.test.ts` are typed in.
+1. **One corpus, two readers (small, high). Done:** `conformance/solver/corpus/` is the one copy, and both suites
+   check it against `conformance/manifest.json` (`conformance/README.md`). The counts in `harness.test.ts` are still typed in.
 2. **A parity runner for any `SolveInput` (small, high).** A CLI on each side that solves a JSON input and prints the
    digest (`gradlew solveJson -Pin=...`, `node solve-json.mjs`), plus a script that runs both and diffs them. Any plan
    on either board (`solvedump`, or the website's adapter output) then becomes a parity check in seconds, without

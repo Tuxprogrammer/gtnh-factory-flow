@@ -22,6 +22,7 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import com.gtnhplanner.conformance.Conformance;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.balancer.Balancer;
 import com.gtnhplanner.data.flowchart.balancer.DrawerReadout;
@@ -43,7 +44,7 @@ final class SolverCorpus {
     /** One case: a name and its input. */
     record Case(String name, SolveInput input) {}
 
-    /** The plans written from the game, under {@code /solver-corpus/}. */
+    /** The plans written from the game, in {@code conformance/solver/corpus/inputs/}. */
     static final String[] PLANS = { "alumina-line-shared-reactor", "benzene", "full-platline", "glass", "hv-diesel",
         "mega-iv-nitrobenzene-power-plant", "mv", "oxygen-silicon-loop", "pa-cell-loop", "platline", "single-card-v2",
         "sulfuric-acid", "titanium-line-chembath", "titanium-line-tour", "buffer-drawers" };
@@ -126,11 +127,12 @@ final class SolverCorpus {
     }
 
     /**
-     * The Up to plans the website wrote for the parity check ({@code solver-corpus-upto/}, {@code UpToParityTest}): its
+     * The Up to plans the website wrote for the parity check ({@code conformance/solver/up-to/},
+     * {@code UpToParityTest}): its
      * hand-built Up to plans and every corpus plan with each exact count Up to.
      */
     static List<Case> upToCases() {
-        final java.nio.file.Path dir = java.nio.file.Path.of("src/test/resources/solver-corpus-upto");
+        final java.nio.file.Path dir = Conformance.path("solver/up-to");
         final List<Case> out = new ArrayList<>();
         try (java.util.stream.Stream<java.nio.file.Path> files = java.nio.file.Files.list(dir)) {
             for (final java.nio.file.Path f : files.filter(
@@ -161,8 +163,7 @@ final class SolverCorpus {
     }
 
     static SolveInput plan(final String name) {
-        try (InputStream in = SolverCorpus.class.getResourceAsStream("/solver-corpus/" + name + ".json")) {
-            if (in == null) throw new IllegalArgumentException("no corpus plan " + name);
+        try (InputStream in = Conformance.open("solver/corpus/inputs/" + name + ".json")) {
             return SolveInputJson.read(
                 new JsonParser().parse(new InputStreamReader(in, StandardCharsets.UTF_8))
                     .getAsJsonObject());

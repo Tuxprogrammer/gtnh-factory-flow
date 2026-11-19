@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Job `web-core`: the TeaVM build of the core (WebAssembly GC and JavaScript), its JVM-side tests and override check, and
+# Job `web-core`: the TeaVM build of the core's modules (WebAssembly GC and JavaScript), its JVM-side tests and override check, and
 # the conformance run in Node: the committed vectors and a few hundred thousand random cases the JVM made, against each
 # target (the JavaScript one a sample unless the diff needs the full run). Any difference fails the job. Prints the size (raw and gzip) of each file the website would ship and the times.
 # Needs JDK 25 as JAVA_HOME (it runs Gradle and TeaVM), Node 24 on PATH, and no Gradle daemon.
@@ -41,11 +41,16 @@ PY
 say "web module JVM tests: $ran ran"
 
 teavm="$build/generated/teavm"
-for f in wasm-gc/core.wasm wasm-gc/core.wasm-runtime.js js/core.js; do
+# The modules (jvm/web/modules.txt): each has a wasm and a JavaScript file; the first one supplies the shared runtime script.
+mapfile -t modules < <(awk '!/^#/ && NF { print $1 }' jvm/web/modules.txt)
+[ "${#modules[@]}" -ge 1 ] || fail "jvm/web/modules.txt names no module"
+files=("wasm-gc/${modules[0]}.wasm-runtime.js")
+for m in "${modules[@]}"; do files+=("wasm-gc/$m.wasm" "js/$m.js"); done
+for f in "${files[@]}"; do
   [ -s "$teavm/$f" ] || fail "$teavm/$f was not built"
 done
 say "sizes (raw / gzip -9, bytes):"
-for f in wasm-gc/core.wasm wasm-gc/core.wasm-runtime.js js/core.js; do
+for f in "${files[@]}"; do
   say "  $(printf '%-28s %9d %9d' "$f" "$(wc -c < "$teavm/$f")" "$(gzip -9 -c "$teavm/$f" | wc -c)")"
 done
 
@@ -54,7 +59,22 @@ done
 full=()
 if [ "${CI_WEB_CORE_FULL:-}" = true ] || [ "${WEB_CORE_FULL:-}" = 1 ]; then full=(--full); fi
 say "conformance: ${full[*]:-sampled on the JavaScript target}"
-node tools/web-core/run.mjs --build "$teavm" --random "$build/random/cases.jsonl" "${full[@]}" || fail "the compiled core differs from the vectors or from the JVM (above)"
+# One Node process per target, side by side: the JavaScript target is the slow one and nothing it computes is read by the
+# other, so the run takes as long as the longer of the two. The JVM-against-Node check of the random cases does not depend on
+# the target and runs in the WebAssembly process only. Each process's lines are printed whole, WebAssembly first.
+logs="$build/conformance"
+rm -rf "$logs"; mkdir -p "$logs"
+run_target() { # target, extra run.mjs arguments
+  local target="$1"; shift
+  pin node tools/web-core/run.mjs --build "$teavm" --random "$build/random/cases.jsonl" --targets "$target" "$@" "${full[@]}" >"$logs/$target.log" 2>&1
+}
+run_target wasm & wasm_pid=$!
+run_target js --no-jvm-node & js_pid=$!
+status=0
+wait "$wasm_pid" || status=1
+wait "$js_pid" || status=1
+cat "$logs/wasm.log" "$logs/js.log"
+[ "$status" = 0 ] || fail "the compiled core differs from the vectors or from the JVM (above)"
 done=$(date +%s)
 say "build $((built - started))s, conformance $((done - built))s"
 say "PASS"

@@ -1,11 +1,11 @@
 import { createHash } from "node:crypto";
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { getPowerSource, POWER_SOURCES } from "@/lib/power/registry";
 import { buildPowerSettingsReader } from "@/lib/power/types";
-import { CORE_EXPORT_NAMES } from "./exports.generated";
+import { CORE_EXPORT_NAMES, CORE_MODULES } from "./exports.generated";
 import {
   CoreNotLoadedError,
   CoreUnavailableError,
@@ -44,6 +44,46 @@ describe("core loader without a core", () => {
       rmSync(empty, { recursive: true, force: true });
       resetCoreForTests();
     }
+  });
+});
+
+describe("core loader and the manifest", () => {
+  it("refuses a manifest of another format and names the fix", async () => {
+    resetCoreForTests();
+    const dir = mkdtempSync(path.join(os.tmpdir(), "old-core-"));
+    try {
+      writeFileSync(
+        path.join(dir, "manifest.json"),
+        JSON.stringify({ format: 1, version: "x", files: [] }),
+      );
+      await expect(loadCore({ dir })).rejects.toThrow(/rebuild/);
+      expect(coreState()).toBe("unavailable");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+      resetCoreForTests();
+    }
+  });
+
+  it.skipIf(!present)("names every file by its content hash, and every module has both targets", () => {
+    const manifest = JSON.parse(
+      readFileSync(path.join(process.cwd(), "public", "core", "manifest.json"), "utf8"),
+    ) as {
+      format: number;
+      runtime: string;
+      modules: Record<string, { wasm: string; js: string }>;
+      files: { path: string }[];
+    };
+    expect(manifest.format).toBe(2);
+    const listed = new Set(manifest.files.map((f) => f.path));
+    for (const f of [
+      manifest.runtime,
+      ...Object.values(manifest.modules).flatMap((m) => [m.wasm, m.js]),
+    ]) {
+      expect(f).toMatch(/\.[0-9a-f]{8}\./);
+      expect(listed.has(f), f).toBe(true);
+      expect(existsSync(path.join(process.cwd(), "public", "core", f)), f).toBe(true);
+    }
+    expect(Object.keys(manifest.modules)).toEqual(Object.keys(CORE_MODULES));
   });
 });
 
@@ -199,27 +239,57 @@ for (const target of targets) {
       expect(power.powerCompute("no-such-source", "{}")).toBeNull();
     });
 
-    it("exports exactly the functions the Java sources declare", () => {
-      if ((CORE_EXPORT_NAMES.top as readonly string[]).length === 0) return; // no jvm tree in this checkout: nothing declared
+    it("exports exactly the functions the Java sources declare, module by module", async () => {
+      const modules = CORE_MODULES as Record<
+        string,
+        { namespaces: readonly string[]; top: readonly string[] }
+      >;
+      if (Object.keys(modules).length === 0) return; // no jvm tree in this checkout: nothing declared
       const exp = core() as unknown as Record<string, unknown>;
-      const declared = CORE_EXPORT_NAMES.namespaces as Record<string, readonly string[]>;
-      for (const [ns, names] of Object.entries(declared)) {
-        const actual = Object.keys(exp[ns] as object)
-          .filter((k) => typeof (exp[ns] as Record<string, unknown>)[k] === "function")
+      // What is on the object: data properties only, so a namespace of a module not loaded (a throwing getter) is not read.
+      const present = () => {
+        const out: Record<string, unknown> = {};
+        for (const k of Object.getOwnPropertyNames(exp)) {
+          const d = Object.getOwnPropertyDescriptor(exp, k);
+          if (d && "value" in d) out[k] = d.value;
+        }
+        return out;
+      };
+      const check = (loaded: string[]) => {
+        const have = present();
+        const topWanted = new Set<string>();
+        for (const name of loaded) {
+          for (const ns of modules[name].namespaces) {
+            const actual = Object.keys(have[ns] as object)
+              .filter((k) => typeof (have[ns] as Record<string, unknown>)[k] === "function")
+              .sort();
+            const declared = (CORE_EXPORT_NAMES.namespaces as Record<string, readonly string[]>)[ns];
+            expect(actual, ns).toEqual([...declared].sort());
+          }
+          for (const t of modules[name].top) topWanted.add(t);
+        }
+        const namespaces = Object.values(modules).flatMap((m) => m.namespaces);
+        const top = Object.keys(have)
+          .filter((k) => typeof have[k] === "function" && !namespaces.includes(k) && k !== "main")
           .sort();
-        expect(actual, ns).toEqual([...names].sort());
-      }
-      const extraNamespaces = [
-        ...new Set([...Object.getOwnPropertyNames(exp), ...Object.keys(exp)]),
-      ].filter((k) => k.endsWith("Exports") && !(k in declared));
-      expect(extraNamespaces).toEqual([]);
-      // Wasm exports may be non-enumerable, so read the names every way.
-      const names = new Set<string>(Object.getOwnPropertyNames(exp));
-      for (const k in exp) names.add(k);
-      const top = [...names]
-        .filter((k) => typeof exp[k] === "function" && !(k in declared) && k !== "main")
-        .sort();
-      expect(top).toEqual([...CORE_EXPORT_NAMES.top].sort());
+        expect(top).toEqual([...topWanted].sort());
+        // A module that is not loaded names itself in the error instead of answering undefined.
+        for (const name of Object.keys(modules).filter((n) => !loaded.includes(n)))
+          for (const ns of modules[name].namespaces) {
+            expect(() => exp[ns], ns).toThrow(CoreNotLoadedError);
+            expect(() => exp[ns], ns).toThrow(new RegExp(name));
+          }
+        expect(Object.keys(have).filter((k) => namespaces.includes(k)).length).toBe(
+          loaded.reduce((n, name) => n + modules[name].namespaces.length, 0),
+        );
+      };
+      check(["core"]);
+      // The solver module loads on its own call and joins the same object; the core's functions stay.
+      const before = core();
+      await loadCore({ target, modules: ["solver"] });
+      expect(core()).toBe(before);
+      expect(coreInfo()!.modules.solver?.target).toBe(target);
+      check(Object.keys(modules));
     });
   });
 }

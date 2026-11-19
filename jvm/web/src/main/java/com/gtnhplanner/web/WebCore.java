@@ -10,6 +10,9 @@ import org.teavm.jso.JSExport;
  */
 public final class WebCore {
 
+    /** The export convention's version every module's {@code webCoreExportVersion} answers. */
+    public static final int EXPORT_VERSION = 1;
+
     private WebCore() {}
 
     public static void main(final String[] args) {
@@ -19,7 +22,7 @@ public final class WebCore {
     /** Tells the loader which build it got, so a stale file is noticed. Bump with a change to the export convention. */
     @JSExport
     public static int webCoreExportVersion() {
-        return 1;
+        return EXPORT_VERSION;
     }
 
     /**

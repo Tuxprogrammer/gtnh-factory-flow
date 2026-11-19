@@ -6,6 +6,9 @@
 // StrictMath, which the plugin sends to ExactMath), java/d2i, java/d2l, java/neg, java/order-<form> (bracketing),
 // java/double-to-string and java/bigdecimal-valueof (NumberText.javaString and BigDecimal.valueOf against the JDK),
 // java/bigdecimal-op<n> (BigDecimal arithmetic and rounding to a MathContext against the JDK).
+// Each load module (jvm/web/modules.txt) is its own TeaVM compilation, so the plugin and the BigDecimal override are proved
+// in each: the core module through BaseExports (the groups above), the solver module through SolverJavaExports (the same
+// groups under solver/, all but exact-math/* and java/double-to-string, which call core-base directly).
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -23,44 +26,67 @@ function same(actual, hex) {
 
 const long = (h) => h.padStart(16, "0");
 
-function checkOne(base, tally, fn, xHex, yHex, answer, strictAlso) {
+/**
+ * One module's probes: `java` answers the java* functions, `exact` (core only) ExactMath itself, `at` prefixes its group
+ * names ("" for core, "solver/" for the solver module).
+ */
+function probesOf(api) {
+  return [
+    { at: "", java: api.BaseExports, exact: api.BaseExports, name: "BaseExports" },
+    { at: "solver/", java: api.SolverJavaExports, exact: null, name: "SolverJavaExports" },
+  ];
+}
+
+function checkOne(p, tally, fn, xHex, yHex, answer, strictAlso) {
   const x = fromBits(xHex);
   const y = yHex === null ? 0 : fromBits(yHex);
   const args = yHex === null ? xHex : `${xHex}, ${yHex}`;
+  const base = p.java;
   if (fn === "round") {
-    const a = long(base.exactMathRoundHex(x));
-    tally.check("exact-math/round", a === answer, () => `round(${args}): ${a} (JVM ${answer})`);
+    if (p.exact) {
+      const a = long(p.exact.exactMathRoundHex(x));
+      tally.check("exact-math/round", a === answer, () => `round(${args}): ${a} (JVM ${answer})`);
+    }
     const b = long(base.javaMathRoundHex(false, x));
-    tally.check("java-math/round", b === answer, () => `Math.round(${args}): ${b} (JVM ${answer})`);
+    tally.check(`${p.at}java-math/round`, b === answer, () => `Math.round(${args}): ${b} (JVM ${answer})`);
     if (strictAlso) {
       const c = long(base.javaMathRoundHex(true, x));
-      tally.check("strict-math/round", c === answer, () => `StrictMath.round(${args}): ${c} (JVM ${answer})`);
+      tally.check(`${p.at}strict-math/round`, c === answer, () => `StrictMath.round(${args}): ${c} (JVM ${answer})`);
     }
     return;
   }
-  const a = base.exactMath(fn, x, y);
-  tally.check(`exact-math/${fn}`, same(a, answer), () => `${fn}(${args}): ${bitsOf(a)} (JVM ${answer})`);
+  if (p.exact) {
+    const a = p.exact.exactMath(fn, x, y);
+    tally.check(`exact-math/${fn}`, same(a, answer), () => `${fn}(${args}): ${bitsOf(a)} (JVM ${answer})`);
+  }
   const b = base.javaMath(false, fn, x, y);
-  tally.check(`java-math/${fn}`, same(b, answer), () => `Math.${fn}(${args}): ${bitsOf(b)} (JVM ${answer})`);
+  tally.check(`${p.at}java-math/${fn}`, same(b, answer), () => `Math.${fn}(${args}): ${bitsOf(b)} (JVM ${answer})`);
   if (strictAlso) {
     const c = base.javaMath(true, fn, x, y);
-    tally.check(`strict-math/${fn}`, same(c, answer), () => `StrictMath.${fn}(${args}): ${bitsOf(c)} (JVM ${answer})`);
+    tally.check(`${p.at}strict-math/${fn}`, same(c, answer), () => `StrictMath.${fn}(${args}): ${bitsOf(c)} (JVM ${answer})`);
   }
 }
 
 /** The committed vectors, and the random cases' math and conversion lines when there are any. */
 export function runExactMath(api, tally, cases = [], { every = 1 } = {}) {
-  const base = api.BaseExports;
-  if (!base?.exactMath) {
-    tally.check("exact-math/exports", false, () => "the build has no BaseExports.exactMath");
-    return;
-  }
   const started = Date.now();
+  for (const p of probesOf(api)) {
+    if (!p.java?.javaMath || (p.exact && !p.exact.exactMath)) {
+      tally.check(`${p.at}exact-math/exports`, false, () => `the build has no ${p.name} probes`);
+      continue;
+    }
+    runModule(p, tally, cases, every);
+  }
+  tally.group("exact-math/sin").ms = Date.now() - started;
+}
+
+function runModule(p, tally, cases, every) {
+  const base = p.java;
   const { functions } = JSON.parse(readFileSync(EXACT_MATH_VECTORS, "utf8"));
   for (const [fn, rows] of Object.entries(functions)) {
     for (const r of rows) {
-      if (r.length === 3) checkOne(base, tally, fn, r[0], r[1], r[2], true);
-      else checkOne(base, tally, fn, r[0], null, r[1], true);
+      if (r.length === 3) checkOne(p, tally, fn, r[0], r[1], r[2], true);
+      else checkOne(p, tally, fn, r[0], null, r[1], true);
     }
   }
   // The random cases: all of them, or every n-th of each kind on a sampled run (the JavaScript target in CI).
@@ -72,45 +98,46 @@ export function runExactMath(api, tally, cases = [], { every = 1 } = {}) {
     if (i % every !== 0) continue;
     switch (c[0]) {
       case "math":
-        checkOne(base, tally, c[1], c[2], c[3], c[4], false);
+        checkOne(p, tally, c[1], c[2], c[3], c[4], false);
         break;
       case "d2i": {
         const a = base.javaToInt(fromBits(c[1]));
-        tally.check("java/d2i", a === c[2], () => `(int) ${c[1]}: ${a} (JVM ${c[2]})`);
+        tally.check(`${p.at}java/d2i`, a === c[2], () => `(int) ${c[1]}: ${a} (JVM ${c[2]})`);
         break;
       }
       case "d2l": {
         const a = long(base.javaToLongHex(fromBits(c[1])));
-        tally.check("java/d2l", a === c[2], () => `(long) ${c[1]}: ${a} (JVM ${c[2]})`);
+        tally.check(`${p.at}java/d2l`, a === c[2], () => `(long) ${c[1]}: ${a} (JVM ${c[2]})`);
         break;
       }
       case "neg": {
         const a = base.javaNegate(fromBits(c[1]));
-        tally.check("java/neg", same(a, c[2]), () => `-${c[1]}: ${bitsOf(a)} (JVM ${c[2]})`);
+        tally.check(`${p.at}java/neg`, same(a, c[2]), () => `-${c[1]}: ${bitsOf(a)} (JVM ${c[2]})`);
         break;
       }
       case "jstr": {
         const x = fromBits(c[1]);
-        const a = base.numberTextJavaString(x);
-        tally.check("java/double-to-string", a === c[2], () => `${c[1]}: ${a} (JDK ${c[2]})`);
+        if (p.exact) {
+          const a = p.exact.numberTextJavaString(x);
+          tally.check("java/double-to-string", a === c[2], () => `${c[1]}: ${a} (JDK ${c[2]})`);
+        }
         const b = base.javaBigDecimalOf(x);
-        tally.check("java/bigdecimal-valueof", b === c[3], () => `${c[1]}: ${b} (JDK ${c[3]})`);
+        tally.check(`${p.at}java/bigdecimal-valueof`, b === c[3], () => `${c[1]}: ${b} (JDK ${c[3]})`);
         break;
       }
       case "dec": {
         const a = base.javaBigDecimalOp(c[1], c[2], c[3], c[4], c[5]);
-        tally.check(`java/bigdecimal-op${c[1]}`, a === c[6], () => `op ${c[1]} (${c[2]}, ${c[3]}, ${c[4]}, mode ${c[5]}): ${a} (JDK ${c[6]})`);
+        tally.check(`${p.at}java/bigdecimal-op${c[1]}`, a === c[6], () => `op ${c[1]} (${c[2]}, ${c[3]}, ${c[4]}, mode ${c[5]}): ${a} (JDK ${c[6]})`);
         break;
       }
       case "assoc": {
         const a = base.javaOrder(c[1], fromBits(c[2]), fromBits(c[3]), fromBits(c[4]));
-        tally.check(`java/order-${c[1]}`, same(a, c[5]), () => `form ${c[1]} (${c[2]}, ${c[3]}, ${c[4]}): ${bitsOf(a)} (JVM ${c[5]})`);
+        tally.check(`${p.at}java/order-${c[1]}`, same(a, c[5]), () => `form ${c[1]} (${c[2]}, ${c[3]}, ${c[4]}): ${bitsOf(a)} (JVM ${c[5]})`);
         break;
       }
       default:
     }
   }
-  tally.group("exact-math/sin").ms = Date.now() - started;
 }
 
 /** The case kinds this file answers; random.mjs leaves them alone. */

@@ -4,8 +4,10 @@ This module compiles the `core-*` modules with TeaVM 0.16 into two targets from 
 
 | Target | Files (under `build/generated/teavm/`) | Use |
 |---|---|---|
-| WebAssembly GC | `wasm-gc/core.wasm`, `wasm-gc/core.wasm-runtime.js` | the default in browsers and Node 24 |
-| JavaScript | `js/core.js` (ES2015 module) | fallback, and a second opinion in the conformance run |
+| WebAssembly GC | `wasm-gc/<module>.wasm`, `wasm-gc/core.wasm-runtime.js` | the default in browsers and Node 24 |
+| JavaScript | `js/<module>.js` (ES2015 module) | fallback, and a second opinion in the conformance run |
+
+Each target is built once per load module (see "Load modules").
 
 It compiles `:core-base`, `:core-power`, `:core-layout` and `:core-solver` (the `coreModules` list in `build.gradle.kts`). The TeaVM plugin adds no repository; the module's own
 `repositories { mavenCentral() }` is for the TeaVM libraries. `:web:build` does not run TeaVM (the mod's
@@ -125,7 +127,58 @@ that TeaVM's classlib lacks. One more override is for speed only: `DenseTableau`
 the non-zero entries row by row (the same values; the dense scan was 17% of the heaviest plan's solve). The core solves on one thread (`Parallel` uses `Worker.INLINE` by default), as the browser has
 none. `SolverExports.solverSolve(json)` takes the solve input in the JSON `SolveInputJson` writes and returns the answer in
 the corpus's golden format; `SolverCodec` reads and writes both with `JsonTree` (no reflection, no Gson). The run solves the
-whole corpus in `conformance/solver/` on both targets and compares it as `SolverGoldenTest` and `UpToParityTest` do.
+whole corpus in `conformance/solver/` on both targets and compares it as `SolverGoldenTest` and `UpToParityTest` do. It also
+runs the 223 recorded website cases (`conformance/solver/website/cases.json.gz`) as `WebsiteCasesTest` does: 219 equal by the
+golden rule (1e-6 relative), 3 listed as differing and 1 as equal within the LP's tolerance, each with its reason in
+`tools/web-core/solver.mjs`.
+
+## Load modules
+
+The core is compiled as two modules per target, so a visitor who never solves does not download the solver. TeaVM has no
+code splitting: each module is its own compilation, and both carry `:core-base` and its statics, so module state is not
+shared (the solver never reads a card-side value). `modules.txt` is the one list (`<module> <main class> <exports...>`),
+read by `build.gradle.kts` and by `tools/web-core/modules.mjs`:
+
+| Module | Main class | Exports | Holds |
+|---|---|---|---|
+| `core` | `WebCore` | every `<Module>Exports` class not named below | base, formats, machines, power, layout |
+| `solver` | `WebSolver` | `SolverExports`, `SolverJavaExports` | the solver and ojAlgo (`SolverJavaExports`: the conformance run's arithmetic probes) |
+
+Exactly one module takes `*`, so a new `<Module>Exports` class joins the card side without an edit here. All modules share
+one runtime script, `core.wasm-runtime.js`. `tools/copy-core.mjs` publishes every file under a name with its content hash
+(`core.1a2b3c4d.wasm`) and writes a manifest (format 2) that lists the names; `next.config.ts` serves
+`/core/wasm-gc/*` and `/core/js/*` as `immutable` for a year and `/core/manifest.json` as `no-cache`, so a returning
+visitor fetches the manifest and nothing else. `loadCore({ modules })` loads the named modules (default: `core`);
+the namespaces of a module that is not loaded throw `CoreNotLoadedError`, and `coreFor(area)` in `adopt.ts` loads the module
+its area needs. The solver module is meant to load inside the solve Worker. `ExportConventionTest` and the conformance
+run (`build/module-<name>` checks) hold each module to the exports `modules.txt` assigns it; `webCoreExportVersion` is
+checked per module.
+
+## Compiler options
+
+Raw / gzip -9 bytes of each file, per TeaVM option (one build each; speed is the conformance run's time for the same
+cases on one core, wasm / JavaScript, in seconds):
+
+| Option | core.wasm | solver.wasm | core.js | solver.js | Result |
+|---|---|---|---|---|---|
+| `AGGRESSIVE` | 2.11 MB / 482 KB | 2.52 MB / 775 KB | 2.18 MB / 468 KB | 1.79 MB / 502 KB | goldens 7.0 / 32.3, Up to 8.6 / 29.8, machines 7.6 |
+| `BALANCED` (now) | 1.52 MB / 375 KB | 1.55 MB / 553 KB | 1.61 MB / 362 KB | 0.99 MB / 331 KB | goldens 7.2 / 31.4, Up to 9.5 / 33.8, machines 6.9 |
+| `NONE` | 1.66 MB / 406 KB | 2.00 MB / 656 KB | 1.70 MB / 392 KB | 1.24 MB / 400 KB | goldens 11.5 / 28.6, Up to 10.3 / 34.3, machines 10.8 |
+
+`AGGRESSIVE` inlines until the code is larger and no faster; `BALANCED` keeps the speed and is 22 to 34 percent smaller on
+the wire, so it is the build's level (`-PwebOptimization=AGGRESSIVE|NONE` builds the others). The other options:
+`fastGlobalAnalysis=true` fails the solver's JavaScript compile (TeaVM error) and is not used; `strict=true` changes the JavaScript
+size by under 5 percent either way and the wasm not at all; `debugInformation=true` only adds a deobfuscator file and
+leaves the module unchanged; `-Pplain` (no obfuscation, for debugging) is 3 to 5 times larger in JavaScript and
+1.3 to 1.6 times in wasm. The runtime script is 17 KB (6 KB gzipped) and shared, so it is not worth an option.
+
+What the card module (`core`) holds: 0.78 MB of its WebAssembly is the embedded handler and power tables
+(`handlers.json` and the power data, read by machines and power alike), about half of it. Parts that could leave it as a third
+module, measured by compiling them alone: layout (`LayoutExports`) is 124 KB raw and 45 KB gzipped smaller in `core`, and costs 81 KB
+as a module of its own (the duplicated `core-base`); the bee and crop readouts are 42 KB raw and 16 KB gzipped. Neither is
+worth a third module: a visitor who uses layout would pay 36 KB more than today, and the bee and crop readouts share
+the machine tables. Machines and power share the same tables, so a module of power alone is as big as machines and power
+together (243 KB against 264 KB gzipped).
 
 ## Adding a core module
 
@@ -154,16 +207,19 @@ whole corpus in `conformance/solver/` on both targets and compares it as `Solver
 
 A class in this module with the name of a class on TeaVM's classpath replaces it, but only when it comes first on
 the classpath, and the plugin puts project classes last. `build.gradle.kts` moves them first in `afterEvaluate`, and
-`check/OverrideCheck.java` (tasks `checkOverrides*`, part of `check` and a dependency of both `generate*` tasks) fails
-the build if a listed override is not first, replaces nothing, or if an unlisted class shadows another. The list is
+`check/OverrideCheck.java` (tasks `checkOverrides*`, one per module and target, e.g. `checkOverridesWasmGC` for core and
+`checkOverridesSolverWasmGC` for solver; each is part of `check` and a dependency of its own `generate*` task) fails
+the build if a listed override is not first on that compilation's classpath, replaces nothing, or if an unlisted class
+shadows another. Every override applies to every module. The list is
 `overrides.txt`. The runtime probe `webCoreRuntimeMaxMemory` (4 GiB) is checked in the conformance run, and without the
 override the compile itself fails.
 
 ## Java's arithmetic: the build plugin
 
 `src/main/java/com/gtnhplanner/web/teavm/ExactMathPlugin.java` is a TeaVM plugin (found through
-`META-INF/services/org.teavm.vm.spi.TeaVMPlugin`; a build tool, never in the output). It rewrites every class TeaVM
-compiles, the core, ojAlgo and the class library alike, where TeaVM's code differs from the JVM's:
+`META-INF/services/org.teavm.vm.spi.TeaVMPlugin`; a build tool, never in the output). Every module's compilation loads
+it from the same classpath. It rewrites every class TeaVM compiles, the core, ojAlgo and the class library alike, where
+TeaVM's code differs from the JVM's:
 
 - `java.lang.Math` and `StrictMath`: sin, cos, tan, asin, acos, atan, atan2, exp, log, log10, pow, cbrt, sinh, cosh,
   tanh, expm1, log1p, hypot, rint, round, toRadians, toDegrees and ulp run core-base's `ExactMath` (fdlibm in plain
@@ -190,7 +246,9 @@ ojAlgo arithmetic.
 
 `tools/web-core/exact-math.mjs` proves each rewrite on both targets (`exact-math/*` against
 `conformance/core-base/exact-math/`, `java-math/*` and `strict-math/*` through `java.lang.Math`, `java/d2i`, `java/d2l`,
-`java/neg`, `java/order-*`, `java/double-to-string`, `java/bigdecimal-*` on the random cases). Core code still calls
+`java/neg`, `java/order-*`, `java/double-to-string`, `java/bigdecimal-*` on the random cases), in each module: core
+through `BaseExports`, solver through `SolverJavaExports` (the same groups under `solver/`, apart from `exact-math/*` and
+`java/double-to-string`, which call core-base directly; `teavm/JavaProbe` holds the probes both call). Core code still calls
 `ExactMath` itself (the purity gate's `math-exact` rule): the
 JVM's `Math` is not `StrictMath` either.
 

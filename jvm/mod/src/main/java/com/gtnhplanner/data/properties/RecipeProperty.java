@@ -3,7 +3,7 @@ package com.gtnhplanner.data.properties;
 import java.util.Objects;
 import java.util.function.Function;
 
-import net.minecraft.util.StatCollector;
+import com.gtnhplanner.core.base.Text;
 
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
@@ -25,7 +25,8 @@ public class RecipeProperty<T> {
     private final Function<T, String> displayFormatter = null;
 
     public String displayName() {
-        return StatCollector.translateToLocal("gtnhplanner.properties." + key);
+        return Text.get()
+            .translate("gtnhplanner.properties." + key);
     }
 
     public String formatDisplayName(final T value) {

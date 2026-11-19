@@ -14,8 +14,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.gtnhplanner.GtnhPlanner;
 import com.gtnhplanner.Tags;
+import com.gtnhplanner.core.base.Log;
 
 /**
  * Whether a newer GTNH Planner is out: the mod's releases on GitHub, asked once a game in the background, the newest
@@ -80,12 +80,14 @@ public final class UpdateCheck {
                     body = new String(readAll(in), StandardCharsets.UTF_8);
                 }
                 latest = newest(body);
-                if (latest != null) GtnhPlanner.LOG.info("Newest GTNH Planner release: {}", latest.tag());
+                if (latest != null) Log.get()
+                    .info("Newest GTNH Planner release: {}", latest.tag());
             } finally {
                 c.disconnect();
             }
         } catch (final Exception | LinkageError e) {
-            GtnhPlanner.LOG.debug("Could not check for a newer GTNH Planner", e);
+            Log.get()
+                .debug("Could not check for a newer GTNH Planner", e);
         }
     }
 

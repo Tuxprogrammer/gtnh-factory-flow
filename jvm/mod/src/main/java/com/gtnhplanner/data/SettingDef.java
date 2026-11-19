@@ -8,7 +8,7 @@ import java.util.function.BiPredicate;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import net.minecraft.util.StatCollector;
+import com.gtnhplanner.core.base.Text;
 
 public class SettingDef<T> {
 
@@ -28,7 +28,8 @@ public class SettingDef<T> {
         @Nullable final List<String> options, @Nullable final BiFunction<T, MachineConfig, String> badgeFn,
         final BiPredicate<RecipeContext, Map<String, Object>> visibility) {
         this.key = key;
-        this.label = StatCollector.translateToLocal("gtnhplanner.settings." + key);
+        this.label = Text.get()
+            .translate("gtnhplanner.settings." + key);
         this.type = type;
         this.defaultValue = defaultValue;
         this.minInt = minInt;

@@ -27,7 +27,6 @@ import javax.annotation.Nullable;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.gtnhplanner.GtnhPlanner;
 import com.gtnhplanner.cloud.map.CloudGame;
 import com.gtnhplanner.cloud.map.CloudPlans;
 import com.gtnhplanner.cloud.net.CloudApi;
@@ -35,6 +34,7 @@ import com.gtnhplanner.cloud.net.LiveClient;
 import com.gtnhplanner.cloud.net.LiveSocket;
 import com.gtnhplanner.cloud.store.CloudCache;
 import com.gtnhplanner.cloud.store.Migration;
+import com.gtnhplanner.core.base.Log;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Plan;
 
@@ -415,14 +415,15 @@ public final class CloudSession {
         for (final Graph g : local.getGraphs()) if (g.getCloudKey() == null && Migration.eligible(g)) fresh.add(g);
         if (fresh.isEmpty()) return null;
         if (!host.backUpWorld()) {
-            GtnhPlanner.LOG.warn("The world's plans could not be backed up; they stay in the world for now");
+            Log.get()
+                .warn("The world's plans could not be backed up; they stay in the world for now");
             host.notice("Your plans from this world could not be added to your account");
             return null;
         }
         for (final Graph g : fresh) g.setCloudKey(newKey());
         if (!host.saveWorld(local)) {
             for (final Graph g : fresh) g.setCloudKey(null);
-            GtnhPlanner.LOG
+            Log.get()
                 .warn("The world's plans could not be saved with their keys; they stay in the world for now");
             host.notice("Your plans from this world could not be added to your account");
             return null;
@@ -433,7 +434,8 @@ public final class CloudSession {
             make(g, g.getCloudKey());
             broughtOver.add(g.getCloudKey());
         }
-        GtnhPlanner.LOG.info("[cloud] {}: {} plans from this world joined the account", accountId, fresh.size());
+        Log.get()
+            .info("[cloud] {}: {} plans from this world joined the account", accountId, fresh.size());
         final int at = local.getActiveIndex();
         final Graph open = at >= 0 && at < local.getGraphs()
             .size() ? local.getGraphs()
@@ -489,7 +491,8 @@ public final class CloudSession {
             if (copy != null) d = LiveDoc.fromCopy(this, key, copy, cache.pending(key));
             else d = LiveDoc.unknown(this, key, listedName(key), cache.pending(key));
         } catch (final RuntimeException e) {
-            GtnhPlanner.LOG.error("Could not read the plan {}; it stays in the account", key, e);
+            Log.get()
+                .error("Could not read the plan {}; it stays in the account", key, e);
             return null;
         }
         if (making && copy != null) d.markMaking();
@@ -527,10 +530,11 @@ public final class CloudSession {
                 if (deleting.remove(d.key())) letGo(d);
                 else {
                     // Gone from the planner without the player deleting it: kept, on this device and in the account.
-                    GtnhPlanner.LOG.warn(
-                        "'{}' left the planner unasked; it stays in the account",
-                        d.graph()
-                            .getName());
+                    Log.get()
+                        .warn(
+                            "'{}' left the planner unasked; it stays in the account",
+                            d.graph()
+                                .getName());
                     d.keepCopy(true);
                     docs.remove(d.key());
                 }
@@ -627,13 +631,14 @@ public final class CloudSession {
 
     /** Takes a plan off the planner that the account no longer has for this player (deleted, or unshared). */
     private void dropped(final LiveDoc d, final String why) {
-        GtnhPlanner.LOG.info(
-            "[cloud] {}: '{}' ({}) leaves the planner: {}",
-            accountId,
-            d.graph()
-                .getName(),
-            d.key(),
-            why);
+        Log.get()
+            .info(
+                "[cloud] {}: '{}' ({}) leaves the planner: {}",
+                accountId,
+                d.graph()
+                    .getName(),
+                d.key(),
+                why);
         docs.remove(d.key());
         cache.forget(d.key());
         pinsKept.remove(d.key());
@@ -732,11 +737,12 @@ public final class CloudSession {
                 com.gtnhplanner.dev.DevPerf.time("cloud.write", System.nanoTime() - t);
         } catch (final RuntimeException e) {
             // The board keeps the change; the next commit tries again.
-            GtnhPlanner.LOG.error(
-                "Could not write the changes to '{}'",
-                d.graph()
-                    .getName(),
-                e);
+            Log.get()
+                .error(
+                    "Could not write the changes to '{}'",
+                    d.graph()
+                        .getName(),
+                    e);
         }
     }
 
@@ -750,7 +756,8 @@ public final class CloudSession {
             if (next != null && com.gtnhplanner.dev.DevPerf.on())
                 com.gtnhplanner.dev.DevPerf.time("cloud.read", System.nanoTime() - t);
         } catch (final RuntimeException e) {
-            GtnhPlanner.LOG.error("Could not read the changes to '{}' into the board", old.getName(), e);
+            Log.get()
+                .error("Could not read the changes to '{}' into the board", old.getName(), e);
             rejoin(d);
             return;
         }
@@ -859,8 +866,8 @@ public final class CloudSession {
         @Override
         public void onState(final LiveSocket.State state, final String reason) {
             if (state != LiveSocket.State.OPEN) for (final LiveDoc d : docs.values()) d.leftRoom();
-            if (LiveSocket.AUTH.equals(reason))
-                GtnhPlanner.LOG.warn("The live service did not take this sign-in; plans are kept here");
+            if (LiveSocket.AUTH.equals(reason)) Log.get()
+                .warn("The live service did not take this sign-in; plans are kept here");
         }
 
         @Override
@@ -889,7 +896,8 @@ public final class CloudSession {
         public void onRefused(final String doc, final String cid, final String code, final String message) {
             final LiveDoc d = docs.get(doc);
             if (d != null) d.refused(cid, code);
-            GtnhPlanner.LOG.warn("The live service refused an edit to {} ({}: {})", doc, code, message);
+            Log.get()
+                .warn("The live service refused an edit to {} ({}: {})", doc, code, message);
         }
 
         @Override
@@ -966,7 +974,8 @@ public final class CloudSession {
             try {
                 r.run();
             } catch (final RuntimeException e) {
-                GtnhPlanner.LOG.warn("A cloud answer failed", e);
+                Log.get()
+                    .warn("A cloud answer failed", e);
             }
         }
         if (client != null) {
@@ -1093,8 +1102,8 @@ public final class CloudSession {
                 answers.add(() -> {
                     busyCalls.remove(what);
                     if (e instanceof final CloudApi.Refused r && r.status == 401)
-                        GtnhPlanner.LOG.warn("The account's sign-in ran out ({})", what);
-                    else GtnhPlanner.LOG.debug("Cloud call {} failed", what, e);
+                        Log.get().warn("The account's sign-in ran out ({})", what);
+                    else Log.get().debug("Cloud call {} failed", what, e);
                     failed.accept(e instanceof final IOException io ? io : new IOException(e));
                 });
             }
@@ -1190,7 +1199,8 @@ public final class CloudSession {
 
     /** The account refused a plan's create: made again from the board once, then kept here only. */
     private void createRefused(final LiveDoc d, final Exception e) {
-        GtnhPlanner.LOG.warn("The account refused to create the plan {}: {}", d.key(), e.getMessage());
+        Log.get()
+            .warn("The account refused to create the plan {}: {}", d.key(), e.getMessage());
         d.commit();
         if (makeRefusals.merge(d.key(), 1, Integer::sum) == 1) {
             d.rebuildBody();
@@ -1318,14 +1328,16 @@ public final class CloudSession {
             return;
         }
         if (!host.backUpWorld()) {
-            GtnhPlanner.LOG.warn("The world's plans could not be backed up; they stay here for now");
+            Log.get()
+                .warn("The world's plans could not be backed up; they stay here for now");
             return;
         }
         final List<Migration.Item> items;
         try {
             items = Migration.prepare(local, accountId, known, write);
         } catch (final RuntimeException e) {
-            GtnhPlanner.LOG.error("Could not ready the world's plans for the account", e);
+            Log.get()
+                .error("Could not ready the world's plans for the account", e);
             return;
         }
         if (items.isEmpty() || !host.saveWorld(local)) {
@@ -1348,8 +1360,8 @@ public final class CloudSession {
                     .add(d.graph());
                 arrived++;
             }
-            for (final Migration.Failure f : result.failed())
-                GtnhPlanner.LOG.warn("'{}' did not go to the account yet: {}", f.name(), f.reason());
+            for (final Migration.Failure f : result.failed()) Log.get()
+                .warn("'{}' did not go to the account yet: {}", f.name(), f.reason());
             if (arrived > 0) {
                 replaceStandIn(local, items);
                 host.notice("Your plans from this world are now in your account");
@@ -1357,7 +1369,9 @@ public final class CloudSession {
             releaseStandIn();
             listAt = -LIST_EVERY_MS;
             keepDevice();
-        }, e -> GtnhPlanner.LOG.warn("The world's plans did not go to the account yet", e));
+        },
+            e -> Log.get()
+                .warn("The world's plans did not go to the account yet", e));
     }
 
     // endregion

@@ -22,8 +22,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.gtnhplanner.GtnhPlanner;
 import com.gtnhplanner.cloud.net.CloudApi;
+import com.gtnhplanner.core.base.Log;
 
 /**
  * This device's copy of one account's cloud plans, under {@code <game dir>/gtnhplanner/cloud/<accountId>/}: per doc key
@@ -242,7 +242,8 @@ public final class CloudCache {
                 try {
                     list = CloudApi.Library.fromJson(o);
                 } catch (final RuntimeException e) {
-                    GtnhPlanner.LOG.warn("Could not read the cloud plan list", e);
+                    Log.get()
+                        .warn("Could not read the cloud plan list", e);
                 }
             }
         }
@@ -335,7 +336,8 @@ public final class CloudCache {
                     plan.getAsJsonObject("plan"));
             }
         } catch (final RuntimeException e) {
-            GtnhPlanner.LOG.warn("Skipping a malformed cached plan for {}", key, e);
+            Log.get()
+                .warn("Skipping a malformed cached plan for {}", key, e);
         }
         try {
             final JsonObject pending = readJson(file(key, "pending.json"));
@@ -354,7 +356,8 @@ public final class CloudCache {
                 s.pending.addAll(read);
             }
         } catch (final RuntimeException e) {
-            GtnhPlanner.LOG.warn("Skipping malformed pending batches for {}", key, e);
+            Log.get()
+                .warn("Skipping malformed pending batches for {}", key, e);
         }
         try {
             final JsonObject pins = readJson(file(key, "pins.json"));
@@ -364,7 +367,8 @@ public final class CloudCache {
                 s.pins.addAll(read);
             }
         } catch (final RuntimeException e) {
-            GtnhPlanner.LOG.warn("Skipping malformed pins for {}", key, e);
+            Log.get()
+                .warn("Skipping malformed pins for {}", key, e);
         }
         return s;
     }
@@ -390,7 +394,8 @@ public final class CloudCache {
             return new JsonParser().parse(new String(Files.readAllBytes(f.toPath()), StandardCharsets.UTF_8))
                 .getAsJsonObject();
         } catch (final IOException | RuntimeException e) {
-            GtnhPlanner.LOG.warn("Could not read {}", f, e);
+            Log.get()
+                .warn("Could not read {}", f, e);
             return null;
         }
     }
@@ -423,7 +428,8 @@ public final class CloudCache {
                     Files.move(next.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 }
             } catch (final IOException e) {
-                GtnhPlanner.LOG.warn("Could not write {}", file, e);
+                Log.get()
+                    .warn("Could not write {}", file, e);
                 throw new java.io.UncheckedIOException(e);
             }
         }, writer);

@@ -147,6 +147,11 @@
       "bytes": 7455,
       "sha256": "e4a4041cd55e4c64491ba45e3925fcde73d659774643889c34ef115120841c0d"
     },
+    "layout/arrange.json.gz": {
+      "area": "layout",
+      "bytes": 163879,
+      "sha256": "25c2d4c5422d5e476f42ff00d1a6aa4c7487eb4db31bae86c35ba6db620493a5"
+    },
     "layout/boards.json.gz": {
       "area": "layout",
       "bytes": 355403,

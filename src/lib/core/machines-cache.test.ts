@@ -1,7 +1,7 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { gunzipSync } from "node:zlib";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { PROJECT_SCHEMA_VERSION, type FactoryNode, type FactoryProject, type Recipe } from "@/lib/model/types";
 import { getGameRates, setActiveGameRates, type ActiveGameRates } from "@/lib/model/game-rates";
 import { applyMachineHandlerToRecipe, getSelectedMachineHandler, isSteamMachineHandler } from "@/lib/model/recipe-rules";
@@ -28,6 +28,8 @@ import {
   clearCardMachineMath,
   resetCardMachineMathCounts,
 } from "./machines";
+import { withAdopt } from "./adopt";
+import { loadCore, resetCoreForTests, wasmGcSupported } from "./loader";
 
 // The card's one readout (machines.ts `cardMachineMath`): the same figures every consumer computed for itself before,
 // computed once per (recipe object, node content, game rates), and never stale when any of those changes.
@@ -311,4 +313,50 @@ describe("exact invalidation on a board", () => {
     buildMachineList(arranged, calculateThroughput(arranged));
     expect(cardMachineMathCounts()).toMatchObject({ readouts: 0, stats: 0, power: 0, steam: 0 });
   });
+});
+
+/** Numbers to 1e-9 relative (the shadow test's rule), everything else exactly. */
+function near(a: unknown, b: unknown): boolean {
+  if (typeof a === "number" && typeof b === "number")
+    return a === b || (Number.isNaN(a) && Number.isNaN(b)) || Math.abs(a - b) <= 1e-9 * Math.max(Math.abs(a), Math.abs(b));
+  if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((x, i) => near(x, b[i]));
+  if (a && b && typeof a === "object" && typeof b === "object") {
+    const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+    return [...keys].every((k) => near((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k]));
+  }
+  return a === b;
+}
+
+const corePresent = existsSync(path.join(process.cwd(), "public", "core", "manifest.json"));
+describe.skipIf(!corePresent)("a card's machine readout through the core (the machines area forced on)", () => {
+  beforeAll(async () => {
+    resetCoreForTests();
+    await loadCore({ target: wasmGcSupported() ? "wasm-gc" : "js" });
+  });
+  afterAll(() => resetCoreForTests());
+
+  it("gives the consumers the TypeScript's figures, from the core where it covers the card", () => {
+    let throughCore = 0;
+    let compared = 0;
+    withAdopt({ machines: true }, () => {
+      INPUTS.forEach((input, i) => {
+        if (i % 3 !== 0) return;
+        setActiveGameRates(rates(input));
+        let before: ReturnType<typeof figuresAsBefore>;
+        try {
+          before = figuresAsBefore(input.recipe, input.node);
+        } catch {
+          return;
+        }
+        resetCardMachineMathCounts();
+        const got = figuresOf(input.recipe, input.node);
+        throughCore += cardMachineMathCounts().core;
+        compared++;
+        if (!near(got, before)) expect.fail(`${input.recipe.id}: ${JSON.stringify(got).slice(0, 300)}`);
+        expect(near(cardTipFacts(input.recipe, input.node), tipsAsBefore(input.recipe, input.node))).toBe(true);
+      });
+    });
+    expect(compared).toBeGreaterThan(2000);
+    expect(throughCore).toBeGreaterThan(compared * 0.8);
+  }, 300_000);
 });

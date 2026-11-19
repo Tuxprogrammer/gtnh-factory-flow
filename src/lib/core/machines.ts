@@ -127,6 +127,15 @@ export function keepRecipe(c: CoreExports, recipe: Recipe): void {
   k.byId.set(recipe.id, recipe);
 }
 
+/** The game-rates record last handed to each core instance: the core reads the pack's rates from its own copy. */
+const ratesSent = new WeakMap<CoreExports, ActiveGameRates>();
+function sendRates(c: CoreExports): void {
+  const rates = getGameRates();
+  if (ratesSent.get(c) === rates) return;
+  c.MachinesExports.machinesSetRates(rates.beesYield, rates.ic2CropsYield, rates.recipeDurationDivisor);
+  ratesSent.set(c, rates);
+}
+
 /** The core path, or null where the core leaves the machine to the website (crops, bees, the TGS, the Vat). */
 export function cardMachineMathCore(
   c: CoreExports,
@@ -134,6 +143,7 @@ export function cardMachineMathCore(
   node: FactoryNode,
 ): CardMachineMath | null {
   if (websiteOnly(recipe)) return null;
+  sendRates(c);
   keepRecipe(c, recipe);
   const text = c.MachinesExports.machinesCard(recipe.id, JSON.stringify(node));
   if (text == null) return null;

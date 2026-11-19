@@ -114,7 +114,7 @@ export interface RailInput {
   spares: RailInSpare[];
   cards: string[];
   wires: Array<{ from: string; to: string }>;
-  view: { filter: string; peak: boolean; power: string };
+  view: { filter: string; peak: boolean; power: string; keepOpen?: boolean };
 }
 
 // region Lines
@@ -508,7 +508,8 @@ export function matchesFilter(filter: string, label: string): boolean {
 
 /**
  * What a section lists a line at: what the plan's spares carry is theirs, so a line left with nothing but that (and no
- * drawer or pin to set) is not listed. An internal line is always listed whole.
+ * drawer or pin to set) is not listed. An internal line is always listed whole. A host that sets a rate on an unwired
+ * port from the line (`keepOpen`) keeps a line with such a port too.
  */
 export function keptAmount(
   line: {
@@ -516,16 +517,19 @@ export function keptAmount(
     amount: number;
     drawers: readonly unknown[];
     pins: readonly unknown[];
+    open?: readonly unknown[];
   },
   internal: boolean,
   spared: ReadonlyMap<string, number>,
+  keepOpen = false,
 ): number | undefined {
   if (internal) return line.amount;
   const left = Math.max(0, line.amount - (spared.get(line.key) ?? 0));
   if (
     left <= Math.max(RAIL_CORE_EPS, line.amount * 1e-4) &&
     line.drawers.length === 0 &&
-    line.pins.length === 0
+    line.pins.length === 0 &&
+    !(keepOpen && (line.open?.length ?? 0) > 0)
   )
     return undefined;
   return left;
@@ -535,10 +539,11 @@ export function keptLines(
   lines: readonly CoreLine[],
   internal: boolean,
   spared: ReadonlyMap<string, number>,
+  keepOpen = false,
 ): CoreLine[] {
   const out: CoreLine[] = [];
   for (const line of lines) {
-    const amount = keptAmount(line, internal, spared);
+    const amount = keptAmount(line, internal, spared, keepOpen);
     if (amount !== undefined) out.push({ ...line, amount });
   }
   return out;
@@ -629,6 +634,7 @@ export function railViewOf(input: RailInput): RailViewJson {
   const model = railFromInput(input);
   const spares = sparesFromInput(input);
   const { filter, peak, power: unit } = input.view;
+  const keepOpen = input.view.keepOpen === true;
   const dialUnitDivisor = dialDivisor(unit);
   const resources = (
     id: "INPUTS" | "OUTPUTS" | "INTERNAL",
@@ -637,7 +643,12 @@ export function railViewOf(input: RailInput): RailViewJson {
     empty: string,
   ): RailViewJson["sections"][number] => {
     const internal = id === "INTERNAL";
-    const kept = keptLines(lines, internal, internal ? new Map() : sparedOf(spares, sources));
+    const kept = keptLines(
+      lines,
+      internal,
+      internal ? new Map() : sparedOf(spares, sources),
+      keepOpen,
+    );
     const shown = kept.filter((line) => matchesFilter(filter, line.label));
     const groups = internal
       ? []

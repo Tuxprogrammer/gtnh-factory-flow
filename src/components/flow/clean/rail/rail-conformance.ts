@@ -393,6 +393,11 @@ function handCases(): RailCase[] {
     ["setters, filter on a renamed line", withView(setterCase(), { filter: "ANY LOG" })],
     ["setters, filter with spaces", withView(setterCase(), { filter: " plank " })],
     ["setters, average amps", withView(setterCase(), { peak: false, power: "amps" })],
+    ["setters, a host that sets open ports keeps them at zero", withView(setterCase(), { keepOpen: true })],
+    [
+      "setters, keep open ports with a filter",
+      withView(setterCase(), { keepOpen: true, filter: "ghost" }),
+    ],
     ["spares with a stored split and depths", sparesCase()],
     ["spares, filter on a place's name", withView(sparesCase(), { filter: "steel" })],
     ["spares, filter that hides them", withView(sparesCase(), { filter: "zzz" })],

@@ -454,33 +454,5 @@ public final class CardFace {
         };
     }
 
-    /**
-     * What holds a drawer's rate back, as short sentences after it (the website's notices.ts): each limiting card by
-     * its rule and reason, each limiting drawer by its rate. {@code rule} and {@code reason} read a card's.
-     */
-    public static String holders(final List<UUID> cards, final List<UUID> drawers, final Function<UUID, String> name,
-        final Function<UUID, PinRule> rule, final Function<UUID, UpToReason> reason,
-        final Function<UUID, String> drawerName) {
-        final StringBuilder out = new StringBuilder();
-        for (final UUID id : cards) {
-            final String n = name.apply(id);
-            final UpToReason why = reason.apply(id);
-            final String sentence;
-            if (rule.apply(id) == PinRule.EXACT) sentence = "The " + n + " is set exactly.";
-            else if (why != null && why != UpToReason.FULL && why != UpToReason.BOTTLENECK) sentence = "The " + n
-                + " is "
-                + why.name()
-                    .toLowerCase(Locale.ROOT)
-                + ".";
-            else sentence = "The " + n + " is full.";
-            out.append(' ')
-                .append(sentence);
-        }
-        for (final UUID id : drawers) out.append(" The ")
-            .append(drawerName.apply(id))
-            .append(" drawer's rate holds it back.");
-        return out.toString();
-    }
-
     // endregion
 }

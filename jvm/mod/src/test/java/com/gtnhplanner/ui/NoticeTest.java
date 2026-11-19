@@ -9,20 +9,35 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.ToIntFunction;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.gtnhplanner.data.flowchart.balancer.Severity;
 import com.gtnhplanner.data.flowchart.balancer.UpToLoop;
+import com.gtnhplanner.harness.LangText;
 
 /**
- * The board's notices as the website's notices.test.ts has them: a ring's alarm, most pressing first, and the alarm's
- * row keeping its words whole however narrow the board.
+ * The board's notice rows: a ring's alarm chip and the row keeping its words whole however narrow the board. What the
+ * notices say and their order are the core's ({@code Notices}, conformance/view/notice-cases.json).
  */
 class NoticeTest {
 
     /** The game's font runs about six pixels a letter. */
     private static final ToIntFunction<String> SIX = s -> 6 * s.length();
     private static final List<UUID> CARDS = List.of(new UUID(0, 1), new UUID(0, 2));
+
+    private LangText lang;
+
+    @BeforeEach
+    void words() {
+        lang = LangText.english();
+    }
+
+    @AfterEach
+    void putBack() {
+        lang.close();
+    }
 
     @Test
     void aRingsNoticeIsAnAlarmWithItsChip() {
@@ -35,20 +50,8 @@ class NoticeTest {
     }
 
     @Test
-    void listsTheMostPressingFirstAFailedSolveThenAlarmsThenWarningsThenTheRest() {
-        final Notice info = new Notice(Severity.INFO, "info", List.of());
-        final Notice warn = new Notice(Severity.WARN, "warn", List.of());
-        final Notice warn2 = new Notice(Severity.WARN, "warn 2", List.of());
-        final Notice alarm = Notice.alarm(UpToLoop.Kind.DEAD_LOOP, "alarm", CARDS);
-        final Notice failed = new Notice(Severity.ERROR, "failed", List.of());
-        assertEquals(
-            List.of(failed, alarm, warn, warn2, info),
-            Notice.byUrgency(List.of(info, warn, alarm, failed, warn2)));
-    }
-
-    @Test
     void anAlarmsSentenceSitsBesideItsChipWhereItFitsAndUnderItWhereItDoesNot() {
-        final String sentence = Loops.sentence(UpToLoop.Kind.DEAD_LOOP, 2);
+        final String sentence = "These machines starve each other in a downward spiral.";
         final Notice alarm = Notice.alarm(UpToLoop.Kind.DEAD_LOOP, sentence, CARDS);
         final int chip = SIX.applyAsInt("DEAD LOOP") + 2 * NoticeRow.CHIP_PAD;
         // A wide board: one line, the sentence after the chip.

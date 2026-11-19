@@ -149,7 +149,7 @@ class RailConformanceTest {
         return new RailInput(o.get("answered").getAsBoolean(), stringMap(o.getAsJsonObject("aliases")), flows, drawers,
             machines, stringMap(o.getAsJsonObject("names")), spares, strings(o.get("cards")), wires,
             new RailInput.ViewIn(v.get("filter").getAsString(), v.get("peak").getAsBoolean(),
-                v.get("power").getAsString()));
+                v.get("power").getAsString(), v.has("keepOpen") && v.get("keepOpen").getAsBoolean()));
     }
 
     static Notices.Input noticeInput(final JsonObject o) {

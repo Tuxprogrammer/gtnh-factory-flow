@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.balancer.PortRef;
 import com.gtnhplanner.data.flowchart.balancer.UpToLoop;
+import com.gtnhplanner.harness.LangText;
 
 /** Dead loops and clog locks on the board ({@link Loops}), case for case with the website's {@code loops.test.ts}. */
 class LoopsTest {
@@ -20,13 +21,11 @@ class LoopsTest {
     private static final UpToLoop.Kind DEAD = UpToLoop.Kind.DEAD_LOOP, CLOG = UpToLoop.Kind.CLOG_LOCK;
 
     @Test
-    void namesWhatItIsAndSaysItIsADownwardSpiralInOneShortSentence() {
-        assertEquals("DEAD LOOP", Loops.tag(DEAD));
-        assertEquals("CLOG LOCK", Loops.tag(CLOG));
-        assertEquals("These machines starve each other in a downward spiral.", Loops.sentence(DEAD, 3));
-        assertEquals("These machines clog each other in a downward spiral.", Loops.sentence(CLOG, 2));
-        assertEquals("This machine starves itself in a downward spiral.", Loops.sentence(DEAD, 1));
-        assertEquals("This machine clogs itself in a downward spiral.", Loops.sentence(CLOG, 1));
+    void namesWhatItIs() {
+        try (LangText lang = LangText.english()) {
+            assertEquals("DEAD LOOP", Loops.tag(DEAD));
+            assertEquals("CLOG LOCK", Loops.tag(CLOG));
+        }
     }
 
     private static final UUID A = id(1), B = id(2), C = id(3), SPLIT = id(4), MAKE = id(5), OTHER = id(6),

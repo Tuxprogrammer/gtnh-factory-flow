@@ -327,14 +327,15 @@ public final class RailBuilder {
         final RailView.Dial dial = new RailView.Dial(view.power(), RailMath.dialSuffix(view.power(), null),
             RailMath.divisor(view.power(), null));
         final List<RailView.Section> sections = new ArrayList<>();
-        sections.add(resources("INPUTS", model.inputs(), spares, true, view.filter(), EMPTY_INPUTS));
-        sections.add(resources("OUTPUTS", model.outputs(), spares, false, view.filter(), EMPTY_OUTPUTS));
-        sections.add(resources("INTERNAL", model.internal(), spares, false, view.filter(), EMPTY_INTERNAL));
+        sections.add(resources("INPUTS", model.inputs(), spares, true, view, EMPTY_INPUTS));
+        sections.add(resources("OUTPUTS", model.outputs(), spares, false, view, EMPTY_OUTPUTS));
+        sections.add(resources("INTERNAL", model.internal(), spares, false, view, EMPTY_INTERNAL));
         return new RailView(dial, sections, machines(model, view));
     }
 
     private static RailView.Section resources(final String id, final List<RailView.Line> lines,
-        final List<RailView.Spare> spares, final boolean sources, final String filter, final String empty) {
+        final List<RailView.Spare> spares, final boolean sources, final RailInput.ViewIn view, final String empty) {
+        final String filter = view.filter();
         final boolean internal = id.equals("INTERNAL");
         final Map<String, Double> spared = internal ? Map.of() : sparedByResource(spares, sources);
         final List<RailView.Line> kept = new ArrayList<>();
@@ -345,7 +346,8 @@ public final class RailBuilder {
             }
             final Double sp = spared.get(line.key());
             final double left = Math.max(0, line.amount() - (sp == null ? 0 : sp));
-            if (left <= Math.max(EPS, line.amount() * 1e-4) && line.drawers().isEmpty() && line.pins().isEmpty()) continue;
+            if (left <= Math.max(EPS, line.amount() * 1e-4) && line.drawers().isEmpty() && line.pins().isEmpty()
+                && !(view.keepOpen() && !line.open().isEmpty())) continue;
             kept.add(withAmount(line, left));
         }
         final List<RailView.Line> shown = new ArrayList<>();

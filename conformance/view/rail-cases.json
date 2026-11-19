@@ -22854,6 +22854,886 @@
   }
  },
  {
+  "name": "setters, a host that sets open ports keeps them at zero",
+  "input": {
+   "answered": true,
+   "aliases": {
+    "item:log_alt": "item:log",
+    "item:plank_a": "item:plank"
+   },
+   "flows": [
+    {
+     "card": "m",
+     "machine": "Saw",
+     "machines": 2,
+     "utilization": 0.5,
+     "ports": [
+      {
+       "kind": "item",
+       "id": "plank_a",
+       "label": "Plank",
+       "perSecond": 6,
+       "handle": "o-item:plank_a",
+       "wired": false,
+       "set": 3,
+       "output": true,
+       "key": "item:plank_a"
+      },
+      {
+       "kind": "item",
+       "id": "sawdust",
+       "label": "Sawdust",
+       "perSecond": 2,
+       "handle": "o-item:sawdust",
+       "wired": true,
+       "set": 0,
+       "output": true,
+       "key": "item:sawdust"
+      },
+      {
+       "kind": "item",
+       "id": "log_alt",
+       "label": "Log",
+       "perSecond": 4,
+       "handle": "i-item:log_alt",
+       "wired": false,
+       "set": 0,
+       "output": false,
+       "key": "item:log_alt"
+      },
+      {
+       "kind": "item",
+       "id": "iron",
+       "label": "Iron Ingot",
+       "perSecond": 9,
+       "handle": "i-item:iron",
+       "wired": true,
+       "set": 0,
+       "output": false,
+       "key": "item:iron"
+      }
+     ]
+    },
+    {
+     "card": "n",
+     "machine": "Furnace",
+     "machines": 1,
+     "utilization": 1,
+     "ports": [
+      {
+       "kind": "item",
+       "id": "iron",
+       "label": "Iron Ingot",
+       "perSecond": 9,
+       "handle": "o-item:iron",
+       "wired": true,
+       "set": 0,
+       "output": true,
+       "key": "item:iron"
+      },
+      {
+       "kind": "item",
+       "id": "coal",
+       "label": "Coal",
+       "perSecond": 1,
+       "handle": "i-item:coal",
+       "wired": false,
+       "set": 0.5,
+       "output": false,
+       "key": "item:coal"
+      },
+      {
+       "kind": "fluid",
+       "id": "water",
+       "label": "Water",
+       "perSecond": 100,
+       "handle": "i-fluid:water",
+       "wired": false,
+       "set": 0,
+       "output": false,
+       "key": "fluid:water"
+      }
+     ]
+    },
+    {
+     "card": "z",
+     "machine": "Idle",
+     "machines": 0,
+     "utilization": 1,
+     "ports": [
+      {
+       "kind": "item",
+       "id": "ghost",
+       "label": "ghost",
+       "perSecond": 7,
+       "handle": "i-item:ghost",
+       "wired": false,
+       "set": 0,
+       "output": false,
+       "key": "item:ghost"
+      }
+     ]
+    }
+   ],
+   "drawers": [
+    {
+     "kind": "item",
+     "resourceId": "log",
+     "label": "Log",
+     "rule": "at-most",
+     "set": true,
+     "rate": 12,
+     "unmet": false,
+     "eaten": 0,
+     "id": "d-log",
+     "role": "source"
+    },
+    {
+     "kind": "item",
+     "resourceId": "log_alt",
+     "label": "Log",
+     "rule": "ignore",
+     "set": false,
+     "rate": 0,
+     "unmet": true,
+     "eaten": 0,
+     "id": "d-log2",
+     "role": "source"
+    },
+    {
+     "kind": "item",
+     "resourceId": "plank",
+     "label": "Plank",
+     "rule": "exact",
+     "set": true,
+     "rate": 6,
+     "unmet": true,
+     "eaten": 0,
+     "id": "d-plank",
+     "role": "product"
+    },
+    {
+     "kind": "item",
+     "resourceId": "sawdust",
+     "label": "Sawdust",
+     "rule": "ignore",
+     "set": false,
+     "rate": 0,
+     "unmet": false,
+     "eaten": 0,
+     "id": "d-dust",
+     "role": "byproduct"
+    },
+    {
+     "kind": "item",
+     "resourceId": "sawdust",
+     "label": "Sawdust",
+     "rule": "ignore",
+     "set": false,
+     "rate": 0,
+     "unmet": false,
+     "eaten": 0.5,
+     "id": "d-trash",
+     "role": "trash"
+    },
+    {
+     "kind": "item",
+     "resourceId": "gold",
+     "label": "Gold",
+     "rule": "at-least",
+     "set": false,
+     "rate": 0,
+     "unmet": false,
+     "eaten": 0,
+     "id": "d-gold",
+     "role": "source"
+    },
+    {
+     "kind": "item",
+     "resourceId": "void",
+     "label": "Void",
+     "rule": "ignore",
+     "set": false,
+     "rate": 0,
+     "unmet": false,
+     "eaten": 0,
+     "id": "d-void",
+     "role": "other"
+    }
+   ],
+   "machines": [
+    {
+     "label": "Saw",
+     "count": 2,
+     "tank": false,
+     "pinned": true,
+     "rule": "at-most",
+     "multiblock": false,
+     "state": "ok",
+     "nodeId": "m",
+     "pin": 3,
+     "upTo": {
+      "reason": "STARVED",
+      "reached": 1.5,
+      "capacity": 3
+     },
+     "euT": 30,
+     "avgEuT": 15,
+     "tier": "LV"
+    },
+    {
+     "label": "Furnace",
+     "count": 1,
+     "tank": false,
+     "pinned": true,
+     "rule": "exact",
+     "multiblock": false,
+     "state": "ok",
+     "nodeId": "n",
+     "pin": 1,
+     "upTo": {
+      "reached": 0.25,
+      "capacity": 1
+     },
+     "euT": 8,
+     "avgEuT": 8,
+     "tier": "ULV"
+    }
+   ],
+   "names": {
+    "item:log": "Any Log"
+   },
+   "spares": [],
+   "cards": [],
+   "wires": [],
+   "view": {
+    "filter": "",
+    "peak": true,
+    "power": "eu",
+    "keepOpen": true
+   }
+  },
+  "view": {
+   "dial": {
+    "unit": "eu",
+    "suffix": "EU/t"
+   },
+   "sections": [
+    {
+     "id": "INPUTS",
+     "count": 5,
+     "shown": 5,
+     "lines": [
+      {
+       "key": "fluid:water",
+       "kind": "fluid",
+       "id": "water",
+       "label": "Water",
+       "amount": 100,
+       "energy": false,
+       "drawers": [],
+       "pins": [],
+       "open": [
+        {
+         "nodeId": "n",
+         "handle": "i-fluid:water",
+         "output": false,
+         "perSecond": 100,
+         "machine": "Furnace"
+        }
+       ]
+      },
+      {
+       "key": "item:log",
+       "kind": "item",
+       "id": "log_alt",
+       "label": "Log",
+       "amount": 2,
+       "energy": false,
+       "drawers": [
+        {
+         "id": "d-log",
+         "source": true,
+         "role": "source",
+         "rule": "at-most",
+         "rate": 12,
+         "set": true,
+         "unmet": false
+        },
+        {
+         "id": "d-log2",
+         "source": true,
+         "role": "source",
+         "rule": "ignore",
+         "rate": 0,
+         "set": false,
+         "unmet": true
+        }
+       ],
+       "pins": [],
+       "open": [
+        {
+         "nodeId": "m",
+         "handle": "i-item:log_alt",
+         "output": false,
+         "perSecond": 2,
+         "machine": "Saw"
+        }
+       ]
+      },
+      {
+       "key": "item:coal",
+       "kind": "item",
+       "id": "coal",
+       "label": "Coal",
+       "amount": 1,
+       "energy": false,
+       "drawers": [],
+       "pins": [
+        {
+         "nodeId": "n",
+         "handle": "i-item:coal",
+         "output": false,
+         "rate": 0.5,
+         "machine": "Furnace"
+        }
+       ],
+       "open": [
+        {
+         "nodeId": "n",
+         "handle": "i-item:coal",
+         "output": false,
+         "perSecond": 1,
+         "machine": "Furnace"
+        }
+       ]
+      },
+      {
+       "key": "item:ghost",
+       "kind": "item",
+       "id": "ghost",
+       "label": "ghost",
+       "amount": 0,
+       "energy": false,
+       "drawers": [],
+       "pins": [],
+       "open": [
+        {
+         "nodeId": "z",
+         "handle": "i-item:ghost",
+         "output": false,
+         "perSecond": 0,
+         "machine": "Idle"
+        }
+       ]
+      },
+      {
+       "key": "item:gold",
+       "kind": "item",
+       "id": "gold",
+       "label": "Gold",
+       "amount": 0,
+       "energy": false,
+       "drawers": [
+        {
+         "id": "d-gold",
+         "source": true,
+         "role": "source",
+         "rule": "at-least",
+         "rate": 0,
+         "set": false,
+         "unmet": false
+        }
+       ],
+       "pins": [],
+       "open": []
+      }
+     ],
+     "spares": []
+    },
+    {
+     "id": "OUTPUTS",
+     "count": 3,
+     "shown": 3,
+     "lines": [
+      {
+       "key": "item:iron",
+       "kind": "item",
+       "id": "iron",
+       "label": "Iron Ingot",
+       "amount": 4.5,
+       "energy": false,
+       "drawers": [],
+       "pins": [],
+       "open": []
+      },
+      {
+       "key": "item:plank",
+       "kind": "item",
+       "id": "plank_a",
+       "label": "Plank",
+       "amount": 3,
+       "energy": false,
+       "drawers": [
+        {
+         "id": "d-plank",
+         "source": false,
+         "role": "product",
+         "rule": "exact",
+         "rate": 6,
+         "set": true,
+         "unmet": true
+        }
+       ],
+       "pins": [
+        {
+         "nodeId": "m",
+         "handle": "o-item:plank_a",
+         "output": true,
+         "rate": 3,
+         "machine": "Saw"
+        }
+       ],
+       "open": [
+        {
+         "nodeId": "m",
+         "handle": "o-item:plank_a",
+         "output": true,
+         "perSecond": 3,
+         "machine": "Saw"
+        }
+       ]
+      },
+      {
+       "key": "item:sawdust",
+       "kind": "item",
+       "id": "sawdust",
+       "label": "Sawdust",
+       "amount": 0.5,
+       "energy": false,
+       "drawers": [
+        {
+         "id": "d-dust",
+         "source": false,
+         "role": "byproduct",
+         "rule": "ignore",
+         "rate": 0,
+         "set": false,
+         "unmet": false
+        }
+       ],
+       "pins": [],
+       "open": []
+      }
+     ],
+     "spares": []
+    },
+    {
+     "id": "INTERNAL",
+     "count": 1,
+     "shown": 1,
+     "lines": [
+      {
+       "key": "item:iron",
+       "kind": "item",
+       "id": "iron",
+       "label": "Iron Ingot",
+       "amount": 4.5,
+       "energy": false,
+       "drawers": [],
+       "pins": [],
+       "open": []
+      }
+     ],
+     "spares": []
+    }
+   ],
+   "machines": {
+    "count": 3,
+    "shown": 3,
+    "total": {
+     "value": 38,
+     "suffix": "EU/t"
+    },
+    "groups": [
+     {
+      "name": "Saw",
+      "entries": [
+       {
+        "nodeId": "m",
+        "label": "Saw",
+        "count": 2,
+        "pinned": true,
+        "rule": "at-most",
+        "pin": 3,
+        "upTo": {
+         "reason": "STARVED",
+         "reached": 1.5,
+         "capacity": 3
+        },
+        "tier": "LV",
+        "multiblock": false,
+        "state": "ok",
+        "eu": {
+         "kind": "used",
+         "value": 30,
+         "suffix": "EU/t"
+        }
+       }
+      ]
+     },
+     {
+      "name": "Furnace",
+      "entries": [
+       {
+        "nodeId": "n",
+        "label": "Furnace",
+        "count": 1,
+        "pinned": true,
+        "rule": "exact",
+        "pin": 1,
+        "upTo": {
+         "reached": 0.25,
+         "capacity": 1
+        },
+        "tier": "ULV",
+        "multiblock": false,
+        "state": "ok",
+        "eu": {
+         "kind": "used",
+         "value": 8,
+         "suffix": "EU/t"
+        }
+       }
+      ]
+     }
+    ]
+   }
+  }
+ },
+ {
+  "name": "setters, keep open ports with a filter",
+  "input": {
+   "answered": true,
+   "aliases": {
+    "item:log_alt": "item:log",
+    "item:plank_a": "item:plank"
+   },
+   "flows": [
+    {
+     "card": "m",
+     "machine": "Saw",
+     "machines": 2,
+     "utilization": 0.5,
+     "ports": [
+      {
+       "kind": "item",
+       "id": "plank_a",
+       "label": "Plank",
+       "perSecond": 6,
+       "handle": "o-item:plank_a",
+       "wired": false,
+       "set": 3,
+       "output": true,
+       "key": "item:plank_a"
+      },
+      {
+       "kind": "item",
+       "id": "sawdust",
+       "label": "Sawdust",
+       "perSecond": 2,
+       "handle": "o-item:sawdust",
+       "wired": true,
+       "set": 0,
+       "output": true,
+       "key": "item:sawdust"
+      },
+      {
+       "kind": "item",
+       "id": "log_alt",
+       "label": "Log",
+       "perSecond": 4,
+       "handle": "i-item:log_alt",
+       "wired": false,
+       "set": 0,
+       "output": false,
+       "key": "item:log_alt"
+      },
+      {
+       "kind": "item",
+       "id": "iron",
+       "label": "Iron Ingot",
+       "perSecond": 9,
+       "handle": "i-item:iron",
+       "wired": true,
+       "set": 0,
+       "output": false,
+       "key": "item:iron"
+      }
+     ]
+    },
+    {
+     "card": "n",
+     "machine": "Furnace",
+     "machines": 1,
+     "utilization": 1,
+     "ports": [
+      {
+       "kind": "item",
+       "id": "iron",
+       "label": "Iron Ingot",
+       "perSecond": 9,
+       "handle": "o-item:iron",
+       "wired": true,
+       "set": 0,
+       "output": true,
+       "key": "item:iron"
+      },
+      {
+       "kind": "item",
+       "id": "coal",
+       "label": "Coal",
+       "perSecond": 1,
+       "handle": "i-item:coal",
+       "wired": false,
+       "set": 0.5,
+       "output": false,
+       "key": "item:coal"
+      },
+      {
+       "kind": "fluid",
+       "id": "water",
+       "label": "Water",
+       "perSecond": 100,
+       "handle": "i-fluid:water",
+       "wired": false,
+       "set": 0,
+       "output": false,
+       "key": "fluid:water"
+      }
+     ]
+    },
+    {
+     "card": "z",
+     "machine": "Idle",
+     "machines": 0,
+     "utilization": 1,
+     "ports": [
+      {
+       "kind": "item",
+       "id": "ghost",
+       "label": "ghost",
+       "perSecond": 7,
+       "handle": "i-item:ghost",
+       "wired": false,
+       "set": 0,
+       "output": false,
+       "key": "item:ghost"
+      }
+     ]
+    }
+   ],
+   "drawers": [
+    {
+     "kind": "item",
+     "resourceId": "log",
+     "label": "Log",
+     "rule": "at-most",
+     "set": true,
+     "rate": 12,
+     "unmet": false,
+     "eaten": 0,
+     "id": "d-log",
+     "role": "source"
+    },
+    {
+     "kind": "item",
+     "resourceId": "log_alt",
+     "label": "Log",
+     "rule": "ignore",
+     "set": false,
+     "rate": 0,
+     "unmet": true,
+     "eaten": 0,
+     "id": "d-log2",
+     "role": "source"
+    },
+    {
+     "kind": "item",
+     "resourceId": "plank",
+     "label": "Plank",
+     "rule": "exact",
+     "set": true,
+     "rate": 6,
+     "unmet": true,
+     "eaten": 0,
+     "id": "d-plank",
+     "role": "product"
+    },
+    {
+     "kind": "item",
+     "resourceId": "sawdust",
+     "label": "Sawdust",
+     "rule": "ignore",
+     "set": false,
+     "rate": 0,
+     "unmet": false,
+     "eaten": 0,
+     "id": "d-dust",
+     "role": "byproduct"
+    },
+    {
+     "kind": "item",
+     "resourceId": "sawdust",
+     "label": "Sawdust",
+     "rule": "ignore",
+     "set": false,
+     "rate": 0,
+     "unmet": false,
+     "eaten": 0.5,
+     "id": "d-trash",
+     "role": "trash"
+    },
+    {
+     "kind": "item",
+     "resourceId": "gold",
+     "label": "Gold",
+     "rule": "at-least",
+     "set": false,
+     "rate": 0,
+     "unmet": false,
+     "eaten": 0,
+     "id": "d-gold",
+     "role": "source"
+    },
+    {
+     "kind": "item",
+     "resourceId": "void",
+     "label": "Void",
+     "rule": "ignore",
+     "set": false,
+     "rate": 0,
+     "unmet": false,
+     "eaten": 0,
+     "id": "d-void",
+     "role": "other"
+    }
+   ],
+   "machines": [
+    {
+     "label": "Saw",
+     "count": 2,
+     "tank": false,
+     "pinned": true,
+     "rule": "at-most",
+     "multiblock": false,
+     "state": "ok",
+     "nodeId": "m",
+     "pin": 3,
+     "upTo": {
+      "reason": "STARVED",
+      "reached": 1.5,
+      "capacity": 3
+     },
+     "euT": 30,
+     "avgEuT": 15,
+     "tier": "LV"
+    },
+    {
+     "label": "Furnace",
+     "count": 1,
+     "tank": false,
+     "pinned": true,
+     "rule": "exact",
+     "multiblock": false,
+     "state": "ok",
+     "nodeId": "n",
+     "pin": 1,
+     "upTo": {
+      "reached": 0.25,
+      "capacity": 1
+     },
+     "euT": 8,
+     "avgEuT": 8,
+     "tier": "ULV"
+    }
+   ],
+   "names": {
+    "item:log": "Any Log"
+   },
+   "spares": [],
+   "cards": [],
+   "wires": [],
+   "view": {
+    "filter": "ghost",
+    "peak": true,
+    "power": "eu",
+    "keepOpen": true
+   }
+  },
+  "view": {
+   "dial": {
+    "unit": "eu",
+    "suffix": "EU/t"
+   },
+   "sections": [
+    {
+     "id": "INPUTS",
+     "count": 5,
+     "shown": 1,
+     "lines": [
+      {
+       "key": "item:ghost",
+       "kind": "item",
+       "id": "ghost",
+       "label": "ghost",
+       "amount": 0,
+       "energy": false,
+       "drawers": [],
+       "pins": [],
+       "open": [
+        {
+         "nodeId": "z",
+         "handle": "i-item:ghost",
+         "output": false,
+         "perSecond": 0,
+         "machine": "Idle"
+        }
+       ]
+      }
+     ],
+     "spares": []
+    },
+    {
+     "id": "OUTPUTS",
+     "count": 3,
+     "shown": 0,
+     "empty": "gtnhplanner.rail.empty.matches",
+     "lines": [],
+     "spares": []
+    },
+    {
+     "id": "INTERNAL",
+     "count": 1,
+     "shown": 0,
+     "empty": "gtnhplanner.rail.empty.matches",
+     "lines": [],
+     "spares": []
+    }
+   ],
+   "machines": {
+    "count": 3,
+    "shown": 0,
+    "total": {
+     "value": 38,
+     "suffix": "EU/t"
+    },
+    "empty": "gtnhplanner.rail.empty.matches",
+    "groups": []
+   }
+  }
+ },
+ {
   "name": "spares with a stored split and depths",
   "input": {
    "answered": true,

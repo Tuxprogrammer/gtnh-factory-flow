@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 
+import com.gtnhplanner.core.base.Text;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.balancer.PortRef;
 import com.gtnhplanner.data.flowchart.balancer.UpToLoop;
@@ -79,17 +80,7 @@ public final class Loops {
 
     /** What a ring is: the chip its notice wears before its sentence, in the ring's tone and blinking. */
     public static String tag(final UpToLoop.Kind kind) {
-        return com.gtnhplanner.ui.card.CardFace.loopWord(kind);
-    }
-
-    /**
-     * The notice for a ring after its chip, one short sentence (the website's loopSentence): its cards starve (a dead
-     * loop) or clog (a clog lock) each other in a downward spiral, each holding the next back. Which cards is for Show
-     * me, their pulsing outlines and the lit wires to say; {@code cards} is how many.
-     */
-    public static String sentence(final UpToLoop.Kind kind, final int cards) {
-        final boolean dead = kind == UpToLoop.Kind.DEAD_LOOP;
-        if (cards == 1) return "This machine " + (dead ? "starves" : "clogs") + " itself in a downward spiral.";
-        return "These machines " + (dead ? "starve" : "clog") + " each other in a downward spiral.";
+        return Text.get()
+            .translate("gtnhplanner.loop." + (kind == UpToLoop.Kind.DEAD_LOOP ? "dead" : "clog") + ".tag");
     }
 }

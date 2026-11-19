@@ -18,6 +18,7 @@ import com.gtnhplanner.GtnhPlanner;
 import com.gtnhplanner.api.PlanAPI;
 import com.gtnhplanner.cloud.session.CloudSession;
 import com.gtnhplanner.cloud.session.LiveDoc;
+import com.gtnhplanner.core.view.rail.Notices;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.Graph;
@@ -37,6 +38,7 @@ import com.gtnhplanner.data.flowchart.balancer.SolveInput;
 import com.gtnhplanner.data.flowchart.balancer.SolveService;
 import com.gtnhplanner.data.flowchart.balancer.SolverMessage;
 import com.gtnhplanner.data.flowchart.balancer.UpToReadout;
+import com.gtnhplanner.data.flowchart.balancer.UpToReason;
 import com.gtnhplanner.nei.NodeLookupContext;
 import com.gtnhplanner.ui.card.CardDefaults;
 import com.gtnhplanner.ui.card.CardFace;
@@ -3731,106 +3733,111 @@ public final class BoardSession {
 
     /**
      * The lines along the top of the board, as a player wants them: what is wrong in a few words, the thing it is about
-     * named first, and "Show me" to find it. The solver's own sentences are for the log; problems of one kind share a
-     * line.
+     * named first, and "Show me" to find it. The core decides which stand and in what order ({@link Notices}); this
+     * reads the solve into its input and the sentences come out of the language file. The solver's own sentences are for
+     * the log; problems of one kind share a line.
      */
     private List<Notice> buildNotices(final Map<UUID, CardModel> cards) {
-        final List<Notice> out = new ArrayList<>();
         nothingToSolveFor = false;
         unset = result == null ? java.util.Set.of() : unsetParts();
+        final Notices.Input input = noticeInput(cards);
+        if (input.failure() != null && input.failure()
+            .kind()
+            .equals("NO_PIN")) nothingToSolveFor = !cards.isEmpty();
+        return NoticeHost.of(Notices.build(input), this::rateText);
+    }
+
+    /** A rate in units a second of a resource kind, as the board spells it under the player's rate unit. */
+    private String rateText(final double perSecond, final String resource) {
+        return resource.equals("power") ? Fmt.power(perSecond / 20) + " EU/t"
+            : Fmt.rate(perSecond, rateUnit, resource.equals("fluid"));
+    }
+
+    /** The solve's notes, rings and shortfalls as the records the core works the list out from. */
+    private Notices.Input noticeInput(final Map<UUID, CardModel> cards) {
+        final List<Notices.Loop> loops = new ArrayList<>();
+        final List<Notices.Note> notes = new ArrayList<>();
+        Notices.Failure failure = null;
+        boolean noPin = false;
         if (result != null) {
             for (final Note note : result.notes()) {
-                if (note.message() == SolverMessage.NO_PIN) {
-                    nothingToSolveFor = !cards.isEmpty();
-                    if (nothingToSolveFor) out.add(
-                        new Notice(
-                            Severity.INFO,
-                            "Nothing to calculate yet: set a rate on a drawer, or set a machine count",
-                            List.of()));
-                }
+                if (note.message() == SolverMessage.NO_PIN) noPin = true;
+                else if (failure == null && note.severity() == Severity.ERROR
+                    && note.message() != SolverMessage.EMPTY_GRAPH) failure = failure(note);
             }
             // Old Build's rings: a dead loop's cards starve each other, a clog lock's clog each other on a surplus.
-            // Alarms: a chip in the ring's tone, blinking, right under a failed solve. Show me frames the ring's cards.
             for (final com.gtnhplanner.data.flowchart.balancer.UpToLoop loop : upToLoops()) {
-                final List<UUID> ring = Loops.cards(loop, this::hostOf);
-                ring.removeIf(id -> !cards.containsKey(id));
-                if (ring.isEmpty()) continue;
-                out.add(Notice.alarm(loop.kind(), Loops.sentence(loop.kind(), ring.size()), ring));
+                final List<String> ring = new ArrayList<>();
+                for (final UUID id : Loops.cards(loop, this::hostOf)) if (cards.containsKey(id)) ring.add(id.toString());
+                loops.add(
+                    new Notices.Loop(
+                        loop.kind() == com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind.DEAD_LOOP ? "DEAD_LOOP"
+                            : "CLOG_LOCK",
+                        ring));
             }
-            for (final DrawerReadout.Shortfall s : shortfalls()) {
-                final DrawerModel d = drawerModels.get(s.drawer());
-                final boolean supply = d != null && d.kind == Drawer.Kind.SOURCE;
-                final String label = "The " + (d == null ? "" : d.label + " ") + (supply ? "supply" : "drawer");
-                final List<UUID> focus = new ArrayList<>();
-                focus.add(s.drawer());
-                focus.addAll(s.limitingNodes());
-                focus.addAll(s.limitingDrawers());
-                final String reach = d == null ? Fmt.rate(s.reachable(), rateUnit, false)
-                    : d.rate(s.reachable(), rateUnit);
-                final String target = d == null ? Fmt.rate(s.target(), rateUnit, false) : d.rate(s.target(), rateUnit);
-                // Plain sentences: what the drawer asks for, and what the plan does instead.
-                final String asks = s.rule() == Drawer.Rule.EXACTLY ? "exactly " : "";
-                final String text;
-                // Short of its rate: what it gets, then what holds it back (the cards at their counts, the drawers).
-                if (s.reachable() < s.target()) text = label + " gets "
-                    + reach
-                    + " of "
-                    + target
-                    + "."
-                    + CardFace.holders(
-                        s.limitingNodes(),
-                        s.limitingDrawers(),
-                        id -> cards.get(id) == null ? "machine" : cards.get(id).machineName,
-                        this::rule,
-                        id -> upTo(id) == null ? null : upTo(id).reason(),
-                        id -> drawerModels.get(id) == null ? "other" : drawerModels.get(id).label);
-                else if (s.reachable() > s.target()) text = label + " allows at most "
-                    + target
-                    + ", but the plan "
-                    + (supply ? "needs " : "makes ")
-                    + reach;
-                else text = label + (supply ? " should give " : " wants ")
-                    + asks
-                    + target
-                    + ", but the plan can only "
-                    + (supply ? "use " : "make ")
-                    + reach;
-                out.add(new Notice(Severity.WARN, text, focus));
-            }
+            for (final DrawerReadout.Shortfall s : shortfalls()) notes.add(unmet(s, cards));
             for (final Note note : result.notes()) {
                 // If/else, not a switch: a switch on an enum compiles to a lookup table a hot swap does not refresh.
                 // The solver also guesses at missing wires (something made here and brought in too); that is a guess
                 // about what the player meant, not a problem with the plan, so it is not shown.
                 final SolverMessage m = note.message();
-                if (m == SolverMessage.OVERSHOOTS_TARGET) out.add(overshoot(note, cards));
-                else if (m == SolverMessage.DRAWER_NOT_CONNECTED) out.add(
-                    new Notice(
-                        Severity.WARN,
-                        "The " + note.args()[0] + " drawer has a rate, but nothing is wired to it",
-                        idsIn(note)));
-                else if (m == SolverMessage.DRAWER_WIRED_IGNORED) out.add(
-                    new Notice(
-                        Severity.WARN,
-                        "The " + note.args()[0] + " drawer's rate does nothing: the ports it's on are wired",
-                        idsIn(note)));
+                if (m == SolverMessage.OVERSHOOTS_TARGET) notes.add(overshoot(note, cards));
+                else if (m == SolverMessage.DRAWER_NOT_CONNECTED) notes.add(drawerNote("NOT_CONNECTED", note));
+                else if (m == SolverMessage.DRAWER_WIRED_IGNORED) notes.add(drawerNote("WIRED_IGNORED", note));
                 else if (m == SolverMessage.CHOICE_NO_LONGER_FITS || m == SolverMessage.CHOICE_NEEDS_MORE_GATES)
-                    out.add(
-                        new Notice(
-                            Severity.WARN,
-                            "Your saved choice no longer fits this plan, so the planner's own answer is shown",
-                            List.of()));
-                else if (note.severity() == Severity.ERROR && m != SolverMessage.EMPTY_GRAPH) out.add(failure(note));
+                    notes.add(blankNote("CHOICE", "", "", List.of()));
             }
+            if (failure == null && noPin) failure = new Notices.Failure("NO_PIN", List.of(), List.of());
         } else if (lastResult != null && lastResult.errorNote() != null) {
-            out.add(failure(lastResult.errorNote()));
+            failure = failure(lastResult.errorNote());
         }
         // A port with no wire or drawer is no problem: what it takes comes in from outside the plan, what it makes
-        // leaves it (the card draws it so). Most pressing first; a flash goes above them all (notices()).
-        return Notice.byUrgency(out);
+        // leaves it (the card draws it so).
+        return new Notices.Input(failure, !cards.isEmpty(), loops, notes);
+    }
+
+    private static Notices.Note blankNote(final String type, final String id, final String label,
+        final List<String> focus) {
+        return new Notices.Note(type, id, label, "item", false, false, 0, 0, 0, 0, false, List.of(), "", focus);
+    }
+
+    private Notices.Note drawerNote(final String type, final Note note) {
+        final Object[] a = note.args();
+        final List<String> focus = new ArrayList<>();
+        for (final UUID id : idsIn(note)) focus.add(id.toString());
+        return blankNote(type, a.length > 1 ? String.valueOf(a[1]) : "", String.valueOf(a[0]), focus);
+    }
+
+    /** A drawer the plan cannot give its rate, and what holds it back. */
+    private Notices.Note unmet(final DrawerReadout.Shortfall s, final Map<UUID, CardModel> cards) {
+        final DrawerModel d = drawerModels.get(s.drawer());
+        final List<String> focus = new ArrayList<>();
+        focus.add(s.drawer().toString());
+        for (final UUID id : s.limitingNodes()) focus.add(id.toString());
+        for (final UUID id : s.limitingDrawers()) focus.add(id.toString());
+        final List<Notices.Holder> holders = new ArrayList<>();
+        for (final UUID id : s.limitingNodes()) {
+            final CardModel card = cards.get(id);
+            final String name = card == null ? "machine" : card.machineName;
+            final UpToReadout readout = upTo(id);
+            final UpToReason why = readout == null ? null : readout.reason();
+            if (rule(id) == PinRule.EXACT) holders.add(new Notices.Holder("exact", name));
+            else if (why != null && why != UpToReason.FULL && why != UpToReason.BOTTLENECK)
+                holders.add(new Notices.Holder(why.name().toLowerCase(java.util.Locale.ROOT), name));
+            else holders.add(new Notices.Holder("full", name));
+        }
+        for (final UUID id : s.limitingDrawers()) {
+            final DrawerModel other = drawerModels.get(id);
+            holders.add(new Notices.Holder("drawer", other == null ? "other" : other.label));
+        }
+        final String resource = d == null ? "item" : d.isPower() ? "power" : d.isFluid() ? "fluid" : "item";
+        return new Notices.Note("UNMET", s.drawer().toString(), d == null ? "" : d.label, resource,
+            d != null && d.kind == Drawer.Kind.SOURCE, s.rule() == Drawer.Rule.EXACTLY, s.target(), s.reachable(), 0, 0,
+            s.reachable() < s.target(), holders, "", focus);
     }
 
     /** An output made past its target, said in full. */
-    private Notice overshoot(final Note note, final Map<UUID, CardModel> cards) {
+    private Notices.Note overshoot(final Note note, final Map<UUID, CardModel> cards) {
         final Object[] a = note.args();
         final String what = String.valueOf(a[1]);
         boolean fluid = false;
@@ -3839,24 +3846,18 @@ public final class BoardSession {
             .equals(what)) fluid = p.isFluid();
         final double made = a[2] instanceof final Number n ? n.doubleValue() : 0;
         final double target = a[3] instanceof final Number n ? n.doubleValue() : 0;
-        return new Notice(
-            Severity.WARN,
-            "The " + named(note).args()[0]
-                + " makes "
-                + Fmt.rate(made, rateUnit, fluid)
-                + " of "
-                + what
-                + ", more than its "
-                + Fmt.rate(target, rateUnit, fluid)
-                + " target, because another of its outputs needs more",
-            idsIn(note));
+        final List<String> focus = new ArrayList<>();
+        for (final UUID id : idsIn(note)) focus.add(id.toString());
+        return new Notices.Note("OVERSHOOT", (a.length > 4 ? String.valueOf(a[4]) : "") + ":" + what, what,
+            fluid ? "fluid" : "item", false, false, 0, 0, made, target, false, List.of(),
+            String.valueOf(named(note).args()[0]), focus);
     }
 
     /**
      * A solve that found no answer, as what the player can do about it. The solver's own account goes to the log, once
      * per change.
      */
-    private Notice failure(final Note note) {
+    private Notices.Failure failure(final Note note) {
         final String detail = render(note);
         if (!detail.equals(lastFailureLogged)) {
             lastFailureLogged = detail;
@@ -3866,31 +3867,22 @@ public final class BoardSession {
         collect(note, SolverMessage.PIN_DROPPED, clashing);
         if (!clashing.isEmpty()) {
             final List<String> names = new ArrayList<>();
-            final List<UUID> ids = new ArrayList<>();
+            final List<String> ids = new ArrayList<>();
             for (final Note pin : clashing) {
                 final String name = String.valueOf(named(pin).args()[0]);
                 if (!names.contains(name)) names.add(name);
-                ids.addAll(idsIn(pin));
+                for (final UUID id : idsIn(pin)) if (!ids.contains(id.toString())) ids.add(id.toString());
             }
-            return new Notice(
-                Severity.ERROR,
-                "The pinned counts on " + String.join(" and ", names) + " can't all be met at once: unpin one",
-                ids);
+            return new Notices.Failure("PIN_CONFLICT", names, ids);
         }
         if (note.containsMessage(SolverMessage.MACHINES_CANNOT_RUN))
-            return new Notice(Severity.ERROR, "Some machines can't run with these rates and pinned counts", List.of());
+            return new Notices.Failure("CANNOT_RUN", List.of(), List.of());
         if (note.containsMessage(SolverMessage.SOLVER_UNSATISFIABLE)
             || note.containsMessage(SolverMessage.SOLVER_NO_SOLUTION)
             || note.containsMessage(SolverMessage.SOLVER_BUDGET)
             || note.containsMessage(SolverMessage.STAGE_FAILED))
-            return new Notice(
-                Severity.ERROR,
-                "There's no way to meet all these rates and pinned counts: change a rate or unpin a count",
-                List.of());
-        return new Notice(
-            Severity.ERROR,
-            "The planner couldn't solve this plan (the details are in the log)",
-            List.of());
+            return new Notices.Failure("NO_WAY", List.of(), List.of());
+        return new Notices.Failure("FAILED", List.of(), List.of());
     }
 
     private String lastFailureLogged = "";

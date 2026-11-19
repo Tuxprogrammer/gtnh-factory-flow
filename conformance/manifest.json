@@ -1062,8 +1062,8 @@
     },
     "view/rail-cases.json": {
       "area": "view",
-      "bytes": 466576,
-      "sha256": "ee391f33e9a429b4d12bd7de8b1c2c5f15c459aeebe0e3ebe51b12f9e94e954d"
+      "bytes": 483180,
+      "sha256": "c5e97342b72116cf6293d0b274249defd94e4980240c800b4b1c536f42bde87c"
     },
     "view/rail-math.json": {
       "area": "view",

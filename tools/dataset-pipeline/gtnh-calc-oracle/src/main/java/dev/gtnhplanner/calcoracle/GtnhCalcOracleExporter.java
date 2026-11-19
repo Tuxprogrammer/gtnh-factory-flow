@@ -2313,7 +2313,7 @@ public final class GtnhCalcOracleExporter {
             callFluent(calculator, "setRecipeEUt", Long.TYPE, Long.valueOf(Math.max(0L, recipe.mEUt)));
             // The single-block machine hands the calculator tier voltage times the map's
             // amperage (EUOverclockDescriber.createCalculator).
-            callFluent(calculator, "setEUt", Long.TYPE, Long.valueOf(GT_VOLTAGES[tier] * amperage));
+            callFluent(calculator, "setEUt", Long.TYPE, Long.valueOf(amperageVoltage(GT_VOLTAGES[tier], amperage)));
             callFluent(calculator, "setDuration", Integer.TYPE, Integer.valueOf(Math.max(1, recipe.mDuration)));
             callFluent(calculator, "setParallel", Integer.TYPE, Integer.valueOf(1));
             if (profile.perfectOc) {
@@ -3045,6 +3045,12 @@ public final class GtnhCalcOracleExporter {
             return ((java.util.Collection<?>) input).isEmpty();
         }
         return input != null && input.getClass().isArray() && java.lang.reflect.Array.getLength(input) == 0;
+    }
+
+    // The MAX tier is Long.MAX_VALUE volts: a plain product would wrap negative and
+    // turn that row into a recipe that never overclocks.
+    private static long amperageVoltage(long voltage, int amperage) {
+        return voltage > Long.MAX_VALUE / amperage ? Long.MAX_VALUE : voltage * amperage;
     }
 
     private Map<String, Object> resourceFromUnknown(Object input) {

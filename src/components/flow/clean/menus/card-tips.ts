@@ -378,6 +378,7 @@ export function stripTip(
   control: SettingControl | undefined,
   needK?: number,
 ): TipSpec {
+  if (chip.id === "parallel") return parallelTip(nodeId, chip);
   const rows: NonNullable<TipSpec["rows"]> = [
     { label: chip.reading ? "Reads" : "Set to", value: chip.value },
   ];
@@ -398,6 +399,30 @@ export function stripTip(
           { input: "right", label: "Step back" },
           { input: "wheel", label: "Step" },
         ],
+  };
+}
+
+/**
+ * The Parallel reading's tip: what runs at once and what sets it. Below what the structure allows, the power supply is
+ * the limit, with both numbers and what lifts it.
+ */
+function parallelTip(nodeId: string, chip: CleanChipView): TipSpec {
+  const cap = chip.powerCap;
+  const rows: NonNullable<TipSpec["rows"]> = [{ label: "Running", value: chip.value }];
+  if (cap) rows.push({ label: "Structure allows", value: `×${formatCompact(cap.structure)}` });
+  return {
+    id: `${nodeId}|setting|${chip.id}`,
+    title: "Parallel",
+    rows,
+    notes: [
+      cap
+        ? {
+            text: `The power supply pays for ${formatCompact(cap.running)} at once, not all ${formatCompact(cap.structure)}. More amps or a higher tier runs more.`,
+            tone: "warn",
+          }
+        : { text: "Set by the machine and its configuration.", tone: "muted" },
+    ],
+    actions: [],
   };
 }
 

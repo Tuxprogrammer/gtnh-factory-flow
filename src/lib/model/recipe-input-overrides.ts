@@ -2,6 +2,7 @@ import type { FactoryNode, Recipe, ResourceAmount, ResourceKind } from "./types"
 import { isOreDictionaryResource } from "./resources";
 import { applyInputConsumeChances } from "./input-chance";
 import { applyVatInputs, isVatRecipe } from "@/lib/machines/bacterial-vat";
+import { applyAlgaePondInputs, isAlgaePondRecipe } from "@/lib/machines/algae-pond";
 import { getOverclockedRecipeStats } from "@/lib/solver/overclock";
 
 /**
@@ -60,6 +61,9 @@ export function applyRecipeInputOverrides(
   if (isVatRecipe(recipe)) {
     const stats = getOverclockedRecipeStats(recipe, node as FactoryNode);
     return applyVatInputs(overridden, node.machineConfigTiers, stats.durationTicks / 20);
+  }
+  if (isAlgaePondRecipe(recipe)) {
+    return applyAlgaePondInputs(overridden, node.machineConfigTiers);
   }
   return overridden;
 }

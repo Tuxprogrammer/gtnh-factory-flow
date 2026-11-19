@@ -1,4 +1,5 @@
 import { TGS_MACHINE_TYPE, tgsEuPerTick } from "@/lib/machines/tree-growth-simulator";
+import { enrichAlgaePondRecipe, isAlgaePondRecipe } from "@/lib/machines/algae-pond";
 import { getGameRates } from "./game-rates";
 import { applyInputConsumeChances } from "./input-chance";
 import type {
@@ -756,6 +757,10 @@ export function enrichPassiveProductionRecipe(recipe: Recipe): Recipe {
   // section reads the recipe's EU, and a 0 hides it.
   if (recipe.machineType === TGS_MACHINE_TYPE && recipe.minimumTier === "ULV") {
     return { ...recipe, minimumTier: "LV", eut: tgsEuPerTick(1) };
+  }
+  // The Algae Farm's NEI page says ULV and 0 EU/t; it draws 9/10 of its hatch's voltage (algae-pond.ts).
+  if (isAlgaePondRecipe(recipe)) {
+    return enrichAlgaePondRecipe(recipe);
   }
   if (isCropProductionRecipe(recipe)) {
     return enrichCropProductionRecipe(recipe);

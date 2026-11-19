@@ -18,7 +18,6 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -56,8 +55,8 @@ class PlanSchemaTest {
      * The mod's plans kept in the tree. Corpus plans only: their ids come from the corpus files, where an imported
      * website plan gets new random ids each time it is read.
      */
-    private static final String[] COMMITTED = { "corpus single-card-v2", "corpus glass", "corpus benzene", "corpus hv-diesel",
-        "corpus mv" };
+    private static final String[] COMMITTED = { "corpus single-card-v2", "corpus glass", "corpus benzene",
+        "corpus hv-diesel", "corpus mv" };
 
     private static JsonSchema plan;
 
@@ -149,7 +148,9 @@ class PlanSchemaTest {
                     assertEquals(
                         Conformance.text(e.getKey()),
                         text,
-                        e.getKey() + " is out of date (" + name + "): run -PwritePlans, then node tools/conformance/manifest.mjs --write");
+                        e.getKey() + " is out of date ("
+                            + name
+                            + "): run -PwritePlans, then node tools/conformance/manifest.mjs --write");
                 }
             }
         }

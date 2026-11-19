@@ -179,6 +179,8 @@ public final class GtnhCalcOracleExporter {
                 }
             });
 
+            RockBreakerDurations rockBreaker = RockBreakerDurations.load();
+            ScannerDurations scanner = ScannerDurations.load();
             for (RecipeMap<RecipeMapBackend> map : maps) {
                 Map<String, Object> exportedMap = map();
                 String name = StatCollector.translateToLocal(map.unlocalizedName);
@@ -225,7 +227,18 @@ public final class GtnhCalcOracleExporter {
                     Map<String, Object> exportedRecipe = map();
                     exportedRecipe.put("id", sha1(map.unlocalizedName + ":" + index + ":" + recipe.toString()).substring(0, 16));
                     exportedRecipe.put("enabled", Boolean.TRUE);
-                    exportedRecipe.put("durationTicks", Integer.valueOf(Math.max(1, recipe.mDuration)));
+                    int exportedDuration = recipe.mDuration;
+                    if (RockBreakerDurations.MAP_ID.equals(map.unlocalizedName)) {
+                        // The machine runs its own list, not this display copy.
+                        int machineDuration = rockBreaker.durationFor(recipe);
+                        if (machineDuration >= 0) exportedDuration = machineDuration;
+                    }
+                    if (ScannerDurations.MAP_ID.equals(map.unlocalizedName)) {
+                        // The Scanner runs its handlers' literal times, not this display copy.
+                        int machineDuration = scanner.durationFor(recipe);
+                        if (machineDuration >= 0) exportedDuration = machineDuration;
+                    }
+                    exportedRecipe.put("durationTicks", Integer.valueOf(Math.max(1, exportedDuration)));
                     exportedRecipe.put("eut", Long.valueOf(recipe.mEUt));
                     exportedRecipe.put("specialValue", Integer.valueOf(recipe.mSpecialValue));
                     if ("gt.recipe.fusionreactor".equals(map.unlocalizedName)) {
@@ -255,7 +268,14 @@ public final class GtnhCalcOracleExporter {
                         putWearingInputs(exportedRecipe, recipe);
                     }
                     exportedRecipe.put("nonConsumedInputs", specialItems(recipe.mSpecialItems));
-                    exportedRecipe.put("runtimeCalculation", buildGtRuntimeCalculation(map.unlocalizedName, name, recipe, Math.max(1, map.getAmperage())));
+                    // The overclock ladder starts from the time the machine really runs.
+                    int displayedDuration = recipe.mDuration;
+                    recipe.mDuration = exportedDuration;
+                    try {
+                        exportedRecipe.put("runtimeCalculation", buildGtRuntimeCalculation(map.unlocalizedName, name, recipe, Math.max(1, map.getAmperage())));
+                    } finally {
+                        recipe.mDuration = displayedDuration;
+                    }
                     recipes.add(exportedRecipe);
                     index++;
                 }

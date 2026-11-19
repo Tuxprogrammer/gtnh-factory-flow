@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.zip.GZIPInputStream;
 
 import org.junit.jupiter.api.DynamicTest;
@@ -139,6 +140,36 @@ class ArrangeConformanceTest {
             return new Arrange.Verdict(v.crossings(), v.length(), v.points(), v.events());
         };
     }
+
+    /** A host's second thread, as the staged arrange asks for one: each job on a thread of its own. */
+    static final Arrange.Worker THREAD = new Arrange.Worker() {
+
+        @Override
+        public <T> Arrange.Job<T> start(final Supplier<T> work) {
+            final List<T> answer = new ArrayList<>();
+            final List<Throwable> thrown = new ArrayList<>();
+            final Thread thread = new Thread(() -> {
+                try {
+                    answer.add(work.get());
+                } catch (final Throwable t) {
+                    thrown.add(t);
+                }
+            });
+            thread.start();
+            return () -> {
+                try {
+                    thread.join();
+                } catch (final InterruptedException e) {
+                    throw new IllegalStateException(e);
+                }
+                if (!thrown.isEmpty()) {
+                    if (thrown.get(0) instanceof RuntimeException r) throw r;
+                    throw new IllegalStateException(thrown.get(0));
+                }
+                return answer.get(0);
+            };
+        }
+    };
 
     // endregion
 
@@ -289,6 +320,27 @@ class ArrangeConformanceTest {
                     b.getAsJsonObject("free"),
                     Arrange.arrangeFreeStage(input(b, judge(judgeInput), tuning)));
                 finish("board " + name + " free");
+            }));
+            out.add(DynamicTest.dynamicTest("board " + name + " staged", () -> {
+                differences.clear();
+                final Arrange.Input in = input(b, judge(judgeInput), tuning);
+                sameResult(
+                    name + " staged",
+                    b.getAsJsonObject("result"),
+                    Arrange.arrangeStaged(
+                        new Arrange.Input(
+                            in.cards(),
+                            in.wires(),
+                            in.ink(),
+                            in.origin(),
+                            in.spacing(),
+                            in.judge(),
+                            in.polishBudget(),
+                            in.tuning(),
+                            in.onProgress(),
+                            in.clock(),
+                            THREAD)));
+                finish("board " + name + " staged");
             }));
             out.add(DynamicTest.dynamicTest("board " + name + " whole", () -> {
                 differences.clear();

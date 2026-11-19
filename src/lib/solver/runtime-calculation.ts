@@ -6,6 +6,7 @@ import {
 } from "@/lib/model/tiers";
 import { getMachineBehaviour } from "@/lib/machines/machine-table";
 import { isFusionRecipe } from "@/lib/machines/fusion";
+import { zeroUnslottedOutputs } from "@/lib/machines/singleblock-output-slots";
 import type {
   FactoryNode,
   MachineTier,
@@ -87,7 +88,7 @@ export function getRuntimeCalculationOutputs(
     return undefined;
   }
 
-  return variant.outputs.map((runtimeOutput) => {
+  const outputs = variant.outputs.map((runtimeOutput) => {
     const existing = recipe.outputs.find(
       (output) => output.kind === runtimeOutput.kind && output.id === runtimeOutput.id,
     );
@@ -108,6 +109,8 @@ export function getRuntimeCalculationOutputs(
       byproduct: existing?.byproduct,
     };
   });
+  // The variant lists every recipe output; a singleblock makes only those it has slots for.
+  return zeroUnslottedOutputs(recipe, outputs, resolveRuntimeTier(variant, "LV"));
 }
 
 export function runtimeCalculationWarning(

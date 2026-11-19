@@ -2831,8 +2831,10 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
     // endregion
 
     /**
-     * Arranges the plan ({@link com.gtnhplanner.layout.arrange.Arrange}: the column pass, its optimiser and the free
-     * placement, each routed by the board's router, the best two polished), keeping it where it was on the board. It
+     * Arranges the plan ({@link com.gtnhplanner.core.layout.arrange.Arrange}, the website's arrange: the column pass,
+     * its
+     * optimiser and the free placement, each routed by the board's router, the best two polished), keeping it where it
+     * was on the board. It
      * runs in the background, a second or two on most plans and longer on a big one; the key shows how far it has got
      * and a second press stops it. When it is done everything glides to its place and the plan is framed: one
      * undoable step.
@@ -2845,7 +2847,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
         final Graph g = graph();
         // A shared machine is one box: every recipe on it answers to its card. A group on the board is one box too, its
         // insides untouched (docs/design/groups.md, Arrange): whatever it holds answers to it.
-        final List<com.gtnhplanner.layout.arrange.ArrangeCard> boxes = new ArrayList<>();
+        final List<com.gtnhplanner.core.layout.arrange.ArrangeCard> boxes = new ArrayList<>();
         final java.util.Map<UUID, UUID> owner = new HashMap<>();
         final java.util.function.Function<UUID, UUID> top = id -> {
             final List<UUID> up = com.gtnhplanner.data.flowchart.Groups.ancestors(g, id);
@@ -2857,7 +2859,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
             for (int s = 0; s < card.layout()
                 .sections(); s++) owner.put(card.sectionId(s), card.nodeId);
             boxes.add(
-                new com.gtnhplanner.layout.arrange.ArrangeCard(
+                new com.gtnhplanner.core.layout.arrange.ArrangeCard(
                     card.nodeId.toString(),
                     n.x,
                     n.y,
@@ -2866,7 +2868,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
                     false));
         }
         for (final Drawer d : g.getDrawers()) if (d.getGroup() == null) boxes.add(
-            new com.gtnhplanner.layout.arrange.ArrangeCard(
+            new com.gtnhplanner.core.layout.arrange.ArrangeCard(
                 d.getId()
                     .toString(),
                 d.getX(),
@@ -2878,7 +2880,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
             final com.gtnhplanner.data.flowchart.BoardGroup b = card.group();
             if (b == null || b.getParent() != null) continue;
             boxes.add(
-                new com.gtnhplanner.layout.arrange.ArrangeCard(
+                new com.gtnhplanner.core.layout.arrange.ArrangeCard(
                     b.getId()
                         .toString(),
                     b.getX(),
@@ -2895,14 +2897,14 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
         // The wires, with the ports they leave and enter at, weighed by the width they are drawn at.
         final java.util.Map<UUID, Double> width = new HashMap<>();
         for (final WireLayer.Wire w : wires.wires(cards, drawers, false)) width.put(w.key(), (double) w.width());
-        final List<com.gtnhplanner.layout.arrange.ArrangeWire> links = new ArrayList<>();
+        final List<com.gtnhplanner.core.layout.arrange.ArrangeWire> links = new ArrayList<>();
         for (final Edge e : g.getEdges()) {
             final UUID from = owner.get(e.sourceNodeId), to = owner.get(e.targetNodeId);
             if (from == null || to == null) continue;
             final boolean fromGroup = g.boardGroups.containsKey(from), toGroup = g.boardGroups.containsKey(to);
             if (fromGroup && from.equals(to)) continue;
             links.add(
-                new com.gtnhplanner.layout.arrange.ArrangeWire(
+                new com.gtnhplanner.core.layout.arrange.ArrangeWire(
                     e.id.toString(),
                     from.toString(),
                     to.toString(),
@@ -2933,7 +2935,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
                 final String drawer = (drawerHolder != null ? drawerHolder : d.getId()).toString();
                 links.add(
                     source
-                        ? new com.gtnhplanner.layout.arrange.ArrangeWire(
+                        ? new com.gtnhplanner.core.layout.arrange.ArrangeWire(
                             key.toString(),
                             drawer,
                             card.toString(),
@@ -2941,7 +2943,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
                             port,
                             null,
                             width.get(key))
-                        : new com.gtnhplanner.layout.arrange.ArrangeWire(
+                        : new com.gtnhplanner.core.layout.arrange.ArrangeWire(
                             key.toString(),
                             card.toString(),
                             drawer,
@@ -2956,17 +2958,25 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
         arrangeShown = 0;
         arrangeGraph = g;
         arrangeJob = ARRANGER.submit(
-            () -> com.gtnhplanner.layout.arrange.Arrange.arrange(
-                new com.gtnhplanner.layout.arrange.Arrange.Input(
+            () -> com.gtnhplanner.core.layout.arrange.Arrange.arrangeStaged(
+                new com.gtnhplanner.core.layout.arrange.Arrange.Input(
                     boxes,
                     links,
                     null,
+                    null,
                     "compact",
-                    new com.gtnhplanner.layout.arrange.RouterJudge(boxes, links),
+                    new com.gtnhplanner.core.layout.arrange.BoxJudge(
+                        boxes,
+                        links,
+                        com.gtnhplanner.core.layout.RouterTuning.DEFAULT),
                     null,
                     null,
-                    progress -> arrangeProgress = progress,
-                    () -> arrangeCancelled,
+                    progress -> {
+                        // A second press stops it: the arrange hears it at its next step.
+                        if (arrangeCancelled) throw new com.gtnhplanner.core.layout.arrange.Arrange.Cancelled();
+                        arrangeProgress = progress;
+                    },
+                    null,
                     new ArrangeThread())));
     }
 
@@ -2974,10 +2984,10 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
      * The arrange working in the background, if any, on which plan, where it has got to, and whether it was stopped.
      */
     @Nullable
-    private java.util.concurrent.Future<com.gtnhplanner.layout.arrange.Arrange.Result> arrangeJob;
+    private java.util.concurrent.Future<com.gtnhplanner.core.layout.arrange.ArrangeResult> arrangeJob;
     @Nullable
     private Graph arrangeGraph;
-    private volatile com.gtnhplanner.layout.arrange.Arrange.Progress arrangeProgress;
+    private volatile com.gtnhplanner.core.layout.arrange.Arrange.Progress arrangeProgress;
     private volatile boolean arrangeCancelled;
     /** How far the key says it has got (it never goes back, though the two polishes report in turn). */
     private float arrangeShown;
@@ -3002,9 +3012,9 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
 
     /** How far an arrange under way has got, 0 to 1, never going back. */
     private float arrangeDone() {
-        final com.gtnhplanner.layout.arrange.Arrange.Progress p = arrangeProgress;
+        final com.gtnhplanner.core.layout.arrange.Arrange.Progress p = arrangeProgress;
         if (p != null) {
-            final float within = p.total() > 0 ? Math.min(1, p.done() / (float) p.total()) : 0;
+            final float within = p.total() > 0 ? (float) Math.min(1, p.done() / p.total()) : 0;
             arrangeShown = Math.max(arrangeShown, (p.step() + within) / 6);
         }
         return arrangeShown;
@@ -3037,13 +3047,13 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
     /** Takes an arrange that has finished: everything glides to its place, as one undoable step. */
     private void collectArrange() {
         if (arrangeJob == null || !arrangeJob.isDone()) return;
-        final java.util.concurrent.Future<com.gtnhplanner.layout.arrange.Arrange.Result> job = arrangeJob;
+        final java.util.concurrent.Future<com.gtnhplanner.core.layout.arrange.ArrangeResult> job = arrangeJob;
         arrangeJob = null;
-        final com.gtnhplanner.layout.arrange.Arrange.Result result;
+        final com.gtnhplanner.core.layout.arrange.ArrangeResult result;
         try {
             result = job.get();
         } catch (final java.util.concurrent.ExecutionException e) {
-            if (!(e.getCause() instanceof com.gtnhplanner.layout.arrange.Arrange.Cancelled))
+            if (!(e.getCause() instanceof com.gtnhplanner.core.layout.arrange.Arrange.Cancelled))
                 com.gtnhplanner.GtnhPlanner.LOG.warn("[arrange] failed", e.getCause());
             return;
         } catch (final InterruptedException e) {
@@ -3053,19 +3063,16 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
         }
         // Another plan came up meanwhile: this one's places are not for it.
         if (graph() != arrangeGraph) return;
-        com.gtnhplanner.GtnhPlanner.LOG
-            .info("[arrange] chose the {} layout, {} points", result.chosen(), Math.round(result.points()));
         final Graph g = graph();
         // Where everything is now, and where it goes (cards and drawers made since keep their places).
         final java.util.Map<UUID, int[]> from = new HashMap<>(), to = new HashMap<>(), groupMoves = new HashMap<>();
-        for (final java.util.Map.Entry<String, com.gtnhplanner.layout.arrange.Point> e : result.positions()
-            .entrySet()) {
-            final UUID id = UUID.fromString(e.getKey());
+        for (final com.gtnhplanner.core.layout.arrange.ArrangeResult.Move e : result.moves()) {
+            final UUID id = UUID.fromString(e.id());
             final int[] at = { (int) Math.round(
-                e.getValue()
+                e.position()
                     .x()),
                 (int) Math.round(
-                    e.getValue()
+                    e.position()
                         .y()) };
             final com.gtnhplanner.data.flowchart.BoardGroup group = g.boardGroups.get(id);
             if (group != null) {
@@ -3093,6 +3100,16 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
         session.editLayout(() -> {
             place(to);
             Waypoints.afterArrange(g, groupMoves);
+            // A bridge between two islands that would cut through a third walks round its ground on the arrange's
+            // stops, as on the website (wires between drawers and cards are left to the router).
+            for (final com.gtnhplanner.core.layout.arrange.ArrangeResult.WireRoute r : result.wireRoutes()) {
+                final Edge e = g.edges.get(UUID.fromString(r.id()));
+                if (e == null) continue;
+                final List<int[]> stops = new ArrayList<>();
+                for (final com.gtnhplanner.core.layout.GridPoint p : r.waypoints())
+                    stops.add(new int[] { (int) Math.round(p.x()), (int) Math.round(p.y()) });
+                e.waypoints = List.copyOf(stops);
+            }
         });
         Sfx.SWEEP.play();
         place(from);

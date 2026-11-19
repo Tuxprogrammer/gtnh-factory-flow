@@ -6,7 +6,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Supplier;
 
-import com.gtnhplanner.layout.arrange.Arrange;
+import com.gtnhplanner.core.layout.arrange.Arrange;
 
 /**
  * Arrange's second thread in the game (the core starts none): the free placement searches beside the challenger and

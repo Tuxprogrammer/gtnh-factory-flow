@@ -290,6 +290,18 @@ export function getOverclockedRecipeStats(
   const perfectSteps = Math.min(rule.maxPerfect, affordable);
   const normalSteps = Math.min(rule.maxNormal, affordable - perfectSteps);
   const steps = perfectSteps + normalSteps;
+  const quantise =
+    getMachineBehaviour(effectiveRecipe.machineType)?.quantiseDuration ?? quantiseDurationToTicks;
+  const durationTicks = capBankedParallels(
+    quantise(
+      (effectiveRecipe.durationTicks / rule.multiplier ** perfectSteps / 2 ** normalSteps) *
+        durationMultiplier,
+      subTickCapable,
+    ),
+    parallels,
+    machinePower,
+    Math.ceil(Math.abs(effectiveRecipe.eut) * eutMultiplier * heatDiscountMultiplier),
+  );
 
   return {
     tier,
@@ -298,11 +310,7 @@ export function getOverclockedRecipeStats(
     perfectOverclockSteps: perfectSteps,
     perfectSpeedFactor: rule.multiplier,
     perfectEuFactor: rule.euMultiplier ?? rule.multiplier,
-    durationTicks: (getMachineBehaviour(effectiveRecipe.machineType)?.quantiseDuration ?? quantiseDurationToTicks)(
-      (effectiveRecipe.durationTicks / rule.multiplier ** perfectSteps / 2 ** normalSteps) *
-        durationMultiplier,
-      subTickCapable,
-    ),
+    durationTicks,
     eut:
       effectiveRecipe.eut *
       heatOverclock.heatDiscountMultiplier *
@@ -356,6 +364,28 @@ export function quantiseDurationToTicks(durationTicks: number, subTickCapable: b
     return Math.floor(durationTicks);
   }
   return subTickCapable ? 1 / Math.ceil(1 / durationTicks) : 1;
+}
+
+/**
+ * Parallels banked from a run shorter than one tick still have to be paid
+ * for. ParallelHelper.determineParallel multiplies the machine's parallels by
+ * `calculateMultiplierUnderOneTick`, then caps the result at
+ * `availableEUt / ceil(recipe EU/t x EU modifier x heat discount)`, and the run
+ * takes one tick. The EU/t the game bills is still the unbanked parallels'
+ * (OverclockCalculator keeps `parallel` at the smaller count), so the card keeps
+ * its parallels and the cap stretches the duration instead: `parallels / cap`.
+ */
+function capBankedParallels(
+  durationTicks: number,
+  parallels: number,
+  machinePower: number,
+  perParallelEuT: number,
+): number {
+  if (durationTicks >= 1 || !(perParallelEuT > 0) || !Number.isFinite(machinePower)) {
+    return durationTicks;
+  }
+  const cap = Math.floor(machinePower / perParallelEuT);
+  return parallels / durationTicks > cap ? parallels / Math.max(cap, 1) : durationTicks;
 }
 
 /**

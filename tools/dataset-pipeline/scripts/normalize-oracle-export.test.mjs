@@ -67,6 +67,25 @@ describe("a recipe map that runs on several amps", () => {
   it("keeps the whole EU/t for a one-amp map or an older export that names no amps", () => {
     expect(tierOf(1, 48)).toBe("MV");
     expect(tierOf(undefined, 48)).toBe("MV");
+
+describe("a crafting recipe with an ingredient that names nothing", () => {
+  // GregTech registers "hammer + gemFlawlessFluix -> 2 Fluix Crystal" although no
+  // such gem exists; the exporter marks the empty slot and the recipe cannot be made.
+  const crafting = inputs => normalize({ domains: [
+    { id: "gregtech", recipeMaps: [{ id: "gt.recipe.macerator", name: "Macerator", recipes: [{
+      id: "anchor", durationTicks: 20, eut: 2,
+      itemInputs: [item("a:in", 1, "In")], itemOutputs: [item("a:out", 1, "Out")] }] }] },
+    { id: "crafting", recipes: [{ id: "c", type: "shaped", output: item("a:crystal", 2, "Crystal"), inputs }] },
+  ] }).recipes.filter(recipe => recipe.category === "crafting");
+  const hammer = { kind: "item", id: "a:hammer", amount: 1, displayName: "Hammer", slotIndex: 0 };
+
+  it("drops the recipe rather than leaving it with the tool alone", () => {
+    expect(crafting([hammer, { kind: "missing", slotIndex: 1 }])).toHaveLength(0);
+  });
+
+  it("keeps a recipe whose slots all resolved", () => {
+    const [recipe] = crafting([hammer, { ...hammer, id: "a:gem", slotIndex: 1 }]);
+    expect(recipe.inputs).toHaveLength(2);
   });
 });
 

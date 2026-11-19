@@ -3027,6 +3027,14 @@ public final class GtnhCalcOracleExporter {
         if (resource != null) {
             resource.put("slotIndex", Integer.valueOf(slotIndex));
             inputs.add(resource);
+        } else if (input != null) {
+            // A filled slot that names no real item (a GT recipe's "gemFlawlessFluix"
+            // when no such item exists). The recipe cannot be crafted, so the
+            // normalizer needs to see it and drop the recipe.
+            Map<String, Object> missing = map();
+            missing.put("kind", "missing");
+            missing.put("slotIndex", Integer.valueOf(slotIndex));
+            inputs.add(missing);
         }
     }
 

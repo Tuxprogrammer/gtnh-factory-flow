@@ -1,0 +1,558 @@
+/*
+ * Copyright 1997-2026 Optimatika
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+// GTNH planner web build: a copy of ojAlgo 57.4.0's DenseTableau (MIT, notice above), listed in jvm/web/overrides.txt.
+// The one change is Scaling.doUpdateIteration, the Ruiz equilibration a solve runs on every model it is given: it walks
+// the tableau row by row over the non-zero model-variable entries (found once per tableau) instead of column by column
+// over the whole dense body. Value for value the same: a column's infinity norm is the largest of its non-zero entries,
+// and the clamped factors are finite and positive, so scaling leaves a zero as it is; each entry is multiplied by the
+// same factors in the same order. On WebAssembly the dense scan was 17% of gtnh-flow-palladium_line's solve. The JVM
+// keeps ojAlgo's own class; the solver corpus run in Node (tools/web-core) holds the two to the same answers. Upgrading
+// ojAlgo means copying its new DenseTableau.java and making the same change again.
+package org.ojalgo.optimisation.linear;
+
+import static org.ojalgo.function.constant.PrimitiveMath.*;
+
+import java.util.Arrays;
+
+import org.ojalgo.array.ArrayR064;
+import org.ojalgo.array.operation.AXPY;
+import org.ojalgo.array.operation.CorePrimitiveOperation;
+import org.ojalgo.array.operation.IndexOf;
+import org.ojalgo.optimisation.Equilibrator;
+import org.ojalgo.structure.Access1D;
+import org.ojalgo.structure.ElementView1D;
+import org.ojalgo.structure.Primitive1D;
+import org.ojalgo.structure.Primitive2D;
+
+/**
+ * {@link SimplexTableau} backed by a dense two-dimensional {@code double} array. All tableau elements
+ * (constraint body, RHS, objective, and phase-1 row) are stored explicitly and updated in-place on each
+ * pivot.
+ * <p>
+ * Best suited for smaller or denser LP problems. For large sparse problems {@link SparseTableau} may be more
+ * efficient. Also used as a dense backing option by the {@link SimplexSolver} family (via
+ * {@link SimplexStore#newStoreFactory(org.ojalgo.optimisation.Optimisation.Options)}).
+ */
+final class DenseTableau extends SimplexTableau {
+
+    /**
+     * Ruiz-style diagonal equilibration for an LP held in a {@link DenseTableau}.
+     * <p>
+     * Scales the model-variable columns and constraint rows of the dense tableau in place. The model-variable
+     * columns and the objective row are multiplied by the column factors; the full constraint rows (body,
+     * slack/artificial columns, and RHS) are multiplied by the row factors. Slack and artificial columns are
+     * not independently column-scaled, preserving the natural BFS structure.
+     */
+    static final class Scaling extends Equilibrator<DenseTableau> {
+
+        Scaling(final int nbIterations, final int nbModelVars, final int nbConstraints) {
+            super(nbIterations, nbModelVars, nbConstraints);
+        }
+
+        @Override
+        protected void doAfterUpdate(final DenseTableau tableau) {
+
+            tableau.scaleBounds(primal.inverse);
+
+            tableau.recomputePhase1Objective();
+        }
+
+        /**
+         * Per constraint row, the model-variable columns where the body is not zero (found once: scaling by the
+         * positive factors below never turns a zero into anything else, nor a non-zero into a zero that matters,
+         * since a zero adds nothing to a norm and scales to itself).
+         */
+        private int[][] myNonZeros = null;
+
+        /**
+         * The same iteration as ojAlgo's, value for value, over the non-zero entries only and row by row: a column's
+         * infinity norm is the largest of its non-zero entries (zeros never raise it), and scaling leaves a zero as it
+         * is. ojAlgo's walks the whole dense body column by column, which on these sparse models is most of a solve.
+         */
+        @Override
+        protected void doUpdateIteration(final DenseTableau tableau, final double[] wPrimal, final double[] wDual) {
+
+            int nbVars = wPrimal.length;
+            int m = tableau.m;
+            int rhsCol = tableau.n;
+            double[][] body = tableau.myTableau;
+
+            if (nbVars == 0 || m == 0) {
+                return;
+            }
+
+            if (myNonZeros == null) {
+                myNonZeros = new int[m][];
+                int[] work = new int[nbVars];
+                for (int i = 0; i < m; i++) {
+                    double[] row = body[i];
+                    int count = 0;
+                    for (int j = 0; j < nbVars; j++) {
+                        if (row[j] != ZERO) {
+                            work[count++] = j;
+                        }
+                    }
+                    myNonZeros[i] = java.util.Arrays.copyOf(work, count);
+                }
+            }
+
+            // Column infinity norms over constraint rows
+            java.util.Arrays.fill(wPrimal, ZERO);
+            // Row infinity norms over model-variable columns
+            for (int i = 0; i < m; i++) {
+                double norm = ZERO;
+                double[] row = body[i];
+                for (int j : myNonZeros[i]) {
+                    double abs = Math.abs(row[j]);
+                    if (abs > wPrimal[j]) {
+                        wPrimal[j] = abs;
+                    }
+                    if (abs > norm) {
+                        norm = abs;
+                    }
+                }
+                wDual[i] = norm;
+            }
+
+            Equilibrator.clamp(wPrimal);
+            Equilibrator.clamp(wDual);
+            org.ojalgo.array.operation.SQRT.invoke(wPrimal);
+            org.ojalgo.array.operation.SQRT.invoke(wDual);
+            org.ojalgo.array.operation.INV.invoke(wPrimal, wPrimal);
+            org.ojalgo.array.operation.INV.invoke(wDual, wDual);
+
+            // Column scaling: model-variable columns of the body and the objective row
+            for (int i = 0; i < m; i++) {
+                double[] row = body[i];
+                for (int j : myNonZeros[i]) {
+                    double p = wPrimal[j];
+                    if (p != ONE) {
+                        row[j] *= p;
+                    }
+                }
+            }
+            double[] objective = body[m];
+            for (int j = 0; j < nbVars; j++) {
+                double p = wPrimal[j];
+                if (p != ONE) {
+                    objective[j] *= p;
+                }
+            }
+
+            // Row scaling: only the model-variable columns and the RHS get row-scaled (see ojAlgo's own note).
+            for (int i = 0; i < m; i++) {
+                double d = wDual[i];
+                if (d != ONE) {
+                    double[] row = body[i];
+                    for (int j : myNonZeros[i]) {
+                        row[j] *= d;
+                    }
+                    row[rhsCol] *= d;
+                }
+            }
+
+            // Accumulate cumulative column and row scales
+            for (int j = 0; j < nbVars; j++) {
+                primal.values[j] *= wPrimal[j];
+            }
+            for (int i = 0; i < m; i++) {
+                dual.values[i] *= wDual[i];
+            }
+        }
+
+    }
+
+    private final int myColDim;
+    private double[] myPhase1Row = null;
+    private final double[][] myTableau;
+
+    DenseTableau(final int mm, final int nn) {
+        this(new LinearStructure(mm, nn));
+    }
+
+    DenseTableau(final LinearStructure linearStructure) {
+
+        super(linearStructure);
+
+        int nbRows = m + 1;
+        int nbCols = n + 1;
+
+        myTableau = new double[nbRows][nbCols];
+        myColDim = nbCols;
+
+        myPhase1Row = new double[nbCols];
+    }
+
+    @Override
+    public double doubleValue(final int row, final int col) {
+        if (row == m + 1) {
+            return myPhase1Row[col];
+        } else {
+            return myTableau[row][col];
+        }
+    }
+
+    @Override
+    public int getColDim() {
+        return myColDim;
+    }
+
+    @Override
+    public int getRowDim() {
+        if (myPhase1Row != null) {
+            return myTableau.length + 1;
+        } else {
+            return myTableau.length;
+        }
+    }
+
+    @Override
+    public void set(final int row, final int col, final double value) {
+        myTableau[row][col] = value;
+    }
+
+    private void doPivot(final int row, final int col, final double[] pivotRow) {
+
+        for (int i = 0, limit = myTableau.length; i < limit; i++) {
+            if (i != row) {
+                double[] dataRow = myTableau[i];
+                double colVal = dataRow[col];
+                if (colVal != ZERO && (myPhase1Row != null && i == m || !PRECISION.isZero(colVal))) {
+                    AXPY.invoke(dataRow, 0, -colVal, pivotRow, 0, 0, myColDim);
+                }
+            }
+        }
+
+        if (myPhase1Row != null) {
+            double colVal = myPhase1Row[col];
+            if (colVal != ZERO) {
+                AXPY.invoke(myPhase1Row, 0, -colVal, pivotRow, 0, 0, myColDim);
+            }
+        }
+    }
+
+    private void scale(final double[] body, final int col) {
+        double pivotElement = body[col];
+        if (pivotElement != ONE) {
+            CorePrimitiveOperation.divide(body, 0, myColDim, 1, body, pivotElement);
+        }
+    }
+
+    @Override
+    protected void doPivot(final int row, final int col) {
+
+        double[] pivotRow = myTableau[row];
+
+        this.scale(pivotRow, col);
+
+        this.doPivot(row, col, pivotRow);
+    }
+
+    @Override
+    protected void shiftColumn(final int col, final double shift) {
+        super.shiftColumn(col, shift);
+        for (int i = 0; i < m; i++) {
+            myTableau[i][n] -= shift * myTableau[i][col];
+        }
+    }
+
+    @Override
+    void copyBasicSolution(final double[] solution) {
+        for (int i = 0; i < included.length; i++) {
+            solution[included[i]] = myTableau[i][n];
+        }
+    }
+
+    @Override
+    double extractValue() {
+
+        double retVal = -myTableau[m][n];
+
+        for (int je = 0; je < excluded.length; je++) {
+            int j = excluded[je];
+            ColumnState columnState = this.getColumnState(j);
+
+            if (columnState == ColumnState.LOWER) {
+
+                double lowerBound = this.getLowerBound(j);
+                if (lowerBound != ZERO) {
+                    retVal += lowerBound * myTableau[m][j];
+                }
+
+            } else if (columnState == ColumnState.UPPER) {
+
+                double upperBound = this.getUpperBound(j);
+                if (upperBound != ZERO) {
+                    retVal += upperBound * myTableau[m][j];
+                }
+            }
+        }
+
+        return retVal + this.getValueShift();
+    }
+
+    @Override
+    boolean fixVariable(final int index, final double value) {
+
+        int row = IndexOf.indexOf(included, index);
+
+        if (row < 0) {
+            return false;
+        }
+
+        // Incoming value is in original (unscaled) variable space; convert to scaled space so the
+        // comparison against the current (scaled) RHS is consistent.
+        double scaledValue = value;
+        if (equilibrator != null && index < structure.countModelVariables()) {
+            scaledValue *= equilibrator.primal.inverse[index];
+        }
+
+        // Diff begin
+
+        // Array1D<Double> currentRow = myTransposed.sliceColumn(row);
+        ArrayR064 currentRow = ArrayR064.wrap(myTableau[row]);
+        double currentRHS = currentRow.doubleValue(myColDim - 1);
+
+        final ArrayR064 auxiliaryRow = ArrayR064.make(myColDim);
+        if (currentRHS > scaledValue) {
+            currentRow.axpy(NEG, auxiliaryRow);
+            auxiliaryRow.set(index, ZERO);
+            auxiliaryRow.set(myColDim - 1, scaledValue - currentRHS);
+        } else if (currentRHS < scaledValue) {
+            currentRow.axpy(ONE, auxiliaryRow);
+            auxiliaryRow.set(index, ZERO);
+            auxiliaryRow.set(myColDim - 1, currentRHS - scaledValue);
+        } else {
+            return true;
+        }
+
+        // Diff end
+
+        Access1D<Double> objectiveRow = this.sliceTableauRow(m);
+
+        int pivotCol = this.findNextPivotColumn(auxiliaryRow, objectiveRow);
+
+        if (pivotCol < 0) {
+            // TODO Problem infeasible?
+            // Probably better to return true here, and have the subsequest solver.solve() return INFEASIBLE
+            return false;
+        }
+
+        // Diff begin
+
+        this.scale(auxiliaryRow.data, pivotCol);
+
+        this.doPivot(-1, pivotCol, auxiliaryRow.data);
+
+        // myTransposed.fillColumn(row, auxiliaryRow);
+        myTableau[row] = auxiliaryRow.data;
+
+        // Diff end
+
+        for (ElementView1D<Double, ?> elem : this.sliceConstraintsRHS().elements()) {
+            if (elem.doubleValue() < ZERO) {
+                return false;
+            }
+        }
+
+        this.update(row, pivotCol);
+
+        return true;
+    }
+
+    @Override
+    double getInfeasibility() {
+        if (myPhase1Row != null) {
+            return myPhase1Row[n];
+        } else {
+            return ZERO;
+        }
+    }
+
+    @Override
+    double getReducedCost(final int je) {
+        if (myPhase1Row != null) {
+            return myPhase1Row[excluded[je]];
+        } else {
+            return myTableau[m][excluded[je]];
+        }
+    }
+
+    @Override
+    double getValue() {
+        return myTableau[m][n];
+    }
+
+    @Override
+    Primitive2D newConstraintsBody() {
+
+        int base = structure.nbIdty;
+        int limit = structure.countVariables();
+
+        return new Primitive2D() {
+
+            @Override
+            public double doubleValue(final int row, final int col) {
+                return myTableau[row][col];
+            }
+
+            @Override
+            public int getColDim() {
+                return structure.countVariables();
+            }
+
+            @Override
+            public int getRowDim() {
+                return m;
+            }
+
+            @Override
+            public void set(final int row, final int col, final double value) {
+
+                myTableau[row][col] = value;
+
+                if (row >= base && col < limit) {
+                    myPhase1Row[col] -= value;
+                }
+            }
+
+        };
+    }
+
+    @Override
+    Primitive1D newConstraintsRHS() {
+
+        int base = structure.nbIdty;
+
+        return new Primitive1D() {
+
+            @Override
+            public double doubleValue(final int index) {
+                return myTableau[index][n];
+            }
+
+            @Override
+            public void set(final int index, final double value) {
+
+                if (structure.nbArti > 0) {
+                    myTableau[index][n - m + index] = ONE;
+                }
+
+                myTableau[index][n] = value;
+
+                if (index >= base) {
+                    myPhase1Row[n] -= value;
+                }
+            }
+
+            @Override
+            public int size() {
+                return m;
+            }
+
+        };
+    }
+
+    @Override
+    Scaling newEquilibrator(final int nbIterations, final int nbPrimals, final int nbDuals) {
+
+        Scaling retVal = new Scaling(nbIterations, nbPrimals, nbDuals);
+
+        retVal.update(this);
+
+        return retVal;
+    }
+
+    @Override
+    Primitive1D newObjective() {
+
+        return new Primitive1D() {
+
+            @Override
+            public double doubleValue(final int index) {
+                return myTableau[m][index];
+            }
+
+            @Override
+            public void set(final int index, final double value) {
+                myTableau[m][index] = value;
+            }
+
+            @Override
+            public int size() {
+                return structure.countModelVariables();
+            }
+
+        };
+    }
+
+    @Override
+    Primitive1D phase1() {
+
+        if (myPhase1Row == null) {
+            myPhase1Row = new double[n + 1];
+        }
+
+        return new Primitive1D() {
+
+            @Override
+            public double doubleValue(final int index) {
+                return myPhase1Row[index];
+            }
+
+            @Override
+            public void set(final int index, final double value) {
+                myPhase1Row[index] = value;
+            }
+
+            @Override
+            public int size() {
+                return structure.countModelVariables();
+            }
+
+        };
+    }
+
+    void recomputePhase1Objective() {
+
+        if (myPhase1Row != null) {
+
+            int nbVars = structure.countVariables();
+
+            Arrays.fill(myPhase1Row, ZERO);
+
+            for (int i = structure.nbIdty; i < m; i++) {
+                double[] row = myTableau[i];
+                for (int j = 0; j < nbVars; j++) {
+                    myPhase1Row[j] -= row[j];
+                }
+                myPhase1Row[n] -= row[n];
+            }
+        }
+    }
+
+    @Override
+    void removePhase1() {
+        myPhase1Row = null;
+    }
+
+}

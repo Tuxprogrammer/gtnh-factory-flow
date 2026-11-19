@@ -6,3 +6,4 @@
 org.teavm.classlib.java.lang.TRuntime adds maxMemory (TeaVM's has none; ojAlgo's Hardware calls it): 4 GiB; read back by the webCoreRuntimeMaxMemory export
 org.ojalgo.concurrent.DaemonPoolExecutor replaces ojAlgo's daemon thread pool: a task runs on the calling thread when it is submitted, as the browser has no threads and the solver asks ojAlgo for one
 org.ojalgo.concurrent.MultiviewSet replaces ojAlgo's prioritised set: the same code with a set from Collections.newSetFromMap where ojAlgo calls ConcurrentHashMap.newKeySet, which TeaVM's classlib lacks
+org.ojalgo.optimisation.linear.DenseTableau replaces ojAlgo's dense simplex tableau: the same equilibration, value for value, over the non-zero entries row by row (ojAlgo's walks the whole dense body column by column, 17% of a heavy plan's solve on WebAssembly)

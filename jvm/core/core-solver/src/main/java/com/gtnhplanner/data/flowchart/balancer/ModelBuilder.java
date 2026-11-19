@@ -1,25 +1,20 @@
 package com.gtnhplanner.data.flowchart.balancer;
 
+import java.util.Arrays;
 import java.util.function.IntToDoubleFunction;
 
-import javax.annotation.Nullable;
-
-import org.ojalgo.optimisation.Expression;
-import org.ojalgo.optimisation.ExpressionsBasedModel;
-import org.ojalgo.optimisation.Optimisation;
-import org.ojalgo.optimisation.Variable;
-import org.ojalgo.optimisation.integer.IntegerStrategy;
-import org.ojalgo.type.context.NumberContext;
+import com.gtnhplanner.core.solver.lp.LinearProgram;
+import com.gtnhplanner.core.solver.lp.LpEngine;
 
 /**
  * The ONE place an LP model is assembled. A stage declares what it wants - which variable
  * families, which row families, which objective - as a fluent chain over the build-once
- * {@link ModelData}, and {@link #solve(String)} hands back the ojAlgo result. Composable steps, so
+ * {@link ModelData}, and {@link #solve(String)} hands back the engine's result. Composable steps, so
  * a new balancer type expresses its constraint family in its stage instead of reaching into Solver
  * internals.
  *
  * <p>
- * A model is a fresh ojAlgo object (inherent to the library, allowed by the zero-copy rule) while
+ * A model is a fresh {@link LinearProgram} (inherent to the engine, allowed by the zero-copy rule) while
  * everything it reads - machines, ports, edges, gates - lives once on {@link ModelData}. The flags
  * below are the guard rails: chaining {@code portRows(...)} before {@code flows()} is a caller
  * bug, and the builder says so rather than indexing past an empty array.
@@ -34,14 +29,6 @@ import org.ojalgo.type.context.NumberContext;
 public final class ModelBuilder {
 
     private final SolveContext ctx;
-    /**
-     * The solver's own ojAlgo environment, with no presolvers. ojAlgo 57.3.1's presolve restarts its pass over the rows
-     * after every variable it fixes, in BigDecimal: 85% of a solve. Worse, it declared sets of gates infeasible that
-     * balance (gtnh-flow's 230_platline, with the every-machine floors), so it decided answers. These models are small
-     * and plain; the simplex needs none of it. Branch-and-bound (the OUTPUT and INPUT modes) still presolves its own
-     * way.
-     */
-    private static final Optimisation.Environment ENVIRONMENT = environment();
 
     /**
      * Tests only: every model adds its variables in reverse order, a different path through the simplex to the same
@@ -49,40 +36,28 @@ public final class ModelBuilder {
      */
     private static volatile boolean reversed;
 
-    private final ExpressionsBasedModel m = ENVIRONMENT.newModel();
+    private final LinearProgram m;
 
-    private Variable[] extentVars = new Variable[0];
-    private Variable[] flowVars = new Variable[0];
-    private Variable[] extVars = new Variable[0];
+    private int[] extentVars = new int[0];
+    private int[] flowVars = new int[0];
+    private int[] extVars = new int[0];
     /** Per connected port, its conservation row ({@link #conservation()}); empty before it. */
-    private Expression[] conservationRows = new Expression[0];
+    private int[] conservationRows = new int[0];
     private boolean extents;
     private boolean flows;
     private boolean externals;
     private boolean conserved;
     private boolean countsSpace;
     /** Per drawer row, the slack that lets the total fall short of / run over its bounds (relaxed rows only). */
-    private Variable[] drawerUnder = new Variable[0];
-    private Variable[] drawerOver = new Variable[0];
+    private int[] drawerUnder = new int[0];
+    private int[] drawerOver = new int[0];
 
     private ModelBuilder(final SolveContext ctx) {
         this.ctx = ctx;
-        final Numerics numerics = ctx.heuristics.numerics();
         // A safety net against a model that never ends, never reached by a working one: the work a solve does is
         // counted, never timed, so its answer is the same on every computer however busy.
-        m.options.time_abort = numerics.modelSafetyMillis;
-        m.options.time_suffice = numerics.modelSafetyMillis;
-        // One branch-and-bound worker, so the node order is a property of the model, not of thread
-        // interleaving, and the same chart answers the same on every machine.
-        m.options.integer(IntegerStrategy.DEFAULT.withGapTolerance(NumberContext.of(12, 8)));
-        m.options.parallelism(1);
-        m.options.feasibility = NumberContext.of(12, 10);
-    }
-
-    private static Optimisation.Environment environment() {
-        final Optimisation.Environment environment = Optimisation.newEnvironment();
-        environment.clearPresolvers();
-        return environment;
+        m = LpEngine.get()
+            .newProgram(ctx.heuristics.numerics().modelSafetyMillis);
     }
 
     /** Tests only: whether every model from now on adds its variables in reverse order. */
@@ -107,16 +82,16 @@ public final class ModelBuilder {
      */
     public ModelBuilder extents(final double[] lower) {
         final ModelData model = ctx.model;
-        extentVars = new Variable[model.machines.size()];
+        extentVars = new int[model.machines.size()];
         for (int k = 0; k < extentVars.length; k++) {
             final int i = order(k, extentVars.length);
-            final Variable v = m.addVariable("extent_" + i);
+            final int v = m.addColumn("extent_" + i);
             final double pinned = ctx.pinnedExtent[i];
             if (!Double.isNaN(pinned)) {
-                v.lower(pinned)
-                    .upper(pinned);
+                m.columnLower(v, pinned);
+                m.columnUpper(v, pinned);
             } else {
-                v.lower(lower[i]);
+                m.columnLower(v, lower[i]);
             }
             extentVars[i] = v;
         }
@@ -134,18 +109,18 @@ public final class ModelBuilder {
      */
     public ModelBuilder extentCounts() {
         final ModelData model = ctx.model;
-        extentVars = new Variable[model.machines.size()];
+        extentVars = new int[model.machines.size()];
         for (int i = 0; i < extentVars.length; i++) {
-            final Variable v = m.addVariable("count_" + i)
-                .integer();
+            final int v = m.addColumn("count_" + i);
+            m.integer(v);
             final double pinned = ctx.pinnedExtent[i];
             if (!Double.isNaN(pinned)) {
                 final double count = Math
                     .round(pinned * model.machines.get(i).durTicks / (double) Numerics.TICKS_PER_SECOND);
-                v.lower(count)
-                    .upper(count);
+                m.columnLower(v, count);
+                m.columnUpper(v, count);
             } else {
-                v.lower(1.0);
+                m.columnLower(v, 1.0);
             }
             extentVars[i] = v;
         }
@@ -171,15 +146,16 @@ public final class ModelBuilder {
         for (int p = 0; p < model.pools.size(); p++) {
             if (ctx.droppedPools.contains(p)) continue;
             final ModelData.Pool pool = model.pools.get(p);
-            final Expression row = m.addExpression("pool_" + p);
+            final int row = m.addRow("pool_" + p);
             for (final int machine : pool.machines()) {
-                row.set(
+                m.set(
+                    row,
                     extentVars[machine],
                     countsSpace ? 1.0 : model.machines.get(machine).durTicks / (double) Numerics.TICKS_PER_SECOND);
             }
             // A cap, or for a pinned shared machine the count itself.
-            if (pool.exact()) row.level(pool.capacity());
-            else row.upper(pool.capacity());
+            if (pool.exact()) m.rowLevel(row, pool.capacity());
+            else m.rowUpper(row, pool.capacity());
         }
         return this;
     }
@@ -187,11 +163,11 @@ public final class ModelBuilder {
     /** One nonnegative flow (items/s) variable per drawn edge. */
     public ModelBuilder flows() {
         final ModelData model = ctx.model;
-        flowVars = new Variable[model.edges.size()];
+        flowVars = new int[model.edges.size()];
         for (int k = 0; k < flowVars.length; k++) {
             final int e = order(k, flowVars.length);
-            flowVars[e] = m.addVariable("flow_" + e)
-                .lower(0);
+            flowVars[e] = m.addColumn("flow_" + e);
+            m.columnLower(flowVars[e], 0);
         }
         flows = true;
         return this;
@@ -199,11 +175,11 @@ public final class ModelBuilder {
 
     /** One nonnegative external variable per connected port. */
     public ModelBuilder externals() {
-        extVars = new Variable[ctx.model.connectedPorts.size()];
+        extVars = new int[ctx.model.connectedPorts.size()];
         for (int k = 0; k < extVars.length; k++) {
             final int p = order(k, extVars.length);
-            extVars[p] = m.addVariable("ext_" + p)
-                .lower(0);
+            extVars[p] = m.addColumn("ext_" + p);
+            m.columnLower(extVars[p], 0);
         }
         externals = true;
         return this;
@@ -217,17 +193,17 @@ public final class ModelBuilder {
     public ModelBuilder conservation() {
         require(extents && flows && externals, "extents(), flows() and externals()");
         final ModelData model = ctx.model;
-        conservationRows = new Expression[model.connectedPorts.size()];
+        conservationRows = new int[model.connectedPorts.size()];
         for (int p = 0; p < model.connectedPorts.size(); p++) {
             final ModelData.ConnectedPort port = model.connectedPorts.get(p);
             final double scale = 1.0 / Math.max(1.0, port.qtyPerCraft());
-            final Expression row = m.addExpression("port_" + p);
+            final int row = m.addRow("port_" + p);
             for (final int e : port.edges()) {
-                row.set(flowVars[e], scale);
+                m.set(row, flowVars[e], scale);
             }
-            row.set(extVars[p], scale);
-            row.set(extentVars[port.machine()], -port.qtyPerCraft() * scale * extentFactor(port.machine()));
-            row.level(0);
+            m.set(row, extVars[p], scale);
+            m.set(row, extentVars[port.machine()], -port.qtyPerCraft() * scale * extentFactor(port.machine()));
+            m.rowLevel(row, 0);
             conservationRows[p] = row;
         }
         conserved = true;
@@ -244,12 +220,12 @@ public final class ModelBuilder {
         final SolveContext.Guard guard = ctx.guard;
         if (guard == null || ctx.guardOff) return this;
         if (guard.cap() <= 0) {
-            for (final int p : guard.ports()) extVars[p].upper(0);
+            for (final int p : guard.ports()) m.columnUpper(extVars[p], 0);
             return this;
         }
-        final Expression row = m.addExpression("guard");
-        for (final int p : guard.ports()) row.add(extVars[p], ctx.externalWeight(p));
-        row.upper(guard.cap());
+        final int row = m.addRow("guard");
+        for (final int p : guard.ports()) m.add(row, extVars[p], ctx.externalWeight(p));
+        m.rowUpper(row, guard.cap());
         return this;
     }
 
@@ -288,8 +264,10 @@ public final class ModelBuilder {
         require(extents, "extents() or extentCounts()");
         final ModelData model = ctx.model;
         final boolean bind = conserved && externals && ctx.bindsExternals;
-        drawerUnder = new Variable[model.drawers.size()];
-        drawerOver = new Variable[model.drawers.size()];
+        drawerUnder = new int[model.drawers.size()];
+        drawerOver = new int[model.drawers.size()];
+        Arrays.fill(drawerUnder, -1);
+        Arrays.fill(drawerOver, -1);
         for (int d = 0; d < model.drawers.size(); d++) {
             final double lower = ctx.drawerLower[d];
             final double upper = ctx.drawerUpper[d];
@@ -297,47 +275,46 @@ public final class ModelBuilder {
             final ModelData.DrawerRow drawer = model.drawers.get(d);
             final double bound = Math.max(Double.isNaN(lower) ? 0 : lower, Double.isNaN(upper) ? 0 : upper);
             final double scale = 1.0 / Math.max(1.0, bound);
-            final Expression row = m.addExpression("drawer_" + d);
+            final int row = m.addRow("drawer_" + d);
             for (int i = 0; i < drawer.extentMachines().length; i++) {
                 final int machine = drawer.extentMachines()[i];
-                row.set(extentVars[machine], drawer.extentQty()[i] * extentFactor(machine) * scale);
+                m.set(row, extentVars[machine], drawer.extentQty()[i] * extentFactor(machine) * scale);
             }
             // A buffer's total is the flow on its edges; every model that has edges has their flows.
             if (flows) {
                 for (final int e : drawer.flowEdges()) {
-                    row.set(flowVars[e], scale);
+                    m.set(row, flowVars[e], scale);
                 }
             }
             if (bind) {
                 for (final int p : drawer.externalPorts()) {
-                    row.set(extVars[p], scale);
+                    m.set(row, extVars[p], scale);
                 }
             }
             if (relaxed) {
                 final double weight = 1.0 / Math.max(1.0, bound);
                 if (!Double.isNaN(lower)) {
-                    drawerUnder[d] = m.addVariable("drawer_under_" + d)
-                        .lower(0)
-                        .weight(weight);
-                    row.set(drawerUnder[d], scale);
+                    drawerUnder[d] = m.addColumn("drawer_under_" + d);
+                    m.columnLower(drawerUnder[d], 0);
+                    m.cost(drawerUnder[d], weight);
+                    m.set(row, drawerUnder[d], scale);
                 }
                 if (!Double.isNaN(upper)) {
-                    drawerOver[d] = m.addVariable("drawer_over_" + d)
-                        .lower(0)
-                        .weight(weight);
-                    row.set(drawerOver[d], -scale);
+                    drawerOver[d] = m.addColumn("drawer_over_" + d);
+                    m.columnLower(drawerOver[d], 0);
+                    m.cost(drawerOver[d], weight);
+                    m.set(row, drawerOver[d], -scale);
                 }
             }
-            if (!Double.isNaN(lower)) row.lower(lower * scale);
-            if (!Double.isNaN(upper)) row.upper(upper * scale);
+            if (!Double.isNaN(lower)) m.rowLower(row, lower * scale);
+            if (!Double.isNaN(upper)) m.rowUpper(row, upper * scale);
         }
         return this;
     }
 
-    private static double value(@Nullable final Variable v) {
-        if (v == null) return 0;
-        final Number n = v.getValue();
-        return n == null ? 0 : n.doubleValue();
+    /** A column's value at the solution; 0 for none ({@code -1}). */
+    private double value(final int column) {
+        return column < 0 ? 0 : m.value(column);
     }
 
     /**
@@ -362,18 +339,18 @@ public final class ModelBuilder {
                 .isEmpty()) continue;
             final boolean claimed = inputPriority == port.input();
             final double scale = 1.0 / Math.max(1.0, port.qtyPerCraft());
-            final Expression row = m.addExpression("port_" + p);
+            final int row = m.addRow("port_" + p);
             for (final int e : port.edges()) {
-                row.set(flowVars[e], scale);
+                m.set(row, flowVars[e], scale);
             }
             if (!claimed && externals) {
-                row.set(extVars[p], scale);
+                m.set(row, extVars[p], scale);
             }
-            row.set(extentVars[port.machine()], -port.qtyPerCraft() * scale * extentFactor(port.machine()));
+            m.set(row, extentVars[port.machine()], -port.qtyPerCraft() * scale * extentFactor(port.machine()));
             if (claimed) {
-                row.level(0);
+                m.rowLevel(row, 0);
             } else {
-                row.lower(0);
+                m.rowLower(row, 0);
             }
         }
         return this;
@@ -388,8 +365,8 @@ public final class ModelBuilder {
      */
     public ModelBuilder importsWeighted(final double weight) {
         requireExternals();
-        for (final Variable ext : extVars) {
-            ext.weight(weight);
+        for (final int ext : extVars) {
+            m.cost(ext, weight);
         }
         return this;
     }
@@ -400,7 +377,7 @@ public final class ModelBuilder {
      */
     public ModelBuilder extentsWeighted(final IntToDoubleFunction weight) {
         for (int i = 0; i < extentVars.length; i++) {
-            extentVars[i].weight(weight.applyAsDouble(i));
+            m.cost(extentVars[i], weight.applyAsDouble(i));
         }
         return this;
     }
@@ -411,18 +388,12 @@ public final class ModelBuilder {
     }
 
     /** Runs the model, reporting to the profiler with {@code label} when one is attached. */
-    public Optimisation.Result solve(final String label) {
+    public LinearProgram.Result solve(final String label) {
         final Profiler profiler = ctx.profiler;
         final long start = profiler.enabled() ? System.currentTimeMillis() : 0;
-        final Optimisation.Result result = m.minimise();
+        final LinearProgram.Result result = m.solve();
         if (profiler.enabled()) {
-            profiler.modelSolved(
-                label,
-                System.currentTimeMillis() - start,
-                result.getState()
-                    .toString(),
-                m.countVariables(),
-                m.countExpressions());
+            profiler.modelSolved(label, System.currentTimeMillis() - start, result.word(), m.columns(), m.rows());
         }
         return result;
     }

@@ -5,10 +5,9 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.item.ItemStack;
-import net.minecraftforge.fluids.FluidStack;
-
 import com.gtnhplanner.api.RecipePropertyAPI;
+import com.gtnhplanner.core.model.ResourceKey;
+import com.gtnhplanner.core.model.ResourceRegistry;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Port;
 
@@ -106,31 +105,16 @@ public final class CustomRate {
         (supply(node) ? node.outputs : node.inputs).add(port);
     }
 
-    /** A port for a resource key moving {@code perSecond}, exact; null when this game has no such resource. */
+    /**
+     * A port for a resource key (the mod's spelling, as saved) moving {@code perSecond}, exact; null when this game has
+     * no such resource. The host makes it ({@link ResourceRegistry#port}).
+     */
     @Nullable
     static Port<?> port(final String key, final double perSecond) {
-        if (Energy.KEY.equals(key)) {
-            final Port<Energy> eu = new Port<>(RecipePropertyAPI.POWER, new Energy(perSecond), 1f);
-            eu.setExactAmount(perSecond);
-            return eu;
-        }
-        final FluidStack fluid = com.gtnhplanner.ui.Resources.fluid(key);
-        if (fluid != null) {
-            fluid.amount = amount(perSecond);
-            final Port<FluidStack> port = new Port<>(RecipePropertyAPI.FLUID, fluid, 1f);
-            port.setExactAmount(perSecond);
-            return port;
-        }
-        final ItemStack item = com.gtnhplanner.ui.Resources.item(key);
-        if (item == null) return null;
-        item.stackSize = amount(perSecond);
-        final Port<ItemStack> port = new Port<>(RecipePropertyAPI.ITEM, item, 1f);
-        port.setExactAmount(perSecond);
-        return port;
-    }
-
-    private static int amount(final double perSecond) {
-        return (int) Math.max(1, Math.min(Integer.MAX_VALUE, Math.round(perSecond)));
+        final ResourceKey resource = com.gtnhplanner.core.model.SavedKeys.resource(key);
+        return resource == null ? null
+            : ResourceRegistry.get()
+                .port(resource, perSecond);
     }
 
     /** Takes a resource on a side, keeping the dial; the caller rebuilds the ports. */

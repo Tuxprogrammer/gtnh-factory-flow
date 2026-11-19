@@ -171,7 +171,7 @@ public final class IncrementalRouter {
         // Pinned wires install in the order the last solve installed them, so lane-mates keep their places.
         final Map<String, Integer> rank = new HashMap<>();
         for (final String id : routes.keySet()) rank.put(id, rank.size());
-        pinned.sort(
+        JsSort.sort(pinned, 
             (a, b) -> rank.get(
                 a.request()
                     .edgeId())

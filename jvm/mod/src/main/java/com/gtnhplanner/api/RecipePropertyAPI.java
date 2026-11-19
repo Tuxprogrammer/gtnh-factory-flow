@@ -17,11 +17,13 @@ import com.gtnhplanner.Compat;
 import com.gtnhplanner.client.GuiHelper;
 import com.gtnhplanner.client.IngredientColors;
 import com.gtnhplanner.client.PlannerColors;
+import com.gtnhplanner.core.model.ResourceKey;
 import com.gtnhplanner.data.properties.PropertyProvider;
 import com.gtnhplanner.data.properties.RecipeProperty;
 import com.gtnhplanner.data.properties.ResourceProperty;
 import com.gtnhplanner.data.provider.DefaultProvider;
 import com.gtnhplanner.data.provider.gregtech.GTHooks;
+import com.gtnhplanner.importer.game.GameIds;
 import com.gtnhplanner.power.Energy;
 
 public final class RecipePropertyAPI {
@@ -36,9 +38,11 @@ public final class RecipePropertyAPI {
         .amountFormatter(GuiHelper::formatRate)
         .amountExtractor(stack -> stack.stackSize)
         .amountUpdater((stack, newAmount) -> stack.stackSize = newAmount)
+        // A recipe's two input slots of items sharing an ore name read as one port (a recipe that takes any plank twice
+        // takes two planks). What a wire may join is the slot's own list, not this (core.model.Wiring).
         .connectionChecker(RecipePropertyAPI::itemsMatch)
-        // The same item: its id, meta and NBT. Sharing an ore name (Lapis Lazuli and Lapis Dust do) lets two items
-        // wire, never makes two outputs one.
+        // The same item: its id, meta and NBT. Sharing an ore name (Lapis Lazuli and Lapis Dust do) folds two inputs,
+        // never makes two outputs one.
         .sameChecker((a, b) -> a.getItem() != null && a.isItemEqual(b) && ItemStack.areItemStackTagsEqual(a, b))
         .hashCodeExtractor(
             s -> 31 * s.getItem()
@@ -47,6 +51,7 @@ public final class RecipePropertyAPI {
             stack -> "item:" + net.minecraft.item.Item.itemRegistry.getNameForObject(stack.getItem())
                 + ":"
                 + stack.getItemDamage())
+        .resourceExtractor(stack -> ResourceKey.item(GameIds.itemId(stack)))
         .copier(ItemStack::copy)
         .displayStackProvider(stack -> stack)
         .colorProvider(IngredientColors::itemColor)
@@ -73,6 +78,7 @@ public final class RecipePropertyAPI {
         .keyExtractor(
             fs -> "fluid:" + fs.getFluid()
                 .getName())
+        .resourceExtractor(fs -> ResourceKey.fluid(GameIds.fluidId(fs)))
         .copier(FluidStack::copy)
         // Guard sits inside the lambda so GT classes only load if GT is present AND the
         // lambda actually runs (lambda bodies resolve their classes at call time, not here).
@@ -104,6 +110,7 @@ public final class RecipePropertyAPI {
         .amountUpdater((e, amount) -> e.perCraft = amount)
         .connectionChecker((a, b) -> true)
         .hashCodeExtractor(e -> Energy.KEY.hashCode())
+        .resourceExtractor(e -> ResourceKey.EU)
         .colorProvider(e -> Energy.AMBER)
         .pinInputColor(0xFF000000 | Energy.AMBER)
         .pinOutputColor(0xFF000000 | Energy.AMBER)

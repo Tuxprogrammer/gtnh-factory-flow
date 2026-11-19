@@ -90,11 +90,12 @@ class InputPickTest {
         final LoadedChart chart = steelLine();
         final Graph g = chart.graph();
         final Node carbonizer = chart.machine(0), ebf = chart.machine(1);
-        assertEquals(-1, g.findCompatibleInput(carbonizer, 0, ebf), "coal dust takes no carbon");
+        assertEquals(1, g.findCompatibleInput(carbonizer, 0, ebf), "the coal slot lists carbon, so it takes it");
+        assertEquals(-1, g.findCompatibleInput(ebf, 0, carbonizer), "nothing of the slot's list is steel or wood");
 
         ebf.pickInput(1, "carbon");
         final int in = g.findCompatibleInput(carbonizer, 0, ebf);
-        assertEquals(1, in, "set to carbon, it does");
+        assertEquals(1, in, "set to carbon, it still does");
         g.addEdge(new Edge(Uuid.randomUUID(), carbonizer.id, ebf.id, 0, in));
         final Drawer steel = new Drawer(Kind.PRODUCT, "test:steel");
         steel.setTarget(Rule.EXACTLY, 3);
@@ -106,5 +107,36 @@ class InputPickTest {
         final SolutionView s = solved.solution();
         assertEquals(3, s.machineCounts.get(ebf.id), EPS);
         assertEquals(3, s.machineCounts.get(carbonizer.id), EPS, "the carbon is made on the plan");
+    }
+
+    @Test
+    void aWireTheSlotDoesNotTakeStaysAndCarriesNothing() {
+        // A save from before the slot rule: carbon wired into a coal slot that does not list it (the old rule let two
+        // items sharing an ore name wire).
+        final LoadedChart chart = GtnhFlowLoader.parse(
+            "old",
+            "- {m: carbonizer, dur: 1, I: {wood: 1}, O: {carbon: 1}}\n"
+                + "- {m: ebf, dur: 1, I: {iron: 1, coal: 1}, O: {steel: 1}}");
+        final Graph g = chart.graph();
+        final Node carbonizer = chart.machine(0), ebf = chart.machine(1);
+        final Edge old = new Edge(Uuid.randomUUID(), carbonizer.id, ebf.id, 0, 1);
+        g.addEdge(old);
+        assertTrue(GraphSolve.notTaken(g, old), "the coal slot does not take carbon");
+        assertTrue(
+            GraphSolve.input(g)
+                .edges()
+                .isEmpty(),
+            "the solver does not see it, as the website's does not");
+        assertTrue(g.edges.containsKey(old.id), "the wire stays in the plan");
+    }
+
+    @Test
+    void aFractionalPinSolvesAtItsFraction() {
+        final LoadedChart chart = steelLine();
+        final Node ebf = chart.machine(1);
+        com.gtnhplanner.data.flowchart.PinRule.set(ebf, com.gtnhplanner.data.flowchart.PinRule.EXACT, 0.5);
+        final Answer answer = GraphSolve.solveWithAlternatives(BalanceMode.AUTO, chart.graph(), null, Map.of());
+        if (!(answer instanceof final Answer.Solved solved)) throw new AssertionError("failed: " + answer);
+        assertEquals(0.5, solved.solution().machineCounts.get(ebf.id), EPS, "half a blast furnace, as set");
     }
 }

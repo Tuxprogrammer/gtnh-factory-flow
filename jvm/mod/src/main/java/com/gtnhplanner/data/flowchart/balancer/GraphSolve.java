@@ -1,8 +1,8 @@
 package com.gtnhplanner.data.flowchart.balancer;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,15 +10,13 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import net.minecraft.item.ItemStack;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.oredict.OreDictionary;
-
 import com.gtnhplanner.core.base.CoreSettings;
 import com.gtnhplanner.core.base.Uuid;
+import com.gtnhplanner.core.model.ResourceKey;
 import com.gtnhplanner.data.MachineConfig;
 import com.gtnhplanner.data.effect.EffectResult;
 import com.gtnhplanner.data.flowchart.Drawer;
+import com.gtnhplanner.data.flowchart.DrawerTypes;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Group;
@@ -39,9 +37,10 @@ import com.gtnhplanner.data.properties.RecipeProperty;
  * The solver on a {@link Graph}: the snapshot ({@link #input}) and the entry points that take a graph, kept for the
  * callers and tests written against the graph. Client thread only: the snapshot is taken here, on the calling thread -
  * that is where the machine effects are computed (the GregTech overclock calculator keeps shared mutable state and
- * writes into the node, so it must never run anywhere else), where ingredient names are resolved, and where ports are
- * grouped into ingredients with {@link Port#canConnect}. What comes out is the core's plain {@link SolveInput}, safe on
- * any thread.
+ * writes into the node, so it must never run anywhere else) and where ingredient names are resolved. Ports are numbered
+ * into ingredients by their resource, as the website's adapter numbers them ({@link Ingredients}), and a wire reaches
+ * the solver only when its input's slot takes what its output carries ({@link Port#feeds}): one rule on both sides, so
+ * the same plan is the same input. What comes out is the core's plain {@link SolveInput}, safe on any thread.
  */
 public final class GraphSolve {
 
@@ -63,7 +62,8 @@ public final class GraphSolve {
      */
     public static SolveInput input(final Graph graph, final BalanceMode mode, @Nullable final ChoiceKey choice,
         final Map<Uuid, Double> extentPins) {
-        final Ingredients ingredients = new Ingredients();
+        final List<Edge> wires = takenWires(graph);
+        final Ingredients ingredients = Ingredients.of(graph, wires);
         final List<Machine> machines = new ArrayList<>(graph.nodes.size());
         final List<PoolIn> pools = new ArrayList<>();
         // The count rules are AUTO's; the older modes read every set count as a pin, as they always did.
@@ -74,14 +74,14 @@ public final class GraphSolve {
                 continue;
             }
             final PinRule rule = PinRule.of(node);
-            final int count = node.machineConfig.getMachineCount();
+            final double count = node.machineConfig.machineCount();
             // An Up to count is a one-machine pool: the solver finds how many run, never above it (docs/design/up-to.md).
             // Exactly is the fixed count it always was.
             if (rule == PinRule.UP_TO && count > 0) pools.add(new PoolIn(List.of(node.id), count, false, true));
             machines.add(machineOf(node, ingredients, rule == PinRule.EXACT));
         }
-        final List<EdgeIn> edges = new ArrayList<>(graph.edges.size());
-        for (final Edge edge : graph.getEdges()) {
+        final List<EdgeIn> edges = new ArrayList<>(wires.size());
+        for (final Edge edge : wires) {
             edges.add(
                 new EdgeIn(
                     edge.id,
@@ -104,7 +104,7 @@ public final class GraphSolve {
                     new PoolIn(
                         members.stream()
                             .toList(),
-                        machineGroup.getMachineCapacity(),
+                        machineGroup.machineCount(),
                         exact,
                         auto && rule == PinRule.UP_TO));
             }
@@ -132,6 +132,30 @@ public final class GraphSolve {
         final Map<Uuid, Double> pins = new LinkedHashMap<>();
         for (final Map.Entry<Uuid, Double> e : extentPins.entrySet()) pins.put(e.getKey(), e.getValue());
         return new SolveInput(mode, choice, machines, edges, pools, drawers, pins, graph.spareShares);
+    }
+
+    /**
+     * The plan's wires the solver reads: all of them but a wire whose input no longer takes what its output carries
+     * (one a save made under the older rule, when two items sharing an ore name wired to each other). Such a wire stays
+     * in the plan and on the board, flagged ({@link #notTaken}), and carries nothing, as the website's adapter leaves
+     * it out of the solve. A wire whose port is gone from its card goes through as before: the solver skips it.
+     */
+    private static List<Edge> takenWires(final Graph graph) {
+        final List<Edge> out = new ArrayList<>(graph.edges.size());
+        for (final Edge edge : graph.getEdges()) if (!notTaken(graph, edge)) out.add(edge);
+        return out;
+    }
+
+    /** Whether the wire's input exists and does not take what its output carries ({@link Port#feeds}). */
+    public static boolean notTaken(final Graph graph, final Edge edge) {
+        final Node src = graph.nodes.get(edge.sourceNodeId), dst = graph.nodes.get(edge.targetNodeId);
+        if (src == null || dst == null
+            || edge.sourceOutputIndex < 0
+            || edge.sourceOutputIndex >= src.outputs.size()
+            || edge.targetInputIndex < 0
+            || edge.targetInputIndex >= dst.inputs.size()) return false;
+        return !src.outputs.get(edge.sourceOutputIndex)
+            .feeds(dst.inputs.get(edge.targetInputIndex));
     }
 
     /** A drawer's links as the solver reads them: node and port, without the wire's steering dots. */
@@ -181,23 +205,63 @@ public final class GraphSolve {
             inputs,
             outputs,
             exact,
-            cfg.getMachineCount(),
+            cfg.machineCount(),
             targets,
             properties,
             inputTargets);
     }
 
     /**
-     * Numbers the ingredients of one snapshot: a port takes the number of the first ingredient it connects to, else a
-     * new one. Each ingredient is filed under every key a port connecting to it must share (an item's id and damage
-     * and each of its ore dictionary ids; a fluid; any other kind as a whole), so a port is only tested against the
-     * ingredients filed under its own keys, in order: the same numbers as testing every ingredient, without the plan
-     * squared.
+     * The ingredient numbers of one snapshot, as the website's adapter gives them ({@code adapter/model.ts}): every
+     * port the number of its resource, first seen first (cards in plan order, a card's inputs then its outputs); then a
+     * wired input the number of the output feeding it (an ore dictionary slot fed one of its items is that item), and a
+     * buffer's takers the number of its first maker (the solver joins a buffer's ports of one number). The solver reads
+     * the numbers as which ports are one ingredient: the buffers it may join and the wiring hints it gives.
      */
     private static final class Ingredients {
 
-        private final List<Port<?>> representatives = new ArrayList<>();
-        private final Map<Object, List<Integer>> filed = new HashMap<>();
+        private final Map<ResourceKey, Integer> numbers = new HashMap<>();
+        /** Per port, by identity: a port is one object in one place on one card. */
+        private final Map<Port<?>, Integer> ofPort = new IdentityHashMap<>();
+
+        static Ingredients of(final Graph graph, final List<Edge> wires) {
+            final Ingredients in = new Ingredients();
+            for (final Node node : graph.getNodes()) {
+                for (final Port<?> p : node.inputs) in.ofPort.put(p, in.numberOf(p.resource()));
+                for (final Port<?> p : node.outputs) in.ofPort.put(p, in.numberOf(p.resource()));
+            }
+            for (final Edge e : wires) {
+                final Port<?> from = port(graph, e.sourceNodeId, e.sourceOutputIndex, false),
+                    to = port(graph, e.targetNodeId, e.targetInputIndex, true);
+                if (from != null && to != null) in.ofPort.put(to, in.ofPort.get(from));
+            }
+            for (final Drawer drawer : graph.getDrawers()) {
+                if (drawer.getKind() != DrawerTypes.Kind.BUFFER || drawer.getLinks()
+                    .isEmpty()) continue;
+                final Drawer.Link first = drawer.getLinks()
+                    .get(0);
+                final Port<?> maker = port(graph, first.nodeId(), first.portIndex(), false);
+                if (maker == null) continue;
+                final int made = in.ofPort.get(maker);
+                for (final Drawer.Link taker : drawer.getTakers()) {
+                    final Port<?> p = port(graph, taker.nodeId(), taker.portIndex(), true);
+                    if (p != null) in.ofPort.put(p, made);
+                }
+            }
+            return in;
+        }
+
+        private int numberOf(final ResourceKey key) {
+            return numbers.computeIfAbsent(key, k -> numbers.size());
+        }
+
+        @Nullable
+        private static Port<?> port(final Graph graph, final Uuid nodeId, final int index, final boolean input) {
+            final Node node = graph.nodes.get(nodeId);
+            if (node == null) return null;
+            final List<Port<?>> ports = input ? node.inputs : node.outputs;
+            return index >= 0 && index < ports.size() ? ports.get(index) : null;
+        }
 
         PortIn portOf(final Port<?> port, final double multiplier) {
             final String name = port.getDisplayName();
@@ -205,54 +269,10 @@ public final class GraphSolve {
                 port.amount(),
                 port.getChance(),
                 multiplier,
-                resourceOf(port),
+                ofPort.get(port),
                 name == null ? "" : name,
                 name != null && CoreSettings.get()
                     .isFreeIngredient(name));
-        }
-
-        private int resourceOf(final Port<?> port) {
-            final List<Object> keys = keysOf(port);
-            int found = Integer.MAX_VALUE;
-            for (final Object key : keys) {
-                final List<Integer> candidates = filed.get(key);
-                if (candidates == null) continue;
-                for (final int i : candidates) {
-                    if (i >= found) break;
-                    if (representatives.get(i)
-                        .canConnect(port)) {
-                        found = i;
-                        break;
-                    }
-                }
-            }
-            if (found != Integer.MAX_VALUE) return found;
-            final int index = representatives.size();
-            representatives.add(port);
-            for (final Object key : keys) filed.computeIfAbsent(key, k -> new ArrayList<>())
-                .add(index);
-            return index;
-        }
-
-        /**
-         * Every key a port that connects to this one shares with it: {@code RecipePropertyAPI}'s item rule (same item and
-         * damage, or a shared ore dictionary id) and fluid rule (same fluid), recognised by their keys so that nothing
-         * here loads the fluid registry; any other kind is filed whole.
-         */
-        private static List<Object> keysOf(final Port<?> port) {
-            final String kind = port.getType()
-                .getKey();
-            if ("item".equals(kind) && port.getValue() instanceof final ItemStack stack) {
-                if (stack.getItem() == null) return List.of(); // connects to nothing
-                final List<Object> keys = new ArrayList<>();
-                keys.add(List.of(stack.getItem(), stack.getItemDamage()));
-                for (final int ore : OreDictionary.getOreIDs(stack)) keys.add(ore);
-                return keys;
-            }
-            if ("fluid".equals(kind) && port.getValue() instanceof final FluidStack fluid) {
-                return Collections.singletonList(fluid.getFluid());
-            }
-            return List.of(port.getType());
         }
     }
 

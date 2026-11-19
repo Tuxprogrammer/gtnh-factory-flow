@@ -125,7 +125,12 @@ public final class Enumerator {
         }
         final int cap = (int) Math.min(swaps.size(), n.effort(n.maxAltSwaps));
         final List<int[]> tried = swaps.subList(0, cap);
-        final List<StageOutcome> answers = Parallel.map(ctx, tried, swap -> {
+        final boolean[] cannot = cannotBalance(ctx, open, tried);
+        final List<Integer> order = new ArrayList<>(tried.size());
+        for (int i = 0; i < tried.size(); i++) order.add(i);
+        final List<StageOutcome> answers = Parallel.map(ctx, order, i -> {
+            if (cannot[i]) return null;
+            final int[] swap = tried.get(i);
             final Set<Integer> trial = new HashSet<>(open);
             trial.remove(swap[0]);
             trial.add(swap[1]);
@@ -288,6 +293,82 @@ public final class Enumerator {
         final SolveResult s3Result = Solver.leastFlowHolding(ctx, drawn);
         if (s3Result.isRejected()) return null;
         return new Settled(Solver.canonicalHolding(ctx, drawn, s3Result.point()), trades);
+    }
+
+    /**
+     * The swaps that cannot balance, found a group at a time instead of one by one. A swap's support is the open gates
+     * less the one it drops plus the one it opens, and its first trading level's model ({@link TradeStage#settle}) is
+     * that of any larger support with more of its externals closed: so when the model of the open gates less the
+     * dropped one plus a group of candidates has no point, no swap in the group has one either, and
+     * {@link #evaluateSupport} would find nothing for each. What is ruled out is decided by the same model a swap's own
+     * solve starts with, so the alternatives found are the same; only how many models it takes changes.
+     *
+     * <p>
+     * Per decision, all its candidates are asked at once ({@link #screen}). On a plan where few swaps balance
+     * (gtnh-flow's palladium_line: 34 of 875) that is a few models per balancing swap in place of two per swap; where
+     * the dropped gate is not needed at all it is one model.
+     */
+    private static boolean[] cannotBalance(final SolveContext ctx, final Set<Integer> open, final List<int[]> tried) {
+        final boolean[] cannot = new boolean[tried.size()];
+        final List<Solver.Level> levels = Solver.levels(ctx);
+        if (levels.isEmpty()) return cannot;
+        UpTo.prepareGuard(ctx);
+        // One list of swaps per decision (they are listed decision by decision).
+        final List<List<Integer>> decisions = new ArrayList<>();
+        for (int from = 0, to = 1; to <= tried.size(); to++) {
+            if (to < tried.size() && tried.get(to)[0] == tried.get(from)[0]) continue;
+            final List<Integer> swaps = new ArrayList<>();
+            for (int i = from; i < to; i++) swaps.add(i);
+            decisions.add(swaps);
+            from = to;
+        }
+        final List<List<Integer>> ruledOut = Parallel.map(ctx, decisions, swaps -> {
+            final List<Integer> out = new ArrayList<>();
+            screen(ctx, open, tried, levels.get(0), swaps, out);
+            return out;
+        });
+        for (final List<Integer> out : ruledOut) for (final int i : out) cannot[i] = true;
+        return cannot;
+    }
+
+    /**
+     * Rules out of {@code group} (swaps of one decision) the ones that cannot balance, into {@code out}. The group is
+     * asked at once: no point rules it all out. A point says which candidates trade there, and those are what made it
+     * balance: the rest are asked again on their own, and the traders, when there are several, in two halves (a half
+     * may not balance without the other). One swap is left to its own solve.
+     */
+    private static void screen(final SolveContext ctx, final Set<Integer> open, final List<int[]> tried,
+        final Solver.Level first, final List<Integer> group, final List<Integer> out) {
+        if (group.size() < 2) return;
+        final Set<Integer> gates = new HashSet<>(open);
+        gates.remove(tried.get(group.get(0))[0]);
+        for (final int i : group) gates.add(tried.get(i)[1]);
+        final SolveResult least = Solver.leastAt(ctx, Solver.Trades.within(gates), first);
+        if (least.isRejected()) {
+            out.addAll(group);
+            return;
+        }
+        final double[] externals = least.point().externals;
+        final List<Integer> trading = new ArrayList<>(), rest = new ArrayList<>();
+        for (final int i : group) {
+            boolean trades = false;
+            for (final int p : ctx.model.gates.get(tried.get(i)[1])
+                .ports()) trades |= externals[p] > 0;
+            (trades ? trading : rest).add(i);
+        }
+        // No candidate trades: the decision balances without any of them, so every swap of it may.
+        if (trading.isEmpty()) return;
+        screen(ctx, open, tried, first, rest, out);
+        if (trading.size() == group.size()) {
+            // All of them trade: nothing set apart, so halve the group itself.
+            final int mid = trading.size() / 2;
+            screen(ctx, open, tried, first, new ArrayList<>(trading.subList(0, mid)), out);
+            screen(ctx, open, tried, first, new ArrayList<>(trading.subList(mid, trading.size())), out);
+        } else if (trading.size() >= 2) {
+            final int mid = trading.size() / 2;
+            screen(ctx, open, tried, first, new ArrayList<>(trading.subList(0, mid)), out);
+            screen(ctx, open, tried, first, new ArrayList<>(trading.subList(mid, trading.size())), out);
+        }
     }
 
     /** A gate whose every port is shut (a buffer's bank or closed by the guard): it never opens as a gate. */

@@ -1,22 +1,23 @@
 package com.gtnhplanner.data.flowchart;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.item.ItemStack;
+import com.gtnhplanner.core.base.Float32Ops;
+import com.gtnhplanner.core.model.PortType;
+import com.gtnhplanner.core.model.ResourceKey;
+import com.gtnhplanner.core.model.Wiring;
 
-import com.cleanroommc.modularui.utils.Color;
-import com.gtnhplanner.data.properties.ResourceProperty;
-
-import lombok.Getter;
-import lombok.Setter;
-
-@Setter
-@Getter
+/**
+ * One input or output of a card: what it carries per craft and at what chance. The value is the host's own (the
+ * mod's stack, a test's named ingredient) and is read only through its {@link PortType}; what the port is in a plan is
+ * its {@link #resource()}, and which wires it takes is {@link Wiring}'s rule on resources.
+ */
 public class Port<T> {
 
-    private final ResourceProperty<T> type;
+    private final PortType<T> type;
     private final T value;
     private float chance;
     /**
@@ -30,16 +31,56 @@ public class Port<T> {
      */
     public boolean fromModel;
     /**
-     * The items an input's recipe slot takes, as NEI lists them (an ore dictionary slot's every member, GregTech's
-     * alternatives), the recipe's own first; empty when it takes one thing only. A card can be set to any of them
-     * ({@link Node#inputPicks}). Read from NEI on every refresh, never saved.
+     * The items an input's recipe slot takes, as the recipe lists them (an ore dictionary slot's every member,
+     * GregTech's alternatives), the recipe's own first; empty when it takes one thing only. A card can be set to any of
+     * them ({@code Node.inputPicks}), and a wire of any of them lands on it. Read from the recipe on every refresh, never
+     * saved.
      */
     private List<T> alternatives = List.of();
 
-    public Port(final ResourceProperty<T> type, final T value, final float chance) {
+    /** The value's resource and the alternatives' (computed once: wiring asks them every frame a wire is held). */
+    @Nullable
+    private ResourceKey resource;
+    @Nullable
+    private List<ResourceKey> alternativeResources;
+
+    public Port(final PortType<T> type, final T value, final float chance) {
         this.type = type;
         this.value = value;
         this.chance = chance;
+    }
+
+    public PortType<T> getType() {
+        return type;
+    }
+
+    public T getValue() {
+        return value;
+    }
+
+    public float getChance() {
+        return chance;
+    }
+
+    public void setChance(final float chance) {
+        this.chance = chance;
+    }
+
+    public double getExactAmount() {
+        return exactAmount;
+    }
+
+    public void setExactAmount(final double exactAmount) {
+        this.exactAmount = exactAmount;
+    }
+
+    public List<T> getAlternatives() {
+        return alternatives;
+    }
+
+    public void setAlternatives(final List<T> alternatives) {
+        this.alternatives = alternatives;
+        this.alternativeResources = null;
     }
 
     /** Whether the port can be set to another item (its slot lists more than one). */
@@ -47,12 +88,41 @@ public class Port<T> {
         return alternatives.size() > 1;
     }
 
-    /** The port's resource key ({@code item:<registry name>:<meta>}, {@code fluid:<name>}). */
+    /** What the port carries, as the plan JSON names it. */
+    public ResourceKey resource() {
+        if (resource == null) resource = type.resource(value);
+        return resource;
+    }
+
+    /** The resources the port's slot lists in its place (its alternatives'), the recipe's own first. */
+    public List<ResourceKey> alternativeResources() {
+        if (alternativeResources == null) {
+            final List<ResourceKey> keys = new ArrayList<>(alternatives.size());
+            for (final T alt : alternatives) keys.add(type.resource(alt));
+            alternativeResources = List.copyOf(keys);
+        }
+        return alternativeResources;
+    }
+
+    /**
+     * Whether this port, as an input, takes what {@code offered} carries: its own resource or one its slot lists
+     * ({@link Wiring}).
+     */
+    public boolean takes(final Port<?> offered) {
+        return Wiring.accepts(resource(), alternativeResources(), offered.resource());
+    }
+
+    /** Whether this port, as an output, feeds {@code slot}: the slot takes it. */
+    public boolean feeds(final Port<?> slot) {
+        return slot.takes(this);
+    }
+
+    /** The port's key in the host's spelling ({@link PortType#key}): what a pick and a drawer are saved as. */
     public String key() {
         return type.key(value);
     }
 
-    /** The key of one of this port's alternatives. */
+    /** The host key of one of this port's alternatives. */
     @SuppressWarnings("unchecked")
     public String keyOf(final Object alternative) {
         return type.key((T) alternative);
@@ -60,7 +130,7 @@ public class Port<T> {
 
     /** The recipe's own item for the slot: what the port is when nothing is picked. */
     public T own() {
-        return alternatives.isEmpty() ? value : alternatives.getFirst();
+        return alternatives.isEmpty() ? value : alternatives.get(0);
     }
 
     /** Where the port's item is among its alternatives; -1 when it has none. */
@@ -71,7 +141,7 @@ public class Port<T> {
         return -1;
     }
 
-    /** The alternative with that key, or null. */
+    /** The alternative with that host key, or null. */
     @Nullable
     public T alternative(final String key) {
         for (final T alt : alternatives) if (type.key(alt)
@@ -90,6 +160,7 @@ public class Port<T> {
         p.exactAmount = exactAmount;
         p.fromModel = fromModel;
         p.alternatives = alternatives;
+        p.alternativeResources = alternativeResources;
         return p;
     }
 
@@ -112,12 +183,6 @@ public class Port<T> {
         return type.formatDisplayName(value);
     }
 
-    /** The ItemStack recipe viewers (NEI) show for this port's ingredient; null if none. */
-    @Nullable
-    public ItemStack getDisplayStack() {
-        return type.displayStack(value);
-    }
-
     /** Pin color for this port's ingredient; the type's pin color when none is derivable. */
     public int getPinColor(final boolean input) {
         return colorOr(input ? type.getPinInputColor() : type.getPinOutputColor());
@@ -132,20 +197,24 @@ public class Port<T> {
     private int colorOr(final int fallback) {
         final int rgb = type.color(value);
         if (rgb == -1) return fallback;
-        return Color.withAlpha(rgb, Color.getAlpha(fallback));
+        return rgb & 0xFFFFFF | (fallback >> 24 & 0xFF) << 24;
     }
 
+    /**
+     * Whether two inputs of one recipe are one port, as the host reads its recipes ({@link PortType#folds}): never a
+     * question of what may be wired.
+     */
     @SuppressWarnings("unchecked")
-    public boolean canConnect(final Port<?> other) {
+    public boolean folds(final Port<?> other) {
         if (!type.equals(other.type)) return false;
-        return ((ResourceProperty<Object>) type).canConnect(value, other.value);
+        return ((PortType<Object>) type).folds(value, other.value);
     }
 
     /** Whether the other port carries the same resource (not just one it could wire to): two such outputs are one. */
     @SuppressWarnings("unchecked")
     public boolean same(final Port<?> other) {
         if (!type.equals(other.type)) return false;
-        return ((ResourceProperty<Object>) type).same(value, other.value);
+        return ((PortType<Object>) type).same(value, other.value);
     }
 
     public void merge(final Port<?> other) {
@@ -157,7 +226,11 @@ public class Port<T> {
         // chance it would leave here reaches the balancer as a NaN coefficient, where it poisons a
         // whole solve instead of failing anywhere near this line.
         if (newAmount != 0) {
-            this.chance = (this.getAmount() * this.chance + other.getAmount() * other.chance) / newAmount;
+            this.chance = Float32Ops.div(
+                Float32Ops.add(
+                    Float32Ops.mul(Float32Ops.of(this.getAmount()), this.chance),
+                    Float32Ops.mul(Float32Ops.of(other.getAmount()), other.chance)),
+                Float32Ops.of(newAmount));
         }
         type.setAmount(value, newAmount);
         exactAmount = exact;

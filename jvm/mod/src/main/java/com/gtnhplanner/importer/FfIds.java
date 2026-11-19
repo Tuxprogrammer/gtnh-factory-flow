@@ -5,6 +5,9 @@ import java.util.Locale;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.model.ResourceKey;
+import com.gtnhplanner.core.model.SavedKeys;
+
 /**
  * Resource ids the Factory Flow way: an item is its lowercase registry name, with {@code @meta} only when the meta
  * is not 0 ({@code gregtech:gt.metaitem.01@2377}, {@code ic2:itemcellempty}); a fluid is its fluid name; ore
@@ -91,6 +94,12 @@ public final class FfIds {
         if ("fluid".equals(kind)) return "fluid:" + n;
         final int at = metaAt(n);
         return at < 0 ? "item:" + n + ":0" : "item:" + n.substring(0, at) + ":" + n.substring(at + 1);
+    }
+
+    /** The shared resource a GTNH Planner key names ({@link SavedKeys#resource}); null for any other key. */
+    @Nullable
+    public static ResourceKey resource(@Nullable final String key) {
+        return SavedKeys.resource(key);
     }
 
     /** FF's slug: lowercase, every run of other characters one dash, no dash at either end. */

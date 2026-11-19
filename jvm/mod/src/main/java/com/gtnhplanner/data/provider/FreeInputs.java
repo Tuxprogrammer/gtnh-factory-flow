@@ -4,8 +4,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.item.ItemStack;
-
+import com.gtnhplanner.core.model.ResourceKey;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Port;
 
@@ -28,15 +27,11 @@ public final class FreeInputs {
         return itemId != null && ITEM_IDS.contains(itemId);
     }
 
-    /** Whether the game gives {@code stack} away. */
-    public static boolean isFree(@Nullable final ItemStack stack) {
-        return stack != null && stack.getItem() != null
-            && isFreeId(com.gtnhplanner.importer.game.GameIds.itemId(stack));
-    }
-
-    /** Whether {@code port}, an input, is one the game gives away. */
+    /** Whether {@code port}, an input, is one the game gives away: by its resource, whatever the port holds. */
     public static boolean isFree(@Nullable final Port<?> port) {
-        return port != null && port.getValue() instanceof final ItemStack stack && isFree(stack);
+        if (port == null) return false;
+        final ResourceKey key = port.resource();
+        return key.kind() == ResourceKey.Kind.ITEM && isFreeId(key.id());
     }
 
     /** Whether input {@code index} of {@code node} is one the game gives away; never an output. */

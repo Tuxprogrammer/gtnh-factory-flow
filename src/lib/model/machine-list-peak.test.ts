@@ -76,10 +76,20 @@ describe("peak and average draw on a solved board", () => {
     });
   });
 
-  it("a shared card keeps billing each recipe at its solved machines, as its own power row does", () => {
-    const { p, result } = line(0.25, { solvePin: 2, extraRecipes: [{ recipeId: "heavy" }] });
+  it("a shared card is billed as one card: whole machines of its pool, the hungriest recipe on each", () => {
+    const { p, result } = line(0.25, { extraRecipes: [{ recipeId: "heavy" }] });
     result.nodes["n0#r1"]!.theoreticalMachinesRequired = 0.5;
     result.nodes["n0#r1"]!.utilization = 1;
-    expect(buildMachineList(p, result)[0]).toMatchObject({ count: 0.75, euT: 18, avgEuT: 14 });
+    // 0.75 machines of work: one whole machine at the heavy recipe's 24 at peak, 14 on average.
+    expect(buildMachineList(p, result)[0]).toMatchObject({ count: 0.75, euT: 24, avgEuT: 14 });
+  });
+
+  it("a shared card with a set count is billed that count, or the pool when it is more", () => {
+    const set = line(0.25, { solvePin: 2, extraRecipes: [{ recipeId: "heavy" }] });
+    set.result.nodes["n0#r1"]!.theoreticalMachinesRequired = 0.5;
+    set.result.nodes["n0#r1"]!.utilization = 1;
+    expect(buildMachineList(set.p, set.result)[0]).toMatchObject({ euT: 48, avgEuT: 14 });
+    set.result.nodes["n0#r1"]!.theoreticalMachinesRequired = 3.5;
+    expect(buildMachineList(set.p, set.result)[0]).toMatchObject({ euT: 24 * 3.75 });
   });
 });

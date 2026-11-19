@@ -45,7 +45,7 @@ public enum PinRule {
         boolean countAlwaysExact();
 
         /** Sets the card's machine count, whole machines. */
-        void setMachineCount(int count);
+        void setMachineCount(double count);
     }
 
     /**
@@ -71,15 +71,16 @@ public enum PinRule {
     }
 
     /**
-     * Sets a card's rule at a count, the website's withPinRule: Any lets go of the count, Up to and Exactly set it (to
-     * whole machines, at least one). A count that is not a positive number means Any.
+     * Sets a card's rule at a count, the website's withPinRule: Any lets go of the count, Up to and Exactly set it, a
+     * fraction kept as it is (half a machine is a count the model and the solver take). A count that is not a positive
+     * number means Any.
      */
     public static void set(final Card node, final PinRule rule, final double count) {
         if (rule == ANY || !(count > 0) || Double.isInfinite(count)) {
             set(node, ANY);
             return;
         }
-        node.setMachineCount(machines(count));
+        node.setMachineCount(count);
         set(node, rule);
     }
 
@@ -90,8 +91,8 @@ public enum PinRule {
     }
 
     /**
-     * Sets a shared machine's rule at a count: Any lets go of it (no capacity), Up to and Exactly set it. A count that
-     * is not a positive number means Any.
+     * Sets a shared machine's rule at a count: Any lets go of it (no capacity), Up to and Exactly set it, a fraction
+     * kept as it is. A count that is not a positive number means Any.
      */
     public static void set(final MachineGroup group, final PinRule rule, final double count) {
         if (rule == ANY || !(count > 0) || Double.isInfinite(count)) {
@@ -99,11 +100,7 @@ public enum PinRule {
             group.setMachineCapacity(0);
             return;
         }
-        group.setMachineCapacity(machines(count));
+        group.setMachineCount(count);
         set(group, rule);
-    }
-
-    private static int machines(final double count) {
-        return (int) Math.max(1, Math.min(Integer.MAX_VALUE, Math.round(count)));
     }
 }

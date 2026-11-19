@@ -211,7 +211,10 @@ function normalizeGregtech(domain) {
         rawRecipe.specialValue,
         catalystControls,
       );
-      const minimumTier = voltageTierForEu(rawRecipe.eut ?? 0);
+      // A map that runs on several amps (the Thermal Centrifuge takes 2) names its
+      // machine tier by EU/t per amp, as NEI does: 48 EU/t at 2 amps is an LV recipe.
+      const mapAmps = Math.max(1, Math.floor(Number(recipeMap.amperage) || 1));
+      const minimumTier = voltageTierForEu(Math.floor((rawRecipe.eut ?? 0) / mapAmps));
       const durationTicks = positiveInt(rawRecipe.durationTicks, 1);
       const eut = Math.max(0, Number(rawRecipe.eut) || 0);
       const machineHandlers = instantiateRecipeMachineHandlers(handlerTemplates, {

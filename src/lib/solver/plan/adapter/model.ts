@@ -66,6 +66,14 @@ export interface MachineEntry {
   section: number;
 }
 
+/** A drawer the solver never sees because each of its ports feeds an earlier drawer, and the rule it cannot keep. */
+export interface UnfedDrawer {
+  id: Id;
+  label: string;
+  rule: "AT_LEAST" | "EXACTLY";
+  rate: number;
+}
+
 /** A wire between a machine port and a drawer. */
 export interface DrawerEdge {
   edgeId: string;
@@ -93,6 +101,8 @@ export interface PlanModel {
   groups: Map<string, string[]>;
   /** Ports that a drawer sits on, as PortKeys. */
   drawerPorts: Set<PortKey>;
+  /** Drawers whose every port's flow goes to an earlier drawer, with a rule that asks for flow: unmet at zero. */
+  unfed: UnfedDrawer[];
   /** Ids that are hidden helpers (never shown to the player). */
   hidden: Set<Id>;
   /** Recipes and drawers in a part of the plan nothing sets. */
@@ -284,8 +294,22 @@ export function buildPlanModel(args: PlanSolveArgs): PlanModel {
       portByKey.set(row.portKey, { node: entry.id, port: row.index, input: false });
     }
   }
+  // A port's flow goes to its first drawer by wire id (the read-out's rule, `answer.ts`); a later drawer on the same
+  // port gets nothing there, so it is not linked to it and its rule is checked against what it does get.
+  const portDrawer = new Map<PortKey, Id>();
+  const shadowed = new Set<Id>();
   for (const link of [...drawerEdges.values()].sort((a, b) => compareIds(a.edgeId, b.edgeId))) {
     const buffer = roles.get(link.drawerId) === "buffer";
+    if (!buffer) {
+      const entry = machines.get(link.ref.node)!;
+      const key = (link.ref.input ? entry.inputs : entry.outputs)[link.ref.port]!.portKey;
+      const owner = portDrawer.get(key);
+      if (owner !== undefined && owner !== link.drawerId) {
+        shadowed.add(link.drawerId);
+        continue;
+      }
+      portDrawer.set(key, link.drawerId);
+    }
     const byDrawer = buffer && link.ref.input ? takersByDrawer : linksByDrawer;
     const links = byDrawer.get(link.drawerId) ?? [];
     if (!links.some((l) => l.node === link.ref.node && l.port === link.ref.port)) {
@@ -298,12 +322,20 @@ export function buildPlanModel(args: PlanSolveArgs): PlanModel {
     drawerPorts.add((link.ref.input ? entry.inputs : entry.outputs)[link.ref.port]!.portKey);
   }
   const drawerIns: DrawerIn[] = [];
+  const unfed: UnfedDrawer[] = [];
   const drawerMap = new Map<Id, FactoryStorage>();
   for (const storage of [...flat.storages].sort((a, b) => compareIds(a.id, b.id))) {
     const links = linksByDrawer.get(storage.id) ?? [];
     const takers = takersByDrawer.get(storage.id) ?? [];
     const role = roles.get(storage.id);
     if (links.length + takers.length === 0 || !role) {
+      if (role && shadowed.has(storage.id)) {
+        const { rule, rate } = drawerKindAndRule(storage, role);
+        if ((rule === "AT_LEAST" || rule === "EXACTLY") && rate > 0) {
+          const label = storage.displayName ?? storage.resourceId;
+          unfed.push({ id: storage.id, label, rule, rate });
+        }
+      }
       continue;
     }
     const { kind, rule, rate } = drawerKindAndRule(storage, role);
@@ -493,6 +525,7 @@ export function buildPlanModel(args: PlanSolveArgs): PlanModel {
     drawers: drawerMap,
     groups,
     drawerPorts,
+    unfed,
     hidden,
     unanchored: [],
     portByKey,

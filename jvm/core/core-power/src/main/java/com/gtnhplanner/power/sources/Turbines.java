@@ -9,6 +9,7 @@ import java.util.function.DoubleUnaryOperator;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.Float32;
 import com.gtnhplanner.power.PowerData;
 import com.gtnhplanner.power.PowerData.FusionRecipe;
 import com.gtnhplanner.power.PowerData.Rotor;
@@ -122,7 +123,7 @@ public final class Turbines {
 
     /** The turbines compute in Java float; every step below rounds like it ({@code Math.fround}). */
     private static double f32(final double value) {
-        return (float) value;
+        return Float32.round(value);
     }
 
     /** {@code Math.trunc}: toward zero, keeping infinities and NaN. */

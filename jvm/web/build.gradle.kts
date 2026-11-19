@@ -15,6 +15,8 @@ plugins {
 // src/main/java/com/gtnhplanner/web/exports (every class there is exported without being listed anywhere).
 val coreModules = listOf(
     ":core-base",
+    ":core-power",
+    ":core-layout",
 )
 
 val teavmVersion = "0.16.0"

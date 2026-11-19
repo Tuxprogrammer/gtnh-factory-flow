@@ -7,6 +7,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { Tally } from "./compare.mjs";
 import { TARGETS, loadTarget } from "./load.mjs";
+import { runLayout, runPower } from "./goldens.mjs";
 import { checkJvmAgainstNode, readCases, runRandom } from "./random.mjs";
 import { loadVectors, runBuildProbes, runVectors, vectorFile } from "./vectors.mjs";
 
@@ -52,13 +53,15 @@ for (const target of opts.targets) {
   runBuildProbes(api, tally);
   runVectors(api, vectors, tally);
   if (opts.random) runRandom(api, cases, tally);
+  runPower(api, tally);
+  runLayout(api, tally);
   report(`${target} (${label})`, tally);
 }
 
 function report(title, tally) {
   for (const [name, g] of [...tally.groups].sort()) {
     const bad = g.differ > 0 || g.checked === 0;
-    say(`${title}  ${name.padEnd(24)} ${String(g.checked).padStart(7)} checked  ${g.differ} differ${bad ? "  <-- FAIL" : ""}`);
+    say(`${title}  ${name.padEnd(24)} ${String(g.checked).padStart(7)} checked  ${g.differ} differ${g.ms === undefined ? "" : `  ${g.ms} ms`}${bad ? "  <-- FAIL" : ""}`);
     for (const d of g.first) say(`    ${d}`);
     if (bad) failed = true;
   }

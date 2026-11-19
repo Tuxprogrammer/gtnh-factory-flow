@@ -649,6 +649,13 @@ function correctSteamMakers() {
   }
 }
 
+function correctTiers() {
+  // GTValues.V: UMV is 134,217,728 EU/t (the sheet has 134,217,718).
+  data.singleblockTiers = data.singleblockTiers.map((row) =>
+    row.tier === "UMV" ? { ...row, voltage: 134_217_728 } : row,
+  );
+}
+
 function correctReactors() {
   // RecipeLoaderLFTR: LFTR Fuel 2 (LiFBeF2ZrF4UF4) leaves 100 L of TB Salt
   // (LiFBeF2ThF4), not T Salt.
@@ -846,6 +853,7 @@ if (!reapply) {
   correctRotors();
 }
 correctSteamMakers();
+correctTiers();
 correctReactors();
 correctFusion();
 

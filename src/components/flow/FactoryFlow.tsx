@@ -224,7 +224,8 @@ import { type RecipeFlowNode } from "./RecipeNode";
 import { RecipeNodeSwitch } from "./clean/CleanRecipeNode";
 import { StorageNodeSwitch } from "./clean/drawer/CleanStorageNode";
 import { CleanDrawerFace } from "./clean/drawer/CleanDrawer";
-import { PlanNoticeSwitch, PlanTopNotices } from "./clean/rail/NoticeBar";
+import { flashNotice, PlanNoticeSwitch, PlanTopNotices } from "./clean/rail/NoticeBar";
+import { powerWireRefusal } from "./power-wire-refusal";
 import { registerBoardCommands, reportArrange } from "../chrome/board-commands";
 import { BoardMinimap } from "./clean/minimap/BoardMinimap";
 import { registerMinimapRoutes } from "./clean/minimap/minimap-feed";
@@ -4480,17 +4481,22 @@ export function FactoryFlow() {
             sourceHandle: source.handleId,
             targetHandle: target.handleId,
           });
+        } else {
+          tellRefusedPowerWire(project, draggedResource, targetHandle.nodeId);
         }
         return;
       }
 
       const flowInstance = flowInstanceRef.current;
-      if (
-        !draggedResource ||
-        connectCompletedRef.current ||
-        isPointerOverIncompatibleFlowHandle(project, event, draggedResource) ||
-        !flowInstance
-      ) {
+      if (!draggedResource || connectCompletedRef.current || !flowInstance) {
+        return;
+      }
+      if (isPointerOverIncompatibleFlowHandle(project, event, draggedResource)) {
+        tellRefusedPowerWire(
+          project,
+          draggedResource,
+          clientPosition ? getBoardNodeIdAtPosition(clientPosition) : undefined,
+        );
         return;
       }
 
@@ -4500,7 +4506,9 @@ export function FactoryFlow() {
 
       // Landing on a card that washed red means "no": never spawn a drawer
       // on top of it.
-      if (getBoardNodeIdAtPosition(clientPosition)) {
+      const refusedCard = getBoardNodeIdAtPosition(clientPosition);
+      if (refusedCard) {
+        tellRefusedPowerWire(project, draggedResource, refusedCard);
         return;
       }
 
@@ -12499,6 +12507,16 @@ function paintNodeDropFit(
       element.dataset.dropFit = verdict;
     }
   }
+}
+
+/** An EU wire refused by a machine says why: machines draw from the whole plan, not from a wire. */
+function tellRefusedPowerWire(
+  project: FactoryProject,
+  dragged: DraggedResourceConnection,
+  cardId: string | undefined,
+) {
+  const text = powerWireRefusal(project, dragged, cardId);
+  if (text) flashNotice("info", text);
 }
 
 function clearNodeDropFit() {

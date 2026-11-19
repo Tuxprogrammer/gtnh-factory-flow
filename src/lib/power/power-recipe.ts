@@ -32,6 +32,14 @@ export const POWER_EU_RESOURCE = {
   dominantColor: "#fbbf24",
 } as const;
 
+/**
+ * What the board says when an EU wire is let go on a machine: machines have no EU input, their draw is billed against
+ * the whole plan's power (the Overview's Made and Net), so the wire is refused. A generator on Any runs none, since
+ * nothing in the solve asks for EU; a set count runs it. Kept to one line of the notices bar.
+ */
+export const POWER_WIRE_REFUSED =
+  "Machines take EU from the whole plan, not a wire. Set the generator's count, then check Net.";
+
 export interface RecipePowerInfo {
   sourceId: string;
   /** Net EU/t of one machine at the baked settings; negative = parasitic. */

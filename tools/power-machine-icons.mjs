@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Bakes each power source's machine face - the real in-game item icon from
- * the dataset - into src/lib/power/data/machine-icons.json. The id list
+ * the dataset - into jvm/core/core-power/src/main/resources/assets/gtnhplanner/power/machine-icons.json (the source; node tools/sync-core-tables.mjs --write copies it to src/lib/power/data/). The id list
  * below was picked by hand from resources API probes (the query is only used
  * to find the entry; the id is what must match).
  *
@@ -12,10 +12,24 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
-const outPath = path.join(repoRoot, "src", "lib", "power", "data", "machine-icons.json");
+const outPath = path.join(
+  repoRoot,
+  "jvm",
+  "core",
+  "core-power",
+  "src",
+  "main",
+  "resources",
+  "assets",
+  "gtnhplanner",
+  "power",
+  "machine-icons.json",
+);
 const args = process.argv.slice(2);
 const base = args.includes("--base") ? args[args.indexOf("--base") + 1] : "https://gtnhplanner.com";
-const version = args.includes("--version") ? args[args.indexOf("--version") + 1] : "local-2.9.0-beta-2";
+const version = args.includes("--version")
+  ? args[args.indexOf("--version") + 1]
+  : "local-2.9.0-beta-2";
 
 /** sourceId -> { query to find it, exact item id } */
 const MACHINES = {
@@ -29,18 +43,33 @@ const MACHINES = {
   "magic-energy-absorber": { query: "magic energy absorber", id: "gregtech:gt.blockmachines@1127" },
   "acid-generator": { query: "acid generator", id: "gregtech:gt.blockmachines@12793" },
   "geothermal-engine": { query: "geothermal", id: "gregtech:gt.blockmachines@830" },
-  "magic-energy-converter": { query: "magic energy converter", id: "gregtech:gt.blockmachines@1123" },
+  "magic-energy-converter": {
+    query: "magic energy converter",
+    id: "gregtech:gt.blockmachines@1123",
+  },
   "large-neutralization-engine": { query: "acid generator", id: "gregtech:gt.blockmachines@31088" },
-  "large-combustion-engine": { query: "large combustion engine", id: "gregtech:gt.blockmachines@15533" },
-  "extreme-combustion-engine": { query: "extreme combustion", id: "gregtech:gt.blockmachines@15534" },
+  "large-combustion-engine": {
+    query: "large combustion engine",
+    id: "gregtech:gt.blockmachines@15533",
+  },
+  "extreme-combustion-engine": {
+    query: "extreme combustion",
+    id: "gregtech:gt.blockmachines@15534",
+  },
   "large-semifluid-generator": { query: "large semifluid", id: "gregtech:gt.blockmachines@31026" },
   "large-rocket-engine": { query: "rocketdyne", id: "gregtech:gt.blockmachines@996" },
-  "universal-chemical-fuel-engine": { query: "universal chemical", id: "gregtech:gt.blockmachines@15535" },
+  "universal-chemical-fuel-engine": {
+    query: "universal chemical",
+    id: "gregtech:gt.blockmachines@15535",
+  },
   "solid-oxide-fuel-cell-1": { query: "solid-oxide", id: "gregtech:gt.blockmachines@13101" },
   "solid-oxide-fuel-cell-2": { query: "solid-oxide", id: "gregtech:gt.blockmachines@13102" },
   "large-bronze-boiler": { query: "large bronze boiler", id: "gregtech:gt.blockmachines@15529" },
   "large-steel-boiler": { query: "large steel boiler", id: "gregtech:gt.blockmachines@15530" },
-  "large-titanium-boiler": { query: "large titanium boiler", id: "gregtech:gt.blockmachines@15531" },
+  "large-titanium-boiler": {
+    query: "large titanium boiler",
+    id: "gregtech:gt.blockmachines@15531",
+  },
   "large-tungstensteel-boiler": {
     query: "large tungstensteel boiler",
     id: "gregtech:gt.blockmachines@15532",
@@ -48,7 +77,10 @@ const MACHINES = {
   "thermal-boiler": { query: "thermal boiler", id: "gregtech:gt.blockmachines@15557" },
   "large-heat-exchanger": { query: "large heat exchanger", id: "gregtech:gt.blockmachines@1154" },
   "whakawhiti-wera-xl": { query: "whakawhiti", id: "gregtech:gt.blockmachines@31079" },
-  "extreme-heat-exchanger": { query: "extreme heat exchanger", id: "gregtech:gt.blockmachines@32017" },
+  "extreme-heat-exchanger": {
+    query: "extreme heat exchanger",
+    id: "gregtech:gt.blockmachines@32017",
+  },
   "large-steam-turbine": { query: "large steam turbine", id: "gregtech:gt.blockmachines@15524" },
   "large-hp-steam-turbine": { query: "large steam turbine", id: "gregtech:gt.blockmachines@15525" },
   "large-sc-steam-turbine": {
@@ -60,7 +92,10 @@ const MACHINES = {
   "xl-turbo-sc-steam-turbine": { query: "xl turbo", id: "gregtech:gt.blockmachines@15521" },
   "large-gas-turbine": { query: "large gas turbine", id: "gregtech:gt.blockmachines@15527" },
   "xl-turbo-gas-turbine": { query: "xl turbo", id: "gregtech:gt.blockmachines@15522" },
-  "large-plasma-generator": { query: "large plasma generator", id: "gregtech:gt.blockmachines@15528" },
+  "large-plasma-generator": {
+    query: "large plasma generator",
+    id: "gregtech:gt.blockmachines@15528",
+  },
   "xl-turbo-plasma-turbine": { query: "xl turbo", id: "gregtech:gt.blockmachines@15523" },
   thtr: { query: "thorium reactor", id: "gregtech:gt.blockmachines@12733" },
   htgr: { query: "gas-cooled", id: "gregtech:gt.blockmachines@12791" },

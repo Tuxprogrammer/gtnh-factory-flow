@@ -5,7 +5,7 @@
  * modelled at steady state: the tank as it fills, the boiler at full heat.
  */
 import { powerPlannerData, type PowerFuelEntry } from "../planner-data";
-import type { PowerModel, PowerSourceDefinition } from "../types";
+import type { PowerFlowLine, PowerModel, PowerSourceDefinition } from "../types";
 import { formatAmount, items, liters, stat } from "./helpers";
 
 /** Seconds as "45 s", "12 min" or "2 h 15 min". */
@@ -108,15 +108,51 @@ const BOILER_PRESSURES = [
 
 /**
  * The solid firebox burns whatever a furnace burns, at its furnace value
- * (FuelPlugin): the workbook's furnace table, with Railcraft's own 1000 for
- * a blaze rod. Lava containers (1000 a bucket, worse than coal, leaving the
- * container) and wood are left out.
+ * (TileBoilerFireboxSolid takes FuelPlugin.getBurnTime > 0): the workbook's
+ * furnace table, with Railcraft's own 1000 for a blaze rod. Lava containers
+ * (1000 a bucket, worse than coal, leaving the container) are left out.
  */
-const BOILER_SOLIDS: Array<{ name: string; burnTicks: number }> =
-  powerPlannerData.boilerFuels.bronzeSolid.map((entry: PowerFuelEntry) => ({
+/** Every vanilla wood's item (`@32767` is any damage): a firebox burns any log, planks or sapling alike. */
+const anyWood = (ids: string[], displayName: string) =>
+  ids.map((id) => ({ kind: "item" as const, id: `${id}@32767`, displayName }));
+
+const BOILER_SOLIDS: Array<{
+  name: string;
+  label?: string;
+  burnTicks: number;
+  alternatives?: PowerFlowLine["alternatives"];
+}> = [
+  ...powerPlannerData.boilerFuels.bronzeSolid.map((entry: PowerFuelEntry) => ({
     name: entry.name,
     burnTicks: entry.name === "Blaze Rod" ? 1000 : (entry.euPerItem ?? 0),
-  }));
+  })),
+  // Furnace fuels the workbook's GT boiler table lacks. TileEntityFurnace.getItemBurnTime: any wooden block 300, a
+  // stick or sapling 100 (the pack's CustomFuels.xml changes none of them); GTProxy.getBurnTime's ore dictionary table:
+  // dustCoal and dustCharcoal 1600, dustLignite 1200, dustWood 100. Any log or planks burn alike; oak is the port.
+  {
+    name: "Oak Log",
+    label: "Log (any wood)",
+    burnTicks: 300,
+    alternatives: anyWood(["minecraft:log", "minecraft:log2"], "Log"),
+  },
+  {
+    name: "Oak Planks",
+    label: "Planks (any wood)",
+    burnTicks: 300,
+    alternatives: anyWood(["minecraft:planks"], "Planks"),
+  },
+  { name: "Stick", burnTicks: 100 },
+  {
+    name: "Oak Sapling",
+    label: "Sapling (any)",
+    burnTicks: 100,
+    alternatives: anyWood(["minecraft:sapling"], "Sapling"),
+  },
+  { name: "Wood Pulp", burnTicks: 100 },
+  { name: "Coal Dust", burnTicks: 1600 },
+  { name: "Charcoal Dust", burnTicks: 1600 },
+  { name: "Lignite Coal Dust", burnTicks: 1200 },
+].sort((a, b) => a.burnTicks - b.burnTicks);
 
 /**
  * FuelManager's boiler fuels in the pack, heat per 1000 L: Railcraft's own
@@ -171,7 +207,7 @@ const railcraftBoiler: PowerSourceDefinition = {
       id: "fuel",
       label: "Fuel",
       options: [
-        ...BOILER_SOLIDS.map(({ name }) => ({ key: name, label: name })),
+        ...BOILER_SOLIDS.map(({ name, label }) => ({ key: name, label: label ?? name })),
         ...BOILER_LIQUIDS.map(({ name, label }) => ({ key: name, label })),
       ],
       defaultKey: "Coal",
@@ -199,7 +235,10 @@ const railcraftBoiler: PowerSourceDefinition = {
     if (liquid) {
       inputs.push(liters(liquid.name, (fuelPerSecond * 1000) / liquid.heat));
     } else if (solid && solid.burnTicks > 0) {
-      inputs.push(items(solid.name, fuelPerSecond / solid.burnTicks));
+      inputs.push({
+        ...items(solid.name, fuelPerSecond / solid.burnTicks),
+        ...(solid.alternatives ? { alternatives: solid.alternatives } : {}),
+      });
     }
     inputs.push(liters("Water", waterPerSecond));
 

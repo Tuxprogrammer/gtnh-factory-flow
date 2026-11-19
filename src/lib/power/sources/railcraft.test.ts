@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { resolvePowerResource } from "../planner-data";
+import { buildPowerRecipe } from "../power-recipe";
+import { resourceMatchesInput } from "@/lib/model/resources";
 import { getPowerSource } from "../registry";
 import { buildPowerSettingsReader } from "../types";
 import { boilerWarmUpTicks, waterTankFill } from "./railcraft";
@@ -94,6 +96,44 @@ describe("Railcraft Boiler (SteamBoiler at full heat)", () => {
   it("counts a blaze rod at Railcraft's 1000, not the furnace's 2400", () => {
     const model = compute("railcraft-boiler", { size: "2x2x2", fuel: "Blaze Rod" });
     expect(flow(model, "Blaze Rod")).toBeCloseTo(0.1, 10);
+  });
+
+  it("burns wood and coal dusts at their furnace values (fork issue 120)", () => {
+    // TileEntityFurnace.getItemBurnTime: a wooden block 300, a stick or sapling 100. GTProxy.getBurnTime's ore
+    // dictionary table: dustCoal and dustCharcoal 1600, dustLignite 1200, dustWood 100. 324 fuel units a second.
+    for (const [fuel, burn] of [
+      ["Oak Log", 300],
+      ["Oak Planks", 300],
+      ["Stick", 100],
+      ["Oak Sapling", 100],
+      ["Wood Pulp", 100],
+      ["Coal Dust", 1600],
+      ["Charcoal Dust", 1600],
+      ["Lignite Coal Dust", 1200],
+    ] as const) {
+      const model = compute("railcraft-boiler", { fuel });
+      expect(flow(model, fuel), fuel).toBeCloseTo(324 / burn, 10);
+      expect(model.stats.find((line) => line.label === "Firebox")?.value).toBe("Solid Fueled");
+    }
+    expect(resolvePowerResource("Oak Log")?.id).toBe("minecraft:log");
+    expect(resolvePowerResource("Oak Planks")?.id).toBe("minecraft:planks");
+    expect(resolvePowerResource("Coal Dust")?.id).toBe("gregtech:gt.metaitem.01@2535");
+  });
+
+  it("takes any vanilla log in its Log slot, so a wood farm's spruce wires in", () => {
+    const recipe = buildPowerRecipe("railcraft-boiler", { fuel: "Oak Log" }, "boiler")!;
+    const log = recipe.inputs.find((input) => input.id === "minecraft:log")!;
+    for (const id of ["minecraft:log", "minecraft:log@1", "minecraft:log@3", "minecraft:log2@1"]) {
+      expect(resourceMatchesInput({ kind: "item", id }, log), id).toBe(true);
+    }
+    expect(resourceMatchesInput({ kind: "item", id: "minecraft:planks@1" }, log)).toBe(false);
+    const planks = buildPowerRecipe("railcraft-boiler", { fuel: "Oak Planks" }, "boiler")!;
+    expect(
+      resourceMatchesInput(
+        { kind: "item", id: "minecraft:planks@1" },
+        planks.inputs.find((input) => input.id === "minecraft:planks")!,
+      ),
+    ).toBe(true);
   });
 
   it("states warm-up and pollution", () => {

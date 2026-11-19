@@ -74,6 +74,8 @@ export interface PowerFlowLine {
   name: string;
   perSecond: number;
   unit: "L" | "item";
+  /** Other items the slot takes (`@32767` is any damage): any log for a firebox that burns logs. */
+  alternatives?: Array<{ kind: "item"; id: string; displayName: string }>;
 }
 
 export interface PowerStatLine {

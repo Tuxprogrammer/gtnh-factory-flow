@@ -8,6 +8,7 @@ import org.teavm.jso.JSBody;
 import org.teavm.jso.JSExport;
 import org.teavm.jso.JSObject;
 
+import com.gtnhplanner.core.base.Float32;
 import com.gtnhplanner.core.base.JsMath;
 import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.core.base.Uuid;
@@ -47,6 +48,11 @@ public final class BaseExports {
     @JSExport
     public static double jsMathRound(final double n) {
         return JsMath.round(n);
+    }
+
+    @JSExport
+    public static double float32Round(final double n) {
+        return Float32.round(n);
     }
 
     /** Up to 16 hex digits as the long they spell (TeaVM's Long has no parseUnsignedLong). */

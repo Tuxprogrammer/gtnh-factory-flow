@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
+import com.gtnhplanner.core.base.Float32;
 import com.gtnhplanner.core.base.JsMath;
 import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.core.base.Uuid;
@@ -24,7 +25,7 @@ import com.gtnhplanner.core.base.Uuid;
  * </pre>
  *
  * Lines (hex is a 64-bit pattern, 16 digits): ["of", hex, text, json], ["fixed", hex, digits, text or null when it must
- * throw], ["parse", text, hex], ["round", hex, hex], ["id", msb, lsb, text, hash, version, variant], ["cmp", msb, lsb,
+ * throw], ["parse", text, hex], ["round", hex, hex], ["f32", hex, hex], ["id", msb, lsb, text, hash, version, variant], ["cmp", msb, lsb,
  * msb, lsb, signum], ["order", "msb:lsb,...", "i,j,..."], ["name", text, id], ["uparse", text, id or exception name].
  */
 public final class RandomCases {
@@ -228,6 +229,28 @@ public final class RandomCases {
             for (int i = 0; i < 40_000 * scale; i++) {
                 final double x = r.nextInt(3) == 0 ? Math.floor(number(r)) + 0.5 * (r.nextBoolean() ? 1 : -1) : number(r);
                 w.write("[\"round\",\"" + hex(x) + "\",\"" + hex(JsMath.round(x)) + "\"]\n");
+            }
+            for (int i = 0; i < 40_000 * scale; i++) {
+                // Floats' own edges (the halfway between two floats, the float limits, whole numbers past 2^24) are
+                // where a target that does not narrow goes wrong, so a share of the cases sits on them.
+                final double x;
+                switch (r.nextInt(4)) {
+                    case 0:
+                        x = number(r);
+                        break;
+                    case 1: {
+                        final float f = Float.intBitsToFloat(r.nextInt());
+                        x = (Float.isNaN(f) ? 1.5f : f) + (r.nextBoolean() ? Math.ulp(Math.abs(Float.isNaN(f) ? 1.5f : f)) / 2 : 0);
+                        break;
+                    }
+                    case 2:
+                        x = 16_777_216 + r.nextInt(64) + (r.nextBoolean() ? 0.5 : 0);
+                        break;
+                    default:
+                        x = new double[] { 0.1, 0.9, 0.5, 1e-46, 1.4e-45, 3.4028235e38, 3.4028236e38, 1e39,
+                            Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, -0.0, 0.0 }[r.nextInt(13)];
+                }
+                w.write("[\"f32\",\"" + hex(x) + "\",\"" + hex(Float32.round(x)) + "\"]\n");
             }
             for (int i = 0; i < 30_000 * scale; i++) {
                 final UUID u = anyId(r);

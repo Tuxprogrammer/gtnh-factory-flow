@@ -19,6 +19,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.gtnhplanner.conformance.Conformance;
+import com.gtnhplanner.core.base.Format;
 import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.ui.theme.Fmt;
 import com.gtnhplanner.ui.theme.Fmt.RateUnit;
@@ -61,7 +62,8 @@ class FmtConformanceTest {
             final JsonObject row = e.getAsJsonObject();
             final JsonElement mod = row.get("mod");
             if (mod.isJsonNull() || !mod.getAsString()
-                .startsWith("Fmt.")) continue;
+                .startsWith("Fmt.") && !mod.getAsString()
+                    .startsWith("Format.")) continue;
             final StringBuilder out = new StringBuilder("    ")
                 .append(quote(row.get("id").getAsString()))
                 .append(": [");
@@ -104,7 +106,7 @@ class FmtConformanceTest {
         return p.getAsDouble();
     }
 
-    /** What Fmt answers, or "throws <exception>" where it throws: NaN and the infinities reach BigDecimal in some of its formatters. */
+    /** What the mod's formatter answers, or "throws <exception>" where it throws. */
     private static String answer(final JsonObject row, final JsonElement in) {
         try {
             return format(row, in);
@@ -117,38 +119,66 @@ class FmtConformanceTest {
     private static String format(final JsonObject row, final JsonElement in) {
         final String id = row.get("id")
             .getAsString();
-        if (id.startsWith("rate.")) {
-            final RateUnit unit = RateUnit.valueOf(
-                row.get("unit")
-                    .getAsString()
-                    .toUpperCase(Locale.ROOT));
-            return Fmt.rate(
-                num(in),
-                unit,
-                row.get("kind")
-                    .getAsString()
-                    .equals("fluid"));
-        }
-        switch (id) {
-            case "compact":
+        final String mod = row.get("mod")
+            .getAsString();
+        switch (mod) {
+            case "Fmt.rate":
+                return Fmt.rate(
+                    num(in),
+                    RateUnit.valueOf(
+                        row.get("unit")
+                            .getAsString()
+                            .toUpperCase(Locale.ROOT)),
+                    row.get("kind")
+                        .getAsString()
+                        .equals("fluid"));
+            case "Fmt.compact":
                 return Fmt.compact(num(in));
-            case "brief":
+            case "Fmt.brief":
                 return Fmt.brief(num(in));
-            case "power":
+            case "Fmt.power":
                 return Fmt.power(num(in));
-            case "machines":
+            case "Fmt.machines":
                 return Fmt.machines(num(in));
-            case "euEach": {
+            case "Fmt.euEach": {
                 final JsonArray pair = in.getAsJsonArray();
                 final double r = Fmt.euEach(num(pair.get(0)), num(pair.get(1)));
                 return Double.isNaN(r) ? "none" : NumberText.of(r);
             }
-            case "euEach.suffix":
+            case "Fmt.euEachSuffix":
                 return Fmt.euEachSuffix(
                     in.getAsString()
                         .equals("fluid"));
+            case "Format.compact":
+                return Format.compact(num(in));
+            case "Format.compactStable":
+                return Format.compactStable(num(in));
+            case "Format.powerValue":
+                return Format.powerValue(num(in), id.endsWith(".stable"));
+            case "Format.rate":
+                return Format.rate(
+                    num(in),
+                    row.get("digits")
+                        .getAsInt());
+            case "Format.thousands":
+                return row.has("text") ? Format.thousands(in.getAsString()) : Format.thousands(num(in));
+            case "Format.trimZeros":
+                return Format.trimZeros(in.getAsString());
+            case "Format.machineListCount":
+                return Format.machineListCount(num(in));
+            case "Format.ratioShare":
+                return Format.ratioShare(num(in));
+            case "Format.slotRate":
+                return Format.slotRate(
+                    num(in),
+                    com.gtnhplanner.core.base.RateUnit.valueOf(
+                        row.get("unit")
+                            .getAsString()
+                            .toUpperCase(Locale.ROOT)),
+                    row.get("kind")
+                        .getAsString());
             default:
-                throw new IllegalArgumentException("no Fmt formatter for row " + id);
+                throw new IllegalArgumentException("no formatter for row " + id + " (" + mod + ")");
         }
     }
 

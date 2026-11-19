@@ -11,6 +11,7 @@
 #   conformance/, jvm/conformance-support/, tools/conformance/, src/test-support/, tools/ci/, .github/   every job
 #   anything outside jvm/                    website and icons
 #   anything under jvm/                      jvm
+#   jvm/web/, jvm/core/, jvm/*.kts, jvm/gradle/   also website (its tests load the core built from them)
 #   jvm/ outside jvm/mod/, src/lib/core/     web-core
 # An empty or unknowable diff runs every job: a skipped job must never be a guess.
 set -euo pipefail
@@ -61,7 +62,8 @@ while IFS= read -r f; do
   case "$f" in
     jvm/*)
       jvm=true
-      case "$f" in jvm/mod/*) ;; *) webcore=true ;; esac ;;
+      case "$f" in jvm/mod/*) ;; *) webcore=true ;; esac
+      case "$f" in jvm/web/* | jvm/core/* | jvm/*.kts | jvm/gradle/* | jvm/gradle.properties) website=true ;; esac ;;
     *) website=true ;;
   esac
   case "$f" in src/lib/core/*) webcore=true ;; esac

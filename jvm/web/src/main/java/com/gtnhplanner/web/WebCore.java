@@ -33,4 +33,29 @@ public final class WebCore {
         return Runtime.getRuntime()
             .maxMemory();
     }
+
+    /**
+     * Returns its argument. The cost of a call that crosses the boundary with a string in each direction, which the
+     * loader's browser probe measures (a JSON plan or board is megabytes of text).
+     */
+    @JSExport
+    public static String webCoreEcho(final String text) {
+        return text;
+    }
+
+    /** The length of the text in UTF-16 units: a string crosses into the core and only a number comes back. */
+    @JSExport
+    public static int webCoreLength(final String text) {
+        return text.length();
+    }
+
+    /** The text repeated {@code times} times: a small argument goes in and a large string comes back. */
+    @JSExport
+    public static String webCoreRepeat(final String text, final int times) {
+        final StringBuilder out = new StringBuilder(text.length() * Math.max(times, 0));
+        for (int i = 0; i < times; i++) {
+            out.append(text);
+        }
+        return out.toString();
+    }
 }

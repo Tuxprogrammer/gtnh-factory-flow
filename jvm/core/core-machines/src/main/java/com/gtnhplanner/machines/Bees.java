@@ -9,6 +9,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.Float32;
 import com.gtnhplanner.core.machines.GameRates;
 
 /**
@@ -231,7 +232,7 @@ public final class Bees {
     /** The allele nearest a gene's value (a species' own speed). */
     public static Allele nearestSpeed(final float value) {
         Allele best = SPEEDS.get(3);
-        for (final Allele a : SPEEDS) if (Math.abs(a.value() - value) < Math.abs(best.value() - value)) best = a;
+        for (final Allele a : SPEEDS) if (Math.abs(single(a.value() - value)) < Math.abs(single(best.value() - value))) best = a;
         return best;
     }
 
@@ -253,7 +254,7 @@ public final class Bees {
             return switch (rule) {
                 case FORESTRY -> sum < 10.0f ? 1.0f : 0.0f;
                 case CONSTANT -> value;
-                case CEILING -> value < 0.0f ? value : sum >= max ? 0.0f : Math.min(value, max - sum);
+                case CEILING -> value < 0.0f ? value : sum >= max ? 0.0f : Math.min(value, single(max - sum));
             };
         }
     }
@@ -399,30 +400,48 @@ public final class Bees {
         if (h.industrial()) {
             if (s.acceleration()
                 .upgraded()) return UPGRADED_PRODUCTION;
-            return s.productionUpgrades() > 0 ? 4.0f * (float) powInt(1.2, s.productionUpgrades()) : h.production();
+            return s.productionUpgrades() > 0 ? single(4.0 * single(powInt(1.2, s.productionUpgrades()))) : h.production();
         }
-        if (h == ALVEARY) return s.alvearyFrames()
-            .production()
-            + s.stimulator()
-                .production();
+        if (h == ALVEARY) return single(
+            s.alvearyFrames()
+                .production()
+                + s.stimulator()
+                    .production());
         float sum = h == MAGIC_APIARY && s.aura() ? MAGIC_AURA_PRODUCTION : h.production();
-        if (h.frames()) for (final Frame f : s.frames()) if (f != null) sum += f.production(sum);
+        if (h.frames()) for (final Frame f : s.frames()) if (f != null) sum = single(sum + f.production(sum));
         return sum;
     }
 
     /** p + t, the production term the chance grows with. */
     public static float term(final Setup s) {
-        return productionModifier(s) + s.housing()
-            .t();
+        return single(
+            productionModifier(s) + s.housing()
+                .t());
     }
 
     /** Forestry's Bee.getFinalChance, in the game's float arithmetic: a roll's chance (above 1 in the GT apiary). */
     public static float finalChance(float chance, final float beeSpeed, final float productionModifier, final float t) {
-        if (productionModifier + t <= 0.0F) return 0.0F;
-        chance *= 100.0F;
-        return (float) (2.8D * Math.pow(chance, 0.52D)
-            * Math.pow(productionModifier + t, 0.52D)
-            * Math.pow(beeSpeed, 0.37D)) / 100.0F;
+        final float total = single(productionModifier + t);
+        if (total <= 0.0F) return 0.0F;
+        chance = single(chance * 100.0F);
+        return single(
+            single(
+                2.8D * Math.pow(chance, 0.52D) * Math.pow(total, 0.52D)
+                    * Math.pow(beeSpeed, 0.37D))
+                / 100.0F);
+    }
+
+    /**
+     * A float result. On the JavaScript target a float is a double and arithmetic on floats does not narrow, so each
+     * float operation rounds here, as it does on the JVM and in WebAssembly.
+     */
+    private static float single(final double value) {
+        return (float) Float32.round(value);
+    }
+
+    /** {@code Float::sum}, rounded to a float on every target. */
+    private static Float sum(final Float a, final Float b) {
+        return single(a + b);
     }
 
     /** GTUtility.powInt: by squaring, as GTApiaryUpgrade takes its powers. */
@@ -464,18 +483,18 @@ public final class Bees {
             .works();
         final boolean jubilant = jubilant(s, species);
         // The queen's life: health / (1 / (housing lifespan x mode lifespan)), the IA's own lifespan modifier 1.
-        float lifespan = 1.0F * MODE_LIFESPAN;
-        lifespan = 1.0F / lifespan;
-        final float cycles = (float) species.lifespan() / lifespan;
+        float lifespan = single(1.0F * MODE_LIFESPAN);
+        lifespan = single(1.0F / lifespan);
+        final float cycles = single(single(species.lifespan()) / lifespan);
         // Primary products, the second species' at half chance, then the specialties: summed per item as floats.
         final Map<String, Float> drops = new LinkedHashMap<>();
         for (final Product pr : species.products()) if (!pr.specialty())
-            drops.merge(pr.id(), finalChance(pr.chance(), speed, p, t) * pr.stack() * cycles, Float::sum);
+            drops.merge(pr.id(), single(single(finalChance(pr.chance(), speed, p, t) * pr.stack()) * cycles), Bees::sum);
         for (final Product pr : species.products()) if (!pr.specialty())
-            drops.merge(pr.id(), finalChance(pr.chance() / 2.0F, speed, p, t) * pr.stack() * cycles, Float::sum);
+            drops.merge(pr.id(), single(single(finalChance(pr.chance() / 2.0F, speed, p, t) * pr.stack()) * cycles), Bees::sum);
         for (final Product pr : species.products()) if (pr.specialty()) drops
-            .merge(pr.id(), jubilant ? finalChance(pr.chance(), speed, p, t) * pr.stack() * cycles : 0f, Float::sum);
-        final int life = (int) (cycles * (float) CYCLE_TICKS);
+            .merge(pr.id(), jubilant ? single(single(finalChance(pr.chance(), speed, p, t) * pr.stack()) * cycles) : 0f, Bees::sum);
+        final int life = (int) single(cycles * CYCLE_TICKS);
         final int limit = life / 100;
         final int accel = 1 << s.acceleration()
             .speed();
@@ -565,7 +584,7 @@ public final class Bees {
         final int speed = s.acceleration()
             .speed();
         final int accel = 1 << speed;
-        long eut = (int) (INDUSTRIAL_EUT * energy(s) * (float) accel);
+        long eut = (int) single(single(INDUSTRIAL_EUT * energy(s)) * accel);
         if (accel == 2) eut += 32;
         else if (accel > 2) eut += 32L * (accel << (speed - 2));
         return eut;
@@ -574,9 +593,9 @@ public final class Bees {
     /** The upgrades' energy modifier: 1.4^n for n production upgrades, x14.75 for the Upgraded Acceleration. */
     public static float energy(final Setup s) {
         float energy = 1.0f;
-        if (s.productionUpgrades() > 0) energy = (float) (energy * powInt(1.399999976158142, s.productionUpgrades()));
+        if (s.productionUpgrades() > 0) energy = single(energy * powInt(1.399999976158142, s.productionUpgrades()));
         if (s.acceleration()
-            .upgraded()) energy = (float) (energy * 14.75);
+            .upgraded()) energy = single(energy * 14.75);
         return energy;
     }
 
@@ -625,13 +644,13 @@ public final class Bees {
                     .get(i);
                 if (f == null) continue;
                 final float add = f.production(sum);
-                sum += add;
+                sum = single(sum + add);
                 terms.add(add < 0 ? " − " : " + ");
                 terms.add(FormulaLine.knob(num(Math.abs(add)), FRAME + (i + 1)));
             }
         }
         terms.add(" + " + num(h.t()));
-        lines.add(FormulaLine.of("p + t", num(p + h.t()), terms.toArray()));
+        lines.add(FormulaLine.of("p + t", num(single(p + h.t())), terms.toArray()));
         lines.add(
             FormulaLine.of(
                 "speed",
@@ -654,7 +673,7 @@ public final class Bees {
                 "F(b)",
                 "2.8·(100b)",
                 FormulaLine.sup("0.52"),
-                "·" + num(p + h.t()),
+                "·" + num(single(p + h.t())),
                 FormulaLine.sup("0.52"),
                 "·s",
                 FormulaLine.sup("0.37"),

@@ -17,6 +17,7 @@ import java.util.zip.GZIPInputStream;
 import org.junit.jupiter.api.Test;
 
 import com.gtnhplanner.conformance.Conformance;
+import com.gtnhplanner.core.base.JsonTree;
 import com.gtnhplanner.core.power.PowerCardTier;
 import com.gtnhplanner.core.power.PowerCatalog;
 import com.gtnhplanner.core.power.TurbineFlow;

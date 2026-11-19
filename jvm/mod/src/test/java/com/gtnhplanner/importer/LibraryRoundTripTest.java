@@ -409,9 +409,9 @@ class LibraryRoundTripTest {
         r.nei.additionalInfo = List.of("Special value: 0");
         r.source = new Web.Source();
         r.source.recipeMap = entry.name;
-        r.metadata = new JsonObject();
-        r.metadata.addProperty("recipeMapId", entry.id);
-        r.metadata.addProperty("specialValue", 0);
+        r.metadata = new java.util.LinkedHashMap<>();
+        r.metadata.put("recipeMapId", entry.id);
+        r.metadata.put("specialValue", 0.0);
         r.machineConfigControls = HandlerData.recipeControls(entry, 0);
         r.machineHandlers = HandlerData
             .handlers(entry, r.minimumTier, r.durationTicks, r.eut, r.machineConfigControls);

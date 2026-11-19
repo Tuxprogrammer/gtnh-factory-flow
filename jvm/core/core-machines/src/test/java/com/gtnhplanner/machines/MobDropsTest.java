@@ -20,6 +20,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.gtnhplanner.core.base.JsonTree;
 import com.gtnhplanner.machines.web.HandlerData;
 
 /**
@@ -99,10 +100,7 @@ class MobDropsTest {
             r.outputs()
                 .get(1)
                 .xp());
-        assertTrue(
-            r.eec()
-                .get("alwaysInfernal")
-                .getAsBoolean());
+        assertEquals(Boolean.TRUE, r.eec().get("alwaysInfernal"));
         assertEquals("LuV", HandlerData.recipeMinimumTier(r.eut()));
     }
 
@@ -185,7 +183,7 @@ class MobDropsTest {
                     1e-12,
                     at + " chance");
             }
-            assertEquals(want.get("eec"), got.eec(), mob.key() + " metadata");
+            assertEquals(JsonTree.parse(want.get("eec").toString()), got.eec(), mob.key() + " metadata");
             final String notes = want.get("notes")
                 .isJsonNull() ? ""
                     : want.get("notes")

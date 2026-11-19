@@ -1,17 +1,28 @@
 # format
 
-How the website and the mod spell numbers: one value list (`values.json`) put through each side's formatters, the answers
-pinned in three files, and a table that lines them up (`COMPARISON.md`). The formatters are **not** merged and the two
-sides are **not** required to agree. This tree records where they do not, so the view work can decide each difference
-once instead of finding it by eye.
+How a number is spelled for a player. One value list (`values.json`) is put through each formatter; the answers are
+pinned in files, and a table lines them up (`COMPARISON.md`).
+
+The number formatter is written once, in the Java core (`jvm/core/core-base`, `Format.java` and `RateUnit.java`), as a
+translation of the website's `src/lib/format/numbers.ts` and `rate-unit.ts`. The mod calls it through `Fmt` (core-view);
+the website's TypeScript formatters stay and are held to the same answers. Where the two sides used to print one quantity
+two ways, the website's spelling won.
 
 | file | what | made by |
 | --- | --- | --- |
 | `values.json` | the inputs (groups) and the rows (which formatter on each side reads which groups) | by hand |
 | `website-out.json` | what the website's formatters return | `src/test-support/format-conformance.ts`; `GTNH_WRITE_GOLDEN=1` rewrites it |
-| `mod-out.json` | what `Fmt` (core-view) returns | `FmtConformanceTest`; `-PwriteVectors` rewrites it |
+| `mod-out.json` | what the mod's `Fmt` and the core's `Format` return | `FmtConformanceTest`; `-PwriteVectors` rewrites it |
 | `mod-recipe-overlay-out.json` | what the recipe overlay's `GuiHelper.formatRate` and `formatCount` return | `RecipeOverlayFormatTest`; `-PwriteVectors` rewrites it |
 | `COMPARISON.md` | the table | `node tools/conformance/format/compare.mjs` |
+
+Who checks what:
+
+- the website's vitest pins `website-out.json` to the TypeScript;
+- `FormatGoldenTest` (core-base) holds `Format` to `website-out.json`, character for character, on the JVM;
+- `tools/web-core/format.mjs` holds the compiled core to the same file in Node on both web targets (wasm and js), as part
+  of `tools/ci/web-core.sh`;
+- `FmtConformanceTest` pins what the mod's `Fmt` prints to `mod-out.json`.
 
 After changing a formatter on either side: rewrite its answer file, run `compare.mjs`, run
 `node tools/conformance/manifest.mjs --write`. Each answer file has a test that fails when the code and the file disagree,
@@ -19,57 +30,56 @@ and `compare.test.mjs` fails when the table is stale.
 
 An output of `throws X` is an exception the formatter raises on that input.
 
-## What the table says, by kind of difference
+## What was decided, and what is left apart
 
-Each item names the rows it shows up in. "Decision" is the work order for the view item: the answer to each is one line
-in its plan, not code in this item.
+The website's spelling is the rule. The mod now prints, through the core:
 
-1. **Tiny values** (`compact`, `rate.*`, `power`, `brief`). The website prints a value below a millionth as the decimal it
-   is (`0.000000000001`), because a rate that small is still a rate. `Fmt` has a floor (`NOTHING = 1e-6`): below it
-   `Fmt.compact` and `Fmt.brief` print `0`. (Between a millionth and a hundredth `Fmt.brief` keeps two figures where the
-   website's `formatCompactStable` prints `0`; that is item 7.) Decision: does the mod keep its floor, or does it show
-   what the website shows? A floor is shorter on a card; the website's choice keeps a trickle visible.
-2. **Rounding on the half** (`compact`, `power`, `rate.*`, `machines`). Rounds `1.005` to `1` and `9.995` to `9.99` on the
-   website (JavaScript's `toFixed` reads the exact binary value) and to `1.01` and `10` in the mod (`BigDecimal.valueOf` reads
-   the shortest decimal and rounds half up). The same value reads one digit differently on the two sides. Decision: take the
-   website's rule in `Fmt`. `core-base`'s `NumberText.fixed` is the JavaScript-faithful `toFixed` and is the tool for it.
-3. **Past a quadrillion** (`compact`, `rate.*`). The website's ladder goes on to `E` (`1E`, then `1000E`, `1000000E`); the
-   mod's ends at `P` (`1000P`, `1000000P`). Decision: add `E` to `Fmt`, or accept the mod's ladder (a plan
-   that reaches 1e18 per second is not a plan a player builds).
-4. **Not a number** (`compact`, `brief`, `power`, `machines`). `NaN` and the infinities read `unbounded` on the website
-   (`formatSolvedMachines` prints `NaN` and `Infinity` as JavaScript does). In the mod `NaN` reads `0`, and an infinity
-   makes `Fmt.compact`, `Fmt.brief` and `Fmt.power` throw `NumberFormatException` out of `BigDecimal`; `Fmt.machines`
-   throws on `NaN` and prints `9223372036854775807` for `Infinity`. Decision: one answer for all three, chosen by the view item. A formatter
-   that throws on a value the solver can produce (an infeasible plan) is a bug whichever answer wins.
-5. **EU/t** (`power`). The website's `formatPowerValue` shows `<0.01` and `>-0.01` for a tiny draw and otherwise the
-   compact ladder; `Fmt.power` is `Fmt.compact` as it is. They agree on every whole tier value in the list (8 EU/t up to
-   34 billion). They differ only on the tiny values and rounding of 1 to 4 above. Decision: follow what items 1 and 2 give.
-6. **Machine counts** (`machines`). The website: `0` under half a millionth, `<0.001` under 0.0005, then three decimals,
-   `formatSolvedMachines`. The mod: `0` only at zero or below, `<0.001` for every positive count under 0.001, and from 100
-   up it rounds **up** to a whole machine (`100.0000001` reads `101`; the website reads `100`). The round-up is the mod's
-   on purpose (you cannot build part of a machine); the website rounds. Decision: which rule is the plan's. The
-   website's `formatMachineListCount` (the list panel) has no mod peer.
-7. **"brief"** (`brief`). The website's `formatCompactStable` and `Fmt.brief` are two different designs under similar jobs.
-   The website's keeps a number the same width while it animates: whole numbers under 1000, fixed decimals with the
-   suffix above (`1.00k`, `180.0k`, `1000.0k`). The mod's keeps three significant figures (`33.3`, `1k`, `180k`). No
-   non-test code in the mod calls `Fmt.brief` yet. Decision: say which one the mod's zoomed-out drawer wants before
-   anything is built on it; they should not share a name if they stay different.
-8. **The recipe overlay's own spelling** (`compact.recipeOverlay`, `machines.recipeOverlay`). `GuiHelper.formatRate(float)`
-   and `formatCount(double)` are a second formatter family in the mod, beside `Fmt`. They keep fixed decimals (`1.00`,
-   `2.50`, `1.0k`), take a float, read a thousand to a million with one decimal, never round across a tier
-   (`999950` reads `1000.0k`) and give a negative no suffix at all (`-1500`, `-2147483648`). They agree with the website on
-   24 of 80 rates and 14 of 28 counts. Decision: does the overlay move to `Fmt`, or stay as NEI and AE2 spell numbers. Its
-   own comment says it follows NEI and AE2's readable-number suffixes, which is a reason to keep it apart.
-9. **No peer in the mod.** `machines.list`, the three percent formatters (`percent.share`, `percent.whole`,
-   `percent.supply`) and `times` (an ask bigger than the machine, as a multiplier) exist only on the website. The mod draws
-   no percent or multiplier. Neither side has a duration formatter at all; the plan's times are drawn as rates. Decision:
-   whether the mod's view needs any of them; if it does, they are ported with these rows as their vectors.
+1. **Tiny values** print their decimal, however small (`0.000000001`), not `0`. A rate that small is still a rate.
+2. **Rounding on the half** follows JavaScript's `toFixed`, which reads the exact binary value: `1.005` is `1`, `9.995` is
+   `9.99`. (`NumberText.fixed` is that `toFixed`.)
+3. **Past a quadrillion** the suffixes go on to `E` (`1E`, `1000E`).
+4. **Not a number**: `NaN` and the infinities read `unbounded` (EU/t, compact, rates). A machine count reads `NaN` or
+   `Infinity` as the website does. Nothing throws.
+5. **EU/t** reads `<0.01` and `>-0.01` for a trickle, then the compact ladder.
+6. **Machine counts** (`Format.solvedMachines`): `0` at half a millionth or less, `<0.001` below 0.0005, then three
+   decimals under 1, two under 10, one under 100, trailing zeros dropped. From 100 up a count rounds **up** to a whole
+   machine, within a millionth: `100.0000001` reads `100`, `100.00001` reads `101`. (Both sides always rounded up from
+   100; they differed only in that tolerance, a billionth in the mod.)
+7. **The list-panel count and the share** (`machineListCount`, `ratioShare`) had no mod peer; they are in the core now,
+   with the rate-unit helpers (`slotRate`, `energyPerUnit`) and the plain `rate`, `thousands` and `trimZeros`.
 
-Agreement worth keeping: `euEach` and `euEach.suffix` (EU per unit made) agree on every input, as do the tier values of
-`power` and every ordinary whole or one-decimal rate in `compact` and `rate.*`.
+Left apart on purpose:
 
-## For the view item
+- **`brief`.** `Fmt.brief` is the mod's width-fitting number (three significant figures: `33.3`, `1k`, `180k`) and has
+  four callers (the overview rail, card paint, the drawer card and the minimap). It is a different design from the
+  website's `formatCompactStable` (whole numbers under 1000, fixed decimals with a suffix above: `1.00k`, `180.0k`), which
+  the core also has as `Format.compactStable`. Both are in the table; the `brief` row compares the mod's with the
+  website's and differs by design. Below 1 `brief` is `compact`, so it no longer floors at a millionth; it reads
+  `unbounded` for a number that is not finite.
+- **The recipe overlay's own spelling** (`compact.recipeOverlay`, `machines.recipeOverlay`). `GuiHelper.formatRate(float)`
+  and `formatCount(double)` keep fixed decimals (`1.00`, `2.50`, `1.0k`), take a float, never round across a tier and give a
+  negative no suffix. They follow NEI and AE2's readable-number suffixes, a quantity the website never prints, so they are
+  unchanged and still differ.
+- **The power display dial.** The website's amps tiers are not ported; only the default EU/t dial is.
 
-`COMPARISON.md` is the table; this file is the list of decisions. When a decision changes a formatter, rewrite the
-answer file for that side, run `compare.mjs`, and the table shows the difference closed or kept. A difference kept on
-purpose gets one line here saying so.
+## Percent, multiplier and duration text is still written by hand
+
+No formatter was invented for these. The `percent.whole`, `percent.supply` and `times` rows pin the website's own
+formatters (`formatPct`, `formatSupplyPercent`, `formatTimes`); the core has no peer.
+
+- Percent. Website: `formatPct`, `formatSupplyPercent`, `formatRatioShare` (the last is in the core), and hand-made
+  `${Math.round(x * 10000) / 100}%` for a chance (`clean-model.ts`, `tips.ts`, `CropPickerMenu.tsx`, `MobPickerMenu.tsx`),
+  `formatCompact(...)}%` (`card-tips.ts`). Mod: `Fmt.compact(x) + "%"` (`CardFace`, `RecipeCard`, `BoardScreen` for a
+  chance), `Math.round(...) + "%"` (`RecipeCard`, `BoardCanvas`), and the core's `Bees`, `CropsNh` and `Endgame` text.
+- Multiplier. Website: `formatTimes`, `` `×${formatSolvedMachines(...)}` `` (`clean-model.ts`),
+  `` `×${formatCompact(...)}` ``, `×${formatRate(...)}` (`MachinePicker.tsx`). Mod: `"×" + Fmt.machines(...)` in `CardFace`,
+  `RecipeCard`, `OverviewRail` and `Minimap`.
+- Duration. Website: ticks over twenty with a hand-added `s` in the tooltips. Mod: `Fmt.compact(ticks / 20.0) + " s"`
+  (`PowerPanel`, `RecipeCard`), `Bees` (`FormulaLine.number(ticks / 20.0) + " s"`), `Railcraft`.
+
+A later item can give each its own core formatter, with these rows as the vectors.
+
+## Reading `COMPARISON.md`
+
+`COMPARISON.md` is the table. Every row the core formats agrees with the website on every input; the rows still differing
+are `brief` and the two `recipeOverlay` rows, above, and the rows with no mod peer are listed as `none`.

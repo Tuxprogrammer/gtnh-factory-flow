@@ -10,8 +10,9 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.gtnhplanner.core.base.JsonTree;
 import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.BoardGroup;
 import com.gtnhplanner.data.flowchart.Drawer;
@@ -323,9 +324,8 @@ public final class PlanExport {
                     : n.outputs.get(0)
                         .getDisplayName());
         r.addProperty("kind", "gregtech_machine");
-        final String mapId = site == null || site.metadata == null || !site.metadata.has("recipeMapId") ? null
-            : site.metadata.get("recipeMapId")
-                .getAsString();
+        final String mapId = site != null && site.metadata != null
+            && site.metadata.get("recipeMapId") instanceof final String recipeMap ? recipeMap : null;
         if (site != null) r.addProperty(
             "category",
             "crafting".equals(site.category) ? "crafting"
@@ -353,7 +353,8 @@ public final class PlanExport {
         r.add("source", source);
         final JsonObject meta = new JsonObject();
         if (site != null && site.metadata != null)
-            for (final Map.Entry<String, JsonElement> e : site.metadata.entrySet()) meta.add(e.getKey(), e.getValue());
+            for (final Map.Entry<String, Object> e : site.metadata.entrySet())
+                meta.add(e.getKey(), new JsonParser().parse(JsonTree.write(e.getValue())));
         if (meta.entrySet()
             .size() > 0) r.add("metadata", meta);
         return withNeiRecipe(r, world.neiRecipe(n));
@@ -362,8 +363,8 @@ public final class PlanExport {
     /** The mob a crusher recipe kills (its {@code metadata.eec.mob}); null for any other recipe. */
     @Nullable
     private static String eecMob(@Nullable final Web.Recipe site) {
-        if (site == null || site.metadata == null || !(site.metadata.get("eec") instanceof final JsonObject eec)) return null;
-        return eec.get("mob") instanceof final JsonElement m && m.isJsonPrimitive() ? m.getAsString() : null;
+        if (site == null || site.metadata == null || !(site.metadata.get("eec") instanceof final Map<?, ?> eec)) return null;
+        return eec.get("mob") instanceof final String mob ? mob : null;
     }
 
     /**

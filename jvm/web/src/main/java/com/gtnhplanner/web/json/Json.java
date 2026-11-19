@@ -1,72 +1,144 @@
-package com.gtnhplanner.power;
+package com.gtnhplanner.web.json;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 import com.gtnhplanner.core.base.NumberText;
 
 /**
- * A small JSON reader for the workbook and resource tables: objects become ordered maps, arrays lists, numbers
- * doubles (as JavaScript reads them), strings, booleans, and null stays null. No reflection, so the same code runs
- * where Gson cannot.
+ * The JSON the web exports speak: a reader into plain Java values (objects are ordered maps, arrays lists, numbers
+ * doubles as JavaScript reads them, strings, booleans, null) and a writer that spells numbers as JavaScript does.
+ * No reflection, so it compiles under TeaVM. Not an export: the exports classes call it.
+ *
+ * Non-finite numbers are written as the strings "Infinity", "-Infinity" and "NaN", as the conformance files spell
+ * them (JSON has no such numbers, and null would lose which one it was).
  */
-final class JsonTree {
+public final class Json {
 
     private final String text;
     private int at;
 
-    private JsonTree(final String text) {
+    private Json(final String text) {
         this.text = text;
     }
 
-    /** The value a JSON document holds. */
-    @Nullable
-    static Object parse(final String text) {
-        final JsonTree reader = new JsonTree(text);
+    public static Object parse(final String text) {
+        final Json reader = new Json(text);
         final Object value = reader.value();
         reader.space();
         if (reader.at != text.length()) throw reader.fail("trailing text");
         return value;
     }
 
-    // ---- typed reads of a parsed tree; an absent or null field reads as 0, null or empty
+    // ---- typed reads: an absent or null field reads as the fallback
 
     @SuppressWarnings("unchecked")
-    static Map<String, Object> object(@Nullable final Object value) {
+    public static Map<String, Object> object(final Object value) {
         return value instanceof Map ? (Map<String, Object>) value : new LinkedHashMap<>();
     }
 
     @SuppressWarnings("unchecked")
-    static List<Object> array(@Nullable final Object value) {
+    public static List<Object> array(final Object value) {
         return value instanceof List ? (List<Object>) value : new ArrayList<>();
     }
 
-    static double num(final Map<String, Object> from, final String key) {
-        return from.get(key) instanceof Double ? (Double) from.get(key) : 0;
+    public static double num(final Map<String, Object> from, final String key, final double fallback) {
+        final Object v = from.get(key);
+        if (v instanceof Double) return (Double) v;
+        if ("Infinity".equals(v)) return Double.POSITIVE_INFINITY;
+        if ("-Infinity".equals(v)) return Double.NEGATIVE_INFINITY;
+        if ("NaN".equals(v)) return Double.NaN;
+        return fallback;
     }
 
-    @Nullable
-    static Double boxed(final Map<String, Object> from, final String key) {
+    /** A number, or null when the field is absent or not a number. */
+    public static Double boxed(final Map<String, Object> from, final String key) {
         return from.get(key) instanceof Double ? (Double) from.get(key) : null;
     }
 
-    @Nullable
-    static String str(final Map<String, Object> from, final String key) {
+    public static boolean bool(final Map<String, Object> from, final String key, final boolean fallback) {
+        return from.get(key) instanceof Boolean ? (Boolean) from.get(key) : fallback;
+    }
+
+    public static String str(final Map<String, Object> from, final String key) {
         return from.get(key) instanceof String ? (String) from.get(key) : null;
     }
 
-    /** A ladder: numbers with null where the table has none. Null when the field is absent. */
-    @Nullable
-    static Double[] ladder(final Map<String, Object> from, final String key) {
-        if (!(from.get(key) instanceof List)) return null;
-        final List<Object> list = array(from.get(key));
-        final Double[] out = new Double[list.size()];
-        for (int i = 0; i < out.length; i++) out[i] = list.get(i) instanceof Double ? (Double) list.get(i) : null;
-        return out;
+    // ---- writer
+
+    /** Spells a value: maps, lists, Doubles/Integers, strings, booleans, null. Maps keep their order. */
+    public static String write(final Object value) {
+        final StringBuilder out = new StringBuilder();
+        write(out, value);
+        return out.toString();
+    }
+
+    @SuppressWarnings("unchecked")
+    public static void write(final StringBuilder out, final Object value) {
+        if (value == null) out.append("null");
+        else if (value instanceof String) quote(out, (String) value);
+        else if (value instanceof Boolean) out.append(((Boolean) value) ? "true" : "false");
+        else if (value instanceof Number) number(out, ((Number) value).doubleValue());
+        else if (value instanceof Map) {
+            out.append('{');
+            boolean first = true;
+            for (final Map.Entry<String, Object> e : ((Map<String, Object>) value).entrySet()) {
+                if (!first) out.append(',');
+                first = false;
+                quote(out, e.getKey());
+                out.append(':');
+                write(out, e.getValue());
+            }
+            out.append('}');
+        } else if (value instanceof List) {
+            out.append('[');
+            boolean first = true;
+            for (final Object e : (List<Object>) value) {
+                if (!first) out.append(',');
+                first = false;
+                write(out, e);
+            }
+            out.append(']');
+        } else throw new IllegalArgumentException("cannot write " + value.getClass().getName());
+    }
+
+    private static void number(final StringBuilder out, final double n) {
+        if (n != n || n == Double.POSITIVE_INFINITY || n == Double.NEGATIVE_INFINITY) quote(out, NumberText.of(n));
+        else out.append(NumberText.of(n));
+    }
+
+    private static void quote(final StringBuilder out, final String s) {
+        out.append('"');
+        for (int i = 0; i < s.length(); i++) {
+            final char c = s.charAt(i);
+            switch (c) {
+                case '"':
+                    out.append("\\\"");
+                    break;
+                case '\\':
+                    out.append("\\\\");
+                    break;
+                case '\n':
+                    out.append("\\n");
+                    break;
+                case '\r':
+                    out.append("\\r");
+                    break;
+                case '\t':
+                    out.append("\\t");
+                    break;
+                default:
+                    if (c < 0x20) {
+                        final String hex = Integer.toHexString(c);
+                        out.append("\\u");
+                        for (int p = hex.length(); p < 4; p++) out.append('0');
+                        out.append(hex);
+                    } else out.append(c);
+            }
+        }
+        out.append('"');
     }
 
     // ---- reader
@@ -83,7 +155,6 @@ final class JsonTree {
         }
     }
 
-    @Nullable
     private Object value() {
         space();
         if (at >= text.length()) throw fail("unexpected end");
@@ -118,7 +189,7 @@ final class JsonTree {
         final Map<String, Object> out = new LinkedHashMap<>();
         at++;
         space();
-        if (text.charAt(at) == '}') {
+        if (at < text.length() && text.charAt(at) == '}') {
             at++;
             return out;
         }
@@ -142,7 +213,7 @@ final class JsonTree {
         final List<Object> out = new ArrayList<>();
         at++;
         space();
-        if (text.charAt(at) == ']') {
+        if (at < text.length() && text.charAt(at) == ']') {
             at++;
             return out;
         }

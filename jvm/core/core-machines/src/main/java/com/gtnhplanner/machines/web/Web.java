@@ -5,12 +5,13 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import com.google.gson.JsonObject;
+import com.gtnhplanner.core.base.JsonTree;
 
 /**
- * The website's recipe, machine and node shapes (src/lib/model/types.ts), as plain classes Gson reads straight from its
- * JSON: the golden fixture's cases, the machine data the website exports, and what the game side builds for a card.
- * Field names are the website's; a missing field is null. Pure: no game classes.
+ * The website's recipe, machine and node shapes (src/lib/model/types.ts), as plain classes: {@link WebJson} binds them
+ * from JSON text (Gson binds them too). They carry the golden fixture's cases, the machine data the website exports,
+ * and what the game side builds for a card. Field names are the website's; a missing field is null. Pure: no game
+ * classes.
  */
 public final class Web {
 
@@ -276,13 +277,14 @@ public final class Web {
         public List<Handler> machineHandlers;
         @Nullable
         public List<Control> machineConfigControls;
-        /** Power cards only: the generator this recipe was built from. */
+        /** Power cards only: the generator this recipe was built from (a {@link JsonTree} object). */
         @Nullable
-        public JsonObject power;
+        public Map<String, Object> power;
         @Nullable
         public Source source;
+        /** What the dataset keeps beside the recipe (a {@link JsonTree} object). */
         @Nullable
-        public JsonObject metadata;
+        public Map<String, Object> metadata;
         @Nullable
         public Nei nei;
         @Nullable

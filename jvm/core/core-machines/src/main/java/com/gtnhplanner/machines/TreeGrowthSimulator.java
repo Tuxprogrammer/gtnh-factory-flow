@@ -8,6 +8,8 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.Float32;
+import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.machines.FormulaLine.Tone;
 
 /**
@@ -197,11 +199,11 @@ public final class TreeGrowthSimulator {
         if (base == null) return null;
         return switch (mode) {
             case LOG -> {
-                final double height = Math.max(3 * (setup.height() - 1), 0) + 1;
+                final double height = single(Math.max(single(3 * single(setup.height() - 1)), 0) + 1);
                 yield (int) (base * height * f.girth());
             }
-            case SAPLING -> Math.max(1, (int) (base * (double) (setup.fertility() * 10)));
-            case FRUIT -> Math.max(1, (int) (base * (double) (setup.yield() * 10)));
+            case SAPLING -> Math.max(1, (int) (base * (double) single(setup.fertility() * 10)));
+            case FRUIT -> Math.max(1, (int) (base * (double) single(setup.yield() * 10)));
             default -> base;
         };
     }
@@ -318,10 +320,21 @@ public final class TreeGrowthSimulator {
         return lines;
     }
 
+    /**
+     * A float result. On the JavaScript target a float is a double and arithmetic on floats does not narrow, so each
+     * float operation rounds here, as it does on the JVM and in WebAssembly.
+     */
+    private static float single(final double value) {
+        return (float) Float32.round(value);
+    }
+
     /** A gene value as JavaScript prints the same float: its shortest decimal. */
     private static String plain(final float v) {
-        final String s = Float.toString(v);
-        return s.endsWith(".0") ? s.substring(0, s.length() - 2) : s;
+        for (int places = 0; places < 9; places++) {
+            final String text = NumberText.fixed(v, places);
+            if (Float32.round(NumberText.parse(text)) == v) return text;
+        }
+        return NumberText.of(v);
     }
 
     static final String[] TIER_NAMES = { "ULV", "LV", "MV", "HV", "EV", "IV", "LuV", "ZPM", "UV", "UHV", "UEV", "UIV",

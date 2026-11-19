@@ -17,6 +17,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.gtnhplanner.core.base.JsonTree;
 import com.gtnhplanner.machines.MobDrops;
 
 /**
@@ -122,9 +123,9 @@ class EecCardRatesTest {
         r.specialValue = 0.0;
         r.source = new Web.Source();
         r.source.recipeMap = MobDrops.MACHINE_TYPE;
-        r.metadata = new JsonObject();
-        r.metadata.addProperty("recipeMapId", MobDrops.MAP_ID);
-        r.metadata.add("eec", built.get("eec"));
+        r.metadata = new LinkedHashMap<>();
+        r.metadata.put("recipeMapId", MobDrops.MAP_ID);
+        r.metadata.put("eec", JsonTree.parse(built.get("eec").toString()));
         r.inputs = new ArrayList<>();
         final List<Web.Resource> outs = new ArrayList<>();
         for (final JsonElement e : built.getAsJsonArray("outputs")) {

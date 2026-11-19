@@ -381,13 +381,11 @@ describe("curated machine table", () => {
     });
     expect(spec).toEqual(OVERCLOCK.none());
 
-    // The Steam Hearth's map is vanilla smelting: the machine runs GT's fixed
-    // 128-tick furnace recipe while the dataset's base is the 200-tick vanilla
-    // smelt, so its multiplier lands the shown duration on the game's own 204
-    // ticks basic and 102 high pressure.
+    // The Steam Hearth runs the same multipliers on GT's 128-tick furnace
+    // recipe, which gtFurnaceDurationTicks seeds (gt-furnace-rates.test.ts).
     const hearth = { ...grinder, machineType: "Steam Hearth" } as Recipe;
-    expect(200 * getMachineDurationMultiplier(hearth, bronze)).toBeCloseTo(204.8, 10);
-    expect(200 * getMachineDurationMultiplier(hearth, highPressure)).toBeCloseTo(102.4, 10);
+    expect(128 * getMachineDurationMultiplier(hearth, bronze)).toBeCloseTo(204.8, 10);
+    expect(128 * getMachineDurationMultiplier(hearth, highPressure)).toBeCloseTo(102.4, 10);
   });
 
   it("gives the Naquadah Fuel Refinery field restriction coils, not heating coils", () => {

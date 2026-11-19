@@ -1,4 +1,4 @@
-package com.gtnhplanner.core.view.rail;
+package com.gtnhplanner.core.view;
 
 import java.util.List;
 import java.util.Map;

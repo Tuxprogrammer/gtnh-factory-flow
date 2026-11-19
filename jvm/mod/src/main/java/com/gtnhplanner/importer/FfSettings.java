@@ -67,7 +67,7 @@ public final class FfSettings {
      * @param machine  the machine FF runs the recipe on, for picking it in game
      * @param notes    what did not carry over exactly
      */
-    public record Mapped(Map<String, Object> settings, int machines, boolean pinned, boolean exact,
+    public record Mapped(Map<String, Object> settings, double machines, boolean pinned, boolean exact,
         NodeMaker.Machine machine, List<String> notes) {
 
         @Nullable
@@ -174,16 +174,15 @@ public final class FfSettings {
         }
 
         final int most = crop ? MAX_CROPS : MAX_MACHINES;
-        int machines = 1;
+        double machines = 1;
         boolean pinned = false, exact = false;
         if (solveMode) {
             final Double pin = pinnable ? node.solvePin() : null;
             if (pin != null && pin > 0) {
-                machines = (int) Math.max(1, Math.min(most, Math.round(pin)));
+                // The pin as the plan set it: a fraction of a machine is a count the model and the solver take.
+                machines = Math.min(most, pin);
                 pinned = true;
                 exact = node.solvePinExact();
-                if (Math.abs(machines - pin) > 1e-6)
-                    notes.add("pinned " + fmt(pin) + " machines, rounded to " + machines);
             } else if (pin != null) {
                 notes.add("pinned to 0 machines; left for the plan to decide");
             }

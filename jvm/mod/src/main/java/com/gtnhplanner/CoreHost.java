@@ -88,5 +88,6 @@ public final class CoreHost {
         Uuid.installRandom(random::nextLong);
         SolverThreads.install();
         com.gtnhplanner.data.flowchart.ModPlanHost.install();
+        com.gtnhplanner.core.model.ResourceRegistry.install(GameResources.INSTANCE);
     }
 }

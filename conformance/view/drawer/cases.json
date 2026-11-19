@@ -1,0 +1,7680 @@
+{
+ "record": "drawer",
+ "set": "cases",
+ "measure": "six-px",
+ "cases": [
+  {
+   "name": "product, no rule, nothing moving",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "moved": 0,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "0",
+    "unit": "/s",
+    "zero": true,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "0",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan puts in it whatever it needs.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "0 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "product, no rule, nothing set: prompts",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "moved": 0,
+    "unmet": false,
+    "unanchored": true,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "0",
+    "unit": "/s",
+    "zero": true,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": true,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "0",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan puts in it whatever it needs.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "0 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "product, at least 12/s, reached",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "target": 12,
+    "moved": 12,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "12",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "at-least",
+    "ruleMark": "≥",
+    "target": {
+     "number": "12",
+     "unit": "/s"
+    },
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "progress": 1,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "+12",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "At least",
+      "rows": [],
+      "notes": [
+       {
+        "text": "The plan puts in it at least the rate.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "Target rate",
+      "rows": [
+       {
+        "label": "At least",
+        "value": "12 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "12 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "product, at least 12/s, half reached",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "target": 12,
+    "moved": 6,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "6",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "at-least",
+    "ruleMark": "≥",
+    "target": {
+     "number": "12",
+     "unit": "/s"
+    },
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "progress": 0.5,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "+6",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "At least",
+      "rows": [],
+      "notes": [
+       {
+        "text": "The plan puts in it at least the rate.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "Target rate",
+      "rows": [
+       {
+        "label": "At least",
+        "value": "12 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "6 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "product, exactly 40/s, unreachable",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "exact",
+    "inert": false,
+    "target": 40,
+    "moved": 25,
+    "unmet": true,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "25",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "exact",
+    "ruleMark": "=",
+    "target": {
+     "number": "40",
+     "unit": "/s"
+    },
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": true,
+    "reaches": "25 /s",
+    "progress": 0.625,
+    "tone": "bad",
+    "linked": true,
+    "glanceRate": "+25",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Exactly",
+      "rows": [],
+      "notes": [
+       {
+        "text": "The plan puts in it exactly the rate.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "Target rate",
+      "rows": [
+       {
+        "label": "Exactly",
+        "value": "40 /s"
+       },
+       {
+        "label": "Reaches",
+        "value": "25 /s",
+        "tone": "red"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "25 /s"
+       }
+      ],
+      "notes": [
+       {
+        "text": "Reaches only 25 /s of its 40 /s target",
+        "tone": "red"
+       }
+      ],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "product, at most 8/s, calm",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-most",
+    "inert": false,
+    "target": 8,
+    "moved": 3,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "3",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "at-most",
+    "ruleMark": "≤",
+    "target": {
+     "number": "8",
+     "unit": "/s"
+    },
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "progress": 0.375,
+    "tone": "calm",
+    "linked": true,
+    "glanceRate": "+3",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "At most",
+      "rows": [],
+      "notes": [
+       {
+        "text": "The plan puts in it no more than the rate.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "Target rate",
+      "rows": [
+       {
+        "label": "At most",
+        "value": "8 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "3 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "product, at most 0 holds nothing",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-most",
+    "inert": false,
+    "target": 0,
+    "moved": 0,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "0",
+    "unit": "/s",
+    "zero": true,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "at-most",
+    "ruleMark": "≤",
+    "target": {
+     "number": "0",
+     "unit": "/s"
+    },
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "calm",
+    "linked": true,
+    "glanceRate": "0",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "At most",
+      "rows": [],
+      "notes": [
+       {
+        "text": "The plan puts in it no more than the rate.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "Target rate",
+      "rows": [
+       {
+        "label": "At most",
+        "value": "0 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "0 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "product, at least 0 is no rate",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "target": 0,
+    "moved": 4,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "4",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "+4",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan puts in it whatever it needs.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "4 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "product, rule ignore keeps the saved rate quiet",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "ignore",
+    "inert": false,
+    "target": 9,
+    "moved": 4,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "4",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "+4",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan puts in it whatever it needs.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "4 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "product, tiny flow",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "moved": 0.003,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "0.003",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "+0.003",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan puts in it whatever it needs.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "0.003 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "product, a trickle reads nothing",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "moved": 0.000001,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "0",
+    "unit": "/s",
+    "zero": true,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "0",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan puts in it whatever it needs.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "0 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "product, 1234/s reads 1.23k",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "moved": 1234,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "1.23k",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "+1.23k",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan puts in it whatever it needs.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "1.23k /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "product, 98765/s reads 98.8k",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "moved": 98765,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "98.8k",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "+98.8k",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan puts in it whatever it needs.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "98.8k /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "product, 2.5 million",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "moved": 2500000,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "2.5M",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "+2.5M",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan puts in it whatever it needs.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "2.5M /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "product, per minute",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "exact",
+    "inert": false,
+    "target": 2,
+    "moved": 2,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 60,
+    "unit": "/min"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "120",
+    "unit": "/min",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "exact",
+    "ruleMark": "=",
+    "target": {
+     "number": "120",
+     "unit": "/min"
+    },
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "progress": 1,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "+120",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Exactly",
+      "rows": [],
+      "notes": [
+       {
+        "text": "The plan puts in it exactly the rate.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "Target rate",
+      "rows": [
+       {
+        "label": "Exactly",
+        "value": "120 /min"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "120 /min"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "product, per hour",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "target": 0.5,
+    "moved": 0.25,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 3600,
+    "unit": "/hr"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "900",
+    "unit": "/hr",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "at-least",
+    "ruleMark": "≥",
+    "target": {
+     "number": "1.8k",
+     "unit": "/hr"
+    },
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "progress": 0.5,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "+900",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "At least",
+      "rows": [],
+      "notes": [
+       {
+        "text": "The plan puts in it at least the rate.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "Target rate",
+      "rows": [
+       {
+        "label": "At least",
+        "value": "1.8k /hr"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "900 /hr"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "product, per tick",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "moved": 40,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 0.05,
+    "unit": "/t"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "2",
+    "unit": "/t",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "+2",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan puts in it whatever it needs.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "2 /t"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "product, not wired",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "moved": 1,
+    "unmet": false,
+    "unanchored": false,
+    "linked": false,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "1",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": false,
+    "glanceRate": "+1",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan puts in it whatever it needs.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "1 /s"
+       }
+      ],
+      "notes": [
+       {
+        "text": "Unconnected",
+        "tone": "warn"
+       }
+      ],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "product, unwired and unmet",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "exact",
+    "inert": false,
+    "target": 5,
+    "moved": 1,
+    "unmet": true,
+    "unanchored": false,
+    "linked": false,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "1",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "exact",
+    "ruleMark": "=",
+    "target": {
+     "number": "5",
+     "unit": "/s"
+    },
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": true,
+    "reaches": "1 /s",
+    "progress": 0.2,
+    "tone": "bad",
+    "linked": false,
+    "glanceRate": "+1",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Exactly",
+      "rows": [],
+      "notes": [
+       {
+        "text": "The plan puts in it exactly the rate.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "Target rate",
+      "rows": [
+       {
+        "label": "Exactly",
+        "value": "5 /s"
+       },
+       {
+        "label": "Reaches",
+        "value": "1 /s",
+        "tone": "red"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "1 /s"
+       }
+      ],
+      "notes": [
+       {
+        "text": "Unconnected",
+        "tone": "warn"
+       },
+       {
+        "text": "Reaches only 1 /s of its 5 /s target",
+        "tone": "red"
+       }
+      ],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "byproduct reads as a product with no rule",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": true,
+    "target": 5,
+    "moved": 3,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "3",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "+3",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan puts in it whatever it needs.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "3 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "idle drawer with a negative goal is a source",
+   "input": {
+    "id": "d",
+    "kind": "source",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "exact",
+    "inert": false,
+    "target": -2,
+    "moved": 2,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "source",
+    "label": "Iron Ingot",
+    "number": "2",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "exact",
+    "ruleMark": "=",
+    "target": {
+     "number": "2",
+     "unit": "/s"
+    },
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "progress": 1,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "-2",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Source",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Exactly",
+      "rows": [],
+      "notes": [
+       {
+        "text": "The plan draws from it exactly the rate.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "Target rate",
+      "rows": [
+       {
+        "label": "Exactly",
+        "value": "2 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Source",
+      "rows": [
+       {
+        "label": "Supplies",
+        "value": "2 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an output",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "idle drawer reads as a product",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "moved": 0,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "0",
+    "unit": "/s",
+    "zero": true,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "0",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan puts in it whatever it needs.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "0 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "source, exactly 30/s",
+   "input": {
+    "id": "d",
+    "kind": "source",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "exact",
+    "inert": false,
+    "target": -30,
+    "moved": 30,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "source",
+    "label": "Iron Ingot",
+    "number": "30",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "exact",
+    "ruleMark": "=",
+    "target": {
+     "number": "30",
+     "unit": "/s"
+    },
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "progress": 1,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "-30",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Source",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Exactly",
+      "rows": [],
+      "notes": [
+       {
+        "text": "The plan draws from it exactly the rate.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "Target rate",
+      "rows": [
+       {
+        "label": "Exactly",
+        "value": "30 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Source",
+      "rows": [
+       {
+        "label": "Supplies",
+        "value": "30 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an output",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "source, at most 10/s",
+   "input": {
+    "id": "d",
+    "kind": "source",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-most",
+    "inert": false,
+    "target": -10,
+    "moved": 4,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "source",
+    "label": "Iron Ingot",
+    "number": "4",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "at-most",
+    "ruleMark": "≤",
+    "target": {
+     "number": "10",
+     "unit": "/s"
+    },
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "progress": 0.4,
+    "tone": "calm",
+    "linked": true,
+    "glanceRate": "-4",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Source",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "At most",
+      "rows": [],
+      "notes": [
+       {
+        "text": "The plan draws from it no more than the rate.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "Target rate",
+      "rows": [
+       {
+        "label": "At most",
+        "value": "10 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Source",
+      "rows": [
+       {
+        "label": "Supplies",
+        "value": "4 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an output",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "source, nothing set: prompts",
+   "input": {
+    "id": "d",
+    "kind": "source",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "exact",
+    "inert": false,
+    "moved": 0,
+    "unmet": false,
+    "unanchored": true,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "source",
+    "label": "Iron Ingot",
+    "number": "0",
+    "unit": "/s",
+    "zero": true,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": true,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "0",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Source",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan draws from it whatever it needs.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Source",
+      "rows": [
+       {
+        "label": "Supplies",
+        "value": "0 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an output",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "source, fluid in litres",
+   "input": {
+    "id": "d",
+    "kind": "source",
+    "resource": "fluid",
+    "label": "Iron Ingot",
+    "rule": "exact",
+    "inert": false,
+    "target": -250,
+    "moved": 250,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "L/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "source",
+    "label": "Iron Ingot",
+    "number": "250",
+    "unit": "L/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "exact",
+    "ruleMark": "=",
+    "target": {
+     "number": "250",
+     "unit": "L/s"
+    },
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "progress": 1,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "-250",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Source",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Exactly",
+      "rows": [],
+      "notes": [
+       {
+        "text": "The plan draws from it exactly the rate.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "Target rate",
+      "rows": [
+       {
+        "label": "Exactly",
+        "value": "250 L/s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Source",
+      "rows": [
+       {
+        "label": "Supplies",
+        "value": "250 L/s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an output",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "source, fluid per hour",
+   "input": {
+    "id": "d",
+    "kind": "source",
+    "resource": "fluid",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "target": -0.5,
+    "moved": 0.5,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 3600,
+    "unit": "L/hr"
+   },
+   "view": {
+    "id": "d",
+    "kind": "source",
+    "label": "Iron Ingot",
+    "number": "1.8k",
+    "unit": "L/hr",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "at-least",
+    "ruleMark": "≥",
+    "target": {
+     "number": "1.8k",
+     "unit": "L/hr"
+    },
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "progress": 1,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "-1.8k",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Source",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "At least",
+      "rows": [],
+      "notes": [
+       {
+        "text": "The plan draws from it at least the rate.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "Target rate",
+      "rows": [
+       {
+        "label": "At least",
+        "value": "1.8k L/hr"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Source",
+      "rows": [
+       {
+        "label": "Supplies",
+        "value": "1.8k L/hr"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an output",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "power product in EU/t",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "power",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "target": 640,
+    "moved": 640,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 0.05,
+    "unit": "EU/t"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "32",
+    "unit": "EU/t",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "at-least",
+    "ruleMark": "≥",
+    "target": {
+     "number": "32",
+     "unit": "EU/t"
+    },
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "progress": 1,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "+32",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "At least",
+      "rows": [],
+      "notes": [
+       {
+        "text": "The plan puts in it at least the rate.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "Target rate",
+      "rows": [
+       {
+        "label": "At least",
+        "value": "32 EU/t"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "32 EU/t"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "power product, a trickle",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "power",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "moved": 0.1,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 0.05,
+    "unit": "EU/t"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "<0.01",
+    "unit": "EU/t",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "+<0.01",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan puts in it whatever it needs.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "<0.01 EU/t"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "trash",
+   "input": {
+    "id": "d",
+    "kind": "trash",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": true,
+    "moved": 7,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "trash",
+    "label": "Iron Ingot",
+    "number": "7",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": false,
+    "rule": "ignore",
+    "ruleMark": "×",
+    "boxText": "Voided",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "+7",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Trash",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Trash",
+      "rows": [],
+      "notes": [
+       {
+        "text": "It voids what comes in: it leaves the plan without being one of its outputs.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Keep it instead"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Trash",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "7 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "trash, nothing",
+   "input": {
+    "id": "d",
+    "kind": "trash",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": true,
+    "moved": 0,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "trash",
+    "label": "Iron Ingot",
+    "number": "0",
+    "unit": "/s",
+    "zero": true,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": false,
+    "rule": "ignore",
+    "ruleMark": "×",
+    "boxText": "Voided",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "0",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Trash",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Trash",
+      "rows": [],
+      "notes": [
+       {
+        "text": "It voids what comes in: it leaves the plan without being one of its outputs.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Keep it instead"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Trash",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "0 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "trash ignores a saved rule",
+   "input": {
+    "id": "d",
+    "kind": "trash",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "exact",
+    "inert": true,
+    "target": 5,
+    "moved": 2,
+    "unmet": false,
+    "unanchored": true,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "trash",
+    "label": "Iron Ingot",
+    "number": "2",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": false,
+    "rule": "ignore",
+    "ruleMark": "×",
+    "boxText": "Voided",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "+2",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Trash",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Trash",
+      "rows": [],
+      "notes": [
+       {
+        "text": "It voids what comes in: it leaves the plan without being one of its outputs.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Keep it instead"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Trash",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "2 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "buffer passes 12/s with no rule",
+   "input": {
+    "id": "d",
+    "kind": "buffer",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "moved": 12,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "buffer",
+    "label": "Iron Ingot",
+    "number": "12",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "12",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Buffer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan passes whatever its users take.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Buffer",
+      "rows": [
+       {
+        "label": "Passes",
+        "value": "12 /s"
+       }
+      ],
+      "notes": [
+       {
+        "text": "Its makers put in what its users take out.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "buffer, nothing passes",
+   "input": {
+    "id": "d",
+    "kind": "buffer",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "moved": 0,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "buffer",
+    "label": "Iron Ingot",
+    "number": "0",
+    "unit": "/s",
+    "zero": true,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "0",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Buffer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan passes whatever its users take.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Buffer",
+      "rows": [
+       {
+        "label": "Passes",
+        "value": "0 /s"
+       }
+      ],
+      "notes": [
+       {
+        "text": "Its makers put in what its users take out.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "buffer, at least 20/s, half reached",
+   "input": {
+    "id": "d",
+    "kind": "buffer",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "target": 20,
+    "moved": 10,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "buffer",
+    "label": "Iron Ingot",
+    "number": "10",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "at-least",
+    "ruleMark": "≥",
+    "target": {
+     "number": "20",
+     "unit": "/s"
+    },
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "progress": 0.5,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "10",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Buffer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "At least",
+      "rows": [],
+      "notes": [
+       {
+        "text": "The plan passes at least the rate through it.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "Target rate",
+      "rows": [
+       {
+        "label": "At least",
+        "value": "20 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Buffer",
+      "rows": [
+       {
+        "label": "Passes",
+        "value": "10 /s"
+       }
+      ],
+      "notes": [
+       {
+        "text": "Its makers put in what its users take out.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "buffer, exactly 15/s, reached",
+   "input": {
+    "id": "d",
+    "kind": "buffer",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "exact",
+    "inert": false,
+    "target": 15,
+    "moved": 15,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "buffer",
+    "label": "Iron Ingot",
+    "number": "15",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "exact",
+    "ruleMark": "=",
+    "target": {
+     "number": "15",
+     "unit": "/s"
+    },
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "progress": 1,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "15",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Buffer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Exactly",
+      "rows": [],
+      "notes": [
+       {
+        "text": "The plan passes exactly the rate through it.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "Target rate",
+      "rows": [
+       {
+        "label": "Exactly",
+        "value": "15 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Buffer",
+      "rows": [
+       {
+        "label": "Passes",
+        "value": "15 /s"
+       }
+      ],
+      "notes": [
+       {
+        "text": "Its makers put in what its users take out.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "buffer, at most 9/s, unreachable",
+   "input": {
+    "id": "d",
+    "kind": "buffer",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-most",
+    "inert": false,
+    "target": 9,
+    "moved": 4,
+    "unmet": true,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "buffer",
+    "label": "Iron Ingot",
+    "number": "4",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "at-most",
+    "ruleMark": "≤",
+    "target": {
+     "number": "9",
+     "unit": "/s"
+    },
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": true,
+    "reaches": "4 /s",
+    "progress": 0.4444444444444444,
+    "tone": "bad",
+    "linked": true,
+    "glanceRate": "4",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Buffer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "At most",
+      "rows": [],
+      "notes": [
+       {
+        "text": "The plan passes no more than the rate through it.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "Target rate",
+      "rows": [
+       {
+        "label": "At most",
+        "value": "9 /s"
+       },
+       {
+        "label": "Reaches",
+        "value": "4 /s",
+        "tone": "red"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Buffer",
+      "rows": [
+       {
+        "label": "Passes",
+        "value": "4 /s"
+       }
+      ],
+      "notes": [
+       {
+        "text": "Its makers put in what its users take out.",
+        "tone": "muted"
+       },
+       {
+        "text": "Reaches only 4 /s of its 9 /s target",
+        "tone": "red"
+       }
+      ],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "buffer, nothing set: prompts",
+   "input": {
+    "id": "d",
+    "kind": "buffer",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "moved": 3,
+    "unmet": false,
+    "unanchored": true,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "buffer",
+    "label": "Iron Ingot",
+    "number": "3",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": true,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "3",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Buffer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan passes whatever its users take.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Buffer",
+      "rows": [
+       {
+        "label": "Passes",
+        "value": "3 /s"
+       }
+      ],
+      "notes": [
+       {
+        "text": "Its makers put in what its users take out.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "buffer forced out 80/s",
+   "input": {
+    "id": "d",
+    "kind": "buffer",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "moved": 20,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "spill": 80,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "buffer",
+    "label": "Iron Ingot",
+    "number": "20",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": true,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "20",
+    "spill": {
+     "number": "80",
+     "unit": "/s",
+     "tip": {
+      "id": "d|spill",
+      "title": "Forced out",
+      "rows": [
+       {
+        "label": "At its makers",
+        "value": "80 /s"
+       }
+      ],
+      "notes": [
+       {
+        "text": "Its makers make 80 /s more than its users take. They force it out themselves; this adds it up.",
+        "tone": "muted"
+       }
+      ],
+      "actions": []
+     }
+    },
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Buffer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan passes whatever its users take.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Buffer",
+      "rows": [
+       {
+        "label": "Passes",
+        "value": "20 /s"
+       }
+      ],
+      "notes": [
+       {
+        "text": "Its makers put in what its users take out.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "buffer forced out a fluid",
+   "input": {
+    "id": "d",
+    "kind": "buffer",
+    "resource": "fluid",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "moved": 1500,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "spill": 12500,
+    "multiplier": 1,
+    "unit": "L/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "buffer",
+    "label": "Iron Ingot",
+    "number": "1.5k",
+    "unit": "L/s",
+    "zero": false,
+    "numberSmall": true,
+    "nameSmall": false,
+    "nameClipped": true,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "1.5k",
+    "spill": {
+     "number": "12.5k",
+     "unit": "L/s",
+     "tip": {
+      "id": "d|spill",
+      "title": "Forced out",
+      "rows": [
+       {
+        "label": "At its makers",
+        "value": "12.5k L/s"
+       }
+      ],
+      "notes": [
+       {
+        "text": "Its makers make 12.5k L/s more than its users take. They force it out themselves; this adds it up.",
+        "tone": "muted"
+       }
+      ],
+      "actions": []
+     }
+    },
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Buffer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan passes whatever its users take.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Buffer",
+      "rows": [
+       {
+        "label": "Passes",
+        "value": "1.5k L/s"
+       }
+      ],
+      "notes": [
+       {
+        "text": "Its makers put in what its users take out.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "buffer forced out a trickle shows nothing",
+   "input": {
+    "id": "d",
+    "kind": "buffer",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "moved": 5,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "spill": 0.000001,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "buffer",
+    "label": "Iron Ingot",
+    "number": "5",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "5",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Buffer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan passes whatever its users take.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Buffer",
+      "rows": [
+       {
+        "label": "Passes",
+        "value": "5 /s"
+       }
+      ],
+      "notes": [
+       {
+        "text": "Its makers put in what its users take out.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "buffer, forced out narrows the words",
+   "input": {
+    "id": "d",
+    "kind": "buffer",
+    "resource": "item",
+    "label": "Hydrochloric Acid",
+    "rule": "at-least",
+    "inert": false,
+    "moved": 123456,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "spill": 5,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "buffer",
+    "label": "Hydrochloric Acid",
+    "number": "123k",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": true,
+    "nameSmall": true,
+    "nameClipped": true,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "123k",
+    "spill": {
+     "number": "5",
+     "unit": "/s",
+     "tip": {
+      "id": "d|spill",
+      "title": "Forced out",
+      "rows": [
+       {
+        "label": "At its makers",
+        "value": "5 /s"
+       }
+      ],
+      "notes": [
+       {
+        "text": "Its makers make 5 /s more than its users take. They force it out themselves; this adds it up.",
+        "tone": "muted"
+       }
+      ],
+      "actions": []
+     }
+    },
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Hydrochloric Acid",
+      "sub": "Buffer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan passes whatever its users take.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Hydrochloric Acid",
+      "sub": "Buffer",
+      "rows": [
+       {
+        "label": "Passes",
+        "value": "123k /s"
+       }
+      ],
+      "notes": [
+       {
+        "text": "Its makers put in what its users take out.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "buffer, forced out per minute with a rule",
+   "input": {
+    "id": "d",
+    "kind": "buffer",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "target": 3,
+    "moved": 3,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "spill": 1.5,
+    "multiplier": 60,
+    "unit": "/min"
+   },
+   "view": {
+    "id": "d",
+    "kind": "buffer",
+    "label": "Iron Ingot",
+    "number": "180",
+    "unit": "/min",
+    "zero": false,
+    "numberSmall": true,
+    "nameSmall": false,
+    "nameClipped": true,
+    "hasRule": true,
+    "rule": "at-least",
+    "ruleMark": "≥",
+    "target": {
+     "number": "180",
+     "unit": "/min"
+    },
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "progress": 1,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "180",
+    "spill": {
+     "number": "90",
+     "unit": "/min",
+     "tip": {
+      "id": "d|spill",
+      "title": "Forced out",
+      "rows": [
+       {
+        "label": "At its makers",
+        "value": "90 /min"
+       }
+      ],
+      "notes": [
+       {
+        "text": "Its makers make 90 /min more than its users take. They force it out themselves; this adds it up.",
+        "tone": "muted"
+       }
+      ],
+      "actions": []
+     }
+    },
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Buffer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "At least",
+      "rows": [],
+      "notes": [
+       {
+        "text": "The plan passes at least the rate through it.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "Target rate",
+      "rows": [
+       {
+        "label": "At least",
+        "value": "180 /min"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Buffer",
+      "rows": [
+       {
+        "label": "Passes",
+        "value": "180 /min"
+       }
+      ],
+      "notes": [
+       {
+        "text": "Its makers put in what its users take out.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "a spill on a product is not shown",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "moved": 5,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "spill": 9,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "5",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "+5",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan puts in it whatever it needs.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "5 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "buffer, not wired",
+   "input": {
+    "id": "d",
+    "kind": "buffer",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "at-least",
+    "inert": false,
+    "moved": 2,
+    "unmet": false,
+    "unanchored": false,
+    "linked": false,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "buffer",
+    "label": "Iron Ingot",
+    "number": "2",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": false,
+    "glanceRate": "2",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Buffer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan passes whatever its users take.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Buffer",
+      "rows": [
+       {
+        "label": "Passes",
+        "value": "2 /s"
+       }
+      ],
+      "notes": [
+       {
+        "text": "Its makers put in what its users take out.",
+        "tone": "muted"
+       },
+       {
+        "text": "Unconnected",
+        "tone": "warn"
+       }
+      ],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "a long name steps down and clips",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Distilled Hydrogen Sulfide Solution",
+    "rule": "at-least",
+    "inert": false,
+    "moved": 2,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Distilled Hydrogen Sulfide Solution",
+    "number": "2",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": true,
+    "nameClipped": true,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "+2",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Distilled Hydrogen Sulfide Solution",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan puts in it whatever it needs.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Distilled Hydrogen Sulfide Solution",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "2 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "a name just over the step-down width",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Aluminium Dust!",
+    "rule": "at-least",
+    "inert": false,
+    "moved": 2,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Aluminium Dust!",
+    "number": "2",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": true,
+    "nameClipped": true,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "+2",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Aluminium Dust!",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan puts in it whatever it needs.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Aluminium Dust!",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "2 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "a name that fits",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Aluminium Du",
+    "rule": "at-least",
+    "inert": false,
+    "moved": 2,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Aluminium Du",
+    "number": "2",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": true,
+    "nameClipped": true,
+    "hasRule": true,
+    "rule": "ignore",
+    "ruleMark": "~",
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "+2",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Aluminium Du",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Any",
+      "rows": [],
+      "notes": [
+       {
+        "text": "No target: the plan puts in it whatever it needs.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "No rate yet",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Aluminium Du",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "2 /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "a wide figure steps down",
+   "input": {
+    "id": "d",
+    "kind": "product",
+    "resource": "item",
+    "label": "Iron Ingot",
+    "rule": "exact",
+    "inert": false,
+    "target": 99999,
+    "moved": 98765.4,
+    "unmet": false,
+    "unanchored": false,
+    "linked": true,
+    "multiplier": 1,
+    "unit": "/s"
+   },
+   "view": {
+    "id": "d",
+    "kind": "product",
+    "label": "Iron Ingot",
+    "number": "98.8k",
+    "unit": "/s",
+    "zero": false,
+    "numberSmall": false,
+    "nameSmall": false,
+    "nameClipped": false,
+    "hasRule": true,
+    "rule": "exact",
+    "ruleMark": "=",
+    "target": {
+     "number": "100k",
+     "unit": "/s"
+    },
+    "boxText": "Set",
+    "prompt": false,
+    "unmet": false,
+    "progress": 0.9876638766387663,
+    "tone": "ok",
+    "linked": true,
+    "glanceRate": "+98.8k",
+    "tips": {
+     "bar": {
+      "id": "d|bar",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Move"
+       },
+       {
+        "input": "left",
+        "label": "Select"
+       }
+      ]
+     },
+     "del": {
+      "id": "d|del",
+      "title": "Delete this drawer",
+      "rows": [],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Delete"
+       }
+      ]
+     },
+     "rule": {
+      "id": "d|rule",
+      "title": "Rule",
+      "sub": "Exactly",
+      "rows": [],
+      "notes": [
+       {
+        "text": "The plan puts in it exactly the rate.",
+        "tone": "muted"
+       }
+      ],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Pick"
+       },
+       {
+        "input": "wheel",
+        "label": "Next"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "rate": {
+      "id": "d|rate",
+      "title": "Target rate",
+      "rows": [
+       {
+        "label": "Exactly",
+        "value": "100k /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "left",
+        "label": "Type (2.5k, 1/3)"
+       },
+       {
+        "input": "wheel",
+        "label": "+1, Ctrl 10, Shift 100"
+       },
+       {
+        "input": "middle",
+        "label": "Clear"
+       }
+      ]
+     },
+     "body": {
+      "id": "d|body",
+      "title": "Iron Ingot",
+      "sub": "Product",
+      "rows": [
+       {
+        "label": "Takes",
+        "value": "98.8k /s"
+       }
+      ],
+      "notes": [],
+      "actions": [
+       {
+        "input": "drag",
+        "label": "Wire to a card"
+       },
+       {
+        "input": "key",
+        "label": "R, U"
+       }
+      ]
+     }
+    },
+    "flip": {
+     "id": "d|flip",
+     "title": "Make it an input",
+     "rows": [],
+     "notes": [
+      {
+       "text": "Its wires come off.",
+       "tone": "muted"
+      }
+     ],
+     "actions": [
+      {
+       "input": "left",
+       "label": "Switch"
+      }
+     ]
+    }
+   }
+  }
+ ]
+}

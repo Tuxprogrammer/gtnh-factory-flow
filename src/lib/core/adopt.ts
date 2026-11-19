@@ -21,7 +21,7 @@ export const ADOPT = {
   // power: the power planner's sources and models (PowerExports).
   power: true,
   // layout: the wire router and Arrange (LayoutExports).
-  layout: false,
+  layout: true,
   // solve: the plan solve (SolverExports).
   solve: false,
 } as const satisfies Record<string, boolean>;

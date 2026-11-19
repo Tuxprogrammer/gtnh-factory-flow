@@ -34,6 +34,11 @@ public final class LiveDrag {
     private double lastBeatAt = Double.NEGATIVE_INFINITY;
     private double slowAtEdgeCount = Double.POSITIVE_INFINITY;
 
+    /** A card is picked up: the drag's first frame that moves something routes at once; the throttle paces the rest. */
+    public void start() {
+        lastBeatAt = Double.NEGATIVE_INFINITY;
+    }
+
     /** Whether wires follow a drag on a board of {@code edgeCount} wires; false: they hold until the drop. */
     public boolean follows(final int edgeCount, final boolean movesObstacles) {
         return movesObstacles && edgeCount <= ROUTE_EDGE_LIMIT && !(edgeCount >= slowAtEdgeCount * SLOW_MARGIN);

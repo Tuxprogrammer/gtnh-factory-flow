@@ -86,7 +86,7 @@ public final class TradeStage implements Entry<Solver.Trades> {
         Solver.Trades held = pushed;
         for (final Solver.Level level : drawerLevels(ctx)) {
             final Handles h = Solver.tradeModel(ctx, held);
-            for (final int p : level.ports()) h.extVars()[p].weight(ctx.externalWeight(p));
+            for (final int p : level.ports()) h.cost(h.extVars()[p], ctx.externalWeight(p));
             final SolveResult least = Solver
                 .run(ctx, h, level.buying() ? "least from source drawers" : "least into sink drawers");
             if (least.isRejected()) return held;

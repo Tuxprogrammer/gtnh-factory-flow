@@ -11,7 +11,7 @@ import com.gtnhplanner.core.view.rail.RailMath;
 /**
  * What the mod itself works out for the overview rail ({@link RailHost}): the steam a machine line burns and the
  * machines it is billed at its peak. The lines, the machine list and the figures are the core's, pinned by the shared
- * conformance cases ({@code conformance/view/rail-cases.json}).
+ * conformance cases ({@code conformance/view/rail/cases.json}).
  */
 class RailHostTest {
 

@@ -55,7 +55,7 @@ public final class FastPathStage implements Prelude {
     private static void runUpTo(final SolveContext ctx) {
         final Solver.Trades closed = forcedClosed(ctx);
         final Handles h = Solver.tradeModel(ctx, closed);
-        for (int e = 0; e < h.flowVars().length; e++) h.flowVars()[e].weight(1.0);
+        for (int e = 0; e < h.flowVars().length; e++) h.cost(h.flowVars()[e], 1.0);
         if (Solver.run(ctx, h, "fast path")
             .isRejected()) return;
         final Solver.Trades pushed = UpTo.push(ctx, closed);

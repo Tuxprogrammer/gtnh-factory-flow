@@ -252,7 +252,8 @@ public final class FfCards {
         node.y = y;
         final Double pin = card.solvePin();
         if (ctx.solveMode() && pin != null && pin > 0) {
-            node.machineConfig.setMachineCount((int) Math.ceil(pin - 1e-9));
+            // The pin as the plan set it: a fraction stays one.
+            node.machineConfig.setMachineCount(pin.doubleValue());
             node.setMachineCountFixed(true);
             node.setMachineCountExact(card.solvePinExact());
         } else {
@@ -314,7 +315,7 @@ public final class FfCards {
         g.setHeader("Shared machine");
         final Node host = made.getFirst();
         if (host.isMachineCountFixed()) {
-            g.setMachineCapacity(host.machineConfig.getMachineCount());
+            g.setMachineCount(host.machineConfig.machineCount());
             g.setPinned(true);
             g.setExact(host.isMachineCountExact());
         }

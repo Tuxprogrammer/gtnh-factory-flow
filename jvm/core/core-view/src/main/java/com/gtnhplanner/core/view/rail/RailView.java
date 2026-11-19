@@ -4,6 +4,8 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.view.Json;
+
 /**
  * What the overview rail shows, worked out: the three resource sections and the machine list with the numbers they
  * print, under the filter, the peak or average choice and the power dial. A host draws it and adds only what is its own

@@ -36,6 +36,16 @@ public final class Resources {
         return CardDefaults.itemKey(stack);
     }
 
+    /** The stack recipe viewers (NEI) show for a port's ingredient (a fluid's display cell); null when none. */
+    @Nullable
+    public static ItemStack displayStack(final Port<?> port) {
+        if (!(port.getType() instanceof final com.gtnhplanner.data.properties.ResourceProperty<?> type)) return null;
+        @SuppressWarnings("unchecked")
+        final Object stack = ((com.gtnhplanner.data.properties.ResourceProperty<Object>) type)
+            .displayStack(port.getValue());
+        return stack instanceof final ItemStack s ? s : null;
+    }
+
     /** EU: a generator's output, shown in EU/t and drawn as a bolt. */
     public static boolean isPower(final String key) {
         return com.gtnhplanner.power.Energy.KEY.equals(key);

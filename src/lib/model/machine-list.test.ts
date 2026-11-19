@@ -117,8 +117,9 @@ describe("the machine list follows each board card", () => {
     result.nodes.n0!.theoreticalMachinesRequired = 0.25;
     result.nodes["n0#r1"]!.theoreticalMachinesRequired = 0.5;
     result.nodes.n0!.utilization = result.nodes["n0#r1"]!.utilization = 1;
+    // A shared pool bills whole machines at its hungriest recipe at peak: 1 x 24, not 0.75 x 24.
     expect(buildMachineList(p, result)).toEqual([
-      expect.objectContaining({ count: 0.75, euT: 18, avgEuT: 14 }),
+      expect.objectContaining({ count: 0.75, euT: 24, avgEuT: 14 }),
     ]);
   });
 

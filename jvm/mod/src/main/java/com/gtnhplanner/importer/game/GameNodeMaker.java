@@ -133,7 +133,7 @@ public final class GameNodeMaker implements NodeMaker {
         final ItemStack cell = GameIds.stackOf(cellId);
         if (cell == null) return null;
         final String key = CardDefaults.itemKey(cell);
-        if (com.gtnhplanner.power.FluidTank.pair(key) == null) return null;
+        if (com.gtnhplanner.power.FluidTank.pair(key, emptying) == null) return null;
         final Map<String, String> settings = new java.util.LinkedHashMap<>();
         settings.put(
             com.gtnhplanner.power.FluidTank.MODE,

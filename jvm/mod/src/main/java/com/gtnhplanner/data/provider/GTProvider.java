@@ -252,7 +252,8 @@ public class GTProvider implements PropertyProvider {
             if (r.mInputs[i].stackSize <= 0) continue;
             final ItemStack in = copyOf(r.mInputs[i]);
             // The Rock Breaker's lava placeholder (FreeInputs): kept on the card, an amount of 0 so nothing asks for it.
-            if (FreeInputs.isFree(in)) in.stackSize = 0;
+            if (in.getItem() != null && FreeInputs.isFreeId(com.gtnhplanner.importer.game.GameIds.itemId(in)))
+                in.stackSize = 0;
             node.inputs.add(
                 new Port<>(
                     RecipePropertyAPI.ITEM,

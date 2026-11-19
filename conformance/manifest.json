@@ -25,13 +25,15 @@
       "generator": "website-out.json: GTNH_WRITE_GOLDEN=1 vitest run src/test-support/format-conformance.test.ts; mod-out.json: ./gradlew :core-view:test --tests '*FmtConformanceTest*' -PwriteVectors; mod-recipe-overlay-out.json: ./gradlew :mod:test --tests '*RecipeOverlayFormatTest*' -PwriteVectors; COMPARISON.md: node tools/conformance/format/compare.mjs; then node tools/conformance/manifest.mjs --write"
     },
     "layout": {
-      "specifies": "The wire router: every router call the website's router tests make (router-tests.json: solves with boards in and routes out, IncrementalRouter step sequences, cardRimDocks vectors) and the reference boards (boards.json.gz: the layout benchmark's plans as boxes and wires, each routed fresh, its busiest box dragged three beats and dropped), all answered by the website's TypeScript router; the Java router (core-layout) must give the same routes and search work to the bit; and the arrange (arrange.json.gz: every arrange call the website's arrange tests make, and the reference boards up to 80 wires arranged with the router judge, stage by stage and whole, answered by the website's Arrange, plus the optimiser's searches, free placements and proxy scores as it calls them); the Java Arrange (core-layout) must give the same positions, islands and steering stops to the bit.",
+      "specifies": "The wire router: every router call the website's router tests make (router-tests.json: solves with boards in and routes out, IncrementalRouter step sequences, cardRimDocks vectors) and the reference boards (boards.json.gz: the layout benchmark's plans as boxes and wires, each routed fresh, its busiest box dragged three beats and dropped), all answered by the website's TypeScript router; the Java router (core-layout) must give the same routes and search work to the bit; and the arrange (arrange.json.gz: every arrange call the website's arrange tests make, and the reference boards up to 80 wires arranged with the router judge, stage by stage and whole, answered by the website's Arrange, plus the optimiser's searches, free placements and proxy scores as it calls them); the Java Arrange (core-layout) must give the same positions, islands and steering stops to the bit. js-sort.json pins JavaScript's Array.prototype.sort as V8 runs it (consistent orders, equal keys and comparators that are no order at all, written by Node); core-layout's JsSort, through which every list sort of the router and the Arrange goes, must give the same order. tie-board.json.gz is a website board (a grid of 484 cards, 200 wires) whose dock order ties in cycles; the website routes it through the TypeScript and the compiled core on both targets and requires the same routes.",
       "readers": [
         "jvm: core-layout com.gtnhplanner.core.layout.RouterConformanceTest",
         "jvm: core-layout com.gtnhplanner.core.layout.arrange.ArrangeConformanceTest",
-        "jvm: core-layout com.gtnhplanner.core.layout.arrange.ArrangePartsConformanceTest"
+        "jvm: core-layout com.gtnhplanner.core.layout.arrange.ArrangePartsConformanceTest",
+        "jvm: core-layout com.gtnhplanner.core.layout.JsSortTest",
+        "vitest: src/components/flow/layout-core.test.ts"
       ],
-      "generator": "node tools/conformance/layout/generate.mjs [--boards jvm/mod/build/bench/versus/boards]"
+      "generator": "node tools/conformance/layout/generate.mjs [--boards jvm/mod/build/bench/versus/boards] ; node tools/conformance/layout/js-sort.mjs"
     },
     "live": {
       "specifies": "The live-plan op engine: every rule of put, patch, del, meta, apply, diff and invert as a vector (plan, ops, expected result), run by both engines.",
@@ -49,6 +51,13 @@
         "website: src/lib/core/machines-shadow.test.ts (machine-goldens and website-test-inputs through the TypeScript and the compiled core)"
       ],
       "generator": "machine-goldens: npx tsx tools/audits/export-mod-machine-goldens.ts --out conformance/machines/machine-goldens.jsonl.gz --dataset stable-2.9.0-tuxmine --rates recipeDurationDivisor=64,beesYield=4,ic2CropsYield=4 (the instance's dataset, checksumSha256 7c6fbe83d7be4863518e88c615b0299033d7a4b6c4e32bb497225979ac35b3c2, at its pack's GTNHRates config); crop-goldens: npx tsx tools/audits/export-mod-crop-goldens.ts --out conformance/machines/crop-goldens.jsonl.gz --dataset stable-2.9.0-tuxmine (same dataset); bee-goldens: BEE_GOLDENS_OUT=$PWD/conformance/machines/bee-goldens.jsonl.gz node node_modules/vitest/vitest.mjs run --config jvm/mod/tools/dev/bees/vitest.bees.config.mjs; reference-coefficients: see src/lib/machines/CLAUDE.md; website-test-inputs: node tools/audits/machine-test-inputs/record.mjs"
+    },
+    "model": {
+      "specifies": "The plan model's resource rules both sides hold: wiring.json, which wires a plan allows (a slot takes its own resource and what its recipe lists in its place, never an item that only shares an ore name with them).",
+      "readers": [
+        "website: src/lib/model/wiring-conformance.test.ts (resourceMatchesInput)",
+        "core-model: core/model/ResourcesTest (Wiring.accepts)"
+      ]
     },
     "pending": {
       "specifies": "Files that disagree with a copy in the tree and wait for a decision. No suite reads them. Each subdirectory says in its README.md what it is and which file it would replace.",
@@ -110,10 +119,10 @@
       "generator": "website: src/lib/tasks/order-key.ts"
     },
     "view": {
-      "specifies": "The overview rail and the notices bar as view records: rail-cases.json is plan read-outs (flows, drawers, machines, spares and the player's view) with the rail the website's code makes of each (sections, lines, setters, spares, machine groups, power totals and the dial); notice-cases.json is the solver's notes with the notice list made of them (id, severity, word key, arguments, focus); rail-math.json is the rate box, share and wheel arithmetic, the peak machine count and the power dial. Numbers are raw; each host spells them with its own formatter. Optional fields are absent, never null.",
+      "specifies": "The shared view model's records as an envelope per file (record, set, measure, cases or vectors; see view/README.md): rail/cases.json is plan read-outs (flows, drawers, machines, spares and the player's view) with the rail the website's code makes of each (sections, lines, setters, spares, machine groups, power totals and the dial); notices/cases.json is the solver's notes with the notice list made of them (id, severity, word key, arguments, focus); rail/math.json is the rate box, share and wheel arithmetic, the peak machine count and the power dial. Numbers are raw; each host spells them with its own formatter. Optional fields are absent, never null. Every file names the text measure it was computed with.",
       "readers": [
-        "jvm: core-view com.gtnhplanner.core.view.rail.RailConformanceTest",
-        "website: src/components/flow/clean/rail/rail-conformance.test.ts"
+        "jvm: core-view com.gtnhplanner.core.view.rail.RailCasesTest, NoticeCasesTest, RailMathVectorsTest",
+        "website: src/components/flow/clean/rail/rail-conformance.test.ts, src/test-support/view-corpus.test.ts"
       ],
       "generator": "npx tsx tools/conformance/view/generate.ts, then node tools/conformance/manifest.mjs --write"
     }
@@ -174,10 +183,20 @@
       "bytes": 355403,
       "sha256": "df8629460a87d6e64533be8dbdd5af66aa0c50f1f901e2cad0acff53ee9296cd"
     },
+    "layout/js-sort.json": {
+      "area": "layout",
+      "bytes": 540029,
+      "sha256": "dea1356ed128c5ab5854f04c26efd6e8c6247f4873bfe61628f9dc2efe54dc82"
+    },
     "layout/router-tests.json": {
       "area": "layout",
       "bytes": 1688373,
       "sha256": "6dacfaedf0c5eb1744e2e4f774747b5c56b0bd246006f2ad73653697d2f385d7"
+    },
+    "layout/tie-board.json.gz": {
+      "area": "layout",
+      "bytes": 36172,
+      "sha256": "3b40ff396076bab48dd61058a12759ef1b78021d5f4ddfc108485e240cf6c3ae"
     },
     "live/live-vectors.json": {
       "area": "live",
@@ -208,6 +227,11 @@
       "area": "machines",
       "bytes": 120878,
       "sha256": "9264f9be65f716e43774850747604716dbc9b2733eb30e629cf246be89cc1678"
+    },
+    "model/wiring.json": {
+      "area": "model",
+      "bytes": 5513,
+      "sha256": "7d7a0579c86468b5878af00810433ce97c762a82d12d8b9e009295d6eea338a6"
     },
     "plans/invalid/fuel-profile-empty-id.json": {
       "area": "plans",
@@ -1124,20 +1148,40 @@
       "bytes": 6601,
       "sha256": "dad06cb14862c075382f2b43fdffb9edfed3b8534cc221add8dbf7e3bf6a8664"
     },
-    "view/notice-cases.json": {
+    "view/drawer/cases.json": {
       "area": "view",
-      "bytes": 32444,
-      "sha256": "634bebd79490fcb3eb3ba197e2dce52739b74b6ee3e6d4f60373978238250600"
+      "bytes": 140126,
+      "sha256": "410ba66170bc7e82dcfbed3a3e61a6e9539964894dc24b8910addca4b06a293a"
     },
-    "view/rail-cases.json": {
+    "view/group/cases.json": {
       "area": "view",
-      "bytes": 483180,
-      "sha256": "c5e97342b72116cf6293d0b274249defd94e4980240c800b4b1c536f42bde87c"
+      "bytes": 16300,
+      "sha256": "5589c24af6f41a5ddcc3da29c9c253ca80662aa578c71f3eaa180f5188d134fe"
     },
-    "view/rail-math.json": {
+    "view/note/look.json": {
       "area": "view",
-      "bytes": 46714,
-      "sha256": "0788bdc578a1adf1ac578d1665a8c998001b46222b68398d2e1519b7486df174"
+      "bytes": 4891,
+      "sha256": "893ad1786a962fb0a433273d6088c970c436c554dfeed52f59cb3ee60f081020"
+    },
+    "view/notices/cases.json": {
+      "area": "view",
+      "bytes": 34399,
+      "sha256": "9606d40b87918431085c3156f079bbab1aef50f08fcaf057629b7e54a9a6ad59"
+    },
+    "view/rail/cases.json": {
+      "area": "view",
+      "bytes": 536951,
+      "sha256": "2909fe9f9188bee9e7e6fd2552cfb2f6a617b6031ab9d0b646fcc8c336be92c4"
+    },
+    "view/rail/math.json": {
+      "area": "view",
+      "bytes": 50150,
+      "sha256": "22971d9861d228fb888024f62a76afe3653573900fe503ae9cbeedd3ef15ee25"
+    },
+    "view/records.json": {
+      "area": "view",
+      "bytes": 10479,
+      "sha256": "cc2558961fa8eb028cf8c9134e96b70bd0c410973ded2d11a4fcf4f6a0933113"
     }
   }
 }

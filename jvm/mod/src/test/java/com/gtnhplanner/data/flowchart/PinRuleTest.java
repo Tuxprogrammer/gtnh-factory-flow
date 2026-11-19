@@ -65,10 +65,12 @@ class PinRuleTest {
         final Node n = card();
         PinRule.set(n, PinRule.EXACT, 3.4);
         assertEquals(PinRule.EXACT, PinRule.of(n));
-        assertEquals(3, n.machineConfig.getMachineCount());
+        assertEquals(3.4, n.machineConfig.machineCount(), "a fraction is kept, as the website keeps it");
+        assertEquals(4, n.machineConfig.getMachineCount(), "in whole machines, rounded up");
         PinRule.set(n, PinRule.UP_TO, 0.2);
         assertEquals(PinRule.UP_TO, PinRule.of(n));
-        assertEquals(1, n.machineConfig.getMachineCount(), "at least one machine");
+        assertEquals(0.2, n.machineConfig.machineCount());
+        assertEquals(1, n.machineConfig.getMachineCount(), "a part of a machine is a machine to build");
         PinRule.set(n, PinRule.EXACT, 0);
         assertEquals(PinRule.ANY, PinRule.of(n), "no count is Any");
         PinRule.set(n, PinRule.UP_TO, Double.NaN);

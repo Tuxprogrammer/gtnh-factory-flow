@@ -6,6 +6,7 @@ import {
   runRouteSolveJob,
   type EncodedRouteSolveJob,
 } from "./grid-route-job";
+import { loadLayoutCore } from "./layout-core";
 import { loadRoutes, saveRoutes } from "./route-memory";
 
 /**
@@ -19,8 +20,12 @@ import { loadRoutes, saveRoutes } from "./route-memory";
  * `grid-route-solve.ts` and `FactoryFlow.tsx`.
  */
 
-/** Jobs run one after another, the stored routes read in between. */
-let queue: Promise<void> = Promise.resolve();
+/**
+ * Jobs run one after another, the stored routes read in between. The first waits for the compiled core when the
+ * layout area is on (`layout-core.ts`; a load that fails leaves the TypeScript router), so every plan this worker
+ * routes keeps one router from its first job.
+ */
+let queue: Promise<unknown> = loadLayoutCore();
 /** Plans whose stored routes were already asked for this session. */
 const asked = new Set<string>();
 const saveTimers = new Map<string, ReturnType<typeof setTimeout>>();

@@ -504,7 +504,11 @@ public final class Serializer {
         }
         obj.addProperty("handlerRecipeIndex", node.handlerRecipeIndex);
         obj.addProperty("extractorIndex", node.getExtractorIndex());
-        obj.addProperty("machineCount", node.machineConfig.getMachineCount());
+        // A whole count as the whole number it always was; a fraction (a website pin of 0.5) as it is.
+        final double count = node.machineConfig.machineCount();
+        if (Math.floor(count) == count && Math.abs(count) <= Integer.MAX_VALUE)
+            obj.addProperty("machineCount", (int) count);
+        else obj.addProperty("machineCount", count);
         if (node.isMachineCountFixed()) {
             obj.addProperty("machineCountFixed", true);
         }
@@ -606,7 +610,7 @@ public final class Serializer {
         if (obj.has("machineCount")) {
             node.machineConfig.setMachineCount(
                 obj.get("machineCount")
-                    .getAsInt());
+                    .getAsDouble());
         }
         node.setMachineCountFixed(
             obj.has("machineCountFixed") && obj.get("machineCountFixed")

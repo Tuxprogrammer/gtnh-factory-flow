@@ -9,7 +9,6 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import org.ojalgo.optimisation.Variable;
 
 import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.DrawerTypes;
@@ -433,7 +432,7 @@ public final class UpToRead {
     /** A drawer's total as row terms, over {@code scale}. */
     private static Solver.Terms drawerTerms(final SolveContext ctx, final Handles h, final int d, final double scale) {
         final ModelData.DrawerRow row = ctx.model.drawers.get(d);
-        final Solver.Terms t = new Solver.Terms();
+        final Solver.Terms t = new Solver.Terms(h.lp());
         for (int i = 0; i < row.extentMachines().length; i++)
             t.add(h.extentVars()[row.extentMachines()[i]], row.extentQty()[i] / scale);
         for (final int e : row.flowEdges()) t.add(h.flowVars()[e], 1 / scale);
@@ -457,14 +456,16 @@ public final class UpToRead {
         } finally {
             ctx.droppedPools.remove(pool);
         }
-        final Solver.Terms terms = new Solver.Terms();
+        final Solver.Terms terms = new Solver.Terms(h.lp());
         for (final int q : fedPools) terms.addAll(Solver.levelTerms(ctx, h, q));
         for (final Unmet u : fedDrawers) {
             // Its met fraction: f in 0..1 with total / target - f >= 0.
-            final Variable f = h.model()
-                .addVariable("met_" + u.drawer())
-                .lower(0)
-                .upper(1);
+            final int f = h.lp()
+                .addColumn("met_" + u.drawer());
+            h.lp()
+                .columnLower(f, 0);
+            h.lp()
+                .columnUpper(f, 1);
             drawerTerms(ctx, h, u.drawer(), u.target()).add(f, -1)
                 .row(h, "met_" + u.drawer(), 0, Double.POSITIVE_INFINITY);
             terms.add(f, 1);

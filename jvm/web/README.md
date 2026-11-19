@@ -123,7 +123,8 @@ one runs and `coreInfo().fellBack` why. `loadCore({ target })` pins a target and
 `:core-solver` compiles with three stand-ins for what ojAlgo 57 asks of the JVM (`overrides.txt`, and the `T*` classlib
 stubs in `src/main/java/org/teavm/classlib`): `DaemonPoolExecutor` runs a task on the calling thread when it is submitted,
 `MultiviewSet` swaps a concurrent set for a plain one, and the stubs add the thread, executor, adder and management classes
-that TeaVM's classlib lacks. The core solves on one thread (`Parallel` uses `Worker.INLINE` by default), as the browser has
+that TeaVM's classlib lacks. One more override is for speed only: `DenseTableau` is ojAlgo's own, its equilibration walking
+the non-zero entries row by row (the same values; the dense scan was 17% of the heaviest plan's solve). The core solves on one thread (`Parallel` uses `Worker.INLINE` by default), as the browser has
 none. `SolverExports.solverSolve(json)` takes the solve input in the JSON `SolveInputJson` writes and returns the answer in
 the corpus's golden format; `SolverCodec` reads and writes both with `JsonTree` (no reflection, no Gson). The run solves the
 whole corpus in `conformance/solver/` on both targets and compares it as `SolverGoldenTest` and `UpToParityTest` do. It also

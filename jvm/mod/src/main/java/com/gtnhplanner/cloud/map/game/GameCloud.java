@@ -113,7 +113,7 @@ public final class GameCloud implements CloudGame {
 
     @Override
     public double machines(final Node node) {
-        return node.machineConfig.getMachineCount();
+        return node.machineConfig.machineCount();
     }
 
     @Override

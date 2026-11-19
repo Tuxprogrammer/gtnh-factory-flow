@@ -1,4 +1,4 @@
-package com.gtnhplanner.power;
+package com.gtnhplanner.core.base;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -7,14 +7,12 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import com.gtnhplanner.core.base.NumberText;
-
 /**
- * A small JSON reader for the workbook and resource tables: objects become ordered maps, arrays lists, numbers
- * doubles (as JavaScript reads them), strings, booleans, and null stays null. No reflection, so the same code runs
- * where Gson cannot.
+ * A small JSON reader and writer for the core's tables and exchange text: objects become ordered maps, arrays lists,
+ * numbers doubles (as JavaScript reads them), strings, booleans, and null stays null. No reflection, so the same code
+ * runs where Gson cannot (the web compile). {@link #write} is the way back, spelling numbers with {@link NumberText}.
  */
-final class JsonTree {
+public final class JsonTree {
 
     private final String text;
     private int at;
@@ -25,7 +23,7 @@ final class JsonTree {
 
     /** The value a JSON document holds. */
     @Nullable
-    static Object parse(final String text) {
+    public static Object parse(final String text) {
         final JsonTree reader = new JsonTree(text);
         final Object value = reader.value();
         reader.space();
@@ -36,37 +34,120 @@ final class JsonTree {
     // ---- typed reads of a parsed tree; an absent or null field reads as 0, null or empty
 
     @SuppressWarnings("unchecked")
-    static Map<String, Object> object(@Nullable final Object value) {
+    public static Map<String, Object> object(@Nullable final Object value) {
         return value instanceof Map ? (Map<String, Object>) value : new LinkedHashMap<>();
     }
 
     @SuppressWarnings("unchecked")
-    static List<Object> array(@Nullable final Object value) {
+    public static List<Object> array(@Nullable final Object value) {
         return value instanceof List ? (List<Object>) value : new ArrayList<>();
     }
 
-    static double num(final Map<String, Object> from, final String key) {
+    public static double num(final Map<String, Object> from, final String key) {
         return from.get(key) instanceof Double ? (Double) from.get(key) : 0;
     }
 
     @Nullable
-    static Double boxed(final Map<String, Object> from, final String key) {
+    public static Double boxed(final Map<String, Object> from, final String key) {
         return from.get(key) instanceof Double ? (Double) from.get(key) : null;
     }
 
     @Nullable
-    static String str(final Map<String, Object> from, final String key) {
+    public static String str(final Map<String, Object> from, final String key) {
         return from.get(key) instanceof String ? (String) from.get(key) : null;
     }
 
     /** A ladder: numbers with null where the table has none. Null when the field is absent. */
     @Nullable
-    static Double[] ladder(final Map<String, Object> from, final String key) {
+    public static Double[] ladder(final Map<String, Object> from, final String key) {
         if (!(from.get(key) instanceof List)) return null;
         final List<Object> list = array(from.get(key));
         final Double[] out = new Double[list.size()];
         for (int i = 0; i < out.length; i++) out[i] = list.get(i) instanceof Double ? (Double) list.get(i) : null;
         return out;
+    }
+
+    @Nullable
+    public static Boolean bool(final Map<String, Object> from, final String key) {
+        return from.get(key) instanceof Boolean ? (Boolean) from.get(key) : null;
+    }
+
+    // ---- writer
+
+    /**
+     * The compact JSON text of a tree (maps, lists, strings, numbers, booleans, null): keys in map order, numbers as
+     * {@code JSON.stringify} spells them (non-finite as null), strings escaped as it escapes them.
+     */
+    public static String write(@Nullable final Object tree) {
+        final StringBuilder out = new StringBuilder();
+        write(out, tree);
+        return out.toString();
+    }
+
+    private static void write(final StringBuilder out, @Nullable final Object value) {
+        if (value == null) out.append("null");
+        else if (value instanceof String) quote(out, (String) value);
+        else if (value instanceof Boolean) out.append(((Boolean) value).booleanValue() ? "true" : "false");
+        else if (value instanceof Number) out.append(NumberText.json(((Number) value).doubleValue()));
+        else if (value instanceof Map) {
+            out.append('{');
+            boolean first = true;
+            for (final Map.Entry<?, ?> e : ((Map<?, ?>) value).entrySet()) {
+                if (!first) out.append(',');
+                first = false;
+                quote(out, String.valueOf(e.getKey()));
+                out.append(':');
+                write(out, e.getValue());
+            }
+            out.append('}');
+        } else if (value instanceof Iterable) {
+            out.append('[');
+            boolean first = true;
+            for (final Object item : (Iterable<?>) value) {
+                if (!first) out.append(',');
+                first = false;
+                write(out, item);
+            }
+            out.append(']');
+        } else throw new IllegalArgumentException("Not a JSON value: " + value.getClass().getName());
+    }
+
+    private static void quote(final StringBuilder out, final String text) {
+        out.append('"');
+        for (int i = 0; i < text.length(); i++) {
+            final char c = text.charAt(i);
+            switch (c) {
+                case '"':
+                    out.append("\\\"");
+                    break;
+                case '\\':
+                    out.append("\\\\");
+                    break;
+                case '\n':
+                    out.append("\\n");
+                    break;
+                case '\r':
+                    out.append("\\r");
+                    break;
+                case '\t':
+                    out.append("\\t");
+                    break;
+                case '\b':
+                    out.append("\\b");
+                    break;
+                case '\f':
+                    out.append("\\f");
+                    break;
+                default:
+                    if (c < 0x20) {
+                        out.append("\\u00")
+                            .append(Character.forDigit(c >> 4, 16))
+                            .append(Character.forDigit(c & 15, 16));
+                    } else out.append(c);
+                    break;
+            }
+        }
+        out.append('"');
     }
 
     // ---- reader
@@ -118,6 +199,7 @@ final class JsonTree {
         final Map<String, Object> out = new LinkedHashMap<>();
         at++;
         space();
+        if (at >= text.length()) throw fail("unexpected end");
         if (text.charAt(at) == '}') {
             at++;
             return out;
@@ -142,6 +224,7 @@ final class JsonTree {
         final List<Object> out = new ArrayList<>();
         at++;
         space();
+        if (at >= text.length()) throw fail("unexpected end");
         if (text.charAt(at) == ']') {
             at++;
             return out;

@@ -347,7 +347,7 @@ public final class RailBuilder {
             final Double sp = spared.get(line.key());
             final double left = Math.max(0, line.amount() - (sp == null ? 0 : sp));
             if (left <= Math.max(EPS, line.amount() * 1e-4) && line.drawers().isEmpty() && line.pins().isEmpty()
-                && !(view.keepOpen() && !line.open().isEmpty())) continue;
+                && !(view.keepsOpen() && !line.open().isEmpty())) continue;
             kept.add(withAmount(line, left));
         }
         final List<RailView.Line> shown = new ArrayList<>();

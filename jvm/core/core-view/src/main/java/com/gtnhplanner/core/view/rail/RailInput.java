@@ -72,10 +72,15 @@ public record RailInput(boolean answered, Map<String, String> aliases, List<Flow
      * {@code keepOpen}: the host sets a rate on an unwired port from its line, so a line with such a port stays listed
      * at zero.
      */
-    public record ViewIn(String filter, boolean peak, String power, boolean keepOpen) {
+    public record ViewIn(String filter, boolean peak, String power, @Nullable Boolean keepOpen) {
 
         public ViewIn(final String filter, final boolean peak, final String power) {
-            this(filter, peak, power, false);
+            this(filter, peak, power, null);
+        }
+
+        /** Whether open ports keep their line listed at zero. */
+        public boolean keepsOpen() {
+            return Boolean.TRUE.equals(keepOpen);
         }
     }
 }

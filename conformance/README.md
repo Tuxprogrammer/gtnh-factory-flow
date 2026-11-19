@@ -16,6 +16,7 @@ conformance/
   live/              live-plan op vectors
   tasks/             task order-key vectors
   format/            how the website and the mod spell numbers: one value list, each side's answers, and the generated table of differences
+  view/              the shared view model: <record>/<set>.json envelopes (rail, notices, ...), the website's views of input records; see view/README.md
   core-base/         the kernel's value vectors: number-text (JavaScript's spelling of doubles) and uuid (java.util.UUID)
   schema/            JSON Schema for the plan, blueprint payload, dataset and solver data, generated from the Zod schemas
   plans/             plan files both sides read: valid/, invalid/, website/ (what the website writes), mod/ (what the mod writes)

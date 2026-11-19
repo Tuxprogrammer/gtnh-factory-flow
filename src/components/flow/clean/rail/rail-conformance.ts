@@ -16,6 +16,7 @@ import {
 import type { PlanNote, PlanSolveExtras } from "@/lib/solver/plan/types";
 import type { ThroughputResult } from "@/lib/model/types";
 import { peakCount } from "@/lib/model/peak-count";
+import { viewEnvelope } from "@/test-support/view-corpus";
 import { GT_VOLTAGE_TIERS } from "@/lib/model/tiers";
 import { noticeInput } from "./notices";
 import {
@@ -61,7 +62,7 @@ export interface RailCase {
 export interface NoticeCase {
   name: string;
   input: NoticeInput;
-  notices: CoreNotice[];
+  view: CoreNotice[];
 }
 
 type View = RailInput["view"];
@@ -379,6 +380,164 @@ function sparesCase(): RailInput {
   });
 }
 
+/**
+ * Direct cases for what the mod's deleted `RailTotalsTest` covered: how the lists form from the flows, and how machine
+ * lines read (a tank left out, a shared machine as one line, a steam line, the peak count a line is billed).
+ */
+function directCases(): Array<[string, RailInput]> {
+  const open = (output: boolean, key: string, perSecond: number) =>
+    port({ output, key, perSecond });
+  const wiredPort = (output: boolean, key: string, perSecond: number) =>
+    port({ output, key, perSecond, wired: true });
+  return [
+    [
+      "lists: in, out and inside, biggest first",
+      base({
+        flows: [
+          flow("a", [open(false, "item:ore", 2), open(true, "item:dust", 2)]),
+          flow("b", [
+            open(false, "item:dust", 1),
+            open(true, "item:slag", 3),
+            open(false, "item:gem", 5),
+          ]),
+        ],
+      }),
+    ],
+    [
+      "lists: unwired ports of a card that runs nothing stay at zero",
+      base({
+        flows: [
+          flow("a", [open(false, "item:plate", 4), open(true, "item:rod", 4)], { machines: 0 }),
+        ],
+      }),
+    ],
+    [
+      "lists: a failed solve keeps unwired ports at zero",
+      base({
+        answered: false,
+        flows: [flow("a", [open(false, "item:plate", 4), open(true, "item:rod", 4)])],
+      }),
+    ],
+    [
+      "lists: one card's unwired output is another's unwired input, both lines stay",
+      base({
+        flows: [
+          flow("cutter", [open(true, "item:plate", 2)]),
+          flow("press", [open(false, "item:plate", 2)]),
+        ],
+      }),
+    ],
+    [
+      "lists: zero lines follow the flowing ones, ports before drawers, each once",
+      base({
+        flows: [
+          flow("a", [open(false, "item:ore", 2)]),
+          flow("b", [open(false, "item:coal", 1)], { machines: 0 }),
+        ],
+        drawers: [
+          drawer({ id: "d-tin", role: "source", resourceId: "tin", label: "tin" }),
+          drawer({ id: "d-coal", role: "source", resourceId: "coal", label: "coal" }),
+          drawer({ id: "d-log", role: "source", resourceId: "log", label: "log" }),
+          drawer({ id: "d-ingot", role: "product", resourceId: "ingot", label: "ingot" }),
+        ],
+      }),
+    ],
+    [
+      "lists: trash leaves what it voids out of the outputs",
+      base({
+        flows: [flow("a", [wiredPort(true, "item:slag", 3)])],
+        drawers: [
+          drawer({ id: "t", role: "trash", resourceId: "slag", label: "slag", eaten: 3 }),
+        ],
+      }),
+    ],
+    [
+      "machines: every machine listed at zero too, a fluid tank left out",
+      base({
+        machines: [
+          machine({ nodeId: "comp", label: "Compressor", count: 0, euT: 0, avgEuT: 0, tier: "LV" }),
+          machine({ nodeId: "cutter", label: "Cutter", count: 0.5, euT: 32, avgEuT: 16, tier: "LV" }),
+          machine({ nodeId: "tank", label: "Fluid Tank", count: 1, tank: true }),
+          machine({ nodeId: "saw", label: "Saw", count: 2, euT: 64, avgEuT: 64, tier: "LV" }),
+        ],
+      }),
+    ],
+    [
+      "machines: a shared machine is one line, billed as whole machines of its pool at the hungriest recipe",
+      base({
+        machines: [
+          machine({ nodeId: "bender", label: "Bender", count: 0.75, euT: 24, avgEuT: 14, tier: "LV" }),
+          machine({ nodeId: "saw", label: "Saw", count: 1, euT: 8, avgEuT: 8, tier: "LV" }),
+        ],
+      }),
+    ],
+    [
+      "machines: a shared machine with a set count is billed that count, or its pool when more",
+      base({
+        machines: [
+          machine({
+            nodeId: "bender",
+            label: "Bender",
+            count: 0.75,
+            pinned: true,
+            rule: "at-most",
+            pin: 2,
+            euT: 48,
+            avgEuT: 14,
+            tier: "LV",
+          }),
+          machine({
+            nodeId: "press",
+            label: "Press",
+            count: 3.75,
+            pinned: true,
+            rule: "at-most",
+            pin: 2,
+            euT: 90,
+            avgEuT: 80,
+            tier: "LV",
+          }),
+        ],
+      }),
+    ],
+    [
+      "machines: a steam line burns steam at peak or average",
+      withView(
+        base({
+          machines: [
+            machine({
+              nodeId: "boiler",
+              label: "Boiler",
+              count: 1.75,
+              steamLs: 6 * 20 * 2,
+              avgSteamLs: 6 * 20 * 1.25 + 3 * 20 * 0.5,
+            }),
+            machine({ nodeId: "calm", label: "Calm", count: 3 }),
+          ],
+        }),
+        { peak: true },
+      ),
+    ],
+    [
+      "machines: a steam line on the average",
+      withView(
+        base({
+          machines: [
+            machine({
+              nodeId: "boiler",
+              label: "Boiler",
+              count: 1.75,
+              steamLs: 240,
+              avgSteamLs: 180,
+            }),
+          ],
+        }),
+        { peak: false },
+      ),
+    ],
+  ];
+}
+
 function handCases(): RailCase[] {
   const cases: Array<[string, RailInput]> = [
     ["empty plan", base({ answered: true })],
@@ -401,6 +560,7 @@ function handCases(): RailCase[] {
     ["spares with a stored split and depths", sparesCase()],
     ["spares, filter on a place's name", withView(sparesCase(), { filter: "steel" })],
     ["spares, filter that hides them", withView(sparesCase(), { filter: "zzz" })],
+    ...directCases(),
   ];
   return cases.map(([name, input]) => ({ name, input, view: railViewOf(input) }));
 }
@@ -633,7 +793,7 @@ export function noticeCases(): NoticeCase[] {
   return [...handNoticeCases(), ...mockNoticeCases()].map(([name, input]) => ({
     name,
     input,
-    notices: noticeList(input),
+    view: noticeList(input),
   }));
 }
 
@@ -682,6 +842,8 @@ export function mathVectors() {
     [2.000001, undefined, false], [0, undefined, false], [-0.5, undefined, false], [0.25, 0, false], [0.25, -1, false],
     [0.25, 1, false], [1.5, 1, false], [1.5, 3, false], [3, 3, false], [0.25, undefined, true], [1.5, undefined, true],
     [1.5, 3, true], [0, 2, true], [0, 2, false], [1e-10, undefined, false], [100.4, undefined, false],
+    // A shared machine's pool, billed as one card.
+    [0.75, undefined, false], [0.75, 2, false], [3.75, 2, false],
   ];
   const dials: Array<[string, string | undefined]> = [];
   for (const unit of ["eu", "amps", ...TIERS]) {
@@ -732,12 +894,11 @@ export function mathVectors() {
 
 // endregion
 
-/** The files of `conformance/view/` as the code makes them now, by name. */
+/** The files of `conformance/view/` this family writes, by path under it (`conformance/view/README.md`). */
 export function viewFiles(): Record<string, string> {
-  const text = (value: unknown) => `${JSON.stringify(value, null, 1)}\n`;
   return {
-    "rail-cases.json": text(railCases()),
-    "notice-cases.json": text(noticeCases()),
-    "rail-math.json": text(mathVectors()),
+    "rail/cases.json": viewEnvelope("rail", "cases", "none", { cases: railCases() }),
+    "notices/cases.json": viewEnvelope("notices", "cases", "none", { cases: noticeCases() }),
+    "rail/math.json": viewEnvelope("rail", "math", "none", { vectors: mathVectors() }),
   };
 }

@@ -1,0 +1,1972 @@
+{
+ "record": "notices",
+ "set": "cases",
+ "measure": "none",
+ "cases": [
+  {
+   "name": "nothing to say",
+   "input": {
+    "hasNodes": true,
+    "loops": [],
+    "notes": []
+   },
+   "view": []
+  },
+  {
+   "name": "no pin on a plan with cards",
+   "input": {
+    "hasNodes": true,
+    "loops": [],
+    "notes": [],
+    "failure": {
+     "kind": "NO_PIN",
+     "names": [],
+     "focus": []
+    }
+   },
+   "view": [
+    {
+     "id": "no-pin",
+     "severity": "info",
+     "key": "gtnhplanner.notice.noPin",
+     "args": [],
+     "focus": []
+    }
+   ]
+  },
+  {
+   "name": "no pin on an empty plan",
+   "input": {
+    "hasNodes": false,
+    "loops": [],
+    "notes": [],
+    "failure": {
+     "kind": "NO_PIN",
+     "names": [],
+     "focus": []
+    }
+   },
+   "view": []
+  },
+  {
+   "name": "empty graph",
+   "input": {
+    "hasNodes": true,
+    "loops": [],
+    "notes": [],
+    "failure": {
+     "kind": "EMPTY_GRAPH",
+     "names": [],
+     "focus": []
+    }
+   },
+   "view": []
+  },
+  {
+   "name": "pin conflict names one",
+   "input": {
+    "hasNodes": true,
+    "loops": [],
+    "notes": [],
+    "failure": {
+     "kind": "PIN_CONFLICT",
+     "names": [
+      "Saw"
+     ],
+     "focus": [
+      "a"
+     ]
+    }
+   },
+   "view": [
+    {
+     "id": "pin-conflict",
+     "severity": "error",
+     "key": "gtnhplanner.notice.pinConflict",
+     "args": [
+      {
+       "kind": "names",
+       "list": [
+        "Saw"
+       ]
+      }
+     ],
+     "focus": [
+      "a"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "pin conflict names three",
+   "input": {
+    "hasNodes": true,
+    "loops": [],
+    "notes": [],
+    "failure": {
+     "kind": "PIN_CONFLICT",
+     "names": [
+      "Saw",
+      "Mixer",
+      "Kiln"
+     ],
+     "focus": [
+      "a",
+      "b"
+     ]
+    }
+   },
+   "view": [
+    {
+     "id": "pin-conflict",
+     "severity": "error",
+     "key": "gtnhplanner.notice.pinConflict",
+     "args": [
+      {
+       "kind": "names",
+       "list": [
+        "Saw",
+        "Mixer",
+        "Kiln"
+       ]
+      }
+     ],
+     "focus": [
+      "a",
+      "b"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "cannot run",
+   "input": {
+    "hasNodes": true,
+    "loops": [],
+    "notes": [],
+    "failure": {
+     "kind": "CANNOT_RUN",
+     "names": [],
+     "focus": []
+    }
+   },
+   "view": [
+    {
+     "id": "cannot-run",
+     "severity": "error",
+     "key": "gtnhplanner.notice.cannotRun",
+     "args": [],
+     "focus": []
+    }
+   ]
+  },
+  {
+   "name": "no way",
+   "input": {
+    "hasNodes": true,
+    "loops": [],
+    "notes": [],
+    "failure": {
+     "kind": "NO_WAY",
+     "names": [],
+     "focus": []
+    }
+   },
+   "view": [
+    {
+     "id": "no-way",
+     "severity": "error",
+     "key": "gtnhplanner.notice.noWay",
+     "args": [],
+     "focus": []
+    }
+   ]
+  },
+  {
+   "name": "unknown failure",
+   "input": {
+    "hasNodes": true,
+    "loops": [],
+    "notes": [],
+    "failure": {
+     "kind": "FAILED",
+     "names": [],
+     "focus": []
+    }
+   },
+   "view": [
+    {
+     "id": "failed",
+     "severity": "error",
+     "key": "gtnhplanner.notice.failed",
+     "args": [],
+     "focus": []
+    }
+   ]
+  },
+  {
+   "name": "loops of one and many cards, a loop with none",
+   "input": {
+    "hasNodes": true,
+    "loops": [
+     {
+      "kind": "DEAD_LOOP",
+      "cards": [
+       "a"
+      ]
+     },
+     {
+      "kind": "CLOG_LOCK",
+      "cards": [
+       "b",
+       "c"
+      ]
+     },
+     {
+      "kind": "DEAD_LOOP",
+      "cards": []
+     },
+     {
+      "kind": "CLOG_LOCK",
+      "cards": [
+       "d"
+      ]
+     },
+     {
+      "kind": "DEAD_LOOP",
+      "cards": [
+       "e",
+       "f"
+      ]
+     }
+    ],
+    "notes": []
+   },
+   "view": [
+    {
+     "id": "loop:DEAD_LOOP:a",
+     "severity": "error",
+     "key": "gtnhplanner.loop.dead.one",
+     "args": [],
+     "focus": [
+      "a"
+     ],
+     "tag": "gtnhplanner.loop.dead.tag",
+     "loop": "dead"
+    },
+    {
+     "id": "loop:CLOG_LOCK:b,c",
+     "severity": "error",
+     "key": "gtnhplanner.loop.clog.many",
+     "args": [],
+     "focus": [
+      "b",
+      "c"
+     ],
+     "tag": "gtnhplanner.loop.clog.tag",
+     "loop": "clog"
+    },
+    {
+     "id": "loop:CLOG_LOCK:d",
+     "severity": "error",
+     "key": "gtnhplanner.loop.clog.one",
+     "args": [],
+     "focus": [
+      "d"
+     ],
+     "tag": "gtnhplanner.loop.clog.tag",
+     "loop": "clog"
+    },
+    {
+     "id": "loop:DEAD_LOOP:e,f",
+     "severity": "error",
+     "key": "gtnhplanner.loop.dead.many",
+     "args": [],
+     "focus": [
+      "e",
+      "f"
+     ],
+     "tag": "gtnhplanner.loop.dead.tag",
+     "loop": "dead"
+    }
+   ]
+  },
+  {
+   "name": "unmet in every wording",
+   "input": {
+    "hasNodes": true,
+    "loops": [],
+    "notes": [
+     {
+      "type": "UNMET",
+      "id": "s1",
+      "label": "Iron",
+      "resource": "item",
+      "supply": true,
+      "exact": false,
+      "asked": 10,
+      "reached": 6,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": []
+     },
+     {
+      "type": "UNMET",
+      "id": "s2",
+      "label": "Iron",
+      "resource": "item",
+      "supply": true,
+      "exact": true,
+      "asked": 10,
+      "reached": 6,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": []
+     },
+     {
+      "type": "UNMET",
+      "id": "s3",
+      "label": "Gold",
+      "resource": "item",
+      "supply": true,
+      "exact": false,
+      "asked": 4,
+      "reached": 7,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": []
+     },
+     {
+      "type": "UNMET",
+      "id": "d1",
+      "label": "Plate",
+      "resource": "item",
+      "supply": false,
+      "exact": false,
+      "asked": 10,
+      "reached": 6,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": []
+     },
+     {
+      "type": "UNMET",
+      "id": "d2",
+      "label": "Plate",
+      "resource": "item",
+      "supply": false,
+      "exact": true,
+      "asked": 10,
+      "reached": 6,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": []
+     },
+     {
+      "type": "UNMET",
+      "id": "d3",
+      "label": "Rod",
+      "resource": "item",
+      "supply": false,
+      "exact": false,
+      "asked": 4,
+      "reached": 7,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": []
+     },
+     {
+      "type": "UNMET",
+      "id": "f1",
+      "label": "Water",
+      "resource": "fluid",
+      "supply": false,
+      "exact": false,
+      "asked": 1500,
+      "reached": 900,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": []
+     },
+     {
+      "type": "UNMET",
+      "id": "p1",
+      "label": "Power",
+      "resource": "power",
+      "supply": false,
+      "exact": false,
+      "asked": 4096,
+      "reached": 1000,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": []
+     }
+    ]
+   },
+   "view": [
+    {
+     "id": "unmet:s1",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.unmet.under.supply",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Iron"
+      },
+      {
+       "kind": "rate",
+       "value": 10,
+       "unit": "item"
+      },
+      {
+       "kind": "rate",
+       "value": 6,
+       "unit": "item"
+      }
+     ],
+     "focus": []
+    },
+    {
+     "id": "unmet:s2",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.unmet.under.supplyExact",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Iron"
+      },
+      {
+       "kind": "rate",
+       "value": 10,
+       "unit": "item"
+      },
+      {
+       "kind": "rate",
+       "value": 6,
+       "unit": "item"
+      }
+     ],
+     "focus": []
+    },
+    {
+     "id": "unmet:s3",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.unmet.over.supply",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Gold"
+      },
+      {
+       "kind": "rate",
+       "value": 4,
+       "unit": "item"
+      },
+      {
+       "kind": "rate",
+       "value": 7,
+       "unit": "item"
+      }
+     ],
+     "focus": []
+    },
+    {
+     "id": "unmet:d1",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.unmet.under.drawer",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Plate"
+      },
+      {
+       "kind": "rate",
+       "value": 10,
+       "unit": "item"
+      },
+      {
+       "kind": "rate",
+       "value": 6,
+       "unit": "item"
+      }
+     ],
+     "focus": []
+    },
+    {
+     "id": "unmet:d2",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.unmet.under.drawerExact",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Plate"
+      },
+      {
+       "kind": "rate",
+       "value": 10,
+       "unit": "item"
+      },
+      {
+       "kind": "rate",
+       "value": 6,
+       "unit": "item"
+      }
+     ],
+     "focus": []
+    },
+    {
+     "id": "unmet:d3",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.unmet.over.drawer",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Rod"
+      },
+      {
+       "kind": "rate",
+       "value": 4,
+       "unit": "item"
+      },
+      {
+       "kind": "rate",
+       "value": 7,
+       "unit": "item"
+      }
+     ],
+     "focus": []
+    },
+    {
+     "id": "unmet:f1",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.unmet.under.drawer",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Water"
+      },
+      {
+       "kind": "rate",
+       "value": 1500,
+       "unit": "fluid"
+      },
+      {
+       "kind": "rate",
+       "value": 900,
+       "unit": "fluid"
+      }
+     ],
+     "focus": []
+    },
+    {
+     "id": "unmet:p1",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.unmet.under.drawer",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Power"
+      },
+      {
+       "kind": "rate",
+       "value": 4096,
+       "unit": "power"
+      },
+      {
+       "kind": "rate",
+       "value": 1000,
+       "unit": "power"
+      }
+     ],
+     "focus": []
+    }
+   ]
+  },
+  {
+   "name": "unmet with holders of every kind",
+   "input": {
+    "hasNodes": true,
+    "loops": [],
+    "notes": [
+     {
+      "type": "UNMET",
+      "id": "h",
+      "label": "Steel",
+      "resource": "item",
+      "supply": false,
+      "exact": false,
+      "asked": 10,
+      "reached": 4,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": true,
+      "holders": [
+       {
+        "kind": "exact",
+        "name": "Saw"
+       },
+       {
+        "kind": "full",
+        "name": "Mixer"
+       },
+       {
+        "kind": "starved",
+        "name": "Kiln"
+       },
+       {
+        "kind": "clogged",
+        "name": "Press"
+       },
+       {
+        "kind": "unused",
+        "name": "Cutter"
+       },
+       {
+        "kind": "limited",
+        "name": "Bender"
+       },
+       {
+        "kind": "drawer",
+        "name": "Coal"
+       }
+      ],
+      "subject": "",
+      "focus": [
+       "h",
+       "a",
+       "b"
+      ]
+     },
+     {
+      "type": "UNMET",
+      "id": "h2",
+      "label": "Steel",
+      "resource": "item",
+      "supply": true,
+      "exact": false,
+      "asked": 10,
+      "reached": 4,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": true,
+      "holders": [],
+      "subject": "",
+      "focus": []
+     }
+    ]
+   },
+   "view": [
+    {
+     "id": "unmet:h",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.unmet.short.drawer",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Steel"
+      },
+      {
+       "kind": "rate",
+       "value": 4,
+       "unit": "item"
+      },
+      {
+       "kind": "rate",
+       "value": 10,
+       "unit": "item"
+      },
+      {
+       "kind": "holders",
+       "holders": [
+        {
+         "kind": "exact",
+         "name": "Saw"
+        },
+        {
+         "kind": "full",
+         "name": "Mixer"
+        },
+        {
+         "kind": "starved",
+         "name": "Kiln"
+        },
+        {
+         "kind": "clogged",
+         "name": "Press"
+        },
+        {
+         "kind": "unused",
+         "name": "Cutter"
+        },
+        {
+         "kind": "limited",
+         "name": "Bender"
+        },
+        {
+         "kind": "drawer",
+         "name": "Coal"
+        }
+       ]
+      }
+     ],
+     "focus": [
+      "h",
+      "a",
+      "b"
+     ]
+    },
+    {
+     "id": "unmet:h2",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.unmet.short.supply",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Steel"
+      },
+      {
+       "kind": "rate",
+       "value": 4,
+       "unit": "item"
+      },
+      {
+       "kind": "rate",
+       "value": 10,
+       "unit": "item"
+      },
+      {
+       "kind": "holders",
+       "holders": []
+      }
+     ],
+     "focus": []
+    }
+   ]
+  },
+  {
+   "name": "overshoot, port taken, unwired, ignored, choice",
+   "input": {
+    "hasNodes": true,
+    "loops": [],
+    "notes": [
+     {
+      "type": "OVERSHOOT",
+      "id": "m:Plate",
+      "label": "Plate",
+      "resource": "item",
+      "supply": false,
+      "exact": false,
+      "asked": 0,
+      "reached": 0,
+      "made": 12,
+      "target": 8,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "Bender",
+      "focus": [
+       "m"
+      ]
+     },
+     {
+      "type": "OVERSHOOT",
+      "id": "m:Oil",
+      "label": "Oil",
+      "resource": "fluid",
+      "supply": false,
+      "exact": false,
+      "asked": 0,
+      "reached": 0,
+      "made": 1200,
+      "target": 1000,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "Cracker",
+      "focus": [
+       "m"
+      ]
+     },
+     {
+      "type": "PORT_TAKEN",
+      "id": "p1",
+      "label": "Iron",
+      "resource": "item",
+      "supply": true,
+      "exact": false,
+      "asked": 3,
+      "reached": 0,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": []
+     },
+     {
+      "type": "PORT_TAKEN",
+      "id": "p2",
+      "label": "Iron",
+      "resource": "item",
+      "supply": true,
+      "exact": true,
+      "asked": 3,
+      "reached": 0,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": []
+     },
+     {
+      "type": "PORT_TAKEN",
+      "id": "p3",
+      "label": "Plate",
+      "resource": "item",
+      "supply": false,
+      "exact": false,
+      "asked": 3,
+      "reached": 0,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": []
+     },
+     {
+      "type": "PORT_TAKEN",
+      "id": "p4",
+      "label": "Plate",
+      "resource": "fluid",
+      "supply": false,
+      "exact": true,
+      "asked": 3,
+      "reached": 0,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": []
+     },
+     {
+      "type": "NOT_CONNECTED",
+      "id": "u1",
+      "label": "Coal",
+      "resource": "item",
+      "supply": false,
+      "exact": false,
+      "asked": 0,
+      "reached": 0,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": [
+       "u1"
+      ]
+     },
+     {
+      "type": "WIRED_IGNORED",
+      "id": "w1",
+      "label": "Sand",
+      "resource": "item",
+      "supply": false,
+      "exact": false,
+      "asked": 0,
+      "reached": 0,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": [
+       "w1",
+       "x"
+      ]
+     },
+     {
+      "type": "CHOICE",
+      "id": "",
+      "label": "",
+      "resource": "item",
+      "supply": false,
+      "exact": false,
+      "asked": 0,
+      "reached": 0,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": []
+     },
+     {
+      "type": "SOMETHING_ELSE",
+      "id": "q",
+      "label": "",
+      "resource": "item",
+      "supply": false,
+      "exact": false,
+      "asked": 0,
+      "reached": 0,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": []
+     }
+    ]
+   },
+   "view": [
+    {
+     "id": "overshoot:m:Plate",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.overshoot",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Bender"
+      },
+      {
+       "kind": "rate",
+       "value": 12,
+       "unit": "item"
+      },
+      {
+       "kind": "text",
+       "text": "Plate"
+      },
+      {
+       "kind": "rate",
+       "value": 8,
+       "unit": "item"
+      }
+     ],
+     "focus": [
+      "m"
+     ]
+    },
+    {
+     "id": "overshoot:m:Oil",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.overshoot",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Cracker"
+      },
+      {
+       "kind": "rate",
+       "value": 1200,
+       "unit": "fluid"
+      },
+      {
+       "kind": "text",
+       "text": "Oil"
+      },
+      {
+       "kind": "rate",
+       "value": 1000,
+       "unit": "fluid"
+      }
+     ],
+     "focus": [
+      "m"
+     ]
+    },
+    {
+     "id": "unmet:p1",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.portTaken.supply",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Iron"
+      },
+      {
+       "kind": "rate",
+       "value": 3,
+       "unit": "item"
+      }
+     ],
+     "focus": []
+    },
+    {
+     "id": "unmet:p2",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.portTaken.supplyExact",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Iron"
+      },
+      {
+       "kind": "rate",
+       "value": 3,
+       "unit": "item"
+      }
+     ],
+     "focus": []
+    },
+    {
+     "id": "unmet:p3",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.portTaken.drawer",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Plate"
+      },
+      {
+       "kind": "rate",
+       "value": 3,
+       "unit": "item"
+      }
+     ],
+     "focus": []
+    },
+    {
+     "id": "unmet:p4",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.portTaken.drawerExact",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Plate"
+      },
+      {
+       "kind": "rate",
+       "value": 3,
+       "unit": "fluid"
+      }
+     ],
+     "focus": []
+    },
+    {
+     "id": "unwired:u1",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.unwired",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Coal"
+      }
+     ],
+     "focus": [
+      "u1"
+     ]
+    },
+    {
+     "id": "ignored:w1",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.ignored",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Sand"
+      }
+     ],
+     "focus": [
+      "w1",
+      "x"
+     ]
+    },
+    {
+     "id": "choice",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.choice",
+     "args": [],
+     "focus": []
+    }
+   ]
+  },
+  {
+   "name": "the order: failure, alarms, warnings, then the rest",
+   "input": {
+    "hasNodes": true,
+    "loops": [
+     {
+      "kind": "DEAD_LOOP",
+      "cards": [
+       "a"
+      ]
+     }
+    ],
+    "notes": [
+     {
+      "type": "CHOICE",
+      "id": "",
+      "label": "",
+      "resource": "item",
+      "supply": false,
+      "exact": false,
+      "asked": 0,
+      "reached": 0,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": []
+     },
+     {
+      "type": "UNMET",
+      "id": "s1",
+      "label": "Iron",
+      "resource": "item",
+      "supply": true,
+      "exact": false,
+      "asked": 10,
+      "reached": 6,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": []
+     },
+     {
+      "type": "NOT_CONNECTED",
+      "id": "u1",
+      "label": "Coal",
+      "resource": "item",
+      "supply": false,
+      "exact": false,
+      "asked": 0,
+      "reached": 0,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": []
+     }
+    ],
+    "failure": {
+     "kind": "NO_WAY",
+     "names": [],
+     "focus": []
+    }
+   },
+   "view": [
+    {
+     "id": "no-way",
+     "severity": "error",
+     "key": "gtnhplanner.notice.noWay",
+     "args": [],
+     "focus": []
+    },
+    {
+     "id": "loop:DEAD_LOOP:a",
+     "severity": "error",
+     "key": "gtnhplanner.loop.dead.one",
+     "args": [],
+     "focus": [
+      "a"
+     ],
+     "tag": "gtnhplanner.loop.dead.tag",
+     "loop": "dead"
+    },
+    {
+     "id": "unmet:s1",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.unmet.under.supply",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Iron"
+      },
+      {
+       "kind": "rate",
+       "value": 10,
+       "unit": "item"
+      },
+      {
+       "kind": "rate",
+       "value": 6,
+       "unit": "item"
+      }
+     ],
+     "focus": []
+    },
+    {
+     "id": "choice",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.choice",
+     "args": [],
+     "focus": []
+    },
+    {
+     "id": "unwired:u1",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.unwired",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Coal"
+      }
+     ],
+     "focus": []
+    }
+   ]
+  },
+  {
+   "name": "the same sentence twice is said once",
+   "input": {
+    "hasNodes": true,
+    "loops": [],
+    "notes": [
+     {
+      "type": "UNMET",
+      "id": "a",
+      "label": "Iron",
+      "resource": "item",
+      "supply": false,
+      "exact": false,
+      "asked": 10,
+      "reached": 6,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": []
+     },
+     {
+      "type": "UNMET",
+      "id": "b",
+      "label": "Iron",
+      "resource": "item",
+      "supply": false,
+      "exact": false,
+      "asked": 10,
+      "reached": 6,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": []
+     },
+     {
+      "type": "UNMET",
+      "id": "c",
+      "label": "Iron",
+      "resource": "item",
+      "supply": false,
+      "exact": false,
+      "asked": 10,
+      "reached": 7,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": []
+     },
+     {
+      "type": "CHOICE",
+      "id": "",
+      "label": "",
+      "resource": "item",
+      "supply": false,
+      "exact": false,
+      "asked": 0,
+      "reached": 0,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": []
+     },
+     {
+      "type": "CHOICE",
+      "id": "",
+      "label": "",
+      "resource": "item",
+      "supply": false,
+      "exact": false,
+      "asked": 0,
+      "reached": 0,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": []
+     }
+    ]
+   },
+   "view": [
+    {
+     "id": "unmet:a",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.unmet.under.drawer",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Iron"
+      },
+      {
+       "kind": "rate",
+       "value": 10,
+       "unit": "item"
+      },
+      {
+       "kind": "rate",
+       "value": 6,
+       "unit": "item"
+      }
+     ],
+     "focus": []
+    },
+    {
+     "id": "unmet:c",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.unmet.under.drawer",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Iron"
+      },
+      {
+       "kind": "rate",
+       "value": 10,
+       "unit": "item"
+      },
+      {
+       "kind": "rate",
+       "value": 7,
+       "unit": "item"
+      }
+     ],
+     "focus": []
+    },
+    {
+     "id": "choice",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.choice",
+     "args": [],
+     "focus": []
+    }
+   ]
+  },
+  {
+   "name": "Forced flows: as solved",
+   "input": {
+    "hasNodes": true,
+    "loops": [],
+    "notes": []
+   },
+   "view": []
+  },
+  {
+   "name": "Leftovers and spares: as solved",
+   "input": {
+    "hasNodes": true,
+    "loops": [],
+    "notes": []
+   },
+   "view": []
+  },
+  {
+   "name": "Unneeded and unanchored: as solved",
+   "input": {
+    "hasNodes": true,
+    "loops": [],
+    "notes": [
+     {
+      "resource": "item",
+      "supply": false,
+      "exact": false,
+      "asked": 10,
+      "reached": 6,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": [
+       "steel"
+      ],
+      "type": "UNMET",
+      "id": "steel",
+      "label": "Steel Plate"
+     }
+    ]
+   },
+   "view": [
+    {
+     "id": "unmet:steel",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.unmet.under.drawer",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Steel Plate"
+      },
+      {
+       "kind": "rate",
+       "value": 10,
+       "unit": "item"
+      },
+      {
+       "kind": "rate",
+       "value": 6,
+       "unit": "item"
+      }
+     ],
+     "focus": [
+      "steel"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Up to counts: as solved",
+   "input": {
+    "hasNodes": true,
+    "loops": [],
+    "notes": []
+   },
+   "view": []
+  },
+  {
+   "name": "Dead loop and clog lock: as solved",
+   "input": {
+    "hasNodes": true,
+    "loops": [
+     {
+      "kind": "DEAD_LOOP",
+      "cards": [
+       "ra",
+       "rb",
+       "rc"
+      ]
+     },
+     {
+      "kind": "CLOG_LOCK",
+      "cards": [
+       "split",
+       "make"
+      ]
+     }
+    ],
+    "notes": []
+   },
+   "view": [
+    {
+     "id": "loop:DEAD_LOOP:ra,rb,rc",
+     "severity": "error",
+     "key": "gtnhplanner.loop.dead.many",
+     "args": [],
+     "focus": [
+      "ra",
+      "rb",
+      "rc"
+     ],
+     "tag": "gtnhplanner.loop.dead.tag",
+     "loop": "dead"
+    },
+    {
+     "id": "loop:CLOG_LOCK:split,make",
+     "severity": "error",
+     "key": "gtnhplanner.loop.clog.many",
+     "args": [],
+     "focus": [
+      "split",
+      "make"
+     ],
+     "tag": "gtnhplanner.loop.clog.tag",
+     "loop": "clog"
+    }
+   ]
+  },
+  {
+   "name": "Unneeded and unanchored: exact unmet",
+   "input": {
+    "hasNodes": true,
+    "loops": [],
+    "notes": [
+     {
+      "resource": "item",
+      "supply": false,
+      "exact": true,
+      "asked": 10,
+      "reached": 6,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": [
+       "steel"
+      ],
+      "type": "UNMET",
+      "id": "steel",
+      "label": "Steel Plate"
+     }
+    ]
+   },
+   "view": [
+    {
+     "id": "unmet:steel",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.unmet.under.drawerExact",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Steel Plate"
+      },
+      {
+       "kind": "rate",
+       "value": 10,
+       "unit": "item"
+      },
+      {
+       "kind": "rate",
+       "value": 6,
+       "unit": "item"
+      }
+     ],
+     "focus": [
+      "steel"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Unneeded and unanchored: overshoot",
+   "input": {
+    "hasNodes": true,
+    "loops": [],
+    "notes": [
+     {
+      "resource": "item",
+      "supply": false,
+      "exact": false,
+      "asked": 0,
+      "reached": 0,
+      "made": 12,
+      "target": 8,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "Compressor",
+      "focus": [],
+      "type": "OVERSHOOT",
+      "id": "compressor:Steel Plate",
+      "label": "Steel Plate"
+     }
+    ]
+   },
+   "view": [
+    {
+     "id": "overshoot:compressor:Steel Plate",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.overshoot",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Compressor"
+      },
+      {
+       "kind": "rate",
+       "value": 12,
+       "unit": "item"
+      },
+      {
+       "kind": "text",
+       "text": "Steel Plate"
+      },
+      {
+       "kind": "rate",
+       "value": 8,
+       "unit": "item"
+      }
+     ],
+     "focus": []
+    }
+   ]
+  },
+  {
+   "name": "Unneeded and unanchored: failure no pin",
+   "input": {
+    "failure": {
+     "kind": "NO_PIN",
+     "names": [],
+     "focus": []
+    },
+    "hasNodes": true,
+    "loops": [],
+    "notes": [
+     {
+      "resource": "item",
+      "supply": false,
+      "exact": false,
+      "asked": 10,
+      "reached": 6,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": [
+       "steel"
+      ],
+      "type": "UNMET",
+      "id": "steel",
+      "label": "Steel Plate"
+     }
+    ]
+   },
+   "view": [
+    {
+     "id": "unmet:steel",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.unmet.under.drawer",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Steel Plate"
+      },
+      {
+       "kind": "rate",
+       "value": 10,
+       "unit": "item"
+      },
+      {
+       "kind": "rate",
+       "value": 6,
+       "unit": "item"
+      }
+     ],
+     "focus": [
+      "steel"
+     ]
+    },
+    {
+     "id": "no-pin",
+     "severity": "info",
+     "key": "gtnhplanner.notice.noPin",
+     "args": [],
+     "focus": []
+    }
+   ]
+  },
+  {
+   "name": "Unneeded and unanchored: failure empty graph",
+   "input": {
+    "failure": {
+     "kind": "EMPTY_GRAPH",
+     "names": [],
+     "focus": []
+    },
+    "hasNodes": true,
+    "loops": [],
+    "notes": [
+     {
+      "resource": "item",
+      "supply": false,
+      "exact": false,
+      "asked": 10,
+      "reached": 6,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": [
+       "steel"
+      ],
+      "type": "UNMET",
+      "id": "steel",
+      "label": "Steel Plate"
+     }
+    ]
+   },
+   "view": [
+    {
+     "id": "unmet:steel",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.unmet.under.drawer",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Steel Plate"
+      },
+      {
+       "kind": "rate",
+       "value": 10,
+       "unit": "item"
+      },
+      {
+       "kind": "rate",
+       "value": 6,
+       "unit": "item"
+      }
+     ],
+     "focus": [
+      "steel"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Unneeded and unanchored: failure cannot run",
+   "input": {
+    "failure": {
+     "kind": "CANNOT_RUN",
+     "names": [],
+     "focus": []
+    },
+    "hasNodes": true,
+    "loops": [],
+    "notes": [
+     {
+      "resource": "item",
+      "supply": false,
+      "exact": false,
+      "asked": 10,
+      "reached": 6,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": [
+       "steel"
+      ],
+      "type": "UNMET",
+      "id": "steel",
+      "label": "Steel Plate"
+     }
+    ]
+   },
+   "view": [
+    {
+     "id": "cannot-run",
+     "severity": "error",
+     "key": "gtnhplanner.notice.cannotRun",
+     "args": [],
+     "focus": []
+    },
+    {
+     "id": "unmet:steel",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.unmet.under.drawer",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Steel Plate"
+      },
+      {
+       "kind": "rate",
+       "value": 10,
+       "unit": "item"
+      },
+      {
+       "kind": "rate",
+       "value": 6,
+       "unit": "item"
+      }
+     ],
+     "focus": [
+      "steel"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Unneeded and unanchored: failure no way",
+   "input": {
+    "failure": {
+     "kind": "NO_WAY",
+     "names": [],
+     "focus": []
+    },
+    "hasNodes": true,
+    "loops": [],
+    "notes": [
+     {
+      "resource": "item",
+      "supply": false,
+      "exact": false,
+      "asked": 10,
+      "reached": 6,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": [
+       "steel"
+      ],
+      "type": "UNMET",
+      "id": "steel",
+      "label": "Steel Plate"
+     }
+    ]
+   },
+   "view": [
+    {
+     "id": "no-way",
+     "severity": "error",
+     "key": "gtnhplanner.notice.noWay",
+     "args": [],
+     "focus": []
+    },
+    {
+     "id": "unmet:steel",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.unmet.under.drawer",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Steel Plate"
+      },
+      {
+       "kind": "rate",
+       "value": 10,
+       "unit": "item"
+      },
+      {
+       "kind": "rate",
+       "value": 6,
+       "unit": "item"
+      }
+     ],
+     "focus": [
+      "steel"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Unneeded and unanchored: failure unknown",
+   "input": {
+    "failure": {
+     "kind": "FAILED",
+     "names": [],
+     "focus": []
+    },
+    "hasNodes": true,
+    "loops": [],
+    "notes": [
+     {
+      "resource": "item",
+      "supply": false,
+      "exact": false,
+      "asked": 10,
+      "reached": 6,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": [
+       "steel"
+      ],
+      "type": "UNMET",
+      "id": "steel",
+      "label": "Steel Plate"
+     }
+    ]
+   },
+   "view": [
+    {
+     "id": "failed",
+     "severity": "error",
+     "key": "gtnhplanner.notice.failed",
+     "args": [],
+     "focus": []
+    },
+    {
+     "id": "unmet:steel",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.unmet.under.drawer",
+     "args": [
+      {
+       "kind": "text",
+       "text": "Steel Plate"
+      },
+      {
+       "kind": "rate",
+       "value": 10,
+       "unit": "item"
+      },
+      {
+       "kind": "rate",
+       "value": 6,
+       "unit": "item"
+      }
+     ],
+     "focus": [
+      "steel"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Unneeded and unanchored: choice no longer fits",
+   "input": {
+    "hasNodes": true,
+    "loops": [],
+    "notes": [
+     {
+      "resource": "item",
+      "supply": false,
+      "exact": false,
+      "asked": 0,
+      "reached": 0,
+      "made": 0,
+      "target": 0,
+      "hasShortfall": false,
+      "holders": [],
+      "subject": "",
+      "focus": [],
+      "type": "CHOICE",
+      "id": "",
+      "label": ""
+     }
+    ]
+   },
+   "view": [
+    {
+     "id": "choice",
+     "severity": "warn",
+     "key": "gtnhplanner.notice.choice",
+     "args": [],
+     "focus": []
+    }
+   ]
+  }
+ ]
+}

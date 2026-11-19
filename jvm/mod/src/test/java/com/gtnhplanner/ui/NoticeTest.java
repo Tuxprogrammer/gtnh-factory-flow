@@ -19,7 +19,7 @@ import com.gtnhplanner.harness.LangText;
 
 /**
  * The board's notice rows: a ring's alarm chip and the row keeping its words whole however narrow the board. What the
- * notices say and their order are the core's ({@code Notices}, conformance/view/notice-cases.json).
+ * notices say and their order are the core's ({@code Notices}, conformance/view/notices/cases.json).
  */
 class NoticeTest {
 

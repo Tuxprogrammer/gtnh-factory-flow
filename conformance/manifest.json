@@ -109,10 +109,10 @@
       "generator": "website: src/lib/tasks/order-key.ts"
     },
     "view": {
-      "specifies": "The overview rail and the notices bar as view records: rail-cases.json is plan read-outs (flows, drawers, machines, spares and the player's view) with the rail the website's code makes of each (sections, lines, setters, spares, machine groups, power totals and the dial); notice-cases.json is the solver's notes with the notice list made of them (id, severity, word key, arguments, focus); rail-math.json is the rate box, share and wheel arithmetic, the peak machine count and the power dial. Numbers are raw; each host spells them with its own formatter. Optional fields are absent, never null.",
+      "specifies": "The shared view model's records as an envelope per file (record, set, measure, cases or vectors; see view/README.md): rail/cases.json is plan read-outs (flows, drawers, machines, spares and the player's view) with the rail the website's code makes of each (sections, lines, setters, spares, machine groups, power totals and the dial); notices/cases.json is the solver's notes with the notice list made of them (id, severity, word key, arguments, focus); rail/math.json is the rate box, share and wheel arithmetic, the peak machine count and the power dial. Numbers are raw; each host spells them with its own formatter. Optional fields are absent, never null. Every file names the text measure it was computed with.",
       "readers": [
-        "jvm: core-view com.gtnhplanner.core.view.rail.RailConformanceTest",
-        "website: src/components/flow/clean/rail/rail-conformance.test.ts"
+        "jvm: core-view com.gtnhplanner.core.view.rail.RailCasesTest, NoticeCasesTest, RailMathVectorsTest",
+        "website: src/components/flow/clean/rail/rail-conformance.test.ts, src/test-support/view-corpus.test.ts"
       ],
       "generator": "npx tsx tools/conformance/view/generate.ts, then node tools/conformance/manifest.mjs --write"
     }
@@ -1108,20 +1108,40 @@
       "bytes": 6601,
       "sha256": "dad06cb14862c075382f2b43fdffb9edfed3b8534cc221add8dbf7e3bf6a8664"
     },
-    "view/notice-cases.json": {
+    "view/drawer/cases.json": {
       "area": "view",
-      "bytes": 32444,
-      "sha256": "634bebd79490fcb3eb3ba197e2dce52739b74b6ee3e6d4f60373978238250600"
+      "bytes": 140126,
+      "sha256": "410ba66170bc7e82dcfbed3a3e61a6e9539964894dc24b8910addca4b06a293a"
     },
-    "view/rail-cases.json": {
+    "view/group/cases.json": {
       "area": "view",
-      "bytes": 483180,
-      "sha256": "c5e97342b72116cf6293d0b274249defd94e4980240c800b4b1c536f42bde87c"
+      "bytes": 16300,
+      "sha256": "5589c24af6f41a5ddcc3da29c9c253ca80662aa578c71f3eaa180f5188d134fe"
     },
-    "view/rail-math.json": {
+    "view/note/look.json": {
       "area": "view",
-      "bytes": 46714,
-      "sha256": "0788bdc578a1adf1ac578d1665a8c998001b46222b68398d2e1519b7486df174"
+      "bytes": 4891,
+      "sha256": "893ad1786a962fb0a433273d6088c970c436c554dfeed52f59cb3ee60f081020"
+    },
+    "view/notices/cases.json": {
+      "area": "view",
+      "bytes": 34399,
+      "sha256": "9606d40b87918431085c3156f079bbab1aef50f08fcaf057629b7e54a9a6ad59"
+    },
+    "view/rail/cases.json": {
+      "area": "view",
+      "bytes": 536951,
+      "sha256": "2909fe9f9188bee9e7e6fd2552cfb2f6a617b6031ab9d0b646fcc8c336be92c4"
+    },
+    "view/rail/math.json": {
+      "area": "view",
+      "bytes": 50150,
+      "sha256": "22971d9861d228fb888024f62a76afe3653573900fe503ae9cbeedd3ef15ee25"
+    },
+    "view/records.json": {
+      "area": "view",
+      "bytes": 10479,
+      "sha256": "cc2558961fa8eb028cf8c9134e96b70bd0c410973ded2d11a4fcf4f6a0933113"
     }
   }
 }

@@ -40,28 +40,29 @@ describe("a buffer drawer (docs/buffer-drawers.md)", () => {
     expect(view.kind).toBe("buffer");
     expect(view.number).toBe("12");
     expect(view.glanceRate).toBe("12");
-    // No rule key or rate box: a buffer passes what its users take.
-    expect(view.hasRule).toBe(false);
+    // A rule key and a rate box like a product's, on Any until one is set.
+    expect(view.hasRule).toBe(true);
+    expect(view.rule).toBe("ignore");
     expect(view.tips.body.sub).toBe("Buffer");
     expect(view.tips.body.rows).toEqual([{ label: "Passes", value: "12 /s" }]);
     expect(drawerMixes("buffer").tint).toBe("#2E9C8F");
   });
-  it("has no rule: a stored one (an older plan's, or from when it was a product) shows nothing and asks for nothing", () => {
+  it("carries a rule: a stored one (an older plan's, or from when it was a product) applies and asks for its rate", () => {
     const view = buildDrawerView({
       ...base,
       storage: storage({ targetPerSecond: 20, targetMode: "at-least" }),
       role: "buffer",
       result: { netPerSecond: 0, producedPerSecond: 10 } as never,
       unmet: true,
-      unanchored: true,
     });
     expect([view.hasRule, view.rule, view.target, view.unmet, view.prompt]).toEqual([
-      false,
-      "ignore",
-      undefined,
-      false,
+      true,
+      "at-least",
+      { number: "20", unit: "/s" },
+      true,
       false,
     ]);
+    expect(view.progress).toBeCloseTo(0.5, 9);
   });
   it("totals what its makers force out on a Forced out tile, and says it happens at the makers", () => {
     const view = buildDrawerView({

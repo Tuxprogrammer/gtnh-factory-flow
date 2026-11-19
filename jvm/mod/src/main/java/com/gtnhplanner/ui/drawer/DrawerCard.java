@@ -16,6 +16,7 @@ import com.cleanroommc.modularui.theme.WidgetThemeEntry;
 import com.cleanroommc.modularui.widget.Widget;
 import com.cleanroommc.modularui.widget.sizer.Area;
 import com.gtnhplanner.core.base.Uuid;
+import com.gtnhplanner.core.view.drawer.DrawerView;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.ui.BoardSession;
 import com.gtnhplanner.ui.canvas.BoardCanvas;
@@ -260,6 +261,7 @@ public final class DrawerCard extends Widget<DrawerCard> implements Interactable
         // The row, as it was on the card: the resource, what the plan moves through it, its name, and under them its
         // rule key and rate box (trash: what it does).
         final Fmt.RateUnit unit = session.rateUnit();
+        final DrawerView view = m.view(unit, session.unset(drawerId));
         final boolean out = outputLook(), trash = kind == Drawer.Kind.TRASH;
         final int ink = m.rate <= 0 ? DrawerPaint.IDLE_INK
             : trash ? DrawerPaint.TRASH_INK : Hyb.mix(DrawerPaint.tint(kind), Hyb.INK, 0.75f);
@@ -270,7 +272,7 @@ public final class DrawerCard extends Widget<DrawerCard> implements Interactable
             m.item,
             m.fluid,
             m.isPower(),
-            Fmt.compact(m.shown(m.rate, unit)),
+            view.number(),
             m.suffix(unit, false),
             m.label,
             ink,
@@ -287,7 +289,10 @@ public final class DrawerCard extends Widget<DrawerCard> implements Interactable
                 0,
                 m.rule,
                 null,
-                empty ? null : Fmt.compact(m.shown(target, unit)),
+                empty ? null
+                    : wheeled != null || view.target() == null ? Fmt.compact(m.shown(target, unit))
+                        : view.target()
+                            .number(),
                 m.suffix(unit, true),
                 null,
                 hover == Part.RULE,
@@ -310,6 +315,18 @@ public final class DrawerCard extends Widget<DrawerCard> implements Interactable
             false,
             null);
         org.lwjgl.opengl.GL11.glPopMatrix();
+        // A buffer's makers force out more than its users take: the sum, on a tile under the drawer (its tip says
+        // more).
+        if (view.spill() != null) {
+            final String forced = "Forced out " + view.spill()
+                .number()
+                + view.spill()
+                    .unit();
+            final int width = Hyb.width(forced) + 6;
+            final int tile = Hyb.mix(DrawerPaint.tint(Drawer.Kind.PRODUCT), Hyb.INK, 0.6f);
+            Hyb.rect(0, H + 1, width, 11, tile);
+            Hyb.text(forced, 3, H + 3, Hyb.mix(DrawerPaint.tint(Drawer.Kind.PRODUCT), Hyb.MUTED, 0.3f));
+        }
         // The delete key, at the bar's left end, while the mouse is on the drawer or it is selected.
         if (hover != null || session.showsSelected(drawerId)) {
             final int[] del = partRect(Part.DELETE);
@@ -378,82 +395,47 @@ public final class DrawerCard extends Widget<DrawerCard> implements Interactable
         };
     }
 
-    /** The tooltip for the part under the mouse: what it is, its figures, what the mouse does. */
+    /** The tooltip for the part under the mouse: the core's words for it ({@code DrawerView.tips}), drawn here. */
     public com.gtnhplanner.ui.popup.Tip tip() {
         if (model == null || !isHovering()) return null;
         final Part part = partAt(localX(), localY());
-        final Fmt.RateUnit unit = session.rateUnit();
-        final DrawerModel m = model;
-        return switch (part) {
-            case DELETE -> com.gtnhplanner.ui.popup.Tip.of("Delete this drawer")
-                .action(com.gtnhplanner.ui.popup.Tip.Input.LEFT, "Delete");
-            case BAR -> com.gtnhplanner.ui.popup.Tip.of(m.label)
-                .sub(kindName(m.kind))
-                .action(com.gtnhplanner.ui.popup.Tip.Input.DRAG, "Move")
-                .action(com.gtnhplanner.ui.popup.Tip.Input.LEFT, "Select");
-            case RULE -> m.kind == Drawer.Kind.TRASH ? com.gtnhplanner.ui.popup.Tip.of("Trash")
-                .muted("It voids what comes in: it leaves the plan without being one of its outputs.")
-                .action(com.gtnhplanner.ui.popup.Tip.Input.LEFT, "Keep it instead")
-                : com.gtnhplanner.ui.popup.Tip.of("Rule")
-                    .sub(ruleLabel(m.rule))
-                    .muted(ruleMeaning(m.kind, m.rule))
-                    .action(com.gtnhplanner.ui.popup.Tip.Input.LEFT, "Pick")
-                    .action(com.gtnhplanner.ui.popup.Tip.Input.WHEEL, "Next")
-                    .action(com.gtnhplanner.ui.popup.Tip.Input.MIDDLE, "Clear");
-            case RATE -> {
-                final com.gtnhplanner.ui.popup.Tip tip = com.gtnhplanner.ui.popup.Tip
-                    .of(m.rule == Drawer.Rule.ANY ? "No rate yet" : "Target rate");
-                if (m.rule != Drawer.Rule.ANY) tip.row(ruleLabel(m.rule), m.rate(m.target, unit));
-                if (m.shortfall != null) tip.row("Reaches", m.rate(m.shortfall.reachable(), unit), Hyb.RED_INK);
-                yield tip.action(com.gtnhplanner.ui.popup.Tip.Input.LEFT, "Type (2.5k, 1/3)")
-                    .action(com.gtnhplanner.ui.popup.Tip.Input.WHEEL, "+1, Ctrl 10, Shift 100")
-                    .action(com.gtnhplanner.ui.popup.Tip.Input.MIDDLE, "Clear");
-            }
-            default -> {
-                final com.gtnhplanner.ui.popup.Tip tip = com.gtnhplanner.ui.popup.Tip.of(m.label)
-                    .sub(kindName(m.kind))
+        final DrawerView view = model.view(session.rateUnit(), session.unset(drawerId));
+        final DrawerView.Tips tips = view.tips();
+        if (part != Part.DELETE && part != Part.BAR && part != Part.RULE && part != Part.RATE) {
+            // The body also says what the buffer forces out: its tile is not a part of its own here.
+            final com.gtnhplanner.ui.popup.Tip tip = com.gtnhplanner.ui.popup.Tip.of(
+                tips.body()
+                    .title());
+            if (tips.body()
+                .sub() != null)
+                tip.sub(
+                    tips.body()
+                        .sub());
+            com.gtnhplanner.ui.popup.TipViews.body(tip, tips.body());
+            if (view.spill() != null) {
+                tip.gap()
                     .row(
-                        m.kind == Drawer.Kind.SOURCE ? "Supplies" : m.kind == Drawer.Kind.BUFFER ? "Passes" : "Takes",
-                        m.rate(m.rate, unit));
-                if (m.kind == Drawer.Kind.BUFFER) tip.muted("Its makers put in what its users take out.");
-                if (!m.linked) tip.note("Unconnected", com.gtnhplanner.ui.popup.Tip.WARN);
-                if (m.shortfall != null) tip.note(
-                    "Reaches only " + m.rate(m.shortfall.reachable(), unit)
-                        + " of its "
-                        + m.rate(m.shortfall.target(), unit)
-                        + " target",
-                    Hyb.RED_INK);
-                yield tip.action(com.gtnhplanner.ui.popup.Tip.Input.DRAG, "Wire to a card")
-                    .action(com.gtnhplanner.ui.popup.Tip.Input.KEY, "R, U");
+                        "Forced out",
+                        view.spill()
+                            .number() + " "
+                            + view.spill()
+                                .unit(),
+                        com.gtnhplanner.ui.popup.Tip.WARN);
+                com.gtnhplanner.ui.popup.TipViews.body(
+                    tip,
+                    view.spill()
+                        .tip());
             }
-        };
-    }
-
-    /** What a rule asks of the plan, in a sentence. */
-    private static String ruleMeaning(final Drawer.Kind kind, final Drawer.Rule rule) {
-        if (kind == Drawer.Kind.BUFFER) return switch (rule) {
-            case ANY -> "No target: the plan passes whatever its users take.";
-            case AT_LEAST -> "The plan passes at least the rate through it.";
-            case EXACTLY -> "The plan passes exactly the rate through it.";
-            case AT_MOST -> "The plan passes no more than the rate through it.";
-        };
-        final String flow = kind == Drawer.Kind.SOURCE ? "draws from it" : "puts in it";
-        return switch (rule) {
-            case ANY -> "No target: the plan " + flow + " whatever it needs.";
-            case AT_LEAST -> "The plan " + flow + " at least the rate.";
-            case EXACTLY -> "The plan " + flow + " exactly the rate.";
-            case AT_MOST -> "The plan " + flow + " no more than the rate.";
-        };
-    }
-
-    static String kindName(final Drawer.Kind kind) {
-        return switch (kind) {
-            case SOURCE -> "Source";
-            case PRODUCT -> "Product";
-            case BYPRODUCT -> "Product";
-            case TRASH -> "Trash";
-            case BUFFER -> "Buffer";
-        };
+            for (final com.gtnhplanner.core.view.TipView.Action a : tips.body()
+                .actions()) tip.action(com.gtnhplanner.ui.popup.TipViews.input(a.input()), a.label());
+            return tip;
+        }
+        return com.gtnhplanner.ui.popup.TipViews.of(switch (part) {
+            case DELETE -> tips.del();
+            case BAR -> tips.bar();
+            case RULE -> tips.rule();
+            default -> tips.rate();
+        });
     }
 
     // endregion

@@ -8,6 +8,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 import com.gtnhplanner.core.base.Text;
+import com.gtnhplanner.core.view.Json;
 
 /**
  * The notices bar's list, worked out from what the solve said, most pressing first. The core decides which notices
@@ -48,24 +49,24 @@ public final class Notices {
     // region Output
 
     /** A value a notice's words take. */
-    public record Arg(String kind, @Nullable String text, double value, @Nullable String unit, List<Holder> holders,
-        List<String> list) {
+    public record Arg(String kind, @Nullable String text, @Nullable Double value, @Nullable String unit,
+        @Nullable List<Holder> holders, @Nullable List<String> list) {
 
         public static Arg text(final String text) {
-            return new Arg("text", text, 0, null, List.of(), List.of());
+            return new Arg("text", text, null, null, null, null);
         }
 
         /** A rate in units a second of a resource kind ({@code item}, {@code fluid}, {@code power}). */
         public static Arg rate(final double perSecond, final String resource) {
-            return new Arg("rate", null, perSecond, resource, List.of(), List.of());
+            return new Arg("rate", null, perSecond, resource, null, null);
         }
 
         public static Arg holders(final List<Holder> holders) {
-            return new Arg("holders", null, 0, null, holders, List.of());
+            return new Arg("holders", null, null, null, holders, null);
         }
 
         public static Arg names(final List<String> names) {
-            return new Arg("names", null, 0, null, List.of(), names);
+            return new Arg("names", null, null, null, null, names);
         }
     }
 
@@ -227,8 +228,9 @@ public final class Notices {
     private static String word(final Arg a, final RateFormat rates) {
         switch (a.kind()) {
             case "rate":
-                return rates.rate(a.value(), a.unit());
+                return rates.rate(a.value() == null ? 0 : a.value(), a.unit());
             case "names": {
+                if (a.list() == null) return "";
                 final StringBuilder sb = new StringBuilder();
                 for (int i = 0; i < a.list().size(); i++) {
                     if (i > 0) {
@@ -243,7 +245,7 @@ public final class Notices {
                 return sb.toString();
             }
             case "holders": {
-                if (a.holders().isEmpty()) return "";
+                if (a.holders() == null || a.holders().isEmpty()) return "";
                 final StringBuilder sb = new StringBuilder();
                 for (final Holder h : a.holders()) {
                     sb.append(' ')
@@ -265,9 +267,9 @@ public final class Notices {
     private static void writeArg(final Json j, final Arg a) {
         j.begin().str("kind", a.kind());
         switch (a.kind()) {
-            case "rate" -> j.num("value", a.value()).str("unit", a.unit());
-            case "holders" -> j.list("holders", a.holders(), (jj, h) -> jj.begin().str("kind", h.kind()).str("name", h.name()).end());
-            case "names" -> j.strings("list", a.list());
+            case "rate" -> j.num("value", a.value() == null ? 0 : a.value()).str("unit", a.unit());
+            case "holders" -> j.list("holders", a.holders() == null ? List.<Holder>of() : a.holders(), (jj, h) -> jj.begin().str("kind", h.kind()).str("name", h.name()).end());
+            case "names" -> j.strings("list", a.list() == null ? List.<String>of() : a.list());
             default -> j.str("text", a.text() == null ? "" : a.text());
         }
         j.end();

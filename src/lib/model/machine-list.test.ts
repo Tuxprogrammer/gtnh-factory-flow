@@ -150,7 +150,8 @@ describe("the machine list follows each board card", () => {
     const steam = lines.find((entry) => entry.nodeId === "n1")!;
     expect(steam.count).toBe(0.125);
     expect(steam.steamLs).toBeGreaterThan(0);
-    expect(steam.avgSteamLs).toBe(steam.steamLs);
+    // Peak bills the whole machine that 0.125 of a machine needs; the average stays the solved fraction.
+    expect(steam.avgSteamLs).toBeCloseTo(steam.steamLs! * 0.125, 9);
     expect(steam.euT).toBeUndefined();
   });
 
@@ -179,8 +180,26 @@ describe("power card tiers in the machine list", () => {
       recipes: [lhe, turbine],
       edges: [],
       nodes: [
-        { id: "lhe", recipeId: "r-lhe", machineCount: 100, parallel: 1, enabled: true, overclockTier: "EV", position: { x: 0, y: 0 }, machineConfigTiers: lheSettings },
-        { id: "turbine", recipeId: "r-turbine", machineCount: 1, parallel: 1, enabled: true, overclockTier: "EV", position: { x: 400, y: 0 }, machineConfigTiers: turbineSettings },
+        {
+          id: "lhe",
+          recipeId: "r-lhe",
+          machineCount: 100,
+          parallel: 1,
+          enabled: true,
+          overclockTier: "EV",
+          position: { x: 0, y: 0 },
+          machineConfigTiers: lheSettings,
+        },
+        {
+          id: "turbine",
+          recipeId: "r-turbine",
+          machineCount: 1,
+          parallel: 1,
+          enabled: true,
+          overclockTier: "EV",
+          position: { x: 400, y: 0 },
+          machineConfigTiers: turbineSettings,
+        },
       ],
     };
     const lines = buildMachineList(p, calculateThroughput(p));

@@ -3,6 +3,7 @@ import { getSelectedMachineHandler } from "./recipe-rules";
 import { applyRecipeInputOverrides } from "./recipe-input-overrides";
 import { isCustomRateRecipe } from "./custom-rate";
 import { pinRuleOf } from "./pin-rule";
+import { peakCount as peakCountOf } from "./peak-count";
 import { listNodeSections } from "./shared-machine";
 import { getVoltageTierIndex, isVoltageTierName } from "./tiers";
 import {
@@ -130,10 +131,15 @@ export function buildMachineList(
     const parallel = Math.max(1, node.parallel);
     const runningCount = solving || usage > 0 ? count : 0;
     // Peak is every machine the card has drawing at once: a plain card's set count (Up to, Exactly) is those machines,
-    // as its power row bills it; the solved count is only what runs, which is the average. A crop card's pin is seeds,
-    // and a shared card's power row bills each recipe at its solved machines, so both keep the solved count.
+    // as its power row bills it, and one with no count is the whole machines its solved fraction needs; the solved
+    // count is only what runs, which is the average. A crop card's pin is seeds, and a shared card's power row bills
+    // each recipe at its solved machines, so both keep the solved count.
     const pinned = solving && !crop && sections.length === 1 && pinRuleOf(node, recipe) !== "any";
-    const peakCount = pinned ? Math.max(node.solvePin ?? 0, runningCount) : runningCount;
+    const peakCount = peakCountOf(
+      runningCount,
+      pinned ? node.solvePin : undefined,
+      !solving || !!crop || sections.length !== 1,
+    );
     const report = sections[0]?.report;
     const steam = sections[0]?.steam;
     const peakDraw = Math.max(0, ...sections.map((part) => part.report?.drawEuT ?? 0));

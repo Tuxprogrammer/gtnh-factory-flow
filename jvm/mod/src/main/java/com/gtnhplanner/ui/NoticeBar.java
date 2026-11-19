@@ -1,12 +1,12 @@
 package com.gtnhplanner.ui;
 
 import java.util.List;
-import java.util.UUID;
 
 import com.cleanroommc.modularui.api.widget.Interactable;
 import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
 import com.cleanroommc.modularui.theme.WidgetThemeEntry;
 import com.cleanroommc.modularui.widget.Widget;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.ui.canvas.BoardCanvas;
 import com.gtnhplanner.ui.card.CardFace;
 import com.gtnhplanner.ui.card.CardPaint;
@@ -187,7 +187,7 @@ final class NoticeBar extends Widget<NoticeBar> implements Interactable {
         }
         // All at once while that still shows their ports; else one at a time, in turn, close enough to read.
         Hyb.click();
-        final List<UUID> focus = n.focus();
+        final List<Uuid> focus = n.focus();
         if (focus.size() == 1 || canvas.framesReadably(focus)) canvas.frame(focus);
         else canvas.frame(List.of(focus.get((turns.merge(n.text(), 1, Integer::sum) - 1) % focus.size())));
         return Result.SUCCESS;

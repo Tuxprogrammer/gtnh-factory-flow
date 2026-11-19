@@ -69,7 +69,7 @@ class MachineEffectTest {
         final BalanceResult result = GraphSolve.balance(chart.graph(), BalanceMode.AUTO);
 
         final var balance = result.nodeBalances()
-            .get(CoreIds.core(distillery.id));
+            .get(distillery.id);
         assertEquals(3.0, balance.operations(), 1e-6, "the count is the pin");
         // Effective rates are per cycle; the distillery's cycle is one second.
         assertEquals(
@@ -82,7 +82,7 @@ class MachineEffectTest {
         assertEquals(
             150.0,
             result.nodeBalances()
-                .get(CoreIds.core(chart.machine(0).id))
+                .get(chart.machine(0).id)
                 .effectiveOutputs()
                 .get(1) * 20.0
                 / 160.0,
@@ -91,7 +91,7 @@ class MachineEffectTest {
         assertEquals(
             150.0,
             result.nodeBalances()
-                .get(CoreIds.core(chart.machine(0).id))
+                .get(chart.machine(0).id)
                 .outputPerSecond(1),
             1e-3,
             "and reads per second without the arithmetic");

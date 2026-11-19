@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
@@ -20,6 +19,7 @@ import com.google.gson.JsonParser;
 import com.gtnhplanner.cloud.sync.LiveJson;
 import com.gtnhplanner.cloud.sync.LiveOp;
 import com.gtnhplanner.cloud.sync.LiveOps;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.BoardGroup;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Graph;
@@ -106,7 +106,7 @@ class CloudBoardsTest {
             "pockets",
             outer.getId()
                 .toString());
-        // The game's own group under its UUID; the imported one keeps its UUID too, its website id in its data.
+        // The game's own group under its Uuid; the imported one keeps its Uuid too, its website id in its data.
         final JsonObject innerJson = o.thing(
             "pockets",
             inner.getId()
@@ -206,12 +206,12 @@ class CloudBoardsTest {
         assertEquals("[\"gtnhplanner\",\"size\"]", fields(ops.getFirst()));
 
         // Ungrouped: the pocket goes, what it held is in the group it sat in, where it stands.
-        final List<UUID> held = Groups.children(o.board, inner.getId());
+        final List<Uuid> held = Groups.children(o.board, inner.getId());
         Groups.ungroup(o.board, inner.getId());
         ops = o.send("ungrouped");
         assertEquals(1, count(ops, LiveOp.Kind.DEL, "pockets"), ops.toString());
         assertEquals(held.size(), ops.size() - 1, ops.toString());
-        for (final UUID id : held) assertEquals(outer.getId(), Groups.groupOf(o.board, id));
+        for (final Uuid id : held) assertEquals(outer.getId(), Groups.groupOf(o.board, id));
 
         // A new group round a drawing.
         final BoardGroup made = new BoardGroup();
@@ -832,11 +832,11 @@ class CloudBoardsTest {
     // region Helpers
 
     /** Moves a group and everything in it, as the board carries one. */
-    private static void move(final Graph g, final UUID group, final int dx, final int dy) {
+    private static void move(final Graph g, final Uuid group, final int dx, final int dy) {
         final BoardGroup b = g.boardGroups.get(group);
         b.setX(b.getX() + dx);
         b.setY(b.getY() + dy);
-        for (final UUID id : Groups.descendants(g, group)) {
+        for (final Uuid id : Groups.descendants(g, group)) {
             final Node n = g.nodes.get(id);
             if (n != null) {
                 n.x += dx;
@@ -868,7 +868,7 @@ class CloudBoardsTest {
 
     /** A card in no group (and in no shared machine). */
     private static Node outside(final Graph g) {
-        final Set<UUID> shared = new java.util.HashSet<>();
+        final Set<Uuid> shared = new java.util.HashSet<>();
         for (final com.gtnhplanner.data.flowchart.Group group : g.getGroups())
             if (group instanceof final com.gtnhplanner.data.flowchart.MachineGroup m) shared.addAll(m.getSections());
         for (final Node n : g.getNodes()) if (n.group == null && !shared.contains(n.id)) return n;

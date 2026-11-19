@@ -5,9 +5,10 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import org.jetbrains.annotations.Nullable;
+
+import com.gtnhplanner.core.base.Uuid;
 
 /**
  * Who is in which board group ({@link BoardGroup}): the rules of {@code docs/design/groups.md} over a {@link Graph},
@@ -19,7 +20,7 @@ public final class Groups {
 
     /** The group a card, drawer, note or group is in, or null for the board (or no such thing). */
     @Nullable
-    public static UUID groupOf(final Graph graph, final UUID id) {
+    public static Uuid groupOf(final Graph graph, final Uuid id) {
         final Node n = graph.nodes.get(id);
         if (n != null) return n.group;
         final Drawer d = graph.drawers.get(id);
@@ -35,7 +36,7 @@ public final class Groups {
      * machine's other recipes with it; a group is never put inside itself or what it holds (false then, nothing
      * changes). Changes no version: the caller's edit does.
      */
-    public static boolean setGroupOf(final Graph graph, final UUID id, @Nullable final UUID group) {
+    public static boolean setGroupOf(final Graph graph, final Uuid id, @Nullable final Uuid group) {
         if (group != null && !graph.boardGroups.containsKey(group)) return false;
         final BoardGroup g = graph.boardGroups.get(id);
         if (g != null) {
@@ -45,7 +46,7 @@ public final class Groups {
         }
         final Node n = graph.nodes.get(id);
         if (n != null) {
-            for (final UUID s : sections(graph, id)) {
+            for (final Uuid s : sections(graph, id)) {
                 final Node section = graph.nodes.get(s);
                 if (section != null) section.group = group;
             }
@@ -65,7 +66,7 @@ public final class Groups {
     }
 
     /** A recipe and every other recipe on its shared machine. */
-    private static List<UUID> sections(final Graph graph, final UUID nodeId) {
+    private static List<Uuid> sections(final Graph graph, final Uuid nodeId) {
         for (final Group g : graph.getGroups())
             if (g instanceof final MachineGroup m && m.isShared()
                 && m.getSections()
@@ -75,10 +76,10 @@ public final class Groups {
     }
 
     /** The groups round a thing, innermost first (its own group first); empty on the board. */
-    public static List<UUID> ancestors(final Graph graph, final UUID id) {
-        final List<UUID> out = new ArrayList<>();
-        final Set<UUID> seen = new HashSet<>();
-        for (UUID at = groupOf(graph, id); at != null && seen.add(at); at = groupOf(graph, at)) {
+    public static List<Uuid> ancestors(final Graph graph, final Uuid id) {
+        final List<Uuid> out = new ArrayList<>();
+        final Set<Uuid> seen = new HashSet<>();
+        for (Uuid at = groupOf(graph, id); at != null && seen.add(at); at = groupOf(graph, at)) {
             if (!graph.boardGroups.containsKey(at)) break;
             out.add(at);
         }
@@ -86,8 +87,8 @@ public final class Groups {
     }
 
     /** What sits directly in a group: cards, drawers, notes and groups, in that order. */
-    public static List<UUID> children(final Graph graph, final UUID group) {
-        final List<UUID> out = new ArrayList<>();
+    public static List<Uuid> children(final Graph graph, final Uuid group) {
+        final List<Uuid> out = new ArrayList<>();
         for (final Node n : graph.getNodes()) if (group.equals(n.group)) out.add(n.id);
         for (final Drawer d : graph.getDrawers()) if (group.equals(d.getGroup())) out.add(d.getId());
         for (final Note n : graph.getNotes()) if (group.equals(n.getGroup())) out.add(n.getId());
@@ -96,27 +97,27 @@ public final class Groups {
     }
 
     /** Everything a group holds, however deep: its children, their children, and so on (not the group itself). */
-    public static Set<UUID> descendants(final Graph graph, final UUID group) {
-        final Set<UUID> out = new LinkedHashSet<>();
-        final List<UUID> todo = new ArrayList<>(List.of(group));
+    public static Set<Uuid> descendants(final Graph graph, final Uuid group) {
+        final Set<Uuid> out = new LinkedHashSet<>();
+        final List<Uuid> todo = new ArrayList<>(List.of(group));
         while (!todo.isEmpty()) {
-            final UUID at = todo.remove(todo.size() - 1);
-            for (final UUID c : children(graph, at)) if (out.add(c) && graph.boardGroups.containsKey(c)) todo.add(c);
+            final Uuid at = todo.remove(todo.size() - 1);
+            for (final Uuid c : children(graph, at)) if (out.add(c) && graph.boardGroups.containsKey(c)) todo.add(c);
         }
         return out;
     }
 
     /** The outermost collapsed group round a thing (what the board shows in its place), or null when it shows. */
     @Nullable
-    public static UUID hiddenBy(final Graph graph, final UUID id) {
-        UUID hider = null;
-        for (final UUID g : ancestors(graph, id)) if (graph.boardGroups.get(g)
+    public static Uuid hiddenBy(final Graph graph, final Uuid id) {
+        Uuid hider = null;
+        for (final Uuid g : ancestors(graph, id)) if (graph.boardGroups.get(g)
             .isCollapsed()) hider = g;
         return hider;
     }
 
     /** Whether a thing is out of sight inside a collapsed group. */
-    public static boolean hidden(final Graph graph, final UUID id) {
+    public static boolean hidden(final Graph graph, final Uuid id) {
         return hiddenBy(graph, id) != null;
     }
 
@@ -127,11 +128,11 @@ public final class Groups {
 
     /** The groups a new group is put in when made of these things: their one shared group, or the board. */
     @Nullable
-    public static UUID commonGroup(final Graph graph, final java.util.Collection<UUID> ids) {
-        UUID common = null;
+    public static Uuid commonGroup(final Graph graph, final java.util.Collection<Uuid> ids) {
+        Uuid common = null;
         boolean first = true;
-        for (final UUID id : ids) {
-            final UUID g = groupOf(graph, id);
+        for (final Uuid id : ids) {
+            final Uuid g = groupOf(graph, id);
             if (first) common = g;
             else if (!java.util.Objects.equals(common, g)) return null;
             first = false;
@@ -154,10 +155,10 @@ public final class Groups {
     /**
      * Removes a group; what it held goes to the group it sat in (or the board), where it stands. Changes no version.
      */
-    public static void ungroup(final Graph graph, final UUID group) {
+    public static void ungroup(final Graph graph, final Uuid group) {
         final BoardGroup g = graph.boardGroups.get(group);
         if (g == null) return;
-        for (final UUID c : children(graph, group)) setGroupOf(graph, c, g.getParent());
+        for (final Uuid c : children(graph, group)) setGroupOf(graph, c, g.getParent());
         graph.boardGroups.remove(group);
     }
 
@@ -177,8 +178,8 @@ public final class Groups {
             if (g.getName() == null) g.setName("");
         }
         for (final BoardGroup g : graph.boardGroups.values()) {
-            final Set<UUID> seen = new HashSet<>();
-            for (UUID at = g.getParent(); at != null; at = graph.boardGroups.get(at)
+            final Set<Uuid> seen = new HashSet<>();
+            for (Uuid at = g.getParent(); at != null; at = graph.boardGroups.get(at)
                 .getParent()) {
                 if (at.equals(g.getId()) || !seen.add(at)) {
                     g.setParent(null);
@@ -193,7 +194,7 @@ public final class Groups {
      * known) with {@link BoardGroup#PAD} round them and the title strip above, innermost groups first; never shrinks
      * one. True when any frame changed.
      */
-    public static boolean fit(final Graph graph, final java.util.function.Function<UUID, int[]> box) {
+    public static boolean fit(final Graph graph, final java.util.function.Function<Uuid, int[]> box) {
         boolean changed = false;
         // Innermost first: a nested group's grown frame is then its parent's member box.
         final List<BoardGroup> order = new ArrayList<>(graph.boardGroups.values());
@@ -219,10 +220,10 @@ public final class Groups {
 
     /** The box {x0, y0, x1, y1} round a group's direct members (a nested group by its frame), or null for none. */
     @Nullable
-    public static int[] membersBox(final Graph graph, final UUID group,
-        final java.util.function.Function<UUID, int[]> box) {
+    public static int[] membersBox(final Graph graph, final Uuid group,
+        final java.util.function.Function<Uuid, int[]> box) {
         int x0 = Integer.MAX_VALUE, y0 = Integer.MAX_VALUE, x1 = Integer.MIN_VALUE, y1 = Integer.MIN_VALUE;
-        for (final UUID c : children(graph, group)) {
+        for (final Uuid c : children(graph, group)) {
             final BoardGroup child = graph.boardGroups.get(c);
             final int[] b = child != null
                 ? new int[] { child.getX(), child.getY(), child.getWidth(), child.getHeight() }

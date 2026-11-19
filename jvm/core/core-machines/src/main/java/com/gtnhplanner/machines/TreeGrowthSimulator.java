@@ -9,6 +9,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 import com.gtnhplanner.core.base.Float32;
+import com.gtnhplanner.core.base.Float32Ops;
 import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.machines.FormulaLine.Tone;
 
@@ -199,11 +200,11 @@ public final class TreeGrowthSimulator {
         if (base == null) return null;
         return switch (mode) {
             case LOG -> {
-                final double height = single(Math.max(single(3 * single(setup.height() - 1)), 0) + 1);
+                final double height = Float32Ops.add(Math.max(Float32Ops.mul(3f, Float32Ops.sub(setup.height(), 1f)), 0f), 1f);
                 yield (int) (base * height * f.girth());
             }
-            case SAPLING -> Math.max(1, (int) (base * (double) single(setup.fertility() * 10)));
-            case FRUIT -> Math.max(1, (int) (base * (double) single(setup.yield() * 10)));
+            case SAPLING -> Math.max(1, (int) (base * (double) Float32Ops.mul(setup.fertility(), 10f)));
+            case FRUIT -> Math.max(1, (int) (base * (double) Float32Ops.mul(setup.yield(), 10f)));
             default -> base;
         };
     }
@@ -318,14 +319,6 @@ public final class TreeGrowthSimulator {
                 electric > 0 ? "720/h; electric 20 EU/s" : "720 uses/h",
                 tools + " tool" + (tools == 1 ? "" : "s") + ", 1 use ÷ " + SECONDS + "s"));
         return lines;
-    }
-
-    /**
-     * A float result. On the JavaScript target a float is a double and arithmetic on floats does not narrow, so each
-     * float operation rounds here, as it does on the JVM and in WebAssembly.
-     */
-    private static float single(final double value) {
-        return (float) Float32.round(value);
     }
 
     /** A gene value as JavaScript prints the same float: its shortest decimal. */

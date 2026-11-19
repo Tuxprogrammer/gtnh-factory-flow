@@ -87,5 +87,6 @@ public final class CoreHost {
         final SecureRandom random = new SecureRandom();
         Uuid.installRandom(random::nextLong);
         SolverThreads.install();
+        com.gtnhplanner.data.flowchart.ModPlanHost.install();
     }
 }

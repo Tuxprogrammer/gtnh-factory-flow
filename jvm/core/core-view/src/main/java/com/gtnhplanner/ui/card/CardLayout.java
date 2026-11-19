@@ -236,9 +236,12 @@ public final class CardLayout {
 
     /** The chip under a card-local point, or -1. */
     public int chipAt(final float x, final float y) {
+        // Compared as doubles: a float against an int would narrow the int, which the web build does not do.
+        final double px = x;
+        final double py = y;
         for (int i = 0; i < chipAt.length; i++) {
             final int[] at = chipAt[i];
-            if (x >= at[0] && x < at[0] + at[2] && y >= at[1] && y < at[1] + CHIP) return i;
+            if (px >= at[0] && px < at[0] + at[2] && py >= at[1] && py < at[1] + CHIP) return i;
         }
         return -1;
     }

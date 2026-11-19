@@ -13,6 +13,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.gtnhplanner.cloud.sync.LiveJson;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.BoardGroup;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Edge;
@@ -413,14 +414,14 @@ final class Fresh {
     }
 
     /** Where a thing is in its group's frame, {x, y}; where it is on the board when it is in none. */
-    static int[] inGroup(final Graph g, @Nullable final java.util.UUID group, final int x, final int y) {
+    static int[] inGroup(final Graph g, @Nullable final Uuid group, final int x, final int y) {
         final BoardGroup b = group == null ? null : g.boardGroups.get(group);
         return b == null ? new int[] { x, y } : new int[] { x - b.getX(), y - b.getY() };
     }
 
     /** The plan id of the pocket a group is, or null for none on the board. */
     @Nullable
-    static String pocket(final Graph g, final Basis names, @Nullable final java.util.UUID group) {
+    static String pocket(final Graph g, final Basis names, @Nullable final Uuid group) {
         return group == null || !g.boardGroups.containsKey(group) ? null : names.id("pocket", group);
     }
 

@@ -2310,7 +2310,7 @@ final class ColumnArrange {
                     boolean found = false;
                     for (final PartnerEntry p : partners.getOrDefault(slot, List.of())) {
                         final double aligned = p.other().y + p.their() - p.own();
-                        if (aligned % BOARD_GRID != 0) {
+                        if (com.gtnhplanner.core.base.JsMath.rem(aligned, BOARD_GRID) != 0) {
                             continue;
                         }
                         final double distance = Math.abs(aligned - slot.y);

@@ -46,6 +46,14 @@ const readout = (d: DrawerReadout) => ({
   ports: Object.fromEntries(Object.entries(d.ports).map(([id, list]) => [id, list.map(external)])),
   // What a buffer banks only when the plan banks (Up to plans): every golden before it reads the same.
   ...(d.banked !== undefined ? { banked: d.banked } : {}),
+  // What each maker spills into a banking buffer, present exactly when `banked` is.
+  ...(d.spills !== undefined
+    ? {
+        spills: Object.fromEntries(
+          Object.entries(d.spills).map(([id, list]) => [id, list.map(external)]),
+        ),
+      }
+    : {}),
 });
 /** An Up to read-out as the mod's record reads: every field, null or empty where the website leaves one out. */
 const upToReadout = (r: UpToReadout) => ({

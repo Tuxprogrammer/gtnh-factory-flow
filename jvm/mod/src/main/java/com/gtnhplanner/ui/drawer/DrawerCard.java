@@ -2,7 +2,6 @@ package com.gtnhplanner.ui.drawer;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import net.minecraft.item.ItemStack;
 
@@ -16,6 +15,7 @@ import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
 import com.cleanroommc.modularui.theme.WidgetThemeEntry;
 import com.cleanroommc.modularui.widget.Widget;
 import com.cleanroommc.modularui.widget.sizer.Area;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.ui.BoardSession;
 import com.gtnhplanner.ui.canvas.BoardCanvas;
@@ -55,14 +55,14 @@ public final class DrawerCard extends Widget<DrawerCard> implements Interactable
     }
 
     private final BoardSession session;
-    public final UUID drawerId;
+    public final Uuid drawerId;
     private DrawerModel model;
 
     private boolean moving;
     /** Whether the drag under way draws a wire (pressed below the bar) rather than moving the drawer. */
     private boolean wiring;
 
-    public DrawerCard(final BoardSession session, final UUID drawerId) {
+    public DrawerCard(final BoardSession session, final Uuid drawerId) {
         this.session = session;
         this.drawerId = drawerId;
         size(W, H);

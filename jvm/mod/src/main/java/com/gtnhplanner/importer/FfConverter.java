@@ -8,10 +8,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.BoardGroup;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Edge;
@@ -187,23 +187,23 @@ public final class FfConverter {
         }
 
         /** What each node and drawer the import made came from, by FF id (a card, storage or custom rate card). */
-        final Map<UUID, String> origin = new HashMap<>();
+        final Map<Uuid, String> origin = new HashMap<>();
 
         /** Notes what was added to the graph since {@code before} (node and drawer ids) as made from {@code ffId}. */
-        private void madeFrom(final Set<UUID> before, final String ffId) {
-            for (final UUID id : graph.nodes.keySet()) if (!before.contains(id)) origin.putIfAbsent(id, ffId);
-            for (final UUID id : graph.drawers.keySet()) if (!before.contains(id)) origin.putIfAbsent(id, ffId);
+        private void madeFrom(final Set<Uuid> before, final String ffId) {
+            for (final Uuid id : graph.nodes.keySet()) if (!before.contains(id)) origin.putIfAbsent(id, ffId);
+            for (final Uuid id : graph.drawers.keySet()) if (!before.contains(id)) origin.putIfAbsent(id, ffId);
         }
 
-        private Set<UUID> ids() {
-            final Set<UUID> ids = new HashSet<>(graph.nodes.keySet());
+        private Set<Uuid> ids() {
+            final Set<Uuid> ids = new HashSet<>(graph.nodes.keySet());
             ids.addAll(graph.drawers.keySet());
             return ids;
         }
 
         Result run() {
             for (final FfNode card : plan.nodes()) {
-                final Set<UUID> before = ids();
+                final Set<Uuid> before = ids();
                 placeCard(card);
                 madeFrom(before, card.id());
             }
@@ -351,8 +351,8 @@ public final class FfConverter {
             tank.x = snap((from.node().x + to.node().x) / 2.0);
             tank.y = snap((from.node().y + to.node().y) / 2.0);
             graph.addNode(tank);
-            graph.addEdge(new Edge(UUID.randomUUID(), from.node().id, tank.id, o, tankIn));
-            graph.addEdge(new Edge(UUID.randomUUID(), tank.id, to.node().id, tankOut, i));
+            graph.addEdge(new Edge(Uuid.randomUUID(), from.node().id, tank.id, o, tankIn));
+            graph.addEdge(new Edge(Uuid.randomUUID(), tank.id, to.node().id, tankOut, i));
             report.add(
                 Kind.CONVERTED,
                 e.resourceId(),
@@ -498,7 +498,7 @@ public final class FfConverter {
                     return;
                 }
                 final Edge edge = new Edge(
-                    UUID.randomUUID(),
+                    Uuid.randomUUID(),
                     from.card()
                         .node().id,
                     to.card()
@@ -598,7 +598,7 @@ public final class FfConverter {
                     if (from[0] == to[0]) continue;
                     graph.addEdge(
                         new Edge(
-                            UUID.randomUUID(),
+                            Uuid.randomUUID(),
                             all.get(from[0])
                                 .node().id,
                             all.get(to[0])
@@ -783,7 +783,7 @@ public final class FfConverter {
         void makeDrawers() {
             for (final Map.Entry<String, PendingDrawer> entry : pending.entrySet()) {
                 final PendingDrawer d = entry.getValue();
-                final Set<UUID> before = ids();
+                final Set<Uuid> before = ids();
                 try {
                     makeDrawer(d);
                 } finally {
@@ -866,8 +866,8 @@ public final class FfConverter {
             graph.addNode(node);
             for (final Drawer.Link link : d.links) {
                 final Edge edge = dial.supply()
-                    ? new Edge(UUID.randomUUID(), node.id, link.nodeId(), 0, link.portIndex())
-                    : new Edge(UUID.randomUUID(), link.nodeId(), node.id, link.portIndex(), 0);
+                    ? new Edge(Uuid.randomUUID(), node.id, link.nodeId(), 0, link.portIndex())
+                    : new Edge(Uuid.randomUUID(), link.nodeId(), node.id, link.portIndex(), 0);
                 edge.waypoints = link.waypoints();
                 graph.addEdge(edge);
             }
@@ -893,7 +893,7 @@ public final class FfConverter {
          */
         void placeNotes() {
             for (final FfNote n : plan.textNotes()) {
-                final Note note = note(n, UUID.randomUUID(), px(n.x()), py(n.y()));
+                final Note note = note(n, Uuid.randomUUID(), px(n.x()), py(n.y()));
                 graph.notes.put(note.getId(), note);
                 if (!n.id()
                     .isEmpty()) noteOrigin.put(note.getId(), n.id());
@@ -901,7 +901,7 @@ public final class FfConverter {
         }
 
         /** The notes the import made, by the FF id of the annotation each came from. */
-        final Map<UUID, String> noteOrigin = new HashMap<>();
+        final Map<Uuid, String> noteOrigin = new HashMap<>();
 
         /**
          * FF's boards as the board's groups: each frame at the cards' scale, open or collapsed as it was, its paper and
@@ -915,7 +915,7 @@ public final class FfConverter {
             for (final FfPlan.FfBoard b : plan.boards()) {
                 final BoardGroup g = group(
                     b,
-                    UUID.randomUUID(),
+                    Uuid.randomUUID(),
                     px(b.x()),
                     py(b.y()),
                     b.name() == null || b.name()
@@ -932,7 +932,7 @@ public final class FfConverter {
                         .getId(),
                     parent.getId());
             }
-            for (final Map.Entry<UUID, String> e : origin.entrySet()) {
+            for (final Map.Entry<Uuid, String> e : origin.entrySet()) {
                 final String in = plan.boardOf()
                     .get(e.getValue());
                 final BoardGroup g = in == null ? null : byFf.get(in);
@@ -942,7 +942,7 @@ public final class FfConverter {
                 final Drawer d = graph.drawers.get(e.getKey());
                 if (d != null) d.setGroup(g.getId());
             }
-            for (final Map.Entry<UUID, String> e : noteOrigin.entrySet()) {
+            for (final Map.Entry<Uuid, String> e : noteOrigin.entrySet()) {
                 final String in = plan.boardOf()
                     .get(e.getValue());
                 final BoardGroup g = in == null ? null : byFf.get(in);
@@ -989,7 +989,7 @@ public final class FfConverter {
      * drawing's, which an arrow may go under on one axis to run level), with its colour, text size and text, and a
      * drawing's kind and dress (docs/design/annotations.md).
      */
-    public static Note note(final FfNote n, final UUID id, final int x, final int y) {
+    public static Note note(final FfNote n, final Uuid id, final int x, final int y) {
         final Note note = new Note(id);
         note.setX(x);
         note.setY(y);
@@ -1031,7 +1031,7 @@ public final class FfConverter {
      * A board (FF's pocket) as a group at a place, its parent and website id left to the caller: its frame at the
      * cards' scale (the smallest a frame gets when it has no size), open or collapsed as it was, its colour and paper.
      */
-    public static BoardGroup group(final FfPlan.FfBoard b, final UUID id, final int x, final int y, final String name) {
+    public static BoardGroup group(final FfPlan.FfBoard b, final Uuid id, final int x, final int y, final String name) {
         final BoardGroup g = new BoardGroup(id);
         g.setName(name);
         if (b.colorTag() != null && !b.colorTag()

@@ -11,6 +11,8 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.Float32Ops;
+
 /**
  * The grid edge router, the website's {@code grid-edge-router.ts} written once in Java for both sides. It is a
  * translation, not a redesign: the same 20 px grid, the same costs and the same tie-breaks, so the website's own
@@ -434,7 +436,10 @@ public final class GridEdgeRouter {
                     .add(claimInterval);
                 final int cell = cellOf(x, y);
                 // Float32 as on the website: the sum is rounded to a float on every store.
-                if (cell >= 0) totals[run.axis * cellCount + cell] += width;
+                if (cell >= 0) {
+                    final int index = run.axis * cellCount + cell;
+                    totals[index] = Float32Ops.of(totals[index] + width);
+                }
                 records.add(new ClaimRecord(key, cell, run.axis, claimInterval));
             }
         }
@@ -560,7 +565,7 @@ public final class GridEdgeRouter {
                     if (r.cell >= 0) {
                         final int index = r.axis * cellCount + r.cell;
                         final double total = totals[index] - (r.claim.hi - r.claim.lo);
-                        totals[index] = total <= 1e-6 ? 0 : (float) total;
+                        totals[index] = total <= 1e-6 ? 0 : Float32Ops.of(total);
                     }
                 }
                 claimsByEdge.remove(edgeId);
@@ -1207,8 +1212,9 @@ public final class GridEdgeRouter {
                     : far;
                 final double centreX = (rect[0] + rect[2]) / 2;
                 final double centreY = (rect[1] + rect[3]) / 2;
-                final double angle = (StrictMath.atan2(heading.y() - centreY, heading.x() - centreX) + Math.PI * 1.25
-                    + Math.PI * 4) % (Math.PI * 2);
+                final double angle = com.gtnhplanner.core.base.JsMath.rem(
+                    StrictMath.atan2(heading.y() - centreY, heading.x() - centreX) + Math.PI * 1.25 + Math.PI * 4,
+                    Math.PI * 2);
                 final double ideal = exitParam(rect, heading);
                 byCard.computeIfAbsent(cardId, k -> new ArrayList<>())
                     .add(

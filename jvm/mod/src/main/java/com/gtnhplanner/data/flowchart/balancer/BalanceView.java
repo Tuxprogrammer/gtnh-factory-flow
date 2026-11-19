@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.gtnhplanner.CoreIds;
 import com.gtnhplanner.client.GuiHelper;
 import com.gtnhplanner.data.MachineConfig;
 import com.gtnhplanner.data.flowchart.Edge;
@@ -61,10 +60,10 @@ public final class BalanceView {
     /**
      * Everything crossing the chart's boundary. Reads the balance already on hand and runs no
      * solver of its own, but still builds a list and a label per flow, so callers drawing every
-     * frame want {@link Graph#boundary()} rather than this.
+     * frame want {@link GraphBalance#boundary(Graph)} rather than this.
      */
     public static List<Boundary> boundary(final Graph graph) {
-        return boundary(graph, graph.balance());
+        return boundary(graph, GraphBalance.of(graph));
     }
 
     /**
@@ -93,8 +92,8 @@ public final class BalanceView {
     private static List<Boundary> configuredBoundary(final Graph graph) {
         final Set<PortRef> wired = new HashSet<>();
         for (final Edge edge : graph.getEdges()) {
-            wired.add(new PortRef(CoreIds.core(edge.sourceNodeId), edge.sourceOutputIndex, false));
-            wired.add(new PortRef(CoreIds.core(edge.targetNodeId), edge.targetInputIndex, true));
+            wired.add(new PortRef(edge.sourceNodeId, edge.sourceOutputIndex, false));
+            wired.add(new PortRef(edge.targetNodeId, edge.targetInputIndex, true));
         }
         final List<Boundary> out = new ArrayList<>();
         for (final Node node : graph.getNodes()) {
@@ -116,7 +115,7 @@ public final class BalanceView {
         final List<Port<?>> ports = input ? node.inputs : node.outputs;
         for (int i = 0; i < ports.size(); i++) {
             final Port<?> port = ports.get(i);
-            if (wired.contains(new PortRef(CoreIds.core(node.id), i, input))) continue;
+            if (wired.contains(new PortRef(node.id, i, input))) continue;
             final double qty = Math.max(0, port.amount()) * port.getChance()
                 * (input ? cfg.inputMultiplier(i) * eff.inputMultiplier(i)
                     : cfg.outputMultiplier(i) * eff.outputMultiplier(i))
@@ -125,7 +124,7 @@ public final class BalanceView {
             final double rate = count * qty * GuiHelper.TICKS_PER_SECOND / durTicks;
             out.add(
                 new Boundary(
-                    new PortRef(CoreIds.core(node.id), i, input),
+                    new PortRef(node.id, i, input),
                     input ? Kind.SUPPLY : Kind.PRODUCT,
                     rate,
                     port.getDisplayName(),
@@ -293,9 +292,9 @@ public final class BalanceView {
 
     private static Port<?> portOf(final Graph graph, final External external) {
         final Node node = graph.nodes.get(
-            CoreIds.mod(
-                external.port()
-                    .nodeId()));
+
+            external.port()
+                .nodeId());
         if (node == null) return null;
         final List<Port<?>> ports = external.port()
             .input() ? node.inputs : node.outputs;

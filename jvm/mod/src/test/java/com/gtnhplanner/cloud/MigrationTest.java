@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.AfterEach;
@@ -24,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.gtnhplanner.cloud.store.Migration;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Note;
 import com.gtnhplanner.data.flowchart.Plan;
@@ -102,7 +102,7 @@ class MigrationTest {
 
     private static Graph plan(final String name) {
         final Graph g = new Graph(name);
-        g.notes.put(UUID.randomUUID(), new Note());
+        g.notes.put(Uuid.randomUUID(), new Note());
         return g;
     }
 

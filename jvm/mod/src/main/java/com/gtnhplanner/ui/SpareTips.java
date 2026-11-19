@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.ui.popup.Tip;
 import com.gtnhplanner.ui.theme.Hyb;
 
@@ -58,7 +59,7 @@ final class SpareTips {
      * An unwired port the plan runs through anyway (its machine is pinned, or wired to what is): a forced input or
      * output at the only place it can be, on {@code machine}'s card.
      */
-    static Tip open(final BoardSession session, final java.util.UUID node, final String machine,
+    static Tip open(final BoardSession session, final Uuid node, final String machine,
         final com.gtnhplanner.ui.card.CardModel.PortView view) {
         final boolean in = !view.output();
         final Tip tip = head(in, session.pinsBehind(List.of(node)));

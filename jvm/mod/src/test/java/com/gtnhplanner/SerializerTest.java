@@ -14,7 +14,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
-import java.util.UUID;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -22,6 +21,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.MachineConfig;
 import com.gtnhplanner.data.MachineProfile;
 import com.gtnhplanner.data.MachineProfileRegistry;
@@ -209,7 +209,7 @@ class SerializerTest {
             .iterator()
             .next();
         final Edge twin = new Edge(
-            UUID.nameUUIDFromBytes("twin".getBytes(StandardCharsets.UTF_8)),
+            Uuid.nameUUIDFromBytes("twin".getBytes(StandardCharsets.UTF_8)),
             edge.sourceNodeId,
             edge.targetNodeId,
             edge.sourceOutputIndex,
@@ -364,7 +364,7 @@ class SerializerTest {
                         GtnhFlowLoader.load("mk1")
                             .graph())))
             .getAsJsonObject();
-        final UUID id = UUID.nameUUIDFromBytes("old note".getBytes(StandardCharsets.UTF_8));
+        final Uuid id = Uuid.nameUUIDFromBytes("old note".getBytes(StandardCharsets.UTF_8));
         final JsonObject old = new com.google.gson.JsonParser()
             .parse(
                 "{\"text\": [\"Remember\"], \"id\": \"" + id

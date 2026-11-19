@@ -2,10 +2,10 @@ package com.gtnhplanner.ui;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.Graph;
@@ -23,7 +23,7 @@ public final class HoverScope {
     @Nullable
     private final String resource;
     private final Set<String> ports = new HashSet<>(), links = new HashSet<>();
-    private final Set<UUID> drawers = new HashSet<>(), edges = new HashSet<>();
+    private final Set<Uuid> drawers = new HashSet<>(), edges = new HashSet<>();
 
     private HoverScope(@Nullable final String resource) {
         this.resource = resource;
@@ -34,16 +34,16 @@ public final class HoverScope {
         return key == null || key.isEmpty() ? NONE : new HoverScope(key);
     }
 
-    private static String port(final UUID node, final boolean output, final int index) {
+    private static String port(final Uuid node, final boolean output, final int index) {
         return node + (output ? ":o:" : ":i:") + index;
     }
 
-    private static String link(final UUID drawer, final UUID node, final int index) {
+    private static String link(final Uuid drawer, final Uuid node, final int index) {
         return drawer + ":" + node + ":" + index;
     }
 
     /** A port: it, every wire on it, and the port or drawer at each wire's far end. */
-    public static HoverScope ofPort(final Graph graph, final UUID node, final boolean output, final int index) {
+    public static HoverScope ofPort(final Graph graph, final Uuid node, final boolean output, final int index) {
         final HoverScope s = new HoverScope(null);
         s.ports.add(port(node, output, index));
         for (final Edge e : graph.getEdges()) {
@@ -67,7 +67,7 @@ public final class HoverScope {
      * Ports alone, without their wires (a leftover's place, which can sit on more than one port): only the rows glow,
      * so nothing reads as a wire.
      */
-    public static HoverScope portsOnly(final java.util.List<UUID> nodes, final java.util.List<Boolean> outputs,
+    public static HoverScope portsOnly(final java.util.List<Uuid> nodes, final java.util.List<Boolean> outputs,
         final java.util.List<Integer> indices) {
         final HoverScope s = new HoverScope(null);
         for (int i = 0; i < nodes.size(); i++) s.ports.add(port(nodes.get(i), outputs.get(i), indices.get(i)));
@@ -121,7 +121,7 @@ public final class HoverScope {
     }
 
     /** Whether a card's port glows; {@code key} is its resource. */
-    public boolean port(final UUID node, final boolean output, final int index, final String key) {
+    public boolean port(final Uuid node, final boolean output, final int index, final String key) {
         return resource != null ? resource.equals(key) : ports.contains(port(node, output, index));
     }
 

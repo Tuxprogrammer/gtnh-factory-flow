@@ -8,11 +8,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.Worker;
 import com.gtnhplanner.core.layout.JsSort;
 import com.gtnhplanner.core.layout.GridEdgeRouter;
 import com.gtnhplanner.core.layout.GridPoint;
@@ -54,23 +54,6 @@ public final class Arrange {
     public interface ProgressSink {
 
         void accept(Progress progress);
-    }
-
-    /**
-     * The host's second thread for the staged run (arrange-solve.ts runs the column candidates beside the free
-     * placement, then the two polishes, on two workers). Null: one thread. Becomes core-base's Worker when the kernel's
-     * lands.
-     */
-    public interface Worker {
-
-        <T> Job<T> start(Supplier<T> work);
-
-        default void stop() {}
-    }
-
-    public interface Job<T> {
-
-        T await();
     }
 
     /**
@@ -816,7 +799,8 @@ public final class Arrange {
         }
         progress(input, 0, "Laying the board out", 0, 1);
         final SearchFold search = new SearchFold(input);
-        final Job<Columns> columnsJob = worker.start(() -> arrangeColumnStage(input.withProgress(search::columns)));
+        final Worker.Job<Columns> columnsJob = worker
+            .start(() -> arrangeColumnStage(input.withProgress(search::columns)));
         final ArrangeResult free;
         final Columns columns;
         try {

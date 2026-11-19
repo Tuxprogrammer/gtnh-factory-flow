@@ -9,7 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.gtnhplanner.core.base.NumberText;
-import com.gtnhplanner.core.machines.Roots;
+import com.gtnhplanner.core.base.Roots;
 import com.gtnhplanner.machines.FormulaLine;
 
 /**

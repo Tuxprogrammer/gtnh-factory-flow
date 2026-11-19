@@ -63,8 +63,17 @@ describe("peak and average draw on a solved board", () => {
     });
   });
 
-  it("a card with no set count bills what the solve runs either way", () => {
-    expect(line(0.25).entry).toMatchObject({ count: 0.25, euT: 2, avgEuT: 2 });
+  it("a card with no set count bills whole machines at peak and what the solve runs on average", () => {
+    expect(line(0.25).entry).toMatchObject({ count: 0.25, euT: 8, avgEuT: 2 });
+    expect(line(1.5).entry).toMatchObject({ count: 1.5, euT: 16, avgEuT: 12 });
+    expect(line(2).entry).toMatchObject({ count: 2, euT: 16, avgEuT: 16 });
+  });
+
+  it("an Up to card with no count is a card with none set", () => {
+    expect(line(0.25, { solvePin: 0, solvePinExact: false }).entry).toMatchObject({
+      euT: 8,
+      avgEuT: 2,
+    });
   });
 
   it("a shared card keeps billing each recipe at its solved machines, as its own power row does", () => {

@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -14,6 +13,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.gtnhplanner.core.base.JsonTree;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.BoardGroup;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Edge;
@@ -274,7 +274,7 @@ public final class PlanExport {
         p.addProperty("schemaVersion", 1);
         p.addProperty(
             "id",
-            UUID.randomUUID()
+            Uuid.randomUUID()
                 .toString());
         p.addProperty("name", name);
         // The plan's face, which the website's plan card shows: its description and icon.
@@ -1055,7 +1055,7 @@ public final class PlanExport {
      * A member of a group, as the website keeps one (docs/design/groups.md): {@code pocketId} its board's id, its
      * position measured from the board's frame corner.
      */
-    private static void inGroup(final Graph g, final JsonObject o, @Nullable final UUID group, final int x,
+    private static void inGroup(final Graph g, final JsonObject o, @Nullable final Uuid group, final int x,
         final int y) {
         final BoardGroup b = group == null ? null : g.boardGroups.get(group);
         if (b == null) return;

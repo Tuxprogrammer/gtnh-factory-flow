@@ -5,7 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.gtnhplanner.core.base.Float32;
+import com.gtnhplanner.core.base.Float32Ops;
 import com.gtnhplanner.core.base.JsonTree;
 import com.gtnhplanner.core.machines.GameRates;
 
@@ -77,15 +77,15 @@ public final class BeeReadout {
             final float p = Bees.productionModifier(s), t = s.housing().t(), speed = s.speed().value();
             // The sum and the quotient are floats on the JVM; the JavaScript target keeps floats as doubles.
             productMultiplier = s.climate().works()
-                ? Float32.round(
-                    Float32.round(
-                        Bees.finalChance(product.chance(), speed, p, t)
-                            + Bees.finalChance((float) Float32.round(product.chance() / 2f), speed, p, t))
-                        / product.chance())
+                ? Float32Ops.div(
+                    Float32Ops.add(
+                        Bees.finalChance(product.chance(), speed, p, t),
+                        Bees.finalChance(Float32Ops.div(product.chance(), 2f), speed, p, t)),
+                    product.chance())
                     * share
                 : 0;
             specialtyMultiplier = Bees.jubilant(s, SPECIES)
-                ? Float32.round(Bees.finalChance(special.chance(), speed, p, t) / special.chance()) * share
+                ? Float32Ops.div(Bees.finalChance(special.chance(), speed, p, t), special.chance()) * share
                 : 0;
         } else {
             final Map<String, Double> cycle = Bees.perCycle(s, SPECIES);

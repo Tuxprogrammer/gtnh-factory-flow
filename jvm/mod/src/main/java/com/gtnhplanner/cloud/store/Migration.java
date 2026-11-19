@@ -6,7 +6,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -15,6 +14,7 @@ import javax.annotation.Nullable;
 
 import com.google.gson.JsonObject;
 import com.gtnhplanner.cloud.net.CloudApi;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Plan;
 
@@ -87,7 +87,7 @@ public final class Migration {
             final String existing = g.getCloudKey();
             final String id;
             if (existing == null) {
-                id = UUID.randomUUID()
+                id = Uuid.randomUUID()
                     .toString();
                 g.setCloudKey(accountId + ":" + id);
             } else {

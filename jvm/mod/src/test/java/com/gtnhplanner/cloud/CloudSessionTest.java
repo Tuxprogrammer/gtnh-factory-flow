@@ -16,7 +16,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BooleanSupplier;
@@ -42,6 +41,7 @@ import com.gtnhplanner.cloud.session.CloudSession;
 import com.gtnhplanner.cloud.session.LiveDoc;
 import com.gtnhplanner.cloud.store.CloudCache;
 import com.gtnhplanner.cloud.sync.LiveOp;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Plan;
@@ -335,7 +335,7 @@ class CloudSessionTest {
         return slot(p, key);
     }
 
-    private static JsonObject nodeIn(final JsonObject plan, final UUID id) {
+    private static JsonObject nodeIn(final JsonObject plan, final Uuid id) {
         for (final JsonElement e : plan.getAsJsonArray("nodes")) if (id.toString()
             .equals(
                 e.getAsJsonObject()
@@ -827,7 +827,7 @@ class CloudSessionTest {
         final Plan world = Plan.cloud("unused");
         final Graph mine = Boards.corpus("mv");
         host.game.knowing(mine);
-        final String id = UUID.randomUUID()
+        final String id = Uuid.randomUUID()
             .toString();
         mine.setCloudKey(ME + ":" + id);
         world.getGraphs()

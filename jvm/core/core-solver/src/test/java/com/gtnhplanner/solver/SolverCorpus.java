@@ -312,8 +312,10 @@ final class SolverCorpus {
             for (final RecordComponent rc : o.getClass().getRecordComponents()) {
                 try {
                     final Object value = rc.getAccessor().invoke(o);
-                    // What a buffer banks only when the plan banks (Up to plans): the goldens before it read the same.
-                    if (value == null && o instanceof DrawerReadout && rc.getName().equals("banked")) continue;
+                    // What a buffer banks, and its spills, only when the plan banks (Up to plans): the goldens before
+                    // them read the same.
+                    if (value == null && o instanceof DrawerReadout
+                        && (rc.getName().equals("banked") || rc.getName().equals("spills"))) continue;
                     j.add(rc.getName(), of(value, depth + 1));
                 } catch (final ReflectiveOperationException e) {
                     throw new IllegalStateException(e);

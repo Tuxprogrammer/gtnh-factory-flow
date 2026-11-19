@@ -58,7 +58,7 @@ public record FormulaLine(String label, List<Term> math, String result, Tone ton
         if (Double.isNaN(value) || Double.isInfinite(value)) return "-";
         final boolean negative = value < 0 || value == 0 && 1 / value < 0;
         final double abs = Math.abs(value);
-        if (value == Math.rint(value) && abs < 1e15) return (negative ? "-" : "") + group(NumberText.fixed(abs, 0));
+        if (Math.floor(value) == value && abs < 1e15) return (negative ? "-" : "") + group(NumberText.fixed(abs, 0));
         final int digits = abs >= 100 ? 1 : abs >= 1 ? 2 : 3;
         String text = NumberText.fixed(abs, digits);
         int end = text.length();

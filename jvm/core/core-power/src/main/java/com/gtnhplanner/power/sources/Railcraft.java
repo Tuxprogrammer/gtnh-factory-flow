@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import com.gtnhplanner.core.base.Float32Ops;
 import com.gtnhplanner.power.PowerData;
 import com.gtnhplanner.power.PowerData.Fuel;
 import com.gtnhplanner.power.PowerGroup;
@@ -58,8 +59,8 @@ public final class Railcraft {
             .equals(sky)) entry = row;
         if (entry.multiplier() == 0) return 0;
         float rate = 10f;
-        rate *= (float) humidity;
-        rate *= entry.multiplier();
+        rate = Float32Ops.mul(rate, Float32Ops.of(humidity));
+        rate = Float32Ops.mul(rate, entry.multiplier());
         return Math.max(1, (int) Math.floor(rate));
     }
 

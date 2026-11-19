@@ -7,10 +7,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.harness.GtnhFlowLoader;
 
 /** Board groups (docs/design/groups.md): membership, nesting, hiding, fitting, colours and saves. */
@@ -123,7 +123,7 @@ class GroupsTest {
         assertFalse(
             Serializer.encode(lost)
                 .contains("boardGroups"));
-        final UUID unused = UUID.randomUUID();
+        final Uuid unused = Uuid.randomUUID();
         assertNull(Groups.groupOf(lost, unused));
     }
 }

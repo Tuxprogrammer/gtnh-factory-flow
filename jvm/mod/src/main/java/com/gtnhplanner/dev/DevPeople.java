@@ -2,8 +2,8 @@ package com.gtnhplanner.dev;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Node;
@@ -57,7 +57,7 @@ public final class DevPeople {
         final float[] box = bounds(g);
         final long now = System.currentTimeMillis();
         final double t = (now - started) / 1000.0;
-        final List<UUID> things = things(g);
+        final List<Uuid> things = things(g);
         for (int i = 0; i < count; i++) {
             if (now - heard[i] < 100 && peers.hasFake(i)) continue;
             // The third goes quiet for 14 s of every 24: its cursor fades, then comes back.
@@ -68,7 +68,7 @@ public final class DevPeople {
             final float rx = Math.max(120, (box[2] - box[0]) / 2), ry = Math.max(80, (box[3] - box[1]) / 2);
             final int x = Math.round(cx + rx * (float) Math.sin(a * t + phase));
             final int y = Math.round(cy + ry * (float) Math.sin(b * t + 2 * phase));
-            final List<UUID> sel = new ArrayList<>();
+            final List<Uuid> sel = new ArrayList<>();
             if (!things.isEmpty()) {
                 // A new pick every few seconds; every other one takes two.
                 final int pick = (int) (t / (3 + i)) + 7 * i;
@@ -85,8 +85,8 @@ public final class DevPeople {
     }
 
     /** The plan's cards and drawers, in a steady order. */
-    private static List<UUID> things(final Graph g) {
-        final List<UUID> out = new ArrayList<>();
+    private static List<Uuid> things(final Graph g) {
+        final List<Uuid> out = new ArrayList<>();
         for (final Node n : g.getNodes()) out.add(n.id);
         for (final Drawer d : g.getDrawers()) out.add(d.getId());
         return out;

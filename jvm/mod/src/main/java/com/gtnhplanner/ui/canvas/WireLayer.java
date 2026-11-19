@@ -5,11 +5,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.jetbrains.annotations.Nullable;
 
-import com.gtnhplanner.CoreIds;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.core.layout.BoxRouter;
 import com.gtnhplanner.core.layout.GridRoutedEdge;
 import com.gtnhplanner.core.layout.IncrementalStats;
@@ -52,7 +51,7 @@ final class WireLayer {
      * A wire on the board: an edge, or a drawer's link; its route ({@code path}) and the dots steering it
      * ({@code stops}, the website's waypoints: the plan's, or those of a dot being dragged on it).
      */
-    record Wire(UUID key, Kind kind, @Nullable Edge edge, @Nullable Drawer drawer, @Nullable Drawer.Link link,
+    record Wire(Uuid key, Kind kind, @Nullable Edge edge, @Nullable Drawer drawer, @Nullable Drawer.Link link,
         int color, float width, double perSecond, List<int[]> path, String resource, List<int[]> stops) {}
 
     private final BoardSession session;
@@ -72,7 +71,7 @@ final class WireLayer {
      * A collapsed group's summary card on the board {x, y, w, h}, or null (docs/design/groups.md): wires between what
      * it hides and the rest dock on it. Set by the board.
      */
-    java.util.function.Function<UUID, int[]> groupBox = id -> null;
+    java.util.function.Function<Uuid, int[]> groupBox = id -> null;
 
     WireLayer(final BoardSession session) {
         this.session = session;
@@ -96,11 +95,11 @@ final class WireLayer {
     @Nullable
     private Edge ghostEdge;
     @Nullable
-    private UUID ghostDrawer;
+    private Uuid ghostDrawer;
     @Nullable
     private Drawer.Link ghostLink;
 
-    void ghost(@Nullable final Edge edge, @Nullable final UUID drawer, @Nullable final Drawer.Link link) {
+    void ghost(@Nullable final Edge edge, @Nullable final Uuid drawer, @Nullable final Drawer.Link link) {
         ghostEdge = edge;
         ghostDrawer = link == null ? null : drawer;
         ghostLink = drawer == null ? null : link;
@@ -111,11 +110,11 @@ final class WireLayer {
      * the plan's until the drop puts them on the plan. Null for none.
      */
     @Nullable
-    private UUID draftKey;
+    private Uuid draftKey;
     private List<int[]> draftStops = List.of();
     private long draftMoves;
 
-    void draft(@Nullable final UUID key, final List<int[]> stops) {
+    void draft(@Nullable final Uuid key, final List<int[]> stops) {
         if (java.util.Objects.equals(key, draftKey) && com.gtnhplanner.data.flowchart.Waypoints.same(stops, draftStops))
             return;
         draftKey = key;
@@ -124,7 +123,7 @@ final class WireLayer {
     }
 
     /** A wire's dots: those being dragged on it, else its own. */
-    private List<int[]> stopsOf(final UUID key, final List<int[]> own) {
+    private List<int[]> stopsOf(final Uuid key, final List<int[]> own) {
         return draftKey != null && draftKey.equals(key) ? draftStops : own;
     }
 
@@ -165,7 +164,7 @@ final class WireLayer {
      * never shows a wire out of place, and until a slower one comes back, or while wires hold, a wire whose card or
      * drawer moved stretches to follow it.
      */
-    List<Wire> wires(final Map<UUID, RecipeCard> cards, final Map<UUID, DrawerCard> drawers, final boolean moving) {
+    List<Wire> wires(final Map<Uuid, RecipeCard> cards, final Map<Uuid, DrawerCard> drawers, final boolean moving) {
         final boolean arrived = collect();
         // Hashing where everything is costs as much as the plan is big: done only when something it covers may have
         // moved (an edit, a solve, a card's new size, the board placing things, a drag).
@@ -194,10 +193,10 @@ final class WireLayer {
                 final long started = System.nanoTime();
                 final IncrementalStats stats = new IncrementalStats();
                 final Map<String, GridRoutedEdge> solved = router.route(p.boxes(), p.requests(), thorough, stats);
-                final Map<UUID, List<int[]>> routed = new HashMap<>();
+                final Map<Uuid, List<int[]>> routed = new HashMap<>();
                 for (final BoxRouter.Wire w : p.requests()) {
                     final GridRoutedEdge r = solved.get(w.key());
-                    if (r != null) routed.put(UUID.fromString(w.key()), BoxRouter.pixels(r));
+                    if (r != null) routed.put(Uuid.fromString(w.key()), BoxRouter.pixels(r));
                 }
                 return new Routed(routing, routed, endsOf(p), (System.nanoTime() - started) / 1_000_000, stats.routed);
             });
@@ -249,7 +248,7 @@ final class WireLayer {
         moves++;
     }
 
-    private long quickKey(final Map<UUID, RecipeCard> cards, final Map<UUID, DrawerCard> drawers) {
+    private long quickKey(final Map<Uuid, RecipeCard> cards, final Map<Uuid, DrawerCard> drawers) {
         long k = session.graph()
             .version();
         k = k * 31 + System.identityHashCode(session.graph());
@@ -275,12 +274,12 @@ final class WireLayer {
     @Nullable
     private java.util.concurrent.Future<Routed> job;
     /** The latest routes by wire key, where each wire's two ends stood when it was routed, and for which geometry. */
-    private Map<UUID, List<int[]>> routes = Map.of();
-    private Map<UUID, int[]> routedEnds = Map.of();
+    private Map<Uuid, List<int[]>> routes = Map.of();
+    private Map<Uuid, int[]> routedEnds = Map.of();
     private long routedGeometry = Long.MIN_VALUE, lastRouteMillis = -1;
 
     /** One route's answer, and how many wires it routed again. */
-    private record Routed(long geometry, Map<UUID, List<int[]>> routes, Map<UUID, int[]> ends, long millis,
+    private record Routed(long geometry, Map<Uuid, List<int[]>> routes, Map<Uuid, int[]> ends, long millis,
         int routed) {}
 
     /** The router's thread: each board's router keeps scratch state, so they all route on this one thread. */
@@ -316,8 +315,8 @@ final class WireLayer {
             r.millis());
     }
 
-    private static Map<UUID, int[]> endsOf(final Plan p) {
-        final Map<UUID, int[]> ends = new HashMap<>();
+    private static Map<Uuid, int[]> endsOf(final Plan p) {
+        final Map<Uuid, int[]> ends = new HashMap<>();
         for (int i = 0; i < p.wires()
             .size(); i++)
             ends.put(
@@ -330,7 +329,7 @@ final class WireLayer {
     }
 
     /** Where the wires go: every card's and drawer's place and size, and what is wired to what. */
-    private long geometry(final Map<UUID, RecipeCard> cards) {
+    private long geometry(final Map<Uuid, RecipeCard> cards) {
         final Graph graph = session.graph();
         long sig = 17;
         for (final RecipeCard card : cards.values()) {
@@ -380,7 +379,7 @@ final class WireLayer {
      */
     private record Plan(List<BoxRouter.Box> boxes, List<BoxRouter.Wire> requests, List<Wire> wires, List<int[]> ends) {}
 
-    private Plan plan(final Map<UUID, RecipeCard> cards, final Map<UUID, DrawerCard> drawers) {
+    private Plan plan(final Map<Uuid, RecipeCard> cards, final Map<Uuid, DrawerCard> drawers) {
         final Graph graph = session.graph();
         final List<BoxRouter.Box> boxes = new ArrayList<>();
         final Map<RecipeCard, Integer> cardBox = new java.util.IdentityHashMap<>();
@@ -398,7 +397,7 @@ final class WireLayer {
                     card.layout() == null ? 100 : card.layout().height,
                     false));
         }
-        final Map<UUID, Integer> drawerBox = new HashMap<>();
+        final Map<Uuid, Integer> drawerBox = new HashMap<>();
         final java.util.Collection<Drawer> drawerList = drawers();
         for (final Drawer d : drawerList) {
             // Out of sight in a collapsed group: its wires dock on the group's summary.
@@ -416,7 +415,7 @@ final class WireLayer {
                     true));
         }
         // Collapsed groups on show: one box each, where what they hide is wired to (docs/design/groups.md).
-        final Map<UUID, Integer> groupBoxes = new HashMap<>();
+        final Map<Uuid, Integer> groupBoxes = new HashMap<>();
         for (final com.gtnhplanner.data.flowchart.BoardGroup g : graph.boardGroups.values()) {
             if (!g.isCollapsed() || !com.gtnhplanner.data.flowchart.Groups.shows(graph, g)) continue;
             final int[] b = groupBox.apply(g.getId());
@@ -432,8 +431,8 @@ final class WireLayer {
                     b[3],
                     true));
         }
-        final java.util.function.Function<UUID, Integer> hiddenIn = id -> {
-            final UUID hider = groupBoxes.isEmpty() ? null : com.gtnhplanner.data.flowchart.Groups.hiddenBy(graph, id);
+        final java.util.function.Function<Uuid, Integer> hiddenIn = id -> {
+            final Uuid hider = groupBoxes.isEmpty() ? null : com.gtnhplanner.data.flowchart.Groups.hiddenBy(graph, id);
             return hider == null ? null : groupBoxes.get(hider);
         };
         final java.util.Set<Integer> groupIndex = new java.util.HashSet<>(groupBoxes.values());
@@ -487,7 +486,7 @@ final class WireLayer {
                 if (card == null) card = hiddenIn.apply(n.id);
                 if (card == null || card == drawer && groupIndex.contains(card)) continue;
                 final Port<?> port = ports.get(link.portIndex());
-                final UUID key = UUID.nameUUIDFromBytes(
+                final Uuid key = Uuid.nameUUIDFromBytes(
                     (d.getId() + ":" + link.nodeId() + ":" + link.portIndex() + (d.isTaker(link) ? ":in" : ""))
                         .getBytes(StandardCharsets.UTF_8));
                 between.add(source ? new int[] { drawer, card } : new int[] { card, drawer });
@@ -500,7 +499,7 @@ final class WireLayer {
                         link,
                         colorOf(port),
                         0,
-                        d.isBuffer() ? bufferFlow(result, d, new PortRef(CoreIds.core(n.id), link.portIndex(), source))
+                        d.isBuffer() ? bufferFlow(result, d, new PortRef(n.id, link.portIndex(), source))
                             : linkFlow(result, n, source, link.portIndex()),
                         null,
                         Resources.key(port),
@@ -617,25 +616,25 @@ final class WireLayer {
     private static double edgeFlow(@Nullable final BalanceResult result, final Edge e) {
         if (result == null) return 0;
         if (result instanceof final BalanceResult.Solved solved && solved.auto() != null) {
-            final Double f = solved.auto().edgeFlowsPerSecond.get(CoreIds.core(e.id));
+            final Double f = solved.auto().edgeFlowsPerSecond.get(e.id);
             if (f != null) return f;
         }
         final Balancer.NodeBalance b = result.nodeBalances()
-            .get(CoreIds.core(e.sourceNodeId));
+            .get(e.sourceNodeId);
         return b == null ? 0 : b.outputPerSecond(e.sourceOutputIndex);
     }
 
     /** What passes through one of a buffer's ports: the solver's flow on its edges there, not the port's whole rate. */
     private static double bufferFlow(@Nullable final BalanceResult result, final Drawer d, final PortRef port) {
         if (!(result instanceof final BalanceResult.Solved solved) || solved.auto() == null) return 0;
-        return solved.auto().drawers.portRate(CoreIds.core(d.getId()), port);
+        return solved.auto().drawers.portRate(d.getId(), port);
     }
 
     private static double linkFlow(@Nullable final BalanceResult result, final Node n, final boolean input,
         final int port) {
         if (result == null) return 0;
         final Balancer.NodeBalance b = result.nodeBalances()
-            .get(CoreIds.core(n.id));
+            .get(n.id);
         if (b == null) return 0;
         return input ? b.inputPerSecond(port) : b.outputPerSecond(port);
     }
@@ -774,7 +773,7 @@ final class WireLayer {
 
     /** The dot under the mouse or in hand (by its wire's key and index), drawn lit; null for none. */
     @Nullable
-    private UUID hotKey;
+    private Uuid hotKey;
     private int hotIndex;
 
     void hot(@Nullable final Dot dot) {
@@ -887,7 +886,7 @@ final class WireLayer {
      * core, a little wider than it (the website's {@code cc-loop-wire}), the arrows on top again.
      */
     private void drawRings(final List<Wire> wires, final Map<Wire, WireHops.Hopped> hopped) {
-        final Map<UUID, com.gtnhplanner.ui.Loops.Tone> rings = session.loopWires();
+        final Map<Uuid, com.gtnhplanner.ui.Loops.Tone> rings = session.loopWires();
         if (rings.isEmpty()) return;
         Hyb.beginBatch();
         for (final Wire w : wires) {
@@ -980,10 +979,16 @@ final class WireLayer {
     /** A hopped wire {@code width} wide, offset by (dx, dy): its straight runs, then its bumps as smooth ribbons. */
     private static void drawHopped(final WireHops.Hopped h, final float width, final int color, final float dx,
         final float dy) {
-        for (final List<float[]> run : h.straights()) {
+        for (final List<double[]> run : h.straights()) {
             for (int i = 1; i < run.size(); i++) {
-                final float[] a = run.get(i - 1), b = run.get(i);
-                segment(a[0] + dx, a[1] + dy, b[0] + dx, b[1] + dy, width, color);
+                final double[] a = run.get(i - 1), b = run.get(i);
+                segment(
+                    (float) (a[0] + dx),
+                    (float) (a[1] + dy),
+                    (float) (b[0] + dx),
+                    (float) (b[1] + dy),
+                    width,
+                    color);
             }
         }
         for (final WireHops.Bump b : h.bumps()) ribbon(b.points(BUMP_STEPS), width, color, dx, dy);
@@ -995,20 +1000,20 @@ final class WireLayer {
      * A curve {@code width} wide through the points: each point pushed out both ways along the curve's normal there,
      * the band between filled with triangles, so the curve has no steps at its joints.
      */
-    private static void ribbon(final List<float[]> pts, final float width, final int color, final float dx,
+    private static void ribbon(final List<double[]> pts, final float width, final int color, final float dx,
         final float dy) {
         final int n = pts.size();
         final float h = width / 2;
         final float[] lx = new float[n], ly = new float[n], rx = new float[n], ry = new float[n];
         for (int i = 0; i < n; i++) {
-            final float[] prev = pts.get(Math.max(0, i - 1)), next = pts.get(Math.min(n - 1, i + 1));
-            final float tx = next[0] - prev[0], ty = next[1] - prev[1], len = (float) Math.hypot(tx, ty);
-            final float nx = len == 0 ? 0 : -ty / len * h, ny = len == 0 ? 0 : tx / len * h;
-            final float[] p = pts.get(i);
-            lx[i] = p[0] + dx + nx;
-            ly[i] = p[1] + dy + ny;
-            rx[i] = p[0] + dx - nx;
-            ry[i] = p[1] + dy - ny;
+            final double[] prev = pts.get(Math.max(0, i - 1)), next = pts.get(Math.min(n - 1, i + 1));
+            final double tx = next[0] - prev[0], ty = next[1] - prev[1], len = Math.hypot(tx, ty);
+            final double nx = len == 0 ? 0 : -ty / len * h, ny = len == 0 ? 0 : tx / len * h;
+            final double[] p = pts.get(i);
+            lx[i] = (float) (p[0] + dx + nx);
+            ly[i] = (float) (p[1] + dy + ny);
+            rx[i] = (float) (p[0] + dx - nx);
+            ry[i] = (float) (p[1] + dy - ny);
         }
         for (int i = 1; i < n; i++) {
             Hyb.triangle(lx[i - 1], ly[i - 1], lx[i], ly[i], rx[i], ry[i], color);
@@ -1083,7 +1088,7 @@ final class WireLayer {
      * one
      * every {@value #ARROW_EVERY} on a long run, and at least one per wire, on its longest run.
      */
-    private static void arrows(final List<int[]> path, final int color, final float width, final List<float[]> hops) {
+    private static void arrows(final List<int[]> path, final int color, final float width, final List<double[]> hops) {
         final float len = 1.25f * Math.max(7, Math.min(12, 2f * width + 3));
         final float half = 1.25f * Math.max(3.5f, Math.min(6, width * 0.9f + 1.5f));
         final float clear = len + 8;
@@ -1120,8 +1125,8 @@ final class WireLayer {
     }
 
     /** Whether an arrowhead ending {@code tip} along the wire keeps off every hop, with its own length to spare. */
-    private static boolean offHops(final float tip, final float len, final List<float[]> hops) {
-        for (final float[] span : hops) {
+    private static boolean offHops(final float tip, final float len, final List<double[]> hops) {
+        for (final double[] span : hops) {
             if (tip > span[0] - len && tip - len < span[1] + len) return false;
         }
         return true;

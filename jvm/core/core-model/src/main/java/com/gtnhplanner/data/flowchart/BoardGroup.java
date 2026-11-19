@@ -1,25 +1,21 @@
 package com.gtnhplanner.data.flowchart;
 
 import java.util.List;
-import java.util.UUID;
 
-import org.jetbrains.annotations.Nullable;
+import javax.annotation.Nullable;
 
-import lombok.Getter;
-import lombok.Setter;
+import com.gtnhplanner.core.base.Uuid;
 
 /**
  * A group on the board: a named, coloured frame round part of the plan, moved as one and collapsed down to a summary
  * card ({@code docs/design/groups.md}). It is the website's board ({@code FactoryPocket}, plan JSON {@code pockets[]}),
- * so a plan's groups travel there and back: members say which group they are in ({@link Node#group},
- * {@link Drawer#getGroup()}, {@link Note#getGroup()}), groups nest through {@link #parent}. Groups take no part in the
+ * so a plan's groups travel there and back: members say which group they are in ({@code Node.group},
+ * {@code Drawer.getGroup()}, {@link Note#getGroup()}), groups nest through {@link #parent}. Groups take no part in the
  * solve.
  *
  * <p>
  * Not the old {@link Group} (the base of {@link MachineGroup}, a shared machine): that one is about the hardware.
  */
-@Getter
-@Setter
 public class BoardGroup {
 
     /** The title strip's height, in board px. */
@@ -29,7 +25,7 @@ public class BoardGroup {
     /** ...and the smallest a frame gets. */
     public static final int MIN_W = 160, MIN_H = 80;
 
-    private final UUID id;
+    private final Uuid id;
     /**
      * The website's id of the board this came from ({@code pocket-...}), kept so it goes back out the same; or null.
      */
@@ -41,7 +37,7 @@ public class BoardGroup {
     private String color;
     /** The group it sits in, or null for the board. */
     @Nullable
-    private UUID parent;
+    private Uuid parent;
     /** The frame, absolute board px; a collapsed group's summary card sits at its corner. */
     private int x, y, width = MIN_W, height = MIN_H;
     private boolean collapsed;
@@ -50,10 +46,10 @@ public class BoardGroup {
     private String theme, pattern;
 
     public BoardGroup() {
-        this(UUID.randomUUID());
+        this(Uuid.randomUUID());
     }
 
-    public BoardGroup(final UUID id) {
+    public BoardGroup(final Uuid id) {
         this.id = id;
     }
 
@@ -128,5 +124,97 @@ public class BoardGroup {
         g.theme = theme;
         g.pattern = pattern;
         return g;
+    }
+
+    public Uuid getId() {
+        return this.id;
+    }
+
+    public String getFfId() {
+        return this.ffId;
+    }
+
+    public void setFfId(final String ffId) {
+        this.ffId = ffId;
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public void setName(final String name) {
+        this.name = name;
+    }
+
+    public String getColor() {
+        return this.color;
+    }
+
+    public void setColor(final String color) {
+        this.color = color;
+    }
+
+    public Uuid getParent() {
+        return this.parent;
+    }
+
+    public void setParent(final Uuid parent) {
+        this.parent = parent;
+    }
+
+    public int getX() {
+        return this.x;
+    }
+
+    public void setX(final int x) {
+        this.x = x;
+    }
+
+    public int getY() {
+        return this.y;
+    }
+
+    public void setY(final int y) {
+        this.y = y;
+    }
+
+    public int getWidth() {
+        return this.width;
+    }
+
+    public void setWidth(final int width) {
+        this.width = width;
+    }
+
+    public int getHeight() {
+        return this.height;
+    }
+
+    public void setHeight(final int height) {
+        this.height = height;
+    }
+
+    public boolean isCollapsed() {
+        return this.collapsed;
+    }
+
+    public void setCollapsed(final boolean collapsed) {
+        this.collapsed = collapsed;
+    }
+
+    public String getTheme() {
+        return this.theme;
+    }
+
+    public void setTheme(final String theme) {
+        this.theme = theme;
+    }
+
+    public String getPattern() {
+        return this.pattern;
+    }
+
+    public void setPattern(final String pattern) {
+        this.pattern = pattern;
     }
 }

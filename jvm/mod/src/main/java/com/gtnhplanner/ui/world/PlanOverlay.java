@@ -7,7 +7,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -22,6 +21,7 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.GLU;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.ui.PlannerSettings;
 import com.gtnhplanner.ui.card.RecipeCard;
@@ -110,10 +110,10 @@ public final class PlanOverlay {
     }
 
     @Nullable
-    private UUID looked;
+    private Uuid looked;
     /** The card the crosshair is on, its spot or the card itself, found on the screen last frame; drawn highlighted. */
     @Nullable
-    private UUID lit;
+    private Uuid lit;
     /** The placement the crosshair meets (its ghost), found with {@link #looked}. */
     @Nullable
     private Placed lookedAt;
@@ -349,11 +349,11 @@ public final class PlanOverlay {
         final List<Conn> out = new ArrayList<>();
         final PlanSnapshot snap = PlanSnapshot.latest();
         if (snap == null) return out;
-        final Map<UUID, Placed> byNode = new HashMap<>();
-        for (final Placed p : placed) if (p.main) for (final UUID id : p.card.nodeIds()) byNode.put(id, p);
+        final Map<Uuid, Placed> byNode = new HashMap<>();
+        for (final Placed p : placed) if (p.main) for (final Uuid id : p.card.nodeIds()) byNode.put(id, p);
         // Only the wires leaving a card near the player, in the plan's order (a plan has tens of thousands).
         final java.util.BitSet leaving = new java.util.BitSet();
-        for (final UUID id : byNode.keySet()) for (final int i : snap.wiresFrom(id)) leaving.set(i);
+        for (final Uuid id : byNode.keySet()) for (final int i : snap.wiresFrom(id)) leaving.set(i);
         for (int i = leaving.nextSetBit(0); i >= 0; i = leaving.nextSetBit(i + 1)) {
             final PlanSnapshot.Line w = snap.wires()
                 .get(i);
@@ -395,11 +395,11 @@ public final class PlanOverlay {
             p.big = v != null
                 && ((v[2] - v[0]) * (v[3] - v[1]) > 0.22f * screenArea || v[3] - v[1] > 0.5f * sr.getScaledHeight());
         }
-        final Map<UUID, Float> seen = attention(all);
+        final Map<Uuid, Float> seen = attention(all);
         for (final Placed p : all) p.a = seen.getOrDefault(p.card.id(), 0f);
         // A card stands over one of its machines, the one the crosshair meets, else its first (the one in hand while
         // placing): the others show as ghosts.
-        final Map<UUID, Placed> stand = new HashMap<>();
+        final Map<Uuid, Placed> stand = new HashMap<>();
         for (final Placed p : all) if (p.main) stand.put(p.card.id(), p);
         if (lookedAt != null && !LinkPicker.active()) for (final Placed p : all) if (!p.preview && p.card.id()
             .equals(lookedAt.card.id()) && p.x == lookedAt.x && p.y == lookedAt.y && p.z == lookedAt.z)
@@ -447,7 +447,7 @@ public final class PlanOverlay {
             near = null;
             over = null;
         }
-        final UUID card = inHand != null ? inHand.id : near != null ? null : over != null ? over.card.id() : looked;
+        final Uuid card = inHand != null ? inHand.id : near != null ? null : over != null ? over.card.id() : looked;
         if (inHand == null && near == null && card == null) {
             float nearest = WIRE_REACH;
             for (final Run r : runs) {
@@ -546,30 +546,30 @@ public final class PlanOverlay {
     private static final float EASE = 12;
 
     /** Each card's share looked at, eased from frame to frame; and when it was last eased. */
-    private final Map<UUID, Float> attention = new HashMap<>();
+    private final Map<Uuid, Float> attention = new HashMap<>();
     private long attentionAt;
     /** The card the crosshair was over last frame: a card being read stays up. */
     @Nullable
-    private UUID overCard;
+    private Uuid overCard;
 
     /**
      * How much each card is looked at, by card, easing in and out: with Focus on, whole with the crosshair on its
      * machine (its ghost, through blocks) or on its card, else none; with Focus off, and while placing, none.
      */
-    private Map<UUID, Float> attention(final List<Placed> all) {
+    private Map<Uuid, Float> attention(final List<Placed> all) {
         final long now = System.nanoTime();
         final float step = attentionAt == 0 ? 1 : Math.min(1, (now - attentionAt) / 1e9f * EASE);
         attentionAt = now;
         final boolean focus = PlannerSettings.arFocus() && !LinkPicker.active();
-        final Map<UUID, Float> want = new HashMap<>();
+        final Map<Uuid, Float> want = new HashMap<>();
         for (final Placed p : all) {
-            final UUID id = p.card.id();
+            final Uuid id = p.card.id();
             final float w = focus && (id.equals(looked) || id.equals(overCard)) ? 1 : 0;
             want.merge(id, w, Math::max);
         }
         attention.keySet()
             .retainAll(want.keySet());
-        for (final Map.Entry<UUID, Float> e : want.entrySet()) {
+        for (final Map.Entry<Uuid, Float> e : want.entrySet()) {
             final float was = attention.getOrDefault(e.getKey(), 0f);
             attention.put(e.getKey(), was + (e.getValue() - was) * step);
         }
@@ -601,7 +601,7 @@ public final class PlanOverlay {
     }
 
     /** How much of a wire shows: as much as the more looked at of the two cards it joins. */
-    private static float shown(final Run r, final Map<UUID, Float> seen) {
+    private static float shown(final Run r, final Map<Uuid, Float> seen) {
         return Math.max(seen.getOrDefault(r.conn.from().card.id(), 0f), seen.getOrDefault(r.conn.to().card.id(), 0f));
     }
 
@@ -670,12 +670,12 @@ public final class PlanOverlay {
      * in
      * lanes, each tag beside its own lane on its outer side.
      */
-    private List<Run> runs(final List<Conn> conns, final Map<UUID, Float> seen, final ScaledResolution sr,
+    private List<Run> runs(final List<Conn> conns, final Map<Uuid, Float> seen, final ScaledResolution sr,
         final Minecraft mc, final PlanSnapshot snap) {
         final List<Run> out = new ArrayList<>();
         final Map<String, List<Conn>> pairs = new java.util.LinkedHashMap<>();
         for (final Conn c : conns) {
-            final UUID a = c.from.card.id(), b = c.to.card.id();
+            final Uuid a = c.from.card.id(), b = c.to.card.id();
             pairs.computeIfAbsent(a.compareTo(b) < 0 ? a + "/" + b : b + "/" + a, key -> new ArrayList<>())
                 .add(c);
         }
@@ -816,7 +816,7 @@ public final class PlanOverlay {
      * world, so they keep their pace and spacing however you move.
      */
     @Nullable
-    private Run run(final Conn c, final float lane, final double clock, final Map<UUID, Float> seen,
+    private Run run(final Conn c, final float lane, final double clock, final Map<Uuid, Float> seen,
         final ScaledResolution sr, final Minecraft mc, final PlanSnapshot snap) {
         // From the block of the one nearest the other to the block of the other nearest that: a structure's wire
         // leaves from its side toward where it goes, and meets the near side of where it arrives.
@@ -1013,7 +1013,7 @@ public final class PlanOverlay {
      * Each card's offset from its home just above its machine, in its own widths (right) and heights (up), kept from
      * frame to frame: where it is going {x, y} and where it is drawn now {x, y}.
      */
-    private final Map<UUID, float[]> offsets = new HashMap<>();
+    private final Map<Uuid, float[]> offsets = new HashMap<>();
     private long laidOut;
 
     /**

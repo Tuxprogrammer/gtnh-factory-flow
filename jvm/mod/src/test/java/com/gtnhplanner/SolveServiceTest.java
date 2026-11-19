@@ -168,11 +168,11 @@ class SolveServiceTest {
             for (final Node machine : chart.machines()) {
                 assertEquals(
                     direct.nodeBalances()
-                        .get(CoreIds.core(machine.id))
+                        .get(machine.id)
                         .operations(),
                     result.balance()
                         .nodeBalances()
-                        .get(CoreIds.core(machine.id))
+                        .get(machine.id)
                         .operations(),
                     1e-6);
             }

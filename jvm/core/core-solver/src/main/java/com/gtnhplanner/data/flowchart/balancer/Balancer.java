@@ -14,6 +14,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.gtnhplanner.core.base.CoreSettings;
+import com.gtnhplanner.core.base.Float32Ops;
 import com.gtnhplanner.core.base.Log;
 import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.balancer.alternatives.Alternative;
@@ -552,7 +553,7 @@ public final class Balancer {
     private static Map<Uuid, Double> configuredCounts(final SolveInput input) {
         final Map<Uuid, Double> counts = new HashMap<>();
         for (final SolveInput.Machine machine : input.machines()) {
-            counts.put(machine.id(), (double) machine.machineCount());
+            counts.put(machine.id(), machine.machineCount());
         }
         return counts;
     }
@@ -592,7 +593,8 @@ public final class Balancer {
                     .get(i);
                 final double stackSize = out.amount();
                 if (stackSize <= 0) continue;
-                final float total = (float) (count * stackSize * out.chance() * out.multiplier() * throughputFactor);
+                final float total = Float32Ops
+                    .of(count * stackSize * out.chance() * out.multiplier() * throughputFactor);
                 if (total <= 0) continue;
                 effOuts.put(i, total);
             }
@@ -606,7 +608,8 @@ public final class Balancer {
                     .get(i);
                 final double stackSize = in.amount();
                 if (stackSize <= 0) continue;
-                final float total = (float) (count * stackSize * in.chance() * in.multiplier() * throughputFactor);
+                final float total = Float32Ops
+                    .of(count * stackSize * in.chance() * in.multiplier() * throughputFactor);
                 if (total <= 0) continue;
                 effIns.put(i, total);
             }

@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.item.ItemStack;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.nei.PlanMenu;
 import com.gtnhplanner.ui.BoardScreen;
@@ -122,7 +122,7 @@ final class Script {
     private static final class Pair {
 
         private final Predicate<Node> kind;
-        private UUID first, second;
+        private Uuid first, second;
         /** The first, and its clone. */
         final Predicate<Node> one, two;
 
@@ -144,9 +144,9 @@ final class Script {
             for (final Node n : all(kind)) if (!n.id.equals(first)) second = n.id;
         }
 
-        private UUID id(final boolean one) {
+        private Uuid id(final boolean one) {
             final List<Node> now = all(kind);
-            final UUID noted = one ? first : second;
+            final Uuid noted = one ? first : second;
             for (final Node n : now) if (n.id.equals(noted)) return noted;
             if (now.size() < (one ? 1 : 2)) return null;
             return one ? now.get(0).id : now.get(now.size() - 1).id;

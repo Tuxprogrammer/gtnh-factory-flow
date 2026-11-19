@@ -14,9 +14,12 @@ The GitHub "GTNH dataset pipeline" workflow has no runner here. Never dispatch i
   Agents here fix pipeline code; they never publish a dataset or write into the operator's
   export, cache or dataset directories.
 - To check a pipeline fix, an agent may run a full export on the build box in its own scratch
-  directory. An export runs a real client and is heavy: hold the box's shared heavy-JVM lock for
-  the whole run, and reuse an existing raw export (`oracle-export.json` with `rendered-icons/`
-  beside it) whenever the fix is in the Node scripts, not the mod.
+  directory. Several exports and game instances may run there at once; there is no lock and no
+  limit on their number. Each run gets its own directory, its own display and its own port
+  (pick a free random port, never a fixed one), and stops only the processes it started. When
+  the run ends, stop them and remove what it created. Reuse an existing raw export
+  (`oracle-export.json` with `rendered-icons/` beside it) whenever the fix is in the Node
+  scripts, not the mod: an export runs a real client and takes about 20 minutes.
 - Never export with `GTNH_RENDER_STACK_ICONS=false`: the export stamps icon filenames, and a
   run without them breaks search.
 - Only 2.9 is supported.

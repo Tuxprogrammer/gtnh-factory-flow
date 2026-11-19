@@ -52,6 +52,14 @@ jobs:
         with:
           node-version: 24
           cache: npm
+      # The website's tests load the core, which Gradle and TeaVM build (tools/copy-core.mjs): JDK 25 only.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 25
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/restructure' }}
       - run: npm ci
       - run: tools/ci/website.sh
 

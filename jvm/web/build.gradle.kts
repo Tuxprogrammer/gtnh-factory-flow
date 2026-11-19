@@ -16,6 +16,8 @@ plugins {
 val coreModules = listOf(
     ":core-base",
     ":core-machines",
+    ":core-power",
+    ":core-layout",
 )
 
 val teavmVersion = "0.16.0"

@@ -7,6 +7,8 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.machines.OutputSlots;
+
 /**
  * The game's own overclock ladder where the website prefers it (src/lib/solver/runtime-calculation.ts): a recipe's
  * runtime variants are GT's OverclockCalculator run at each tier, with one parallel. A machine the curated table covers
@@ -58,7 +60,10 @@ public final class RuntimeCalculation {
         return best;
     }
 
-    /** getRuntimeCalculationOutputs: the variant's outputs (with the recipe's own where it names them), or null. */
+    /**
+     * getRuntimeCalculationOutputs: the variant's outputs (with the recipe's own where it names them), those past the
+     * machine's item slots at zero, or null.
+     */
     @Nullable
     public static List<Web.Resource> outputs(final Web.Recipe recipe, final Web.Node node) {
         final Web.RuntimeVariant v = select(recipe, node);
@@ -81,6 +86,8 @@ public final class RuntimeCalculation {
             res.optional = existing != null ? existing.optional : null;
             out.add(res);
         }
+        // The variant lists every recipe output; a singleblock makes only those it has slots for.
+        OutputSlots.zeroUnslotted(recipe, out, tier(v, "LV"));
         return out;
     }
 

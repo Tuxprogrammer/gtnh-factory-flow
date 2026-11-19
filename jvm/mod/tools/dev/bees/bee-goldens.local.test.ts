@@ -1,12 +1,12 @@
 /**
- * Golden cases for the mod's bee model (machines/Bees.java): a bee card on the website's own functions over a spread
- * of settings, in the three housings the mod models (the plain Apiary, as the mod posts it with a handler of its own;
- * the Magic Apiary, the website's default; the Industrial Apiary). Run with the website's vitest through
- * vitest.bees.config.mjs beside it (its header says how); writes conformance/machines/bee-goldens.jsonl.gz,
- * which BeesGoldensTest reads.
+ * Golden cases for the core's bee model (machines/Bees.java): a bee card on the website's own functions over a spread
+ * of settings, in every housing the website offers (the Apiary, the Bee House, the Magic Apiary, the Alveary, the
+ * Industrial Apiary and the Mega Apiary), at the pack's bee yield of 1 and, on a smaller spread, 4. Run with the
+ * website's vitest through vitest.bees.config.mjs beside it (its header says how); writes
+ * conformance/machines/bee-goldens.jsonl.gz, which BeesGoldensTest reads.
  *
  * FORMAT: gzip, UTF-8, one JSON object per line:
- *   { housing: "apiary" | "magic-apiary" | "industrial-apiary", tiers: { controlId: key },
+ *   { housing: the handler id, tiers: { controlId: key }, tier (the card's voltage tier), beesYield,
  *     product, specialty,      // getMachineOutputMultiplier for a product and for a specialty marked
  *                              // "Needs preferred climate" (the website's jubilance rule)
  *     duration,                // getMachineDurationMultiplier
@@ -15,6 +15,7 @@
 import fs from "node:fs";
 import zlib from "node:zlib";
 import { applyMachineHandlerToRecipe } from "@/lib/model/recipe-rules";
+import { setActiveGameRates } from "@/lib/model/game-rates";
 import { enrichPassiveProductionRecipe } from "@/lib/model/passive-production";
 import { getOverclockedRecipeStats } from "@/lib/solver/overclock";
 import { getMachineDurationMultiplier, getMachineOutputMultiplier } from "@/lib/solver/machine-effects";
@@ -80,6 +81,11 @@ const FRAMES = [
 const STACKING = ["none", "forestry:untreated", "forestry:proven", "magicbees:magic", "magicbees:gentle", "magicbees:necrotic"];
 const IA_SPEEDS = ["none", "speed-1", "speed-2", "speed-3", "speed-4", "speed-5", "speed-6", "speed-7", "speed-8", "speed-8-upgraded"];
 const IA_PRODUCTION = ["0", "1", "2", "3", "4", "5", "6", "7", "8"];
+const ALVEARY_FRAMES = ["none", "proven", "magic", "four-proven"];
+const ALVEARY_STIMULATORS = ["none", "low-voltage", "high-voltage", "four-high-voltage"];
+const ALVEARY_SUPPORTS = ["plain", "climate", "lighting-rain", "sieve"];
+const MEGA_JELLIES = ["none", "partial", "full"];
+const MEGA_TIERS = ["LuV", "ZPM", "UV", "UHV", "UEV"];
 
 function frameSets(): string[][] {
   const out: string[][] = [];
@@ -99,8 +105,7 @@ function frameSets(): string[][] {
 }
 
 it("writes the bee goldens", () => {
-  // The plain Apiary is not one of the site's bee machines (its first, and default, is the Magic Apiary): the mod
-  // posts its Apiary cards with this handler first in the recipe, which the site merges ahead of its own.
+  // A bee recipe as the mod posts it, the Apiary its first handler; the site merges its own housings in by id.
   const recipe = enrichPassiveProductionRecipe({
     ...beeRecipe(),
     machineHandlers: [
@@ -108,24 +113,30 @@ it("writes the bee goldens", () => {
     ],
   } as Recipe);
   const lines: string[] = [];
-  const write = (housing: string, tiers: Record<string, string>) => {
+  let beesYield = 1;
+  const write = (housing: string, tiers: Record<string, string>, voltage?: string) => {
+    const tier = voltage ?? (housing === "industrial-apiary" ? "MV" : "NONE");
     const node = {
       id: "n",
       recipeId: recipe.id,
       machineCount: 1,
       parallel: 1,
-      overclockTier: housing === "industrial-apiary" ? "MV" : "NONE",
+      overclockTier: tier,
       machineConfigTiers: tiers,
       machineHandlerId: housing,
     } as never;
     const effective = applyMachineHandlerToRecipe(recipe, node);
     const stats = getOverclockedRecipeStats(effective, node);
+    // The tier the card's outputs are worked at: the Mega Apiary's own, else the one every card was written at.
+    const at = (voltage ?? "MV") as never;
     lines.push(
       JSON.stringify({
         housing,
         tiers,
-        product: getMachineOutputMultiplier(effective, node, effective.outputs[0]!, "MV"),
-        specialty: getMachineOutputMultiplier(effective, node, effective.outputs[1]!, "MV"),
+        tier,
+        beesYield,
+        product: getMachineOutputMultiplier(effective, node, effective.outputs[0]!, at),
+        specialty: getMachineOutputMultiplier(effective, node, effective.outputs[1]!, at),
         duration: getMachineDurationMultiplier(effective, node),
         durationTicks: stats.durationTicks,
         eut: stats.eut,
@@ -164,6 +175,46 @@ it("writes the bee goldens", () => {
             beeIndustrialSpeed: ia,
             beeIndustrialProduction: production,
           });
+  for (const speed of SPEEDS)
+    for (const climate of CLIMATES) write("bee-house", { beeSpeedGene: speed, beeEnvironment: climate });
+  for (const speed of SPEEDS)
+    for (const climate of CLIMATES)
+      for (const frames of ALVEARY_FRAMES)
+        for (const stimulator of ALVEARY_STIMULATORS)
+          for (const support of ALVEARY_SUPPORTS)
+            write("alveary", {
+              beeSpeedGene: speed,
+              beeEnvironment: climate,
+              beeAlvearyFrameHousing: frames,
+              beeAlvearyStimulator: stimulator,
+              beeAlvearySupport: support,
+            });
+  for (const speed of SPEEDS)
+    for (const jelly of MEGA_JELLIES)
+      for (const tier of MEGA_TIERS) write("mega-apiary", { beeSpeedGene: speed, beeMegaRoyalJelly: jelly }, tier);
+  // The pack's bee yield (GTNHRates' beesYield) on a smaller spread: every housing, every gene and climate.
+  beesYield = 4;
+  setActiveGameRates({ beesYield });
+  try {
+    const empty = { beeFrameSlot2: "none", beeFrameSlot3: "none" };
+    for (const speed of SPEEDS)
+      for (const climate of CLIMATES) {
+        const base = { beeSpeedGene: speed, beeEnvironment: climate };
+        for (const frame of FRAMES) write("apiary", { ...base, ...empty, beeFrameSlot1: frame });
+        write("bee-house", base);
+        write("magic-apiary", { ...base, ...empty, beeFrameSlot1: "none", beeMagicAura: "production-aura" });
+        write("alveary", {
+          ...base,
+          beeAlvearyFrameHousing: "four-proven",
+          beeAlvearyStimulator: "four-high-voltage",
+          beeAlvearySupport: "plain",
+        });
+        write("industrial-apiary", { ...base, beeIndustrialSpeed: "speed-8", beeIndustrialProduction: "8" });
+      }
+    for (const speed of SPEEDS) write("mega-apiary", { beeSpeedGene: speed, beeMegaRoyalJelly: "full" }, "UV");
+  } finally {
+    setActiveGameRates(undefined);
+  }
   fs.writeFileSync(OUT, zlib.gzipSync(Buffer.from(lines.join("\n") + "\n", "utf8")));
   console.log(`wrote ${lines.length} bee cases to ${OUT}`);
 }, 120_000);

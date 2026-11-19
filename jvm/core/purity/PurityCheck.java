@@ -46,14 +46,41 @@ import javax.tools.ToolProvider;
  * The core's purity gate. Fails when a core module's main code uses something rules.txt names (the reason is printed
  * with each finding) and allow.txt does not excuse. Detection: a dependency list for classpath rules, the compiled
  * classes for class, member and concat rules (every instruction, signature and constant-pool reference, so a method
- * reference or a generic type counts too), and the source text for source rules (what leaves no trace in bytecode,
- * such as Lombok). Run by Gradle on JDK 25 (the class-file API) as a single-file program:
+ * reference or a generic type counts too), the arithmetic and conversion instructions for op rules (what the source
+ * says does not matter, only what javac made of it: a float {@code +=} and a hidden widening both show), and the source
+ * text for source rules (what leaves no trace in bytecode, such as Lombok). Run by Gradle on JDK 25 (the class-file API) as a single-file program:
  *
  * <pre>
  *   java PurityCheck.java --root jvm --module core-base --sources ... --classes ... --rules ... --allow ... \
  *       --report out.txt [--dep group:name:version ...]
  *   java PurityCheck.java --self-test planted-dir --rules rules.txt
  * </pre>
+ *
+ * <p>
+ * What it cannot catch, so a reviewer must (each was measured on the JVM, TeaVM's JavaScript target and its WebAssembly
+ * GC target by the probe in the kernel stream's state file; the rules.txt reasons give the numbers):
+ * <ul>
+ * <li>A float that arrives already wrong. The float-narrow rule flags the instructions that make an unrounded float,
+ * so a consumer (a comparison, a store, a call) is only wrong when a producer fed it: the producer is in some core
+ * module's main code and is flagged there. A float from outside the core (a host call, a host-built record) is not
+ * seen, nor is one made by a library jar.
+ * <li>A double converted to int or long (D2I, D2L, Math.round) whose value can leave the range of the type, or is NaN:
+ * the JVM and the WebAssembly target saturate, the JavaScript target wraps (and Math.round(NaN) throws there). About a
+ * hundred sites convert values that stay in range by construction, so the gate does not flag the instruction; clamp
+ * first wherever a value can be unbounded.
+ * <li>The sign of a zero from unary minus: the WebAssembly target compiles {@code -x} as {@code 0.0 - x}, so -(+0.0) is
+ * +0.0 there and -0.0 on the JVM. It only shows through division, atan2, copySign, Double.compare, a boxed Double used
+ * as a key, or text; about forty-five negations exist, nearly all on values that are never zero or are only compared
+ * with &lt;. Where a zero can reach one of those, write {@code x * -1.0}.
+ * <li>The last place of Math.pow, exp, log, sin, tan, atan, atan2, asin, acos, sqrt, floor, ceil, abs, signum, max and
+ * min: they agreed with the JVM on every case probed (27 inputs each), but a probe is not a proof. StrictMath.pow and
+ * StrictMath.exp each differed by one place on one input, Math.cos by one place on three inputs where StrictMath.cos
+ * agrees: the web targets give fdlibm's answers, as V8 does, so where a result must equal the website's, use
+ * StrictMath's trigonometry as the layout code does, and treat every compare of a computed double as needing a
+ * tolerance.
+ * <li>Anything a rule's member pattern does not name: a new java.lang function, or a call through a method handle or
+ * reflection (the reflection rule forbids that for other reasons).
+ * </ul>
  */
 public final class PurityCheck {
 
@@ -405,12 +432,6 @@ public final class PurityCheck {
         OPS.put("FDIV", "float division");
         OPS.put("FREM", "float remainder (%)");
         OPS.put("DREM", "double remainder (%)");
-        OPS.put("FNEG", "float negation");
-        OPS.put("DNEG", "double negation");
-        OPS.put("D2I", "cast of a double to int");
-        OPS.put("D2L", "cast of a double to long");
-        OPS.put("F2I", "cast of a float to int");
-        OPS.put("F2L", "cast of a float to long");
     }
 
     void op(final String opcode, final int line, final Hit hit) {

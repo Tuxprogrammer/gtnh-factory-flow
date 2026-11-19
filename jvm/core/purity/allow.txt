@@ -17,3 +17,21 @@ core/core-machines/src/main/java/com/gtnhplanner/machines/web/Hile.java string-f
 core/core-machines/src/main/java/com/gtnhplanner/machines/web/Js.java float-parse JavaScript Number(s) stand-in; becomes NumberText.parse
 core/core-machines/src/main/java/com/gtnhplanner/machines/web/Js.java float-text JavaScript String(n) stand-in; becomes NumberText.of
 core/core-machines/src/main/java/com/gtnhplanner/machines/web/MachineEffects.java float-parse a numeric setting key read as a number; becomes NumberText.parse
+
+# core-base: the places that are the answer to a rule.
+core/core-base/src/main/java/com/gtnhplanner/core/base/Float32Ops.java float-narrow the one place a float is narrowed: through the bit pattern, which rounds on every target
+core/core-base/src/main/java/com/gtnhplanner/core/base/Roots.java math-cbrt the wrapper that makes a perfect cube exact
+core/core-base/src/main/java/com/gtnhplanner/core/base/NumberText.java math-drift an estimate of the decimal point that the code below corrects exactly, so log10 drift cannot change the answer
+
+# core-machines float and Math sites found by the float rules: the machines stream fixes each (the fix is in the reason) and deletes its line with it.
+core/core-machines/src/main/java/com/gtnhplanner/machines/BacterialVat.java float-narrow machines stream: the float arithmetic at line 91 goes through core-base Float32Ops (of, mul, div)
+core/core-machines/src/main/java/com/gtnhplanner/machines/BacterialVat.java math-drift machines stream: the two Math.tanh calls become a tanh built on Math.exp, which matches on both targets
+core/core-machines/src/main/java/com/gtnhplanner/machines/Bees.java float-narrow machines stream: every float cast and float + - * / goes through core-base Float32Ops (of, add, sub, mul, div)
+core/core-machines/src/main/java/com/gtnhplanner/machines/FormulaLine.java math-rint machines stream: Math.rint(x) == x becomes Math.floor(x) == x
+core/core-machines/src/main/java/com/gtnhplanner/machines/TreeGrowthSimulator.java float-narrow machines stream: the float arithmetic at lines 200-204 goes through core-base Float32Ops
+core/core-machines/src/main/java/com/gtnhplanner/machines/web/ExtremeEntityCrusher.java float-narrow machines stream: the (float) cast at line 456 becomes core-base Float32Ops.of
+core/core-machines/src/main/java/com/gtnhplanner/machines/web/Hile.java math-cbrt machines stream: Math.cbrt becomes core-base Roots.cbrt
+core/core-machines/src/main/java/com/gtnhplanner/machines/web/Js.java math-rint machines stream: Math.rint becomes Math.floor on a value known finite, or a half-even rounding written with Math.floor
+core/core-machines/src/main/java/com/gtnhplanner/machines/web/MachineTableEntries.java math-cbrt machines stream: Math.cbrt becomes core-base Roots.cbrt
+core/core-machines/src/main/java/com/gtnhplanner/machines/web/NeutronActivator.java remainder machines stream: % on doubles becomes core-base JsMath.rem
+core/core-machines/src/main/java/com/gtnhplanner/machines/web/PowerReport.java math-rint machines stream: Math.rint becomes Math.floor on a value known finite, or a half-even rounding written with Math.floor

@@ -9,6 +9,8 @@
 #                                   java/lang/Double.toString(D)Ljava/lang/String;  (* matches anything)
 #   <id> concat <descriptor>        a string concatenation (javac's invokedynamic) with an operand of this type
 #   <id> source <regex>             a match in the source text, comments and string literals removed
+#   <id> op <OPCODE>                a bytecode arithmetic or conversion instruction (D2F, FADD, DREM...), found in
+#                                   compiled code; what the source says does not matter, only what javac made of it
 #
 # An exception is a line in allow.txt beside this file: the file, the rule, and why, argued in the open.
 
@@ -186,7 +188,7 @@ log4j classpath org.apache.logging.log4j:*
 log4j class org/apache/logging/
 log4j class org/slf4j/
 
-rule float-narrow The web compile's JavaScript target does not narrow a float: a cast from double, float arithmetic and an int or long converted to float all stay doubles there (0.1 stays 0.1, 16777217 stays exact), where the JVM and the WebAssembly target round to single precision; a float field, local, parameter, return, record component or boxed Float then carries the wrong number. Literals, float[] stores and Float.floatToIntBits narrow on every target. Round at the point of the narrowing through core-base's Float32 (Float32.of(double) for a cast, Float32.add, sub, mul, div for the four operations, Float32.of(int or long) for a conversion), which narrows on every target.
+rule float-narrow The web compile's JavaScript target does not narrow a float: a cast from double, float + - * / and an int or long converted to float all stay doubles there (0.1 stays 0.1, 16777217 stays exact), where the JVM and the WebAssembly target round to single precision; a float field, local, parameter, return, record component or boxed Float then carries the wrong number. Literals, float[] stores and Float.floatToIntBits narrow on every target. Round at the point of the narrowing through core-base's Float32Ops (of(double) for a cast, add, sub, mul and div for the four operations, of(int) and of(long) for a conversion), which narrows on every target; or keep the value a double.
 float-narrow op D2F
 float-narrow op I2F
 float-narrow op L2F
@@ -195,14 +197,42 @@ float-narrow op FSUB
 float-narrow op FMUL
 float-narrow op FDIV
 
-rule remainder The web compile's WebAssembly GC target computes % on a double or float as x - trunc(x / y) * y, which is not the exact remainder: 123456.789 % 0.001 gives 0 (the JVM and JavaScript give 1.7374062258324052e-12), 3.4028236e38 % 2 gives 3.4028236e38 (not 0), -0.1 % 0.1 gives 0 (not -0), and 0 % -0 gives 0 (not NaN). Use core-base's JsMath.rem, the exact remainder (fmod) on every target.
+rule remainder The web compile's WebAssembly GC target computes % on a double or float as x - trunc(x / y) * y, which is not the exact remainder: 123456.789 % 0.001 gives 0 (the JVM and JavaScript give 1.7374062258324052e-12), 3.4028236e38 % 2 gives 3.4028236e38 (not 0), -0.1 % 0.1 gives 0 (not -0), and 0 % -0 gives 0 (not NaN). Use core-base's JsMath.rem, the exact remainder (fmod) on every target. An int or long % is exact everywhere and is not flagged.
 remainder op DREM
 remainder op FREM
 
-rule negate The web compile's WebAssembly GC target compiles -x on a double or float as 0.0 - x, so the negation of 0 is 0 where the JVM and JavaScript give -0. Wherever the sign of a zero can reach a result (division, Math.atan2, copySign, Double.compare, a boxed Double used as a key or text), write the negation as x * -1.0.
-negate op DNEG
-negate op FNEG
+rule math-cbrt The web compile's own cube root is off by several units in the last place (cbrt(262144) is 63.999999999999986, cbrt(1e300) is 9.999999999999872e99 where the JVM and JavaScript give 64 and 1e100), and a floor of it then lands one low. Use core-base's Roots.cbrt, exact on every perfect cube; other values still differ from the JVM in the last bits, so never compare one for equality.
+math-cbrt member java/lang/Math.cbrt(*
+math-cbrt member java/lang/StrictMath.cbrt(*
 
-rule double-to-integer The web compile's JavaScript target converts a double to int or long by wrapping where the JVM and the WebAssembly target saturate: (int) 1e10 is 2147483647 on the JVM and 1410065408 on JavaScript. A cast of a value that can leave the range of the integer type must clamp first.
-double-to-integer op D2I
-double-to-integer op D2L
+rule math-rint The web compile's Math.rint rounds a half up (rint(2.5) is 3, the JVM gives 2), gives garbage above 2^63 (rint(1e300) is 0 on JavaScript and 9.2e18 on WebAssembly) and throws on NaN on the JavaScript target. To ask whether a number is whole, write Math.floor(x) == x, which is exact everywhere; to round, use JsMath.round.
+math-rint member java/lang/Math.rint(*
+math-rint member java/lang/StrictMath.rint(*
+
+rule math-hypot The web compile's Math.hypot is sqrt(x * x + y * y): a unit in the last place away from the JVM's and V8's (hypot(0.1, 0.2) is 0.223606797749979, the JVM gives 0.22360679774997896), and Infinity where the JVM gives a finite number once a square overflows (hypot(1e300, 1e-300)). Use core-layout's JsMath.hypot, V8's own algorithm, so the website and both targets agree.
+math-hypot member java/lang/Math.hypot(*
+math-hypot member java/lang/StrictMath.hypot(*
+
+rule math-drift These java.lang.Math functions differ between the JVM and the web compile by more than the rounding of the last place, or by a place: tanh gives NaN for any large argument (the JVM gives 1), log1p and expm1 lose their small-argument digits (log1p(1.5e-10) is 1.5000001239980566e-10, the JVM gives 1.4999999998875e-10), sinh and cosh, log10 (log10(1000) is 2.9999999999999996, the JVM gives 3), toRadians and toDegrees, ulp (garbage: ulp(0.1) is 1.2e-94), IEEEremainder (a different answer), scalb (overflows to Infinity early). Write the formula out with Math.exp, Math.log, Math.pow and Math.sqrt, which agree on every target, or leave a tolerance a few places wide and say so in the allow entry.
+math-drift member java/lang/Math.tanh(*
+math-drift member java/lang/Math.log1p(*
+math-drift member java/lang/Math.expm1(*
+math-drift member java/lang/Math.sinh(*
+math-drift member java/lang/Math.cosh(*
+math-drift member java/lang/Math.log10(*
+math-drift member java/lang/Math.toRadians(*
+math-drift member java/lang/Math.toDegrees(*
+math-drift member java/lang/Math.ulp(*
+math-drift member java/lang/Math.IEEEremainder(*
+math-drift member java/lang/Math.scalb(*
+math-drift member java/lang/StrictMath.tanh(*
+math-drift member java/lang/StrictMath.log1p(*
+math-drift member java/lang/StrictMath.expm1(*
+math-drift member java/lang/StrictMath.sinh(*
+math-drift member java/lang/StrictMath.cosh(*
+math-drift member java/lang/StrictMath.log10(*
+math-drift member java/lang/StrictMath.toRadians(*
+math-drift member java/lang/StrictMath.toDegrees(*
+math-drift member java/lang/StrictMath.ulp(*
+math-drift member java/lang/StrictMath.IEEEremainder(*
+math-drift member java/lang/StrictMath.scalb(*

@@ -3,6 +3,8 @@ package com.gtnhplanner.layout;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.gtnhplanner.core.layout.JsMath;
+
 /**
  * Hops: where a wire crosses one drawn behind it, it lifts over in a bump, the schematic jumper that makes a crossing
  * read as "these do not meet" instead of a flat X. Factory Flow's {@code wire-hops.ts}, ported.
@@ -41,7 +43,7 @@ public final class WireHops {
     public record Bump(double footX, double footY, double landX, double landY, double rise, double nx, double ny) {
 
         public double chord() {
-            return Math.hypot(landX - footX, landY - footY);
+            return JsMath.hypot(landX - footX, landY - footY);
         }
 
         public double apexX() {
@@ -98,7 +100,7 @@ public final class WireHops {
         for (int i = 0; i < count; i++) {
             xs[i] = path.get(i)[0];
             ys[i] = path.get(i)[1];
-            if (i > 0) arcs[i] = arcs[i - 1] + Math.hypot(xs[i] - xs[i - 1], ys[i] - ys[i - 1]);
+            if (i > 0) arcs[i] = arcs[i - 1] + JsMath.hypot(xs[i] - xs[i - 1], ys[i] - ys[i - 1]);
         }
         if (count < 2 || crossed.isEmpty() || arcs[count - 1] < MIN_CHORD) return plain(xs, ys);
         final double total = arcs[count - 1];
@@ -106,7 +108,7 @@ public final class WireHops {
         final List<double[]> windows = new ArrayList<>(); // {from, to, height}
         final double[] dist = new double[count];
         for (final Crossed s : crossed) {
-            final double vx = s.ex() - s.sx(), vy = s.ey() - s.sy(), length = Math.hypot(vx, vy);
+            final double vx = s.ex() - s.sx(), vy = s.ey() - s.sy(), length = JsMath.hypot(vx, vy);
             if (length < 1) continue;
             final double ux = vx / length, uy = vy / length;
             // Signed distance of each vertex from the crossed line.
@@ -135,7 +137,7 @@ public final class WireHops {
         }
         if (windows.isEmpty()) return plain(xs, ys);
 
-        windows.sort((a, b) -> Float.compare(a[0], b[0]));
+        windows.sort((a, b) -> Double.compare(a[0], b[0]));
         // Bumps closer together than a bump is tall run into one: two humps with a few pixels of straight between
         // them read as a wiggle, not two hops.
         final List<double[]> merged = new ArrayList<>();
@@ -266,7 +268,7 @@ public final class WireHops {
      */
     private static Bump bump(final double[] foot, final double[] landing, final double height,
         final List<double[]> inside) {
-        final double dx = landing[0] - foot[0], dy = landing[1] - foot[1], chord = Math.hypot(dx, dy);
+        final double dx = landing[0] - foot[0], dy = landing[1] - foot[1], chord = JsMath.hypot(dx, dy);
         if (chord < MIN_CHORD) return null;
         final double ux = dx / chord, uy = dy / chord;
         // The upper normal of the chord (screen y runs down), or the right-hand one when it is vertical.

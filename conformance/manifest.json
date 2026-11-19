@@ -89,6 +89,14 @@
         "core-base: data/flowchart/OrderKeysTest"
       ],
       "generator": "website: src/lib/tasks/order-key.ts"
+    },
+    "view": {
+      "specifies": "The overview rail and the notices bar as view records: rail-cases.json is plan read-outs (flows, drawers, machines, spares and the player's view) with the rail the website's code makes of each (sections, lines, setters, spares, machine groups, power totals and the dial); notice-cases.json is the solver's notes with the notice list made of them (id, severity, word key, arguments, focus); rail-math.json is the rate box, share and wheel arithmetic, the peak machine count and the power dial. Numbers are raw; each host spells them with its own formatter. Optional fields are absent, never null.",
+      "readers": [
+        "jvm: core-view com.gtnhplanner.core.view.rail.RailConformanceTest",
+        "website: src/components/flow/clean/rail/rail-conformance.test.ts"
+      ],
+      "generator": "npx tsx tools/conformance/view/generate.ts, then node tools/conformance/manifest.mjs --write"
     }
   },
   "files": {
@@ -1046,6 +1054,21 @@
       "area": "tasks",
       "bytes": 6601,
       "sha256": "dad06cb14862c075382f2b43fdffb9edfed3b8534cc221add8dbf7e3bf6a8664"
+    },
+    "view/notice-cases.json": {
+      "area": "view",
+      "bytes": 32444,
+      "sha256": "634bebd79490fcb3eb3ba197e2dce52739b74b6ee3e6d4f60373978238250600"
+    },
+    "view/rail-cases.json": {
+      "area": "view",
+      "bytes": 466576,
+      "sha256": "ee391f33e9a429b4d12bd7de8b1c2c5f15c459aeebe0e3ebe51b12f9e94e954d"
+    },
+    "view/rail-math.json": {
+      "area": "view",
+      "bytes": 46714,
+      "sha256": "0788bdc578a1adf1ac578d1665a8c998001b46222b68398d2e1519b7486df174"
     }
   }
 }

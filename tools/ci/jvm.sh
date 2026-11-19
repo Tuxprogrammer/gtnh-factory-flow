@@ -9,7 +9,9 @@ cd "$CI_ROOT/jvm"
 
 # Hosted runners keep each JDK in JAVA_HOME_<n>_X64; tell Gradle's toolchain search about them.
 envs=$(compgen -v | grep -E '^JAVA_HOME_[0-9]+_X64$' | paste -sd, - || true)
-extra=()
+# Gradle's own default heap is 512 MiB, too small for the mod's build (the daemon dies thrashing in downgradeJar).
+# Set it here so a runner without a configured Gradle home behaves like the build box.
+extra=("-Dorg.gradle.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=768m -Dfile.encoding=UTF-8")
 if [ -n "$envs" ]; then extra+=("-Porg.gradle.java.installations.fromEnv=$envs"); fi
 
 # A result file from an earlier run must never count: a resumed build can report `:test NO-SOURCE` and run nothing.

@@ -94,7 +94,6 @@ jobs:
             25
       - uses: gradle/actions/setup-gradle@v4
         with:
-          build-root-directory: jvm
           # Only main and restructure write the cache; other branches read it.
           cache-read-only: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/restructure' }}
       # RetroFuturaGradle's deobfuscated game, about 50 MB, takes minutes to rebuild. It checks its own
@@ -134,7 +133,6 @@ jobs:
           java-version: 25
       - uses: gradle/actions/setup-gradle@v4
         with:
-          build-root-directory: jvm
           cache-read-only: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/restructure' }}
       - run: npm ci
       - run: tools/ci/web-core.sh

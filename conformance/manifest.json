@@ -28,6 +28,14 @@
       "specifies": "Files that disagree with a copy in the tree and wait for a decision. No suite reads them. Each subdirectory says in its README.md what it is and which file it would replace.",
       "readers": []
     },
+    "power": {
+      "specifies": "The power sources as the website computes them: every source with its settings and option labels, its model (EU/t, flows with their alternatives, stats, warnings, the Amps tier) at its defaults and with each setting moved alone, the turbine flow check at several flow shares, and the voltage-tier boundaries. One JSON object per line, gzip.",
+      "readers": [
+        "website: src/lib/power/power-goldens.test.ts",
+        "core-power: power/PowerGoldensTest"
+      ],
+      "generator": "npx tsx tools/audits/export-mod-power-goldens.ts --out conformance/power/power-goldens.jsonl.gz (records in src/lib/power/golden-records.ts), then node tools/conformance/manifest.mjs --write"
+    },
     "solver/corpus": {
       "specifies": "The solver's whole answer on a plan. inputs/<case>.json is a SolveInput as the mod's SolveInputJson writes it; goldens/<case>.json is the digest of the answer both solvers must give, equal to 1e-6 relative. platline-x4 and platline-x10 have a golden only: their input is platline tiled 4 and 10 times. The 16 gtnh-flow-* inputs are dumps of yaml charts the mod loads itself.",
       "readers": [
@@ -102,6 +110,11 @@
       "area": "pending",
       "bytes": 55512,
       "sha256": "9fa420b4d1193a5cf3d8780bb1e30fa351ec0003c1e56bc0d77409dd93792d82"
+    },
+    "power/power-goldens.jsonl.gz": {
+      "area": "power",
+      "bytes": 268201,
+      "sha256": "14dbdf7318bd43c48c9e61dd514a68fec7dfbb695b00d268934b612941d4ebab"
     },
     "solver/corpus/goldens/alumina-line-shared-reactor.json": {
       "area": "solver/corpus",

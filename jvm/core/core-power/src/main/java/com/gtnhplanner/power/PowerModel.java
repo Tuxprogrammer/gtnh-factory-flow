@@ -32,7 +32,28 @@ public record PowerModel(double euPerTick, List<Flow> inputs, List<Flow> outputs
      * One resource stream of ONE machine. {@code name} is the workbook's display name; {@link PowerResources}
      * resolves it to an item or fluid where the map knows it, and the card shows it as a stat where not.
      */
-    public record Flow(String name, double perSecond, Unit unit) {}
+    public record Flow(String name, double perSecond, Unit unit, List<Alternative> alternatives) {
+
+        public Flow {
+            alternatives = List.copyOf(alternatives);
+        }
+
+        public Flow(final String name, final double perSecond, final Unit unit) {
+            this(name, perSecond, unit, List.of());
+        }
+
+        /** This flow with other items its slot takes (types.ts PowerFlowLine.alternatives). */
+        public Flow withAlternatives(final List<Alternative> alternatives) {
+            return new Flow(name, perSecond, unit, alternatives);
+        }
+    }
+
+    /**
+     * Another item a flow's slot takes in place of its own (types.ts PowerFlowLine.alternatives): {@code kind} is always
+     * "item", {@code id} the website's item id ({@code @32767} is any damage), as a fuel line that lists interchangeable
+     * fuels (any log for a firebox that burns logs).
+     */
+    public record Alternative(String kind, String id, String displayName) {}
 
     public record Stat(String label, String value) {}
 

@@ -2,7 +2,7 @@
 /**
  * Resolves every fuel / loop-fluid name the power sector uses against the
  * live dataset's resources API, and bakes the matches into
- * src/lib/power/data/resource-map.json (name -> slot metadata). Names that
+ * jvm/core/core-power/src/main/resources/assets/gtnhplanner/power/resource-map.json (the source; node tools/sync-core-tables.mjs --write copies it to src/lib/power/data/) (name -> slot metadata). Names that
  * do not resolve are listed at the end; power cards show those flows as
  * stats instead of wired ports until an alias is added below.
  *
@@ -14,12 +14,27 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dataPath = path.join(repoRoot, "src", "lib", "power", "data", "power-planner-data.json");
-const outPath = path.join(repoRoot, "src", "lib", "power", "data", "resource-map.json");
+const outPath = path.join(
+  repoRoot,
+  "jvm",
+  "core",
+  "core-power",
+  "src",
+  "main",
+  "resources",
+  "assets",
+  "gtnhplanner",
+  "power",
+  "resource-map.json",
+);
 const args = process.argv.slice(2);
-const base = args[args.indexOf("--base") + 1] && args.includes("--base")
-  ? args[args.indexOf("--base") + 1]
-  : "https://gtnhplanner.com";
-const version = args.includes("--version") ? args[args.indexOf("--version") + 1] : "local-2.9.0-beta-2";
+const base =
+  args[args.indexOf("--base") + 1] && args.includes("--base")
+    ? args[args.indexOf("--base") + 1]
+    : "https://gtnhplanner.com";
+const version = args.includes("--version")
+  ? args[args.indexOf("--version") + 1]
+  : "local-2.9.0-beta-2";
 
 const data = JSON.parse(fs.readFileSync(dataPath, "utf8"));
 
@@ -33,13 +48,13 @@ const ALIASES = {
   "Dense SH Steam": "Dense Superheated Steam",
   "Dense SC Steam": "Dense Supercritical Steam",
   "Bio Gas": "Biogas",
-  "CO2": "Carbon Dioxide",
-  "Diesel": "Fuel",
+  CO2: "Carbon Dioxide",
+  Diesel: "Fuel",
   "Diesel (Fuel)": "Fuel",
-  "Ethanol": "Bio Ethanol",
-  "Coolant": "IC2 Coolant",
+  Ethanol: "Bio Ethanol",
+  Coolant: "IC2 Coolant",
   "Hot Coolant": "IC2 Hot Coolant",
-  "Cryotheum": "Gelid Cryotheum",
+  Cryotheum: "Gelid Cryotheum",
   "Cold Solar Salt": "Solar Salt (Cold)",
   "Hot Solar Salt": "Solar Salt (Hot)",
   "RP-1 (red)": "Rp-1 Rocket Fuel",
@@ -76,7 +91,7 @@ const ALIASES = {
   "Naquadria Bolt (ZPM)": "Naquadria Bolt",
   "Naquadria Rod (UV)": "Naquadria Rod",
   "Forestry Biomass": "Biomass",
-  "Li2BeF4": "Lithium Tetrafluoroberyllate (LFTB)",
+  Li2BeF4: "Lithium Tetrafluoroberyllate (LFTB)",
   "U-Salt": "Uranium Depleted Molten Salt (U Salt)",
   "T-Salt": "Thorium Depleted Molten Salt (T Salt)",
   "TB-Salt": "Thorium-Beryllium Depleted Molten Salt (TB Salt)",
@@ -350,8 +365,11 @@ function pick(results, displayName, kind) {
     // GregTech's own molten fluids are "molten.<material>" (plasma exhaust,
     // fusion); Tinkers' share the display name, so GT's wins a "Molten" tie.
     // Otherwise prefer the busiest resource when ids collide on one name.
-    const gtMolten = (entry) => (lower.startsWith("molten ") && entry.id.startsWith("molten.") ? 1 : 0);
-    return exact.sort((a, b) => gtMolten(b) - gtMolten(a) || (b.recipeCount ?? 0) - (a.recipeCount ?? 0))[0];
+    const gtMolten = (entry) =>
+      lower.startsWith("molten ") && entry.id.startsWith("molten.") ? 1 : 0;
+    return exact.sort(
+      (a, b) => gtMolten(b) - gtMolten(a) || (b.recipeCount ?? 0) - (a.recipeCount ?? 0),
+    )[0];
   }
   const anyKind = results.filter((entry) => (entry.displayName ?? "").toLowerCase() === lower);
   return anyKind.sort((a, b) => (b.recipeCount ?? 0) - (a.recipeCount ?? 0))[0];
@@ -370,7 +388,9 @@ await Promise.all(
       const target = ALIASES[name] ?? name;
       try {
         const override = ID_OVERRIDES[name];
-        const results = await search(override ? name.replace("Ench. ", "").replace("Block of ", "") : target);
+        const results = await search(
+          override ? name.replace("Ench. ", "").replace("Block of ", "") : target,
+        );
         let found = override
           ? results.find((entry) => entry.kind === override.kind && entry.id === override.id)
           : pick(results, target, kind);
@@ -397,7 +417,10 @@ await Promise.all(
 );
 
 const sorted = Object.fromEntries(Object.entries(map).sort(([a], [b]) => a.localeCompare(b)));
-fs.writeFileSync(outPath, JSON.stringify({ datasetVersionId: version, resources: sorted }, null, 1) + "\n");
+fs.writeFileSync(
+  outPath,
+  JSON.stringify({ datasetVersionId: version, resources: sorted }, null, 1) + "\n",
+);
 console.log(`Wrote ${outPath}: ${Object.keys(sorted).length} resolved.`);
 if (unresolved.length > 0) {
   console.log(`UNRESOLVED (${unresolved.length}):`);

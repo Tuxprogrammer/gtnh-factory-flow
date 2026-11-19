@@ -71,4 +71,39 @@ class FmtTest {
         assertEquals("12.3", Fmt.machines(12.34));
         assertEquals("101", Fmt.machines(100.2));
     }
+
+    @Test
+    void numbersTheWebsiteNeverMissed() {
+        // Below a millionth the decimal prints, not "0".
+        assertEquals("0.000000001", Fmt.compact(1e-9));
+        // Half-way cases round as JavaScript's toFixed does: the exact binary value decides.
+        assertEquals("1", Fmt.compact(1.005));
+        assertEquals("9.99", Fmt.compact(9.995));
+        // The suffixes run on to E.
+        assertEquals("1E", Fmt.compact(1e18));
+        assertEquals("1000E", Fmt.compact(1e21));
+        // A number that is not finite reads "unbounded" and never throws.
+        assertEquals("unbounded", Fmt.compact(Double.NaN));
+        assertEquals("unbounded", Fmt.compact(Double.POSITIVE_INFINITY));
+        assertEquals("unbounded", Fmt.brief(Double.NaN));
+    }
+
+    @Test
+    void powerReadsAsATrickleBelowAHundredth() {
+        assertEquals("<0.01", Fmt.power(0.004));
+        assertEquals(">-0.01", Fmt.power(-0.004));
+        assertEquals("0", Fmt.power(0));
+        assertEquals("6.93k", Fmt.power(6930));
+    }
+
+    @Test
+    void machineCountEdges() {
+        assertEquals("0", Fmt.machines(0.0000005));
+        assertEquals("<0.001", Fmt.machines(0.0000006));
+        assertEquals("0.001", Fmt.machines(0.0005));
+        assertEquals("100", Fmt.machines(100.0000005));
+        assertEquals("101", Fmt.machines(100.00001));
+        assertEquals("NaN", Fmt.machines(Double.NaN));
+        assertEquals("Infinity", Fmt.machines(Double.POSITIVE_INFINITY));
+    }
 }

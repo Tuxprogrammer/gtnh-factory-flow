@@ -3,7 +3,16 @@
  * The vitest test checks the answers against `website-out.json`; `GTNH_WRITE_GOLDEN=1` rewrites that file.
  * `tools/conformance/format/compare.mjs` lines the answers up with the mod's.
  */
-import { formatCompact, formatCompactStable, formatMachineListCount, formatPowerValue, formatRatioShare } from "@/lib/format/numbers";
+import {
+  formatCompact,
+  formatCompactStable,
+  formatMachineListCount,
+  formatNumberWithThousands,
+  formatPowerValue,
+  formatRate,
+  formatRatioShare,
+  trimTrailingDecimalZeros,
+} from "@/lib/format/numbers";
 import { energyPerUnit, energyPerUnitSuffix, setActiveRateUnit, type RateUnit } from "@/lib/format/rate-unit";
 import { formatSlotRate, formatPct, formatTimes } from "@/components/flow/flow-explainers";
 import { formatSupplyPercent } from "@/components/flow/edge-labels";
@@ -14,6 +23,10 @@ export interface FormatRow {
   inputs: string[];
   unit?: RateUnit;
   kind?: string;
+  /** formatRate's places under ten. */
+  digits?: number;
+  /** The inputs are texts, not numbers. */
+  text?: boolean;
 }
 
 export interface FormatValues {
@@ -45,16 +58,35 @@ export function websiteRow(row: FormatRow, inputs: unknown[]): string[] {
     case "compact":
     case "compact.recipeOverlay":
       return num(formatCompact);
+    case "compact.edges":
+      return num(formatCompact);
     case "brief":
+    case "stable":
       return num(formatCompactStable);
     case "power":
+    case "power.edges":
       return num((n) => formatPowerValue(n));
+    case "power.stable":
+      return num((n) => formatPowerValue(n, true));
+    case "rate.plain":
+    case "rate.plain.d0":
+    case "rate.plain.d3":
+      return num((n) => formatRate(n, row.digits));
+    case "thousands.text":
+      return inputs.map((t) => formatNumberWithThousands(String(t)));
+    case "thousands.number":
+      return num((n) => formatNumberWithThousands(n));
+    case "trim":
+      return inputs.map((t) => trimTrailingDecimalZeros(String(t)));
     case "machines":
+    case "machines.edges":
     case "machines.recipeOverlay":
       return num(formatSolvedMachines);
     case "machines.list":
+    case "machines.list.edges":
       return num(formatMachineListCount);
     case "percent.share":
+    case "percent.share.edges":
       return num(formatRatioShare);
     case "percent.whole":
       return num(formatPct);

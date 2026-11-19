@@ -21,7 +21,7 @@ import com.gtnhplanner.web.json.Json;
  * core-power for JavaScript: every generator source, its settings, its model and the two helpers the card shell uses.
  * Structured values cross as JSON text in the shapes conformance/power/power-goldens.jsonl.gz records (see
  * src/lib/power/golden-records.ts): a source's description, a model, a turbine check. The three data tables the
- * sources read are inside the module (web/build/CoreResources), so there is nothing to load first.
+ * sources read are inside the module (web/embed/CoreResources), so there is nothing to load first.
  */
 public final class PowerExports {
 

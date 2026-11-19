@@ -13,6 +13,7 @@ import java.util.function.ToDoubleFunction;
 import javax.annotation.Nullable;
 
 import com.gtnhplanner.core.base.Worker;
+import com.gtnhplanner.core.layout.JsSort;
 import com.gtnhplanner.core.layout.GridEdgeRouter;
 import com.gtnhplanner.core.layout.GridPoint;
 import com.gtnhplanner.core.layout.JsMath;
@@ -158,7 +159,7 @@ public final class Arrange {
         ranked.add(new Ranked("plain", candidates.plain(), verdict(input, candidates.plain())));
         ranked.add(new Ranked("challenger", candidates.challenger(), verdict(input, candidates.challenger())));
         ranked.add(new Ranked("free", candidates.free(), verdict(input, candidates.free())));
-        ranked.sort((a, b) -> JsMath.sign(fewerCrossings(a.verdict(), b.verdict())));
+        JsSort.sort(ranked, (a, b) -> JsMath.sign(fewerCrossings(a.verdict(), b.verdict())));
         return ranked;
     }
 
@@ -229,7 +230,7 @@ public final class Arrange {
             for (int i = 0; i < candidates.length; i++) {
                 scored.add(new double[] { proxy(st, input, prepared.airOf(), candidates[i]), i });
             }
-            scored.sort((a, b) -> JsMath.sign(a[0] - b[0]));
+            JsSort.sort(scored, (a, b) -> JsMath.sign(a[0] - b[0]));
             return candidates[(int) scored.get(0)[1]];
         }
         progress(input, 1, "Searching for a better layout", 0, 1);
@@ -478,7 +479,7 @@ public final class Arrange {
             // The most-crossed card first: it is the one standing in the wrong place. Drawers break ties, being cheap
             // to move.
             final List<String> suspects = new ArrayList<>(blame.keySet());
-            suspects.sort((a, b) -> {
+            JsSort.sort(suspects, (a, b) -> {
                 final int storageA = sizeById.get(a)
                     .width() <= ColumnArrange.cells(6) ? 1 : 0;
                 final int storageB = sizeById.get(b)
@@ -541,7 +542,7 @@ public final class Arrange {
                     }
                     distanceOf.put(p, sum + Math.abs(p.x() - own.x()) * 0.1 + Math.abs(p.y() - own.y()) * 0.1);
                 }
-                candidates.sort((a, b) -> JsMath.sign(distanceOf.get(a) - distanceOf.get(b)));
+                JsSort.sort(candidates, (a, b) -> JsMath.sign(distanceOf.get(a) - distanceOf.get(b)));
                 for (final GridPoint candidate : candidates.subList(0, Math.min(18, candidates.size()))) {
                     if (budget[0] <= 0) break;
                     final Map<String, GridPoint> saved = new LinkedHashMap<>();

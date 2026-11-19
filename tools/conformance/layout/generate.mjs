@@ -2,8 +2,12 @@
 //   router-tests.json: every router call the website's router tests make (grid-edge-router.test.ts,
 //     incremental-router.test.ts), boards in and routes out, plus the cardRimDocks vectors they ask for;
 //   boards.json.gz: the reference boards (boxes and wires, as the game's layout bench lays out its plans), each
-//     routed fresh, dragged and dropped.
-// The Java router replays both (jvm/core/core-layout, RouterConformanceTest) and must answer the same.
+//     routed fresh, dragged and dropped;
+//   arrange.json.gz: every arrange call the website's arrange tests make (board-arrange.test.ts, no judge), and the
+//     reference boards up to LAYOUT_ARRANGE_MAX_WIRES wires (default 80) arranged with the router judge, stage by
+//     stage and whole (arrange.capture.ts).
+// The Java router and Arrange replay them (jvm/core/core-layout, RouterConformanceTest, ArrangeConformanceTest) and
+// must answer the same.
 //
 // Usage: node tools/conformance/layout/generate.mjs [--boards <dir>]
 //   --boards: a directory of board inputs (the mod's RouterVersus bench writes them to
@@ -39,6 +43,7 @@ const work = mkdtempSync(join(tmpdir(), "layout-capture-"));
 try {
   const boardsIn = join(work, "boards-in.json");
   const boardsOut = join(work, "boards-out.json");
+  const arrangeOut = join(work, "arrange-out.json");
   writeFileSync(boardsIn, JSON.stringify(boards));
   const run = spawnSync("npx", ["vitest", "run", "--config", join(here, "capture.config.ts")], {
     cwd: root,
@@ -48,6 +53,7 @@ try {
       LAYOUT_CAPTURE_OUT: work,
       LAYOUT_BOARDS_IN: boardsIn,
       LAYOUT_BOARDS_OUT: boardsOut,
+      LAYOUT_ARRANGE_OUT: arrangeOut,
     },
   });
   if (run.status !== 0) throw new Error(`the capture run failed (${run.status})`);
@@ -67,6 +73,28 @@ try {
   writeFileSync(
     join(out, "boards.json.gz"),
     gzipSync(Buffer.from(`${JSON.stringify(file)}\n`), { level: 9 }),
+  );
+  const unitArrange = read("board-arrange");
+  const boardArrange = read("arrange.capture.ts");
+  const arrangeTests = unitArrange.arranges;
+  const arranged = JSON.parse(readFileSync(arrangeOut, "utf8"));
+  // The optimiser, the free placement and the proxy score as called, for testing each on its own.
+  const parts = {
+    optimizes: [...unitArrange.optimizes, ...boardArrange.optimizes],
+    frees: [...unitArrange.frees, ...boardArrange.frees],
+    proxies: [...unitArrange.proxies, ...boardArrange.proxies],
+  };
+  writeFileSync(
+    join(out, "arrange.json.gz"),
+    gzipSync(
+      Buffer.from(
+        `${JSON.stringify({ generator: "node tools/conformance/layout/generate.mjs", tests: arrangeTests, boards: arranged, ...parts })}\n`,
+      ),
+      { level: 9 },
+    ),
+  );
+  console.log(
+    `arrange.json.gz: ${arrangeTests.length} arrange calls, ${arranged.length} boards, ${parts.optimizes.length} searches, ${parts.frees.length} free placements, ${parts.proxies.length} proxy scores`,
   );
   console.log(
     `router-tests.json: ${tests.solves.length} solves, ${tests.sequences.length} sequences, ${tests.rimDocks.length} rim docks; boards.json.gz: ${answered.length} boards`,

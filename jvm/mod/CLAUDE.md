@@ -67,7 +67,7 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   and asks for a count (`SolutionView.unneeded`). There is no setting for it: the owner dropped one.
 - Wires are routed by the website's router, written once in Java (`jvm/core/core-layout`, `core.layout.GridEdgeRouter`,
   through `BoxRouter`): A* on the website's 20 px grid with planned docks, kept per board so a change re-routes only
-  what it touched; `conformance/layout` holds it to the website's TypeScript router to the bit. Arrange is `layout/arrange/`, a port of the website's arrange (column pass,
+  what it touched; `conformance/layout` holds it to the website's TypeScript router to the bit. Arrange is core-layout `core.layout.arrange`, the website's arrange in Java (column pass,
   optimiser, free placement, polish) judged by that router, run in the background from the top bar's key.
   `docs/design/routing-and-arrange.md` has both designs and the benchmark they are tuned against.
 - Steering dots (the website's edge waypoints; `data/flowchart/Waypoints`): points a wire's route passes through in

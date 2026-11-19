@@ -7,12 +7,3 @@ dependencies {
     // Gson as Minecraft 1.7.10 ships it, to read the conformance data.
     testImplementation("com.google.code.gson:gson:2.2.4")
 }
-
-// Where the shared test data is (conformance/ at the repository root). A stand-in until the conformance stream's
-// root build sets gtnh.conformance on every test task.
-tasks.withType<Test>().configureEach {
-    if (!systemProperties.containsKey("gtnh.conformance")) {
-        systemProperty("gtnh.conformance", rootDir.parentFile.resolve("conformance").absolutePath)
-    }
-    inputs.dir(rootDir.parentFile.resolve("conformance/layout")).optional()
-}

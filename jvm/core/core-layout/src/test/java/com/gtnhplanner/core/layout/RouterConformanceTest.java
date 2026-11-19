@@ -5,8 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -15,12 +13,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
+import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.gtnhplanner.conformance.Conformance;
 
 /**
  * The Java router against the website's TypeScript router, on the data the website's own router tests and the
@@ -30,15 +31,8 @@ import com.google.gson.JsonParser;
  */
 class RouterConformanceTest {
 
-    private static File dir() {
-        final String at = System.getProperty("gtnh.conformance");
-        if (at == null) throw new IllegalStateException("gtnh.conformance is not set (the build sets it)");
-        return new File(at, "layout");
-    }
-
     private static JsonObject read(final String name) throws IOException {
-        final File file = new File(dir(), name);
-        try (InputStream raw = new FileInputStream(file);
+        try (InputStream raw = Conformance.open("layout/" + name);
             InputStream in = name.endsWith(".gz") ? new GZIPInputStream(raw) : raw) {
             final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             in.transferTo(bytes);
@@ -353,67 +347,84 @@ class RouterConformanceTest {
 
     // endregion
 
-    @Test
-    void solvesMatchTheWebsitesRouterTests() throws IOException {
+    /** One router for every solve, as the website's module keeps one set of pools: they must not carry anything over. */
+    private final GridEdgeRouter shared = new GridEdgeRouter();
+
+    @TestFactory
+    List<DynamicTest> solvesMatchTheWebsitesRouterTests() throws IOException {
         final JsonArray solves = read("router-tests.json").getAsJsonArray("solves");
         assertTrue(solves.size() > 30, "the website's router tests make more solves than that");
-        final GridEdgeRouter router = new GridEdgeRouter();
+        final List<DynamicTest> tests = new ArrayList<>();
         int n = 0;
         for (final JsonElement e : solves) {
             final JsonObject c = e.getAsJsonObject();
             final String where = "solve " + n++ + " (" + str(c, "name") + ")";
-            final RouterTuning tuning = tuning(c.get("tuning"));
-            final GridSolveStats stats = new GridSolveStats();
-            final Map<String, GridRoutedEdge> got = router.solve(
-                obstacles(c.get("obstacles")),
-                requests(c.get("requests")),
-                stats,
-                tuning,
-                pinned(c.get("pinned")));
-            sameRoutes(where, routes(c.get("routes")), got);
-            sameStats(where, c.getAsJsonObject("stats"), stats);
-            sameMeasure(where, c.getAsJsonObject("measure"), new ArrayList<>(got.values()), tuning);
+            tests.add(DynamicTest.dynamicTest(where, () -> solve(where, c)));
         }
-        finish("solves", n);
+        return tests;
     }
 
-    @Test
-    void incrementalSequencesMatch() throws IOException {
+    private void solve(final String where, final JsonObject c) {
+        differences.clear();
+        final GridEdgeRouter router = shared;
+        final RouterTuning tuning = tuning(c.get("tuning"));
+        final GridSolveStats stats = new GridSolveStats();
+        final Map<String, GridRoutedEdge> got = router.solve(
+            obstacles(c.get("obstacles")),
+            requests(c.get("requests")),
+            stats,
+            tuning,
+            pinned(c.get("pinned")));
+        sameRoutes(where, routes(c.get("routes")), got);
+        sameStats(where, c.getAsJsonObject("stats"), stats);
+        sameMeasure(where, c.getAsJsonObject("measure"), new ArrayList<>(got.values()), tuning);
+        finish(where, 1);
+    }
+
+    @TestFactory
+    List<DynamicTest> incrementalSequencesMatch() throws IOException {
         final JsonArray sequences = read("router-tests.json").getAsJsonArray("sequences");
         assertTrue(sequences.size() >= 8, "the incremental router's tests run more routers than that");
+        final List<DynamicTest> tests = new ArrayList<>();
         int n = 0;
         for (final JsonElement e : sequences) {
             final JsonObject sequence = e.getAsJsonObject();
-            final IncrementalRouter router = new IncrementalRouter();
-            int step = 0;
-            for (final JsonElement s : sequence.getAsJsonArray("steps")) {
-                final JsonObject c = s.getAsJsonObject();
-                final String where = "sequence " + n + " (" + str(sequence, "name") + ") step " + step++;
-                if (c.has("restore")) {
-                    router.restore(snapshot(c.get("restore")));
-                    continue;
-                }
-                if (c.has("reset")) {
-                    router.reset();
-                    continue;
-                }
-                final IncrementalStats stats = new IncrementalStats();
-                final Map<String, GridRoutedEdge> got = router.solve(
-                    obstacles(c.get("obstacles")),
-                    requests(c.get("requests")),
-                    tuning(c.get("tuning")),
-                    bool(c, "thorough", true),
-                    stats);
-                sameRoutes(where, routes(c.get("routes")), got);
-                final JsonObject want = c.getAsJsonObject("stats");
-                if (bool(want, "fresh", false) != stats.fresh) differ(where + " fresh", want.get("fresh"), stats.fresh);
-                sameNumber(where + " routed", num(want, "routed", Double.NaN), stats.routed);
-                sameNumber(where + " kept", num(want, "kept", Double.NaN), stats.kept);
-                sameStats(where, want, stats);
-            }
-            n++;
+            final int at = n++;
+            tests.add(DynamicTest.dynamicTest("sequence " + at + " (" + str(sequence, "name") + ")", () -> sequence(at, sequence)));
         }
-        finish("sequences", n);
+        return tests;
+    }
+
+    private void sequence(final int n, final JsonObject sequence) {
+        differences.clear();
+        final IncrementalRouter router = new IncrementalRouter();
+        int step = 0;
+        for (final JsonElement s : sequence.getAsJsonArray("steps")) {
+            final JsonObject c = s.getAsJsonObject();
+            final String where = "sequence " + n + " (" + str(sequence, "name") + ") step " + step++;
+            if (c.has("restore")) {
+                router.restore(snapshot(c.get("restore")));
+                continue;
+            }
+            if (c.has("reset")) {
+                router.reset();
+                continue;
+            }
+            final IncrementalStats stats = new IncrementalStats();
+            final Map<String, GridRoutedEdge> got = router.solve(
+                obstacles(c.get("obstacles")),
+                requests(c.get("requests")),
+                tuning(c.get("tuning")),
+                bool(c, "thorough", true),
+                stats);
+            sameRoutes(where, routes(c.get("routes")), got);
+            final JsonObject want = c.getAsJsonObject("stats");
+            if (bool(want, "fresh", false) != stats.fresh) differ(where + " fresh", want.get("fresh"), stats.fresh);
+            sameNumber(where + " routed", num(want, "routed", Double.NaN), stats.routed);
+            sameNumber(where + " kept", num(want, "kept", Double.NaN), stats.kept);
+            sameStats(where, want, stats);
+        }
+        finish("sequence " + n, 1);
     }
 
     @Test
@@ -434,58 +445,63 @@ class RouterConformanceTest {
         finish("rim docks", n);
     }
 
-    @Test
-    void referenceBoardsMatchFreshDraggedAndDropped() throws IOException {
+    @TestFactory
+    List<DynamicTest> referenceBoardsMatchFreshDraggedAndDropped() throws IOException {
         final JsonArray boards = read("boards.json.gz").getAsJsonArray("boards");
         assertTrue(boards.size() > 0);
-        int n = 0;
+        final List<DynamicTest> tests = new ArrayList<>();
         for (final JsonElement e : boards) {
             final JsonObject board = e.getAsJsonObject();
-            final List<BoxRouter.Box> boxes = new ArrayList<>();
-            for (final JsonElement b : board.getAsJsonArray("boxes")) {
-                final JsonObject o = b.getAsJsonObject();
-                boxes.add(
-                    new BoxRouter.Box(
-                        str(o, "key"),
-                        num(o, "x", 0),
-                        num(o, "y", 0),
-                        num(o, "w", 0),
-                        num(o, "h", 0),
-                        bool(o, "square", false)));
-            }
-            final List<BoxRouter.Wire> wires = new ArrayList<>();
-            for (final JsonElement w : board.getAsJsonArray("wires")) {
-                final JsonObject o = w.getAsJsonObject();
-                wires.add(
-                    new BoxRouter.Wire(
-                        str(o, "key"),
-                        (int) num(o, "from", 0),
-                        (int) num(o, "to", 0),
-                        (int) num(o, "fromSides", 15),
-                        (int) num(o, "toSides", 15),
-                        num(o, "width", 4),
-                        List.of()));
-            }
-            final int moving = (int) num(board, "moving", 0);
-            final BoxRouter router = new BoxRouter();
-            for (final JsonElement s : board.getAsJsonArray("steps")) {
-                final JsonObject c = s.getAsJsonObject();
-                final double shift = num(c, "shift", 0);
-                final List<BoxRouter.Box> at = new ArrayList<>(boxes);
-                final BoxRouter.Box m = at.get(moving);
-                at.set(moving, new BoxRouter.Box(m.key(), m.x() + shift, m.y(), m.w(), m.h(), m.square()));
-                final IncrementalStats stats = new IncrementalStats();
-                final Map<String, GridRoutedEdge> got = router.route(at, wires, bool(c, "thorough", true), stats);
-                final String where = "board " + str(board, "name") + " shift " + shift;
-                sameRoutes(where, routes(c.get("routes")), got);
-                final JsonObject want = c.getAsJsonObject("stats");
-                sameNumber(where + " routed", num(want, "routed", Double.NaN), stats.routed);
-                sameNumber(where + " kept", num(want, "kept", Double.NaN), stats.kept);
-                sameStats(where, want, stats);
-                sameMeasure(where, c.getAsJsonObject("measure"), new ArrayList<>(got.values()), RouterTuning.DEFAULT);
-            }
-            n++;
+            tests.add(DynamicTest.dynamicTest("board " + str(board, "name"), () -> board(board)));
         }
-        finish("reference boards", n);
+        return tests;
+    }
+
+    private void board(final JsonObject board) {
+        differences.clear();
+        final List<BoxRouter.Box> boxes = new ArrayList<>();
+        for (final JsonElement b : board.getAsJsonArray("boxes")) {
+            final JsonObject o = b.getAsJsonObject();
+            boxes.add(
+                new BoxRouter.Box(
+                    str(o, "key"),
+                    num(o, "x", 0),
+                    num(o, "y", 0),
+                    num(o, "w", 0),
+                    num(o, "h", 0),
+                    bool(o, "square", false)));
+        }
+        final List<BoxRouter.Wire> wires = new ArrayList<>();
+        for (final JsonElement w : board.getAsJsonArray("wires")) {
+            final JsonObject o = w.getAsJsonObject();
+            wires.add(
+                new BoxRouter.Wire(
+                    str(o, "key"),
+                    (int) num(o, "from", 0),
+                    (int) num(o, "to", 0),
+                    (int) num(o, "fromSides", 15),
+                    (int) num(o, "toSides", 15),
+                    num(o, "width", 4),
+                    List.of()));
+        }
+        final int moving = (int) num(board, "moving", 0);
+        final BoxRouter router = new BoxRouter();
+        for (final JsonElement s : board.getAsJsonArray("steps")) {
+            final JsonObject c = s.getAsJsonObject();
+            final double shift = num(c, "shift", 0);
+            final List<BoxRouter.Box> at = new ArrayList<>(boxes);
+            final BoxRouter.Box m = at.get(moving);
+            at.set(moving, new BoxRouter.Box(m.key(), m.x() + shift, m.y(), m.w(), m.h(), m.square()));
+            final IncrementalStats stats = new IncrementalStats();
+            final Map<String, GridRoutedEdge> got = router.route(at, wires, bool(c, "thorough", true), stats);
+            final String where = "board " + str(board, "name") + " shift " + shift;
+            sameRoutes(where, routes(c.get("routes")), got);
+            final JsonObject want = c.getAsJsonObject("stats");
+            sameNumber(where + " routed", num(want, "routed", Double.NaN), stats.routed);
+            sameNumber(where + " kept", num(want, "kept", Double.NaN), stats.kept);
+            sameStats(where, want, stats);
+            sameMeasure(where, c.getAsJsonObject("measure"), new ArrayList<>(got.values()), RouterTuning.DEFAULT);
+        }
+        finish("board " + str(board, "name"), 1);
     }
 }

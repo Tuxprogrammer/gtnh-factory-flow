@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.gtnhplanner.layout.RouteMetrics;
 import com.gtnhplanner.core.layout.BoxRouter;
 import com.gtnhplanner.core.layout.GridRoutedEdge;
 import com.gtnhplanner.core.layout.IncrementalStats;
+import com.gtnhplanner.layout.RouteMetrics;
 
 /**
  * Routes and arranges a {@link BenchBoard} the way the board does (WireLayer, BoardCanvas.arrange), and measures it.

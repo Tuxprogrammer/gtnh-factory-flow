@@ -11,14 +11,15 @@ import java.util.UUID;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import com.gtnhplanner.layout.RouteMetrics;
 import com.gtnhplanner.core.layout.BoxRouter;
 import com.gtnhplanner.core.layout.GridRoutedEdge;
 import com.gtnhplanner.core.layout.IncrementalStats;
+import com.gtnhplanner.layout.RouteMetrics;
 
 /**
  * Drags a card across a board as the board does while the mouse moves: the busiest card, then a quiet one, forty steps,
- * each routed again incrementally and roughly ({@link BoxRouter#route}), then dropped (routed again thoroughly); and compares
+ * each routed again incrementally and roughly ({@link BoxRouter#route}), then dropped (routed again thoroughly); and
+ * compares
  * what that leaves with routing the final board afresh. {@code -Pbench=drag --tests '*DragBench*'}.
  */
 @Tag("bench")
@@ -86,7 +87,8 @@ class DragBench {
         final BenchBoard after = board.placed(at);
         final RouteMetrics.Result kept = BenchRun.measure(after, dropped);
         t0 = System.nanoTime();
-        final Map<UUID, List<int[]>> afresh = pixels(new BoxRouter().route(boxes(after, null, 0, 0), wires, true, null));
+        final Map<UUID, List<int[]>> afresh = pixels(
+            new BoxRouter().route(boxes(after, null, 0, 0), wires, true, null));
         final double freshMs = (System.nanoTime() - t0) / 1e6;
         final RouteMetrics.Result clean = BenchRun.measure(after, afresh);
         System.out.printf(

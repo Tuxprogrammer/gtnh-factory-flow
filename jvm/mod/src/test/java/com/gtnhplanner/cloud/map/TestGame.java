@@ -3,10 +3,10 @@ package com.gtnhplanner.cloud.map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.Settings;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Node;
@@ -31,7 +31,7 @@ public final class TestGame implements CloudGame {
     public java.util.function.Function<Node, String> handlers = n -> null;
 
     /** What NEI would read for each card: its ports and recipe numbers, by card id. */
-    private final Map<UUID, Node> nei = new HashMap<>();
+    private final Map<Uuid, Node> nei = new HashMap<>();
 
     /** Every card of a board becomes one NEI knows, so it reads back with its ports. */
     public TestGame knowing(final Graph g) {

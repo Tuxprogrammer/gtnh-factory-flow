@@ -6,11 +6,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import com.cleanroommc.modularui.widget.sizer.Area;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Note;
@@ -111,7 +111,7 @@ final class PresenceLayer {
             .isEmpty()) return List.of();
         final List<Object> out = new ArrayList<>();
         final Set<Object> seen = new HashSet<>();
-        for (final UUID id : p.selected()) {
+        for (final Uuid id : p.selected()) {
             final Object thing = thing(id);
             if (thing != null && seen.add(thing)) out.add(thing);
         }
@@ -122,7 +122,7 @@ final class PresenceLayer {
      * What a board id is drawn as: its card (a shared machine's, whichever recipe), drawer, note or group; else null.
      */
     @Nullable
-    private Object thing(final UUID id) {
+    private Object thing(final Uuid id) {
         final RecipeCard card = canvas.cards()
             .get(id);
         if (card != null) return card.model() == null || card.layout() == null ? null : card;

@@ -7,8 +7,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.Graph;
@@ -39,10 +39,10 @@ public final class DevReplay {
     private List<Note> notes;
     private List<Group> groups;
     /** Each drawer's links as the plan had them; the board's copy only links what has arrived. */
-    private Map<UUID, List<Drawer.Link>> links;
-    private final Set<UUID> present = new HashSet<>(), placedDrawers = new HashSet<>(), placedEdges = new HashSet<>(),
+    private Map<Uuid, List<Drawer.Link>> links;
+    private final Set<Uuid> present = new HashSet<>(), placedDrawers = new HashSet<>(), placedEdges = new HashSet<>(),
         placedGroups = new HashSet<>();
-    private final List<UUID> arrived = new ArrayList<>();
+    private final List<Uuid> arrived = new ArrayList<>();
     private int next;
     private long stepNanos, nextAt;
     private boolean frameGrow, framePending, running;
@@ -89,7 +89,7 @@ public final class DevReplay {
     private static List<Node> buildOrder(final List<Node> nodes, final List<Edge> edges, final boolean fromRight) {
         final Comparator<Node> byX = Comparator.comparingInt(n -> n.x);
         final Comparator<Node> start = (fromRight ? byX.reversed() : byX).thenComparingInt(n -> n.y);
-        final Map<UUID, Set<UUID>> wired = new LinkedHashMap<>();
+        final Map<Uuid, Set<Uuid>> wired = new LinkedHashMap<>();
         for (final Edge e : edges) {
             wired.computeIfAbsent(e.sourceNodeId, k -> new HashSet<>())
                 .add(e.targetNodeId);
@@ -97,7 +97,7 @@ public final class DevReplay {
                 .add(e.sourceNodeId);
         }
         final List<Node> left = new ArrayList<>(nodes), out = new ArrayList<>();
-        final Set<UUID> built = new HashSet<>();
+        final Set<Uuid> built = new HashSet<>();
         Node last = null;
         while (!left.isEmpty()) {
             Node pick = null;
@@ -105,7 +105,7 @@ public final class DevReplay {
             for (final Node n : left) {
                 if (last == null) break;
                 boolean touches = false;
-                for (final UUID other : wired.getOrDefault(n.id, Set.of())) if (built.contains(other)) touches = true;
+                for (final Uuid other : wired.getOrDefault(n.id, Set.of())) if (built.contains(other)) touches = true;
                 if (!touches) continue;
                 final double d = Math.hypot(n.x - last.x, n.y - last.y);
                 if (d < best) {
@@ -147,7 +147,7 @@ public final class DevReplay {
                 arrived.isEmpty() ? null
                     : b.session()
                         .graph().nodes.get(lastNode))) {
-                final List<UUID> ids = frameGrow ? new ArrayList<>(arrived)
+                final List<Uuid> ids = frameGrow ? new ArrayList<>(arrived)
                     : new ArrayList<>(arrived.subList(Math.max(0, arrived.size() - recent), arrived.size()));
                 b.canvas()
                     .frame(ids);
@@ -202,7 +202,7 @@ public final class DevReplay {
         framePending = true;
     }
 
-    private UUID lastNode;
+    private Uuid lastNode;
 
     /** Whether a card sits wholly in the board's view, with a margin; false for none. */
     private static boolean inView(final BoardScreen b, final Node n) {

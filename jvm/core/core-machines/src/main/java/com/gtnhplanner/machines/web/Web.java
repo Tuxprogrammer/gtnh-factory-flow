@@ -289,6 +289,13 @@ public final class Web {
         public Nei nei;
         @Nullable
         public RuntimeCalculation runtimeCalculation;
+        /**
+         * RecipeRules.machineHandlers' answer for this object, kept on first read. A recipe is never changed after the
+         * maths read it (every changed recipe is a {@link #copy()}, which does not carry it); transient, so no JSON
+         * binding writes or reads it.
+         */
+        @Nullable
+        transient List<Handler> familyHandlers;
 
         /** A shallow copy, as the website's {@code {...recipe}}. */
         public Recipe copy() {

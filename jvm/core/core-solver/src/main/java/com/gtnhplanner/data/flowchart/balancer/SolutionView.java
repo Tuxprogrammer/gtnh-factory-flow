@@ -23,7 +23,7 @@ import com.gtnhplanner.core.base.Uuid;
  *
  * <p>
  * Cutoffs and derived numbers follow the solver's numerics: flows below the
- * {@code dust * solutionScale} cutoff, counts as {@code extent * durTicks / TICKS_PER_SECOND}, the
+ * {@code dust} cutoff of their own network ({@link SolveContext#dustScales}), counts as {@code extent * durTicks / TICKS_PER_SECOND}, the
  * terminal rule (machine ports with no drawn edge), and {@code externalQuantity} as the raw sum
  * over the reported externals. Deliberately NOT the normalized/craft-weighted stage-2 objective.
  */
@@ -84,8 +84,8 @@ public final class SolutionView {
 
     private SolutionView(final SolveContext ctx, final long wallMillis) {
         final ModelData model = ctx.model;
-        final double tol = ctx.heuristics.numerics().dust
-            * ctx.solutionScale(ctx.extents(), ctx.flows(), ctx.externals());
+        final double dust = ctx.heuristics.numerics().dust;
+        final SolveContext.DustScales scales = ctx.dustScales(ctx.extents(), ctx.flows(), ctx.externals());
         // An idle Up to machine is UNUSED in its read-out, never "(set count)" (docs/design/up-to.md, "Anchoring").
         final Set<Integer> upToMachines = new HashSet<>();
         for (final int p : ctx.upToPools) upToMachines.addAll(
@@ -95,7 +95,8 @@ public final class SolutionView {
             final ModelData.Machine md = model.machines.get(m);
             extentsPerSecond.put(md.spec.id(), ctx.extents()[m]);
             machineCounts.put(md.spec.id(), ctx.extents()[m] * md.durTicks / (double) Numerics.TICKS_PER_SECOND);
-            if (Double.isNaN(ctx.pinnedExtent[m]) && !upToMachines.contains(m) && ctx.extents()[m] <= tol)
+            if (Double.isNaN(ctx.pinnedExtent[m]) && !upToMachines.contains(m)
+                && ctx.extents()[m] <= dust * scales.machines()[m])
                 unneeded.add(md.spec.id());
         }
         // The plan's own wires only: a buffer's edges are the solver's, read out per port on the drawer.
@@ -109,13 +110,13 @@ public final class SolutionView {
         for (int p = 0; p < ctx.externals().length; p++) {
             final double ext = ctx.externals()[p];
             // What a buffer banks is the buffer's (DrawerReadout.banked), not a forced flow.
-            if (ext <= tol || ctx.bankPorts.containsKey(p)) continue;
+            if (ext <= dust * scales.ports()[p] || ctx.bankPorts.containsKey(p)) continue;
             final ModelData.ConnectedPort port = model.connectedPorts.get(p);
             final External external = new External(ctx.refOf(p), ext);
             (port.input() ? gatedSources : gatedSinks).add(external);
             quantity += ext;
         }
-        collectTerminals(ctx, tol);
+        collectTerminals(ctx, scales.machines());
         double flow = 0;
         for (final double f : ctx.flows()) {
             flow += f;
@@ -130,7 +131,7 @@ public final class SolutionView {
         final List<Note> allNotes = new ArrayList<>();
         allNotes.addAll(ctx.notes);
         allNotes.addAll(ctx.stageNotes);
-        allNotes.addAll(wiringDiagnostics(ctx, tol, terminalInputs));
+        allNotes.addAll(wiringDiagnostics(ctx, scales.ports(), terminalInputs));
         this.notes = List.copyOf(allNotes);
     }
 
@@ -140,10 +141,11 @@ public final class SolutionView {
     }
 
     /** Machine ports with no drawn edge, flowing at their own rate - the free terminals. */
-    private void collectTerminals(final SolveContext ctx, final double tol) {
+    private void collectTerminals(final SolveContext ctx, final double[] machineScales) {
         final ModelData model = ctx.model;
         for (int m = 0; m < model.machines.size(); m++) {
             final ModelData.Machine md = model.machines.get(m);
+            final double tol = ctx.heuristics.numerics().dust * machineScales[m];
             terminalScan(ctx, m, md.inQty.length, true, tol, terminalInputs);
             terminalScan(ctx, m, md.outQty.length, false, tol, terminalOutputs);
         }
@@ -180,7 +182,8 @@ public final class SolutionView {
      * Ingredients the pack gives away are filtered out of both - see {@link CoreSettings#isFreeIngredient}, read
      * when the snapshot was taken.
      */
-    private List<Note> wiringDiagnostics(final SolveContext ctx, final double tol, final List<External> terminalIn) {
+    private List<Note> wiringDiagnostics(final SolveContext ctx, final double[] portScales,
+        final List<External> terminalIn) {
         final ModelData model = ctx.model;
         final Producers producers = new Producers(model);
         // A set: the same ingredient imported at two ports of one machine is one wiring mistake to
@@ -212,7 +215,7 @@ public final class SolutionView {
         }
         for (int p = 0; p < model.connectedPorts.size(); p++) {
             final ModelData.ConnectedPort port = model.connectedPorts.get(p);
-            if (!port.input() || ctx.externals()[p] <= tol) continue;
+            if (!port.input() || ctx.externals()[p] <= ctx.heuristics.numerics().dust * portScales[p]) continue;
             final External src = new External(ctx.refOf(p), ctx.externals()[p]);
             if (supplied.contains(src.port())) continue;
             final SolveInput.PortIn ingredient = portOf(ctx, src);

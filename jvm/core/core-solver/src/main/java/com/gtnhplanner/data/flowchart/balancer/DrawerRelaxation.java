@@ -178,7 +178,7 @@ final class DrawerRelaxation {
         return relaxed != null && !missed(ctx, relaxed, d);
     }
 
-    /** The relaxed LP over the context's current pins, bounds and pools; null when infeasible. */
+    /** The relaxed LP over the context's current pins, bounds and pools; null when infeasible or not conserving. */
     @Nullable
     private static Relaxed solve(final SolveContext ctx) {
         final ModelBuilder builder = ModelBuilder.over(ctx)
@@ -198,6 +198,9 @@ final class DrawerRelaxation {
         final double[] extents = values(h.extentVars());
         final double[] flows = values(h.flowVars());
         final double[] externals = values(h.extVars());
+        // Believed only once the independent conservation check passes, as every other model's point: a pin the plan
+        // cannot hold (negative crafts) is no relaxation the drawers could explain.
+        if (ctx.validate(extents, flows, externals) != null) return null;
         final int drawers = ctx.model.drawers.size();
         final double[] slack = new double[drawers];
         final double[] total = new double[drawers];
@@ -210,7 +213,7 @@ final class DrawerRelaxation {
 
     /** A capacity as the note says it: whole machines as a whole number. */
     private static Object machines(final double capacity) {
-        return capacity == Math.rint(capacity) && Math.abs(capacity) < Integer.MAX_VALUE ? (Object) (int) capacity
+        return capacity == Math.floor(capacity) && Math.abs(capacity) < Integer.MAX_VALUE ? (Object) (int) capacity
             : (Object) capacity;
     }
 

@@ -1,7 +1,5 @@
 package com.gtnhplanner.client;
 
-import java.util.UUID;
-
 import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
@@ -13,6 +11,7 @@ import net.minecraft.util.IChatComponent;
 
 import com.gtnhplanner.GtnhPlanner;
 import com.gtnhplanner.Tags;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.importer.FfConverter;
 import com.gtnhplanner.importer.ImportReport;
 import com.gtnhplanner.importer.game.FactoryFlowImport;
@@ -80,7 +79,7 @@ public final class WebsiteInbox {
     static void arrived(final WebsiteListener.Arrival arrival) {
         pending = new Pending(
             arrival,
-            UUID.randomUUID()
+            Uuid.randomUUID()
                 .toString()
                 .substring(0, 8));
         final Minecraft mc = Minecraft.getMinecraft();

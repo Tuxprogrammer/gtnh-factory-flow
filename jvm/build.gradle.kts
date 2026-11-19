@@ -20,7 +20,8 @@ subprojects {
 // Every core module's `check` (so `build`) runs the purity gate, core/purity/PurityCheck.java: it fails when the
 // module's main code or its classpath uses what core/purity/rules.txt names (the game, reflection, threads, java.net,
 // files, AWT, zip, java.security, String.format, the JDK's float spelling and parsing, java.util.UUID, system
-// properties, the default locale, Lombok, log4j) and core/purity/allow.txt does not excuse. :core-base's check also
+// properties, the default locale, Lombok, log4j, and what the web compile gets wrong: float narrowing, % on a double,
+// Math.cbrt, rint, hypot and the Math functions that drift) and core/purity/allow.txt does not excuse. :core-base's check also
 // runs the gate's self-test on the planted violations in core/purity/planted.
 val purity = file("core/purity")
 

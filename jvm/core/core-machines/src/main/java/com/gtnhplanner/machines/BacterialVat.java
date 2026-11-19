@@ -167,8 +167,19 @@ public final class BacterialVat {
     public static long decayTicks(final int sievert) {
         if (sievert == 43) return 5000;
         if (sievert == 61) return 4500;
-        if (sievert <= 100) return (long) Math.ceil((8000 * Math.tanh(-sievert / 20.0) + 8000) * 1000);
-        return (long) Math.ceil(8000 * Math.tanh(-sievert / 65.0) + 8000);
+        if (sievert <= 100) return (long) Math.ceil((8000 * tanh(-sievert / 20.0) + 8000) * 1000);
+        return (long) Math.ceil(8000 * tanh(-sievert / 65.0) + 8000);
+    }
+
+    /**
+     * {@code Math.tanh} written with {@code Math.exp}, which the web compile computes as the JVM does (its own tanh is
+     * NaN for a large argument), in fdlibm's form 1 - 2 / (e^2|x| + 1), which keeps the last place near 1; an infinite
+     * exponential gives 1, never NaN. {@code decayTicks} is held to the JVM's tanh for every sievert from -2000 to 100000
+     * by its test.
+     */
+    static double tanh(final double x) {
+        final double t = 1 - 2 / (Math.exp(2 * Math.abs(x)) + 1);
+        return x < 0 ? -t : t;
     }
 
     /** Items of a material one radio hatch burns a second, running or not. */

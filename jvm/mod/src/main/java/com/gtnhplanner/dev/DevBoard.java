@@ -7,6 +7,7 @@ import java.util.Map;
 
 import net.minecraft.client.Minecraft;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.ui.BoardScreen;
 import com.gtnhplanner.ui.Notice;
@@ -249,7 +250,7 @@ final class DevBoard {
     }
 
     /** The stand-in read-outs and shortfalls {@link #upTo} has put on the board, kept so calls add up. */
-    private static final Map<java.util.UUID, com.gtnhplanner.data.flowchart.balancer.UpToReadout> UP_TO = new LinkedHashMap<>();
+    private static final Map<Uuid, com.gtnhplanner.data.flowchart.balancer.UpToReadout> UP_TO = new LinkedHashMap<>();
     private static final List<com.gtnhplanner.data.flowchart.balancer.DrawerReadout.Shortfall> SHORT = new ArrayList<>();
     private static final List<com.gtnhplanner.data.flowchart.balancer.UpToLoop> LOOPS = new ArrayList<>();
 
@@ -276,7 +277,7 @@ final class DevBoard {
             return Map.of("cleared", true);
         }
         if (q.containsKey("loop")) {
-            final List<java.util.UUID> members = new ArrayList<>();
+            final List<Uuid> members = new ArrayList<>();
             for (final String s : q.getOrDefault("cards", "")
                 .split(",")) if (!s.isBlank()) members.add(card(Integer.parseInt(s.trim())).node.id);
             final List<com.gtnhplanner.data.flowchart.balancer.PortRef> ports = new ArrayList<>();
@@ -293,13 +294,13 @@ final class DevBoard {
                         .toLowerCase(java.util.Locale.ROOT)
                         .startsWith("dead") ? com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind.DEAD_LOOP
                             : com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind.CLOG_LOCK,
-                    com.gtnhplanner.CoreIds.coreList(members),
+                    new ArrayList<>(members),
                     ports));
             session.devLoops(LOOPS);
         }
         if (q.containsKey("combine")) {
             // Cards N,M on one machine, as the selection bar's Combine key does.
-            final List<java.util.UUID> ids = new ArrayList<>();
+            final List<Uuid> ids = new ArrayList<>();
             for (final String s : q.get("combine")
                 .split(",")) ids.add(card(Integer.parseInt(s.trim())).node.id);
             session.combine(ids);
@@ -316,45 +317,45 @@ final class DevBoard {
         }
         if (q.containsKey("card") && q.containsKey("reason")) {
             final CardModel m = card(Integer.parseInt(q.get("card")));
-            final List<java.util.UUID> machines = session.sectionsOf(m.node.id);
+            final List<Uuid> machines = session.sectionsOf(m.node.id);
             final String why = q.get("reason")
                 .toUpperCase(java.util.Locale.ROOT);
-            final List<java.util.UUID> upstream = new ArrayList<>();
+            final List<Uuid> upstream = new ArrayList<>();
             for (final String s : q.getOrDefault("upstream", "")
                 .split(",")) if (!s.isBlank()) upstream.add(card(Integer.parseInt(s.trim())).node.id);
             final List<com.gtnhplanner.data.flowchart.balancer.PortRef> tied = new ArrayList<>();
             for (final String s : q.getOrDefault("tied", "")
                 .split(",")) if (!s.isBlank()) tied.add(port(m, s.trim()));
             final com.gtnhplanner.data.flowchart.balancer.UpToReadout r = new com.gtnhplanner.data.flowchart.balancer.UpToReadout(
-                com.gtnhplanner.CoreIds.core(machines.get(0)),
-                com.gtnhplanner.CoreIds.coreList(machines),
+                machines.get(0),
+                new ArrayList<>(machines),
                 Double.parseDouble(q.getOrDefault("capacity", String.valueOf(session.setCount(m.node)))),
                 Double.parseDouble(q.getOrDefault("reached", "0")),
                 "NONE".equals(why) ? null : com.gtnhplanner.data.flowchart.balancer.UpToReason.valueOf(why),
                 q.containsKey("port") ? port(m, q.get("port")) : null,
                 tied,
                 q.containsKey("wants") ? Double.valueOf(q.get("wants")) : null,
-                com.gtnhplanner.CoreIds.coreList(upstream));
-            for (final java.util.UUID id : machines) UP_TO.put(id, r);
+                new ArrayList<>(upstream));
+            for (final Uuid id : machines) UP_TO.put(id, r);
         }
         if (q.containsKey("shortfall")) {
             final List<DrawerModel> drawers = new ArrayList<>(
                 session.drawerModels()
                     .values());
             final DrawerModel d = drawers.get(Integer.parseInt(q.get("shortfall")));
-            final List<java.util.UUID> limits = new ArrayList<>(), limitDrawers = new ArrayList<>();
+            final List<Uuid> limits = new ArrayList<>(), limitDrawers = new ArrayList<>();
             for (final String s : q.getOrDefault("limit", "")
                 .split(",")) if (!s.isBlank()) limits.add(card(Integer.parseInt(s.trim())).node.id);
             for (final String s : q.getOrDefault("limitDrawer", "")
                 .split(",")) if (!s.isBlank()) limitDrawers.add(drawers.get(Integer.parseInt(s.trim())).drawer.getId());
             SHORT.add(
                 new com.gtnhplanner.data.flowchart.balancer.DrawerReadout.Shortfall(
-                    com.gtnhplanner.CoreIds.core(d.drawer.getId()),
+                    d.drawer.getId(),
                     d.rule,
                     Double.parseDouble(q.getOrDefault("target", "2")),
                     Double.parseDouble(q.getOrDefault("reach", "1")),
-                    com.gtnhplanner.CoreIds.coreList(limits),
-                    com.gtnhplanner.CoreIds.coreList(limitDrawers),
+                    new ArrayList<>(limits),
+                    new ArrayList<>(limitDrawers),
                     0));
         }
         session.devUpTo(UP_TO.isEmpty() ? null : UP_TO, SHORT.isEmpty() ? null : SHORT);
@@ -376,7 +377,7 @@ final class DevBoard {
             return Map.of("cleared", true);
         }
         if (q.containsKey("cards")) {
-            final List<java.util.UUID> nodes = new ArrayList<>();
+            final List<Uuid> nodes = new ArrayList<>();
             for (final String s : q.get("cards")
                 .split(",")) if (!s.isBlank()) nodes.add(card(Integer.parseInt(s.trim())).node.id);
             final List<com.gtnhplanner.data.flowchart.balancer.PortRef> ports = new ArrayList<>();
@@ -392,7 +393,7 @@ final class DevBoard {
                     "clog".equalsIgnoreCase(q.get("kind"))
                         ? com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind.CLOG_LOCK
                         : com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind.DEAD_LOOP,
-                    com.gtnhplanner.CoreIds.coreList(nodes),
+                    new ArrayList<>(nodes),
                     ports));
         }
         session.devLoops(LOOPS.isEmpty() ? null : LOOPS);
@@ -403,7 +404,7 @@ final class DevBoard {
     private static com.gtnhplanner.data.flowchart.balancer.PortRef port(final CardModel m, final String s) {
         final boolean input = s.startsWith("in");
         return new com.gtnhplanner.data.flowchart.balancer.PortRef(
-            com.gtnhplanner.CoreIds.core(m.node.id),
+            m.node.id,
             Integer.parseInt(s.substring(input ? 2 : 3)),
             input);
     }

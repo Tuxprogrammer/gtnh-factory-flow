@@ -55,7 +55,7 @@ public final class JsMath {
         if (Double.isNaN(n)) return "NaN";
         if (Double.isInfinite(n)) return n > 0 ? "Infinity" : "-Infinity";
         if (n == 0) return "0";
-        if (n == Math.rint(n) && Math.abs(n) < 1e15) return Long.toString((long) n);
+        if (n == Math.floor(n) && Math.abs(n) < 1e15) return Long.toString((long) n);
         final BigDecimal exact = new BigDecimal(n);
         for (int digits = 1; digits <= 17; digits++) {
             final BigDecimal shortest = exact.round(new MathContext(digits));

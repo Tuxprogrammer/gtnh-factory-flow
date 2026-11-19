@@ -16,7 +16,6 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
-import java.util.UUID;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -24,6 +23,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Drawer.Link;
 import com.gtnhplanner.data.flowchart.DrawerTypes.Kind;
@@ -40,8 +40,8 @@ class DrawerModelTest {
     void drawersSurviveEncodeDecode() {
         final LoadedChart chart = GtnhFlowLoader.load("light_fuel");
         final Graph graph = chart.graph();
-        final UUID first = chart.machine(0).id;
-        final UUID second = chart.machine(1).id;
+        final Uuid first = chart.machine(0).id;
+        final Uuid second = chart.machine(1).id;
 
         final Drawer product = new Drawer(Kind.PRODUCT, "fluid:liquid_light_fuel");
         product.setTarget(Rule.AT_LEAST, 1250.5);
@@ -110,7 +110,7 @@ class DrawerModelTest {
     @Test
     void unknownNamesAndMissingFieldsAreRepairedOnLoad() {
         final JsonObject root = unpack(Serializer.encode(new Graph("x")));
-        final UUID id = UUID.randomUUID();
+        final Uuid id = Uuid.randomUUID();
         final JsonArray drawers = new JsonArray();
         final JsonObject drawer = new JsonObject();
         drawer.addProperty("id", id.toString());
@@ -160,8 +160,8 @@ class DrawerModelTest {
     void removingANodeDropsItsLinks() {
         final LoadedChart chart = GtnhFlowLoader.load("light_fuel");
         final Graph graph = chart.graph();
-        final UUID gone = chart.machine(0).id;
-        final UUID kept = chart.machine(1).id;
+        final Uuid gone = chart.machine(0).id;
+        final Uuid kept = chart.machine(1).id;
         final Drawer drawer = new Drawer(Kind.PRODUCT, "fluid:x");
         drawer.addLink(new Link(gone, 0));
         drawer.addLink(new Link(kept, 0));
@@ -205,7 +205,7 @@ class DrawerModelTest {
 
         final Drawer drawer = new Drawer(Kind.PRODUCT, "fluid:x");
         drawer.setTarget(Rule.AT_LEAST, 10);
-        drawer.addLink(new Link(UUID.randomUUID(), 2));
+        drawer.addLink(new Link(Uuid.randomUUID(), 2));
         assertTrue(drawer.isAnchor());
         drawer.setKind(Kind.TRASH);
         assertEquals(Rule.ANY, drawer.effectiveRule(), "trash asks for nothing");

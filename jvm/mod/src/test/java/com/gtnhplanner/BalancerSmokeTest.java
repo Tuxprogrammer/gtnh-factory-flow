@@ -45,7 +45,7 @@ class BalancerSmokeTest {
         for (final Node node : chart.machines()) {
             assertTrue(
                 result.nodeBalances()
-                    .containsKey(CoreIds.core(node.id)),
+                    .containsKey(node.id),
                 "missing balance for " + node.machineName);
         }
     }
@@ -70,7 +70,7 @@ class BalancerSmokeTest {
         for (final Node node : chart.machines()) {
             assertTrue(
                 result.nodeBalances()
-                    .containsKey(CoreIds.core(node.id)),
+                    .containsKey(node.id),
                 "missing balance for " + node.machineName);
         }
     }
@@ -93,7 +93,7 @@ class BalancerSmokeTest {
         assertEquals(
             8.0 / 15.0,
             result.nodeBalances()
-                .get(CoreIds.core(lcr.id))
+                .get(lcr.id)
                 .operations(),
             1e-6,
             "the exact fractional machine count, not a ceiling");
@@ -113,7 +113,7 @@ class BalancerSmokeTest {
 
         for (final Node node : chart.machines()) {
             final double ops = result.nodeBalances()
-                .get(CoreIds.core(node.id))
+                .get(node.id)
                 .operations();
             assertEquals(
                 ops,
@@ -140,7 +140,7 @@ class BalancerSmokeTest {
         assertEquals(0.0, result.totalOperations(), 1e-9);
         for (final Node node : chart.machines()) {
             final var nb = result.nodeBalances()
-                .get(CoreIds.core(node.id));
+                .get(node.id);
             assertEquals(0.0, nb.operations(), 1e-9, node.machineName + " must show no count");
             assertTrue(
                 nb.effectiveOutputs()
@@ -186,7 +186,7 @@ class BalancerSmokeTest {
         assertNotNull(result);
         for (final Node node : chart.machines()) {
             final double ops = result.nodeBalances()
-                .get(CoreIds.core(node.id))
+                .get(node.id)
                 .operations();
             assertTrue(ops >= 1, node.machineName + " solved to " + ops + " machines");
         }

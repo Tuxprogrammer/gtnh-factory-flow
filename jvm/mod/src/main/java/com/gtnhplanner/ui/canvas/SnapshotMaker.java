@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.Graph;
@@ -23,19 +23,19 @@ final class SnapshotMaker {
 
     private SnapshotMaker() {}
 
-    static PlanSnapshot make(final BoardSession session, final Map<UUID, RecipeCard> cards,
-        final Map<UUID, DrawerCard> drawers, final List<WireLayer.Wire> wires, final float viewX, final float viewY,
+    static PlanSnapshot make(final BoardSession session, final Map<Uuid, RecipeCard> cards,
+        final Map<Uuid, DrawerCard> drawers, final List<WireLayer.Wire> wires, final float viewX, final float viewY,
         final List<PlanSnapshot.GroupBox> groups) {
         final Graph graph = session.graph();
         final List<PlanSnapshot.Card> outCards = new ArrayList<>();
         for (final RecipeCard card : new LinkedHashSet<>(cards.values())) {
             final CardModel m = card.model();
             if (m == null || card.layout() == null) continue;
-            final List<UUID> ids = session.sectionsOf(card.nodeId);
+            final List<Uuid> ids = session.sectionsOf(card.nodeId);
             final List<PlanSnapshot.Flow> ins = new ArrayList<>(), outs = new ArrayList<>();
             double machines = 0, builds = 0, eu = 0, made = 0;
             final List<CardModel> models = new ArrayList<>();
-            for (final UUID id : ids) {
+            for (final Uuid id : ids) {
                 final CardModel s = session.model(id);
                 if (s == null) continue;
                 models.add(s);

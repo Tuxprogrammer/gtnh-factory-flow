@@ -391,6 +391,52 @@ public final class SolveContext {
         return Math.max(max, Double.MIN_NORMAL);
     }
 
+    /**
+     * What dust is measured against: per connected port, per edge and per machine, the largest rate on the network a
+     * port sits on (its ports' extents times quantities, its edges' flows, its externals). The solver's error follows
+     * the rows a value sits in, so one network's rates say nothing of another's noise: judged over the whole point, a
+     * naquadah reactor's billions of EU a second made a real 0.03/s item flow read as dust, and the answer failed its
+     * own conservation check. A machine takes its smallest network, so it reads as dust only where every network it
+     * touches would; one with no connected port takes the whole point's scale. A network's scale is never below
+     * {@link Numerics#networkFloor} of the whole point's: the engine rounds every value of a model to about 1e-14 of its
+     * largest (ojAlgo left 2e-11 on a network of nothing in a plan moving 2,900 a second), so a network carrying only
+     * that rounding is dust, while a real 0.03/s wire beside billions of EU a second stays.
+     */
+    public record DustScales(double[] ports, double[] edges, double[] machines) {}
+
+    /** The {@link DustScales} of a point; {@code extents} and {@code flows} may be null (externals alone). */
+    public DustScales dustScales(@Nullable final double[] extents, @Nullable final double[] flows,
+        final double[] externals) {
+        // A network is named by its root port (ModelData.portComponent), so a port-sized array holds them all.
+        final int ports = model.connectedPorts.size();
+        final double[] network = new double[ports];
+        for (int p = 0; p < ports; p++) {
+            final ModelData.ConnectedPort port = model.connectedPorts.get(p);
+            double most = Math.abs(externals[p]);
+            if (extents != null) most = Math.max(most, Math.abs(extents[port.machine()] * port.qtyPerCraft()));
+            if (flows != null) for (final int e : port.edges()) most = Math.max(most, Math.abs(flows[e]));
+            final int c = model.portComponent[p];
+            network[c] = Math.max(network[c], most);
+        }
+        final double whole = extents != null && flows != null ? solutionScale(extents, flows, externals)
+            : scaleOf(externals);
+        final double floor = Math.max(heuristics.numerics().networkFloor * whole, Double.MIN_NORMAL);
+        final double[] byPort = new double[ports];
+        for (int p = 0; p < ports; p++) byPort[p] = Math.max(network[model.portComponent[p]], floor);
+        final double[] machines = new double[model.machines.size()];
+        java.util.Arrays.fill(machines, Double.POSITIVE_INFINITY);
+        for (int p = 0; p < ports; p++) {
+            final int m = model.connectedPorts.get(p)
+                .machine();
+            machines[m] = Math.min(machines[m], byPort[p]);
+        }
+        for (int m = 0; m < machines.length; m++) if (machines[m] == Double.POSITIVE_INFINITY) machines[m] = whole;
+        final double[] edges = new double[model.edges.size()];
+        for (int e = 0; e < edges.length; e++) edges[e] = byPort[model.edges.get(e)
+            .srcPort()];
+        return new DustScales(byPort, edges, machines);
+    }
+
     /** How close two solves of one objective have to be to count as the same optimum. */
     public double tieTolerance(final double objective, final StageOutcome s) {
         return heuristics.numerics().tieRel
@@ -400,10 +446,11 @@ public final class SolveContext {
     /** Every gate the point puts flow through, however little - the set that must stay open. */
     public Set<Integer> carryingGates(final double[] externals, final Set<Integer> fallback) {
         final Set<Integer> carrying = new HashSet<>(fallback);
-        final double dust = heuristics.numerics().dust * scaleOf(externals);
+        final double[] scales = dustScales(null, null, externals).ports();
         for (int p = 0; p < externals.length; p++) {
             // What a buffer banks opens no gate (docs/design/up-to.md, "Buffers").
-            if (externals[p] > dust && !bankPorts.containsKey(p)) carrying.add(model.portGate[p]);
+            if (externals[p] > heuristics.numerics().dust * scales[p] && !bankPorts.containsKey(p))
+                carrying.add(model.portGate[p]);
         }
         return carrying;
     }
@@ -464,30 +511,55 @@ public final class SolveContext {
 
     /** Commits a point the way the chain reads it: one authoritative object replaces the last. */
     /**
-     * Commits the plan's answer, with what the solver left at its dust (a rate a hundred-billionth of the plan's
-     * largest, {@link Numerics#dust}) set to exactly zero: a machine there is idle, not running at 0.000000000000001.
+     * Commits the plan's answer, with what the solver left at its dust (a rate a hundred-billionth of the largest on
+     * its network, {@link Numerics#dust}, {@link #dustScales}) set to exactly zero: a machine there is idle, not running
+     * at 0.000000000000001. A machine snaps only where it is dust on every network it touches, so a snapped machine
+     * never leaves a flow behind.
      */
     public void commit(final StageOutcome committed) {
-        // Dust of the point's scale, or of 1 when the point is smaller (as validate): a point that is all but zero
-        // (every Up to card idle) commits as zero.
-        final double tol = heuristics.numerics().dust
-            * Math.max(1, solutionScale(committed.extents, committed.flows, committed.externals));
+        // Dust of the network's scale, or of 1 when the network is smaller (as validate): a network that is all but
+        // zero (every Up to card idle) commits as zero.
+        final double dust = heuristics.numerics().dust;
+        final DustScales scales = dustScales(committed.extents, committed.flows, committed.externals);
         final double[] extents = committed.extents.clone(), flows = committed.flows.clone(),
             externals = committed.externals.clone();
+        final Map<Integer, List<Integer>> portsOf = new HashMap<>();
+        for (int p = 0; p < model.connectedPorts.size(); p++) portsOf.computeIfAbsent(
+            model.connectedPorts.get(p)
+                .machine(),
+            k -> new ArrayList<>())
+            .add(p);
         boolean snapped = false;
         for (int m = 0; m < extents.length; m++) {
-            double most = 0;
-            for (final double q : model.machines.get(m).inQty) most = Math.max(most, q);
-            for (final double q : model.machines.get(m).outQty) most = Math.max(most, q);
-            if (extents[m] != 0 && Math.abs(extents[m]) * Math.max(most, 1) <= tol) {
+            if (extents[m] == 0) continue;
+            final double extent = Math.abs(extents[m]);
+            final List<Integer> ports = portsOf.get(m);
+            boolean isDust = true;
+            if (ports != null) {
+                for (final int p : ports) {
+                    final ModelData.ConnectedPort port = model.connectedPorts.get(p);
+                    if (!(extent * Math.max(port.qtyPerCraft(), 1) <= dust * Math.max(1, scales.ports()[p]))) {
+                        isDust = false;
+                        break;
+                    }
+                }
+            } else {
+                double most = 0;
+                for (final double q : model.machines.get(m).inQty) most = Math.max(most, q);
+                for (final double q : model.machines.get(m).outQty) most = Math.max(most, q);
+                isDust = extent * Math.max(most, 1) <= dust * Math.max(1, scales.machines()[m]);
+            }
+            if (isDust) {
                 extents[m] = 0;
                 snapped = true;
             }
         }
-        for (final double[] values : new double[][] { flows, externals }) {
-            for (int i = 0; i < values.length; i++) {
-                if (values[i] != 0 && Math.abs(values[i]) <= tol) {
-                    values[i] = 0;
+        final double[][] values = { flows, externals };
+        final double[][] valueScales = { scales.edges(), scales.ports() };
+        for (int k = 0; k < values.length; k++) {
+            for (int i = 0; i < values[k].length; i++) {
+                if (values[k][i] != 0 && Math.abs(values[k][i]) <= dust * Math.max(1, valueScales[k][i])) {
+                    values[k][i] = 0;
                     snapped = true;
                 }
             }

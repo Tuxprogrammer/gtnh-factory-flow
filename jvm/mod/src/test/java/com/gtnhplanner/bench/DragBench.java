@@ -6,11 +6,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.core.layout.BoxRouter;
 import com.gtnhplanner.core.layout.GridRoutedEdge;
 import com.gtnhplanner.core.layout.IncrementalStats;
@@ -43,7 +43,7 @@ class DragBench {
                     }
             if (board == null) continue;
             // Wires per box, to pick the busiest and a quiet one.
-            final Map<UUID, Integer> count = new HashMap<>();
+            final Map<Uuid, Integer> count = new HashMap<>();
             for (final BenchBoard.Link l : board.links()) {
                 count.merge(l.from(), 1, Integer::sum);
                 count.merge(l.to(), 1, Integer::sum);
@@ -78,16 +78,16 @@ class DragBench {
         }
         final IncrementalStats drop = new IncrementalStats();
         t0 = System.nanoTime();
-        final Map<UUID, List<int[]>> dropped = pixels(
+        final Map<Uuid, List<int[]>> dropped = pixels(
             router.route(boxes(board, moving, steps * dx, steps * dy), wires, true, drop));
         final double dropMs = (System.nanoTime() - t0) / 1e6;
         final int dropRedone = drop.routed;
-        final Map<UUID, int[]> at = new HashMap<>();
+        final Map<Uuid, int[]> at = new HashMap<>();
         at.put(moving.id(), new int[] { moving.x() + steps * dx, moving.y() + steps * dy });
         final BenchBoard after = board.placed(at);
         final RouteMetrics.Result kept = BenchRun.measure(after, dropped);
         t0 = System.nanoTime();
-        final Map<UUID, List<int[]>> afresh = pixels(
+        final Map<Uuid, List<int[]>> afresh = pixels(
             new BoxRouter().route(boxes(after, null, 0, 0), wires, true, null));
         final double freshMs = (System.nanoTime() - t0) / 1e6;
         final RouteMetrics.Result clean = BenchRun.measure(after, afresh);
@@ -111,9 +111,9 @@ class DragBench {
             clean.crossings());
     }
 
-    private static Map<UUID, List<int[]>> pixels(final Map<String, GridRoutedEdge> routes) {
-        final Map<UUID, List<int[]>> out = new HashMap<>();
-        for (final GridRoutedEdge r : routes.values()) out.put(UUID.fromString(r.edgeId()), BoxRouter.pixels(r));
+    private static Map<Uuid, List<int[]>> pixels(final Map<String, GridRoutedEdge> routes) {
+        final Map<Uuid, List<int[]>> out = new HashMap<>();
+        for (final GridRoutedEdge r : routes.values()) out.put(Uuid.fromString(r.edgeId()), BoxRouter.pixels(r));
         return out;
     }
 

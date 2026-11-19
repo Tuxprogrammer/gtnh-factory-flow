@@ -2,7 +2,6 @@ package com.gtnhplanner.ui.note;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.util.ChatAllowedCharacters;
@@ -19,6 +18,7 @@ import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
 import com.cleanroommc.modularui.theme.WidgetThemeEntry;
 import com.cleanroommc.modularui.widget.Widget;
 import com.cleanroommc.modularui.widget.sizer.Area;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Note;
 import com.gtnhplanner.ui.BoardSession;
 import com.gtnhplanner.ui.canvas.BoardCanvas;
@@ -69,10 +69,10 @@ public final class NoteCard extends Widget<NoteCard> implements Interactable, ID
     private static final int LINE = 11;
 
     private final BoardSession session;
-    public final UUID noteId;
+    public final Uuid noteId;
     private boolean moving;
 
-    public NoteCard(final BoardSession session, final UUID noteId) {
+    public NoteCard(final BoardSession session, final Uuid noteId) {
         this.session = session;
         this.noteId = noteId;
         final Note n = note();

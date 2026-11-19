@@ -2,6 +2,8 @@ package com.gtnhplanner.layout;
 
 import java.util.List;
 
+import com.gtnhplanner.core.layout.JsMath;
+
 /**
  * What a set of routed wires looks like, in numbers: the yardstick the router and the arrange are tuned against, and
  * the terms of the score that picks between arrangements. Pure geometry over world-space polylines and boxes.
@@ -97,7 +99,7 @@ public final class RouteMetrics {
             for (int k = 0; k + 1 < p.size(); k++) {
                 final int[] a = p.get(k), b = p.get(k + 1);
                 final int dx = b[0] - a[0], dy = b[1] - a[1];
-                final double len = Math.hypot(dx, dy);
+                final double len = JsMath.hypot(dx, dy);
                 own += len;
                 // Away from the target on either axis; with the ends level on an axis, any run along it and back.
                 backtrack += away(dx, gx) + away(dy, gy);
@@ -109,7 +111,7 @@ public final class RouteMetrics {
             boolean have = false;
             for (int k = 0; k + 1 < p.size(); k++) {
                 final double dx = p.get(k + 1)[0] - p.get(k)[0], dy = p.get(k + 1)[1] - p.get(k)[1];
-                final double len = Math.hypot(dx, dy);
+                final double len = JsMath.hypot(dx, dy);
                 if (len < 0.5) continue;
                 final double ux = dx / len, uy = dy / len;
                 if (have) {
@@ -125,7 +127,7 @@ public final class RouteMetrics {
             // Jogs: a short run between two runs going the same way.
             for (int k = 1; k + 2 < p.size(); k++) {
                 final int[] a = p.get(k - 1), b = p.get(k), c = p.get(k + 1), d = p.get(k + 2);
-                final double mid = Math.hypot(c[0] - b[0], c[1] - b[1]);
+                final double mid = JsMath.hypot(c[0] - b[0], c[1] - b[1]);
                 if (mid >= JOG || mid == 0) continue;
                 final long dot = (long) (b[0] - a[0]) * (d[0] - c[0]) + (long) (b[1] - a[1]) * (d[1] - c[1]);
                 final long cross = (long) (b[0] - a[0]) * (d[1] - c[1]) - (long) (b[1] - a[1]) * (d[0] - c[0]);
@@ -229,7 +231,7 @@ public final class RouteMetrics {
     /** Length two segments share when they lie on one line. */
     static double collinearOverlap(final int[] a, final int[] b, final int[] c, final int[] d) {
         if (orient(a, b, c) != 0 || orient(a, b, d) != 0) return 0;
-        final double len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+        final double len = JsMath.hypot(b[0] - a[0], b[1] - a[1]);
         if (len == 0) return 0;
         // Positions of c and d along a->b.
         final double ux = (b[0] - a[0]) / len, uy = (b[1] - a[1]) / len;
@@ -256,6 +258,6 @@ public final class RouteMetrics {
             else t1 = Math.min(t1, t);
             if (t0 > t1) return 0;
         }
-        return (t1 - t0) * Math.hypot(dx, dy);
+        return (t1 - t0) * JsMath.hypot(dx, dy);
     }
 }

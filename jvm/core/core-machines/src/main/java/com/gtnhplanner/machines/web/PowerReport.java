@@ -158,7 +158,7 @@ public final class PowerReport {
     }
 
     private static String formatBudget(final double euT) {
-        return euT == Math.rint(euT) ? NumberText.of(euT) : NumberText.fixed(euT, 1);
+        return Math.floor(euT) == euT ? NumberText.of(euT) : NumberText.fixed(euT, 1);
     }
 
     /** NodeSteamReport: what a steam machine burns, in L/t. */

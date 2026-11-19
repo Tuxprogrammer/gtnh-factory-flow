@@ -6,11 +6,11 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import com.google.gson.JsonObject;
+import com.gtnhplanner.core.base.Uuid;
 
 /**
  * What a shared plan was read as: for each of its things the board thing it became, that thing's state then and the
@@ -127,17 +127,17 @@ public final class Basis {
 
     /**
      * The plan id of a board thing ({@code node}, {@code drawer}, {@code edge}, {@code note}, {@code pocket}), as
-     * presence names what is selected: the one it was read from, else its UUID. {@link PlanIds#uuid} turns one back.
+     * presence names what is selected: the one it was read from, else its Uuid. {@link PlanIds#uuid} turns one back.
      */
-    public String planId(final String kind, final UUID uuid) {
+    public String planId(final String kind, final Uuid uuid) {
         return id(kind, uuid);
     }
 
     /**
      * The plan id of a board thing ({@code node}, {@code drawer}, {@code edge}, {@code note}, {@code pocket}): the one
-     * it was read from (a carried thing's card's), else its UUID.
+     * it was read from (a carried thing's card's), else its Uuid.
      */
-    String id(final String kind, final UUID uuid) {
+    String id(final String kind, final Uuid uuid) {
         final String gameKey = kind + ":" + uuid;
         String key = byGame.get(gameKey);
         if (key == null) key = carried.get(gameKey);

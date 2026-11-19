@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -35,6 +34,7 @@ import com.gtnhplanner.cloud.net.LiveSocket;
 import com.gtnhplanner.cloud.store.CloudCache;
 import com.gtnhplanner.cloud.store.Migration;
 import com.gtnhplanner.core.base.Log;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Plan;
 
@@ -348,7 +348,7 @@ public final class CloudSession {
             g.pinList.clear();
             for (final String id : cache.pins(key)) {
                 try {
-                    g.pinList.add(UUID.fromString(id));
+                    g.pinList.add(Uuid.fromString(id));
                 } catch (final IllegalArgumentException ignored) {}
             }
             pinsKept.put(key, cache.pins(key));
@@ -589,7 +589,7 @@ public final class CloudSession {
 
     private String newKey() {
         return accountId + ":"
-            + UUID.randomUUID()
+            + Uuid.randomUUID()
                 .toString();
     }
 
@@ -702,7 +702,7 @@ public final class CloudSession {
         }
         for (final LiveDoc d : docs.values()) {
             final List<String> pins = new ArrayList<>();
-            for (final UUID id : d.graph().pinList) pins.add(id.toString());
+            for (final Uuid id : d.graph().pinList) pins.add(id.toString());
             if (!pins.equals(pinsKept.get(d.key()))) {
                 cache.setPins(d.key(), pins);
                 pinsKept.put(d.key(), pins);

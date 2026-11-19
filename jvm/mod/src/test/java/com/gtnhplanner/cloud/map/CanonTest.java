@@ -7,12 +7,12 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.gtnhplanner.core.base.Uuid;
 
 /** The mapping's small rules: one spelling of JSON, the plan's ids, and what is worked out on load. */
 class CanonTest {
@@ -53,16 +53,16 @@ class CanonTest {
 
     @Test
     void theGamesIdsAreThemselvesAndTheWebsitesKeepTheirs() {
-        final UUID u = UUID.randomUUID();
+        final Uuid u = Uuid.randomUUID();
         assertEquals(u, PlanIds.uuid(u.toString()));
-        assertEquals(UUID.nameUUIDFromBytes("node-1".getBytes(StandardCharsets.UTF_8)), PlanIds.uuid("node-1"));
-        // Only the canonical spelling is a UUID: any other parses differently on the way back.
+        assertEquals(Uuid.nameUUIDFromBytes("node-1".getBytes(StandardCharsets.UTF_8)), PlanIds.uuid("node-1"));
+        // Only the canonical spelling is a Uuid: any other parses differently on the way back.
         assertNotEquals(
             u,
             PlanIds.uuid(
                 u.toString()
                     .toUpperCase(java.util.Locale.ROOT)));
-        assertNotEquals(new UUID(1, 1), PlanIds.uuid("0-1-0-0-1"));
+        assertNotEquals(new Uuid(1, 1), PlanIds.uuid("0-1-0-0-1"));
         assertEquals(PlanIds.part("card", "r1"), PlanIds.part("card", "r1"));
         assertNotEquals(PlanIds.part("card", "r1"), PlanIds.part("card", "r2"));
     }

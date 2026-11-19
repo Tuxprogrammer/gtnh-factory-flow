@@ -11,6 +11,7 @@ import com.cleanroommc.modularui.integration.recipeviewer.RecipeViewerIngredient
 import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
 import com.cleanroommc.modularui.widget.Widget;
 import com.cleanroommc.modularui.widget.sizer.Area;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.ui.canvas.BoardCanvas;
 import com.gtnhplanner.ui.theme.Hyb;
 
@@ -57,7 +58,7 @@ public final class PortSlot extends Widget<PortSlot>
     }
 
     /** The node the port belongs to: its recipe's, which on a shared machine is not the card's own. */
-    public java.util.UUID node() {
+    public Uuid node() {
         return card.sectionId(section);
     }
 
@@ -189,7 +190,7 @@ public final class PortSlot extends Widget<PortSlot>
 
     /** Whether the port can be set to another item: an input whose slot takes several. */
     public boolean hasChoices() {
-        final java.util.UUID id = node();
+        final Uuid id = node();
         final com.gtnhplanner.data.flowchart.Node n = id == null ? null
             : card.session()
                 .graph().nodes.get(id);

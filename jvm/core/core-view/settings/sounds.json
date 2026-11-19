@@ -64,7 +64,12 @@
     "wheelUp": 1.12,
     "wheelDown": 0.9,
     "selectVolume": 0.6,
-    "selectPitch": 1.15
+    "selectPitch": 1.15,
+    "groupInPitch": 1.12,
+    "groupOutVolume": 0.8,
+    "groupOutPitch": 0.85,
+    "ungroupVolume": 0.8,
+    "ungroupPitch": 0.9
   },
   "events": [
     { "id": "pressed", "sounds": ["ui.click"], "mod": "anything pressed (Hyb.click)", "web": "any button, role=button/menuitem/tab/radio/switch, link, or pointer-cursor element clicked; a control with data-sfx-own plays its own" },
@@ -95,6 +100,9 @@
     { "id": "noteAdded", "sounds": ["note.stick"], "mod": "a sticky note added", "web": "an annotation added; feedback sent" },
     { "id": "noteRemoved", "sounds": ["note.crumple"], "mod": "a sticky note deleted", "web": "an annotation removed" },
     { "id": "worldPlaced", "sounds": ["world.place"], "hosts": ["mod"], "mod": "a ghost machine put in the world" },
-    { "id": "worldRemoved", "sounds": ["world.remove"], "hosts": ["mod"], "mod": "a ghost machine taken out of the world" }
+    { "id": "worldRemoved", "sounds": ["world.remove"], "hosts": ["mod"], "mod": "a ghost machine taken out of the world" },
+    { "id": "groupEntered", "sounds": ["board.merge"], "pitch": "groupInPitch", "hosts": ["mod"], "mod": "cards set down into a board group: the merge sound, higher" },
+    { "id": "groupLeft", "sounds": ["board.merge"], "volume": "groupOutVolume", "pitch": "groupOutPitch", "hosts": ["mod"], "mod": "cards set down outside the group they were in: the merge sound, lower and quieter" },
+    { "id": "groupDissolved", "sounds": ["board.sweep"], "volume": "ungroupVolume", "pitch": "ungroupPitch", "hosts": ["mod"], "mod": "a board group dissolved, what it held staying where it is" }
   ]
 }

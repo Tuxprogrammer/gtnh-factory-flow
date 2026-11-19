@@ -9,11 +9,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.Supplier;
 
 import net.minecraft.item.ItemStack;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.Graph;
@@ -50,7 +50,7 @@ final class Rebuild {
     private Rebuild() {}
 
     /** The plan's cards and drawers already built, by the plan's ids: what they are on the board. */
-    private static final Map<UUID, UUID> CARDS = new HashMap<>(), DRAWERS = new HashMap<>();
+    private static final Map<Uuid, Uuid> CARDS = new HashMap<>(), DRAWERS = new HashMap<>();
 
     private record Next(Node node, Edge via) {}
 
@@ -66,7 +66,7 @@ final class Rebuild {
         final Random rnd = new Random(seed);
         final List<Beat> out = new ArrayList<>();
         final List<Next> order = order(plan);
-        final Set<UUID> before = new HashSet<>();
+        final Set<Uuid> before = new HashSet<>();
         for (int i = 0; i < order.size(); i++) {
             final Next n = order.get(i);
             final Beat b = beat(out);
@@ -147,7 +147,7 @@ final class Rebuild {
     private static List<Next> order(final Graph plan) {
         final List<Node> left = new ArrayList<>(plan.getNodes());
         final List<Next> out = new ArrayList<>();
-        final Set<UUID> built = new HashSet<>();
+        final Set<Uuid> built = new HashSet<>();
         Node last = null;
         while (!left.isEmpty()) {
             Node pick = null;
@@ -155,7 +155,7 @@ final class Rebuild {
             double best = Double.MAX_VALUE;
             if (last != null) for (final Node n : left) {
                 for (final Edge e : plan.getEdges()) {
-                    final UUID other = e.sourceNodeId.equals(n.id) ? e.targetNodeId
+                    final Uuid other = e.sourceNodeId.equals(n.id) ? e.targetNodeId
                         : e.targetNodeId.equals(n.id) ? e.sourceNodeId : null;
                     if (other == null || !built.contains(other)) continue;
                     final Node o = plan.nodes.get(other);
@@ -192,7 +192,7 @@ final class Rebuild {
 
     // region What is on the board
 
-    private static java.util.function.Predicate<Node> card(final UUID planId) {
+    private static java.util.function.Predicate<Node> card(final Uuid planId) {
         return n -> n.id.equals(CARDS.get(planId));
     }
 
@@ -207,10 +207,10 @@ final class Rebuild {
     }
 
     /** A port of a built card, by index: one off the view pans the board to it, and reads as not there yet. */
-    private static Target port(final UUID planId, final boolean output, final int index) {
+    private static Target port(final Uuid planId, final boolean output, final int index) {
         return () -> {
             final BoardScreen b = Targets.board();
-            final UUID id = CARDS.get(planId);
+            final Uuid id = CARDS.get(planId);
             if (b == null || id == null) return null;
             final BoardCanvas c = b.canvas();
             final RecipeCard card = c.cards()
@@ -225,10 +225,10 @@ final class Rebuild {
     }
 
     /** A part of a built drawer. */
-    private static Target drawerPart(final UUID planDrawer, final DrawerCard.Part part) {
+    private static Target drawerPart(final Uuid planDrawer, final DrawerCard.Part part) {
         return () -> {
             final BoardScreen b = Targets.board();
-            final UUID id = DRAWERS.get(planDrawer);
+            final Uuid id = DRAWERS.get(planDrawer);
             if (b == null || id == null) return null;
             final DrawerCard d = b.canvas()
                 .drawers()
@@ -246,13 +246,13 @@ final class Rebuild {
     // region Cards
 
     /** The cards on the board now, to tell the new one when it lands. */
-    private static void snapshot(final Set<UUID> into) {
+    private static void snapshot(final Set<Uuid> into) {
         into.clear();
         final BoardSession s = session();
         if (s != null) into.addAll(s.graph().nodes.keySet());
     }
 
-    private static Node fresh(final Set<UUID> before) {
+    private static Node fresh(final Set<Uuid> before) {
         final BoardSession s = session();
         if (s == null) return null;
         for (final Node n : s.graph()
@@ -261,7 +261,7 @@ final class Rebuild {
     }
 
     /** The card that just landed is the plan's: its machine and settings as the plan has them. */
-    private static void adopt(final Node plan, final Set<UUID> before) {
+    private static void adopt(final Node plan, final Set<Uuid> before) {
         final BoardSession s = session();
         final Node n = fresh(before);
         if (s == null || n == null) return;
@@ -333,7 +333,7 @@ final class Rebuild {
         final Target button = button(plan);
         final String machine = plan.machineName == null ? "" : plan.machineName;
         final Target machineRow = Targets.planMenuRow(machine);
-        final Set<UUID> before = new HashSet<>();
+        final Set<Uuid> before = new HashSet<>();
         b.pause(400)
             .click(Targets.neiSearch())
             .type(Steps::neiSearch, s == null ? "" : searchText(s))
@@ -366,7 +366,7 @@ final class Rebuild {
     private static void fromSearch(final Beat b, final Node plan, final Random rnd) {
         final ItemStack s = firstOutput(plan);
         final Target button = button(plan);
-        final Set<UUID> before = new HashSet<>();
+        final Set<Uuid> before = new HashSet<>();
         b.click(Targets.neiSearch())
             .type(Steps::neiSearch, s == null ? "" : searchText(s))
             .pause(300 + rnd.nextInt(300))
@@ -397,10 +397,10 @@ final class Rebuild {
         final Node plan = next.node();
         final Edge e = next.via();
         final boolean makes = e.sourceNodeId.equals(plan.id);
-        final UUID from = makes ? e.targetNodeId : e.sourceNodeId;
+        final Uuid from = makes ? e.targetNodeId : e.sourceNodeId;
         final Target p = port(from, !makes, makes ? e.targetInputIndex : e.sourceOutputIndex);
         final Target button = button(plan);
-        final Set<UUID> before = new HashSet<>();
+        final Set<Uuid> before = new HashSet<>();
         b.move(p);
         if (rnd.nextFloat() < 0.45f) b.hover(p, 500 + rnd.nextInt(800));
         b.run(() -> snapshot(before))
@@ -423,7 +423,7 @@ final class Rebuild {
      * The plan's recipe put on the board as its plan button would, with no page: armed from a built card's port (so it
      * lands beside it, wired), or placed on open board.
      */
-    private static void place(final Node plan, final UUID builtFrom, final boolean output, final int port) {
+    private static void place(final Node plan, final Uuid builtFrom, final boolean output, final int port) {
         final BoardSession s = session();
         if (s == null || plan.recipeId == null) return;
         final codechicken.nei.recipe.RecipeHandlerRef ref = codechicken.nei.recipe.RecipeHandlerRef.of(plan.recipeId);
@@ -433,7 +433,7 @@ final class Rebuild {
     }
 
     /** The board's view on a card, at a zoom, at once. */
-    private static void centreOn(final UUID built, final float zoom) {
+    private static void centreOn(final Uuid built, final float zoom) {
         final BoardScreen b = Targets.board();
         if (b == null || built == null) return;
         final Node n = b.session()
@@ -452,7 +452,7 @@ final class Rebuild {
 
     /** The first card, no NEI: the planner, a new plan, the recipe on it, the view on it at the working zoom. */
     private static void firstQuick(final Beat b, final Node plan, final Random rnd) {
-        final Set<UUID> before = new HashSet<>();
+        final Set<Uuid> before = new HashSet<>();
         b.pause(300)
             .run(() -> Director.openScene(Tour.Scene.BOARD))
             .until(() -> Targets.board() != null, 3000)
@@ -479,7 +479,7 @@ final class Rebuild {
     private static void lookUpQuick(final Beat b, final Next next, final Random rnd) {
         final Node plan = next.node();
         final Edge e = next.via();
-        final Set<UUID> before = new HashSet<>();
+        final Set<Uuid> before = new HashSet<>();
         if (e == null) {
             b.run(() -> {
                 snapshot(before);
@@ -492,7 +492,7 @@ final class Rebuild {
             return;
         }
         final boolean makes = e.sourceNodeId.equals(plan.id);
-        final UUID from = makes ? e.targetNodeId : e.sourceNodeId;
+        final Uuid from = makes ? e.targetNodeId : e.sourceNodeId;
         final int port = makes ? e.targetInputIndex : e.sourceOutputIndex;
         final Target p = port(from, !makes, port);
         b.move(p)
@@ -513,7 +513,7 @@ final class Rebuild {
      * flashing up for every generator spoils a time-lapse as NEI's pages did).
      */
     private static void powerQuick(final Beat b, final Node plan, final Random rnd) {
-        final Set<UUID> before = new HashSet<>();
+        final Set<Uuid> before = new HashSet<>();
         b.pause(350 + rnd.nextInt(500))
             .run(() -> {
                 snapshot(before);
@@ -529,7 +529,7 @@ final class Rebuild {
     private static void power(final Beat b, final Node plan, final Random rnd) {
         final com.gtnhplanner.power.PowerSource src = com.gtnhplanner.power.PowerRegistry.get(plan.powerSource);
         final Target tile = Targets.boardPart("picker:" + (src == null ? plan.powerSource : src.name()));
-        final Set<UUID> before = new HashSet<>();
+        final Set<Uuid> before = new HashSet<>();
         b.run(() -> snapshot(before))
             .click(Targets.topKey("nonrecipe"))
             .until(
@@ -551,7 +551,7 @@ final class Rebuild {
     /** Whether the board already has the plan's wire between built cards. */
     private static boolean wired(final Edge e) {
         final BoardSession s = session();
-        final UUID a = CARDS.get(e.sourceNodeId), b = CARDS.get(e.targetNodeId);
+        final Uuid a = CARDS.get(e.sourceNodeId), b = CARDS.get(e.targetNodeId);
         if (s == null || a == null || b == null) return true;
         for (final Edge w : s.graph()
             .getEdges())
@@ -565,10 +565,10 @@ final class Rebuild {
      * The plan's other wires between this card and ones built before it, dragged port to port with both in view; when
      * they cannot both be read at once, wired as a player would wire them far apart, from the menu, unseen.
      */
-    private static void wireRest(final Beat b, final Graph plan, final Node node, final Set<UUID> built,
+    private static void wireRest(final Beat b, final Graph plan, final Node node, final Set<Uuid> built,
         final Random rnd) {
         for (final Edge e : plan.getEdges()) {
-            final UUID other = e.sourceNodeId.equals(node.id) ? e.targetNodeId
+            final Uuid other = e.sourceNodeId.equals(node.id) ? e.targetNodeId
                 : e.targetNodeId.equals(node.id) ? e.sourceNodeId : null;
             if (other == null || !built.contains(other)) continue;
             final Target from = port(e.sourceNodeId, true, e.sourceOutputIndex),
@@ -585,8 +585,8 @@ final class Rebuild {
         }
     }
 
-    private static List<UUID> ends(final Edge e) {
-        final List<UUID> ids = new ArrayList<>();
+    private static List<Uuid> ends(final Edge e) {
+        final List<Uuid> ids = new ArrayList<>();
         if (CARDS.get(e.sourceNodeId) != null) ids.add(CARDS.get(e.sourceNodeId));
         if (CARDS.get(e.targetNodeId) != null) ids.add(CARDS.get(e.targetNodeId));
         return ids;
@@ -607,7 +607,7 @@ final class Rebuild {
 
     private static void connect(final Edge e) {
         final BoardSession s = session();
-        final UUID a = CARDS.get(e.sourceNodeId), b = CARDS.get(e.targetNodeId);
+        final Uuid a = CARDS.get(e.sourceNodeId), b = CARDS.get(e.targetNodeId);
         if (s != null && a != null && b != null) s.connect(a, e.sourceOutputIndex, b, e.targetInputIndex);
     }
 
@@ -618,7 +618,7 @@ final class Rebuild {
     /** The board's drawer at a built card's port, in a direction. */
     private static Drawer drawerAt(final Drawer.Link l, final boolean input) {
         final BoardSession s = session();
-        final UUID id = CARDS.get(l.nodeId());
+        final Uuid id = CARDS.get(l.nodeId());
         return s == null || id == null ? null
             : s.graph()
                 .drawerAt(id, l.portIndex(), input);
@@ -685,7 +685,7 @@ final class Rebuild {
                 Steps.enterCloses(),
                 Steps.run(() -> {
                     final BoardSession s = session();
-                    final UUID id = DRAWERS.get(d.getId());
+                    final Uuid id = DRAWERS.get(d.getId());
                     final Drawer made = s == null || id == null ? null
                         : s.graph()
                             .getDrawer(id);
@@ -701,7 +701,7 @@ final class Rebuild {
      * the
      * working zoom, as a person zooms in on what they are about to work on.
      */
-    private static void closeIn(final Beat b, final Supplier<UUID> id) {
+    private static void closeIn(final Beat b, final Supplier<Uuid> id) {
         b.when(() -> {
             final BoardSession s = session();
             return s != null && id.get() != null
@@ -711,7 +711,7 @@ final class Rebuild {
         }, Steps.seq(Steps.run(() -> {
             final BoardScreen b2 = Targets.board();
             if (b2 == null) return;
-            final UUID target = id.get();
+            final Uuid target = id.get();
             if (b2.session()
                 .graph().nodes.containsKey(target)) centreOn(target, WORK_ZOOM);
             else b2.canvas()

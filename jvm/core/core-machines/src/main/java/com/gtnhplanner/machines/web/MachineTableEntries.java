@@ -5,8 +5,8 @@ import static com.gtnhplanner.machines.web.MachineTable.*;
 
 import java.util.Map;
 
+import com.gtnhplanner.core.base.Roots;
 import com.gtnhplanner.core.machines.AlgaePond;
-import com.gtnhplanner.core.machines.Roots;
 
 /**
  * The website's machine table entries (machine-table.ts MACHINES), one for one and in its order, keyed by the names

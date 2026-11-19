@@ -65,7 +65,7 @@ public final class CardModels {
     }
 
     /** The core's id of a node's (the nil id for a node that has none yet). */
-    public static Uuid uuid(@Nullable final java.util.UUID id) {
+    public static Uuid uuid(@Nullable final Uuid id) {
         return id == null ? new Uuid(0, 0) : new Uuid(id.getMostSignificantBits(), id.getLeastSignificantBits());
     }
 

@@ -177,7 +177,7 @@ public final class Endgame {
 
     /** {@code ladder[index] ?? 0}: an index off the ladder, or a gap in it, reads as 0. */
     private static double at(@Nullable final Double[] ladder, final double index) {
-        if (ladder == null || index != Math.rint(index) || index < 0 || index >= ladder.length) return 0;
+        if (ladder == null || index != Math.floor(index) || index < 0 || index >= ladder.length) return 0;
         final Double value = ladder[(int) index];
         return value != null ? value : 0;
     }

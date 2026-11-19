@@ -15,14 +15,14 @@ import com.gtnhplanner.layout.WireHops.Hopped;
 /** Wire hops, ported from Factory Flow's src/components/flow/wire-hops.test.ts. */
 class WireHopsTest {
 
-    private static final float EPS = 0.01f;
+    private static final double EPS = 0.01;
 
     /** A horizontal wire at {@code y}, drawn behind, 16 thick unless said. */
-    private static Crossed across(final float y, final float width) {
+    private static Crossed across(final double y, final double width) {
         return new Crossed(0, y, 300, y, width);
     }
 
-    private static Crossed across(final float y) {
+    private static Crossed across(final double y) {
         return across(y, 16);
     }
 
@@ -52,7 +52,7 @@ class WireHopsTest {
 
     @Test
     void liftsASquareCrossingInAHalfCircleCentredOnIt() {
-        final float radius = WireHops.radiusFor(5, 16);
+        final double radius = WireHops.radiusFor(5, 16);
         final Hopped h = WireHops.build(path(150, 200, 150, 0), List.of(across(100)), 5);
         assertEquals(
             1,
@@ -86,7 +86,7 @@ class WireHopsTest {
     void carriesAHopRoundABendNextToTheCrossing() {
         // Jack's broken hop (Factory Flow, 2026-09-23): up, then bending up-right 8 short of the crossed wire, so the
         // crossing is on the diagonal within a bump's reach of the corner.
-        final float radius = WireHops.radiusFor(5, 16);
+        final double radius = WireHops.radiusFor(5, 16);
         final Hopped h = WireHops.build(path(100, 200, 100, 108, 192, 16), List.of(across(100)), 5);
         assertEquals(
             1,
@@ -108,12 +108,12 @@ class WireHopsTest {
             h.spans()
                 .get(0)[1] > 92);
         // It bulges round the outside of the corner, clear of the crossed wire.
-        final float cornerSide = side(b, 100, 108), apexSide = side(b, b.apexX(), b.apexY());
+        final double cornerSide = side(b, 100, 108), apexSide = side(b, b.apexX(), b.apexY());
         assertEquals(Math.signum(cornerSide), Math.signum(apexSide));
         assertTrue(b.apexY() < 100);
     }
 
-    private static float side(final Bump b, final float x, final float y) {
+    private static double side(final Bump b, final double x, final double y) {
         return (b.landX() - b.footX()) * (y - b.footY()) - (b.landY() - b.footY()) * (x - b.footX());
     }
 
@@ -128,7 +128,7 @@ class WireHopsTest {
 
     @Test
     void keepsA45DegreeHopsFeetAsFarOffTheCrossedWireAsASquareOnes() {
-        final float radius = WireHops.radiusFor(5, 16);
+        final double radius = WireHops.radiusFor(5, 16);
         final Bump b = WireHops.build(path(50, 200, 250, 0), List.of(across(100)), 5)
             .bumps()
             .get(0);
@@ -144,7 +144,7 @@ class WireHopsTest {
             1,
             h.bumps()
                 .size());
-        final float radius = WireHops.radiusFor(5, 8);
+        final double radius = WireHops.radiusFor(5, 8);
         assertEquals(
             94 - radius,
             h.spans()
@@ -196,7 +196,7 @@ class WireHopsTest {
         final Bump b = WireHops.build(path(150, 200, 150, 0), List.of(across(100)), 5)
             .bumps()
             .get(0);
-        final List<float[]> pts = b.points(14);
+        final List<double[]> pts = b.points(14);
         assertEquals(15, pts.size());
         assertEquals(b.footX(), pts.get(0)[0], EPS);
         assertEquals(b.footY(), pts.get(0)[1], EPS);

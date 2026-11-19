@@ -7,11 +7,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
 import com.google.gson.JsonObject;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Port;
@@ -95,7 +95,7 @@ class CrusherAndCropFarmExportTest {
     @Test
     void aCrusherPostsAsTheWebsitesCrusherCard() {
         final Graph g = new Graph("Crusher");
-        final Node zombie = new Node(UUID.randomUUID(), 0, 0);
+        final Node zombie = new Node(Uuid.randomUUID(), 0, 0);
         zombie.outputs.add(TestIngredients.port("Rotten Flesh", 1));
         zombie.outputs.add(TestIngredients.port("Liquid XP", 120));
         zombie.machineConfig.settings.put("amp", 2);
@@ -139,7 +139,7 @@ class CrusherAndCropFarmExportTest {
     void anEmptyCropFarmPostsAsTheWebsitesOwn() {
         final Graph g = new Graph("Farm");
         // As the board has it (Node.power, which reads its ports from the game): no ports, no settings.
-        final Node farm = new Node(UUID.randomUUID(), 40, 80);
+        final Node farm = new Node(Uuid.randomUUID(), 40, 80);
         farm.powerSource = com.gtnhplanner.power.CropFarm.ID;
         farm.machineName = com.gtnhplanner.power.CropFarm.SOURCE.name();
         g.addNode(farm);

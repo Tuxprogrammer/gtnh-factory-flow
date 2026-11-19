@@ -1,7 +1,6 @@
 package com.gtnhplanner.ui.world;
 
 import java.util.List;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -11,6 +10,7 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 
 import org.lwjgl.opengl.GL11;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Plan;
 import com.gtnhplanner.ui.PlannerSettings;
@@ -36,10 +36,10 @@ public final class Minimap {
     private boolean placed;
     /** The card to ring and glide to (the linked machine under the crosshair), or null. */
     @Nullable
-    private UUID focus;
+    private Uuid focus;
     /** The card (or else the wire) the crosshair is on over the world, set every frame by the overlay. */
     @Nullable
-    private UUID pointed;
+    private Uuid pointed;
     @Nullable
     private PlanSnapshot.Line wire;
 
@@ -63,7 +63,7 @@ public final class Minimap {
     }
 
     /** The card of the linked machine under the crosshair, which the map rings and (when set) centres on. */
-    public void focus(@Nullable final UUID cardId) {
+    public void focus(@Nullable final Uuid cardId) {
         focus = cardId;
     }
 
@@ -71,7 +71,7 @@ public final class Minimap {
      * The card or the plan's wire the crosshair is on over the world, which the map highlights and (when set) centres
      * on; the card goes before the placed spot under the crosshair ({@link #focus}).
      */
-    public void point(@Nullable final UUID card, @Nullable final PlanSnapshot.Line line) {
+    public void point(@Nullable final Uuid card, @Nullable final PlanSnapshot.Line line) {
         pointed = card;
         wire = line;
     }
@@ -166,7 +166,7 @@ public final class Minimap {
         }
         // Centre: the board's view, or where the player panned it, gliding to the card under the crosshair.
         if (!placed) startAtBoardView();
-        final UUID which = pointed != null ? pointed : focus;
+        final Uuid which = pointed != null ? pointed : focus;
         final PlanSnapshot.Card focused = which == null ? null : snap.cardOf(which);
         final PlanSnapshot.Line lit = wire != null && snap.wires()
             .contains(wire) ? wire : null;

@@ -9,12 +9,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.harness.GtnhFlowLoader;
 
 /**
@@ -61,7 +61,7 @@ class WaypointsTest {
 
     @Test
     void anEdgeKeepsItsDotsThroughTheSave() {
-        final Edge e = new Edge(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), 1, 2);
+        final Edge e = new Edge(Uuid.randomUUID(), Uuid.randomUUID(), Uuid.randomUUID(), 1, 2);
         final JsonObject plain = Serializer.edgeToJson(e);
         assertFalse(plain.has("waypoints"), "an unsteered wire saves as it always did");
         e.waypoints = pts(105, 215, 405, 15);
@@ -72,7 +72,7 @@ class WaypointsTest {
 
     @Test
     void aDrawersLinkKeepsItsDotsAndIsStillTheSameLink() {
-        final UUID node = UUID.randomUUID();
+        final Uuid node = Uuid.randomUUID();
         final Drawer d = new Drawer(Drawer.Kind.PRODUCT, "item:x");
         final Drawer.Link link = new Drawer.Link(node, 0);
         d.addLink(link);
@@ -110,9 +110,9 @@ class WaypointsTest {
     void aDamagedSaveLosesOnlyTheDotsItCannotRead() {
         final JsonObject saved = new JsonParser()
             .parse(
-                "{\"id\":\"" + UUID.randomUUID()
+                "{\"id\":\"" + Uuid.randomUUID()
                     + "\",\"kind\":\"PRODUCT\",\"links\":[{\"nodeId\":\""
-                    + UUID.randomUUID()
+                    + Uuid.randomUUID()
                     + "\",\"portIndex\":0,\"waypoints\":[[5,15],null,[7],[25,35]]}]}")
             .getAsJsonObject();
         final Drawer d = Serializer.readDrawer(saved);
@@ -128,15 +128,15 @@ class WaypointsTest {
     void anArrangeTakesDotsOffWhatItLaidOutAndMovesThoseInAGroupWithIt() {
         GtnhFlowLoader.ensureDefaultMachineProfile();
         final Graph g = new Graph("arranged");
-        final Node a = new Node(UUID.randomUUID(), 0, 0), b = new Node(UUID.randomUUID(), 500, 0),
-            c = new Node(UUID.randomUUID(), 1000, 0);
+        final Node a = new Node(Uuid.randomUUID(), 0, 0), b = new Node(Uuid.randomUUID(), 500, 0),
+            c = new Node(Uuid.randomUUID(), 1000, 0);
         for (final Node n : List.of(a, b, c)) g.nodes.put(n.id, n);
         final BoardGroup group = new BoardGroup();
         g.boardGroups.put(group.getId(), group);
         a.group = group.getId();
         b.group = group.getId();
-        final Edge inside = new Edge(UUID.randomUUID(), a.id, b.id, 0, 0),
-            across = new Edge(UUID.randomUUID(), b.id, c.id, 0, 0);
+        final Edge inside = new Edge(Uuid.randomUUID(), a.id, b.id, 0, 0),
+            across = new Edge(Uuid.randomUUID(), b.id, c.id, 0, 0);
         inside.waypoints = pts(305, 205);
         across.waypoints = pts(805, 405);
         g.edges.put(inside.id, inside);
@@ -160,11 +160,11 @@ class WaypointsTest {
     void aGroupOpenedOrShutTakesTheDotsOffWiresAtWhatItHolds() {
         GtnhFlowLoader.ensureDefaultMachineProfile();
         final Graph g = new Graph("groups");
-        final Node a = new Node(UUID.randomUUID(), 0, 0), b = new Node(UUID.randomUUID(), 500, 0),
-            c = new Node(UUID.randomUUID(), 1000, 0);
+        final Node a = new Node(Uuid.randomUUID(), 0, 0), b = new Node(Uuid.randomUUID(), 500, 0),
+            c = new Node(Uuid.randomUUID(), 1000, 0);
         for (final Node n : List.of(a, b, c)) g.nodes.put(n.id, n);
-        final Edge ab = new Edge(UUID.randomUUID(), a.id, b.id, 0, 0),
-            bc = new Edge(UUID.randomUUID(), b.id, c.id, 0, 0);
+        final Edge ab = new Edge(Uuid.randomUUID(), a.id, b.id, 0, 0),
+            bc = new Edge(Uuid.randomUUID(), b.id, c.id, 0, 0);
         ab.waypoints = pts(305, 205);
         bc.waypoints = pts(805, 405);
         g.edges.put(ab.id, ab);

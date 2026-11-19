@@ -8,6 +8,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import com.gtnhplanner.core.base.NumberText;
+import com.gtnhplanner.core.base.Roots;
 import com.gtnhplanner.power.PowerData;
 import com.gtnhplanner.power.PowerData.Fuel;
 import com.gtnhplanner.power.PowerGroup;
@@ -206,7 +207,7 @@ public final class Engines {
         if (energy <= 30000) {
             return energy;
         }
-        return energy * Math.cbrt(30000 / energy) * (energy >= 80000 ? Math.cbrt(80000 / energy) : 1);
+        return energy * Roots.cbrt(30000 / energy) * (energy >= 80000 ? Roots.cbrt(80000 / energy) : 1);
     }
 
     private static PowerSource largeRocketEngine() {

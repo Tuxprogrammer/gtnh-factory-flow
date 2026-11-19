@@ -2,7 +2,6 @@ package com.gtnhplanner.ui.world;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -11,6 +10,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.MovingObjectPosition;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.ui.Planner;
@@ -44,7 +44,7 @@ public final class LinkTarget {
     private static long noteUntil;
     private static boolean closing;
     /** Whether each card can take the block, worked out once per card. */
-    private static final Map<UUID, Boolean> FITS = new HashMap<>();
+    private static final Map<Uuid, Boolean> FITS = new HashMap<>();
 
     private LinkTarget() {}
 

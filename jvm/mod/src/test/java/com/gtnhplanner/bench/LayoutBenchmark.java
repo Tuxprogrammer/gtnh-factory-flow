@@ -8,11 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.harness.GtnhFlowLoader;
@@ -220,7 +220,7 @@ class LayoutBenchmark {
     }
 
     @SuppressWarnings("unused")
-    private static UUID unused() {
+    private static Uuid unused() {
         return null;
     }
 }

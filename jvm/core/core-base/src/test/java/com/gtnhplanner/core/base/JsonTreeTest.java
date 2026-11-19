@@ -51,6 +51,22 @@ class JsonTreeTest {
         assertEquals(0.0, list.get(4));
     }
 
+    /** The integer and plain-string short cuts give exactly what the full readers give. */
+    @Test
+    void shortCutsAgreeWithTheFullReaders() {
+        for (final String n : new String[] { "0", "7", "-7", "64", "-300", "123456789012345", "-999999999999999",
+            "1234567890123456", "9007199254740993", "-0", "1.5", "1e3", "-0.0", "12345678901234567890" }) {
+            final Object read = JsonTree.parse(n);
+            final double want = NumberText.parse(n);
+            assertEquals(Double.doubleToRawLongBits(want), Double.doubleToRawLongBits((Double) read), n);
+        }
+        assertEquals("plain text", JsonTree.parse("\"plain text\""));
+        assertEquals("", JsonTree.parse("\"\""));
+        assertEquals("a\"b\\c\nd", JsonTree.parse("\"a\\\"b\\\\c\\nd\""));
+        assertEquals("tail \u00e9", JsonTree.parse("\"tail \\u00e9\""));
+        assertEquals(List.of("x", "y\tz"), JsonTree.parse("[\"x\",\"y\\tz\"]"));
+    }
+
     @Test
     void stringEscapes() {
         assertEquals("a\"b\\c\nd\teé/", JsonTree.parse("\"a\\\"b\\\\c\\nd\\te\\u00e9\\/\""));

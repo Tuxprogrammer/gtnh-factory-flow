@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -53,10 +52,10 @@ class SolveInputTest {
             for (final Node machine : chart.machines()) {
                 assertEquals(
                     viaGraph.nodeBalances()
-                        .get(CoreIds.core(machine.id))
+                        .get(machine.id)
                         .operations(),
                     viaSnapshot.nodeBalances()
-                        .get(CoreIds.core(machine.id))
+                        .get(machine.id)
                         .operations(),
                     EPS,
                     name + ": " + machine.machineName);
@@ -71,7 +70,7 @@ class SolveInputTest {
         final SolveInput before = GraphSolve.input(chart.graph(), BalanceMode.AUTO, null);
         final double fusionBefore = Balancer.solve(before)
             .nodeBalances()
-            .get(CoreIds.core(chart.machine(0).id))
+            .get(chart.machine(0).id)
             .operations();
 
         chart.machine(0).targetOutputRates.put(0, 20.0);
@@ -80,7 +79,7 @@ class SolveInputTest {
 
         final double fusionAgain = Balancer.solve(before)
             .nodeBalances()
-            .get(CoreIds.core(chart.machine(0).id))
+            .get(chart.machine(0).id)
             .operations();
         assertEquals(fusionBefore, fusionAgain, EPS, "the snapshot still holds the old chart");
         assertEquals(
@@ -206,9 +205,9 @@ class SolveInputTest {
         final LoadedChart chart = GtnhFlowLoader.load("light_fuel");
         final SolveInput plain = GraphSolve.input(chart.graph());
         final List<PoolIn> pools = List.of(
-            new PoolIn(List.of(CoreIds.core(chart.machine(0).id)), 2, false, true),
-            new PoolIn(List.of(CoreIds.core(chart.machine(1).id)), 3, true),
-            new PoolIn(List.of(CoreIds.core(chart.machine(2).id)), 4));
+            new PoolIn(List.of(chart.machine(0).id), 2, false, true),
+            new PoolIn(List.of(chart.machine(1).id), 3, true),
+            new PoolIn(List.of(chart.machine(2).id), 4));
         assertFalse(
             pools.get(1)
                 .upTo(),
@@ -245,13 +244,13 @@ class SolveInputTest {
                 .pools());
     }
 
-    private static int indexOf(final SolveInput input, final UUID id) {
+    private static int indexOf(final SolveInput input, final Uuid id) {
         for (int i = 0; i < input.machines()
             .size(); i++) {
             if (input.machines()
                 .get(i)
                 .id()
-                .equals(CoreIds.core(id))) return i;
+                .equals(id)) return i;
         }
         throw new AssertionError("no machine " + id);
     }

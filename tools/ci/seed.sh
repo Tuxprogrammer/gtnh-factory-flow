@@ -115,7 +115,9 @@ if [ "$mode" = save ]; then
   say "$name: $n downloaded files this run (0 means the seed was complete)"
   if [ "$n" -gt 0 ]; then
     # Dependency files sit at files-2.1/<group>/<artifact>/<version>/<hash>/<file>; show them as group:artifact:version.
-    printf '%s\n' "$fetched" | sed -E 's#^.*/files-2\.1/([^/]+)/([^/]+)/([^/]+)/[^/]+/[^/]+$#dependency \1:\2:\3#' | sort -u | head -40 | sed 's/^/[ci:seed]   /'
+    printf '%s\n' "$fetched" | grep '/files-2\.1/' | sed -E 's#^.*/files-2\.1/([^/]+)/([^/]+)/([^/]+)/[^/]+/[^/]+$#dependency \1:\2:\3#' | sort -u | head -40 | sed 's/^/[ci:seed]   /'
+    others=$(printf '%s\n' "$fetched" | grep -vc '/files-2\.1/' || true)
+    [ "$others" = 0 ] || say "  and $others files that are not dependencies (Minecraft data, the Gradle distribution, browsers)"
   fi
   upload=false
   if [ -f "$state/cold" ] || [ "$n" -gt 0 ]; then

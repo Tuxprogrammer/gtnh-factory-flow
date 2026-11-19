@@ -59,14 +59,14 @@ for job in "${selected[@]}"; do
     fi
   else
     summary+=("$job: PASS (${secs}s)")
-    [ "${CI_VERBOSE:-0}" = 1 ] || echo "$plain" | grep -E '^ +Tests |Test Files|^\[ci:jvm\] (mod|core-|total)' | tail -8
+    [ "${CI_VERBOSE:-0}" = 1 ] || echo "$plain" | grep -E '^ +Tests |Test Files|^\[ci:jvm\] (mod|core-|total)|\[ci:web-core\] STUB' | tail -8
   fi
 done
 
 echo "[ci] ----"
 for s in "${summary[@]:-}"; do [ -n "$s" ] && echo "[ci] $s"; done
 for j in website icons jvm web-core; do
-  case " ${selected[*]:-} " in *" $j "*) ;; *) echo "[ci] $j: skipped (the diff does not need it)" ;; esac
+  case " ${selected[*]:-} " in *" $j "*) ;; *) echo "[ci] $j: not run (not needed by the diff, or not named)" ;; esac
 done
 if [ ${#failed[@]} -eq 0 ]; then
   echo "CI-LOCAL: PASS"

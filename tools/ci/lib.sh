@@ -1,6 +1,6 @@
 # Sourced by every script in tools/ci/. The scripts are the one definition of each CI job:
 # .github/workflows/ci.yml and the build box's pipeline both call them and nothing else.
-CI_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+CI_ROOT="${CI_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 
 say() { echo "[ci:${CI_JOB:-ci}] $*"; }
 fail() { echo "[ci:${CI_JOB:-ci}] FAIL: $*" >&2; exit 1; }

@@ -8,7 +8,7 @@
 # Env on GitHub: CI_BASE_SHA (the PR base or the push's before), CI_BRANCH.
 #
 # Rules (a file counts toward every rule that matches it):
-#   conformance/, tools/ci/, .github/        every job
+#   conformance/, jvm/conformance-support/, tools/conformance/, src/test-support/, tools/ci/, .github/   every job
 #   anything outside jvm/                    website and icons
 #   anything under jvm/                      jvm
 #   jvm/ outside jvm/mod/, src/lib/core/     web-core
@@ -56,7 +56,7 @@ if [ -z "$files" ]; then all=true; echo "[ci:changes] empty diff; running everyt
 while IFS= read -r f; do
   [ -n "$f" ] || continue
   case "$f" in
-    conformance/* | tools/ci/* | .github/*) all=true ;;
+    conformance/* | jvm/conformance-support/* | tools/conformance/* | src/test-support/* | tools/ci/* | .github/*) all=true ;;
   esac
   case "$f" in
     jvm/*)

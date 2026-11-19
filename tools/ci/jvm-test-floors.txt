@@ -1,0 +1,8 @@
+# Lowest number of tests that may run (tests minus skipped, from the JUnit result XML) per JVM module.
+# `total` is the sum over every module. A module without a line must still run at least one test.
+# Floors catch a build that silently runs part of a suite or none (:test NO-SOURCE). They are not exact
+# counts: when tests move between modules, or a floor is wrong, edit it in the same commit.
+# <module> <floor>
+total 1200
+mod 1000
+core-base 5

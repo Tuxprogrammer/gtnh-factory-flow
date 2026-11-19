@@ -29,8 +29,10 @@ public final class Numerics {
 
     /** Flows below this count as zero when deriving gate support (relative). */
     public final double zero = 1e-6;
-    /** Solver dust: what a variable holds when the solver meant zero (relative). */
+    /** Solver dust: what a variable holds when the solver meant zero (relative to its network's scale). */
     public final double dust = 1e-11;
+    /** The least a network's dust scale is, as a share of the whole point's ({@link SolveContext#dustScales}). */
+    public final double networkFloor = 1e-2;
     /** Residual tolerance for the independent conservation check, scaled per row. */
     public final double validateTol = 1e-6;
 

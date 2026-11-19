@@ -1247,8 +1247,8 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
             graph().touchLayout();
             com.gtnhplanner.api.PlanAPI.save();
             // In a group higher, out of one lower, as on the website.
-            if (moved[0] > 0) Sfx.MERGE.play(1f, 1.12f);
-            else if (moved[1] > 0) Sfx.MERGE.play(0.8f, 0.85f);
+            if (moved[0] > 0) Sfx.MERGE.play(Sfx.GROUP_IN_PITCH);
+            else if (moved[1] > 0) Sfx.MERGE.play(Sfx.GROUP_OUT_VOLUME, Sfx.GROUP_OUT_PITCH);
             else Sfx.DROP.play();
         } else place(moveStart);
         moveStart = null;

@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { isCompactViewport } from "./compact-view";
+import { VIEW_SETTINGS } from "./view-settings.generated";
 
 /**
  * Workspace preferences: which of the three columns are open, and how the
@@ -30,11 +31,6 @@ export interface WorkspaceView {
   /** Only favourites are listed. */
   favouritesOnly: boolean;
   /**
-   * Net the resource panel's boundary: an item in Need and Outputs at once
-   * shows as one signed figure instead of both. Display arithmetic only.
-   */
-  netFlowRates: boolean;
-  /**
    * The build list's power figures, weighted by how hard each machine
    * actually runs instead of every machine at full draw at once. Display
    * arithmetic only.
@@ -48,19 +44,18 @@ export interface WorkspaceView {
   favouriteResourceKeys: string[];
 }
 
-const WORKSPACE_VIEW_STORAGE_KEY = "gtnh-factory-flow-workspace-view";
+const WORKSPACE_VIEW_STORAGE_KEY: string = VIEW_SETTINGS.leftPanelOpen.key;
 
 export const DEFAULT_WORKSPACE_VIEW: WorkspaceView = {
   poolWorksheetOrder: {},
   poolCollapsedMachines: {},
   poolCollapsedProductionGroups: {},
-  leftPanelOpen: true,
-  rightPanelOpen: true,
-  showHiddenResources: false,
-  favouritesOnly: false,
-  netFlowRates: false,
-  averageMachineDraw: true,
-  trendsOpen: true,
+  leftPanelOpen: VIEW_SETTINGS.leftPanelOpen.default,
+  rightPanelOpen: VIEW_SETTINGS.rightPanelOpen.default,
+  showHiddenResources: VIEW_SETTINGS.showHiddenResources.default,
+  favouritesOnly: VIEW_SETTINGS.favouritesOnly.default,
+  averageMachineDraw: VIEW_SETTINGS.powerSense.default === "average",
+  trendsOpen: VIEW_SETTINGS.trendsOpen.default,
   hiddenResourceKeys: [],
   favouriteResourceKeys: [],
 };
@@ -126,7 +121,6 @@ function readWorkspaceView(): WorkspaceView {
         DEFAULT_WORKSPACE_VIEW.showHiddenResources,
       ),
       favouritesOnly: flag(parsed.favouritesOnly, DEFAULT_WORKSPACE_VIEW.favouritesOnly),
-      netFlowRates: flag(parsed.netFlowRates, DEFAULT_WORKSPACE_VIEW.netFlowRates),
       averageMachineDraw: flag(
         parsed.averageMachineDraw,
         DEFAULT_WORKSPACE_VIEW.averageMachineDraw,

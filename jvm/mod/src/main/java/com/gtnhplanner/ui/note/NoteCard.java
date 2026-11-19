@@ -563,7 +563,7 @@ public final class NoteCard extends Widget<NoteCard> implements Interactable, ID
         final int next = Math
             .max(Note.MIN_FONT, Math.min(Note.MAX_FONT, n.fontSizeOrDefault() + steps * Note.FONT_STEP));
         if (next == n.fontSizeOrDefault()) return;
-        com.gtnhplanner.ui.sound.Sfx.TICK.play(steps > 0 ? 1.12f : 0.9f);
+        com.gtnhplanner.ui.sound.Sfx.TICK.play(steps > 0 ? com.gtnhplanner.ui.sound.Sfx.WHEEL_UP : com.gtnhplanner.ui.sound.Sfx.WHEEL_DOWN);
         session.editLayout(() -> n.setFontSize(next));
     }
 

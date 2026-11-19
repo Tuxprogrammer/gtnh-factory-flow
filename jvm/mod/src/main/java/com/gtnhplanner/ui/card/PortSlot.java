@@ -181,7 +181,7 @@ public final class PortSlot extends Widget<PortSlot>
         final int at = Math.max(0, port.choiceIndex());
         final int step = direction == UpOrDown.UP ? 1 : -1;
         final Object next = items.get(Math.floorMod(at + step, items.size()));
-        com.gtnhplanner.ui.sound.Sfx.TICK.play(step > 0 ? 1.12f : 0.9f);
+        com.gtnhplanner.ui.sound.Sfx.TICK.play(step > 0 ? com.gtnhplanner.ui.sound.Sfx.WHEEL_UP : com.gtnhplanner.ui.sound.Sfx.WHEEL_DOWN);
         session.pickInput(model.node, index, port.keyOf(next));
         return true;
     }

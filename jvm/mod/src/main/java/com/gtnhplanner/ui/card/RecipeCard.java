@@ -2477,7 +2477,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
                 stepSetting(layout.chips.get(i), step);
             }
             case AMPS -> {
-                com.gtnhplanner.ui.sound.Sfx.TICK.play(step > 0 ? 1.12f : 0.9f);
+                com.gtnhplanner.ui.sound.Sfx.TICK.play(step > 0 ? com.gtnhplanner.ui.sound.Sfx.WHEEL_UP : com.gtnhplanner.ui.sound.Sfx.WHEEL_DOWN);
                 pendingAmps = stepAmps(pendingAmps > 0 ? pendingAmps : model.amps, step);
                 wheelAt = System.currentTimeMillis();
                 committedOver = null;
@@ -2555,7 +2555,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
             if (model.isPower()) stepPowerTier(step);
             else stepTier(step);
         } else if (part == Part.AMPS && headAmps() > 0) {
-            com.gtnhplanner.ui.sound.Sfx.TICK.play(step > 0 ? 1.12f : 0.9f);
+            com.gtnhplanner.ui.sound.Sfx.TICK.play(step > 0 ? com.gtnhplanner.ui.sound.Sfx.WHEEL_UP : com.gtnhplanner.ui.sound.Sfx.WHEEL_DOWN);
             pendingAmps = stepAmps(pendingAmps > 0 ? pendingAmps : model.amps, step);
             wheelAt = System.currentTimeMillis();
             committedOver = null;
@@ -2641,13 +2641,11 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
     }
 
     private void setCoil(final GtCoils.Coil coil) {
-        com.gtnhplanner.ui.sound.Sfx.ADJUST.playStep(
+        com.gtnhplanner.ui.sound.Sfx.coil(
             Math.max(
                 0,
                 GtCoils.all()
-                    .indexOf(coil)),
-            0.8f,
-            1.05f);
+                    .indexOf(coil)));
         session.editMachine(model.node, () -> {
             final MachineConfig cfg = model.node.machineConfig;
             cfg.setBoolean("gt_multiblock", true);

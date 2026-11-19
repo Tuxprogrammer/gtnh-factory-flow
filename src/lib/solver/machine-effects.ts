@@ -44,6 +44,7 @@ import {
   beeOutputMultiplier,
   beeProductionWithFrames,
 } from "@/lib/model/bee-maths";
+import { getGameRates } from "@/lib/model/game-rates";
 import { getVoltageTierForEuT, getVoltageTierIndex } from "@/lib/model/tiers";
 import { getHeatDiscountMultiplier } from "./heat";
 import { getEffectiveVoltageOrdinal, getNodeRunTier, getPowerPoolEuT } from "./power";
@@ -262,7 +263,11 @@ function getBeeGameOutputMultiplier(
     specialty: isBeeSpecialtyOutput(output),
     capped: !industrial,
   });
-  if (industrial) {
+  if (!industrial) {
+    // Forestry's housings go through Bee.produceStacks, which the rate mod multiplies per roll: after the cap above,
+    // so a roll that is certain still gives beesYield items. The Industrial Apiary uses getFinalChance directly.
+    multiplier *= getGameRates().beesYield;
+  } else {
     const accel = controls.find((control) => control.id === BEE_INDUSTRIAL_SPEED_CONTROL_ID);
     const lifespan = Number(recipe.metadata?.beeLifespan);
     multiplier *= beeIndustrialRateFraction(

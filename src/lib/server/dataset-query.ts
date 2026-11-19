@@ -212,6 +212,10 @@ const maxHydratedRecipeSummaryCount = positiveIntEnv("GTNH_MAX_HYDRATED_RECIPE_S
 
 export async function getDatasetCatalog(versionId: string) {
   const catalog = await loadCatalog(versionId);
+  // From the manifest as it is now: the catalog's own copy of the version is as old as the process.
+  const gameRates = (await loadManifest()).versions.find(
+    (entry) => entry.id === versionId,
+  )?.gameRates;
   return {
     schemaVersion: 1 as const,
     datasetVersionId: catalog.version.id,
@@ -225,6 +229,7 @@ export async function getDatasetCatalog(versionId: string) {
     recipeMaps: catalog.recipeMaps,
     recipeMapIcons: catalog.recipeMapIcons,
     machineHandlerIcons: withSynthesizedHandlerIcons(catalog),
+    ...(gameRates ? { gameRates } : {}),
     generatedAt: catalog.version.publishedAt,
   };
 }

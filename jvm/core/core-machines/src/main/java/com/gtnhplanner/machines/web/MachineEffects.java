@@ -102,7 +102,8 @@ public final class MachineEffects {
 
     /**
      * getPoweredParallelLimit: how many parallels the pool carries. Energy and heat discounts land first
-     * (ParallelHelper folds them into the recipe's draw), so a discounted recipe fits more.
+     * (ParallelHelper folds them into the recipe's draw), so a discounted recipe fits more. It divides by that cost
+     * rounded up to whole EU/t.
      */
     private static double poweredParallelLimit(final Web.Recipe recipe, final Web.Node node) {
         final String runTier = Power.runTier(recipe, node);
@@ -111,7 +112,7 @@ public final class MachineEffects {
         final double recipeEuT = Math.abs(recipe.eut) * eutMultiplier(recipe, node)
             * Heat.discount(recipe, node, runTier, Power.effectiveVoltageOrdinal(recipe, node, runTier));
         if (!(recipeEuT > 0)) return Double.POSITIVE_INFINITY;
-        return Math.max(1, Math.floor(available / recipeEuT));
+        return Math.max(1, Math.floor(available / Math.ceil(recipeEuT)));
     }
 
     /** getMachineDurationMultiplier: the table's speed inverted, else the coil's and settings' multipliers. */

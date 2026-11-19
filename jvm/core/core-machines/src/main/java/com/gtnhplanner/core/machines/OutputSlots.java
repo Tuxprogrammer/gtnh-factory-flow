@@ -46,9 +46,21 @@ public final class OutputSlots {
         Map.entry("High Pressure Steam Forge Hammer", List.of(from("ULV", 1))),
         Map.entry("Precision Laser Engraver", List.of(from("LV", 1))));
 
-    /** itemOutputSlots: the machine's item output slots at this tier, or null when it has room for every recipe. */
+    /**
+     * MULTIBLOCK_ITEM_OUTPUT_LIMIT: multiblocks that override IVoidable.getItemOutputLimit. ParallelHelper hands only
+     * mOutputs[0..limit) (its truncatedItemOutputs) to calculateItemOutputs, so later outputs are voided at every
+     * parallel and every tier. The Steam Grinder (MTESteamMacerator) and bartworks' MTEWindmill both return 1.
+     */
+    private static final Map<String, Integer> MULTIBLOCK_ITEM_OUTPUT_LIMIT = Map.of("Steam Grinder", 1, "Windmill", 1);
+
+    /**
+     * itemOutputSlots: the machine's item output slots at this tier (a multiblock's output limit), or null when it has
+     * room for every recipe.
+     */
     @Nullable
     public static Integer itemOutputSlots(final Web.Recipe recipe, final String tier) {
+        final Integer limit = recipe.machineType != null ? MULTIBLOCK_ITEM_OUTPUT_LIMIT.get(recipe.machineType) : null;
+        if (limit != null) return limit;
         if (recipe.machineProfile != null && "multiblock".equals(recipe.machineProfile.kind)) return null;
         final List<Step> steps = recipe.machineType != null ? ITEM_OUTPUT_SLOTS.get(recipe.machineType) : null;
         if (steps == null) return null;

@@ -346,6 +346,19 @@ EHE -> dense/SC steam -> turbine banks. The sheet's own numbers show the EHE
 route beating direct turbining ~1.5-1.8x. Decay gas returns 1:1 for loop
 closure (D-T -> Helium).
 
+The planner keeps the sheet's rows (product, inputs, EU/L, EHE band) but not
+its per-mark columns: `correctFusion` in the extractor rebuilds startup, input
+ratios, output L/s and drain EU/t per mark from the exported fusion recipe map
+(core-machines `fusion-startups.json`) with the pack's machine rules. Mk-I to
+III overclock x2 EU / x2 speed, Mk-IV and V (GT++ MTEAdvFusionMk4/5) x4 / x4,
+each capped at the machine's fusion tier minus the recipe's
+(`FusionSpecialValueFormatter.getFusionTier`); the compact reactors
+(GoodGenerator MTELargeFusionComputer1-5) run 64 x extraPara(startup)
+parallels. A sub-tick duration becomes parallels rounded up and a duration is
+whole ticks, so long recipes at Mk-IV and V run faster than the sheet's
+smooth figures. The sheet had D+T at 4096 EU/t from 60M (the game: 3840 from
+40M) and D+He3 at 40M (60M).
+
 ## LNR (`11. LNR`)
 
 ```

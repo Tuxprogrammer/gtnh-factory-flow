@@ -209,8 +209,10 @@ public final class RandomCases {
     /** A BigDecimal's text: a double's (both ways ojAlgo makes one), or up to 30 random digits at a random scale. */
     private static String decimal(final Random r) {
         switch (r.nextInt(3)) {
-            case 0:
-                return java.math.BigDecimal.valueOf(number(r)).toString();
+            case 0: {
+                final double x = number(r);
+                return java.math.BigDecimal.valueOf(Double.isFinite(x) ? x : r.nextDouble()).toString();
+            }
             case 1:
                 return new java.math.BigDecimal(r.nextDouble() * 100 * (r.nextBoolean() ? 1 : -1)).toString();
             default: {

@@ -173,10 +173,24 @@ compiles, the core, ojAlgo and the class library alike, where TeaVM's code diffe
   turns -(+0) into +0.
 - JavaScript target only: a double or float converted to int or long goes through `JavaCasts`, which saturates as Java
   does; TeaVM writes `x | 0` (wraps) and `BigInt(x)` (throws on NaN).
+- JavaScript target only: TeaVM's printer drops the brackets of a double `+` or `*` whose right operand is the same
+  kind of operation (`a + (b - c)` runs as `(a + b) - c`, `a * (b / c)` as `(a * b) / c`), so such an operation is
+  rewritten into a form it must bracket (`a - (-1 * b)`, `a * (b - 0)`), the same bits.
+- `java.math.BigDecimal.valueOf(double)`: core-base's `NumberText.javaDecimal`, the decimal JDK 19 and later give
+  (TeaVM's reads its own `Double.toString`, which approximates the shortest digits).
+
+TeaVM's `java.math.BigDecimal` itself is replaced (`src/main/java/org/teavm/classlib/java/math/TBigDecimal.java`, in
+`overrides.txt`): TeaVM's file with exact digit counts where it estimated them (`precision()`, the text constructor's
+precision, `aproxPrecision`, rounding's carry) and a `divide(divisor, MathContext)` that rounds the magnitudes'
+quotient, so `round`, `plus`, `divide` and `multiply` with a MathContext, which ojAlgo uses on every coefficient, give
+the JDK's answers. On the JVM, ojAlgo's own jar is rewritten the same way at build time (core-solver's
+`ojalgoExactMath` task, `jvm/core/exact-math/RewriteMath.java`), so the mod, the tests and the web build all run one
+ojAlgo arithmetic.
 
 `tools/web-core/exact-math.mjs` proves each rewrite on both targets (`exact-math/*` against
 `conformance/core-base/exact-math/`, `java-math/*` and `strict-math/*` through `java.lang.Math`, `java/d2i`, `java/d2l`,
-`java/neg` on the random cases). Core code still calls `ExactMath` itself (the purity gate's `math-exact` rule): the
+`java/neg`, `java/order-*`, `java/double-to-string`, `java/bigdecimal-*` on the random cases). Core code still calls
+`ExactMath` itself (the purity gate's `math-exact` rule): the
 JVM's `Math` is not `StrictMath` either.
 
 ## Traps

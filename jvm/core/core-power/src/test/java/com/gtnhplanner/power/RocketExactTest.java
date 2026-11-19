@@ -17,9 +17,9 @@ import com.gtnhplanner.core.power.PowerCatalog;
 
 /**
  * conformance/power/rocket-exact.json holds the Large Rocket Engine's answers to the last bit, as the JVM computes them
- * (the game's own arithmetic: its output falls off by cube roots, and Math.cbrt is fdlibm here). The goldens elsewhere
- * agree to 1e-9; this file is for a target whose cube root differs in the last bit, which the compiled core did on
- * both web targets when it was written. Each row: [fuel key, fuel rate, boost, EU/t bits, air bits], the bits being
+ * (the game's own arithmetic: its output falls off by cube roots, through core-base's ExactMath.cbrt, fdlibm, the bits
+ * of StrictMath.cbrt on every target). The goldens elsewhere agree to 1e-9; this file holds the last bit, which the
+ * compiled core on both web targets now matches (src/lib/power/power-core.test.ts). Each row: [fuel key, fuel rate, boost, EU/t bits, air bits], the bits being
  * Double.doubleToLongBits in hex. Rewritten by -PwriteVectors (core-power's build.gradle.kts).
  */
 class RocketExactTest {

@@ -392,7 +392,7 @@
     "power/rocket-exact.json": {
       "area": "power",
       "bytes": 17050,
-      "sha256": "ec6f28fec05a4a8edad540b3740c0d0d2d5e9f61feb9a63131790926e06b91b6"
+      "sha256": "315f5133614560d27496cac0727e6f965893a3d2ac99b637b2f90c19cf88bfdf"
     },
     "power/website-test-inputs.jsonl.gz": {
       "area": "power",

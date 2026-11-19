@@ -1,6 +1,5 @@
 package com.gtnhplanner.ui.card;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -9,6 +8,8 @@ import java.util.function.ToIntFunction;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.Float32Ops;
+import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.core.view.Tokens;
 import com.gtnhplanner.data.flowchart.PinRule;
@@ -30,6 +31,9 @@ public final class CardFace {
 
     /** Below this a count is nothing (the solver's round-off). */
     static final double NOTHING = 0.0000005;
+
+    /** Under a count the plan waits for (nothing set anywhere): what to do. */
+    public static final String SET_COUNT = "(set count)";
 
     /**
      * The count under the machine: {@code run} is what runs, as printed ("×18.2"; a crop's has no times sign);
@@ -56,7 +60,7 @@ public final class CardFace {
         final UpToReadout upTo = rule == PinRule.UP_TO ? readout : null;
         final double value = upTo != null ? Math.max(0, upTo.reached()) : solved;
         final String note = pinned ? ""
-            : unset ? CardPaint.SET_COUNT : crop ? Math.round(value) == 1 ? "crop planted" : "crops planted" : "";
+            : unset ? SET_COUNT : crop ? Math.round(value) == 1 ? "crop planted" : "crops planted" : "";
         return new Count(
             (crop ? "" : "×") + Fmt.machines(value),
             value,
@@ -78,9 +82,8 @@ public final class CardFace {
     /** The set count as the card prints it: up to three decimals, no trailing zeros. */
     public static String setText(final double value) {
         if (!(value > 0) || Double.isInfinite(value)) return "0";
-        return BigDecimal.valueOf(Math.round(value * 1000) / 1000.0)
-            .stripTrailingZeros()
-            .toPlainString();
+        // The website's String(Math.round(value * 1000) / 1000): JavaScript's spelling of the rounded number.
+        return NumberText.of(Math.round(value * 1000) / 1000.0);
     }
 
     /**
@@ -335,7 +338,7 @@ public final class CardFace {
      * website's reasonStripes: 7% and 13%), so each reason has its own.
      */
     public static int[] stripes(final Tone tone) {
-        return new int[] { mix(tone.colour, CardPaint.SURFACE, 0.07f), mix(tone.colour, CardPaint.SURFACE, 0.13f) };
+        return new int[] { mix(tone.colour, Tokens.Palette.SURFACE, 0.07f), mix(tone.colour, Tokens.Palette.SURFACE, 0.13f) };
     }
 
     /**
@@ -384,7 +387,7 @@ public final class CardFace {
      * over the card's edge in the other.
      */
     public static int loopFrame(final UpToLoop.Kind kind, final boolean bright) {
-        return bright ? loopTone(kind) : mix(loopTone(kind), CardPaint.EDGE, 0.30f);
+        return bright ? loopTone(kind) : mix(loopTone(kind), Tokens.Palette.EDGE, 0.30f);
     }
 
     /** The ring a card is in (the first when it is in several), by its id; null for none. */
@@ -398,10 +401,16 @@ public final class CardFace {
     /** {@code a} at {@code share} over {@code b}, opaque: {@code Hyb.mix}, kept here so this class stays pure. */
     static int mix(final int a, final int b, final float share) {
         final float s = Math.max(0, Math.min(1, share));
-        final int r = Math.round((a >> 16 & 0xFF) * s + (b >> 16 & 0xFF) * (1 - s));
-        final int g = Math.round((a >> 8 & 0xFF) * s + (b >> 8 & 0xFF) * (1 - s));
-        final int bl = Math.round((a & 0xFF) * s + (b & 0xFF) * (1 - s));
+        final float rest = Float32Ops.sub(1, s);
+        final int r = Math.round(channel(a >> 16 & 0xFF, b >> 16 & 0xFF, s, rest));
+        final int g = Math.round(channel(a >> 8 & 0xFF, b >> 8 & 0xFF, s, rest));
+        final int bl = Math.round(channel(a & 0xFF, b & 0xFF, s, rest));
         return 0xFF000000 | r << 16 | g << 8 | bl;
+    }
+
+    /** One channel's float32 mix, narrowed at every step as the mod's float arithmetic is. */
+    private static float channel(final int a, final int b, final float s, final float rest) {
+        return Float32Ops.add(Float32Ops.mul(Float32Ops.of(a), s), Float32Ops.mul(Float32Ops.of(b), rest));
     }
 
     /** The title of the bar's tip: how many run of how many. */

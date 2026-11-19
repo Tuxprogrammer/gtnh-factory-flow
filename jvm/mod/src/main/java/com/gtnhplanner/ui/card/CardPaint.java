@@ -432,7 +432,7 @@ public final class CardPaint {
     }
 
     /** Under a count the plan waits for (nothing set anywhere): what to do, pulsing gold with the drawers' Set rate. */
-    public static final String SET_COUNT = "(set count)";
+    public static final String SET_COUNT = CardFace.SET_COUNT;
 
     // region Tiles and the well (the website's pass 3)
 

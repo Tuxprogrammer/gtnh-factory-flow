@@ -1999,7 +1999,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
     }
 
     /** The power panel's figures, worked out once for the model they were taken from. */
-    private PowerPanel.Facts powerFacts;
+    private PowerInput.Facts powerFacts;
     private CardModel powerFactsFor;
 
     /** Whether the part under the mouse answers with the power panel: a multiblock's amps, tier or POWER tile. */

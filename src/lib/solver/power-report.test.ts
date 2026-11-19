@@ -349,9 +349,9 @@ describe("steam machines", () => {
     expect(getOverclockedRecipeStats(recipe, single).durationTicks).toBe(256);
     expect(getNodeSteamReport(recipe, single)?.drawSteamPerTick).toBe(8);
 
-    // Steam Hearth: 128 x 1.6 = 204.8 -> 204 whole ticks; 4 EU x 1.25 x 8.
+    // Steam Hearth: 128 x 1.6 = 204.8, rounded up by ofNoOverclock -> 205 ticks; 4 EU x 1.25 x 8.
     const hearth = { overclockTier: "LV", machineHandlerId: "steam-hearth", machineConfigTiers: {} };
-    expect(getOverclockedRecipeStats(recipe, hearth).durationTicks).toBe(204);
+    expect(getOverclockedRecipeStats(recipe, hearth).durationTicks).toBe(205);
     expect(getNodeSteamReport(recipe, hearth)?.drawSteamPerTick).toBe(40);
   });
 

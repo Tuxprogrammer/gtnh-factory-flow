@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { setActiveGameRates } from "@/lib/model/game-rates";
 import { applyMachineHandlerToRecipe, gtFurnaceDurationTicks } from "@/lib/model/recipe-rules";
 import type { Recipe } from "@/lib/model/types";
+import { hasPowerReport } from "@/lib/solver/power-report";
 
 // A smelting recipe as this instance's dataset has it (vanilla 200 ticks, 0 EU/t), with the two
 // multiblocks the pipeline lists on the Furnace map besides the Multi Smelter. Neither handler
@@ -63,6 +64,21 @@ describe("furnace modes of multiblocks and the pack's rate mod (GTNHRates GTFurn
     expect(gtFurnaceDurationTicks(SMELT, arc)).toBe(2);
     setActiveGameRates({ recipeDurationDivisor: 1000 });
     expect(gtFurnaceDurationTicks(SMELT, arc)).toBe(1);
+  });
+
+  it("bills the Industrial Arc Furnace's furnace mode FurnaceBackend's 4 EU/t, not the map's 0", () => {
+    const arc = applyMachineHandlerToRecipe(SMELT, { machineHandlerId: "industrial-arc-furnace" });
+    expect(arc.eut).toBe(4);
+    expect(hasPowerReport(SMELT, { machineHandlerId: "industrial-arc-furnace" })).toBe(true);
+  });
+
+  it("bills the Helioflare's smelting module FurnaceBackend's 4 EU/t, not the map's 0", () => {
+    const forge = applyMachineHandlerToRecipe(SMELT, { machineHandlerId: "helioflare-power-forge" });
+    expect(forge.eut).toBe(4);
+    expect(hasPowerReport(SMELT, { machineHandlerId: "helioflare-power-forge" })).toBe(true);
+    // The vanilla furnace stays unpowered.
+    expect(applyMachineHandlerToRecipe(SMELT, { machineHandlerId: "furnace" }).eut).toBe(0);
+    expect(hasPowerReport(SMELT, { machineHandlerId: "furnace" })).toBe(false);
   });
 
   it("leaves the arc furnace's own arc and blast recipes to the dataset", () => {

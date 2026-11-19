@@ -187,15 +187,24 @@ export function gtFurnaceDurationTicks(
     : Math.max(1, Math.ceil(rated / getGameRates().recipeDurationDivisor));
 }
 
+// Electric multiblocks that smelt at 4 EU/t per parallel, before their own EU math: the Multi
+// Smelter's own RECIPE_EUT (MTEMultiFurnace), and FurnaceBackend's recipe in the Industrial Arc
+// Furnace's furnace mode and the Helioflare's smelting module.
+const GT_FURNACE_EUT_MACHINES = new Set<string | undefined>([
+  "Multi Smelter",
+  "Industrial Arc Furnace",
+  "Helioflare Power Forge",
+]);
+
 /**
- * The EU/t per parallel of a smelt on the Multi Smelter: MTEMultiFurnace bills its own RECIPE_EUT
- * of 4, while the vanilla map and the handler say 0. Other handlers keep their own EU (undefined).
+ * The EU/t per parallel of a smelt on a GT_FURNACE_EUT_MACHINES multiblock, where the vanilla map
+ * and the handler say 0. Other handlers keep their own EU (undefined).
  */
 export function gtFurnaceEut(
   recipe: Pick<Recipe, "machineType" | "source">,
   handler: Pick<MachineHandler, "machineType">,
 ): number | undefined {
-  return isSmeltingRecipeMap(recipe) && handler.machineType === "Multi Smelter"
+  return isSmeltingRecipeMap(recipe) && GT_FURNACE_EUT_MACHINES.has(handler.machineType)
     ? GT_FURNACE_RECIPE_EUT
     : undefined;
 }

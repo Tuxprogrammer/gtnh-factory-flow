@@ -53,7 +53,7 @@ public final class SolveInputJson {
             j.addProperty("countFixed", m.countFixed());
             // Whole machines as a whole number, as every dump before fractional counts wrote them.
             final double count = m.machineCount();
-            if (count == Math.rint(count) && Math.abs(count) < Integer.MAX_VALUE)
+            if (count == Math.floor(count) && Math.abs(count) < Integer.MAX_VALUE)
                 j.addProperty("machineCount", (int) count);
             else j.addProperty("machineCount", count);
             j.add("targetOutputRates", rates(m.targetOutputRates()));

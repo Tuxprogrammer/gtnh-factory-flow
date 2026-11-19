@@ -55,7 +55,7 @@ export function getRecipeMachineHandlers(
     const normalized = normalizeFusionHandler(normalizeMachineHandler(handler), recipe);
     const fusion = getFusionMachine(normalized.machineType);
     if (fusion && fusionMark !== undefined && fusion.mark < fusionMark) continue;
-    if (isSteamMachineHandler(normalized) && !steamMachineRunsRecipe(recipe)) continue;
+    if (isSteamMachineHandler(normalized) && !steamMachineRunsRecipe(normalized, recipe)) continue;
     const familyId = `${normalized.kind ?? "single"}:${slug(normalized.label)}`;
     if (!handlersByFamily.has(familyId)) {
       handlersByFamily.set(familyId, normalized);

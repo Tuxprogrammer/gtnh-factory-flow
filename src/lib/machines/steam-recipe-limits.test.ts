@@ -75,3 +75,46 @@ describe("steam machines are offered only for recipes up to 32 EU/t", () => {
     ]);
   });
 });
+
+describe("steam machines that have no input hatch are not offered for recipes with a fluid input", () => {
+  it("drops the Steam Separator from a centrifuge recipe with a fluid input (Fertilizer, 16 EU/t)", () => {
+    const handlers = [handler("Centrifuge", "single"), handler("Steam Separator", "multiblock")];
+    expect(offered(recipe("Centrifuge", 16, handlers, true))).toEqual(["Centrifuge"]);
+    expect(offered(recipe("Centrifuge", 16, handlers))).toEqual(["Centrifuge", "Steam Separator"]);
+  });
+
+  it("drops the steam singles but keeps the Steam Presser, which takes an input hatch (Thiosulfine Flower, 24 EU/t)", () => {
+    const handlers = [
+      handler("Forge Hammer", "single"),
+      handler("High Pressure Steam Forge Hammer", "single"),
+      handler("Steam Forge Hammer", "single"),
+      handler("Industrial Sledgehammer", "multiblock"),
+      handler("Steam Presser", "multiblock"),
+    ];
+    expect(offered(recipe("Forge Hammer", 24, handlers, true))).toEqual([
+      "Forge Hammer",
+      "Industrial Sledgehammer",
+      "Steam Presser",
+    ]);
+  });
+
+  it("keeps the Steam Squasher, Steam Purifier and Steam Blender on fluid recipes", () => {
+    for (const [map, machine] of [
+      ["Compressor", "Steam Squasher"],
+      ["Ore Washer", "Steam Purifier"],
+      ["Multiblock Mixer", "Steam Blender"],
+    ]) {
+      expect(
+        offered(recipe(map, 15, [handler(map, "single"), handler(machine, "multiblock")], true)),
+      ).toEqual([map, machine]);
+    }
+  });
+
+  it("drops the Steam Grinder, Steam Fuser and Steam Hearth from a fluid recipe", () => {
+    for (const machine of ["Steam Grinder", "Steam Fuser", "Steam Hearth"]) {
+      expect(
+        offered(recipe("Map", 8, [handler("Map", "single"), handler(machine, "multiblock")], true)),
+      ).toEqual(["Map"]);
+    }
+  });
+});

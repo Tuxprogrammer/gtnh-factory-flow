@@ -9,7 +9,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -18,6 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParser;
+import com.gtnhplanner.conformance.Conformance;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.balancer.BalanceMode;
 import com.gtnhplanner.data.flowchart.balancer.Balancer;
@@ -45,7 +45,8 @@ import com.gtnhplanner.dev.SolveInputJson;
  * feeds a cooler (2 a craft); C passes at most 3/s and the filler, pinned at four, takes 4: the rest is surplus.</li>
  * </ol>
  *
- * The case's input is checked in as {@code /solver-corpus/buffer-drawers.json} for both planners' goldens (the website
+ * The case's input is checked in as {@code conformance/solver/corpus/inputs/buffer-drawers.json} for both planners'
+ * goldens (the website
  * solves it in {@code src/lib/solver/plan/__fixtures__}); {@link #inputIsTheCorpusCase} keeps the two the same, and
  * {@code -PwriteGoldens} writes it afresh.
  */
@@ -254,10 +255,10 @@ class BufferDrawerTest {
             .create()
             .toJson(SolveInputJson.write(input()));
         if (Boolean.getBoolean("gtnhplanner.solver.writeGoldens")) {
-            Files.writeString(Path.of("src/test/resources/solver-corpus/buffer-drawers.json"), json + "\n");
+            Files.writeString(Conformance.path("solver/corpus/inputs/buffer-drawers.json"), json + "\n");
             return;
         }
-        try (InputStream in = BufferDrawerTest.class.getResourceAsStream("/solver-corpus/buffer-drawers.json")) {
+        try (InputStream in = Conformance.open("solver/corpus/inputs/buffer-drawers.json")) {
             assertTrue(in != null, "no corpus input (run with -PwriteGoldens)");
             assertEquals(
                 new JsonParser().parse(json),

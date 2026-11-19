@@ -2,6 +2,7 @@
 
 import { Fragment, useId } from "react";
 import type { LucideIcon } from "lucide-react";
+import { CC } from "@/components/flow/clean/tokens";
 
 /**
  * The glance card the board's "?" corner is built from: the screen dims, a
@@ -46,14 +47,14 @@ export interface GlanceRow {
 
 export type GlanceDrawerShape = "source" | "product" | "byproduct" | "trash" | "buffer";
 
-/** The drawer tints from StorageNode's ROLE_TINTS, so the legend and the
- * board agree on what red, green and steel mean. */
+/** The clean drawer's tints (tokens.ts), so the legend and the board agree:
+ * blue comes into the plan, orange leaves it, steel is the bin, teal a buffer. */
 const DRAWER_SHAPE_TINTS: Record<GlanceDrawerShape, string> = {
-  source: "var(--flow-input)",
-  product: "var(--flow-output)",
-  byproduct: "var(--flow-output)",
-  trash: "#8a93a6",
-  buffer: "#8a93a6",
+  source: CC.source,
+  product: CC.product,
+  byproduct: CC.product,
+  trash: CC.trash,
+  buffer: CC.buffer,
 };
 
 /**
@@ -93,10 +94,11 @@ export const GLANCE_LINE = "#2a3441";
  * is green: on this board green means "fine".
  */
 export const GLANCE_TONES: Record<GlanceTone, string> = {
-  need: "#f87171",
+  // The board's in and out: blue comes into the plan, orange leaves it (the overview's INPUTS and OUTPUTS).
+  need: CC.source,
   // The product-drawer blue, since the drawer tiles became colour-coded.
   product: "#60a5fa",
-  output: "#4ade80",
+  output: CC.product,
   internal: "#9a9ca4",
   fine: "#9a9ca4",
   starved: "#b3ae76",

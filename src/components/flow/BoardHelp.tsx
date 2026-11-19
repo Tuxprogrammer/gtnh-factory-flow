@@ -119,7 +119,7 @@ const SOLVING: HelpCard = {
     { text: "Wire recipes and set a *count*, a *rate* or a *drawer*" },
     { text: "*Machine counts* are calculated" },
     { text: "*Forced* rows show what leaves or enters at a port" },
-    { text: "A port with no wire is a *free end*" },
+    { text: "A port with no wire is a *free end*: blue in, orange out" },
   ],
 };
 
@@ -216,8 +216,8 @@ const RECIPE_SEARCH: HelpCard = {
 const PLAN_TOTALS: HelpCard = {
   title: "Inputs and outputs",
   rows: [
-    { chip: "INPUTS", tone: "need", text: "Required external supply" },
-    { chip: "OUTPUTS", tone: "output", text: "Resources leaving the plan" },
+    { chip: "INPUTS", tone: "need", text: "*Blue*: comes into the plan" },
+    { chip: "OUTPUTS", tone: "output", text: "*Orange*: leaves the plan" },
     { chip: "INTERNAL", tone: "internal", text: "Made and used in the plan" },
   ],
 };

@@ -186,6 +186,8 @@ function getWorker(): Worker {
         deliver(key, result);
       } else {
         console.error("solve worker error:", error);
+        // The stale placeholder must not outlive the solve: the plan reads as unsolved, never as still working.
+        deliver(key, failedBooks(error));
       }
       if (queued) {
         const next = queued;
@@ -232,6 +234,24 @@ function deliver(key: string, result: ThroughputResult) {
     lastBooks = result;
     sink?.(result);
   }
+}
+
+/** Books for a solve that threw: nothing solved, and the board's "couldn't solve this plan" notice. */
+function failedBooks(error: string | undefined): ThroughputResult {
+  return {
+    ...emptyBooks(),
+    stale: false,
+    plan: {
+      forced: [],
+      leftovers: [],
+      unneeded: [],
+      unanchored: [],
+      terminals: [],
+      notes: [],
+      openGates: 0,
+      failure: { message: "BALANCE_FAILED", args: [error ?? "solve worker error"] },
+    },
+  };
 }
 
 function emptyBooks(): ThroughputResult {

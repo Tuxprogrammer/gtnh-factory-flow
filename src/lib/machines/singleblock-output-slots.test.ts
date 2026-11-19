@@ -10,7 +10,7 @@ import {
 } from "@/lib/model/types";
 import { applyMachineOutputMultipliers } from "@/lib/solver/machine-effects";
 import { calculateThroughput } from "@/lib/solver/throughput";
-import { singleblockItemOutputSlots } from "./singleblock-output-slots";
+import { itemOutputSlots } from "./singleblock-output-slots";
 
 const TIERS = ["LV", "MV", "HV", "EV", "IV", "LuV", "ZPM", "UV", "UHV", "UEV", "UIV", "UMV"];
 
@@ -56,6 +56,20 @@ function maceratorRecipe(runtime: boolean): Recipe {
         id: "industrial-maceration-stack",
         label: "Industrial Maceration Stack",
         machineType: "Industrial Maceration Stack",
+        kind: "multiblock",
+        minimumTier: "LV",
+      },
+      {
+        id: "steam-grinder",
+        label: "Steam Grinder",
+        machineType: "Steam Grinder",
+        kind: "multiblock",
+        minimumTier: "LV",
+      },
+      {
+        id: "windmill",
+        label: "Windmill",
+        machineType: "Windmill",
         kind: "multiblock",
         minimumTier: "LV",
       },
@@ -119,16 +133,14 @@ describe("single-block item output slots", () => {
   it("follows the macerator's slots by tier (MTEBasicMachineWithRecipeBuilder setSlotsCount)", () => {
     const macerator = { machineType: "Macerator" };
     expect(
-      ["LV", "MV", "HV", "EV", "IV", "UMV"].map((tier) =>
-        singleblockItemOutputSlots(macerator, tier as "LV"),
-      ),
+      ["LV", "MV", "HV", "EV", "IV", "UMV"].map((tier) => itemOutputSlots(macerator, tier as "LV")),
     ).toEqual([1, 1, 2, 3, 4, 4]);
-    expect(singleblockItemOutputSlots({ machineType: "Mixer" }, "MV")).toBe(1);
-    expect(singleblockItemOutputSlots({ machineType: "Mixer" }, "HV")).toBe(4);
-    expect(singleblockItemOutputSlots({ machineType: "Steam Macerator" }, "LV")).toBe(1);
-    expect(singleblockItemOutputSlots({ machineType: "Bending Machine" }, "LV")).toBeUndefined();
+    expect(itemOutputSlots({ machineType: "Mixer" }, "MV")).toBe(1);
+    expect(itemOutputSlots({ machineType: "Mixer" }, "HV")).toBe(4);
+    expect(itemOutputSlots({ machineType: "Steam Macerator" }, "LV")).toBe(1);
+    expect(itemOutputSlots({ machineType: "Bending Machine" }, "LV")).toBeUndefined();
     expect(
-      singleblockItemOutputSlots(
+      itemOutputSlots(
         {
           machineType: "Macerator",
           machineProfile: { machineType: "Macerator", minimumTier: "LV", kind: "multiblock" },
@@ -153,6 +165,12 @@ describe("single-block item output slots", () => {
     expect(plantMassPerCraft(recipe, "LuV")).toBeCloseTo(2.75);
     expect(plantMassPerCraft(recipe, "LV", "steam-macerator")).toBeCloseTo(1);
     expect(plantMassPerCraft(recipe, "LV", "industrial-maceration-stack")).toBeCloseTo(2.75);
+  });
+
+  it("credits the Steam Grinder and the Windmill with the first output only (getItemOutputLimit 1)", () => {
+    const recipe = maceratorRecipe(false);
+    expect(plantMassPerCraft(recipe, "LV", "steam-grinder")).toBeCloseTo(1);
+    expect(plantMassPerCraft(recipe, "LV", "windmill")).toBeCloseTo(1);
   });
 
   it("shows an output with no slot at zero on the card, keeping the port", () => {

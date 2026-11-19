@@ -635,3 +635,23 @@ it("steps a machine's tier from its line as the card does", () => {
   fireEvent.click(chip);
   expect(was()).not.toBe("LV");
 });
+
+it("repaints its rates and unit labels when the rate unit changes, without a hover", () => {
+  load(mockLeftovers);
+  const { container } = render(<OverviewRail />);
+  const rows = () =>
+    [...container.querySelectorAll(".rail-line .rail-num")].map((e) => e.textContent);
+  const headerUnits = () =>
+    [...container.querySelectorAll(".rail-sec-end")].map((e) => e.textContent);
+  try {
+    act(() => useFactoryStore.getState().setRateUnit("second"));
+    const perSecond = rows();
+    const perSecondHeaders = headerUnits();
+    expect(perSecond.length).toBeGreaterThan(0);
+    act(() => useFactoryStore.getState().setRateUnit("hour"));
+    expect(rows()).not.toEqual(perSecond);
+    expect(headerUnits()).not.toEqual(perSecondHeaders);
+  } finally {
+    act(() => useFactoryStore.getState().setRateUnit("second"));
+  }
+});

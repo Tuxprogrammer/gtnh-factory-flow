@@ -6,6 +6,7 @@ import net.minecraft.item.ItemStack;
 
 import org.lwjgl.opengl.GL11;
 
+import com.gtnhplanner.core.view.Tokens;
 import com.gtnhplanner.ui.theme.Fmt;
 import com.gtnhplanner.ui.theme.Hyb;
 
@@ -16,9 +17,10 @@ import com.gtnhplanner.ui.theme.Hyb;
 public final class CardPaint {
 
     /** The card's one surface, its edge, and the hairlines that part the header and the strip. */
-    public static final int SURFACE = 0xFF23252A, EDGE = 0xFF34363C, HAIR = 0xFF2C2E34;
+    public static final int SURFACE = Tokens.Palette.SURFACE, EDGE = Tokens.Palette.EDGE,
+        HAIR = Tokens.Palette.HAIR;
     /** The outline of what would take the wire in hand (the website's green), and of the one it would go to now. */
-    public static final int ACCEPT_FAINT = 0xB34ADE80, ACCEPT = 0xFF4ADE80;
+    public static final int ACCEPT_FAINT = 0xB34ADE80, ACCEPT = Tokens.Palette.ACCEPT;
     /** The machine's name: as large as fits, down to plain. */
     private static final float[] NAME_SIZES = { 1.5f, 1.25f, 1f };
     /** How small a port's name may go before it is cut, and how wide the fade is where it is cut. */
@@ -149,7 +151,7 @@ public final class CardPaint {
             number,
             suffix,
             name,
-            set ? Hyb.GOLD : perSecond <= 0 ? 0xFFA8AFBB : Hyb.INK,
+            set ? Hyb.GOLD : perSecond <= 0 ? Tokens.Palette.IDLE : Hyb.INK,
             nameColour,
             output,
             y,
@@ -235,7 +237,7 @@ public final class CardPaint {
                 fixed != null ? fixed : "Set",
                 bx + bw / 2f,
                 cy + 1,
-                fixed == null && prompt ? prompt() : 0xFF6F737C);
+                fixed == null && prompt ? prompt() : Tokens.Palette.PROMPT_OFF);
             return;
         }
         final String shown = Hyb.fit(number, bw - 4 - Hyb.width(suffix));
@@ -436,12 +438,12 @@ public final class CardPaint {
     // region Tiles and the well (the website's pass 3)
 
     /** A port's tile: its face (lighter under the mouse), its edge, and the bevel's light and dark lines. */
-    private static final int TILE = 0xFF2B2D33, TILE_HOVER = 0xFF31343A, TILE_EDGE = 0xFF121418, TILE_HI = 0xFF3B3E45,
-        TILE_LO = 0xFF222428;
+    private static final int TILE = Tokens.Tile.BODY, TILE_HOVER = Tokens.Tile.HOVER, TILE_EDGE = Tokens.Tile.EDGE,
+        TILE_HI = Tokens.Tile.HI, TILE_LO = Tokens.Tile.LO;
     /** A free end's tile (an open port, a forced row): a source's blue coming in, a product's orange going out. */
-    private static final int IN_BODY = 0xFF292F38, IN_STRIPE = 0xFF2E3844, IN_EDGE = 0xFF4F6986, IN_HI = 0xFF3A4757,
-        IN_LO = 0xFF22272E, OUT_BODY = 0xFF322D2E, OUT_STRIPE = 0xFF3E3431, OUT_EDGE = 0xFF815E49, OUT_HI = 0xFF4B3F39,
-        OUT_LO = 0xFF2A2425;
+    private static final int IN_BODY = Tokens.In.BODY, IN_STRIPE = Tokens.In.STRIPE, IN_EDGE = Tokens.In.EDGE,
+        IN_HI = Tokens.In.HI, IN_LO = Tokens.In.LO, OUT_BODY = Tokens.Out.BODY, OUT_STRIPE = Tokens.Out.STRIPE,
+        OUT_EDGE = Tokens.Out.EDGE, OUT_HI = Tokens.Out.HI, OUT_LO = Tokens.Out.LO;
 
     /** A port's tile in the row at {@code y}: one shape for every port and the power row. */
     public static void portTile(final boolean output, final int y, final boolean hover) {
@@ -635,8 +637,8 @@ public final class CardPaint {
     // region The bar along the foot
 
     /** The bar's ground and its sunk edge. */
-    private static final int FOOT_BG = 0xFF17191D, FOOT_EDGE = 0xFF0D0E11, FOOT_SHADE = 0xFF111215,
-        FOOT_SAY = 0xFFC8CAD0;
+    private static final int FOOT_BG = Tokens.Foot.BG, FOOT_EDGE = Tokens.Foot.EDGE, FOOT_SHADE = Tokens.Foot.SHADE,
+        FOOT_SAY = Tokens.Foot.SAY;
 
     /**
      * The bar along an Up to card's foot (docs/design/up-to.md), {x, y, w, h}: its fill is what runs of the count, a
@@ -680,8 +682,8 @@ public final class CardPaint {
     /** Gold on the beat the drawers' Set rate pulses on, grey off it: the next thing to do, while nothing is set. */
     public static int prompt() {
         // A picture of the plan holds still, at rest.
-        if (com.gtnhplanner.ui.canvas.PlanPicture.drawing()) return 0xFF6F737C;
-        return promptOn() ? Hyb.GOLD : 0xFF6F737C;
+        if (com.gtnhplanner.ui.canvas.PlanPicture.drawing()) return Tokens.Palette.PROMPT_OFF;
+        return promptOn() ? Hyb.GOLD : Tokens.Palette.PROMPT_OFF;
     }
 
     /**

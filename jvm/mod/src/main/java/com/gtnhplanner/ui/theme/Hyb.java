@@ -6,6 +6,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
 import com.cleanroommc.modularui.drawable.GuiDraw;
+import com.gtnhplanner.core.view.Tokens;
 
 /**
  * The hybrid look: Factory Flow's card palette and bevels, NEI's slots, GregTech's tier colours, the game font.
@@ -20,8 +21,8 @@ public final class Hyb {
     public static final float FIGURE = 1.5f;
 
     // Factory Flow card ramp (globals.css tokens, resolved).
-    public static final int INK = 0xFFE8E9EE;
-    public static final int MUTED = 0xFF9A9CA4;
+    public static final int INK = Tokens.Palette.INK;
+    public static final int MUTED = Tokens.Palette.MUTED;
     public static final int FRAME = 0xFF3C3E45;
     public static final int RING = 0xFF52545C;
     public static final int HIGHLIGHT = 0xFF5A5C65;
@@ -29,19 +30,19 @@ public final class Hyb {
     public static final int TILE = 0xFF36383F;
     public static final int TILE_EDGE = 0xFF25272C;
     public static final int TILE_HI = 0xFF4E5058;
-    public static final int KEY = 0xFF26282D;
-    public static final int KEY_HOVER = 0xFF2D2F35;
-    public static final int KEY_EDGE = 0xFF111317;
-    public static final int KEY_HI = 0xFF4A4C54;
-    public static final int KEY_LO = 0xFF17191D;
+    public static final int KEY = Tokens.Palette.KEY;
+    public static final int KEY_HOVER = Tokens.Palette.KEY_HOVER;
+    public static final int KEY_EDGE = Tokens.Palette.KEY_EDGE;
+    public static final int KEY_HI = Tokens.Palette.KEY_HI;
+    public static final int KEY_LO = Tokens.Palette.KEY_LO;
     public static final int NAMEBAR = 0xFF2D2F35;
     public static final int WELL = 0xFF4A4C54;
     /** The ground of a structure rendered in game: the card's machine well (ui/card/CardPaint#well). */
     public static final int PICTURE = 0xFF1A1C20;
-    public static final int CANVAS = 0xFF141414;
-    public static final int CANVAS_DOT = 0xFF26282D;
-    public static final int GOLD = 0xFFFFD257;
-    public static final int SELECTION = 0xFF22D3EE;
+    public static final int CANVAS = Tokens.Palette.CANVAS;
+    public static final int CANVAS_DOT = Tokens.Palette.CANVAS_DOT;
+    public static final int GOLD = Tokens.Palette.GOLD;
+    public static final int SELECTION = Tokens.Palette.SELECT;
     /**
      * What the mouse or the crosshair is on (a resource, a card, a wire, a placed spot), the same everywhere: on the
      * board, on the minimap and over the world. Drawn faint: a thin line and a soft halo.
@@ -49,19 +50,19 @@ public final class Hyb {
     public static final int LIT = 0xFFFFD257;
     public static final int MENU = 0xFF3C3E45;
     public static final int MENU_HOVER = 0xFF4E5058;
-    public static final int RED_INK = 0xFFE05252;
-    public static final int AMBER_INK = 0xFFE0A63A;
+    public static final int RED_INK = Tokens.Palette.RED;
+    public static final int AMBER_INK = Tokens.Palette.AMBER;
     /**
      * The rate key's EU reading, the website's: the number amber, its unit a greyed gold; an input's a step quieter.
      * The one reading on the board that is not a rate, dressed so it is never taken for one.
      */
     public static final int ENERGY = 0xFFFCD34D, ENERGY_TAIL = 0xFF8C7D4C, ENERGY_QUIET = 0xFFC9AE5A;
     /** What comes into the plan (inputs, sources): GregTech's blue for inputs, soft as the rest of the ramp. */
-    public static final int SOURCE_INK = 0xFF78B6F4;
+    public static final int SOURCE_INK = Tokens.Palette.SOURCE;
     /** What leaves the plan (outputs, products): GregTech's orange for outputs, soft, kept clear of the gold. */
-    public static final int PRODUCT_INK = 0xFFF59A5C;
+    public static final int PRODUCT_INK = Tokens.Palette.PRODUCT;
     /** All is well (power to spare, a saved picture): a mint, apart from the inputs' and outputs' colours. */
-    public static final int OK_INK = 0xFF5EE9B5;
+    public static final int OK_INK = Tokens.Palette.OK;
 
     // NEI slots.
     public static final int SLOT_ITEM = 0xFF8B8B8B;
@@ -74,21 +75,18 @@ public final class Hyb {
     /** GregTech tier: background, border, text; tiers from UV up are told apart by an underline, as in game. */
     public record Tier(String name, int bg, int border, int text, boolean underline) {}
 
-    private static final Tier[] TIERS = { new Tier("ULV", 0xFFFF5555, 0xFF8C2F2F, 0xFFFFFFFF, false),
-        new Tier("LV", 0xFF00AA00, 0xFF005E00, 0xFFFFFFFF, false),
-        new Tier("MV", 0xFFFFAA00, 0xFF8C5E00, 0xFF111111, false),
-        new Tier("HV", 0xFFFFFF55, 0xFF8C8C2F, 0xFF111111, false),
-        new Tier("EV", 0xFF555555, 0xFF2F2F2F, 0xFFFFFFFF, false),
-        new Tier("IV", 0xFF5555FF, 0xFF2F2F8C, 0xFFFFFFFF, false),
-        new Tier("LuV", 0xFFFF55FF, 0xFF8C2F8C, 0xFFFFFFFF, false),
-        new Tier("ZPM", 0xFF55FFFF, 0xFF2F8C8C, 0xFF111111, false),
-        new Tier("UV", 0xFF00AA00, 0xFF005E00, 0xFFFFFFFF, true),
-        new Tier("UHV", 0xFFAA0000, 0xFF5E0000, 0xFFFFFFFF, true),
-        new Tier("UEV", 0xFFAA00AA, 0xFF5E005E, 0xFFFFFFFF, true),
-        new Tier("UIV", 0xFF0000AA, 0xFF00005E, 0xFFFFFFFF, true),
-        new Tier("UMV", 0xFFFF5555, 0xFF8C2F2F, 0xFFFFFFFF, true),
-        new Tier("UXV", 0xFFAA0000, 0xFF5E0000, 0xFFFFFFFF, true),
-        new Tier("MAX", 0xFFFFFFFF, 0xFF8C8C8C, 0xFF111111, true) };
+    /** The tier table is the shared one (core-view's tokens.json): the website draws the same colours. */
+    private static final Tier[] TIERS = tiers();
+
+    private static Tier[] tiers() {
+        final Tokens.Tiers.Tier[] all = Tokens.Tiers.ALL;
+        final Tier[] out = new Tier[all.length];
+        for (int i = 0; i < all.length; i++) {
+            final Tokens.Tiers.Tier t = all[i];
+            out[i] = new Tier(t.name(), t.background(), t.border(), t.text(), t.underline());
+        }
+        return out;
+    }
     private static final Tier NO_TIER = new Tier("OFF", 0xFF4A4C54, 0xFF1D1F23, 0xFFE8E9EE, false);
 
     private Hyb() {}

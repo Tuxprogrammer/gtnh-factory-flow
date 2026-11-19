@@ -1,6 +1,4 @@
 import type { FactoryProject, MachineTier, ThroughputResult } from "./types";
-import { getSelectedMachineHandler } from "./recipe-rules";
-import { applyRecipeInputOverrides } from "./recipe-input-overrides";
 import { isCustomRateRecipe } from "./custom-rate";
 import { pinRuleOf } from "./pin-rule";
 import { peakCount as peakCountOf } from "./peak-count";
@@ -20,12 +18,8 @@ import {
   getCropsNhStats,
   isCropProductionRecipe,
 } from "./passive-production";
-import {
-  getNodePowerReport,
-  getNodeSteamReport,
-  hasPowerReport,
-  type NodePowerState,
-} from "@/lib/solver/power-report";
+import type { NodePowerState } from "@/lib/solver/power-report";
+import { cardMachineMath } from "@/lib/core/machines";
 import { getEnergyHatchType } from "@/lib/machines/energy-hatches";
 
 type VoltageTier = Exclude<MachineTier, "DEMO">;
@@ -90,7 +84,7 @@ export function buildMachineList(
   for (const node of project.nodes) {
     const recipe = recipes.get(node.recipeId);
     if (!node.enabled || !recipe || isCustomRateRecipe(recipe)) continue;
-    const handler = getSelectedMachineHandler(recipe, node);
+    const handler = cardMachineMath(recipe, node).handler;
     const cropStats = getCropsNhStats(recipe);
     const crop = cropStats
       ? cropsNhHarvesterFromTiers(
@@ -104,14 +98,12 @@ export function buildMachineList(
 
     const sections = listNodeSections(node).map(({ node: view }) => {
       const raw = recipes.get(view.recipeId);
-      const effective = raw ? applyRecipeInputOverrides(raw, view) : undefined;
-      const steam = effective ? getNodeSteamReport(effective, view) : undefined;
+      // The card's one readout (lib/core/machines.ts): an edit recomputes the edited card's figures only.
+      const machine = raw ? cardMachineMath(raw, view) : undefined;
+      const steam = machine?.steamReport;
       return {
         steam,
-        report:
-          effective && !steam && hasPowerReport(effective, view)
-            ? getNodePowerReport(effective, view)
-            : undefined,
+        report: machine && !steam ? machine.powerReport : undefined,
         required: nonnegative(result.nodes[view.id]?.theoreticalMachinesRequired ?? 0),
         usage: Math.min(1, nonnegative(result.nodes[view.id]?.utilization ?? 1)),
       };

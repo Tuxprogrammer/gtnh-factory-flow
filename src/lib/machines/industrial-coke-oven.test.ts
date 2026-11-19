@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { FactoryNode, MachineConfigControl, Recipe } from "@/lib/model/types";
 import { getRecipeCoilTierControl } from "@/lib/model/recipe-rules";
 import { normalizeHatchInput } from "@/lib/solver/hatch-input";
+import { getMachineStructuralParallels } from "@/lib/solver/machine-effects";
 import { getOverclockedRecipeStats } from "@/lib/solver/overclock";
 import { getNodePowerReport } from "@/lib/solver/power-report";
 
@@ -108,5 +109,50 @@ describe("Industrial Coke Oven issue #58 verification", () => {
     expect(
       normalizeHatchInput(brick, { ...node, recipeId: brick.id }, true).hatchAmps,
     ).toBeUndefined();
+  });
+});
+
+describe("Industrial Coke Oven slices", () => {
+  const slices = Array.from({ length: 16 }, (_, index) => `slice-${index + 1}`);
+  const sliced: Recipe = {
+    ...industrial,
+    machineConfigControls: [
+      control("heatingCoil", ["cupronickel", "kanthal"]),
+      control("cokeOvenCasing", ["heat_resistant", "heat_proof"]),
+      control("cokeOvenSlices", slices),
+    ],
+  };
+
+  it.each([
+    ["heat_resistant", 1, 16],
+    ["heat_resistant", 2, 24],
+    ["heat_resistant", 16, 136],
+    ["heat_proof", 1, 32],
+    ["heat_proof", 2, 48],
+    ["heat_proof", 16, 272],
+  ])("builds %s casing with %i slices for %i parallels", (casing, count, parallels) => {
+    // MTEIndustrialCokeOven.getMaxParallelRecipes: 16 + 8 per slice after the
+    // first with heat resistant casing, 32 + 16 with heat proof.
+    const configured = {
+      ...node,
+      machineConfigTiers: { cokeOvenCasing: casing, cokeOvenSlices: `slice-${count}` },
+    };
+    expect(getMachineStructuralParallels(sliced, configured)).toBe(parallels);
+    expect(
+      getNodePowerReport(sliced, { ...configured, hatchVoltageTier: "UV", hatchAmps: 4 }).parallels,
+    ).toBe(parallels);
+  });
+
+  it("runs only the slices its hatches can pay for", () => {
+    // ParallelHelper caps parallels at the supply: 12A MV is 1536 EU/t, and a
+    // Kanthal-discounted charcoal run costs 60 x 0.98^2 = 57.6 EU/t each.
+    const configured = {
+      ...node,
+      machineConfigTiers: { cokeOvenSlices: "slice-16" },
+      hatchVoltageTier: "MV" as const,
+      hatchAmps: 12,
+    };
+    expect(getMachineStructuralParallels(sliced, configured)).toBe(136);
+    expect(getNodePowerReport(sliced, configured).parallels).toBe(26);
   });
 });

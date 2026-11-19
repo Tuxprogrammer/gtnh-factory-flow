@@ -73,7 +73,7 @@ export function readAnswer(model: PlanModel, answer: Answer): PlanReading {
         notes: [...answer.notes],
         openGates: 0,
         failure: answer.failure,
-        unmetDrawers: [...answer.drawers.unmet],
+        unmetDrawers: [...answer.drawers.unmet, ...model.unfed.map((d) => d.id)],
       },
     };
   }
@@ -201,7 +201,7 @@ export function readAnswer(model: PlanModel, answer: Answer): PlanReading {
   const loops = readLoops(model, solution.upToLoops ?? []);
   const shortfalls = readShortfalls(model, (solution.drawers ?? EMPTY_DRAWERS).shortfalls);
   const unneeded = solution.unneeded.filter((id) => model.machines.has(id) && !model.hidden.has(id));
-  const notes: Note[] = [...solution.notes, ...alternatives.notes];
+  const notes: Note[] = [...solution.notes, ...unfedNotes(model), ...alternatives.notes];
   const choiceNotes = notes.filter((n) => CHOICE_NOTES.has(n.message));
   const anchorKeys = (refs: PortRef[]): PortKey[] =>
     refs.flatMap((ref) => {
@@ -225,12 +225,25 @@ export function readAnswer(model: PlanModel, answer: Answer): PlanReading {
       terminals,
       notes,
       openGates: solution.openGates,
-      unmetDrawers: (solution.drawers ?? EMPTY_DRAWERS).unmet,
+      unmetDrawers: [...(solution.drawers ?? EMPTY_DRAWERS).unmet, ...model.unfed.map((d) => d.id)],
       chosen: anchorKeys(alternatives.chosen?.gateAnchors ?? solution.key.gateAnchors),
       alternativesComplete: alternatives.complete,
       choiceNotes,
     },
   };
+}
+
+/** A drawer whose ports all feed an earlier drawer gets nothing: its rule reads unmet at zero. */
+function unfedNotes(model: PlanModel): Note[] {
+  return model.unfed.map((d) => ({
+    message: "DRAWER_UNMET",
+    args: [
+      d.label,
+      { message: d.rule === "EXACTLY" ? "RULE_EXACTLY" : "RULE_AT_LEAST", args: [] },
+      d.rate,
+      0,
+    ],
+  }));
 }
 
 /** The Up to read-outs by CARD id: a shared card's whole pool is one entry under the card's id. */

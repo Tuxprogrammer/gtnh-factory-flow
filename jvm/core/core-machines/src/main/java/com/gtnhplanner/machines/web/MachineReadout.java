@@ -1,0 +1,141 @@
+package com.gtnhplanner.machines.web;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nullable;
+
+import com.gtnhplanner.core.base.JsonTree;
+
+/**
+ * A recipe on a node as the website's tests read it, for hosts that cannot call the maths object by object: the host
+ * hands over a recipe once (JSON in the website's shape) and then a node per question, and gets back one JSON object
+ * with every number the card shows (tier, overclock steps, duration, EU/t, parallels, output multipliers, power state,
+ * steam, tier controls). The keys are the ones machine-goldens.jsonl.gz records under "expected", so the same file
+ * judges the JVM, the JavaScript target and the WebAssembly target. A number that is not finite is the text
+ * {@code "Infinity"}, {@code "-Infinity"} or {@code "NaN"}, as in that file.
+ */
+public final class MachineReadout {
+
+    private final Map<String, Web.Recipe> recipes = new HashMap<>();
+
+    /** Keeps a recipe (the website's JSON) under an id for later questions; a second recipe under an id replaces it. */
+    public void addRecipe(final String id, final String recipeJson) {
+        final Web.Recipe recipe = WebJson.recipe(JsonTree.parse(recipeJson));
+        if (recipe == null) throw new IllegalArgumentException("Not a recipe: " + id);
+        recipes.put(id, recipe);
+    }
+
+    /**
+     * The numbers of a kept recipe on a node (JSON in the website's node shape), as JSON; null when the recipe is a
+     * machine this module leaves to the mod's own models (Tree Growth Simulator, Bacterial Vat).
+     */
+    @Nullable
+    public String read(final String recipeId, final String nodeJson) {
+        final Web.Recipe recipe = recipes.get(recipeId);
+        if (recipe == null) throw new IllegalArgumentException("No recipe kept under " + recipeId);
+        final Web.Node node = WebJson.node(JsonTree.parse(nodeJson));
+        if (node == null) throw new IllegalArgumentException("Not a node");
+        final Map<String, Object> out = readout(recipe, node);
+        return out == null ? null : JsonTree.write(out);
+    }
+
+    /** Whether the number is one the host can read as JSON text: finite as it is, otherwise the file's word for it. */
+    static Object n(final double value) {
+        if (Double.isNaN(value)) return "NaN";
+        if (Double.isInfinite(value)) return value > 0 ? "Infinity" : "-Infinity";
+        return value;
+    }
+
+    @Nullable
+    static Map<String, Object> readout(final Web.Recipe recipe, final Web.Node node) {
+        if (!NodeMath.covers(recipe, node)) return null;
+        final Map<String, Object> out = new LinkedHashMap<>();
+        final Overclock.Stats s = Overclock.stats(recipe, node);
+        out.put("tier", s.tier());
+        out.put("minimumTier", s.minimumTier());
+        out.put("overclockSteps", s.overclockSteps());
+        out.put("perfectOverclockSteps", s.perfectOverclockSteps());
+        out.put("perfectSpeedFactor", n(s.perfectSpeedFactor()));
+        out.put("perfectEuFactor", n(s.perfectEuFactor()));
+        out.put("durationTicks", n(s.durationTicks()));
+        out.put("eut", n(s.eut()));
+
+        final Web.Recipe effective = RecipeRules.applyHandler(recipe, node);
+        final Web.RuntimeVariant runtime = RuntimeCalculation.select(effective, node);
+        out.put(
+            "parallels",
+            n(
+                runtime != null && runtime.parallel != null ? runtime.parallel
+                    : MachineEffects.parallelMultiplier(effective, node)));
+        out.put("structuralParallels", n(MachineEffects.structuralParallels(effective, node)));
+        out.put("durationMultiplier", n(MachineEffects.durationMultiplier(effective, node)));
+        out.put("eutMultiplier", n(MachineEffects.eutMultiplier(effective, node)));
+        final List<Object> multipliers = new ArrayList<>(), chances = new ArrayList<>();
+        final List<Double> multiplierValues = new ArrayList<>();
+        for (final Web.Resource output : effective.outputs) {
+            final double multiplier = MachineEffects.outputMultiplier(effective, node, output, s.tier());
+            multiplierValues.add(multiplier);
+            multipliers.add(n(multiplier));
+            chances.add(n(output.chance != null ? output.chance : 1));
+        }
+        out.put("outputMultipliers", multipliers);
+        final List<Web.Resource> runtimeOutputs = RuntimeCalculation.outputs(effective, node);
+        final List<Object> amounts = new ArrayList<>();
+        if (runtimeOutputs != null) for (final Web.Resource output : runtimeOutputs) amounts.add(n(output.amount));
+        else for (int i = 0; i < effective.outputs.size(); i++)
+            amounts.add(n(effective.outputs.get(i).amount * multiplierValues.get(i)));
+        out.put("outputAmounts", amounts);
+        out.put("chances", chances);
+        out.put("machineType", effective.machineType);
+        out.put("multiblock", Power.isMultiblock(effective));
+        final String runTier = Power.runTier(effective, node);
+        out.put("runTier", runTier);
+        out.put("amps", n(Power.amps(effective, node)));
+        final int ordinal = Power.effectiveVoltageOrdinal(effective, node, runTier);
+        out.put("voltageOrdinal", ordinal);
+        out.put("heatDiscount", n(Heat.discount(effective, node, runTier, ordinal)));
+
+        if (PowerReport.has(recipe, node)) {
+            final PowerReport.Report p = PowerReport.report(recipe, node);
+            out.put("powerState", p.state());
+            out.put("recipeGateReason", p.recipeGateReason());
+            out.put("poolEuT", n(p.poolEuT()));
+            out.put("singleDrawEuT", n(p.singleDrawEuT()));
+        }
+
+        final PowerReport.Steam steam = PowerReport.steam(recipe, node);
+        if (steam != null) {
+            final Map<String, Object> st = new LinkedHashMap<>();
+            st.put("perTick", n(steam.drawSteamPerTick()));
+            st.put("singlePerTick", n(steam.singleDrawSteamPerTick()));
+            st.put("parallels", n(steam.parallels()));
+            st.put("multiblock", steam.isMultiblock());
+            st.put("highPressure", steam.highPressure());
+            out.put("steam", st);
+        }
+
+        final List<RecipeRules.TierControl> controls = new ArrayList<>(
+            RecipeRules.configTierControls(effective, node.machineConfigTiers));
+        final RecipeRules.TierControl coil = RecipeRules.coilTierControl(effective, node.coilTier);
+        if (coil != null) controls.add(coil);
+        final List<Object> list = new ArrayList<>();
+        for (final RecipeRules.TierControl c : controls) {
+            final Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", c.id());
+            m.put("label", c.label());
+            m.put("minimumKey", c.minimum().key);
+            m.put("currentKey", c.current().key);
+            m.put("minimumIndex", c.minimumIndex());
+            final List<Object> keys = new ArrayList<>();
+            for (final Web.TierOption t : c.tiers()) keys.add(t.key);
+            m.put("tiers", keys);
+            list.add(m);
+        }
+        out.put("controls", list);
+        return out;
+    }
+}

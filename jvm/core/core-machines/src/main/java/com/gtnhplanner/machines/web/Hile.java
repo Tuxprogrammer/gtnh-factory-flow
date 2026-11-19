@@ -9,6 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.gtnhplanner.core.base.NumberText;
+import com.gtnhplanner.core.machines.Roots;
 import com.gtnhplanner.machines.FormulaLine;
 
 /**
@@ -62,7 +63,7 @@ public final class Hile {
             tier.label = source.tier() + " · " + amps + "A" + (legendary ? " (Legendary)" : "");
             final List<String> tooltip = new ArrayList<>();
             tooltip.add(
-                (long) Math.floor(Math.cbrt(source.amps())) + " maximum parallels; recipe and overclock ceiling: "
+                (long) Math.floor(Roots.cbrt(source.amps())) + " maximum parallels; recipe and overclock ceiling: "
                     + Tiers.NAMES[source.ordinal() + 1]
                     + ".");
             tooltip.add(

@@ -142,6 +142,7 @@ import {
 } from "@/lib/solver/plan/hygiene";
 import { collectPocketMembers, expandPocketSelection } from "@/lib/model/pocket-connections";
 import { paperForBoardId, pickBoardPaper } from "@/lib/model/board-paper";
+import { VIEW_SETTINGS } from "@/lib/view-settings.generated";
 import {
   addToGroup,
   fitGroups,
@@ -1176,7 +1177,7 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
     setActivePowerDisplayUnit(unit);
     set({ powerDisplayUnit: unit });
     try {
-      localStorage.setItem("gtnh-factory-flow.power-display-unit.v1", unit);
+      localStorage.setItem(VIEW_SETTINGS.powerDisplay.key, unit);
     } catch { /* Storage can be unavailable; the display still works. */ }
   },
   setProject: (project, options) => {

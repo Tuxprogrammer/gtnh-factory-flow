@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { VIEW_SETTINGS } from "@/lib/view-settings.generated";
 
 /**
  * Where the tour is. `phase` is "playing" while a step acts something out, "waiting" once its note is up and the
@@ -51,7 +52,7 @@ export function useTour(): TourState {
   );
 }
 
-const OFFERED_KEY = "gtnhplanner.tour.offered";
+const OFFERED_KEY: string = VIEW_SETTINGS.tourOffered.key;
 
 /** Whether the first-run offer was answered (either way puts it away for good). */
 export function tourOffered(): boolean {

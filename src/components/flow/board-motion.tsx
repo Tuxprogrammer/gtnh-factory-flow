@@ -2,6 +2,8 @@
 
 import { useEffect, useReducer, useRef, useSyncExternalStore } from "react";
 
+import { VIEW_SETTINGS } from "@/lib/view-settings.generated";
+
 import {
   lerpSampledPolylines,
   morphPointsToPath,
@@ -31,7 +33,7 @@ export interface BoardMotion {
   valueMotion: boolean;
 }
 
-const BOARD_MOTION_STORAGE_KEY = "gtnh-factory-flow-board-motion";
+const BOARD_MOTION_STORAGE_KEY: string = VIEW_SETTINGS.moveMotion.key;
 
 /** How long a card glides onto its cell. Mirrored in globals.css. */
 export const MOVE_SNAP_MS = 120;

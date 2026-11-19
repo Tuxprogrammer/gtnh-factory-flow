@@ -1,6 +1,7 @@
 import { sectionOwnerId } from "../../../model/shared-machine";
 import { compareIds } from "../ids";
 import { makeLeftoverKey } from "../port-key";
+import { chainLinkFlows } from "./buffers";
 import type {
   Alternative,
   Alternatives,
@@ -104,6 +105,12 @@ export function readAnswer(model: PlanModel, answer: Answer): PlanReading {
     flowOf.set(link.edgeId, Math.max(0, at?.ratePerSecond ?? 0));
   }
 
+  // Wires between a chain's drawers: what passes from one to the next.
+  for (const chain of model.chains) {
+    for (const [edgeId, flow] of chainLinkFlows(chain, (id) => flowOf.get(id) ?? 0))
+      flowOf.set(edgeId, flow);
+  }
+
   // Wires to drawers: what the port makes (or takes) that its other wires do
   // not carry. A port has one drawer; should it have more, the first (by id)
   // takes it all.
@@ -153,6 +160,15 @@ export function readAnswer(model: PlanModel, answer: Answer): PlanReading {
     }));
 
   // What a maker puts into a buffer beyond what its takers take: the maker's forced row, totalled on the buffer.
+  // A chain's spill is drawn on the drawer the maker is wired to.
+  const chainDrawerOf = new Map<string, string>();
+  for (const chain of model.chains) {
+    for (const [edgeId, { drawer }] of chain.wires) {
+      const link = model.drawerEdges.get(edgeId);
+      const row = link && model.row(link.ref);
+      if (row) chainDrawerOf.set(`${chain.drawerId}|${row.portKey}`, drawer);
+    }
+  }
   const spills: PlanSpill[] = Object.entries(solution.drawers?.spills ?? {}).flatMap(([drawerId, list]) =>
     external(list, "out")
       .filter((e) => e.perSecond > DUST)
@@ -161,7 +177,7 @@ export function readAnswer(model: PlanModel, answer: Answer): PlanReading {
         portKey: e.portKey,
         resourceKey: e.resourceKey,
         perSecond: e.perSecond,
-        drawerId,
+        drawerId: chainDrawerOf.get(`${drawerId}|${e.portKey}`) ?? drawerId,
       })),
   );
 

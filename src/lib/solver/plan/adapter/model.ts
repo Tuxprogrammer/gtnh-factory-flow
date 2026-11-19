@@ -35,7 +35,7 @@ import type {
   SolveInput,
 } from "../types";
 import type { PlanSolveArgs, PlanUnit } from "./args";
-import { expandBuffers } from "./buffers";
+import { expandBuffers, type BufferChain } from "./buffers";
 import {
   buildRows,
   canonicalPortRateHandle,
@@ -84,6 +84,8 @@ export interface PlanModel {
   /** The edges (buffer-free) the model was built from, and what each covers. */
   edges: FactoryEdge[];
   covers: Map<string, string[]>;
+  /** Buffer drawers wired to each other, each one buffer to the solver. */
+  chains: BufferChain[];
   storages: FactoryStorage[];
   roles: Map<string, StorageRole>;
   drawers: Map<Id, FactoryStorage>;
@@ -485,6 +487,7 @@ export function buildPlanModel(args: PlanSolveArgs): PlanModel {
     drawerEdges,
     edges: flat.edges,
     covers: flat.covers,
+    chains: flat.chains,
     storages: flat.storages,
     roles,
     drawers: drawerMap,

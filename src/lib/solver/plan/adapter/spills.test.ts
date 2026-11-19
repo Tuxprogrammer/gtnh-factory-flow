@@ -43,3 +43,36 @@ describe("spills into a buffer reach the board at the maker's port", () => {
     expect(calculateThroughput(p, { generatedAt: "t" }).plan!.spills).toBeUndefined();
   });
 });
+
+/**
+ * The same plan with the buffer drawn as two drawers wired to each other: one buffer to the solver, so the maker still
+ * runs full and banks its extra instead of slowing to what the user takes (fork issue 95's chained Quicklime drawers).
+ */
+describe("buffer drawers wired to each other bank as one", () => {
+  const plan = () =>
+    project({
+      recipes: [recipe("a", [["x", 1]], [["y", 1]]), recipe("b", [["y", 1]], [["z", 1]])],
+      nodes: [node("m", "a", { solvePin: 2 }), node("t", "b", { solvePin: 1 })],
+      storages: [drawer("xs", "x"), drawer("b1", "y"), drawer("b2", "y"), drawer("zs", "z")],
+      edges: [
+        wire("xm", "xs", "m", "x", {}, { fromDrawer: true }),
+        wire("mb", "m", "b1", "y", {}, { toDrawer: true }),
+        wire("bb", "b1", "b2", "y", {}, { fromDrawer: true, toDrawer: true }),
+        wire("bt", "b2", "t", "y", {}, { fromDrawer: true }),
+        wire("tz", "t", "zs", "z", {}, { toDrawer: true }),
+      ],
+    });
+
+  it("the maker runs full, spills into the drawer it feeds, and the chain passes the rest", () => {
+    const result = calculateThroughput(plan(), { generatedAt: "t" });
+    const extras = result.plan!;
+    expect(extras.upTo?.["m"]?.reached).toBeCloseTo(2, 6);
+    expect(extras.spills).toEqual([
+      expect.objectContaining({ nodeId: "m", perSecond: expect.closeTo(1, 6), drawerId: "b1" }),
+    ]);
+    expect(extras.forced.filter((entry) => entry.nodeId === "m")).toEqual([]);
+    for (const id of ["mb", "bb", "bt"]) {
+      expect(result.edges[id]!.transferredPerSecond).toBeCloseTo(1, 6);
+    }
+  });
+});

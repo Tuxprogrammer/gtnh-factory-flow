@@ -92,6 +92,14 @@
       ],
       "generator": "UPTO_EXPORT_DIR=$PWD/conformance/solver/up-to npx vitest run up-to-export (website), then node tools/conformance/manifest.mjs --write"
     },
+    "solver/website": {
+      "specifies": "The two solvers on the website's own cases: cases.json.gz holds {generator, cases:[{name, input, answer}]}, every distinct solve input the website's tests (its solver test scenarios, the board parity scenarios, every other test that solves a plan) and the reference plans hand the plan solver, minus those already in the corpus or the Up to plans, each with the website's answer as the golden digest (or {failed: message}). The Java kernel must give the same answer, equal to 1e-6 relative; where a plan has several optimal answers the case says so in the Java reader's list.",
+      "readers": [
+        "website: src/lib/solver/plan/__fixtures__/website-cases.test.ts",
+        "jvm: core-solver com.gtnhplanner.solver.WebsiteCasesTest"
+      ],
+      "generator": "node tools/conformance/solver/generate.mjs (runs the website suite with tools/conformance/solver/capture-setup.ts recording, then export.capture.ts; rewrites the manifest)"
+    },
     "tasks": {
       "specifies": "Task order keys: orderBetween answers for pairs of keys, so both sides sort a task list the same way.",
       "readers": [
@@ -1081,6 +1089,11 @@
       "area": "solver/up-to",
       "bytes": 2185,
       "sha256": "4e03697552999baecc21eb8820be0c1bc0c9d376d8a91716d3059d46ab42b8bf"
+    },
+    "solver/website/cases.json.gz": {
+      "area": "solver/website",
+      "bytes": 167578,
+      "sha256": "5dd4f49e7d68c9904fb8c835c4f8b415e7a4aab66b82c6d9a9896f11d649b7b7"
     },
     "tasks/order-key-vectors.json": {
       "area": "tasks",

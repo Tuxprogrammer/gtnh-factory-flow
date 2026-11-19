@@ -2844,6 +2844,39 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
             arrangeCancelled = true;
             return;
         }
+        // On a plan with groups the key asks first, as the website's does: keep each group one block, its insides
+        // untouched, or ungroup everything and arrange the cards themselves.
+        if (!graph().boardGroups.isEmpty()) {
+            final List<PickList.Entry> rows = new ArrayList<>();
+            rows.add(PickList.Entry.of("Keep groups", this::arrangeNow));
+            rows.add(PickList.Entry.of("Ungroup all", () -> {
+                ungroupAll();
+                arrangeNow();
+            }));
+            Popup.open(
+                getPanel(),
+                PickList.popup("gtnhplanner_arrange", null, rows, false, 120),
+                getContext().getAbsMouseX(),
+                getContext().getAbsMouseY());
+            return;
+        }
+        arrangeNow();
+    }
+
+    /** Every group goes, as one undoable step; what they held stays where it stands. */
+    private void ungroupAll() {
+        final Graph g = graph();
+        for (final UUID id : g.boardGroups.keySet()) session.deselect(id);
+        session.editLayout(
+            () -> {
+                for (final UUID id : new ArrayList<>(g.boardGroups.keySet()))
+                    com.gtnhplanner.data.flowchart.Groups.ungroup(g, id);
+            });
+    }
+
+    /** The arrange itself, groups kept as blocks. */
+    private void arrangeNow() {
+        if (arrangeJob != null) return;
         final Graph g = graph();
         // A shared machine is one box: every recipe on it answers to its card. A group on the board is one box too, its
         // insides untouched (docs/design/groups.md, Arrange): whatever it holds answers to it.

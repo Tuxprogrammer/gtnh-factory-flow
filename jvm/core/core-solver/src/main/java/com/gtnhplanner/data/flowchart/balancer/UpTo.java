@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.ojalgo.optimisation.Variable;
-
 /**
  * The Up to rule in the solver (docs/design/up-to.md; the website's {@code guard.ts} and {@code push.ts}): the guard
  * that keeps forced flow from making up an Up to card's gap, and the push that runs every Up to card as high as the
@@ -76,7 +74,7 @@ public final class UpTo {
                 final int[] ports = guardedPorts(ctx);
                 if (ports.length == 0) return;
                 final Handles h = Solver.baseModel(ctx, false, false);
-                for (final int p : ports) h.extVars()[p].weight(ctx.externalWeight(p));
+                for (final int p : ports) h.cost(h.extVars()[p], ctx.externalWeight(p));
                 // The question commits nothing and must not leave its own rejection behind.
                 final Note rejection = ctx.rejection;
                 final SolveResult least = Solver.run(ctx, h, "guard");
@@ -133,7 +131,7 @@ public final class UpTo {
     private static Handles fairRegion(final SolveContext ctx, final Solver.Trades held, final List<Integer> pools,
         final double sum, final Map<Integer, Double> frozen) {
         final Handles h = Solver.tradeModel(ctx, held);
-        final Solver.Terms all = new Solver.Terms();
+        final Solver.Terms all = new Solver.Terms(h.lp());
         for (final int p : pools) all.addAll(Solver.levelTerms(ctx, h, p));
         all.row(h, "push_sum", sum - ctx.heuristics.numerics().pushTol * Math.max(1, sum), Double.POSITIVE_INFINITY);
         for (final Map.Entry<Integer, Double> e : frozen.entrySet()) {
@@ -173,11 +171,13 @@ public final class UpTo {
         List<Integer> active = unfrozen(pools, levels);
         while (!active.isEmpty()) {
             final Handles round = fairRegion(ctx, held, pools, sum, levels);
-            final Variable z = round.model()
-                .addVariable("push_level")
-                .lower(0)
-                .upper(1)
-                .weight(-1);
+            final int z = round.lp()
+                .addColumn("push_level");
+            round.lp()
+                .columnLower(z, 0);
+            round.lp()
+                .columnUpper(z, 1);
+            round.cost(z, -1);
             for (final int p : active) {
                 Solver.levelTerms(ctx, round, p)
                     .add(z, -1)
@@ -185,7 +185,7 @@ public final class UpTo {
             }
             final SolveResult lifted = Solver.run(ctx, round, "push: fairness");
             if (lifted.isRejected()) break;
-            final double least = Solver.valueOf(z);
+            final double least = round.value(z);
             // Every one at its capacity (z sits on its own bound, 1, unless a pool is a hair short of it).
             if (least >= 1 - tol || active.size() == 1) {
                 // With one pool left, the round maximised that pool's level itself.

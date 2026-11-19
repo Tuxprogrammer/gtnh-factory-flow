@@ -7,10 +7,8 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import org.ojalgo.optimisation.Optimisation;
-import org.ojalgo.optimisation.Variable;
-
 import com.gtnhplanner.core.base.Uuid;
+import com.gtnhplanner.core.solver.lp.LinearProgram;
 
 /**
  * What to do when the drawers' rules cannot all hold. Pins are the player's hard word (a machine
@@ -191,13 +189,12 @@ final class DrawerRelaxation {
             // The Up to guard (docs/design/up-to.md): a rate the Up to machines cannot reach is a shortfall that names
             // the Up to card, never a forced flow.
             .guard();
-        final Optimisation.Result result = builder.solve("drawer relaxation");
-        if (!result.getState()
-            .isFeasible()) return null;
+        final LinearProgram.Result result = builder.solve("drawer relaxation");
+        if (!result.feasible()) return null;
         final Handles h = builder.handles();
-        final double[] extents = values(h.extentVars());
-        final double[] flows = values(h.flowVars());
-        final double[] externals = values(h.extVars());
+        final double[] extents = h.values(h.extentVars());
+        final double[] flows = h.values(h.flowVars());
+        final double[] externals = h.values(h.extVars());
         // Believed only once the independent conservation check passes, as every other model's point: a pin the plan
         // cannot hold (negative crafts) is no relaxation the drawers could explain.
         if (ctx.validate(extents, flows, externals) != null) return null;
@@ -215,14 +212,5 @@ final class DrawerRelaxation {
     private static Object machines(final double capacity) {
         return capacity == Math.floor(capacity) && Math.abs(capacity) < Integer.MAX_VALUE ? (Object) (int) capacity
             : (Object) capacity;
-    }
-
-    private static double[] values(final Variable[] vars) {
-        final double[] out = new double[vars.length];
-        for (int i = 0; i < vars.length; i++) {
-            final Number v = vars[i].getValue();
-            out[i] = v == null ? 0 : v.doubleValue();
-        }
-        return out;
     }
 }

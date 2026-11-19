@@ -17,7 +17,13 @@ const SMELT = {
   outputs: [{ kind: "item", id: "iron-ingot", amount: 1 }],
   source: { recipeMap: "Furnace" },
   machineHandlers: [
-    { id: "furnace", label: "Furnace", kind: "single", machineType: "Furnace", minimumTier: "NONE" },
+    {
+      id: "furnace",
+      label: "Furnace",
+      kind: "single",
+      machineType: "Furnace",
+      minimumTier: "NONE",
+    },
     {
       id: "helioflare-power-forge",
       label: "Helioflare Power Forge",
@@ -63,7 +69,10 @@ describe("furnace modes of multiblocks and the pack's rate mod (GTNHRates GTFurn
     setActiveGameRates({ recipeDurationDivisor: 64 });
     const arc = SMELT.machineHandlers!.find((entry) => entry.id === "industrial-arc-furnace")!;
     expect(
-      gtFurnaceDurationTicks({ machineType: "Arc Furnace", source: { recipeMap: "Arc Furnace" } }, arc),
+      gtFurnaceDurationTicks(
+        { machineType: "Arc Furnace", source: { recipeMap: "Arc Furnace" } },
+        arc,
+      ),
     ).toBeUndefined();
     expect(baseTicks("furnace")).toBe(200);
   });

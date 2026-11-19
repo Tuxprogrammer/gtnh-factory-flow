@@ -5,10 +5,13 @@
 // The same files, with the same tolerances, that the JVM tests read (MachineGoldensTest, BeesGoldensTest,
 // CropsNhGoldensTest): relative 1e-9 for machines and crops (crops from max(1, |want|)), 1e-6 for bees, and exact for
 // counts, tiers, keys, text and flags. Both sides' comparisons are written to the same rule list (GoldenCompare).
+// `every` > 1 runs a sample (sample.mjs) of each file: the JavaScript target does that unless the run is --full. Every
+// machine case still registers its recipe, so a sampled case sees what it saw in the full run.
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { gunzipSync } from "node:zlib";
+import { sampleOf } from "./sample.mjs";
 
 const ROOT = fileURLToPath(new URL("../../", import.meta.url));
 const lines = (rel) =>
@@ -83,17 +86,19 @@ function timed(tally, name, fn) {
 
 // ---- machines
 
-export function runMachineGoldens(api, tally, { onlyFirst = Infinity } = {}) {
+export function runMachineGoldens(api, tally, { onlyFirst = Infinity, every = 1 } = {}) {
   const machines = api.MachinesExports;
-  const all = lines("machines/machine-goldens.jsonl.gz");
+  const everything = lines("machines/machine-goldens.jsonl.gz").slice(0, onlyFirst).map((line) => JSON.parse(line));
+  const chosen = new Set(sampleOf(everything, every, (c) => c.group));
+  const all = [...chosen];
   let skipped = 0;
   timed(tally, "machines/cases", () => {
     const ratesOf = (c) => c.gameRates ?? {};
-    for (const line of all.slice(0, onlyFirst)) {
-      const c = JSON.parse(line);
+    for (const c of everything) {
       const r = ratesOf(c);
       machines.machinesSetRates(r.beesYield ?? 1, r.ic2CropsYield ?? 1, r.recipeDurationDivisor ?? 1);
       if (c.recipe) machines.machinesAddRecipe(c.recipeId, JSON.stringify(c.recipe));
+      if (!chosen.has(c)) continue;
       let diff;
       let text;
       try {
@@ -127,13 +132,14 @@ function machineDifference(want, got) {
 
 // ---- bees
 
-export function runBeeGoldens(api, tally) {
+export function runBeeGoldens(api, tally, { every = 1 } = {}) {
   const machines = api.MachinesExports;
-  const all = lines("machines/bee-goldens.jsonl.gz");
+  const everything = lines("machines/bee-goldens.jsonl.gz").map((line) => JSON.parse(line));
+  // Every housing stays in the sample whatever its size: all six are checked.
+  const all = sampleOf(everything, every, (c) => c.housing);
   const housings = new Set();
   timed(tally, "bees/cases", () => {
-    for (const line of all) {
-      const c = JSON.parse(line);
+    for (const c of all) {
       housings.add(c.housing);
       let diff = null;
       try {
@@ -160,12 +166,15 @@ export function runBeeGoldens(api, tally) {
 
 // ---- crops
 
-export function runCropGoldens(api, tally) {
+export function runCropGoldens(api, tally, { every = 1 } = {}) {
   const machines = api.MachinesExports;
-  const all = lines("machines/crop-goldens.jsonl.gz");
+  const all = sampleOf(
+    lines("machines/crop-goldens.jsonl.gz").map((line) => JSON.parse(line)),
+    every,
+    (c) => `${c.crop} ${c.handler}`,
+  );
   timed(tally, "crops/cases", () => {
-    for (const line of all) {
-      const c = JSON.parse(line);
+    for (const c of all) {
       let diff = null;
       try {
         const got = JSON.parse(machines.machinesCropReadout(JSON.stringify({ stats: c.stats, handler: c.handler, tiers: c.tiers, crops: c.crops, gameRates: c.gameRates })));
@@ -187,8 +196,8 @@ function closeCrop(w, g) {
   return Math.abs(w - g) <= 1e-9 * Math.max(1, Math.abs(w));
 }
 
-export function runMachines(api, tally) {
-  runMachineGoldens(api, tally);
-  runBeeGoldens(api, tally);
-  runCropGoldens(api, tally);
+export function runMachines(api, tally, { every = 1 } = {}) {
+  runMachineGoldens(api, tally, { every });
+  runBeeGoldens(api, tally, { every });
+  runCropGoldens(api, tally, { every });
 }

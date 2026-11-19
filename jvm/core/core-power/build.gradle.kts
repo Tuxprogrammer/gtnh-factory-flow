@@ -9,3 +9,10 @@ dependencies {
     testImplementation("com.google.code.gson:gson:2.2.4")
     testCompileOnly("com.google.code.findbugs:jsr305:3.0.2")
 }
+
+tasks.named<Test>("test") {
+    // -PwriteVectors rewrites conformance/power/rocket-exact.json from this JVM (RocketExactTest.writeVectors).
+    if (providers.gradleProperty("writeVectors").isPresent) {
+        systemProperty("gtnh.writeVectors", "true")
+    }
+}

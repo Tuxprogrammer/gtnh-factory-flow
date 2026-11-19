@@ -44,29 +44,33 @@ class WebsiteCasesTest {
 
     private static final String REPORT = System.getProperty("gtnhplanner.solver.casesReport", "");
 
-    private static final String OIL_LINE = "the oil line of website 07b310f3 (loosened holds): see the state note";
+    private static final String LOOSENED = "the website's HiGHS missed a held row by about 1e-7 and its least flow"
+        + " found no point, so it ran again with every hold loosened by 1e-6 (its 07b310f3, a workaround for HiGHS's"
+        + " own row tolerance): that point leaves Up to cards a millionth short of their counts (BOTTLENECK reads"
+        + " LIMITED, FULL reads BOTTLENECK) and here even a card at 0.27 of its count where it can run full. ojAlgo"
+        + " keeps the rows to 1e-12 and needs no loosening: the kernel's answer is the exact one, higher on every Up to"
+        + " card, and the website's becomes it when it solves through the core";
+    private static final String OIL_LINE = "src/lib/solver/plan/loosened-holds.test.ts > held levels read off a slightly"
+        + " inexact point never fail the plan > ";
 
     /**
      * Cases the two engines answer differently, with why. A listed case that agrees fails, so the list never outlives
-     * its reason.
+     * its reason. Each is checked to be solved on both sides.
      */
     private static final Map<String, String> DIFFERS = Map.ofEntries(
-        Map.entry(
-            "src/lib/solver/plan/loosened-holds.test.ts > held levels read off a slightly inexact point never fail the"
-                + " plan > Up to 0.31 solves at the 0.3 machines it needs (forward columns) #3",
-            OIL_LINE),
-        Map.entry(
-            "src/lib/solver/plan/loosened-holds.test.ts > held levels read off a slightly inexact point never fail the"
-                + " plan > Up to 0.5 solves at the 0.3 machines it needs (forward columns) #2",
-            OIL_LINE),
-        Map.entry(
-            "src/lib/solver/plan/loosened-holds.test.ts > held levels read off a slightly inexact point never fail the"
-                + " plan > Up to 1 solves at the 0.3 machines it needs (forward columns) #1",
-            OIL_LINE),
-        Map.entry(
-            "src/lib/solver/plan/loosened-holds.test.ts > held levels read off a slightly inexact point never fail the"
-                + " plan > Up to 2 solves at the 0.3 machines it needs (forward columns) #4",
-            OIL_LINE));
+        Map.entry(OIL_LINE + "Up to 0.31 solves at the 0.3 machines it needs (forward columns) #3", LOOSENED),
+        Map.entry(OIL_LINE + "Up to 0.5 solves at the 0.3 machines it needs (forward columns) #2", LOOSENED),
+        Map.entry(OIL_LINE + "Up to 1 solves at the 0.3 machines it needs (forward columns) #1", LOOSENED));
+
+    /**
+     * Cases the two engines answer alike only within the LP's own tolerance, with why (as {@link UpToParityTest}): the
+     * read-out and its rings are compared whole and the machine counts to a hundred-thousandth of a machine.
+     */
+    private static final Map<String, String> WITHIN_TOLERANCE = Map.of(
+        OIL_LINE + "Up to 2 solves at the 0.3 machines it needs (forward columns) #4",
+        "a 60-card oil line HiGHS solves to its own 1e-7 row tolerance: rates up to 1.2e-6 relative apart, a buffer"
+            + " banking 1.6e-6/s in ojAlgo's point and 0 in HiGHS's, every count within 1.3e-7 of a machine and every"
+            + " read-out the same");
 
     private static final List<String> reported = new ArrayList<>();
 
@@ -115,6 +119,25 @@ class WebsiteCasesTest {
         final String why = DIFFERS.get(name);
         if (why != null) {
             assertFalse(d.isEmpty(), name + " is listed as differing (" + why + ") but now agrees: take it off the list");
+            assertTrue(
+                expected.getAsJsonObject()
+                    .has("solution") && answer instanceof Balancer.Answer.Solved,
+                name + " must solve on both sides");
+            return;
+        }
+        final String close = WITHIN_TOLERANCE.get(name);
+        if (close != null) {
+            assertFalse(d.isEmpty(), name + " is listed as within tolerance (" + close + ") but now agrees exactly");
+            final List<String> parts = SolverCorpus
+                .differences(UpToParityTest.part(expected, "upTo"), UpToParityTest.part(actual, "upTo"));
+            parts.addAll(
+                SolverCorpus
+                    .differences(UpToParityTest.part(expected, "upToLoops"), UpToParityTest.part(actual, "upToLoops")));
+            parts.addAll(
+                UpToParityTest.countsDiffer(
+                    UpToParityTest.part(expected, "machineCounts"),
+                    UpToParityTest.part(actual, "machineCounts")));
+            assertTrue(parts.isEmpty(), name + " read-outs or counts differ:\n  " + String.join("\n  ", parts));
             return;
         }
         assertTrue(d.isEmpty(), name + " answers differently from the website:\n  " + String.join("\n  ", d));

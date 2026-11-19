@@ -1,7 +1,8 @@
 # Machine math (src/lib/machines)
 
-Game source for checking mechanics: GT5-Unofficial and friends at `C:\Users\jack\gtnh-sources`;
-the reference calculator (ShadowTheAge/gtnh, MIT) at `C:\Users\jack\gtnh-reference`.
+Game source for checking mechanics: GT5-Unofficial and friends, at the refs the instance's pack
+ships. The instance operator's tooling keeps that source tree; it is not in this repo, so ask for
+it rather than reading a newer public branch. The reference calculator is ShadowTheAge/gtnh (MIT).
 Source beats the wiki, the workbook and the reference. Engine truth is
 `OverclockCalculator`, `ParallelHelper`, `ProcessingLogic` and each MTE's
 `createProcessingLogic`; GT++ `*Legacy` classes are fossils. Java `int *= float`

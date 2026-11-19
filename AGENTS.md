@@ -28,7 +28,8 @@ before changing that area; it names the tests that pin its behaviour.
 Longer references, read on demand: `docs/solver-equations.md` (solver doctrine),
 `docs/power-planner-math.md` (the decoded power workbook), `docs/COMMUNITY.md`.
 
-Area files and docs were written upstream. Where one describes upstream's hosting,
+Area files and docs were written upstream and are edited here only where a passage is
+about upstream's own machines or repos. Where one still describes upstream's hosting,
 deploys or branches, this file wins.
 
 ## Commands
@@ -60,6 +61,9 @@ Scratch harnesses are `*.local.test.ts` (excluded from the suite); run one with
 - Push only to `origin` (`Tuxprogrammer/gtnh-factory-flow`). The `upstream` push URL is
   disabled in a correct checkout; if `git remote -v` shows a real push URL for it, run
   `git remote set-url --push upstream DISABLED`.
+- Nothing the app does may reach upstream either. Player reports (`/api/feedback`) and the
+  header's GitHub and bug report links go to this fork's repo; no default or setting may
+  name a `jackwrichards` repo as a place to send anything.
 - Pull requests, if any, are opened inside the fork. `gh pr create` on a fork targets the
   parent by default: always pass `--repo Tuxprogrammer/gtnh-factory-flow`.
 - Upstream merges into `main` regularly, so a fix must stay easy to merge over: change the
@@ -124,8 +128,15 @@ Scratch harnesses are `*.local.test.ts` (excluded from the suite); run one with
 ## Datasets
 
 - Only GTNH 2.9 datasets are supported.
-- The instance's dataset is exported from its own pack by the dataset pipeline. Never ship
-  or test against datasets published by gtnhplanner.com; they are a different pack build.
+- The instance's dataset is exported from its own pack and published by the instance
+  operator. Never ship or test against datasets published by gtnhplanner.com; they are a
+  different pack build.
+- Agents here fix pipeline code and may run a full export in their own scratch directory
+  on the build box to check a fix. They never publish a dataset
+  (`tools/dataset-pipeline/CLAUDE.md`).
+- Game source for checking a mechanic is the source at the refs the instance's pack ships,
+  kept by the operator's tooling outside this repo. Ask for it; do not read a newer public
+  branch and call it truth.
 - The server prewarms datasets on start when `GTNH_PREWARM_ON_STARTUP=1`
   (`src/instrumentation.ts`). A slow first API call means prewarm regressed; don't make
   the client wait longer.

@@ -6,24 +6,22 @@ recipe map, NEI layout, catalyst, multiblock config and rendered icon. Node scri
 `normalize-oracle-export.mjs`, `machine-configs.mjs`, `build-resource-index.mjs`,
 `build-recipe-index.mjs` (recipe index, lookup index, 250-recipe shards).
 
-## Rebuild and publish (by hand, in WSL)
+## Rebuild and publish
 
-The GitHub "GTNH dataset pipeline" workflow is a decoy (no runner). Never dispatch it.
+The GitHub "GTNH dataset pipeline" workflow has no runner here. Never dispatch it.
 
-1. `~/gtnh-factory-flow` in WSL Ubuntu is a git-less SNAPSHOT: copy changed pipeline
-   scripts into it first or the rebuild runs old code.
-2. Raw exports live at `~/gtnh-factory-flow/.pipeline/raw-export/<id>/oracle-export.json`
-   with `rendered-icons/` beside them; reuse them while the pack version stands. Never
-   export with `GTNH_RENDER_STACK_ICONS=false`: the export stamps icon filenames, and a
-   run without them broke live search.
-3. `~/run-both.sh` (fuller: `~/rebuild-cokeoven.sh`) normalizes, indexes and gzips into
-   `~/gtnh-export/datasets/gtnh/<id>`. Only 2.9 is supported; 2.8.4 is retired.
-4. `~/copy-datasets.sh` copies results into the Windows repo's `public/datasets/gtnh`.
-5. Publish: scp the changed gzips, shards and oracle-report to the droplet's
-   `/opt/shared/gtnh-datasets/<id>/` (stage first; move staging dirs out of the datasets
-   root before `rebuild-manifest.mjs`), then `systemctl restart gtnh-flow`. Before the
-   swap, compare icon counts and icon tables against live. Verify the live manifest and
-   the published gzip afterwards.
+- The instance's dataset is exported from its own pack and published by the instance operator.
+  Agents here fix pipeline code; they never publish a dataset or write into the operator's
+  export, cache or dataset directories.
+- To check a pipeline fix, an agent may run a full export on the build box in its own scratch
+  directory. An export runs a real client and is heavy: hold the box's shared heavy-JVM lock for
+  the whole run, and reuse an existing raw export (`oracle-export.json` with `rendered-icons/`
+  beside it) whenever the fix is in the Node scripts, not the mod.
+- Never export with `GTNH_RENDER_STACK_ICONS=false`: the export stamps icon filenames, and a
+  run without them breaks search.
+- Only 2.9 is supported.
+- Before a dataset replaces the one in use, compare icon counts and icon tables against it.
+  A fix that changes the dataset's format or needs a re-export says so in its handoff.
 
 Rebuilds must run `normalize-fluid-icon-alpha.mjs` (with `--rename`) after the index
 builds and before publishing, or faint fluids ship invisible. Texture URLs are cache-immutable: fix pixels under a NEW filename (`--rename`),

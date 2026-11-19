@@ -44,20 +44,21 @@ The instance is small and has gone down under load. Rules:
 
 ## Feedback from the game (feedback.ts, app/api/feedback)
 
-- The in-game planner's Feedback box posts to `/api/feedback`; each report becomes an issue on
-  `jackwrichards/gtnh-planner-mod` through `GITHUB_FEEDBACK_TOKEN` (in `/opt/shared/env.local`; without it the route
-  answers 503). The web planner's reports (`origin: "web"`) open on the website's repo,
-  `jackwrichards/gtnh-factory-flow` (`feedbackRepo`; `GITHUB_FEEDBACK_WEB_REPO` and `GITHUB_FEEDBACK_REPO` override), so
-  the token needs Issues read and write on both repos.
+- The Feedback box posts to `/api/feedback`; each report becomes an issue on this fork's repo,
+  `Tuxprogrammer/gtnh-factory-flow`, through `GITHUB_FEEDBACK_TOKEN` (without it the route answers 503). The game's
+  reports and the web planner's (`origin: "web"`) open on the same repo and differ by label (`feedbackRepo`;
+  `GITHUB_FEEDBACK_WEB_REPO` and `GITHUB_FEEDBACK_REPO` override). The token needs Issues read and write on that repo
+  and nothing else. Neither default nor override may name an upstream repo (`feedback.test.ts` pins the defaults).
 - It was flooded on 2026-10-12 (450 spam issues from about 5,000 residential addresses, the mod's user agent, made-up
   versions), so `feedback-guard.ts` stands in front: the mod's shapes (device id, versions), an in-memory gate (30
   a minute; 60 refusals in 10 minutes pause reports for 6 hours), 3 an hour and 10 a day per address and per device,
   the same words once a month, and at most 10 issues an hour and 40 a day for the whole site. Player text is escaped
   (no pictures, links or HTML in the issue).
-- The client address is Caddy's `X-Client-Ip` (Cloudflare's CF-Connecting-IP, trusted only from Cloudflare's
-  ranges), then CF-Connecting-IP; X-Forwarded-For names a Cloudflare edge (`clientAddress` in community.ts).
-- Emergency stop without a deploy: a Caddy rule answering 503 to `POST /api/feedback` (`/etc/caddy/Caddyfile`, then
-  `systemctl reload caddy`).
+- The client address is the gateway's `X-Client-Ip`, then CF-Connecting-IP (`clientAddress` in community.ts). The
+  instance's gateway sets `X-Client-Ip` from the real client; the app trusts it, so the gateway must overwrite
+  whatever a client sends.
+- Emergency stop without a deploy: unset `GITHUB_FEEDBACK_TOKEN` and restart, or have the gateway answer 503 to
+  `POST /api/feedback`. Both are the instance operator's to do.
 - Plans and the picture go to the private `feedback-files` bucket, served by `/api/feedback/files/<id>/<file>`, only
   once every check has passed. The mod strips names, paths and addresses from logs and crash reports before sending.
 

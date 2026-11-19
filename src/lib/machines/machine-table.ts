@@ -358,6 +358,25 @@ const ITEM_PIPE_CONTROL = choiceControl(
 );
 
 /**
+ * Superconducting solenoids (gregtech:gt.blockcasings.cyclotron_coils metas
+ * 0-10, MV-UMV); BlockCyclotronCoils.getVoltageTier is meta + 2, so `tier`
+ * + 2 is the solenoid's voltage tier. Keys and labels match the dataset's own
+ * solenoid knob, so a saved pick carries straight over.
+ */
+const SOLENOID_CONTROL = choiceControl(
+  SOLENOID,
+  "Solenoid",
+  ["MV", "HV", "EV", "IV", "LuV", "ZPM", "UV", "UHV", "UEV", "UIV", "UMV"].map((label, meta) => ({
+    label,
+    icon:
+      meta === 0
+        ? "gregtech:gt.blockcasings.cyclotron_coils"
+        : `gregtech:gt.blockcasings.cyclotron_coils@${meta}`,
+    name: `${label} Superconducting Solenoid`,
+  })),
+);
+
+/**
  * Fluid pipe casings. The two machines that read them take gt.blockcasings2
  * metas 12-15 and nothing else: MTEChemicalPlant's addTieredBlock(12, 16)
  * and MTEMultiAutoclave's getFluidTierFromMeta. The scraper also offered PTFE
@@ -810,6 +829,8 @@ const MACHINES: Record<string, MachineBehaviour> = {
     speed: (c) => 2.5 + 0.05 * c.tier(COIL),
     power: (c) => 0.8 * Math.pow(0.95, c.tier(COIL)),
     parallels: (c) => c.voltageTier * 8 + (c.tier(SOLENOID) + 2) * 2,
+    // Its dataset handler has no solenoid knob either.
+    controls: [SOLENOID_CONTROL],
   },
 
   // -- Flat multiblocks -----------------------------------------------------
@@ -960,10 +981,11 @@ const MACHINES: Record<string, MachineBehaviour> = {
   "Industrial Sledgehammer": {
     // MTEIndustrialForgeHammer (the reference's anvil knob does not exist in
     // it): parallels are 6 x solenoid voltage tier x machine voltage tier
-    // (MV solenoid = 2).
+    // (MV solenoid = 2). The dataset gives its handler no solenoid knob.
     overclock: OVERCLOCK.normal(),
     speed: 2,
     parallels: (c) => c.voltageTier * (c.tier(SOLENOID) + 2) * 6,
+    controls: [SOLENOID_CONTROL],
   },
   "Industrial Precision Lathe": {
     // MTEMultiLathe: flat 4x speed and 0.8x EU, with 8 parallels per ITEM

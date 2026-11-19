@@ -581,10 +581,12 @@ describe("reactors and endgame", () => {
     );
   });
 
-  it("runs helium fusion at Mk-I from the workbook table", () => {
+  it("runs helium fusion at Mk-I from the exported recipe", () => {
+    // Deuterium + Helium-3: 125 L in 16 ticks at 1920 EU/t, 60M EU to start.
     const model = compute("fusion-reactor", { recipe: "Helium Plasma", mark: "1" });
     expect(model.euPerTick).toBe(-1920);
-    expect(model.outputs[0]).toMatchObject({ name: "Helium Plasma", perSecond: 156 });
+    expect(model.outputs[0]).toMatchObject({ name: "Helium Plasma", perSecond: 156.25 });
+    expect(model.stats.find((line) => line.label === "Startup")?.value).toBe("60M EU");
     expect(model.inputs).toHaveLength(2);
   });
 

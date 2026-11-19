@@ -654,12 +654,190 @@ function correctReactors() {
   );
 }
 
+// The fusion card's per-mark rates come from the exported fusion recipe map
+// (core-machines fusion-startups.json: inputs, output, duration, EU/t and
+// startup EU per recipe) run through the pack's own machine rules, not the
+// workbook's precomputed columns. Full-size: MTEFusionComputer Mk-I..III
+// (overclock x2 EU / x2 speed) and GT++ MTEAdvFusionMk4/5 (x4 / x4), one amp,
+// overclocks capped at the machine's fusion tier minus the recipe's
+// (FusionOverclockDescriber, FusionSpecialValueFormatter.getFusionTier) and by
+// voltage tiers. Compact: GoodGenerator MTELargeFusionComputer1..5, 64 x
+// extraPara(startup) parallels on 64 x extraPara(100) amps with amperage
+// overclocks. Both: a sub-tick duration turns into ceil()'d parallels
+// (OverclockCalculator.calculateMultiplierUnderOneTick) and a duration is
+// truncated to whole ticks.
+const FUSION_V = [8, 32, 128, 512, 2048, 8192, 32768, 131072, 524288, 2097152, 8388608];
+const FUSION_MARKS = [
+  { tier: 6, startup: 160_000_000, step: 2 },
+  { tier: 7, startup: 320_000_000, step: 2 },
+  { tier: 8, startup: 640_000_000, step: 2 },
+  { tier: 9, startup: 5_120_000_000, step: 4 },
+  { tier: 10, startup: 20_480_000_000, step: 4 },
+];
+// GTUtility.log4 and log4ceil on whole numbers.
+function log4(a) {
+  let n = 0;
+  for (let rest = a; rest >= 4; rest = Math.floor(rest / 4)) n++;
+  return n;
+}
+function log4ceil(a) {
+  let n = 0;
+  while (4 ** n < a) n++;
+  return n;
+}
+
+function fusionTier(startup, eut) {
+  const M = 1_000_000;
+  let tier =
+    startup <= 160 * M
+      ? 1
+      : startup <= 320 * M
+        ? 2
+        : startup <= 640 * M
+          ? 3
+          : startup <= 5120 * M
+            ? 4
+            : 5;
+  if (eut > FUSION_V[9]) tier = 5;
+  else if (eut > FUSION_V[8]) tier = Math.max(tier, 4);
+  else if (eut > FUSION_V[7]) tier = Math.max(tier, 3);
+  else if (eut > FUSION_V[6]) tier = Math.max(tier, 2);
+  return tier;
+}
+
+// OverclockCalculator.getTiersAbove: whole powers of 4 from base to power.
+function tiersAbove(power, base) {
+  if (power < base) return -1;
+  return log4(Math.floor(Math.round(power * 100) / Math.max(Math.round(base * 100), 3200)));
+}
+
+// MTELargeFusionComputer<mark>.extraPara.
+function compactExtraPara(mark, startup) {
+  const steps = [160_000_000, 320_000_000, 640_000_000, 5_120_000_000].filter(
+    (limit) => startup >= limit,
+  );
+  return Math.max(1, mark - steps.length);
+}
+
+/** Litres a second of output and EU/t drained by one machine of this mark, or null when it cannot run the recipe. */
+function fusionRun(recipe, mark, compact) {
+  const { tier, startup, step } = FUSION_MARKS[mark - 1];
+  const voltage = FUSION_V[tier];
+  if (recipe.startup > startup || recipe.eut > voltage) return null;
+  const maxOverclocks = tier - 5 - fusionTier(recipe.startup, recipe.eut);
+  const amps = compact ? 64 * compactExtraPara(mark, 100) : 1;
+  const maxParallel = compact ? 64 * compactExtraPara(mark, recipe.startup) : 1;
+  // calculateOverclock for a parallel count; without amperage overclocks (full-size)
+  // the machine counts min(amps, parallel) and the voltage tiers cap it too.
+  const overclocksAt = (parallel) => {
+    const machinePower = voltage * (compact ? amps : Math.min(amps, parallel));
+    let overclocks = Math.min(maxOverclocks, tiersAbove(machinePower, recipe.eut * parallel));
+    if (!compact) {
+      const voltageTiers = Math.max(log4ceil(Math.floor(voltage / 8)), 1);
+      overclocks = Math.min(
+        overclocks,
+        voltageTiers - Math.max(log4ceil(Math.floor(recipe.eut / 8)), 1),
+      );
+    }
+    return Math.max(overclocks, 0);
+  };
+  // calculateMultiplierUnderOneTick, on the most parallels the machine allows.
+  const first = overclocksAt(maxParallel);
+  const needed = Math.ceil(Math.log(recipe.duration) / Math.log(step));
+  const subTick = first >= needed ? Math.ceil(step ** first / recipe.duration) : 1;
+  const parallels = Math.min(maxParallel * subTick, Math.floor((voltage * amps) / recipe.eut));
+  // The calculator then runs on the parallels actually used, capped at the machine's own.
+  const counted = Math.min(maxParallel, parallels);
+  const overclocks = overclocksAt(counted);
+  const drain = Math.ceil(recipe.eut * counted * step ** overclocks);
+  const ticks = Math.trunc(Math.max(recipe.duration / step ** overclocks, 1));
+  return { litersPerSecond: (parallels * recipe.output * 20) / ticks, drain };
+}
+
+function correctFusion() {
+  const exported = JSON.parse(
+    fs.readFileSync(
+      path.join(
+        repoRoot,
+        "jvm/core/core-machines/src/main/resources/assets/gtnhplanner/machines/fusion-startups.json",
+      ),
+      "utf8",
+    ),
+  ).recipes;
+  const resources = JSON.parse(
+    fs.readFileSync(path.join(path.dirname(outPath), "resource-map.json"), "utf8"),
+  ).resources;
+  // Workbook names the resource map does not carry.
+  const extraIds = {
+    "Bromine Plasma": "plasma.bromine",
+    "Metastable Oganesson": "molten.metastable oganesson",
+    "Molten Sunnarium": "molten.sunnarium",
+    "Plutonium Fuel": "plutonium based liquid fuel",
+    "Technetium Plasma": "plasma.technetium",
+    "Uranium Fuel": "uranium based liquid fuel",
+  };
+  const fluidId = (name) => {
+    const id = extraIds[name] ?? resources[name]?.id;
+    if (!id) throw new Error(`Fusion: no fluid id for ${name}`);
+    return `fluid:${id}`;
+  };
+  const recipes = Object.entries(exported).map(([key, startup]) => {
+    const [inputs, output, duration, eut] = key.split("|");
+    const [outputId, outputAmount] = output.split("@");
+    return {
+      inputs: Object.fromEntries(
+        inputs
+          .split(";")
+          .map((part) => part.split("@"))
+          .map(([id, n]) => [id, Number(n)]),
+      ),
+      outputId,
+      output: Number(outputAmount),
+      duration: Number(duration),
+      eut: Number(eut),
+      startup,
+    };
+  });
+  data.fusionRecipes = data.fusionRecipes.map((row) => {
+    const in1 = fluidId(row.input1);
+    const in2 = fluidId(row.input2);
+    const matches = recipes.filter(
+      (recipe) =>
+        recipe.outputId === fluidId(row.name) &&
+        Object.keys(recipe.inputs).length === 2 &&
+        in1 in recipe.inputs &&
+        in2 in recipe.inputs,
+    );
+    if (matches.length !== 1) {
+      throw new Error(
+        `Fusion: ${matches.length} exported recipes for ${row.name} from ${row.input1} + ${row.input2}`,
+      );
+    }
+    const recipe = matches[0];
+    const marks = [1, 2, 3, 4, 5];
+    const full = marks.map((mark) => fusionRun(recipe, mark, false));
+    const compact = marks.map((mark) => fusionRun(recipe, mark, true));
+    return {
+      ...row,
+      minMark: marks.find((mark) => full[mark - 1]),
+      startupEu: recipe.startup,
+      ratio1: recipe.inputs[in1] / recipe.output,
+      ratio2: recipe.inputs[in2] / recipe.output,
+      outputLpsByMark: full.map((run) => run?.litersPerSecond ?? 0),
+      drainEutByMark: full.map((run) => run?.drain ?? 0),
+      compactOutputLpsByMark: compact.map((run) => run?.litersPerSecond ?? 0),
+      compactDrainEutByMark: compact.map((run) => run?.drain ?? 0),
+    };
+  });
+}
+
 correctEngineFuels();
 if (!reapply) {
   correctRotors();
 }
 correctSteamMakers();
 correctReactors();
+correctFusion();
 
 fs.mkdirSync(path.dirname(outPath), { recursive: true });
 fs.writeFileSync(outPath, JSON.stringify(data, null, 1) + "\n");

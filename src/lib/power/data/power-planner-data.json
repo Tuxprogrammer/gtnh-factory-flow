@@ -3067,7 +3067,7 @@
    "name": "Helium Plasma",
    "minMark": 1,
    "euPerLiter": 81920,
-   "startupEu": 40000000,
+   "startupEu": 60000000,
    "input1": "Deuterium",
    "ratio1": 1,
    "input2": "Helium-3",
@@ -3075,8 +3075,8 @@
    "eheMaxLps": 500,
    "decayOutput": "Helium",
    "outputLpsByMark": [
-    156,
-    313,
+    156.25,
+    312.5,
     625,
     10000,
     40000
@@ -3118,8 +3118,8 @@
     12,
     24,
     48,
-    768,
-    3072
+    960,
+    5760
    ],
    "drainEutByMark": [
     10240,
@@ -3147,7 +3147,7 @@
    "name": "Helium Plasma",
    "minMark": 1,
    "euPerLiter": 81920,
-   "startupEu": 60000000,
+   "startupEu": 40000000,
    "input1": "Deuterium",
    "ratio1": 1,
    "input2": "Tritium",
@@ -3155,18 +3155,18 @@
    "eheMaxLps": 500,
    "decayOutput": "Helium",
    "outputLpsByMark": [
-    156,
-    313,
+    156.25,
+    312.5,
     625,
     10000,
     40000
    ],
    "drainEutByMark": [
-    4096,
-    8192,
-    16384,
-    262144,
-    1048576
+    3840,
+    7680,
+    15360,
+    245760,
+    983040
    ],
    "compactOutputLpsByMark": [
     10000,
@@ -3176,11 +3176,11 @@
     12800000
    ],
    "compactDrainEutByMark": [
-    262144,
-    1048576,
-    3145728,
-    67108864,
-    335544320
+    245760,
+    983040,
+    2949120,
+    62914560,
+    314572800
    ]
   },
   {
@@ -3279,7 +3279,7 @@
     18,
     36,
     288,
-    1152
+    1440
    ],
    "drainEutByMark": [
     0,
@@ -3319,7 +3319,7 @@
     12,
     24,
     192,
-    768
+    960
    ],
    "drainEutByMark": [
     0,
@@ -3351,7 +3351,7 @@
    "input1": "Molten Copper",
    "ratio1": 1,
    "input2": "Tritium",
-   "ratio2": 3.472222222,
+   "ratio2": 3.4722222222222223,
    "eheMaxLps": 2500,
    "decayOutput": "Molten Zinc",
    "outputLpsByMark": [
@@ -3396,17 +3396,17 @@
    "decayOutput": "Nitrogen",
    "outputLpsByMark": [
     0,
-    156,
-    313,
-    2504,
-    10016
+    156.25,
+    312.5,
+    2500,
+    10000
    ],
    "drainEutByMark": [
     0,
-    16384,
-    32768,
-    262144,
-    1048576
+    15360,
+    30720,
+    245760,
+    983040
    ],
    "compactOutputLpsByMark": [
     0,
@@ -3417,10 +3417,10 @@
    ],
    "compactDrainEutByMark": [
     0,
-    1048576,
-    4194304,
-    50331648,
-    268435456
+    983040,
+    3932160,
+    47185920,
+    251658240
    ]
   },
   {
@@ -3471,7 +3471,7 @@
    "input1": "Molten Silver",
    "ratio1": 0.5,
    "input2": "Helium-3",
-   "ratio2": 1.302083333,
+   "ratio2": 1.3020833333333333,
    "eheMaxLps": 2500,
    "decayOutput": "Molten Tin",
    "outputLpsByMark": [
@@ -3658,9 +3658,9 @@
    "compactDrainEutByMark": [
     0,
     0,
-    3145728,
-    25165824,
-    150994944
+    6291456,
+    50331648,
+    301989888
    ]
   },
   {
@@ -3669,9 +3669,9 @@
    "euPerLiter": 206438,
    "startupEu": 360000000,
    "input1": "Molten Raw Silicon",
-   "ratio1": 0.1111111111,
+   "ratio1": 0.1111111111111111,
    "input2": "Molten Magnesium",
-   "ratio2": 0.1111111111,
+   "ratio2": 0.1111111111111111,
    "eheMaxLps": 2500,
    "decayOutput": "Molten Iron",
    "outputLpsByMark": [
@@ -3711,7 +3711,7 @@
    "input1": "Molten Iridium",
    "ratio1": 1,
    "input2": "Fluorine",
-   "ratio2": 3.472222222,
+   "ratio2": 3.4722222222222223,
    "eheMaxLps": 10000,
    "decayOutput": "Radon",
    "outputLpsByMark": [
@@ -3749,7 +3749,7 @@
    "euPerLiter": 213811,
    "startupEu": 480000000,
    "input1": "Molten Potassium",
-   "ratio1": 0.1111111111,
+   "ratio1": 0.1111111111111111,
    "input2": "Fluorine",
    "ratio2": 1,
    "eheMaxLps": 2500,
@@ -3791,7 +3791,7 @@
    "input1": "Molten Plutonium-241",
    "ratio1": 1,
    "input2": "Hydrogen",
-   "ratio2": 13.88888889,
+   "ratio2": 13.88888888888889,
    "eheMaxLps": 25000,
    "decayOutput": "Molten Americium",
    "outputLpsByMark": [
@@ -3918,8 +3918,8 @@
     0,
     0,
     0,
-    3.33,
-    13.3
+    3.3333333333333335,
+    13.333333333333334
    ],
    "drainEutByMark": [
     0,
@@ -3932,8 +3932,8 @@
     0,
     0,
     0,
-    213,
-    1704
+    213.33333333333334,
+    1706.6666666666667
    ],
    "compactDrainEutByMark": [
     0,
@@ -3958,8 +3958,8 @@
     0,
     0,
     0,
-    3.33,
-    13.3
+    3.3333333333333335,
+    13.333333333333334
    ],
    "drainEutByMark": [
     0,
@@ -3972,8 +3972,8 @@
     0,
     0,
     0,
-    213,
-    1704
+    213.33333333333334,
+    1706.6666666666667
    ],
    "compactDrainEutByMark": [
     0,
@@ -4235,7 +4235,7 @@
    "eheMaxLps": 0,
    "decayOutput": "None",
    "outputLpsByMark": [
-    313,
+    312.5,
     625,
     1250,
     20000,
@@ -4322,11 +4322,11 @@
     1280
    ],
    "drainEutByMark": [
-    16384,
-    32768,
-    65536,
-    1048576,
-    4194304
+    15360,
+    30720,
+    61440,
+    983040,
+    3932160
    ],
    "compactOutputLpsByMark": [
     320,
@@ -4336,11 +4336,11 @@
     409600
    ],
    "compactDrainEutByMark": [
-    1048576,
-    4194304,
-    12582912,
-    268435456,
-    1342177280
+    983040,
+    3932160,
+    11796480,
+    251658240,
+    1258291200
    ]
   },
   {
@@ -4362,11 +4362,11 @@
     1280
    ],
    "drainEutByMark": [
-    24578,
-    49156,
-    98312,
-    1572992,
-    6291968
+    24576,
+    49152,
+    98304,
+    1572864,
+    6291456
    ],
    "compactOutputLpsByMark": [
     320,
@@ -4416,11 +4416,11 @@
     102400
    ],
    "compactDrainEutByMark": [
-    1572864,
-    6291456,
-    18874368,
-    402653184,
-    2013265920
+    1572992,
+    6291968,
+    18875904,
+    402685952,
+    2013429760
    ]
   },
   {
@@ -4442,11 +4442,11 @@
     2560
    ],
    "drainEutByMark": [
-    24578,
-    49156,
-    98312,
-    1572992,
-    6291968
+    24576,
+    49152,
+    98304,
+    1572864,
+    6291456
    ],
    "compactOutputLpsByMark": [
     640,
@@ -4596,10 +4596,10 @@
    "decayOutput": "None",
    "outputLpsByMark": [
     0,
-    3.33,
-    6.67,
-    53.3,
-    213
+    3.3333333333333335,
+    6.666666666666667,
+    53.333333333333336,
+    320
    ],
    "drainEutByMark": [
     0,
@@ -4610,8 +4610,8 @@
    ],
    "compactOutputLpsByMark": [
     0,
-    213,
-    853,
+    213.33333333333334,
+    853.3333333333334,
     10240,
     81920
    ],
@@ -4638,8 +4638,8 @@
     0,
     5,
     10,
-    80,
-    320
+    100,
+    400
    ],
    "drainEutByMark": [
     0,
@@ -4678,8 +4678,8 @@
     0,
     20,
     40,
-    320,
-    1280
+    400,
+    1600
    ],
    "drainEutByMark": [
     0,
@@ -4709,9 +4709,9 @@
    "euPerLiter": 170393,
    "startupEu": 240000000,
    "input1": "Molten Aluminium",
-   "ratio1": 0.1111111111,
+   "ratio1": 0.1111111111111111,
    "input2": "Molten Lithium",
-   "ratio2": 0.1111111111,
+   "ratio2": 0.1111111111111111,
    "eheMaxLps": 0,
    "decayOutput": "None",
    "outputLpsByMark": [
@@ -4958,8 +4958,8 @@
     0,
     4,
     8,
-    64,
-    256
+    64.51612903225806,
+    285.7142857142857
    ],
    "drainEutByMark": [
     0,
@@ -4972,15 +4972,15 @@
     0,
     256,
     512,
-    8258,
-    54857
+    8258.064516129032,
+    54857.142857142855
    ],
    "compactDrainEutByMark": [
     0,
     1966080,
-    7864320,
-    94371840,
-    503316480
+    3932160,
+    62914560,
+    377487360
    ]
   },
   {
@@ -5159,7 +5159,7 @@
     0,
     120,
     480,
-    1920
+    2880
    ],
    "drainEutByMark": [
     0,
@@ -5191,7 +5191,7 @@
    "input1": "Molten Plutonium-241",
    "ratio1": 1,
    "input2": "Helium",
-   "ratio2": 6.944444444,
+   "ratio2": 6.944444444444445,
    "eheMaxLps": 0,
    "decayOutput": "None",
    "outputLpsByMark": [
@@ -5229,7 +5229,7 @@
    "euPerLiter": 0,
    "startupEu": 600000000,
    "input1": "Molten Californium",
-   "ratio1": 0.04444444444,
+   "ratio1": 0.044444444444444446,
    "input2": "Molten Calcium",
    "ratio2": 1,
    "eheMaxLps": 0,
@@ -5349,7 +5349,7 @@
    "euPerLiter": 0,
    "startupEu": 800000000,
    "input1": "Fluorine",
-   "ratio1": 3.472222222,
+   "ratio1": 3.4722222222222223,
    "input2": "Molten Selenium",
    "ratio2": 0.5,
    "eheMaxLps": 0,
@@ -5391,7 +5391,7 @@
    "input1": "Molten Manganese",
    "ratio1": 1,
    "input2": "Neon",
-   "ratio2": 3.472222222,
+   "ratio2": 3.4722222222222223,
    "eheMaxLps": 0,
    "decayOutput": "None",
    "outputLpsByMark": [
@@ -5471,7 +5471,7 @@
    "input1": "Molten Enriched Naquadah Alloy",
    "ratio1": 4,
    "input2": "Oganesson",
-   "ratio2": 6.944444444,
+   "ratio2": 6.944444444444445,
    "eheMaxLps": 0,
    "decayOutput": "None",
    "outputLpsByMark": [
@@ -5492,8 +5492,8 @@
     0,
     0,
     0,
-    76,
-    614
+    76.8,
+    614.4
    ],
    "compactDrainEutByMark": [
     0,
@@ -5518,8 +5518,8 @@
     0,
     0,
     0,
-    0.09,
-    0.35
+    0.087890625,
+    0.3515625
    ],
    "drainEutByMark": [
     0,
@@ -5532,7 +5532,7 @@
     0,
     0,
     0,
-    5.63,
+    5.625,
     45
    ],
    "compactDrainEutByMark": [
@@ -5558,7 +5558,7 @@
     0,
     0,
     0,
-    5.63,
+    5.625,
     22.5
    ],
    "drainEutByMark": [
@@ -5599,7 +5599,7 @@
     0,
     0,
     0,
-    230
+    230.4
    ],
    "drainEutByMark": [
     0,
@@ -5613,7 +5613,7 @@
     0,
     0,
     0,
-    29491
+    29491.2
    ],
    "compactDrainEutByMark": [
     0,
@@ -5631,7 +5631,7 @@
    "input1": "Copper Plasma",
    "ratio1": 1,
    "input2": "Oganesson",
-   "ratio2": 1.736111111,
+   "ratio2": 1.7361111111111112,
    "eheMaxLps": 0,
    "decayOutput": "None",
    "outputLpsByMark": [
@@ -5639,7 +5639,7 @@
     0,
     0,
     0,
-    115
+    115.2
    ],
    "drainEutByMark": [
     0,
@@ -5653,7 +5653,7 @@
     0,
     0,
     0,
-    7372
+    7372.8
    ],
    "compactDrainEutByMark": [
     0,

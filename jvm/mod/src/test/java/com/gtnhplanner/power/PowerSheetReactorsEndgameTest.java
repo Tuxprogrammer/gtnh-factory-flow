@@ -338,14 +338,16 @@ class PowerSheetReactorsEndgameTest {
     }
 
     @Test
-    @DisplayName("runs helium fusion at Mk-I from the workbook table")
+    @DisplayName("runs helium fusion at Mk-I from the exported recipe")
     void heliumFusionMk1() {
+        // Deuterium + Helium-3: 125 L in 16 ticks at 1920 EU/t, 60M EU to start.
         final PowerModel model = compute("fusion-reactor", Map.of("recipe", "Helium Plasma", "mark", "1"));
         assertEquals(-1920, model.euPerTick(), 0);
         final Flow plasma = model.outputs()
             .get(0);
         assertEquals("Helium Plasma", plasma.name());
-        assertEquals(156, plasma.perSecond(), 0);
+        assertEquals(156.25, plasma.perSecond(), 0);
+        assertEquals("60M EU", model.stat("Startup"));
         assertEquals(
             2,
             model.inputs()

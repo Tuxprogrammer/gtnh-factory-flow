@@ -43,6 +43,16 @@ prefix included); bees, crops, veins, mobs and underground fluids keep theirs by
 `local-2.9.0-rc-2` carries beta-2's ids this way (`~/rebuild-rc2.sh` in WSL; the report is
 `oracle/recipe-id-carry.json`).
 
+## Game rates sidecar
+
+The pack's rate mod (`config/gtnhrates.cfg`) scales bee and IC2 crop yields and recipe
+durations. The export step (`write-game-rates.mjs`) writes `game-rates.json` beside the
+dataset (`beesYield`, `ic2CropsYield`, `recipeDurationDivisor` from `gtRecipesEnergyDiscount`);
+a pack without the mod writes none. `rebuild-manifest.mjs` validates it (three positive
+numbers, nothing else) and copies it onto the version's manifest entry as `gameRates`. It is
+not part of the dataset checksum, so adding or changing it needs a manifest rebuild, not a
+re-export.
+
 ## Import principles
 
 - Prefer data exported from NEI or the runtime over hand-written tables and fallbacks.

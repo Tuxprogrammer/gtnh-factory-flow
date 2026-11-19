@@ -323,4 +323,8 @@ node tools/dataset-pipeline/scripts/apply-texture-icons.mjs "$instance_root" "$G
 echo "Computing GTNH asset fingerprint"
 fingerprint_name="${GTNH_EXPORT_PHASE:-runtime}-asset-fingerprint.json"
 node tools/dataset-pipeline/scripts/compute-asset-fingerprint.mjs "$instance_root" "$GTNH_DATASET_OUT_DIR/textures/$fingerprint_name"
+# The client icon phase only renders icons; the data phase owns the rate record.
+if [ "${GTNH_EXPORT_PHASE:-}" != "client" ]; then
+  node tools/dataset-pipeline/scripts/write-game-rates.mjs "$instance_root" "$GTNH_DATASET_OUT_DIR"
+fi
 echo "Oracle export post-processing completed"

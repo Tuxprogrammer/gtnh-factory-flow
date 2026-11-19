@@ -1,4 +1,5 @@
 import { CROP_FARM_PLACEHOLDER_RECIPE_ID, createCropFarmPlaceholderRecipe } from "./passive-production";
+import { getGameRates } from "./game-rates";
 import { getFusionMachine, getFusionRecipeMark, isFusionRecipe, normalizeFusionHandler } from "@/lib/machines/fusion";
 import { TGS_MACHINE_TYPE, tgsEuPerTick } from "@/lib/machines/tree-growth-simulator";
 import type {
@@ -144,6 +145,37 @@ export function isSmeltingRecipeMap(recipe: Pick<Recipe, "machineType" | "source
 }
 
 /**
+ * The one place GT furnace timing is set: the ticks a GT furnace takes for a smelt, before
+ * its own speed math. The Electric Furnace and the Steam Hearth run FurnaceBackend's fixed
+ * recipe; the bronze and steel steam furnaces set 256 and 128 ticks in their checkRecipe.
+ * The pack's rate mod (GTNHRates' GTFurnaces mixin) divides all of those, after the steam
+ * furnace's x2, as max(1, ceil(ticks / divisor)). The Multi Smelter (MTEMultiFurnace) runs its
+ * own fixed 128 ticks outside that backend, so the rate mod never reaches it. Other handlers
+ * keep their own numbers (undefined).
+ */
+export function gtFurnaceDurationTicks(
+  recipe: Pick<Recipe, "machineType" | "source">,
+  handler: Pick<MachineHandler, "label" | "machineType" | "kind">,
+): number | undefined {
+  if (!isSmeltingRecipeMap(recipe)) {
+    return undefined;
+  }
+  if (handler.machineType === "Multi Smelter") {
+    return GT_FURNACE_RECIPE_TICKS;
+  }
+  const steamSingle = handler.kind !== "multiblock" && isSteamMachineHandler(handler);
+  const rated =
+    handler.machineType === "Electric Furnace" || handler.machineType === "Steam Hearth"
+      ? GT_FURNACE_RECIPE_TICKS
+      : steamSingle
+        ? GT_FURNACE_RECIPE_TICKS * (isHighPressureSteamHandler(handler) ? 1 : 2)
+        : undefined;
+  return rated === undefined
+    ? undefined
+    : Math.max(1, Math.ceil(rated / getGameRates().recipeDurationDivisor));
+}
+
+/**
  * Steam singleblocks run the LV recipe on borrowed math the dataset does not
  * carry: SteamOverclockDescriber gives a bronze machine (x1 EU, x2 duration)
  * and a high pressure one (x2 EU, x1 duration). Their handlers export no
@@ -157,7 +189,11 @@ function steamSingleblockDurationTicks(
   if (handler.kind === "multiblock" || !isSteamMachineHandler(handler)) {
     return undefined;
   }
-  const base = isSmeltingRecipeMap(recipe) ? GT_FURNACE_RECIPE_TICKS : recipe.durationTicks;
+  const furnace = gtFurnaceDurationTicks(recipe, handler);
+  if (furnace !== undefined) {
+    return furnace;
+  }
+  const base = recipe.durationTicks;
   return isHighPressureSteamHandler(handler) ? base : base * 2;
 }
 
@@ -205,7 +241,7 @@ export function applyMachineHandlerToRecipe(
   const seedsFromBase = machineTableSeedsFromBase(handler.machineType);
   const minimumTier = getMachineBehaviour(handler.machineType)?.recipeTierFromBase
     ? recipe.minimumTier : handler.minimumTier;
-  const handlerDurationTicks = machineCycleTicks(handler.machineType) ?? (seedsFromBase
+  const handlerDurationTicks = machineCycleTicks(handler.machineType) ?? gtFurnaceDurationTicks(recipe, handler) ?? (seedsFromBase
     ? steamSingleblockDurationTicks(recipe, handler)
     : (handler.durationTicks ?? steamSingleblockDurationTicks(recipe, handler)));
   const handlerEut = seedsFromBase ? undefined : handler.eut;

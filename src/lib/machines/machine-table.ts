@@ -1304,18 +1304,11 @@ const MACHINES: Record<string, MachineBehaviour> = {
   "Steam Presser": STEAM_MULTIBLOCK,
   "Steam Blender": STEAM_MULTIBLOCK,
   "Steam Fuser": STEAM_MULTIBLOCK,
-  "Steam Hearth": {
-    // MTESteamFurnaceMulti, same logic as its seven siblings, but its map is
-    // vanilla smelting: the dataset's base is the 200-tick vanilla smelt while
-    // the machine runs GT's fixed 128t/4EU furnace recipe. 200 / (128 x 1.6)
-    // = 0.9765625, so the shown duration lands on the game's own 205 ticks
-    // basic and 103 high pressure (128 x 1.6 and 128 x 0.8, rounded up).
-    overclock: OVERCLOCK.none(),
-    parallels: 8,
-    speed: (c) => 0.9765625 * (c.tier(STEAM_PRESSURE) + 1),
-    quantiseDuration: quantiseSteamMultiblockDuration,
-    controls: [STEAM_PRESSURE_CONTROL],
-  },
+  // MTESteamFurnaceMulti, same logic as its seven siblings. Its map is vanilla
+  // smelting, but the machine runs GT's furnace recipe: gtFurnaceDurationTicks
+  // seeds it (128 ticks, divided by the pack's rate mod), so the stock game's
+  // 205 ticks basic and 103 high pressure come from the shared coefficients.
+  "Steam Hearth": STEAM_MULTIBLOCK,
 
   "Spinmatron-2737": {
     overclock: OVERCLOCK.normal(),

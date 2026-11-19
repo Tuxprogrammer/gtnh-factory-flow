@@ -316,8 +316,8 @@ public final class GtnhCalcOracleExporter {
                 exported.put("className", raw.getClass().getName());
                 CraftingIngredients.Read read = CraftingIngredients.read(raw);
                 exported.put("type", read != null ? read.type : craftingType(raw));
-                exported.put("width", read != null ? read.width : readIntField(raw, "recipeWidth"));
-                exported.put("height", read != null ? read.height : readIntField(raw, "recipeHeight"));
+                exported.put("width", read != null ? read.width : craftingSize(raw, true));
+                exported.put("height", read != null ? read.height : craftingSize(raw, false));
                 exported.put("inputs", read != null ? readCraftingInputs(read) : craftingInputs(raw));
                 exported.put("output", itemStack(output));
                 recipes.add(exported);
@@ -3071,6 +3071,20 @@ public final class GtnhCalcOracleExporter {
             addUnknownInput(inputs, read.slots.get(index), index);
         }
         return inputs;
+    }
+
+    // A shaped recipe's inputs are packed width x height, so the size is what puts a cell
+    // back in its grid position. ShapedRecipes has public fields (reflection by the
+    // development name finds nothing in a production client); ShapedOreRecipe and every
+    // subclass keep them private as `width` and `height`.
+    private int craftingSize(Object recipe, boolean width) {
+        if (recipe instanceof ShapedRecipes) {
+            return width ? ((ShapedRecipes) recipe).recipeWidth : ((ShapedRecipes) recipe).recipeHeight;
+        }
+        if (recipe instanceof ShapedOreRecipe) {
+            return readIntField(recipe, width ? "width" : "height");
+        }
+        return 0;
     }
 
     private List<Map<String, Object>> craftingInputs(Object recipe) {

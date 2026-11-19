@@ -91,6 +91,27 @@ describe("a crafting recipe with an ingredient that names nothing", () => {
   });
 });
 
+describe("a shaped crafting recipe narrower than the 3x3 grid", () => {
+  // The exporter packs the inputs width x height and says the width, so the cell of
+  // each input follows from it: a 1-wide recipe is a column, not a row.
+  const cells = (width, height, slots) => normalize({ domains: [
+    { id: "gregtech", recipeMaps: [{ id: "gt.recipe.macerator", name: "Macerator", recipes: [{
+      id: "anchor", durationTicks: 20, eut: 2,
+      itemInputs: [item("a:in", 1, "In")], itemOutputs: [item("a:out", 1, "Out")] }] }] },
+    { id: "crafting", recipes: [{ id: "c", type: "shaped", width, height, output: item("a:shovel", 1, "Shovel"),
+      inputs: slots.map(slotIndex => ({ kind: "item", id: `a:part${slotIndex}`, amount: 1, displayName: "Part", slotIndex })) }] },
+  ] }).recipes.find(recipe => recipe.category === "crafting").inputs
+    .map(input => [(input.neiSlot.x - 25) / 18, (input.neiSlot.y - 8) / 18]);
+
+  it("lays a 1-wide recipe out as a column", () => {
+    expect(cells(1, 3, [0, 1, 2])).toEqual([[0, 0], [0, 1], [0, 2]]);
+  });
+
+  it("keeps the gaps of a 2-wide recipe", () => {
+    expect(cells(2, 2, [0, 3])).toEqual([[0, 0], [1, 1]]);
+  });
+});
+
 describe("a crafting recipe whose class builds its ingredients at craft time", () => {
   // Such a class keeps what it takes inside matches(): the export reads no inputs
   // and a card would make the output from nothing.

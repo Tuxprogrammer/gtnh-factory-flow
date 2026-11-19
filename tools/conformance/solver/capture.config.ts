@@ -9,7 +9,10 @@ export default defineConfig({
   test: {
     environment: "node",
     root: path.resolve(__dirname, "../../.."),
-    globalSetup: [path.resolve(__dirname, "../../tokens/vitest-setup.mjs")],
+    globalSetup: [
+      path.resolve(__dirname, "../../tokens/vitest-setup.mjs"),
+      path.resolve(__dirname, "../../web-core/vitest-setup.mjs"),
+    ],
     include: [
       "src/**/*.test.ts",
       "src/**/*.test.tsx",

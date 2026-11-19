@@ -1168,7 +1168,7 @@ export function useCleanCardModel(
       id: control.id,
       label: control.label,
       value: control.value,
-      steps: control.options.length > 1,
+      steps: control.options.length > 1 || control.numeric !== undefined,
     });
     if (!isPinned(liveProject, pinKey, control)) continue;
     rawChips.push({

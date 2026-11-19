@@ -394,7 +394,7 @@ export function stripTip(
     actions: chip.reading
       ? []
       : [
-          { input: "left", label: "Choose" },
+          { input: "left", label: control?.numeric ? "Step up" : "Choose" },
           { input: "right", label: "Step back" },
           { input: "wheel", label: "Step" },
         ],

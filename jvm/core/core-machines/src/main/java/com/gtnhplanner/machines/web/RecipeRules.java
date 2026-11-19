@@ -15,6 +15,8 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.JsMath;
+import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.core.machines.GameRates;
 import com.gtnhplanner.core.machines.SteamRecipeLimits;
 
@@ -339,7 +341,7 @@ public final class RecipeRules {
     public static double snapNumeric(final double value, final Web.Numeric numeric) {
         final double max = numeric.max != null ? numeric.max : 9007199254740991d;
         final double snapped = numeric.step != null && numeric.step != 0
-            ? new BigDecimal(Js.round(value / numeric.step) * numeric.step).setScale(6, RoundingMode.HALF_UP)
+            ? new BigDecimal(JsMath.round(value / numeric.step) * numeric.step).setScale(6, RoundingMode.HALF_UP)
                 .doubleValue()
             : (value < 0 ? Math.ceil(value) : Math.floor(value));
         return Math.min(max, Math.max(numeric.min, snapped));
@@ -347,9 +349,9 @@ public final class RecipeRules {
 
     /** getAdjacentMachineConfigTier: the next rung up or down, never below the minimum. */
     public static String adjacentTier(final TierControl control, final int direction) {
-        if (control.numeric != null) return Js.str(
+        if (control.numeric != null) return NumberText.of(
             snapNumeric(
-                Js.number(control.current.key) + direction * (control.numeric.step != null ? control.numeric.step : 1),
+                NumberText.parse(control.current.key) + direction * (control.numeric.step != null ? control.numeric.step : 1),
                 control.numeric));
         final int current = indexOf(control.tiers, control.current.key);
         final int minimum = indexOf(control.tiers, control.minimum.key);
@@ -419,11 +421,11 @@ public final class RecipeRules {
                 .isEmpty() ? selectedKey.trim()
                     : control.defaultKey != null && !control.defaultKey.isEmpty() ? control.defaultKey
                         : control.minimumKey;
-            final double raw = Js.number(typed);
+            final double raw = NumberText.parse(typed);
             final double value = Double.isFinite(raw) ? snapNumeric(raw, control.numeric) : control.numeric.min;
             final Web.TierOption current = minimum.copy();
-            current.key = Js.str(value);
-            current.label = Js.str(value);
+            current.key = NumberText.of(value);
+            current.label = NumberText.of(value);
             final Web.Resource icon = new Web.Resource();
             if (minimum.resource != null) {
                 icon.kind = minimum.resource.kind;
@@ -434,7 +436,7 @@ public final class RecipeRules {
                 icon.optional = minimum.resource.optional;
                 icon.tooltip = minimum.resource.tooltip;
             }
-            icon.displayName = control.label + ": " + Js.str(value);
+            icon.displayName = control.label + ": " + NumberText.of(value);
             current.resource = icon;
             return new TierControl(
                 control.id,

@@ -21,6 +21,7 @@ import net.minecraftforge.fluids.FluidStack;
 
 import com.gtnhplanner.GtnhPlanner;
 import com.gtnhplanner.api.RecipePropertyAPI;
+import com.gtnhplanner.core.base.JsonTree;
 import com.gtnhplanner.data.RecipeHandlerAccess;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Port;
@@ -108,10 +109,7 @@ public final class MobDropsProvider implements PropertyProvider {
         props.put(GTKeys.TOTAL_EU, (long) recipe.eut() * recipe.duration());
         props.put(EecCards.MOB, mob.key());
         props.put(EecCards.MOB_NAME, mob.name());
-        props.put(
-            EecCards.METADATA,
-            recipe.eec()
-                .toString());
+        props.put(EecCards.METADATA, JsonTree.write(recipe.eec()));
         props.put(EecCards.OUTPUT_IDS, String.join("\n", ids));
         if (!recipe.gated()
             .isEmpty()) props.put(EecCards.GATED, String.join(", ", recipe.gated()));

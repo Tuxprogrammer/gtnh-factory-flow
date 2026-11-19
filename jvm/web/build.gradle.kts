@@ -15,6 +15,7 @@ plugins {
 // src/main/java/com/gtnhplanner/web/exports (every class there is exported without being listed anywhere).
 val coreModules = listOf(
     ":core-base",
+    ":core-machines",
 )
 
 val teavmVersion = "0.16.0"
@@ -30,6 +31,8 @@ tasks.withType<JavaCompile>().configureEach {
 dependencies {
     coreModules.forEach { implementation(project(it)) }
     implementation(teavm.libs.jsoApis)
+    // javax.annotation.Nullable on an export that can return null: the TypeScript declarations are generated from it.
+    compileOnly("com.google.code.findbugs:jsr305:3.0.2")
     // The classlib overrides (src/main/java/org/teavm/...) compile against TeaVM's own classes; they are not shipped.
     compileOnly("org.teavm:teavm-classlib:$teavmVersion")
     compileOnly("org.teavm:teavm-interop:$teavmVersion")

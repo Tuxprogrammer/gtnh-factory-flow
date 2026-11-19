@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.gson.JsonObject;
 
 /** Test recipes and nodes on the game's maps, built from handlers.json as the game builds a card's (WebCards). */
 final class MapRecipes {
@@ -31,9 +30,9 @@ final class MapRecipes {
         r.nei.additionalInfo = List.of("Special value: " + (long) special);
         r.source = new Web.Source();
         r.source.recipeMap = entry.name;
-        r.metadata = new JsonObject();
-        r.metadata.addProperty("recipeMapId", entry.id);
-        r.metadata.addProperty("specialValue", special);
+        r.metadata = new LinkedHashMap<>();
+        r.metadata.put("recipeMapId", entry.id);
+        r.metadata.put("specialValue", special);
         r.inputs = List.of();
         r.outputs = List.of();
         r.machineConfigControls = HandlerData.recipeControls(entry, special);

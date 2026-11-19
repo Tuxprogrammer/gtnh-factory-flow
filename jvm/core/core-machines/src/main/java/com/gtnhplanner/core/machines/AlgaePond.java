@@ -38,13 +38,8 @@ public final class AlgaePond {
     @Nullable
     public static Integer recipeTier(final Web.Recipe recipe) {
         Double value = recipe.specialValue;
-        if (value == null && recipe.metadata != null && recipe.metadata.has("specialValue")
-            && recipe.metadata.get("specialValue")
-                .isJsonPrimitive()
-            && recipe.metadata.getAsJsonPrimitive("specialValue")
-                .isNumber())
-            value = recipe.metadata.get("specialValue")
-                .getAsDouble();
+        if (value == null && recipe.metadata != null && recipe.metadata.get("specialValue") instanceof final Double special)
+            value = special;
         return value != null && value >= 0 && value == Math.floor(value) && value <= Integer.MAX_VALUE
             ? Integer.valueOf(value.intValue())
             : null;

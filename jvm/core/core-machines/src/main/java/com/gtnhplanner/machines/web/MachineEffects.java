@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.core.machines.OutputSlots;
 
 /**
@@ -37,10 +38,10 @@ public final class MachineEffects {
             if (c == null) return 0;
             // Count settings key their options by the number ("8") or end in it ("slice-3").
             final String key = c.current().key;
-            final double parsed = Js.number(key);
+            final double parsed = NumberText.parse(key);
             if (Double.isFinite(parsed)) return parsed;
             final Matcher m = TRAILING_NUMBER.matcher(key);
-            if (m.find()) return Double.parseDouble(m.group(1));
+            if (m.find()) return NumberText.parse(m.group(1));
             return Math.max(0, indexOf(c.tiers(), key));
         },
             Power.effectiveVoltageOrdinal(recipe, node, Power.runTier(recipe, node)),

@@ -1,12 +1,11 @@
 package com.gtnhplanner.machines;
 
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import javax.annotation.Nullable;
+
+import com.gtnhplanner.core.base.NumberText;
 
 /**
  * One line of a machine's worked formulas, as the website's formula-lines.ts has it: a label, the working with the
@@ -57,15 +56,34 @@ public record FormulaLine(String label, List<Term> math, String result, Tone ton
     /** A number as the formulas show it (formulaNumber): whole numbers grouped, fractions to three places. */
     public static String number(final double value) {
         if (Double.isNaN(value) || Double.isInfinite(value)) return "-";
-        final DecimalFormatSymbols symbols = DecimalFormatSymbols.getInstance(Locale.US);
-        if (value == Math.rint(value) && Math.abs(value) < 1e15)
-            return new DecimalFormat("#,##0", symbols).format(value);
+        final boolean negative = value < 0 || value == 0 && 1 / value < 0;
         final double abs = Math.abs(value);
+        if (value == Math.rint(value) && abs < 1e15) return (negative ? "-" : "") + group(NumberText.fixed(abs, 0));
         final int digits = abs >= 100 ? 1 : abs >= 1 ? 2 : 3;
-        final double rounded = new java.math.BigDecimal(value).setScale(digits, java.math.RoundingMode.HALF_UP)
-            .doubleValue();
-        final StringBuilder pattern = new StringBuilder("#,##0.");
-        for (int i = 0; i < digits; i++) pattern.append('#');
-        return new DecimalFormat(pattern.toString(), symbols).format(rounded);
+        String text = NumberText.fixed(abs, digits);
+        int end = text.length();
+        while (text.charAt(end - 1) == '0') end--;
+        if (text.charAt(end - 1) == '.') end--;
+        text = text.substring(0, end);
+        final int point = text.indexOf('.');
+        final String whole = group(point < 0 ? text : text.substring(0, point));
+        final String out = point < 0 ? whole : whole + text.substring(point);
+        // A fraction that rounds to nothing is a plain zero.
+        return negative && !"0".equals(out) ? "-" + out : out;
+    }
+
+    /** A whole number with a comma between thousands ({@code %,d}). */
+    public static String grouped(final long value) {
+        final String digits = Long.toString(value);
+        return value < 0 ? "-" + group(digits.substring(1)) : group(digits);
+    }
+
+    private static String group(final String digits) {
+        final StringBuilder out = new StringBuilder();
+        for (int i = 0; i < digits.length(); i++) {
+            if (i > 0 && (digits.length() - i) % 3 == 0) out.append(',');
+            out.append(digits.charAt(i));
+        }
+        return out.toString();
     }
 }

@@ -132,7 +132,7 @@ public final class PowerReport {
     public static String describeStall(final Report report) {
         if (report.recipeGateReason() != null) return report.recipeGateReason();
         if (UNDER_POWERED.equals(report.state())) {
-            if (report.typedBudget()) return "Needs " + Js.str(report.singleDrawEuT())
+            if (report.typedBudget()) return "Needs " + NumberText.of(report.singleDrawEuT())
                 + " EU/t. Supplied "
                 + formatBudget(report.poolEuT())
                 + ".";
@@ -142,11 +142,11 @@ public final class PowerReport {
                     + report.tier()
                     + " "
                     + (report.hatches() == 1 ? "hatch supplies" : "hatches supply");
-            return "Underpowered: the recipe draws " + Js.str(report.singleDrawEuT())
+            return "Underpowered: the recipe draws " + NumberText.of(report.singleDrawEuT())
                 + " EU/t but "
                 + supply
                 + " "
-                + Js.str(report.poolEuT())
+                + NumberText.of(report.poolEuT())
                 + " EU/t. Add amperage or raise the tier.";
         }
         if (OVER_TIER.equals(report.state())) return "Won't run at " + report.tier()
@@ -158,7 +158,7 @@ public final class PowerReport {
     }
 
     private static String formatBudget(final double euT) {
-        return euT == Math.rint(euT) ? Js.str(euT) : NumberText.fixed(euT, 1);
+        return euT == Math.rint(euT) ? NumberText.of(euT) : NumberText.fixed(euT, 1);
     }
 
     /** NodeSteamReport: what a steam machine burns, in L/t. */

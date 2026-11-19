@@ -69,7 +69,8 @@
     "groupOutVolume": 0.8,
     "groupOutPitch": 0.85,
     "ungroupVolume": 0.8,
-    "ungroupPitch": 0.9
+    "ungroupPitch": 0.9,
+    "groupAimVolume": 0.6
   },
   "events": [
     { "id": "pressed", "sounds": ["ui.click"], "mod": "anything pressed (Hyb.click)", "web": "any button, role=button/menuitem/tab/radio/switch, link, or pointer-cursor element clicked; a control with data-sfx-own plays its own" },
@@ -103,6 +104,7 @@
     { "id": "worldRemoved", "sounds": ["world.remove"], "hosts": ["mod"], "mod": "a ghost machine taken out of the world" },
     { "id": "groupEntered", "sounds": ["board.merge"], "pitch": "groupInPitch", "hosts": ["mod"], "mod": "cards set down into a board group: the merge sound, higher" },
     { "id": "groupLeft", "sounds": ["board.merge"], "volume": "groupOutVolume", "pitch": "groupOutPitch", "hosts": ["mod"], "mod": "cards set down outside the group they were in: the merge sound, lower and quieter" },
-    { "id": "groupDissolved", "sounds": ["board.sweep"], "volume": "ungroupVolume", "pitch": "ungroupPitch", "hosts": ["mod"], "mod": "a board group dissolved, what it held staying where it is" }
+    { "id": "groupDissolved", "sounds": ["board.sweep"], "volume": "ungroupVolume", "pitch": "ungroupPitch", "hosts": ["mod"], "mod": "a board group dissolved, what it held staying where it is" },
+    { "id": "groupAimed", "sounds": ["wire.snap"], "volume": "groupAimVolume", "hosts": ["mod"], "mod": "cards carried over a board group they would join (or off the one they were in): the snap, quieter" }
   ]
 }

@@ -4,11 +4,11 @@
 # counts: when tests move between modules, or a floor is wrong, edit it in the same commit.
 # <module> <floor>
 total 1200
-mod 900
+mod 880
 core-base 5
 core-layout 500
 core-machines 100
 core-power 8
-core-view 90
+core-view 240
 web 3
 core-solver 150

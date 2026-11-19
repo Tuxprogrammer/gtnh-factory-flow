@@ -125,6 +125,41 @@ public final class CardPaint {
         }
     }
 
+    /** The dials and the power tier of the card being drawn: what its rows' figures follow (core-view CardViews). */
+    private static com.gtnhplanner.core.view.card.CardInput.Dials figureDials = new com.gtnhplanner.core.view.card.CardInput.Dials(
+        com.gtnhplanner.core.base.RateUnit.SECOND,
+        "eu",
+        true);
+    @Nullable
+    private static String figureTier;
+
+    /**
+     * The board's dials and the card's own power tier (a generator's: its EU rows read amps of it under the Amps key),
+     * for the rows drawn next. Set by each card before it draws; the drawing is one thread.
+     */
+    public static void figures(final com.gtnhplanner.core.view.card.CardInput.Dials dials,
+        @Nullable final String tier) {
+        figureDials = dials;
+        figureTier = tier;
+    }
+
+    /**
+     * A flow's number and unit as the shared card rules print it: power under the power key in the card's tier, a
+     * resource in the rate unit (" L" before a fluid's). The unit keeps its leading space.
+     */
+    public static com.gtnhplanner.core.view.card.CardView.Figure figure(final double perSecond, final boolean power,
+        final boolean fluid, final Fmt.RateUnit unit) {
+        if (power) {
+            final com.gtnhplanner.core.view.card.CardView.Figure f = com.gtnhplanner.core.view.card.CardViews
+                .powerFigure(perSecond, figureTier, figureDials);
+            return new com.gtnhplanner.core.view.card.CardView.Figure(f.number(), " " + f.unit());
+        }
+        final String kind = fluid ? "fluid" : "item";
+        return new com.gtnhplanner.core.view.card.CardView.Figure(
+            com.gtnhplanner.core.base.Format.slotRateBare(perSecond, unit.core(), kind),
+            com.gtnhplanner.core.base.Format.rateSuffix(unit.core(), kind));
+    }
+
     /** A flow's words: its rate in the plan's unit (EU/t for power) and its name. */
     public static void flowWords(final double perSecond, final boolean power, final boolean fluid, final String name,
         final Fmt.RateUnit unit, final boolean output, final int y) {
@@ -144,11 +179,10 @@ public final class CardPaint {
     public static void flowWords(final double perSecond, final boolean power, final boolean fluid, final String name,
         final Fmt.RateUnit unit, final boolean output, final int y, final boolean set, final boolean controls,
         final int nameColour) {
-        final String number = power ? Fmt.power(perSecond / 20) : Fmt.compact(perSecond * unit.perSecond);
-        final String suffix = power ? " EU/t" : (fluid ? " L" : "") + unit.suffix;
+        final com.gtnhplanner.core.view.card.CardView.Figure f = figure(perSecond, power, fluid, unit);
         words(
-            number,
-            suffix,
+            f.number(),
+            f.unit(),
             name,
             set ? Hyb.GOLD : perSecond <= 0 ? Tokens.Palette.IDLE : Hyb.INK,
             nameColour,
@@ -163,9 +197,11 @@ public final class CardPaint {
      */
     public static void energyWords(final double each, final boolean fluid, final String name, final boolean output,
         final int y, final boolean controls, final int nameColour) {
+        final com.gtnhplanner.core.view.card.CardView.Figure f = com.gtnhplanner.core.view.card.CardViews
+            .energyFigure(each, fluid ? "fluid" : "item", figureDials.power());
         words(
-            Fmt.brief(each),
-            Fmt.euEachSuffix(fluid),
+            f.number(),
+            " " + f.unit(),
             name,
             output ? Hyb.ENERGY : Hyb.ENERGY_QUIET,
             nameColour,
@@ -358,11 +394,10 @@ public final class CardPaint {
                 : com.gtnhplanner.data.flowchart.Drawer.Kind.SOURCE);
         freeTile(p.output(), y, why);
         icon(p.item(), p.fluid(), p.isPower(), p.output(), y, z);
-        final String number = p.isPower() ? Fmt.power(amount / 20) : Fmt.compact(amount * unit.perSecond);
-        final String suffix = p.isPower() ? " EU/t" : (p.isFluid() ? " L" : "") + unit.suffix;
+        final com.gtnhplanner.core.view.card.CardView.Figure f = figure(amount, p.isPower(), p.isFluid(), unit);
         words(
-            number,
-            suffix,
+            f.number(),
+            f.unit(),
             label,
             set ? Hyb.GOLD : Hyb.mix(tint, Hyb.INK, 0.75f),
             why != null && whyName ? why.colour : Hyb.mix(tint, Hyb.MUTED, 0.45f),
@@ -575,7 +610,8 @@ public final class CardPaint {
         final int top = CardLayout.countY(picture), lineY = top + CardLayout.RUN_H + CardLayout.LINE_GAP;
         final float cx = picture[0] + picture[2] / 2f;
         final int[] block = { CardLayout.WELL_X + 2, top - 1, CardLayout.WELL_W - 4, CardLayout.COUNT_H + 2 };
-        if (!c.pinned()) {
+        if (c.ruleWord()
+            .isEmpty()) {
             final int rw = Math.round(Hyb.width(c.run()) * Hyb.FIGURE);
             return new int[][] { block, null, { Math.round(cx - rw / 2f), top, rw, CardLayout.RUN_H } };
         }
@@ -597,7 +633,8 @@ public final class CardPaint {
         final float cx = picture[0] + picture[2] / 2f, s = Hyb.FIGURE;
         final float rw = Hyb.width(c.run()) * s, rx = RecipeCard.crisp(cx - rw / 2f);
         Hyb.text(c.run(), rx, top, s, c.zero() ? Hyb.MUTED : Hyb.INK);
-        if (!c.pinned()) {
+        if (c.ruleWord()
+            .isEmpty()) {
             if (hoverNumber) for (int dx = 0; dx < rw; dx += 3) Hyb.rect(rx + dx, top + 8 * s, 1, 1, Hyb.MUTED);
             if (!c.note()
                 .isEmpty()) Hyb.text(c.note(), RecipeCard.crisp(cx - Hyb.width(c.note()) / 2f), lineY, noteColour);
@@ -609,7 +646,8 @@ public final class CardPaint {
         // The rule word opens its menu: a dotted line under it says so (a custom rate card's cannot change).
         if (!c.ruleFixed())
             for (int dx = 0; dx < word[2] - 1; dx += 2) Hyb.rect(word[0] + dx, lineY + 8, 1, 1, 0xFF5A5E68);
-        Hyb.text(c.setText(), number[0], lineY, Hyb.GOLD);
+        // The set box: the count set in gold, else "Set", asking in the prompts' pulse while nothing sets this part.
+        Hyb.text(c.setText(), number[0], lineY, c.pinned() ? Hyb.GOLD : c.prompt() ? noteColour : Hyb.MUTED);
         if (hoverNumber)
             for (int dx = 0; dx < number[2] - 1; dx += 3) Hyb.rect(number[0] + dx, lineY + 8, 1, 1, Hyb.MUTED);
     }
@@ -626,8 +664,8 @@ public final class CardPaint {
             edit.text()
                 .length() + 1)
             * Hyb.width("0") + 8, h = CardLayout.LINE_H + 3;
-        final float x = c.pinned() ? countParts(c, picture)[2][0] - 4
-            : RecipeCard.crisp(picture[0] + picture[2] / 2f - w / 2f);
+        final float x = !c.ruleWord()
+            .isEmpty() ? countParts(c, picture)[2][0] - 4 : RecipeCard.crisp(picture[0] + picture[2] / 2f - w / 2f);
         edit.drawBox(x, lineY - 2, w, h, lineY);
     }
 

@@ -45,6 +45,17 @@ public final class MachinesExports {
         return MACHINES.read(recipeId, nodeJson);
     }
 
+    /**
+     * A board card's machine maths for a kept recipe on a node (JSON in the website's node shape), as JSON in the
+     * website's own shapes: {"stats", "power"?, "steam"?, "parallel", "structuralParallel", "outputMultipliers"}; null for
+     * a machine the module leaves to the mod's own models (Tree Growth Simulator, Bacterial Vat).
+     */
+    @JSExport
+    @Nullable
+    public static String machinesCard(final String recipeId, final String nodeJson) {
+        return MACHINES.card(recipeId, nodeJson);
+    }
+
     /** A bee card: {"housing","tiers","tier","beesYield"} in, the housing and its multipliers out. */
     @JSExport
     public static String machinesBeeReadout(final String caseJson) {

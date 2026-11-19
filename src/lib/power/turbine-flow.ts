@@ -8,6 +8,7 @@
 import type { Recipe } from "@/lib/model/types";
 import { getPowerSource } from "./registry";
 import { isPowerRecipe } from "./power-recipe";
+import { corePowerCard } from "./power-core";
 import { buildPowerSettingsReader, type PowerSourceDefinition } from "./types";
 
 export interface TurbineFlowCheck {
@@ -81,4 +82,37 @@ export function turbineFlowCheck(
   const euCounted = set.euPerTick * running;
   if (Math.abs(euMade - euCounted) < 1) return undefined;
   return { turbines, flow, setFlow, optimal, unit, euMade, euCounted };
+}
+
+export interface TurbineCard {
+  /** Whole turbines sharing the card's flow. */
+  turbines: number;
+  /** Whether the card can show a flow check: `mayTurbineFlow`, the layout key's cheap test. */
+  may: boolean;
+  /** The check when `may`, as `turbineFlowCheck` gives it. */
+  check: TurbineFlowCheck | undefined;
+}
+
+/**
+ * Everything a card shell asks about its turbines in one go: how many whole turbines share the flow, whether it can
+ * show a check, and the check. A power card asks the core once when the power area is adopted
+ * (power-core.ts); everything else, and every card while the core is not loaded, runs the three functions above.
+ */
+export function turbineCard(
+  recipe: Pick<Recipe, "power" | "category"> | undefined,
+  settings: Record<string, string> | undefined,
+  running: number,
+  exactPin?: number,
+): TurbineCard {
+  if (isPowerRecipe(recipe)) {
+    const card = corePowerCard(recipe.power.sourceId, settings, running, exactPin);
+    if (card) return { turbines: card.turbines, may: card.may, check: card.check };
+  }
+  const turbines = turbinesFor(running, exactPin);
+  const may = mayTurbineFlow(recipe, running, turbines);
+  return {
+    turbines,
+    may,
+    check: may ? turbineFlowCheck(recipe, settings, running, turbines) : undefined,
+  };
 }

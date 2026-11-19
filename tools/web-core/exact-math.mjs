@@ -49,7 +49,7 @@ function checkOne(base, tally, fn, xHex, yHex, answer, strictAlso) {
 }
 
 /** The committed vectors, and the random cases' math and conversion lines when there are any. */
-export function runExactMath(api, tally, cases = []) {
+export function runExactMath(api, tally, cases = [], { every = 1 } = {}) {
   const base = api.BaseExports;
   if (!base?.exactMath) {
     tally.check("exact-math/exports", false, () => "the build has no BaseExports.exactMath");
@@ -63,7 +63,13 @@ export function runExactMath(api, tally, cases = []) {
       else checkOne(base, tally, fn, r[0], null, r[1], true);
     }
   }
+  // The random cases: all of them, or every n-th of each kind on a sampled run (the JavaScript target in CI).
+  const seen = new Map();
   for (const c of cases) {
+    if (!EXACT_MATH_KINDS.has(c[0])) continue;
+    const i = seen.get(c[0]) ?? 0;
+    seen.set(c[0], i + 1);
+    if (i % every !== 0) continue;
     switch (c[0]) {
       case "math":
         checkOne(base, tally, c[1], c[2], c[3], c[4], false);

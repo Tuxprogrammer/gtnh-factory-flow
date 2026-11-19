@@ -9,7 +9,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import { gunzipSync } from "node:zlib";
 import { readConformanceBytes, readConformanceJson } from "@/test-support/conformance";
 import { loadCore, resetCoreForTests } from "@/lib/core/loader";
-import { runArrangeJob, type ArrangeJob } from "@/lib/arrange-job";
+import { runArrangeJob, type ArrangeJob, type ArrangeJobResult, type ArrangeProgress } from "@/lib/arrange-job";
 import {
   boardRouterSnapshot,
   decodeRouteSolveJob,
@@ -20,7 +20,7 @@ import {
   type RouteSolveJob,
 } from "./grid-route-job";
 import { cardRimDocks, LANE_CAPACITY, type GridEndpoint, type GridObstacle, type GridRouteRequest } from "./grid-edge-router";
-import { coreLiveDrag, layoutCore, setLayoutAdoptOverride } from "./layout-core";
+import { arrangeCore, coreLiveDrag, layoutCore, runArrangeJobOnCore, setLayoutAdoptOverride } from "./layout-core";
 import { drawn, layoutTargets } from "./layout-shadow.test-support";
 import { DEFAULT_ROUTER_TUNING, type RouterTuning } from "./router-tuning";
 
@@ -158,6 +158,29 @@ describe.skipIf(targets.length === 0)("layout through the core in the route work
     }
   });
 
+  it("routes a board whose dock order ties in cycles the same (conformance/layout/tie-board.json.gz)", async () => {
+    // Many ends at one card tie on their exit and heading, and the far-card mirror rule makes the order cyclic: the
+    // result is then the sort algorithm's, and the core must sort as V8 does (core-layout JsSort).
+    const board = JSON.parse(gunzipSync(readConformanceBytes("layout", "tie-board.json.gz")).toString("utf8")) as {
+      obstacles: GridObstacle[];
+      requests: GridRouteRequest[];
+    };
+    const job = (key: string): RouteSolveJob => ({
+      signature: "tie",
+      seq: 1,
+      obstacles: board.obstacles,
+      requests: board.requests,
+      tuning: { ...DEFAULT_ROUTER_TUNING, negotiationRounds: 0 },
+      thorough: true,
+      boardKey: key,
+    });
+    const want = await on(undefined, () => drawn(viaWorker(job("ts")).routes));
+    for (const target of targets) {
+      const got = await on(target, () => drawn(viaWorker(job(target)).routes));
+      expect(got, target).toEqual(want);
+    }
+  }, 120_000);
+
   it("stores and restores routes across the two routers (route-memory.ts)", async () => {
     const board = boards.find((b) => b.wires.length >= 20)!;
     const [first] = dragJobs(board, "plan");
@@ -221,30 +244,41 @@ describe.skipIf(targets.length === 0)("Arrange through the core in the arrange w
     expect(inputs.length).toBeGreaterThan(10);
     const want = await on(undefined, () => inputs.map((job) => runArrangeJob(job).result));
     for (const target of targets) {
-      const got = await on(target, () => inputs.map((job) => runArrangeJob(job).result));
+      const got = await on(target, () => inputs.map((job) => runArrangeJobOnCore(layoutCore()!, job).result));
       expect(got, target).toEqual(want);
     }
   }, 120_000);
 
+  /**
+   * Boards the JavaScript build of the core arranges differently from the TypeScript (the JVM and the WebAssembly
+   * build agree with it), so the worker keeps the TypeScript Arrange on that build (`arrangeCore`). A fix makes the
+   * entry fail here: delete it then.
+   */
+  const KNOWN_JS_ARRANGE = new Set(["factory-flow/Untitled design"]);
+
   const small = arrangeData.boards.filter((b) => b.cards.length <= 12);
-  it.each(small.map((b) => [b.name, b] as const))("arranges %s the same, whole and in stages", async (_name, board) => {
+  it.each(small.map((b) => [b.name, b] as const))("arranges %s the same, whole and in stages", async (name, board) => {
     const job = judgedJob(board);
-    const run = () => {
+    type Arrange = (job: ArrangeJob, onProgress?: (p: ArrangeProgress) => void) => ArrangeJobResult;
+    const run = (arrange: Arrange) => () => {
       const progress: string[] = [];
-      const whole = runArrangeJob(job, (p) => progress.push(`${p.step} ${p.stage}`));
-      const columns = runArrangeJob({ ...job, stage: "columns" });
-      const free = runArrangeJob({ ...job, stage: "free" });
+      const whole = arrange(job, (p) => progress.push(`${p.step} ${p.stage}`));
+      const columns = arrange({ ...job, stage: "columns" });
+      const free = arrange({ ...job, stage: "free" });
       const candidates = { plain: columns.columns!.plain, challenger: columns.columns!.challenger, free: free.result };
       const polish = [0, 1].map((which) => {
-        const p = runArrangeJob({ ...job, stage: "polish", candidates, which: which as 0 | 1 });
+        const p = arrange({ ...job, stage: "polish", candidates, which: which as 0 | 1 });
         return { result: p.result, points: p.polishedPoints, crossings: p.polishedCrossings };
       });
       return { whole: whole.result, progress: [...new Set(progress)], columns: columns.columns, free: free.result, polish };
     };
-    const want = await on(undefined, run);
+    const want = await on(undefined, run(runArrangeJob));
     for (const target of targets) {
-      const got = await on(target, run);
-      expect(got, target).toEqual(want);
+      const got = await on(target, run((j, cb) => runArrangeJobOnCore(layoutCore()!, j, cb)));
+      if (target === "js" && KNOWN_JS_ARRANGE.has(name)) expect(got, target).not.toEqual(want);
+      else expect(got, target).toEqual(want);
+      // The arrange worker's job takes the core's Arrange on the WebAssembly build only.
+      expect(await on(target, () => arrangeCore() !== null), target).toBe(target === "wasm-gc");
     }
   }, 300_000);
 });

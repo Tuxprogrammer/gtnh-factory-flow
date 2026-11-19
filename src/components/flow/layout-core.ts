@@ -12,7 +12,7 @@
  * whose points changed. A drag beat therefore sends the moved card and its wires, not the board.
  */
 import type { CoreExports } from "@/lib/core/exports.generated";
-import { coreIfLoaded, loadCore } from "@/lib/core/loader";
+import { coreIfLoaded, coreInfo, loadCore } from "@/lib/core/loader";
 import type { ArrangeJob, ArrangeJobResult, ArrangeProgress } from "@/lib/arrange-job";
 import type {
   GridEndpoint,
@@ -50,6 +50,17 @@ type Layout = CoreExports["LayoutExports"];
 /** The core's layout exports when the area is on and the core is loaded on this thread, else null. */
 export function layoutCore(): Layout | null {
   return layoutAdopted() ? (coreIfLoaded()?.LayoutExports ?? null) : null;
+}
+
+/**
+ * The core for Arrange: as `layoutCore()`, but on the WebAssembly build only. The JavaScript build of the core arranges
+ * one reference board differently from the TypeScript (the column challenger of "factory-flow/Untitled design" in
+ * conformance/layout/arrange.json.gz; the JVM and the WebAssembly build agree with the TypeScript), so an engine without
+ * WebAssembly GC keeps the TypeScript Arrange until that is found and fixed. Its router answers are the TypeScript's
+ * and it routes.
+ */
+export function arrangeCore(): Layout | null {
+  return coreInfo()?.target === "wasm-gc" ? layoutCore() : null;
 }
 
 /**

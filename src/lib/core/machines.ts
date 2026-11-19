@@ -7,7 +7,7 @@
 // re-derives a number. `cardMachineMath` keeps one readout per card (see the key below), so the card, its glance face,
 // its tips and the Overview rail share one computation.
 import type { CoreExports } from "./exports.generated";
-import { coreIfLoaded } from "./loader";
+import { coreIfLoaded, loadCore } from "./loader";
 import type { FactoryNode, MachineHandler, Recipe } from "@/lib/model/types";
 import { applyMachineHandlerToRecipe, getSelectedMachineHandler } from "@/lib/model/recipe-rules";
 import { applyRecipeInputOverrides } from "@/lib/model/recipe-input-overrides";
@@ -156,21 +156,30 @@ export function cardMachineMathCore(
 
 /**
  * Stand-in for adopt.ts's `coreFor("machines")` (the web stream's file, agreed, not on this base yet): the area is off,
- * so the TypeScript answers. When adopt.ts lands, `coreForMachines()` becomes `coreFor("machines")` and the flag lives there.
+ * so the TypeScript answers. When adopt.ts lands, `coreForMachines()` becomes `coreFor("machines")` and the flag lives
+ * there. With the area on, the first ask starts the load (the cards use the TypeScript until it is there) and the
+ * loaded core is warmed in idle time.
  */
 const MACHINES_ADOPTED = false;
+let loading = false;
 function coreForMachines(): CoreExports | null {
-  const c = MACHINES_ADOPTED ? coreIfLoaded() : null;
-  if (c) warmSoon(c);
-  return c;
+  if (!MACHINES_ADOPTED) return null;
+  const c = coreIfLoaded();
+  if (c || loading) return c;
+  loading = true;
+  loadCore().then(warmSoon, () => {
+    // No core here: the TypeScript answers every card, as it does with the area off.
+  });
+  return null;
 }
 
 /**
- * The core's first cards pay for its tables and its cold code (on WebAssembly about as much again as the cards
- * themselves). Once it is there, it runs the maths over a recipe of every map in idle time, so a plan's cards do not.
+ * The core's first cards pay for its tables and its cold code (in the browser on WebAssembly several times what the
+ * cards cost warm). Once it has loaded, it runs the maths over a recipe of every map in idle time, so a plan's cards
+ * do not. Exported for the probes, which load the core themselves.
  */
 const warmed = new WeakSet<CoreExports>();
-function warmSoon(c: CoreExports): void {
+export function warmSoon(c: CoreExports): void {
   if (warmed.has(c)) return;
   warmed.add(c);
   const run = () => {

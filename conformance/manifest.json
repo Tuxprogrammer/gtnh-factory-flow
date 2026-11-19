@@ -70,8 +70,8 @@
     },
     "machines/bee-goldens.jsonl.gz": {
       "area": "machines",
-      "bytes": 174641,
-      "sha256": "0daeb64ea972cef22b201cf64eca168b926794fa52b94aca230a27306266133a"
+      "bytes": 209660,
+      "sha256": "9737818794f8c1b8f65963fb13a52993c602e9fa3eeeed573896c2797397670f"
     },
     "machines/crop-goldens.jsonl.gz": {
       "area": "machines",
@@ -87,11 +87,6 @@
       "area": "machines",
       "bytes": 643054,
       "sha256": "d32b2163d3f0c9cc69100c6e7a273dfe5cba8249cbea21e3e3bc062a0fe98ec6"
-    },
-    "pending/machines/bee-goldens.web-regenerated.jsonl.gz": {
-      "area": "pending",
-      "bytes": 187840,
-      "sha256": "5773e2097c2849d223b41864cc853a81dd7743954db40ed9f404333519b6d544"
     },
     "pending/solver-up-to-web-newer/idle-noise-beside-a-lone-card.json": {
       "area": "pending",

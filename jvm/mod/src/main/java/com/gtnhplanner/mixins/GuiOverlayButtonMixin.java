@@ -30,7 +30,7 @@ public class GuiOverlayButtonMixin {
         final Recipe.RecipeId currentId = Recipe.RecipeId.of(ref.handler, ref.recipeIndex);
         final Graph graph = Plan.getActiveGraph();
         for (final Node node : graph.getNodes()) {
-            if (currentId.equals(node.recipeId)) {
+            if (currentId.equals(com.gtnhplanner.nei.NeiRecipes.id(node))) {
                 return true;
             }
         }

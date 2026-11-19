@@ -9,23 +9,25 @@ import java.util.TreeMap;
 
 import javax.annotation.Nullable;
 
-import com.gtnhplanner.api.RecipePropertyAPI;
 import com.gtnhplanner.core.base.Uuid;
+import com.gtnhplanner.core.model.RecipeRef;
+import com.gtnhplanner.core.model.RecipeSource;
 import com.gtnhplanner.data.MachineConfig;
 import com.gtnhplanner.data.MachineProfileRegistry;
-import com.gtnhplanner.data.properties.PropertyProvider;
 import com.gtnhplanner.data.properties.RecipeProperty;
-import com.gtnhplanner.data.provider.DefaultProvider;
+import com.gtnhplanner.machines.web.Web;
 import com.gtnhplanner.power.PowerModel;
-import com.gtnhplanner.power.game.PowerPorts;
 
-import codechicken.nei.recipe.IRecipeHandler;
-import codechicken.nei.recipe.Recipe;
-import codechicken.nei.recipe.RecipeHandlerRef;
-import lombok.Getter;
-import lombok.Setter;
-
+/**
+ * A card on a plan: a recipe ({@link #recipe}, read through {@link RecipeSource}) or a power card ({@link #powerSource})
+ * run by some count of machines, with its ports, settings, pins and place.
+ */
 public class Node implements PinRule.Card {
+
+    /** The power source id of a fluid tank card (cells to fluid and back), which has no count of its own. */
+    public static final String FLUID_TANK = "fluid-tank";
+    /** The power source id of a custom rate card, whose set count is always Exactly. */
+    public static final String CUSTOM_RATE = "custom-rate";
 
     /**
      * Set only while the node is built, before any graph holds it: a reader that keeps a shared plan's ids
@@ -44,8 +46,14 @@ public class Node implements PinRule.Card {
 
     public String machineName;
 
-    public Recipe.RecipeId recipeId;
-    public int handlerRecipeIndex;
+    /** The recipe the card runs, as the plan saves it; {@link RecipeRef#NONE} on a power card or a hand-built card. */
+    public RecipeRef recipe = RecipeRef.NONE;
+    /**
+     * The host's live hold on the recipe (the mod's NEI page and reader), set by the host when it makes or loads the
+     * card; never saved, never compared. Null on a card the host has not resolved: it reads nothing.
+     */
+    @Nullable
+    public transient Object hostRecipe;
 
     public final MachineConfig machineConfig;
     public final Map<RecipeProperty<?>, Object> properties = new HashMap<>();
@@ -57,7 +65,6 @@ public class Node implements PinRule.Card {
      * {@link #machineCountFixed}. Read the rule with {@link PinRule#of(Node)}: a custom rate card's count is Exactly
      * whatever this says.
      */
-    @Setter
     private boolean machineCountExact;
 
     /**
@@ -66,10 +73,14 @@ public class Node implements PinRule.Card {
      * force cells through the plan with nothing shown as set.
      */
     public boolean isMachineCountFixed() {
-        return machineCountFixed && !com.gtnhplanner.power.FluidTank.ID.equals(powerSource);
+        return machineCountFixed && !FLUID_TANK.equals(powerSource);
     }
 
     /** Sets whether a count is set. Unsetting it lets go of Exactly too: a count set again is Up to. */
+    public void setMachineCountExact(final boolean exact) {
+        machineCountExact = exact;
+    }
+
     public void setMachineCountFixed(final boolean fixed) {
         machineCountFixed = fixed;
         if (!fixed) machineCountExact = false;
@@ -83,7 +94,7 @@ public class Node implements PinRule.Card {
     /** A custom rate card's set count is always Exactly: its dial ({@link PinRule#of(PinRule.Card)}). */
     @Override
     public boolean countAlwaysExact() {
-        return com.gtnhplanner.power.CustomRate.is(this);
+        return CUSTOM_RATE.equals(powerSource);
     }
 
     /** Sets the machine count in the card's settings (no refresh: the count is not a recipe setting); any fraction. */
@@ -137,39 +148,21 @@ public class Node implements PinRule.Card {
      */
     public final transient java.util.SortedMap<String, List<int[]>> elsewhere = new java.util.TreeMap<>();
 
-    /** The recipe page this node was made from, for its first read (a page NEI cannot find again by id). */
-    private transient RecipeHandlerRef madeFrom;
-    @Getter
-    private transient PropertyProvider extractor;
-    @Getter
-    private transient List<PropertyProvider> availableExtractors = List.of();
-    @Getter
-    @Setter
-    private int extractorIndex;
-
-    public Node(final IRecipeHandler handler, final int recipeIndex, final int x, final int y) {
-        this.id = Uuid.randomUUID();
+    /**
+     * A recipe card, read at once: the host has found the recipe ({@code hostRecipe}, its own hold on it) and picked its
+     * machine profile ({@code profileId}, null for the default).
+     */
+    public Node(final Uuid id, final int x, final int y, final String machineName, final RecipeRef recipe,
+        @Nullable final Object hostRecipe, @Nullable final String profileId) {
+        this.id = id;
         this.x = x;
         this.y = y;
-
-        this.machineName = handler.getRecipeName()
-            .trim();
-        this.recipeId = Recipe.RecipeId.of(handler, recipeIndex);
-        this.handlerRecipeIndex = recipeIndex;
-        this.madeFrom = RecipeHandlerRef.of(handler, recipeIndex);
-
-        this.availableExtractors = RecipePropertyAPI.getExtractors(handler.getClass());
-        this.extractorIndex = 0;
-        if (availableExtractors.isEmpty()) {
-            this.extractor = DefaultProvider.INSTANCE;
-        } else {
-            this.extractor = pickBestExtractor(handler, recipeIndex);
-        }
-
-        final String pid = this.extractor.getProfileId(handler, recipeIndex);
-        if (pid != null && !MachineProfileRegistry.defaultId()
-            .equals(pid)) {
-            this.machineConfig = new MachineConfig(this, MachineProfileRegistry.get(pid));
+        this.machineName = machineName;
+        this.recipe = recipe;
+        this.hostRecipe = hostRecipe;
+        if (profileId != null && !MachineProfileRegistry.defaultId()
+            .equals(profileId)) {
+            this.machineConfig = new MachineConfig(this, MachineProfileRegistry.get(profileId));
         } else {
             this.machineConfig = new MachineConfig(this);
         }
@@ -192,31 +185,29 @@ public class Node implements PinRule.Card {
         return node;
     }
 
+    /**
+     * Reads the card again: a power card from its source, a recipe card from its recipe ({@link RecipeSource}). A recipe
+     * the host cannot find leaves the card as it is.
+     */
     public void refresh() {
         if (powerSource != null) {
-            PowerPorts.build(this);
+            RecipeSource.get()
+                .readPower(this);
             return;
         }
-        if (extractor == null) return;
-        // The page it was made from, while there is one; else found again by its id. Not found: left as it is.
-        RecipeHandlerRef ref = madeFrom != null ? madeFrom : com.gtnhplanner.nei.RecipeRefs.of(recipeId);
-        if (ref == null) return;
-        final IRecipeHandler handler = ref.handler;
-        final int recipeIndex = ref.recipeIndex;
-        inputs.clear();
-        outputs.clear();
-        properties.clear();
-
-        final Map<RecipeProperty<?>, Object> props = extractor.extract(this, handler, recipeIndex);
-        if (props != null && !props.isEmpty()) {
-            this.properties.putAll(props);
-        }
-
-        com.gtnhplanner.nei.SlotAlternatives.read(inputs, handler, recipeIndex);
+        if (!RecipeSource.get()
+            .readRecipe(this)) return;
         deduplicate(inputs, false);
         deduplicate(outputs, true);
         applyPicks();
         afterRefresh.accept(this);
+    }
+
+    /** The card's recipe as the shared record ({@link RecipeSource#record}); null when the host has none for it. */
+    @Nullable
+    public Web.Recipe record() {
+        return RecipeSource.get()
+            .record(this);
     }
 
     /**
@@ -284,65 +275,8 @@ public class Node implements PinRule.Card {
         ports.addAll(aggregate);
     }
 
-    /**
-     * The card on another recipe (a crusher's mob, a crop): its id, place, machine, settings and count kept, its ports
-     * read afresh. Following its wires to where their resources now are is the caller's ({@code BoardSession}).
-     */
-    public void remake(final IRecipeHandler handler, final int recipeIndex) {
-        recipeId = Recipe.RecipeId.of(handler, recipeIndex);
-        handlerRecipeIndex = recipeIndex;
-        madeFrom = RecipeHandlerRef.of(handler, recipeIndex);
-        availableExtractors = RecipePropertyAPI.getExtractors(handler.getClass());
-        extractorIndex = 0;
-        extractor = availableExtractors.isEmpty() ? DefaultProvider.INSTANCE : pickBestExtractor(handler, recipeIndex);
-        inputPicks.clear();
-        refresh();
-    }
-
-    public void switchExtractor() {
-        if (availableExtractors.size() < 2) return;
-        extractorIndex = (extractorIndex + 1) % availableExtractors.size();
-        this.extractor = availableExtractors.get(extractorIndex);
-
-        final RecipeHandlerRef ref = com.gtnhplanner.nei.RecipeRefs.of(recipeId);
-        if (ref != null) {
-            final String pid = extractor.getProfileId(ref.handler, ref.recipeIndex);
-            if (pid != null && !MachineProfileRegistry.defaultId()
-                .equals(pid)) {
-                this.machineConfig.profileId = pid;
-            } else {
-                this.machineConfig.profileId = MachineProfileRegistry.defaultId();
-            }
-        }
-
-        refresh();
-        machineConfig.seedRouteDefaults();
-    }
-
-    private PropertyProvider pickBestExtractor(final IRecipeHandler handler, final int recipeIndex) {
-        for (final PropertyProvider p : availableExtractors) {
-            if (p.canCraft(handler, recipeIndex)) return p;
-        }
-        return availableExtractors.getFirst();
-    }
-
     public int getRecipeDuration() {
-        return (int) properties.getOrDefault(RecipePropertyAPI.DURATION_TICKS, 0);
-    }
-
-    public void initExtractor() {
-        final RecipeHandlerRef ref = com.gtnhplanner.nei.RecipeRefs.of(recipeId);
-        if (ref == null) {
-            this.extractor = null;
-            this.availableExtractors = List.of();
-            return;
-        }
-        this.availableExtractors = RecipePropertyAPI.getExtractors(ref.handler.getClass());
-        if (this.extractorIndex >= this.availableExtractors.size()) {
-            this.extractorIndex = 0;
-        }
-        this.extractor = this.availableExtractors.isEmpty() ? DefaultProvider.INSTANCE
-            : this.availableExtractors.get(this.extractorIndex);
+        return (int) properties.getOrDefault(RecipeProperty.DURATION_TICKS, 0);
     }
 
     /**

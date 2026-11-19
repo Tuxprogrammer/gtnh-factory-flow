@@ -93,6 +93,7 @@ dependencies {
     shadowImplementation(project(':core-machines'))
     shadowImplementation(project(':core-power'))
     shadowImplementation(project(':core-model'))
+    shadowImplementation(project(':core-plan-solve'))
 
     // Opt-in GTNH pack recipes for the dev client: `./gradlew runClient -PgtnhRecipes`.
     // Loads the GTNH coremod (dreamcraft) so NEI shows the pack's recipe tweaks in dev.

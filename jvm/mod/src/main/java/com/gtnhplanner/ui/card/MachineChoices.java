@@ -33,7 +33,7 @@ public final class MachineChoices {
      * last picked for its tab, else the first choice.
      */
     public static Node newNode(final IRecipeHandler handler, final int recipeIndex, @Nullable final Choice choice) {
-        final Node node = new Node(handler, recipeIndex, 0, 0);
+        final Node node = com.gtnhplanner.nei.NeiRecipes.node(handler, recipeIndex, 0, 0);
         // A recipe whose machine is a non-recipe machine here (the HTGR's fuel pages): that machine's card, at the
         // settings it was last left at, the recipe's own over them.
         final com.gtnhplanner.power.game.RecipePower.Card power = com.gtnhplanner.power.game.RecipePower.of(node);
@@ -63,7 +63,7 @@ public final class MachineChoices {
 
     /** What a recipe could run on, in NEI's order. */
     public static List<Choice> of(final IRecipeHandler handler, final int recipeIndex) {
-        final Node probe = new Node(handler, recipeIndex, 0, 0);
+        final Node probe = com.gtnhplanner.nei.NeiRecipes.node(handler, recipeIndex, 0, 0);
         CardDefaults.apply(probe);
         return of(probe);
     }

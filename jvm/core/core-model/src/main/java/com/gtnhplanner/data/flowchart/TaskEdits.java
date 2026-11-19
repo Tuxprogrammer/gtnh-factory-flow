@@ -742,7 +742,8 @@ public final class TaskEdits {
     public static String compass(final double dx, final double dz) {
         if (Math.abs(dx) < 0.5 && Math.abs(dz) < 0.5) return "";
         // 0 east, counter-clockwise in the game's x and -z.
-        final double deg = Math.toDegrees(Math.atan2(-dz, dx));
+        // Math.toDegrees written out (the JDK's own: the angle times 180 / pi), which every target computes alike.
+        final double deg = Math.atan2(-dz, dx) * (180.0 / Math.PI);
         final int sector = (int) Math.floorMod(Math.round(deg / 45), 8);
         return switch (sector) {
             case 0 -> "east";

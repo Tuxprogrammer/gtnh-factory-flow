@@ -18,8 +18,6 @@ import com.gtnhplanner.core.model.PlanHost;
 import com.gtnhplanner.data.flowchart.balancer.BalanceMode;
 import com.gtnhplanner.data.flowchart.balancer.ChoiceKey;
 
-import lombok.Getter;
-import lombok.Setter;
 
 public class Graph {
 
@@ -45,27 +43,16 @@ public class Graph {
     public final SortedMap<Uuid, BoardGroup> boardGroups = new TreeMap<>();
 
     /** The plan's name; changing it is an edit ({@link #setName}). */
-    @Getter
     private String name;
 
-    @Getter
-    @Setter
     private float zoom = 1f;
-    @Getter
-    @Setter
     private float panX;
-    @Getter
-    @Setter
     private float panY;
-    @Getter
-    @Setter
     private boolean snapToGrid;
 
     /**
      * When the plan was last open (ms since the epoch), so menus can list the most recent first. Saved with the slot.
      */
-    @Getter
-    @Setter
     private long lastOpen;
 
     /**
@@ -105,21 +92,16 @@ public class Graph {
     public final List<Tasks.Comment> taskComments = new ArrayList<>();
 
     /** Which view the plan opens on: {@link Tasks#PLAN}, {@link Tasks#TASKS} (a task board), or null for the board. */
-    @Getter
     @Nullable
     private String primaryView;
 
     /** Whether the plan has a tab. A closed plan is still kept, in the library's My plans. Saved with the slot. */
-    @Getter
-    @Setter
     private boolean open = true;
 
     /**
      * The post on gtnhplanner.com this plan went up as (its id there), so posting it again updates that post; null when
      * it has none. Saved with the slot, never in a plan code.
      */
-    @Getter
-    @Setter
     @Nullable
     private String postId;
 
@@ -127,8 +109,6 @@ public class Graph {
      * The cloud plan this slot was uploaded as (its doc key, {@code <ownerId>:<designId>}), so it is never uploaded
      * twice; null while it is only on this computer. Saved with the slot, never in a plan code.
      */
-    @Getter
-    @Setter
     @Nullable
     private String cloudKey;
 
@@ -137,8 +117,6 @@ public class Graph {
      * first asked, saved with the slot, never in a plan code. A plan that goes to the account keeps it, and is still
      * found by it.
      */
-    @Getter
-    @Setter
     @Nullable
     private String localId;
 
@@ -156,11 +134,9 @@ public class Graph {
     }
 
     /** A line or two about the plan: its post's description. Saved with the slot. */
-    @Getter
     private String description = "";
 
     /** The plan's face: a resource key ({@code Resources}), shown on its tile and its post; null for none. */
-    @Getter
     @Nullable
     private String icon;
 
@@ -168,11 +144,8 @@ public class Graph {
      * A slot that could not be read when the plans were loaded: its saved data, written back as it was while the slot
      * stays empty (so a failed read never costs the plan), and read again when the slot is opened. Null otherwise.
      */
-    @Getter
-    @Setter
     private transient String unreadable;
 
-    @Getter
     private BalanceMode balanceMode = BalanceMode.AUTO;
 
     /**
@@ -670,5 +643,105 @@ public class Graph {
 
     public Collection<Note> getNotes() {
         return notes.values();
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public float getZoom() {
+        return zoom;
+    }
+
+    public void setZoom(final float zoom) {
+        this.zoom = zoom;
+    }
+
+    public float getPanX() {
+        return panX;
+    }
+
+    public void setPanX(final float panX) {
+        this.panX = panX;
+    }
+
+    public float getPanY() {
+        return panY;
+    }
+
+    public void setPanY(final float panY) {
+        this.panY = panY;
+    }
+
+    public boolean isSnapToGrid() {
+        return snapToGrid;
+    }
+
+    public void setSnapToGrid(final boolean snapToGrid) {
+        this.snapToGrid = snapToGrid;
+    }
+
+    public long getLastOpen() {
+        return lastOpen;
+    }
+
+    public void setLastOpen(final long lastOpen) {
+        this.lastOpen = lastOpen;
+    }
+
+    public String getPrimaryView() {
+        return primaryView;
+    }
+
+    public boolean isOpen() {
+        return open;
+    }
+
+    public void setOpen(final boolean open) {
+        this.open = open;
+    }
+
+    public String getPostId() {
+        return postId;
+    }
+
+    public void setPostId(final String postId) {
+        this.postId = postId;
+    }
+
+    public String getCloudKey() {
+        return cloudKey;
+    }
+
+    public void setCloudKey(final String cloudKey) {
+        this.cloudKey = cloudKey;
+    }
+
+    public String getLocalId() {
+        return localId;
+    }
+
+    public void setLocalId(final String localId) {
+        this.localId = localId;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public String getIcon() {
+        return icon;
+    }
+
+    public String getUnreadable() {
+        return unreadable;
+    }
+
+    public void setUnreadable(final String unreadable) {
+        this.unreadable = unreadable;
+    }
+
+    public BalanceMode getBalanceMode() {
+        return balanceMode;
     }
 }

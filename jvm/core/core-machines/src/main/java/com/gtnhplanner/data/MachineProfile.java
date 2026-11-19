@@ -7,10 +7,10 @@ import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 
-import com.gtnhplanner.api.RecipePropertyAPI;
 import com.gtnhplanner.core.base.CoreSettings;
 import com.gtnhplanner.data.effect.EffectComputer;
 import com.gtnhplanner.data.effect.EffectResult;
+import com.gtnhplanner.data.properties.RecipeProperty;
 
 public record MachineProfile(String id, String displayName, List<SettingDef<?>> settings,
     EffectComputer effectComputer) {
@@ -25,7 +25,7 @@ public record MachineProfile(String id, String displayName, List<SettingDef<?>> 
         private final String id;
         private final String displayName;
         private final List<SettingDef<?>> settings = new ArrayList<>();
-        private EffectComputer effectComputer=(s,ctx)->{final Object dur=ctx.properties().get(RecipePropertyAPI.DURATION_TICKS);return new EffectResult(dur instanceof
+        private EffectComputer effectComputer=(s,ctx)->{final Object dur=ctx.properties().get(RecipeProperty.DURATION_TICKS);return new EffectResult(dur instanceof
         final Number n?n.intValue():0,0,1);
     };
 

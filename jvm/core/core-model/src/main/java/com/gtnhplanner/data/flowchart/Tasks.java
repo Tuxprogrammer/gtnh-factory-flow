@@ -564,7 +564,7 @@ public final class Tasks {
                 .isNumber())
             return null;
         final double d = e.getAsDouble();
-        return d == Math.rint(d) && Math.abs(d) <= Integer.MAX_VALUE ? (int) d : null;
+        return d == Math.floor(d) && Math.abs(d) <= Integer.MAX_VALUE ? (int) d : null;
     }
 
     private static String orEmpty(@Nullable final String s) {

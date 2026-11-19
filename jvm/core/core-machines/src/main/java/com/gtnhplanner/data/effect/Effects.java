@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.function.ToIntBiFunction;
 
-import com.gtnhplanner.api.RecipePropertyAPI;
 import com.gtnhplanner.data.MachineProfile;
 import com.gtnhplanner.data.RecipeContext;
 import com.gtnhplanner.data.properties.RecipeProperty;
@@ -19,7 +18,7 @@ public final class Effects {
 
     public static EffectComputer durationFromHandler() {
         return (s, ctx) -> {
-            final int duration = (int) (Integer) ctx.getOrDefault(RecipePropertyAPI.DURATION_TICKS, 0);
+            final int duration = (int) (Integer) ctx.getOrDefault(RecipeProperty.DURATION_TICKS, 0);
             return new EffectResult(duration, 0, 1);
         };
     }
@@ -27,7 +26,7 @@ public final class Effects {
     public static EffectComputer durationFromTotal(final RecipeProperty<? extends Number> prop,
         final String rateKey, final int defaultRate) {
         return (s, ctx) -> {
-            final Object dur = ctx.properties().get(RecipePropertyAPI.DURATION_TICKS);
+            final Object dur = ctx.properties().get(RecipeProperty.DURATION_TICKS);
             int duration = dur instanceof final Number n ? n.intValue() : 0;
             if (duration <= 0) {
                 final int rate = MachineProfile.getInt(s, rateKey, defaultRate);
@@ -42,7 +41,7 @@ public final class Effects {
 
     public static EffectComputer durationFromFormula(final ToIntBiFunction<RecipeContext, Map<String, Object>> formula) {
         return (s, ctx) -> {
-            final Object dur = ctx.properties().get(RecipePropertyAPI.DURATION_TICKS);
+            final Object dur = ctx.properties().get(RecipeProperty.DURATION_TICKS);
             int duration = dur instanceof final Number n ? n.intValue() : 0;
             if (duration <= 0) {
                 duration = Math.max(1, formula.applyAsInt(ctx, s));
@@ -55,14 +54,14 @@ public final class Effects {
         final EffectComputer delegate) {
         return (s, ctx) -> {
             if (condition.test(s)) return delegate.compute(s, ctx);
-            final Object dur = ctx.properties().get(RecipePropertyAPI.DURATION_TICKS);
+            final Object dur = ctx.properties().get(RecipeProperty.DURATION_TICKS);
             return new EffectResult(dur instanceof final Number n ? n.intValue() : 0, 0, 1);
         };
     }
 
     public static EffectComputer clearCost() {
         return (s, ctx) -> {
-            final Object dur = ctx.properties().get(RecipePropertyAPI.DURATION_TICKS);
+            final Object dur = ctx.properties().get(RecipeProperty.DURATION_TICKS);
             final int d = dur instanceof final Number n ? n.intValue() : 0;
             return new EffectResult(d, 0, 1);
         };

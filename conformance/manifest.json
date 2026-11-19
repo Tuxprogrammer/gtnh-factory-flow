@@ -25,9 +25,11 @@
       "generator": "website-out.json: GTNH_WRITE_GOLDEN=1 vitest run src/test-support/format-conformance.test.ts; mod-out.json: ./gradlew :core-view:test --tests '*FmtConformanceTest*' -PwriteVectors; mod-recipe-overlay-out.json: ./gradlew :mod:test --tests '*RecipeOverlayFormatTest*' -PwriteVectors; COMPARISON.md: node tools/conformance/format/compare.mjs; then node tools/conformance/manifest.mjs --write"
     },
     "layout": {
-      "specifies": "The wire router: every router call the website's router tests make (router-tests.json: solves with boards in and routes out, IncrementalRouter step sequences, cardRimDocks vectors) and the reference boards (boards.json.gz: the layout benchmark's plans as boxes and wires, each routed fresh, its busiest box dragged three beats and dropped), all answered by the website's TypeScript router; the Java router (core-layout) must give the same routes and search work to the bit.",
+      "specifies": "The wire router: every router call the website's router tests make (router-tests.json: solves with boards in and routes out, IncrementalRouter step sequences, cardRimDocks vectors) and the reference boards (boards.json.gz: the layout benchmark's plans as boxes and wires, each routed fresh, its busiest box dragged three beats and dropped), all answered by the website's TypeScript router; the Java router (core-layout) must give the same routes and search work to the bit; and the arrange (arrange.json.gz: every arrange call the website's arrange tests make, and the reference boards up to 80 wires arranged with the router judge, stage by stage and whole, answered by the website's Arrange, plus the optimiser's searches, free placements and proxy scores as it calls them); the Java Arrange (core-layout) must give the same positions, islands and steering stops to the bit.",
       "readers": [
-        "jvm: core-layout com.gtnhplanner.core.layout.RouterConformanceTest"
+        "jvm: core-layout com.gtnhplanner.core.layout.RouterConformanceTest",
+        "jvm: core-layout com.gtnhplanner.core.layout.arrange.ArrangeConformanceTest",
+        "jvm: core-layout com.gtnhplanner.core.layout.arrange.ArrangePartsConformanceTest"
       ],
       "generator": "node tools/conformance/layout/generate.mjs [--boards jvm/mod/build/bench/versus/boards]"
     },
@@ -144,6 +146,11 @@
       "area": "format",
       "bytes": 7455,
       "sha256": "e4a4041cd55e4c64491ba45e3925fcde73d659774643889c34ef115120841c0d"
+    },
+    "layout/arrange.json.gz": {
+      "area": "layout",
+      "bytes": 163879,
+      "sha256": "25c2d4c5422d5e476f42ff00d1a6aa4c7487eb4db31bae86c35ba6db620493a5"
     },
     "layout/boards.json.gz": {
       "area": "layout",

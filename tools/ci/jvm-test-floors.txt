@@ -6,6 +6,7 @@
 total 1200
 mod 900
 core-base 5
+core-layout 500
 core-machines 100
 core-power 8
 core-view 20

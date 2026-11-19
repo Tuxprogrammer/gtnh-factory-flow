@@ -113,8 +113,9 @@ public final class WireMetrics {
         return new int[] { bends45, bends90, bendsSharp };
     }
 
+    /** A segment of a wire, with its box and its length (hypot of dx, dy), worked out once. */
     private record Segment(GridPoint a, GridPoint b, double dx, double dy, double left, double right, double top,
-        double bottom) {}
+        double bottom, double length) {}
 
     /** {@code measureWireRoutes} over routed wires. */
     public static Measure measureRoutes(final Iterable<GridRoutedEdge> routes) {
@@ -126,23 +127,40 @@ public final class WireMetrics {
     /** {@code measureWireRoutes}: crossings counted at bends and run ends too, touching ends excepted. */
     public static Measure measure(final List<Measured> routes) {
         final List<List<Segment>> segments = new ArrayList<>(routes.size());
-        for (final Measured r : routes) {
+        // Each wire's box (left, right, top, bottom over its segments' boxes): two wires whose boxes are apart have no
+        // pair of segments close enough to test, so the pair is passed over whole. Math.min/max carry a NaN through,
+        // so a wire with one is never passed over.
+        final double[] boxes = new double[4 * routes.size()];
+        for (int index = 0; index < routes.size(); index++) {
             final List<Segment> list = new ArrayList<>();
-            final List<GridPoint> pts = r.points();
+            final List<GridPoint> pts = routes.get(index)
+                .points();
+            double left = Double.POSITIVE_INFINITY, right = Double.NEGATIVE_INFINITY, top = Double.POSITIVE_INFINITY,
+                bottom = Double.NEGATIVE_INFINITY;
             for (int i = 1; i < pts.size(); i++) {
                 final GridPoint a = pts.get(i - 1), b = pts.get(i);
-                list.add(
-                    new Segment(
-                        a,
-                        b,
-                        b.x() - a.x(),
-                        b.y() - a.y(),
-                        Math.min(a.x(), b.x()),
-                        Math.max(a.x(), b.x()),
-                        Math.min(a.y(), b.y()),
-                        Math.max(a.y(), b.y())));
+                final double dx = b.x() - a.x(), dy = b.y() - a.y();
+                final Segment s = new Segment(
+                    a,
+                    b,
+                    dx,
+                    dy,
+                    Math.min(a.x(), b.x()),
+                    Math.max(a.x(), b.x()),
+                    Math.min(a.y(), b.y()),
+                    Math.max(a.y(), b.y()),
+                    JsMath.hypot(dx, dy));
+                list.add(s);
+                left = Math.min(left, s.left);
+                right = Math.max(right, s.right);
+                top = Math.min(top, s.top);
+                bottom = Math.max(bottom, s.bottom);
             }
             segments.add(list);
+            boxes[4 * index] = left;
+            boxes[4 * index + 1] = right;
+            boxes[4 * index + 2] = top;
+            boxes[4 * index + 3] = bottom;
         }
         final double[] weights = new double[routes.size()];
         for (int i = 0; i < routes.size(); i++) weights[i] = wireWeight(
@@ -151,7 +169,7 @@ public final class WireMetrics {
         double length = 0, weightedLength = 0;
         for (int index = 0; index < segments.size(); index++) {
             for (final Segment s : segments.get(index)) {
-                final double run = JsMath.hypot(s.dx, s.dy);
+                final double run = s.length;
                 length += run;
                 weightedLength += run * weights[index];
             }
@@ -172,13 +190,17 @@ public final class WireMetrics {
         double weightedCrossings = 0;
         final List<Crossing> events = new ArrayList<>();
         for (int i = 0; i < routes.size(); i++) for (int j = i + 1; j < routes.size(); j++) {
+            // The segments' own test below, on the two wires' boxes: every segment box lies inside its wire's.
+            if (boxes[4 * i + 1] < boxes[4 * j] - EPS || boxes[4 * j + 1] < boxes[4 * i] - EPS
+                || boxes[4 * i + 3] < boxes[4 * j + 2] - EPS
+                || boxes[4 * j + 3] < boxes[4 * i + 2] - EPS) continue;
             final List<GridPoint> contacts = new ArrayList<>();
             for (final Segment a : segments.get(i)) for (final Segment b : segments.get(j)) {
                 if (a.right < b.left - EPS || b.right < a.left - EPS
                     || a.bottom < b.top - EPS
                     || b.bottom < a.top - EPS) continue;
                 final double den = a.dx * b.dy - a.dy * b.dx;
-                if (Math.abs(den) < EPS * JsMath.hypot(a.dx, a.dy) * JsMath.hypot(b.dx, b.dy) || den == 0) continue;
+                if (Math.abs(den) < EPS * a.length * b.length || den == 0) continue;
                 final double wx = b.a.x() - a.a.x(), wy = b.a.y() - a.a.y();
                 final double t = (wx * b.dy - wy * b.dx) / den, u = (wx * a.dy - wy * a.dx) / den;
                 if (t < -EPS || t > 1 + EPS || u < -EPS || u > 1 + EPS) continue;

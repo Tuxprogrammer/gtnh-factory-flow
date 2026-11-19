@@ -68,13 +68,11 @@ public final class BenchRender {
         g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
         g.setColor(new Color(0xC8CAD0));
         g.drawString(
-            r.metrics()
-                .line()
-                + String.format(
-                    "  route %.1f ms  fellBack %d",
-                    r.millis(),
-                    r.fellBack()
-                        .size()),
+            line(r.metrics()) + String.format(
+                "  route %.1f ms  fellBack %d",
+                r.millis(),
+                r.fellBack()
+                    .size()),
             12,
             38);
         final double fx0 = x0, fy0 = y0;
@@ -154,5 +152,25 @@ public final class BenchRender {
             u = ((c[0] - a[0]) * ry - (c[1] - a[1]) * rx) / den;
         if (t <= 0 || t >= 1 || u <= 0 || u >= 1) return null;
         return new double[] { a[0] + t * rx, a[1] + t * ry };
+    }
+
+    /** The metrics as one line, for the picture's caption. */
+    private static String line(final com.gtnhplanner.layout.RouteMetrics.Result m) {
+        return String.format(
+            java.util.Locale.ROOT,
+            "points %.0f  crossings %d  overlap %.0f  bends %d/%d/%d  length %.0f  excess %.0f  backtrack %.0f  jogs %d  wrongSides %d  boxHits %.0f  sharedEnds %d",
+            m.points(),
+            m.crossings(),
+            m.overlap(),
+            m.bends45(),
+            m.bends90(),
+            m.sharp(),
+            m.length(),
+            m.excess(),
+            m.backtrack(),
+            m.jogs(),
+            m.wrongSides(),
+            m.boxHits(),
+            m.sharedEnds());
     }
 }

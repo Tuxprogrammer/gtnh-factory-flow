@@ -11,6 +11,8 @@ export default defineConfig({
       "src/components/flow/grid-edge-router.test.ts",
       "src/components/flow/incremental-router.test.ts",
       "tools/conformance/layout/boards.capture.ts",
+      "src/lib/board-arrange.test.ts",
+      "tools/conformance/layout/arrange.capture.ts",
     ],
     setupFiles: [path.resolve(__dirname, "capture-setup.ts")],
     // The biggest reference board (600 wires) takes most of a minute in the TypeScript router.

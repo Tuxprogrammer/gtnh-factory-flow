@@ -2,6 +2,7 @@ import { CROP_FARM_PLACEHOLDER_RECIPE_ID, createCropFarmPlaceholderRecipe } from
 import { getGameRates } from "./game-rates";
 import { getFusionMachine, getFusionRecipeMark, isFusionRecipe, normalizeFusionHandler } from "@/lib/machines/fusion";
 import { TGS_MACHINE_TYPE, tgsEuPerTick } from "@/lib/machines/tree-growth-simulator";
+import { steamMachineRunsRecipe } from "@/lib/machines/steam-recipe-limits";
 import type {
   FactoryNode,
   MachineConfigControl,
@@ -54,6 +55,7 @@ export function getRecipeMachineHandlers(
     const normalized = normalizeFusionHandler(normalizeMachineHandler(handler), recipe);
     const fusion = getFusionMachine(normalized.machineType);
     if (fusion && fusionMark !== undefined && fusion.mark < fusionMark) continue;
+    if (isSteamMachineHandler(normalized) && !steamMachineRunsRecipe(normalized, recipe)) continue;
     const familyId = `${normalized.kind ?? "single"}:${slug(normalized.label)}`;
     if (!handlersByFamily.has(familyId)) {
       handlersByFamily.set(familyId, normalized);

@@ -2,6 +2,7 @@ import type { FactoryProject, MachineTier, ThroughputResult } from "./types";
 import { getSelectedMachineHandler } from "./recipe-rules";
 import { applyRecipeInputOverrides } from "./recipe-input-overrides";
 import { isCustomRateRecipe } from "./custom-rate";
+import { pinRuleOf } from "./pin-rule";
 import { listNodeSections } from "./shared-machine";
 import { getVoltageTierIndex, isVoltageTierName } from "./tiers";
 import {
@@ -128,6 +129,11 @@ export function buildMachineList(
     // Parallel processing affects draw, never the number of physical machines.
     const parallel = Math.max(1, node.parallel);
     const runningCount = solving || usage > 0 ? count : 0;
+    // Peak is every machine the card has drawing at once: a plain card's set count (Up to, Exactly) is those machines,
+    // as its power row bills it; the solved count is only what runs, which is the average. A crop card's pin is seeds,
+    // and a shared card's power row bills each recipe at its solved machines, so both keep the solved count.
+    const pinned = solving && !crop && sections.length === 1 && pinRuleOf(node, recipe) !== "any";
+    const peakCount = pinned ? Math.max(node.solvePin ?? 0, runningCount) : runningCount;
     const report = sections[0]?.report;
     const steam = sections[0]?.steam;
     const peakDraw = Math.max(0, ...sections.map((part) => part.report?.drawEuT ?? 0));
@@ -152,7 +158,7 @@ export function buildMachineList(
     const madeEuT =
       powerEuT !== undefined && powerEuT >= 0 ? powerEuT * runningCount * parallel : undefined;
     const euT = report
-      ? peakDraw * runningCount * parallel
+      ? peakDraw * peakCount * parallel
       : cropEuT !== undefined
         ? solving || usage > 0
           ? cropEuT
@@ -168,7 +174,7 @@ export function buildMachineList(
     const steamLs = steam
       ? Math.max(...sections.map((part) => part.steam?.drawSteamPerTick ?? 0)) *
         20 *
-        runningCount *
+        peakCount *
         parallel
       : undefined;
     const avgSteamLs = steam

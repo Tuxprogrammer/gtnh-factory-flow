@@ -16,7 +16,7 @@ computes in float: replicate it.
 - Never add an entry by guessing. Their voltage tiers start at LV = 0 (ours at ULV = 0, so
   their `voltageTier + 1` is our ordinal), and their `speed` is throughput (ours is a
   duration multiplier, `1 / speed`). `machine-table.test.ts` checks every entry against
-  `__fixtures__/reference-coefficients.json` and says how to regenerate it; run it.
+  `conformance/machines/reference-coefficients.json` and says how to regenerate it; run it.
 - `ctx.tier(id)` is an option's position; `ctx.value(id)` is the number behind a count
   knob. Formulas that read a count must use `value`.
 - A table machine that declares `speed` or `power` seeds from the recipe's base stats

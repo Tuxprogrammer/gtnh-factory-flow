@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { byOrder, orderBetween } from "./order-key";
-import vectorsJson from "./order-key-vectors.json";
+import { readConformanceJson } from "@/test-support/conformance";
+
+const vectorsJson = readConformanceJson("tasks", "order-key-vectors.json");
 
 describe("fractional order keys", () => {
   it("makes a key for an empty list, then after and before it", () => {

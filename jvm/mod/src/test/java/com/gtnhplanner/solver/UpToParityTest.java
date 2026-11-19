@@ -17,13 +17,15 @@ import org.junit.jupiter.api.TestFactory;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.gtnhplanner.conformance.Conformance;
 import com.gtnhplanner.data.flowchart.balancer.Balancer;
 import com.gtnhplanner.dev.SolveInputJson;
 import com.gtnhplanner.harness.GtnhFlowLoader;
 
 /**
  * The Up to rule answers the same in the mod as on the website (docs/design/up-to.md): every plan the website's
- * {@code parity/up-to-export.test.ts} wrote under {@code solver-corpus-upto/} (its hand-built Up to plans, and every
+ * {@code parity/up-to-export.test.ts} wrote under {@code conformance/solver/up-to/} (its hand-built Up to plans, and
+ * every
  * corpus plan with each exact count turned Up to) is solved here and its whole answer, the read-out, its rings and what
  * a buffer banks included, compared with the website's by the golden rules ({@link SolverCorpus#differences}:
  * floating-point
@@ -31,7 +33,7 @@ import com.gtnhplanner.harness.GtnhFlowLoader;
  */
 class UpToParityTest {
 
-    private static final Path PLANS = Path.of("src/test/resources/solver-corpus-upto");
+    private static final Path PLANS = Conformance.path("solver/up-to");
 
     /**
      * Plans the two engines answer alike only to within the LP's own tolerance, with why. In each the website's

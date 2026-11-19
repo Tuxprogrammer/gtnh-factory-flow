@@ -5,7 +5,12 @@
  * for the power cards; the decoded model is docs/power-planner-math.md.
  *
  *   node tools/power-planner-extract.mjs "path/to/Copy of GTNH Power Planner 2.9.xlsx"
+ *   node tools/power-planner-extract.mjs --reapply
  *
+ * --reapply reads the committed JSON instead of the workbook and runs the Java
+ * corrections again (all but the rotor one, which reads the Rotor Data sheet).
+ * Every correction is idempotent, so a reapply with no change to this file
+ * writes the same bytes; use it to land a new correction without the workbook.
  * (the 2.9 copy whose EOH sheet is "13. EOH"; the later copies renumber it)
  *
  * Writes jvm/core/core-power/src/main/resources/assets/gtnhplanner/power/power-planner-data.json (the source; node tools/sync-core-tables.mjs --write copies it to src/lib/power/data/). Deterministic: same
@@ -19,9 +24,10 @@ import { fileURLToPath } from "node:url";
 
 const xlsxPath = process.argv[2];
 if (!xlsxPath) {
-  console.error("Usage: node tools/power-planner-extract.mjs <workbook.xlsx>");
+  console.error("Usage: node tools/power-planner-extract.mjs <workbook.xlsx> | --reapply");
   process.exit(1);
 }
+const reapply = xlsxPath === "--reapply";
 const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outPath = path.join(
   repoRoot,
@@ -95,7 +101,7 @@ function readZipEntries(buffer) {
 
 // ------------------------------------------------------------- sheet parsing
 
-const zip = readZipEntries(fs.readFileSync(xlsxPath));
+const zip = reapply ? null : readZipEntries(fs.readFileSync(xlsxPath));
 
 function decodeXml(text) {
   return text
@@ -108,7 +114,7 @@ function decodeXml(text) {
 }
 
 const sharedStrings = [];
-{
+if (!reapply) {
   const xml = zip.read("xl/sharedStrings.xml");
   for (const m of xml.matchAll(/<si(?:\/>|>([\s\S]*?)<\/si>)/g)) {
     const body = m[1] ?? "";
@@ -118,7 +124,7 @@ const sharedStrings = [];
 }
 
 const sheetPathByName = new Map();
-{
+if (!reapply) {
   const workbook = zip.read("xl/workbook.xml");
   const rels = zip.read("xl/_rels/workbook.xml.rels");
   const relTargets = new Map();
@@ -214,12 +220,13 @@ function fuelTable(cells, range, fields) {
 
 // ------------------------------------------------------------------ extract
 
-const fuelData = loadSheet("Fuel Data");
-const rotorData = loadSheet("Rotor Data");
-const singleblocks = loadSheet("Singleblocks");
-const eoh = loadSheet("13. EOH") ?? null;
+const fuelData = reapply ? null : loadSheet("Fuel Data");
+const rotorData = reapply ? null : loadSheet("Rotor Data");
+const singleblocks = reapply ? null : loadSheet("Singleblocks");
+const eoh = reapply ? null : (loadSheet("13. EOH") ?? null);
 
-const data = {
+let data = reapply ? JSON.parse(fs.readFileSync(outPath, "utf8")) : undefined;
+data ??= {
   source: "GTNH Power Planner 2.9 (community spreadsheet by Fox)",
   extractedAt: new Date().toISOString().slice(0, 10),
 
@@ -640,7 +647,9 @@ function correctReactors() {
 }
 
 correctEngineFuels();
-correctRotors();
+if (!reapply) {
+  correctRotors();
+}
 correctSteamMakers();
 correctReactors();
 

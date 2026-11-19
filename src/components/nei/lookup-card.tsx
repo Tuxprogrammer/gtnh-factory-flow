@@ -30,7 +30,8 @@ import {
 } from "@/lib/nei/alternative-cycle";
 import type { RecipeInputPicks } from "@/store/factory-store";
 import { useFactoryStore } from "@/store/factory-store";
-import { buildPowerSettingsReader, type PowerSourceDefinition } from "@/lib/power/types";
+import { computePowerModel } from "@/lib/power/power-core";
+import type { PowerSourceDefinition } from "@/lib/power/types";
 import type { PowerStencilHit } from "@/lib/power/power-search";
 import { resolvePowerResource } from "@/lib/power/planner-data";
 import { formatAmount } from "@/lib/power/sources/helpers";
@@ -118,7 +119,7 @@ export function recipeCardRows(recipe: RecipeSummary): CardRows {
 export function powerCardRows(hit: PowerStencilHit): CardRows {
   let model: ReturnType<PowerSourceDefinition["compute"]> | undefined;
   try {
-    model = hit.source.compute(buildPowerSettingsReader(hit.source, hit.settings));
+    model = computePowerModel(hit.source, hit.settings);
   } catch {
     model = undefined;
   }
@@ -420,7 +421,7 @@ export function LookupPowerCard({
   const headPress = useLongPress(onCardMenu);
   const model = useMemo(() => {
     try {
-      return hit.source.compute(buildPowerSettingsReader(hit.source, hit.settings));
+      return computePowerModel(hit.source, hit.settings);
     } catch {
       return undefined;
     }

@@ -21,6 +21,7 @@ import {
 } from "@/lib/viewport-breakpoints";
 import { Analytics } from "./Analytics";
 import { AnalyticsHeartbeat } from "./AnalyticsHeartbeat";
+import { PowerCoreWarm } from "@/components/PowerCoreWarm";
 import { WhatsNewGate } from "@/components/WhatsNewGate";
 import { GlobalTitleTooltip } from "@/components/nei/GlobalTitleTooltip";
 import "./globals.css";
@@ -253,6 +254,7 @@ export default function RootLayout({
         <GlobalTitleTooltip />
         <Analytics />
         <AnalyticsHeartbeat />
+        <PowerCoreWarm />
       </body>
     </html>
   );

@@ -82,7 +82,9 @@
  * doubled the frame time of a pan over a few hundred cards. Below 0.12 a name would be under 6 px tall: it scales to
  * nothing there and is not painted, and its width stops following the zoom, so a whole plan in view lays none out.
  */
-.factory-flow-board[data-detail-level="glance"] .cc-card[data-shell] > .cc-glance[data-name]::before {
+.factory-flow-board[data-detail-level="glance"]
+  .cc-card[data-shell]
+  > .cc-glance[data-name]::before {
   margin-top: 0;
   width: calc(100% * max(var(--board-zoom, 1), 0.12));
   max-width: none;

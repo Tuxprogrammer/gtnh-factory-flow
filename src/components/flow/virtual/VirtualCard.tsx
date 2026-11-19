@@ -209,7 +209,7 @@ export function CardShell({
     }
     return () => wrapper.removeAttribute(FAR_ATTRIBUTE);
   }, [far]);
-  const glance = glanceFace(face.art ? `url(${face.art})` : undefined, face.bar);
+  const glance = glanceFace(face.art ? `url(${face.art})` : undefined, face.bar, face.product);
   const internal = storeApi.getState().nodeLookup.get(nodeId);
   const measured = internal?.measured;
   const handles = markers && !far ? internal?.internals.handleBounds : undefined;
@@ -256,6 +256,7 @@ export function CardShell({
         data-count={face.count}
         data-bar={glance["data-bar"]}
         data-tone={glance["data-tone"]}
+        data-product={glance["data-product"]}
         aria-hidden
         style={glance.style}
       >

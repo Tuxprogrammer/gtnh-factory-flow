@@ -30,6 +30,11 @@ function urlOf(css: string): string | undefined {
   return m?.[1];
 }
 
+/** The last image of a layered background: the glance layer's picture sits under its product (glance.ts). */
+function lastUrlOf(css: string): string | undefined {
+  return [...css.matchAll(/url\((?:"|')?([^"')]+)(?:"|')?\)/g)].at(-1)?.[1];
+}
+
 /** What a card's or drawer's own DOM carries that its node data does not: the picture, the drawer's role and rate. */
 export function readExtras(
   root: Element | null,
@@ -42,7 +47,7 @@ export function readExtras(
   if (!el) return undefined;
   if (type === "recipeNode") {
     const glance = el.querySelector<HTMLElement>(".cc-glance");
-    return { art: glance ? urlOf(glance.style.backgroundImage) : undefined };
+    return { art: glance ? lastUrlOf(glance.style.backgroundImage) : undefined };
   }
   if (type === "storageNode") {
     const cd = el.querySelector<HTMLElement>(".cd");

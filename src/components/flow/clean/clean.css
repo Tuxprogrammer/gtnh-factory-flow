@@ -1099,6 +1099,60 @@
 .cc-glance[data-tone="limited"] {
   --glance-tone: #f472b6;
 }
+/* What the card makes (glance.ts `glanceProduct`): its first output's icon in the top-left corner, the first
+   background layer of the same element, 120 card pixels like the bar's sizes, so a zoom re-lays nothing out and the
+   board gains no element. A fluid's texture fills the middle half of its canvas: drawn twice the size, half a size
+   up and left, it lands where an item's would. Plain values, no custom properties: every shell on screen restyles
+   on each zoom step. */
+.cc-glance[data-product] {
+  background-position:
+    left top,
+    center;
+  background-size:
+    120px 120px,
+    contain;
+}
+.cc-glance[data-product="fluid"] {
+  background-position:
+    left -60px top -60px,
+    center;
+  background-size:
+    240px 240px,
+    contain;
+}
+.cc-glance[data-bar][data-product] {
+  background-position:
+    left 12px top 12px,
+    left bottom,
+    left bottom,
+    center calc(50% - var(--glance-bar-h) / 2);
+  background-size:
+    120px 120px,
+    var(--glance-fill) var(--glance-bar-h),
+    100% var(--glance-bar-h),
+    auto
+      min(
+        calc(100% - var(--glance-bar-h) - 18px),
+        calc(var(--glance-art-w) / var(--glance-art-ratio, 1))
+      );
+  background-origin: border-box, border-box, border-box, border-box;
+}
+.cc-glance[data-bar][data-product="fluid"] {
+  background-position:
+    left -48px top -48px,
+    left bottom,
+    left bottom,
+    center calc(50% - var(--glance-bar-h) / 2);
+  background-size:
+    240px 240px,
+    var(--glance-fill) var(--glance-bar-h),
+    100% var(--glance-bar-h),
+    auto
+      min(
+        calc(100% - var(--glance-bar-h) - 18px),
+        calc(var(--glance-art-w) / var(--glance-art-ratio, 1))
+      );
+}
 /* "Names when zoomed out": the card's name just under it, at a constant screen size (the mod draws it under the card). */
 .cc-glance[data-name]::before {
   content: attr(data-name);

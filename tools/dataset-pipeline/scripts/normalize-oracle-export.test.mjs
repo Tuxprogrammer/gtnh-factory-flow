@@ -67,6 +67,8 @@ describe("a recipe map that runs on several amps", () => {
   it("keeps the whole EU/t for a one-amp map or an older export that names no amps", () => {
     expect(tierOf(1, 48)).toBe("MV");
     expect(tierOf(undefined, 48)).toBe("MV");
+  });
+});
 
 describe("a crafting recipe with an ingredient that names nothing", () => {
   // GregTech registers "hammer + gemFlawlessFluix -> 2 Fluix Crystal" although no

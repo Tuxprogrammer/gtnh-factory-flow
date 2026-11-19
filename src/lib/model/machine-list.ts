@@ -108,7 +108,7 @@ export function buildMachineList(
       return {
         steam,
         report:
-          effective && !steam && hasPowerReport(effective)
+          effective && !steam && hasPowerReport(effective, view)
             ? getNodePowerReport(effective, view)
             : undefined,
         required: nonnegative(result.nodes[view.id]?.theoreticalMachinesRequired ?? 0),

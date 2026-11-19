@@ -173,7 +173,7 @@ export function calculateThroughput(
     // nameplate so ports and wires keep their shape, and the equilibrium pins
     // the node to zero the same way a bare slot does. The card's power cell
     // is what says why.
-    const powerReport = hasPowerReport(nodeRecipe)
+    const powerReport = hasPowerReport(nodeRecipe, node)
       ? getNodePowerReport(nodeRecipe, node)
       : undefined;
     const powerStall = powerReport && isPowerStalled(powerReport) ? powerReport : undefined;

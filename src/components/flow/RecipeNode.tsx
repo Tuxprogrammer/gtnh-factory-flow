@@ -396,7 +396,7 @@ function RecipeNodeComponent({ data, selected, controlsOnly = false, renderEdito
     // all. Only where power means something - crops, bees, steam and zero-EU
     // recipes have no power section.
     const powerReport =
-      machineDrawsEu && tierControl && hasPowerReport(nodeRecipe)
+      machineDrawsEu && tierControl && hasPowerReport(nodeRecipe, projectNode)
         ? getNodePowerReport(nodeRecipe, projectNode)
         : undefined;
     // Steam machines get a steam cell where electric ones get the power cell:
@@ -637,7 +637,7 @@ function RecipeNodeComponent({ data, selected, controlsOnly = false, renderEdito
             node,
             recipe: sectionRecipe,
             display: { ...sectionEffective, ...adjusted, ...stats },
-            powerReport: drawsEu && hasPowerReport(sectionNodeRecipe) ? getNodePowerReport(sectionNodeRecipe, node) : undefined,
+            powerReport: drawsEu && hasPowerReport(sectionNodeRecipe, node) ? getNodePowerReport(sectionNodeRecipe, node) : undefined,
             steamReport: !drawsEu ? getNodeSteamReport(sectionNodeRecipe, node) : undefined,
           };
         })

@@ -410,7 +410,7 @@ function sectionPower(recipe: Recipe, node: FactoryNode) {
     effective.eut > 0 && !isSteamMachineHandler(getSelectedMachineHandler(recipe, node));
   return {
     powerReport:
-      drawsEu && hasPowerReport(nodeRecipe) ? getNodePowerReport(nodeRecipe, node) : undefined,
+      drawsEu && hasPowerReport(nodeRecipe, node) ? getNodePowerReport(nodeRecipe, node) : undefined,
     steamReport: !drawsEu ? getNodeSteamReport(nodeRecipe, node) : undefined,
   };
 }

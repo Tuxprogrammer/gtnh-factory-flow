@@ -177,6 +177,19 @@ export function gtFurnaceDurationTicks(
 }
 
 /**
+ * The EU/t per parallel of a smelt on the Multi Smelter: MTEMultiFurnace bills its own RECIPE_EUT
+ * of 4, while the vanilla map and the handler say 0. Other handlers keep their own EU (undefined).
+ */
+export function gtFurnaceEut(
+  recipe: Pick<Recipe, "machineType" | "source">,
+  handler: Pick<MachineHandler, "machineType">,
+): number | undefined {
+  return isSmeltingRecipeMap(recipe) && handler.machineType === "Multi Smelter"
+    ? GT_FURNACE_RECIPE_EUT
+    : undefined;
+}
+
+/**
  * Steam singleblocks run the LV recipe on borrowed math the dataset does not
  * carry: SteamOverclockDescriber gives a bronze machine (x1 EU, x2 duration)
  * and a high pressure one (x2 EU, x1 duration). Their handlers export no
@@ -245,7 +258,7 @@ export function applyMachineHandlerToRecipe(
   const handlerDurationTicks = machineCycleTicks(handler.machineType) ?? gtFurnaceDurationTicks(recipe, handler) ?? (seedsFromBase
     ? steamSingleblockDurationTicks(recipe, handler)
     : (handler.durationTicks ?? steamSingleblockDurationTicks(recipe, handler)));
-  const handlerEut = seedsFromBase ? undefined : handler.eut;
+  const handlerEut = gtFurnaceEut(recipe, handler) ?? (seedsFromBase ? undefined : handler.eut);
   // Steam machines burn steam, not EU. Their handlers carry no EU override,
   // so without this they would inherit the electric recipe's EU draw and the
   // planner would bill phantom power for them. The litres they do burn are

@@ -29,6 +29,7 @@ import {
   isProgrammedCircuitResource,
 } from "@/lib/model/programmed-circuit";
 import { wheelChangesValues } from "@/lib/device-settings";
+import { createWheelNotch, type WheelNotch } from "@/lib/wheel-notch";
 import {
   applyAlternativeCycleFace,
   getAlternativeCycleFaces,
@@ -669,21 +670,27 @@ function LookupRow({
 }) {
   const { onBrowseResource, onChipMenu, onChipDragStart, onHoverSlot } = handlers;
   // The wheel listener is attached by hand, non-passive: React's synthetic wheel cannot preventDefault, and without it
-  // every cycle also turns the page.
+  // every cycle also turns the page. One step per notch: a high-resolution wheel sends several events for one click
+  // (`wheel-notch.ts`); the gate outlives the listener, as `onCycle` is new every render and the listener is re-attached.
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const notchRef = useRef<WheelNotch>(null);
+  notchRef.current ??= createWheelNotch();
   useEffect(() => {
     const element = rootRef.current;
-    if (!element || !onCycle) {
+    const notch = notchRef.current;
+    if (!element || !onCycle || !notch) {
       return;
     }
     const onWheel = (event: WheelEvent) => {
-      const delta = event.deltaY || event.deltaX;
-      if (!delta || !wheelChangesValues()) {
+      if (!(event.deltaY || event.deltaX) || !wheelChangesValues()) {
         return;
       }
       event.preventDefault();
       event.stopPropagation();
-      onCycle(delta > 0 ? 1 : -1);
+      const step = notch(event);
+      if (step) {
+        onCycle(step);
+      }
     };
     element.addEventListener("wheel", onWheel, { passive: false });
     return () => element.removeEventListener("wheel", onWheel);

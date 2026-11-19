@@ -337,6 +337,9 @@ describe("curated machine table", () => {
         // kubatech's MTEExtremeEntityCrusher and MobHandlerLoader; the
         // reference never modelled it. extreme-entity-crusher.test.ts.
         "Extreme Entity Crusher",
+        // gregtech's MTEAlgaePond; the reference never covered it.
+        // algae-pond.test.ts.
+        "Algae Pond",
       ].map(normalizeMachineName),
     );
     // Every entry must trace back to a reference definition or a direct source

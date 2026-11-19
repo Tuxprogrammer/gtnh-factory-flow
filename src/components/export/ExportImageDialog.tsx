@@ -4,6 +4,7 @@ import { Check, Eye, EyeOff, ImageDown, LoaderCircle, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDialogA11y } from "@/lib/hooks/use-dialog-a11y";
 import { toBlob, toSvg } from "html-to-image";
+import { EXPORT_IMAGE_PLACEHOLDER } from "@/lib/import-export/export-image-placeholder";
 import { computeCommunityPlanStats } from "@/lib/community/plan-stats";
 import type { PlanResourceStat } from "@/lib/community/types";
 import { serializeFactoryProject } from "@/lib/import-export";
@@ -329,6 +330,7 @@ export function ExportImageDialog({ onClose }: { onClose: () => void }) {
                   width: layout.footerWidth,
                   height: layout.footerHeight,
                   skipFonts: true,
+                  imagePlaceholder: EXPORT_IMAGE_PLACEHOLDER,
                   fontEmbedCSS,
                 }),
               )
@@ -356,6 +358,7 @@ export function ExportImageDialog({ onClose }: { onClose: () => void }) {
                 height: layout.footerHeight,
                 pixelRatio: layout.footerScale * capture.pixelRatio,
                 skipFonts: true,
+                imagePlaceholder: EXPORT_IMAGE_PLACEHOLDER,
                 fontEmbedCSS,
               })) ?? undefined)
             : undefined;

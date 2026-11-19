@@ -30,6 +30,11 @@
  */
 import type { MachineConfigControl, Recipe } from "@/lib/model/types";
 import { TGS_TICKS, getTgsControls } from "./tree-growth-simulator";
+import {
+  algaePondPowerMultiplier,
+  getAlgaePondControls,
+  getAlgaePondGateReason,
+} from "./algae-pond";
 import { getVatControls, getVatGateReason } from "./bacterial-vat";
 import { EEC_CONTROLS, EEC_MODE } from "./extreme-entity-crusher";
 import { neutronActivatorSpeed, quantiseNeutronActivatorDuration } from "./neutron-activator";
@@ -1203,6 +1208,18 @@ const MACHINES: Record<string, MachineBehaviour> = {
     cycleTicks: TGS_TICKS,
     parallels: 1,
     controlsFor: (recipe) => getTgsControls(recipe),
+  },
+  /**
+   * MTEAlgaePond (algae-pond.ts): its one energy hatch's tier picks the recipe (one tier higher with compost), and
+   * it draws V x 9/10 of that hatch with no overclocks and one parallel. The only machine on its map, so its
+   * recipes arrive under the map's name.
+   */
+  "Algae Pond": {
+    overclock: OVERCLOCK.none(),
+    parallels: 1,
+    power: (c) => algaePondPowerMultiplier(c.recipe, c.settings),
+    controlsFor: (recipe) => getAlgaePondControls(recipe),
+    recipeGate: (c) => getAlgaePondGateReason(c.recipe, c.settings, c.voltageTier),
   },
   "Research Station": { overclock: OVERCLOCK.normal(), aliases: ["Research station"] },
 

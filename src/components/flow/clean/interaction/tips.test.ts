@@ -74,6 +74,17 @@ describe("the card's tip wording", () => {
     expect(choice.actions?.some((a) => a.input === "wheel" && a.label === "Change item")).toBe(true);
   });
 
+  it("port: a free end says which way it crosses the plan's edge and its colour", () => {
+    expect(portTip(port()).notes).toEqual([
+      { text: "Not wired: comes into the plan (blue).", tone: "muted" },
+    ]);
+    expect(portTip(port({ side: "output" })).notes).toEqual([
+      { text: "Not wired: leaves the plan (orange).", tone: "muted" },
+    ]);
+    expect(portTip(port({ wired: true })).notes).toEqual([]);
+    expect(portTip(port({ zero: true })).notes).toEqual([]);
+  });
+
   it("open port key: Any then Exactly, with the click it takes", () => {
     const any = openKeyTip(port(), false);
     expect(any.title).toBe("Any");

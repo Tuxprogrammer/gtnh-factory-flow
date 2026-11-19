@@ -22,6 +22,7 @@ import java.util.function.ToDoubleFunction;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.layout.JsSort;
 import com.gtnhplanner.core.layout.GridPoint;
 import com.gtnhplanner.core.layout.JsMath;
 import com.gtnhplanner.core.layout.RouterTuning;
@@ -197,7 +198,7 @@ public final class FreeArrange {
         final List<Integer> shelf = new ArrayList<>();
         for (int i = 0; i < cards.size(); i++) if (component[i] < 0) shelf.add(i);
         // Bigger components first: they set the row, and they get the trials.
-        components.sort((a, b) -> {
+        JsSort.sort(components, (a, b) -> {
             final int c = JsMath.sign(b.size() - a.size());
             return c != 0 ? c : JsMath.sign(a.get(0) - b.get(0));
         });
@@ -340,7 +341,7 @@ public final class FreeArrange {
             widths.put(key, (count != null ? count : 0) + 1);
         }
         final List<Map.Entry<Double, Integer>> entries = new ArrayList<>(widths.entrySet());
-        entries.sort((a, b) -> {
+        JsSort.sort(entries, (a, b) -> {
             final int c = JsMath.sign(b.getValue() - a.getValue());
             return c != 0 ? c : JsMath.sign(b.getKey() - a.getKey());
         });
@@ -403,7 +404,7 @@ public final class FreeArrange {
                     lattice.isColumnCard(i) ? 0 : 1,
                     JsMath.hypot(positions[i].x() + card.width() / 2 - cx, positions[i].y() + card.height() / 2 - cy)));
         }
-        order.sort((a, b) -> {
+        JsSort.sort(order, (a, b) -> {
             int c = JsMath.sign(a.column() - b.column());
             if (c != 0) return c;
             c = JsMath.sign(a.d() - b.d());
@@ -611,7 +612,7 @@ public final class FreeArrange {
             final boolean right = parts[1].equals("right");
             final Rect r = rectOf.apply(m);
             final List<Keyed> members = entry.getValue();
-            members.sort(FreeArrange::byKey);
+            JsSort.sort(members, FreeArrange::byKey);
             double height = 0;
             double width = Double.NEGATIVE_INFINITY;
             double portSum = 0;
@@ -642,7 +643,7 @@ public final class FreeArrange {
             final Rect upper = rectOf.apply(Integer.parseInt(parts[0]));
             final Rect lower = rectOf.apply(Integer.parseInt(parts[1]));
             final List<Keyed> members = entry.getValue();
-            members.sort(FreeArrange::byKey);
+            JsSort.sort(members, FreeArrange::byKey);
             double width = 0;
             for (final Keyed k : members) width = width + cards.get(k.d())
                 .width();
@@ -686,7 +687,7 @@ public final class FreeArrange {
                     .add(d);
             }
             for (final List<Integer> list : byCorridor.values()) {
-                list.sort((a, b) -> {
+                JsSort.sort(list, (a, b) -> {
                     final int c = JsMath.sign(out[a].y() - out[b].y());
                     return c != 0 ? c : JsMath.sign(a - b);
                 });
@@ -700,7 +701,7 @@ public final class FreeArrange {
         }
         // Conflicts, in a fixed order: the later drawer of a clashing pair is freed.
         final List<Integer> ids = new ArrayList<>(derived.keySet());
-        ids.sort((a, b) -> JsMath.sign(a - b));
+        JsSort.sort(ids, (a, b) -> JsMath.sign(a - b));
         for (final int d : ids) {
             if (patterns.placement[d] == null) continue;
             final Rect mine = rectAt(out[d], cards.get(d));
@@ -810,7 +811,7 @@ public final class FreeArrange {
             final boolean[] seen = new boolean[n];
             final List<Integer> byDegree = new ArrayList<>(n);
             for (int i = 0; i < n; i++) byDegree.add(i);
-            byDegree.sort((a, b) -> {
+            JsSort.sort(byDegree, (a, b) -> {
                 final int c = JsMath.sign(
                     edges.get(b)
                         .size()
@@ -988,7 +989,7 @@ public final class FreeArrange {
             final ArrangeCard card = cards.get(i);
             order.add(new Order(i, 0, JsMath.hypot(tlx[i] + card.width() / 2 - cx, tly[i] + card.height() / 2 - cy)));
         }
-        order.sort((a, b) -> {
+        JsSort.sort(order, (a, b) -> {
             final int c = JsMath.sign(a.d() - b.d());
             return c != 0 ? c : JsMath.sign(a.i() - b.i());
         });
@@ -1831,7 +1832,7 @@ public final class FreeArrange {
                 undo();
                 if (delta > 0) samples.add(delta);
             }
-            samples.sort((a, b) -> JsMath.sign(a - b));
+            JsSort.sort(samples, (a, b) -> JsMath.sign(a - b));
             final double t0 = Math
                 .max(1, (!samples.isEmpty() ? samples.get((int) Math.floor(samples.size() / 2.0)) * 2 : 200) * heat);
             final double tEnd = t0 / 2000;

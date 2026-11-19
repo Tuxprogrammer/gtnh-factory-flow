@@ -21,7 +21,13 @@ const SMELT = {
   outputs: [{ kind: "item", id: "iron-ingot", amount: 1 }],
   source: { recipeMap: "Furnace" },
   machineHandlers: [
-    { id: "furnace", label: "Furnace", kind: "single", machineType: "Furnace", minimumTier: "NONE" },
+    {
+      id: "furnace",
+      label: "Furnace",
+      kind: "single",
+      machineType: "Furnace",
+      minimumTier: "NONE",
+    },
     {
       id: "electric-furnace",
       label: "Electric Furnace",
@@ -113,7 +119,10 @@ describe("GT furnace timing and the pack's rate mod (GTNHRates GTFurnaces)", () 
     expect(ticks("furnace")).toBe(200);
     const furnace = SMELT.machineHandlers!.find((entry) => entry.id === "electric-furnace")!;
     expect(
-      gtFurnaceDurationTicks({ machineType: "Macerator", source: { recipeMap: "Macerator" } }, furnace),
+      gtFurnaceDurationTicks(
+        { machineType: "Macerator", source: { recipeMap: "Macerator" } },
+        furnace,
+      ),
     ).toBeUndefined();
   });
 });

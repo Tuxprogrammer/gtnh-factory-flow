@@ -32,6 +32,8 @@ export const CONTROLS: ReadonlyArray<readonly [string, string]> = [
   ["Ctrl+C, Ctrl+X, Ctrl+V", "Copy, cut, paste the selection and its wires"],
   ["Ctrl+Z, Ctrl+Shift+Z", "Undo, redo"],
   ["Double-click an overview row", "Show the cards that make or use it"],
+  // Not a gesture: the one place the board's in and out colours are said (free ends, forced rows, drawers, overview).
+  ["Blue and orange", "Blue comes into the plan; orange leaves it"],
 ];
 
 /** The controls list: a menu-skinned panel under the bar, closed like any dropdown. */

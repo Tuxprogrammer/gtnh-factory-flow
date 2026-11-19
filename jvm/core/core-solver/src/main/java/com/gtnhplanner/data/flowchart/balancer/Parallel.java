@@ -57,24 +57,42 @@ public final class Parallel {
             for (final T item : items) out.add(work.apply(item));
             return out;
         }
-        final List<Worker.Job<R>> jobs = new ArrayList<>(items.size());
-        for (final T item : items) jobs.add(w.start(() -> work.apply(item)));
-        // Every job is waited for, even after one fails, so no model outlives the call (a stopped solve's islands
-        // touch the cache only before the solve is over); the first failure, in the items' order, is rethrown.
-        final List<R> out = new ArrayList<>(items.size());
-        RuntimeException failed = null;
-        Error broke = null;
-        for (final Worker.Job<R> job : jobs) {
+        // Fork and join: every item but the first goes to the worker, the first runs here, and the rest are awaited
+        // newest first, so a worker thread awaiting jobs it started itself runs them instead of blocking on them.
+        // Every job is awaited, even after one fails, so no model outlives the call (a stopped solve's islands touch
+        // the cache only before the solve is over); the first failure in the items' order is rethrown.
+        final int n = items.size();
+        final List<Worker.Job<R>> jobs = new ArrayList<>(n);
+        jobs.add(null);
+        for (int i = 1; i < n; i++) {
+            final T item = items.get(i);
+            jobs.add(w.start(() -> work.apply(item)));
+        }
+        final Object[] results = new Object[n];
+        final Throwable[] failures = new Throwable[n];
+        try {
+            results[0] = work.apply(items.get(0));
+        } catch (final RuntimeException | Error e) {
+            failures[0] = e;
+        }
+        for (int i = n - 1; i >= 1; i--) {
             try {
-                out.add(job.await());
-            } catch (final RuntimeException e) {
-                if (failed == null && broke == null) failed = e;
-            } catch (final Error e) {
-                if (failed == null && broke == null) broke = e;
+                results[i] = jobs.get(i)
+                    .await();
+            } catch (final RuntimeException | Error e) {
+                failures[i] = e;
             }
         }
-        if (broke != null) throw broke;
-        if (failed != null) throw failed;
+        for (final Throwable t : failures) {
+            if (t instanceof final RuntimeException e) throw e;
+            if (t instanceof final Error e) throw e;
+        }
+        final List<R> out = new ArrayList<>(n);
+        for (final Object r : results) {
+            @SuppressWarnings("unchecked")
+            final R result = (R) r;
+            out.add(result);
+        }
         return out;
     }
 }

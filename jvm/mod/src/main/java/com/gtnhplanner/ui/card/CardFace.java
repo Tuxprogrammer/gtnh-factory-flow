@@ -11,6 +11,7 @@ import java.util.function.ToIntFunction;
 import javax.annotation.Nullable;
 
 import com.gtnhplanner.CoreIds;
+import com.gtnhplanner.core.view.Tokens;
 import com.gtnhplanner.data.flowchart.PinRule;
 import com.gtnhplanner.data.flowchart.balancer.PortRef;
 import com.gtnhplanner.data.flowchart.balancer.UpToLoop;
@@ -110,14 +111,14 @@ public final class CardFace {
     /** The bar's colour: an Up to card's reason, FORCED IN, or plain (Up to with no reason worked out). */
     public enum Tone {
 
-        FULL(0xFF5EE9B5),
-        BOTTLENECK(0xFFF06262),
-        STARVED(0xFFE0A63A),
-        CLOGGED(0xFFB49CF0),
-        UNUSED(0xFF8A8E97),
-        LIMITED(0xFFF472B6),
-        FORCED(0xFF94C3F3),
-        PLAIN(0xFF9A9CA4);
+        FULL(Tokens.Tone.FULL),
+        BOTTLENECK(Tokens.Tone.BOTTLENECK),
+        STARVED(Tokens.Tone.STARVED),
+        CLOGGED(Tokens.Tone.CLOGGED),
+        UNUSED(Tokens.Tone.UNUSED),
+        LIMITED(Tokens.Tone.LIMITED),
+        FORCED(Tokens.Tone.FORCED),
+        PLAIN(Tokens.Tone.PLAIN);
 
         /** The word's colour, and what the fill is mixed from (the website's clean.css tones). */
         public final int colour;

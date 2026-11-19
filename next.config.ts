@@ -1,4 +1,8 @@
+import { execFileSync } from "node:child_process";
 import type { NextConfig } from "next";
+
+// The shared view tokens are generated, not committed: make sure they exist for every way of starting next.
+execFileSync(process.execPath, ["tools/tokens/generate.mjs"], { cwd: process.cwd(), stdio: "inherit" });
 
 const datasetBackendUrl = process.env.GTNH_DATASET_BACKEND_URL?.replace(/\/+$/, "");
 

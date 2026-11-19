@@ -17,7 +17,13 @@ const RAW_IRON: Recipe = {
   outputs: [{ kind: "item", id: "crushed-iron-ore", amount: 2 }],
   source: { recipeMap: "Macerator" },
   machineHandlers: [
-    { id: "macerator", label: "Macerator", machineType: "Macerator", kind: "single", minimumTier: "LV" },
+    {
+      id: "macerator",
+      label: "Macerator",
+      machineType: "Macerator",
+      kind: "single",
+      minimumTier: "LV",
+    },
     {
       id: "high-pressure-steam-macerator",
       label: "High Pressure Steam Macerator",
@@ -55,7 +61,13 @@ const SUNNARIUM: Recipe = {
   outputs: [{ kind: "item", id: "sunnarium-piece", amount: 9 }],
   source: { recipeMap: "Forge Hammer" },
   machineHandlers: [
-    { id: "forge-hammer", label: "Forge Hammer", machineType: "Forge Hammer", kind: "single", minimumTier: "LV" },
+    {
+      id: "forge-hammer",
+      label: "Forge Hammer",
+      machineType: "Forge Hammer",
+      kind: "single",
+      minimumTier: "LV",
+    },
     {
       id: "steam-presser",
       label: "Steam Presser",
@@ -90,8 +102,12 @@ describe("steam multiblock speed (MTESteam* createProcessingLogic)", () => {
   });
 
   it("banks no sub-tick speed: a 1-tick recipe takes 2 ticks on bronze and 1 on steel", () => {
-    expect(getOverclockedRecipeStats(SUNNARIUM, node("steam-presser", "normal")).durationTicks).toBe(2);
-    expect(getOverclockedRecipeStats(SUNNARIUM, node("steam-presser", "high")).durationTicks).toBe(1);
+    expect(
+      getOverclockedRecipeStats(SUNNARIUM, node("steam-presser", "normal")).durationTicks,
+    ).toBe(2);
+    expect(getOverclockedRecipeStats(SUNNARIUM, node("steam-presser", "high")).durationTicks).toBe(
+      1,
+    );
   });
 
   it("runs 8 parallels at either pressure, so steel is twice bronze only where the rounding allows", () => {
@@ -116,7 +132,8 @@ describe("steam multiblock speed (MTESteam* createProcessingLogic)", () => {
         fuelProfiles: gtnhFuelProfiles,
         selectedFuelProfileId: "biodiesel",
       };
-      return calculateThroughput(project, { generatedAt: "fixed" }).nodes.presser.operationRatePerSecond;
+      return calculateThroughput(project, { generatedAt: "fixed" }).nodes.presser
+        .operationRatePerSecond;
     };
     expect(perSecond("normal")).toBeCloseTo((8 * 20) / 2);
     expect(perSecond("high")).toBeCloseTo((8 * 20) / 1);
@@ -125,6 +142,8 @@ describe("steam multiblock speed (MTESteam* createProcessingLogic)", () => {
   it("leaves the steam singleblocks at twice the recipe's time (bronze) and the recipe's time (steel)", () => {
     // SteamOverclockDescriber: bronze (1 EU, x2 duration), steel (2 EU, x1 duration); whole multipliers, no rounding.
     expect(getOverclockedRecipeStats(RAW_IRON, node("steam-macerator")).durationTicks).toBe(14);
-    expect(getOverclockedRecipeStats(RAW_IRON, node("high-pressure-steam-macerator")).durationTicks).toBe(7);
+    expect(
+      getOverclockedRecipeStats(RAW_IRON, node("high-pressure-steam-macerator")).durationTicks,
+    ).toBe(7);
   });
 });

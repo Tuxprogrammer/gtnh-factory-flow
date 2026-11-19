@@ -3,8 +3,10 @@ package com.gtnhplanner.ui.card;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.gtnhplanner.core.view.TextMeasure;
+import com.gtnhplanner.core.view.TextStyle;
 import com.gtnhplanner.core.view.Tokens;
-import com.gtnhplanner.ui.theme.Hyb;
+import com.gtnhplanner.core.view.card.CardModel;
 
 /**
  * Geometry of a card in GUI pixels, shared by drawing, the child widgets and wire anchors: the clean card
@@ -14,6 +16,7 @@ import com.gtnhplanner.ui.theme.Hyb;
  * circuit in its top left corner) with what runs and what is set under its picture, a strip along the bottom of the
  * settings pinned to it, and under everything the bar along the foot of an Up to card. A port row is its icon at the
  * edge, how much in large type and its name small under it. Power drawn is one more row after a recipe's inputs.
+ * Game-free: text widths come from the host's {@link TextMeasure} (the mod's builds it in {@code CardLayouts}).
  */
 public final class CardLayout {
 
@@ -103,27 +106,21 @@ public final class CardLayout {
     /** Where the rails end: below the last recipe's (and the power row). */
     public final int railsEnd;
 
-    public CardLayout(final CardModel model, final com.gtnhplanner.data.flowchart.Graph plan) {
-        this(List.of(model), plan, false);
-    }
-
-    public CardLayout(final List<CardModel> models, final com.gtnhplanner.data.flowchart.Graph plan) {
-        this(models, plan, false);
-    }
-
     /**
      * A card for its recipes, top first. A shared machine gives each recipe a rule row (its share on the left, its
      * circuit and keys on the right) over its rails, which are as tall as its longer side so its inputs and outputs
-     * face each other; its power is one row after them all. {@code foot}: the card has a bar along its foot.
+     * face each other; its power is one row after them all. {@code chips}: the settings pinned to the card, laid out
+     * by {@code pinsVersion} of the pins. {@code foot}: the card has a bar along its foot. {@code measure}: the host's
+     * text widths.
      */
-    public CardLayout(final List<CardModel> models, final com.gtnhplanner.data.flowchart.Graph plan,
-        final boolean foot) {
+    public CardLayout(final List<CardModel> models, final List<SettingControls.Control> chips, final int pinsVersion,
+        final boolean foot, final TextMeasure measure) {
         sections = models.size();
         final boolean shared = sections > 1;
         final CardModel first = models.get(0);
         // A steam machine's row bills its steam where an electric one's bills EU.
-        final boolean powerRow = !first.isPower() && (first.euPerTick > 0 || first.steamPerTick > 0
-            || com.gtnhplanner.machines.game.CropCards.isCrop(first.node));
+        final boolean powerRow = !first.isPower() && (first.euPerTick() > 0 || first.steamPerTick() > 0
+            || first.crop());
         inRows = new int[sections];
         outRows = new int[sections];
         ruleY = new int[sections];
@@ -135,8 +132,8 @@ public final class CardLayout {
         int y = RAILS_Y, powerY = -1;
         for (int s = 0; s < sections; s++) {
             final CardModel model = models.get(s);
-            inExtra[s] = extras(model.inputs);
-            outExtra[s] = extras(model.outputs);
+            inExtra[s] = extras(model.inputs());
+            outExtra[s] = extras(model.outputs());
             inSlot[s] = slots(inExtra[s]);
             outSlot[s] = slots(outExtra[s]);
             inRows[s] = rowsOf(inExtra[s]);
@@ -160,13 +157,13 @@ public final class CardLayout {
         // At least the well; on a shared machine it stands beside the first recipe, under its rule row.
         railsH = Math.max(railsEnd - RAILS_Y, PICTURE_MIN + (shared ? SECTION_RULE : 0));
         // The strip: chips left to right, a new row when one would pass the edge.
-        chips = SettingControls.pinned(plan, first);
-        pinsVersion = SettingPins.version();
+        this.chips = chips;
+        this.pinsVersion = pinsVersion;
         chipAt = new int[chips.size()][];
         stripY = RAILS_Y + railsH + 6;
         int cx = PAD, cy = stripY + 4;
         for (int i = 0; i < chips.size(); i++) {
-            final int w = chipW(chips.get(i));
+            final int w = chipW(measure, chips.get(i));
             if (cx > PAD && cx + w > W - PAD) {
                 cx = PAD;
                 cy += CHIP_ROW;
@@ -176,12 +173,11 @@ public final class CardLayout {
         }
         final int stripEnd = chips.isEmpty() ? RAILS_Y + railsH + 2 : cy + CHIP + 4;
         warningLines = new ArrayList<>();
-        if (first.isPower() && first.power.model() != null) {
-            for (final String warning : first.power.model()
-                .warnings())
-                warningLines.addAll(
-                    Hyb.font()
-                        .listFormattedStringToWidth(warning, W - 2 * PAD - 4));
+        if (first.isPower() && first.power()
+            .model() != null) {
+            for (final String warning : first.power()
+                .model()
+                .warnings()) warningLines.addAll(measure.wrap(TextStyle.LABEL, warning, W - 2 * PAD - 4));
         }
         warningsY = stripEnd + 2;
         final int end = warningsY + (warningLines.isEmpty() ? 0 : warningLines.size() * 9 + 4);
@@ -189,7 +185,7 @@ public final class CardLayout {
         height = foot ? footY + FOOT_H + 3 : end + 4;
     }
 
-    private static boolean[] extras(final List<CardModel.PortView> ports) {
+    private static boolean[] extras(final List<CardModel.Port> ports) {
         final boolean[] out = new boolean[ports.size()];
         for (int i = 0; i < out.length; i++) out[i] = ports.get(i)
             .hasExtra();
@@ -223,12 +219,13 @@ public final class CardLayout {
     }
 
     /** A chip's width: its icon, label and value. */
-    public static int chipW(final SettingControls.Control c) {
-        return chipW(c.label(), c.value(), c.icon() != null);
+    public static int chipW(final TextMeasure measure, final SettingControls.Control c) {
+        return chipW(measure, c.label(), c.value(), c.icon() != null);
     }
 
-    public static int chipW(final String label, final String value, final boolean icon) {
-        return CHIP_PAD + (icon ? 14 + 3 : 0) + Hyb.width(label) + 4 + Hyb.width(value) + CHIP_PAD;
+    public static int chipW(final TextMeasure measure, final String label, final String value, final boolean icon) {
+        return CHIP_PAD + (icon ? 14 + 3 : 0) + (int) measure.width(TextStyle.LABEL, label) + 4
+            + (int) measure.width(TextStyle.LABEL, value) + CHIP_PAD;
     }
 
     /** Card-local {x, y, w, h} of a chip in the strip. */
@@ -316,7 +313,7 @@ public final class CardLayout {
         return rowY(0, output, index);
     }
 
-    /** Whether a port has its extra row under it ({@link CardModel.PortView#extra}). */
+    /** Whether a port has its extra row under it ({@link CardModel.Port#extra}). */
     public boolean hasExtra(final int section, final boolean output, final int index) {
         final boolean[] extra = (output ? outExtra : inExtra)[clampSection(section)];
         return index >= 0 && index < extra.length && extra[index];

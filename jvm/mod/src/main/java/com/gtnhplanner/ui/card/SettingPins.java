@@ -32,7 +32,7 @@ public final class SettingPins {
     public static void toggle(final Graph plan, final CardModel m, final SettingControls.Control c) {
         if (plan == null) return;
         final List<String> keys = new ArrayList<>();
-        for (final SettingControls.Control each : SettingControls.of(m)) {
+        for (final SettingControls.Control each : CardSettings.of(m)) {
             final boolean on = each.key()
                 .equals(c.key()) ? !pinned(plan, m, each) : pinned(plan, m, each);
             if (on) keys.add(each.key());

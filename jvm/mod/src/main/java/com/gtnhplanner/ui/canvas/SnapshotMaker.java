@@ -151,13 +151,13 @@ final class SnapshotMaker {
     private static List<PlanSnapshot.Setting> settings(final BoardSession session,
         final com.gtnhplanner.ui.card.CardModel m) {
         final List<PlanSnapshot.Setting> out = new ArrayList<>();
-        for (final com.gtnhplanner.ui.card.SettingControls.Control c : com.gtnhplanner.ui.card.SettingControls
+        for (final com.gtnhplanner.ui.card.SettingControls.Control c : com.gtnhplanner.ui.card.CardSettings
             .pinned(session.graph(), m))
             out.add(
                 new PlanSnapshot.Setting(
                     c.label(),
                     c.value(),
-                    c.icon(),
+                    com.gtnhplanner.ui.card.IconKeys.stack(c.icon()),
                     c.warn(),
                     c.type() == com.gtnhplanner.ui.card.SettingControls.Type.READING));
         return out;

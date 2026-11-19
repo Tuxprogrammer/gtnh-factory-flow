@@ -359,6 +359,37 @@ describe("the bar along the foot", () => {
     expect(clog.say).toMatch(/Sulfuric Acid|an output backs up/);
   });
 
+  it("says IDLE on a card on Any that runs none because its input is sent out instead", () => {
+    const anyCount = { rule: "any" as const, set: undefined };
+    const idle = buildFootView(
+      anyCount,
+      undefined,
+      ports,
+      (id) => (id === "m" ? "Mixer" : undefined),
+      undefined,
+      {
+        output: "item:Sulfuric Acid",
+        input: "item:Oxygen",
+        makerId: "m",
+      },
+    )!;
+    expect([idle.tone, idle.word, idle.say, idle.frac, idle.fill]).toEqual([
+      "plain",
+      "IDLE",
+      "Oxygen is sent out instead",
+      "",
+      0,
+    ]);
+    expect([
+      idle.facts.reason,
+      idle.facts.resource,
+      idle.facts.sentOut,
+      idle.facts.upstream,
+    ]).toEqual(["IDLE", "Sulfuric Acid", "Oxygen", ["Mixer"]]);
+    // Any with nothing to say has no bar.
+    expect(buildFootView(anyCount, undefined, ports)).toBeUndefined();
+  });
+
   it("runs a bottleneck's bar on, striped, to what the line wants", () => {
     const neck = buildFootView(
       upToCount,

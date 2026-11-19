@@ -63,6 +63,7 @@ import { mixHex } from "./colors";
 import { UP_TO_COLOR } from "./up-to-reason";
 import { cardLoop, LOOP_WORD, type LoopTone } from "./loops";
 import { glanceBar, type GlanceBar } from "./glance";
+import { idleTradeOf, type IdleTrade } from "./idle-trade";
 import { isPinned, pinMachineKey, settingControls } from "./menus/settings-model";
 import { mcTextWidth, measureClean, measureRowFigure, measureRowName, useFontEpoch } from "./text-measure";
 
@@ -188,7 +189,7 @@ export interface CleanFootView {
   ghost?: { left: number; width: number };
   /** For the tip. */
   facts: {
-    reason: UpToReason | null | "FORCED";
+    reason: UpToReason | null | "FORCED" | "IDLE";
     /** The ring the card is in, when it is in one. */
     loop?: LoopTone;
     rule: PinRule;
@@ -203,6 +204,8 @@ export interface CleanFootView {
     upstream: string[];
     /** FORCED IN: each forced input, "720 L/s Oxygen". */
     forced: string[];
+    /** IDLE: the input that is sent out instead (`resource` is the output running it would send out). */
+    sentOut?: string;
   };
 }
 
@@ -713,7 +716,8 @@ function resourceName(
 /**
  * The foot bar of a card, or nothing: an Up to card with its read-out, or an Exactly card with a forced input on one
  * of its rows. `ports` are the card's rows (every recipe's on a shared machine), `cardName` names a card by id. A card
- * in a ring (`loop`) says DEAD LOOP or CLOG LOCK in the ring's tone in place of its reason.
+ * in a ring (`loop`) says DEAD LOOP or CLOG LOCK in the ring's tone in place of its reason. A card on Any that runs
+ * none because its input is sent out instead (`idle`, idle-trade.ts) says IDLE and which input.
  */
 export function buildFootView(
   count: Pick<CleanCountView, "rule" | "set">,
@@ -721,6 +725,7 @@ export function buildFootView(
   ports: { inputs: readonly CleanPortView[]; outputs: readonly CleanPortView[] },
   cardName: (id: string) => string | undefined = () => undefined,
   loop?: LoopTone,
+  idle?: IdleTrade,
 ): CleanFootView | undefined {
   const fmt = formatSolvedMachines;
   if (count.rule === "upTo" && upTo) {
@@ -838,6 +843,33 @@ export function buildFootView(
           (port) =>
             `${port.forced!.number}${port.forced!.unit ? ` ${port.forced!.unit}` : ""} ${port.name}`,
         ),
+      },
+    };
+  }
+  if (count.rule === "any" && idle) {
+    const input = resourceName(idle.input, ports.inputs)!;
+    const output = resourceName(idle.output, ports.outputs)!;
+    const word = "IDLE";
+    const room = FOOT_TEXT - measureClean(word, FOOT_SIZE) - FOOT_GAP;
+    return {
+      tone: "plain",
+      word,
+      say: fitLine(
+        [`${input} is sent out instead`, `${input} sent out`, "its input is sent out"],
+        room,
+      ),
+      frac: "",
+      fill: 0,
+      facts: {
+        reason: "IDLE",
+        rule: "any",
+        running: 0,
+        capacity: 0,
+        resource: output,
+        sentOut: input,
+        tied: [],
+        upstream: idle.makerId ? [cardName(idle.makerId) ?? "a card"] : [],
+        forced: [],
       },
     };
   }
@@ -1124,12 +1156,18 @@ export function useCleanCardModel(
     countState.upTo,
   );
   const loop = cardLoop(plan?.loops, projectNode.id);
+  // On Any and running none: is it because its input is sent out instead of its output?
+  const idle =
+    count.rule === "any" && count.zero
+      ? idleTradeOf(plan, projectNode.id, new Set(inputs.map((port) => port.resourceKey)))
+      : undefined;
   const foot = buildFootView(
     count,
     countState.upTo,
     { inputs, outputs },
     (id) => cardNameIn(liveProject, id),
     loop,
+    idle,
   );
 
   const view: CleanCardView = {

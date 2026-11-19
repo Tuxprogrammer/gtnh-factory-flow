@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Compiles and tests the pure machine-maths port (com.gtnhplanner.machines.web) with javac and JUnit straight from
-# Gradle's caches, into a folder of your own, without Gradle: several people (or agents) can check their part at once
-# while a Gradle build runs. Usage: tools/dev/webcheck.sh <out-dir> [test class name filter, a regex]
+# Compiles and tests the pure machine-maths port (com.gtnhplanner.machines.web, now in ../core/core-machines) with
+# javac and JUnit straight from Gradle's caches, into a folder of your own, without Gradle: several people (or agents)
+# can check their part at once while a Gradle build runs. Usage: tools/dev/webcheck.sh <out-dir> [test class name
+# filter, a regex]
 set -euo pipefail
 OUT=${1:?out dir}
 FILTER=${2:-.}
@@ -35,10 +36,11 @@ public class WebCheck {
     }
 }
 JAVA
-SRC=$(find "$ROOT/src/main/java/com/gtnhplanner/machines/web" "$ROOT/src/test/java/com/gtnhplanner/machines/web" \
-  -name '*.java' 2>/dev/null; echo "$ROOT/src/main/java/com/gtnhplanner/machines/FormulaLine.java"; echo "$OUT/launcher/WebCheck.java")
+CORE="$ROOT/../core/core-machines/src"
+SRC=$(find "$CORE/main/java/com/gtnhplanner/machines/web" "$CORE/test/java/com/gtnhplanner/machines/web" \
+  -name '*.java' 2>/dev/null; echo "$CORE/main/java/com/gtnhplanner/machines/FormulaLine.java"; echo "$OUT/launcher/WebCheck.java")
 "$JDK/javac.exe" -nowarn -encoding UTF-8 -d "$(cygpath -w "$OUT/classes")" -cp "$CP" $(for f in $SRC; do cygpath -w "$f"; done)
-RUNCP="$(cygpath -w "$OUT/classes");$(cygpath -w "$ROOT/src/main/resources");$(cygpath -w "$ROOT/src/test/resources");$CP"
+RUNCP="$(cygpath -w "$OUT/classes");$(cygpath -w "$CORE/main/resources");$(cygpath -w "$CORE/test/resources");$(cygpath -w "$ROOT/src/test/resources");$CP"
 # Package scanning finds nothing here on Windows, so every test class is named.
 TESTS=$(cd "$OUT/classes" && find com -name '*Test.class' ! -name '*$*' | sed 's/[.]class$//; s|/|.|g' | grep -E "$FILTER" || true)
 [ -n "$TESTS" ] || { echo "no test classes match $FILTER"; exit 1; }

@@ -87,6 +87,7 @@ export const VirtualizationController = memo(function VirtualizationController({
       for (const id of [...farOthers]) showOther(id);
       previousVisible = new Set();
     };
+    let geometrySeen = -1;
     const applyOthers = () => {
       if (boardVirtualizer.holding()) {
         showAllOthers();
@@ -97,6 +98,13 @@ export const VirtualizationController = memo(function VirtualizationController({
         for (const id of [...farOthers]) showOther(id);
         previousVisible = new Set();
         return;
+      }
+      // A card stays hidden only while it has a published box. One without (its plan left the board and came back,
+      // or it was never measured) could never be found on screen again: hidden, it is never measured, so it never
+      // gets a box. It is shown instead, and React Flow measures it.
+      if (boardVirtualizer.geometryVersion !== geometrySeen) {
+        geometrySeen = boardVirtualizer.geometryVersion;
+        for (const id of [...farOthers]) if (!boardVirtualizer.boxOf(id)) showOther(id);
       }
       const visible = boardVirtualizer.visibleIds();
       if (visible === previousVisible) return;
@@ -159,8 +167,19 @@ export const VirtualizationController = memo(function VirtualizationController({
               const id = added.getAttribute("data-id");
               if (!id) return;
               wrapperById.set(id, added);
-              if (farOthers.has(id) && isCardWrapper(added)) added.setAttribute(FAR_ATTRIBUTE, "");
-              else applyZoomTo(added);
+              // Only while the card has a box and is still off screen: a wrapper back from another plan's tab has
+              // neither yet, and hidden now it would never be measured (see applyOthers).
+              if (
+                farOthers.has(id) &&
+                isCardWrapper(added) &&
+                boardVirtualizer.boxOf(id) &&
+                !boardVirtualizer.visibleIds().has(id)
+              ) {
+                added.setAttribute(FAR_ATTRIBUTE, "");
+              } else {
+                farOthers.delete(id);
+                applyZoomTo(added);
+              }
             });
           }
         })

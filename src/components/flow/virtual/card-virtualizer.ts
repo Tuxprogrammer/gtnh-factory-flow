@@ -117,6 +117,8 @@ export class CardVirtualizer {
   private listeners = new Map<string, Set<() => void>>();
   /** Bumped on every change of who is mounted; for tests and for the dev readout. */
   version = 0;
+  /** Bumped whenever the published boxes change (a new set, or a different plan on the board). */
+  geometryVersion = 0;
   private dirty = true;
   /** Set by the controller: called when geometry or the camera changed and a step is wanted. */
   wake: (() => void) | undefined;
@@ -154,6 +156,7 @@ export class CardVirtualizer {
     }
     for (const id of [...this.drawn]) if (!this.geometry.has(id)) this.drawn.delete(id);
     for (const id of [...this.keys.keys()]) if (!this.geometry.has(id)) this.keys.delete(id);
+    this.geometryVersion += 1;
     this.dirty = true;
     this.wake?.();
   }
@@ -212,6 +215,7 @@ export class CardVirtualizer {
     this.boardKey = key;
     this.geometry.clear();
     this.cells.clear();
+    this.geometryVersion += 1;
     this.drawn.clear();
     this.visibleSet = new Set();
     this.visibleKnown = false;

@@ -728,8 +728,11 @@ const MACHINES: Record<string, MachineBehaviour> = {
     speed: 2,
     parallels: (c) => 8 * c.voltageTier,
   },
-  "IsaMill Grinding Machine": { overclock: OVERCLOCK.perfect() },
-  "Flotation Cell Regulator": { overclock: OVERCLOCK.perfect() },
+  // Each is the only machine on its map, so the dataset exports no handler and
+  // the recipes arrive under the map's name. MTEIsaMill and
+  // MTEFrothFlotationCell both enablePerfectOverclock, one parallel.
+  "IsaMill Grinding Machine": { overclock: OVERCLOCK.perfect(), aliases: ["Milling"] },
+  "Flotation Cell Regulator": { overclock: OVERCLOCK.perfect(), aliases: ["Flotation Cell"] },
 
   // -- Coil-driven, no heat mechanic ---------------------------------------
   "Chemical Plant": {

@@ -18,12 +18,12 @@ import type { EntryIcon } from "@/lib/model/types";
 import { openCommunityPost } from "@/lib/community/open-post";
 import { openLibrary } from "@/lib/library/library-tab";
 import { openSidebarTab } from "@/lib/sidebar-tab";
-import { APP_VERSION } from "@/lib/version";
 import { leaveWelcomeTab, setWelcomeOnStartup, useWelcomeTab } from "@/lib/welcome/welcome-tab";
 import { writeWorkspaceView } from "@/lib/workspace-view";
 import { UNTITLED_DESIGN_NAME } from "@/lib/designs/design-library";
 import { useDesignStore } from "@/store/design-store";
 import { useFactoryStore } from "@/store/factory-store";
+import { VersionChip } from "./VersionChip";
 import { WelcomeBackdrop } from "./WelcomeBackdrop";
 import "../chrome/mod-panel.css";
 
@@ -32,8 +32,7 @@ import "../chrome/mod-panel.css";
  * replacing it, over a quiet ASCII backdrop. One short column: the name, the
  * ways to start (new design, shared setups, find a recipe, your library) and
  * community setups. Every pick steps off the tab; the checkbox at the foot
- * turns off showing it on startup. Release notes live on the header's
- * version chip, not here.
+ * turns off showing it on startup. The version chip opens the release notes.
  */
 
 const COMMUNITY_TILE_COUNT = 15;
@@ -104,9 +103,7 @@ export function WelcomePage() {
               <h1 className="text-[22px] leading-none text-white compact:text-[18px]">
                 <span className="text-cyan-300">GTNH</span> Planner
               </h1>
-              <span className="border border-line-strong px-1.5 py-0.5 text-[11px] text-fg-muted">
-                v{APP_VERSION}
-              </span>
+              <VersionChip />
             </div>
             <p className="max-w-[600px] text-[13px] leading-relaxed text-fg-subtle">
               Draw a GregTech: New Horizons factory as a flowchart. Every card is a

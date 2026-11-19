@@ -12,6 +12,7 @@ import { ModScreenshot } from "./chrome/ModScreenshot";
 import { DevMenu } from "./DevMenu";
 import { ModSettings } from "./chrome/ModSettings";
 import { ModBar } from "./chrome/ModBar";
+import { OPEN_CHANGELOG_EVENT } from "./chrome/chrome-events";
 
 /**
  * The pack picker's switch. See the note where it renders; flip this back to
@@ -41,6 +42,20 @@ export function AppHeader(_props: AppHeaderProps) {
   // read: without this the sheet would have nothing above its divider.
   const [unseenVersions, setUnseenVersions] = useState<Set<string>>();
   const [isChangelogOpen, setChangelogOpen] = useState(false);
+  const openChangelog = () => {
+    setUnseenVersions(new Set(unseenEntries().map((entry) => entry.version)));
+    markNotesReadAndNotify();
+    setChangelogOpen(true);
+  };
+  // The Welcome page's version chip asks for the same dialog by event.
+  useEffect(() => {
+    const open = (event: Event) => {
+      event.preventDefault();
+      openChangelog();
+    };
+    window.addEventListener(OPEN_CHANGELOG_EVENT, open);
+    return () => window.removeEventListener(OPEN_CHANGELOG_EVENT, open);
+  }, []);
   // Shift-click the version chip. See DevMenu.
   const [isDevMenuOpen, setDevMenuOpen] = useState(false);
   // The share dialog lives up here rather than in BoardActions so the compact
@@ -86,11 +101,7 @@ export function AppHeader(_props: AppHeaderProps) {
         onShare={(mode) => setShareMode(mode)}
         onScreenshot={() => setExportOpen(true)}
         onSettings={() => setSettingsOpen((open) => !open)}
-        onChangelog={() => {
-          setUnseenVersions(new Set(unseenEntries().map((entry) => entry.version)));
-          markNotesReadAndNotify();
-          setChangelogOpen(true);
-        }}
+        onChangelog={openChangelog}
         onDevMenu={() => setDevMenuOpen(true)}
         unreadNotes={hasUnread}
       />

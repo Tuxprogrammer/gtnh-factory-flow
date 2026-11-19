@@ -7,6 +7,7 @@ export const OPEN_TOUR_EVENT = "gtnh-factory-flow:open-tour";
 export const OPEN_SCREENSHOT_EVENT = "gtnh-factory-flow:open-screenshot";
 export const OPEN_SETTINGS_EVENT = "gtnh-factory-flow:open-settings";
 export const OPEN_CONTROLS_EVENT = "gtnh-factory-flow:open-controls";
+export const OPEN_CHANGELOG_EVENT = "gtnh-factory-flow:open-changelog";
 
 /**
  * Fires a door's event. The answering part calls `event.preventDefault()` to say it took the knock; the return value

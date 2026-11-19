@@ -456,7 +456,11 @@ public final class SteamMakers {
                 final boolean overThreshold = used >= threshold;
                 final double ratio = overThreshold ? rule.overRatio : rule.underRatio;
                 final double efficiency = isThermalBoiler ? 1 : 1 - 0.015 * (tier - 1);
-                final double steamPerSecond = used * ratio * efficiency;
+                // MTEExtremeHeatExchanger: mEUt = (int) (recipe EU/t x efficiency x used / max), and each tick turns
+                // whole 160 L lots of water into steam, so the steam is rounded down to 160 L a tick.
+                final double steamPerSecond = isExtreme
+                    ? Math.floor(Math.floor(((rule.max * ratio) / 20) * efficiency * (used / rule.max)) / 160) * 160 * 20
+                    : used * ratio * efficiency;
                 final String grade = isThermalBoiler
                     ? THERMAL_BOILER_PLAIN_STEAM.contains(fluidName) ? "Steam" : "SH Steam"
                     : isExtreme ? overThreshold ? "SC Steam" : "SH Steam" : overThreshold ? "SH Steam" : "Steam";

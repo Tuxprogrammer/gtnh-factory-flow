@@ -104,6 +104,14 @@ describe("heat exchanger circuit (MTEHeatExchanger, MTEAdvHeatExchanger, MTEExtr
     expect(model.stats.find((line) => line.label === "Threshold")?.value).toBe("1 L/s");
   });
 
+  it("rounds the EHE's steam down to whole 160 L lots a tick", () => {
+    // Hot coolant at circuit 2: (int) (1,280,000 x 0.985 x 8,000 / 128,000) = 78,800 a tick, so 492 lots of
+    // 160 L: 78,720 L/t of SC steam, 1,574,400 L/s, not 1,576,000.
+    const model = compute("extreme-heat-exchanger", { fluid: "Hot Coolant", intake: "8000", tier: "2" });
+    expect(model.outputs[0]).toMatchObject({ name: "SC Steam", perSecond: 1_574_400 });
+    expect(flow(model, "Distilled Water")).toBe(9840);
+  });
+
   it("caps the Whakawhiti Wera XL at twice its lowered threshold", () => {
     // Lava at circuit 10: threshold 32,000 - 9 x 1,200 = 21,200, so at most 42,400 L/s.
     const model = compute("whakawhiti-wera-xl", { fluid: "Lava", intake: "64000", tier: "10" });

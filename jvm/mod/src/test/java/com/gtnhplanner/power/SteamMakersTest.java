@@ -182,6 +182,22 @@ class SteamMakersTest {
     }
 
     @Test
+    void eheSteamIsWholeLotsOfOneHundredSixty() {
+        // Hot coolant at circuit 2: (int) (1,280,000 x 0.985 x 8,000 / 128,000) = 78,800 a tick, so 492 lots of
+        // 160 L: 78,720 L/t of SC steam, 1,574,400 L/s, not 1,576,000.
+        final PowerModel model = compute(
+            "extreme-heat-exchanger",
+            Map.of("fluid", "Hot Coolant", "intake", "8000", "tier", "2"));
+        assertEquals(
+            "SC Steam",
+            model.outputs()
+                .get(0)
+                .name());
+        assertEquals(1_574_400, flow(model, "SC Steam"), 0);
+        assertEquals(9840, flow(model, "Distilled Water"), 0);
+    }
+
+    @Test
     void whakawhitiCapsAtTwiceLoweredThreshold() {
         // caps the Whakawhiti Wera XL at twice its lowered threshold
         // Lava at circuit 10: threshold 32,000 - 9 x 1,200 = 21,200, so at most 42,400 L/s.
@@ -209,11 +225,11 @@ class SteamMakersTest {
     @Test
     void steamStatAtDecimalTieMatchesWebsite() {
         // Not in steam-makers.test.ts: a value the website shows, where the steam sits on a decimal tie
-        // and Intl rounds it up.
+        // and Intl rounds it up (821.7 x 200 x 0.985 / 20 = 8093.745).
         final PowerModel model = compute(
-            "extreme-heat-exchanger",
-            Map.of("fluid", "Hot Coolant", "intake", "321.7", "tier", "2"));
-        assertEquals("3,168.75 L/t SH Steam", model.stat("Steam"));
+            "large-heat-exchanger",
+            Map.of("fluid", "Hot Coolant", "intake", "821.7", "tier", "2"));
+        assertEquals("8,093.75 L/t SH Steam", model.stat("Steam"));
     }
 
     // ---- large boilers (MTELargeBoilerBase, LargeBoilerFuelBackend)

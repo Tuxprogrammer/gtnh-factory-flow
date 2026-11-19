@@ -524,7 +524,11 @@ function buildExchanger(entry: (typeof powerPlannerData.heatExchangers)[number])
       const overThreshold = used >= threshold;
       const ratio = overThreshold ? rule.overRatio : rule.underRatio;
       const efficiency = isThermalBoiler ? 1 : 1 - 0.015 * (tier - 1);
-      const steamPerSecond = used * ratio * efficiency;
+      // MTEExtremeHeatExchanger: mEUt = (int) (recipe EU/t x efficiency x used / max), and each
+      // tick turns whole 160 L lots of water into steam, so the steam is rounded down to 160 L a tick.
+      const steamPerSecond = isExtreme
+        ? Math.floor(Math.trunc(((rule.max * ratio) / 20) * efficiency * (used / rule.max)) / 160) * 160 * 20
+        : used * ratio * efficiency;
       const grade = isThermalBoiler
         ? THERMAL_BOILER_PLAIN_STEAM.has(fluidName)
           ? "Steam"

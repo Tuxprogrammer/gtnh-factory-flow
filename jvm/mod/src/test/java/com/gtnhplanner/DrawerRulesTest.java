@@ -108,7 +108,10 @@ class DrawerRulesTest {
         assertEquals(1500, shortfall.reachable(), 1e-3);
         assertEquals(1000, shortfall.target(), 0);
         assertEquals(Rule.AT_MOST, shortfall.rule());
-        assertEquals(List.of(chart.machine(0).id), shortfall.limitingNodes(), "the reactor's pin holds it");
+        assertEquals(
+            List.of(CoreIds.core(chart.machine(0).id)),
+            shortfall.limitingNodes(),
+            "the reactor's pin holds it");
         assertTrue(hasNote(s.notes, SolverMessage.DRAWER_UNMET), "the notice names the drawer: " + s.notes);
         assertTrue(hasNote(s.notes, SolverMessage.DRAWER_LIMITED_BY), "and the limit: " + s.notes);
     }
@@ -187,7 +190,10 @@ class DrawerRulesTest {
         final DrawerReadout.Shortfall shortfall = s.drawers.shortfall(CoreIds.core(oxygen.getId()));
         assertNotNull(shortfall);
         assertEquals(5, shortfall.reachable(), EPS);
-        assertEquals(List.of(water.getId()), shortfall.limitingDrawers(), "the water cap is what holds it back");
+        assertEquals(
+            List.of(CoreIds.core(water.getId())),
+            shortfall.limitingDrawers(),
+            "the water cap is what holds it back");
         assertTrue(
             shortfall.limitingNodes()
                 .isEmpty());
@@ -246,7 +252,7 @@ class DrawerRulesTest {
         assertEquals(1, s.gatedSinks.size());
         final External sink = s.gatedSinks.get(0);
         assertEquals(
-            chart.machine(2).id,
+            CoreIds.core(chart.machine(2).id),
             sink.port()
                 .nodeId());
         assertEquals(5, sink.ratePerSecond(), EPS);
@@ -416,7 +422,7 @@ class DrawerRulesTest {
         final DrawerReadout.Shortfall shortfall = s.drawers.shortfall(CoreIds.core(dust.getId()));
         assertNotNull(shortfall);
         assertEquals(100 / 112.5, shortfall.reachable(), EPS);
-        assertEquals(List.of(chart.machine(0).id), shortfall.limitingNodes());
+        assertEquals(List.of(CoreIds.core(chart.machine(0).id)), shortfall.limitingNodes());
     }
 
     // ── helpers ──

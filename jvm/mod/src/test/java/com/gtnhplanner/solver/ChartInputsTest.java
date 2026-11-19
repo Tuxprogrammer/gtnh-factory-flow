@@ -42,7 +42,10 @@ class ChartInputsTest {
     private static void check(final String name) throws IOException {
         final Graph graph = GtnhFlowLoader.load(name)
             .graph();
-        final JsonElement snapshot = SolveInputJson.write(GraphSolve.input(graph, graph.getBalanceMode(), null));
+        // Read back from its text, as the stored file is: a chance is a float, which Gson compares as its double.
+        final JsonElement snapshot = new JsonParser().parse(
+            SolveInputJson.write(GraphSolve.input(graph, graph.getBalanceMode(), null))
+                .toString());
         final JsonElement stored;
         try (InputStream in = Conformance.open("solver/corpus/inputs/gtnh-flow-" + name + ".json")) {
             stored = new JsonParser().parse(new InputStreamReader(in, StandardCharsets.UTF_8));

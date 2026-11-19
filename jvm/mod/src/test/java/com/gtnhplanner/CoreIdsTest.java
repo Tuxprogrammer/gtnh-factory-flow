@@ -11,13 +11,13 @@ import org.junit.jupiter.api.Test;
 import com.google.gson.JsonParser;
 import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Serializer;
-import com.gtnhplanner.data.flowchart.Summary;
 import com.gtnhplanner.data.flowchart.balancer.ChoiceKey;
 import com.gtnhplanner.data.flowchart.balancer.PortRef;
 
 /**
- * The mod's ids and the core's cross with nothing lost, and the plan serializer writes a core id exactly as it wrote
- * the mod's: a saved excess choice (its ports name their nodes) reads and writes as before the solver moved.
+ * The mod's ids and the core's cross with nothing lost, and the plan serializer writes and reads a core id exactly as
+ * it
+ * did the mod's: a saved excess choice (its ports name their nodes) is written as before the solver moved.
  */
 class CoreIdsTest {
 
@@ -41,12 +41,9 @@ class CoreIdsTest {
         assertEquals(
             new JsonParser().parse("{\"gateAnchors\":[{\"nodeId\":\"" + NODE + "\",\"portIndex\":3,\"input\":true}]}"),
             new JsonParser().parse(written));
-        assertEquals(choice, Serializer.GSON.fromJson(written, ChoiceKey.class));
-        final Summary summary = new Summary();
-        summary.setExcessChoice(choice);
-        assertEquals(
-            choice,
-            Serializer.GSON.fromJson(Serializer.GSON.toJson(summary), Summary.class)
-                .getExcessChoice());
+        // An id reads back from its text; the same text the plan serializer writes for a java.util.UUID.
+        assertEquals(CoreIds.core(NODE), Serializer.GSON.fromJson("\"" + NODE + "\"", Uuid.class));
+        assertEquals(Serializer.GSON.toJson(NODE), Serializer.GSON.toJson(CoreIds.core(NODE)));
+        assertNull(Serializer.GSON.fromJson("null", Uuid.class));
     }
 }

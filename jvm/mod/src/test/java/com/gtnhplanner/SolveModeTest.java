@@ -257,7 +257,7 @@ class SolveModeTest {
         assertEquals(1, s.gatedSinks.size(), "one gate: " + s.gatedSinks);
         final External sink = s.gatedSinks.get(0);
         assertEquals(
-            chart.machine(0).id,
+            CoreIds.core(chart.machine(0).id),
             sink.port()
                 .nodeId());
         assertEquals(7, sink.ratePerSecond(), EPS);
@@ -342,7 +342,7 @@ class SolveModeTest {
         final DrawerReadout.Shortfall shortfall = s.drawers.shortfall(CoreIds.core(ore.getId()));
         assertNotNull(shortfall);
         assertEquals(6, shortfall.reachable(), EPS);
-        assertEquals(List.of(ingot.getId()), shortfall.limitingDrawers());
+        assertEquals(List.of(CoreIds.core(ingot.getId())), shortfall.limitingDrawers());
     }
 
     @Test
@@ -380,7 +380,7 @@ class SolveModeTest {
         assertFalse(s.drawers.met(CoreIds.core(ingot.getId())));
         final DrawerReadout.Shortfall shortfall = s.drawers.shortfall(CoreIds.core(ingot.getId()));
         assertNotNull(shortfall);
-        assertEquals(List.of(ore.getId()), shortfall.limitingDrawers());
+        assertEquals(List.of(CoreIds.core(ore.getId())), shortfall.limitingDrawers());
     }
 
     @Test
@@ -402,7 +402,7 @@ class SolveModeTest {
         assertEquals(Rule.AT_MOST, shortfall.rule());
         assertEquals(10, shortfall.target(), 0);
         assertEquals(12, shortfall.reachable(), EPS);
-        assertEquals(List.of(chart.machine(0).id), shortfall.limitingNodes());
+        assertEquals(List.of(CoreIds.core(chart.machine(0).id)), shortfall.limitingNodes());
         assertTrue(hasNote(s.notes, SolverMessage.DRAWER_UNMET), "notes: " + s.notes);
         assertFalse(hasNote(s.notes, SolverMessage.PIN_CONFLICT), "notes: " + s.notes);
     }

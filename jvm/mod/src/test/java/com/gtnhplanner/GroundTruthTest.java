@@ -93,7 +93,7 @@ class GroundTruthTest {
         assertEquals(1, s.gatedSources.size(), "the gate is a source");
         final External source = s.gatedSources.get(0);
         assertEquals(
-            chart.machine(0).id,
+            CoreIds.core(chart.machine(0).id),
             source.port()
                 .nodeId(),
             "source sits on the DT (diluted acid input)");
@@ -123,7 +123,7 @@ class GroundTruthTest {
         assertEquals(1, s.gatedSinks.size(), "the deterministic default is the sink");
         final External sink = s.gatedSinks.get(0);
         assertEquals(
-            chart.machine(1).id,
+            CoreIds.core(chart.machine(1).id),
             sink.port()
                 .nodeId(),
             "sink sits on the DT's heavy naquadah output");
@@ -152,7 +152,7 @@ class GroundTruthTest {
 
         final External sink = s.gatedSinks.get(0);
         assertEquals(
-            chart.machine(1).id,
+            CoreIds.core(chart.machine(1).id),
             sink.port()
                 .nodeId(),
             "the surplus is sold at the oven's charcoal, not at the centrifuge's nitrogen");

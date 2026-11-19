@@ -3,13 +3,11 @@ package com.gtnhplanner.data.flowchart;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
-import lombok.Getter;
-import lombok.Setter;
+import com.gtnhplanner.core.base.Uuid;
 
 /**
  * A sticky note on the board: text on a coloured square, moved and resized like a card, nothing to do with the solve.
@@ -17,8 +15,6 @@ import lombok.Setter;
  * {@link #color} is its colour tag and {@link #fontSize} its size in the website's pixels (14 reads as the board's
  * font at its own size).
  */
-@Getter
-@Setter
 public class Note extends GraphData {
 
     /** The smallest a note gets, as on the website: five cells by two. */
@@ -31,7 +27,7 @@ public class Note extends GraphData {
     public static final String DEFAULT_COLOR = "yellow";
 
     /** The text, one entry per line. */
-    @NotNull
+    @Nonnull
     private List<String> text = new ArrayList<>();
     private int width = DEFAULT_W;
     private int height = DEFAULT_H;
@@ -75,14 +71,14 @@ public class Note extends GraphData {
     private String marks;
     /** The board group it is in ({@link BoardGroup}), or null. */
     @Nullable
-    private UUID group;
+    private Uuid group;
 
     public Note() {
-        super(UUID.randomUUID());
+        super(Uuid.randomUUID());
     }
 
     /** A note with a known id (one a shared plan knows it by). */
-    public Note(final UUID id) {
+    public Note(final Uuid id) {
         super(id);
     }
 
@@ -188,5 +184,141 @@ public class Note extends GraphData {
         n.fill = fill;
         n.marks = marks;
         return n;
+    }
+
+    public List<String> getText() {
+        return this.text;
+    }
+
+    public void setText(final List<String> text) {
+        this.text = text;
+    }
+
+    public int getWidth() {
+        return this.width;
+    }
+
+    public void setWidth(final int width) {
+        this.width = width;
+    }
+
+    public int getHeight() {
+        return this.height;
+    }
+
+    public void setHeight(final int height) {
+        this.height = height;
+    }
+
+    public String getColor() {
+        return this.color;
+    }
+
+    public void setColor(final String color) {
+        this.color = color;
+    }
+
+    public int getFontSize() {
+        return this.fontSize;
+    }
+
+    public void setFontSize(final int fontSize) {
+        this.fontSize = fontSize;
+    }
+
+    public String getKind() {
+        return this.kind;
+    }
+
+    public void setKind(final String kind) {
+        this.kind = kind;
+    }
+
+    public String getArrowDirection() {
+        return this.arrowDirection;
+    }
+
+    public void setArrowDirection(final String arrowDirection) {
+        this.arrowDirection = arrowDirection;
+    }
+
+    public List<int[]> getPoints() {
+        return this.points;
+    }
+
+    public void setPoints(final List<int[]> points) {
+        this.points = points;
+    }
+
+    public String getArrowHeads() {
+        return this.arrowHeads;
+    }
+
+    public void setArrowHeads(final String arrowHeads) {
+        this.arrowHeads = arrowHeads;
+    }
+
+    public int getArrowWidth() {
+        return this.arrowWidth;
+    }
+
+    public void setArrowWidth(final int arrowWidth) {
+        this.arrowWidth = arrowWidth;
+    }
+
+    public String getImageUrl() {
+        return this.imageUrl;
+    }
+
+    public void setImageUrl(final String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public String getBorder() {
+        return this.border;
+    }
+
+    public void setBorder(final String border) {
+        this.border = border;
+    }
+
+    public String getBorderColor() {
+        return this.borderColor;
+    }
+
+    public void setBorderColor(final String borderColor) {
+        this.borderColor = borderColor;
+    }
+
+    public String getFillColor() {
+        return this.fillColor;
+    }
+
+    public void setFillColor(final String fillColor) {
+        this.fillColor = fillColor;
+    }
+
+    public String getFill() {
+        return this.fill;
+    }
+
+    public void setFill(final String fill) {
+        this.fill = fill;
+    }
+
+    public String getMarks() {
+        return this.marks;
+    }
+
+    public void setMarks(final String marks) {
+        this.marks = marks;
+    }
+
+    public Uuid getGroup() {
+        return this.group;
+    }
+
+    public void setGroup(final Uuid group) {
+        this.group = group;
     }
 }

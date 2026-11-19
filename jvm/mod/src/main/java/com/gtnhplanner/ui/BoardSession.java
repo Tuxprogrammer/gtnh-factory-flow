@@ -8,17 +8,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import net.minecraft.item.ItemStack;
 
-import com.gtnhplanner.CoreIds;
 import com.gtnhplanner.GtnhPlanner;
 import com.gtnhplanner.api.PlanAPI;
 import com.gtnhplanner.cloud.session.CloudSession;
 import com.gtnhplanner.cloud.session.LiveDoc;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.core.view.rail.Notices;
 import com.gtnhplanner.core.view.rail.RailBuilder;
 import com.gtnhplanner.core.view.rail.RailInput;
@@ -70,16 +69,16 @@ public final class BoardSession {
     private Graph graph;
     private long seenVersion = Long.MIN_VALUE;
     private BalanceResult result;
-    private Map<UUID, CardModel> models = Collections.emptyMap();
-    private Map<UUID, DrawerModel> drawerModels = Collections.emptyMap();
+    private Map<Uuid, CardModel> models = Collections.emptyMap();
+    private Map<Uuid, DrawerModel> drawerModels = Collections.emptyMap();
     private List<Notice> notices = List.of();
     private boolean nothingToSolveFor;
     /** The recipes and drawers in parts of the plan nothing sets ({@link Unanchored}), as of the last solve. */
-    private java.util.Set<UUID> unset = java.util.Set.of();
+    private java.util.Set<Uuid> unset = java.util.Set.of();
     /** Bumped when the set of cards changes, so the canvas knows to rebuild its widgets. */
     private int structure;
     /** The sticky notes the widgets were last built for. */
-    private Set<UUID> noteIds = Set.of();
+    private Set<Uuid> noteIds = Set.of();
     /** The top bar's unit keys, as the player last left them ({@link PlannerSettings}). */
     private Fmt.RateUnit rateUnit = PlannerSettings.rateUnit();
     private NodeLookupContext pendingLookup;
@@ -139,19 +138,19 @@ public final class BoardSession {
         return graph;
     }
 
-    public Map<UUID, CardModel> models() {
+    public Map<Uuid, CardModel> models() {
         return models;
     }
 
-    public CardModel model(final UUID nodeId) {
+    public CardModel model(final Uuid nodeId) {
         return models.get(nodeId);
     }
 
-    public Map<UUID, DrawerModel> drawerModels() {
+    public Map<Uuid, DrawerModel> drawerModels() {
         return drawerModels;
     }
 
-    public DrawerModel drawerModel(final UUID drawerId) {
+    public DrawerModel drawerModel(final Uuid drawerId) {
         return drawerModels.get(drawerId);
     }
 
@@ -337,7 +336,7 @@ public final class BoardSession {
      * or a drawer's link (a buffer's user when {@code taker}). One undoable step, saved, never solved: the dots only
      * route the wire. Nothing happens when the wire is gone or already has them.
      */
-    public void setWaypoints(@Nullable final UUID edgeId, @Nullable final UUID drawerId,
+    public void setWaypoints(@Nullable final Uuid edgeId, @Nullable final Uuid drawerId,
         @Nullable final Drawer.Link link, final boolean taker, final List<int[]> points) {
         final List<int[]> clean = Waypoints.clean(points);
         if (edgeId != null) {
@@ -359,7 +358,7 @@ public final class BoardSession {
     /**
      * Remembers the port an NEI lookup (R/U) started from, so the recipe added from NEI's page next wires into it.
      */
-    public void armLookup(final UUID nodeId, final boolean output, final int portIndex) {
+    public void armLookup(final Uuid nodeId, final boolean output, final int portIndex) {
         pendingLookup = new NodeLookupContext(nodeId, output, portIndex);
     }
 
@@ -381,12 +380,12 @@ public final class BoardSession {
     }
 
     /** The card added from NEI last, once, for the board to bring into view. */
-    private UUID justAdded;
+    private Uuid justAdded;
     /** Whether that card is to be centred and selected (the plan button's), not just brought into view (+'s). */
     private boolean focusAdded;
 
-    public UUID takeJustAdded() {
-        final UUID id = justAdded;
+    public Uuid takeJustAdded() {
+        final Uuid id = justAdded;
         justAdded = null;
         return id;
     }
@@ -440,7 +439,7 @@ public final class BoardSession {
     // region Wires and drawers (each one undoable, saved, re-solved)
 
     /** Wires an output to an input; drawing a wire that already exists removes it instead. */
-    public void connect(final UUID from, final int output, final UUID to, final int input) {
+    public void connect(final Uuid from, final int output, final Uuid to, final int input) {
         final boolean[] cut = { false };
         edit(() -> {
             for (final Edge e : new ArrayList<>(graph.getEdges())) {
@@ -452,14 +451,14 @@ public final class BoardSession {
                     return;
                 }
             }
-            graph.addEdge(new Edge(UUID.randomUUID(), from, to, output, input));
+            graph.addEdge(new Edge(Uuid.randomUUID(), from, to, output, input));
         });
         final String key = outputKey(from, output);
         if (cut[0]) Sfx.cut(key);
         else Sfx.connect(key);
     }
 
-    public void deleteEdge(final UUID edgeId) {
+    public void deleteEdge(final Uuid edgeId) {
         String key = null;
         for (final Edge e : graph.getEdges())
             if (e.id.equals(edgeId)) key = outputKey(e.sourceNodeId, e.sourceOutputIndex);
@@ -468,7 +467,7 @@ public final class BoardSession {
     }
 
     /** The resource an output carries, for its wire's sound; null when there is no such port. */
-    private String outputKey(final UUID nodeId, final int output) {
+    private String outputKey(final Uuid nodeId, final int output) {
         final Node n = graph.nodes.get(nodeId);
         return n == null || output < 0 || output >= n.outputs.size() ? null : Resources.key(n.outputs.get(output));
     }
@@ -477,17 +476,17 @@ public final class BoardSession {
      * A port dragged onto another card: an output wires into the first input there that takes it, an input takes the
      * first output there that fits. False when nothing on that card matches.
      */
-    public boolean dropPortOnCard(final UUID fromNode, final boolean output, final int port, final UUID toNode) {
+    public boolean dropPortOnCard(final Uuid fromNode, final boolean output, final int port, final Uuid toNode) {
         final Node to = graph.nodes.get(toNode);
         if (com.gtnhplanner.power.Holders.is(to)) return dropPortOnHolder(fromNode, output, port, to);
         // A shared machine's recipes in turn: the first with a matching port takes the wire, as on the website.
-        for (final UUID section : sectionsOf(toNode)) {
+        for (final Uuid section : sectionsOf(toNode)) {
             if (!section.equals(fromNode) && dropPortOnRecipe(fromNode, output, port, section)) return true;
         }
         return false;
     }
 
-    private boolean dropPortOnRecipe(final UUID fromNode, final boolean output, final int port, final UUID toNode) {
+    private boolean dropPortOnRecipe(final Uuid fromNode, final boolean output, final int port, final Uuid toNode) {
         final Node src = graph.nodes.get(fromNode), dst = graph.nodes.get(toNode);
         if (src == null || dst == null || src == dst) return false;
         // A wire that lands on an input as one of the other items its slot takes sets it to that item, as the website's
@@ -536,7 +535,7 @@ public final class BoardSession {
     }
 
     /** Whether a wire already joins that output to that input. */
-    private boolean wired(final UUID from, final int output, final UUID to, final int input) {
+    private boolean wired(final Uuid from, final int output, final Uuid to, final int input) {
         for (final Edge e : graph.getEdges()) if (e.sourceNodeId.equals(from) && e.sourceOutputIndex == output
             && e.targetNodeId.equals(to)
             && e.targetInputIndex == input) return true;
@@ -579,7 +578,7 @@ public final class BoardSession {
     private void connectPicking(final Node from, final int output, final Node to, final Pick pick) {
         edit(() -> {
             applyInputPick(to, pick.input(), pick.key());
-            graph.addEdge(new Edge(UUID.randomUUID(), from.id, to.id, output, pick.input()));
+            graph.addEdge(new Edge(Uuid.randomUUID(), from.id, to.id, output, pick.input()));
         });
         Sfx.connect(pick.key());
     }
@@ -627,7 +626,7 @@ public final class BoardSession {
      * The keys of the other items an input could be set to (its slot's alternatives); empty for an output, or an input
      * that takes one thing only.
      */
-    public java.util.Set<String> choiceKeys(final UUID nodeId, final boolean output, final int index) {
+    public java.util.Set<String> choiceKeys(final Uuid nodeId, final boolean output, final int index) {
         final Node n = graph.nodes.get(nodeId);
         if (output || n == null || index < 0 || index >= n.inputs.size()) return java.util.Set.of();
         final Port<?> p = n.inputs.get(index);
@@ -641,7 +640,7 @@ public final class BoardSession {
      * A port dropped on a custom rate card or a fluid tank: the card takes the port's resource and is wired to it,
      * supplying an input or taking an output.
      */
-    private boolean dropPortOnHolder(final UUID fromNode, final boolean output, final int port, final Node card) {
+    private boolean dropPortOnHolder(final Uuid fromNode, final boolean output, final int port, final Node card) {
         final Node src = graph.nodes.get(fromNode);
         if (src == null || src == card || com.gtnhplanner.power.Holders.is(src)) return false;
         final List<Port<?>> ports = output ? src.outputs : src.inputs;
@@ -657,19 +656,19 @@ public final class BoardSession {
      * card's old wires. One undo step; false, changing nothing, when the card cannot take it (a tank given an item that
      * holds no fluid).
      */
-    public boolean holdAndWire(final Node card, final String key, final boolean supply, final UUID other,
+    public boolean holdAndWire(final Node card, final String key, final boolean supply, final Uuid other,
         final int otherPort) {
         if (holderPort(card, key, supply) < 0 && !com.gtnhplanner.power.Holders.canTake(card, key, supply))
             return false;
         edit(() -> {
             if (!holdOn(card, key, supply)) return;
             final int own = holderPort(card, key, supply);
-            final UUID from = supply ? card.id : other, to = supply ? other : card.id;
+            final Uuid from = supply ? card.id : other, to = supply ? other : card.id;
             final int out = supply ? own : otherPort, in = supply ? otherPort : own;
             for (final Edge e : graph.getEdges()) if (e.sourceNodeId.equals(from) && e.sourceOutputIndex == out
                 && e.targetNodeId.equals(to)
                 && e.targetInputIndex == in) return;
-            graph.addEdge(new Edge(UUID.randomUUID(), from, to, out, in));
+            graph.addEdge(new Edge(Uuid.randomUUID(), from, to, out, in));
         });
         Sfx.connect(key);
         return true;
@@ -728,7 +727,7 @@ public final class BoardSession {
     }
 
     /** Every wire and drawer link on a card, gone. */
-    private void unwire(final UUID nodeId) {
+    private void unwire(final Uuid nodeId) {
         for (final Edge e : new ArrayList<>(graph.getEdges()))
             if (e.sourceNodeId.equals(nodeId) || e.targetNodeId.equals(nodeId)) graph.removeEdge(e.id);
         for (final Drawer d : graph.getDrawers()) d.removeLinksTo(nodeId);
@@ -748,7 +747,7 @@ public final class BoardSession {
     }
 
     /** Whether anything is wired to a card: a wire either way, or a drawer. */
-    private boolean wired(final UUID nodeId) {
+    private boolean wired(final Uuid nodeId) {
         for (final Edge e : graph.getEdges())
             if (e.sourceNodeId.equals(nodeId) || e.targetNodeId.equals(nodeId)) return true;
         for (final Drawer d : graph.getDrawers()) for (final Drawer.Held h : d.held()) if (h.link()
@@ -762,7 +761,7 @@ public final class BoardSession {
      * product, or an output on a source, makes it a buffer ({@code docs/design/buffer-drawers.md}); dropped again, it
      * lets go, and a buffer left with one side is the end it still is.
      */
-    public boolean dropPortOnDrawer(final UUID fromNode, final boolean output, final int port, final Drawer drawer) {
+    public boolean dropPortOnDrawer(final Uuid fromNode, final boolean output, final int port, final Drawer drawer) {
         final Node node = graph.nodes.get(fromNode);
         if (node == null || !drawer.takesSide(!output)) return false;
         final String key = Resources.key((output ? node.outputs : node.inputs).get(port));
@@ -804,17 +803,17 @@ public final class BoardSession {
      * of the drop point), an output a product (to the right).
      */
        /** A port on a recipe: its node, which side, and its index there. */
-    public record PortRef(UUID node, boolean output, int index) {}
+    public record PortRef(Uuid node, boolean output, int index) {}
 
     /**
      * The port a port dropped on a card would be wired to, as {@link #dropPortOnCard} picks it: the first recipe on the
      * card with a port that takes it. Null when none does, and for a custom rate card (its own socket takes it).
      */
     @Nullable
-    public PortRef dropTarget(final UUID fromNode, final boolean output, final int port, final UUID toNode) {
+    public PortRef dropTarget(final Uuid fromNode, final boolean output, final int port, final Uuid toNode) {
         final Node to = graph.nodes.get(toNode), src = graph.nodes.get(fromNode);
         if (to == null || src == null || com.gtnhplanner.power.Holders.is(to)) return null;
-        for (final UUID section : sectionsOf(toNode)) {
+        for (final Uuid section : sectionsOf(toNode)) {
             final Node dst = graph.nodes.get(section);
             if (dst == null || dst == src) continue;
             if (output) {
@@ -836,7 +835,7 @@ public final class BoardSession {
     }
 
     /** Whether a port already has a drawer on it: one per port, as on the website. */
-    public boolean portHasDrawer(final UUID node, final boolean output, final int port) {
+    public boolean portHasDrawer(final Uuid node, final boolean output, final int port) {
         for (final Drawer d : graph.getDrawers()) if (d.holds(node, port, !output)) return true;
         return false;
     }
@@ -845,7 +844,7 @@ public final class BoardSession {
      * Whether a port has an end of the plan on it: a drawer that is no buffer. What the solve sends out or brings in at
      * a port linked to a buffer is no buffer's: it is the port's forced row, as on a plain wire.
      */
-    public boolean portHasEndDrawer(final UUID node, final boolean output, final int port) {
+    public boolean portHasEndDrawer(final Uuid node, final boolean output, final int port) {
         for (final Drawer d : graph.getDrawers()) if (!d.isBuffer() && d.holds(node, port, !output)) return true;
         return false;
     }
@@ -854,7 +853,7 @@ public final class BoardSession {
      * A port dropped on empty board: a drawer there for it, wired to it (a product for an output, a source for an
      * input). Refused, false, when the port has a drawer already.
      */
-    public boolean dropPortOnBoard(final UUID fromNode, final boolean output, final int port, final int worldX,
+    public boolean dropPortOnBoard(final Uuid fromNode, final boolean output, final int port, final int worldX,
         final int worldY) {
         final Node node = graph.nodes.get(fromNode);
         if (node == null || portHasDrawer(fromNode, output, port)) return false;
@@ -875,7 +874,7 @@ public final class BoardSession {
      * A port picked up off its card and put down as a drawer, its top left at {@code x, y}: a source for an input, a
      * product for an output, linked to the port, taking the rate set on the port (whose own goes: it is wired now).
      */
-    public boolean dropPortAsDrawer(final UUID fromNode, final boolean output, final int port, final int x,
+    public boolean dropPortAsDrawer(final Uuid fromNode, final boolean output, final int port, final int x,
         final int y) {
         final Drawer drawer = portDrawer(fromNode, output, port);
         return drawer != null && placePortDrawer(drawer, x, y);
@@ -886,7 +885,7 @@ public final class BoardSession {
      * up off its card): a source for an input, a product for an output; null when the port has a drawer already.
      */
     @Nullable
-    public Drawer portDrawer(final UUID fromNode, final boolean output, final int port) {
+    public Drawer portDrawer(final Uuid fromNode, final boolean output, final int port) {
         final Node node = graph.nodes.get(fromNode);
         if (node == null || port < 0
             || port >= (output ? node.outputs : node.inputs).size()
@@ -1063,7 +1062,7 @@ public final class BoardSession {
     }
 
     /** Rates being wheeled, per drawer (per second), shown at once and set once the wheel is still; null for none. */
-    private Map<UUID, Double> wheeledRates;
+    private Map<Uuid, Double> wheeledRates;
 
     /**
      * A drawer rate from the wheel: shown and solved at once, one undo step once the wheel goes still ({@link #live}).
@@ -1077,7 +1076,7 @@ public final class BoardSession {
     }
 
     /** The rate a drawer is being wheeled to, per second; null when it is not. */
-    public Double wheeledRate(final UUID drawerId) {
+    public Double wheeledRate(final Uuid drawerId) {
         return wheeledRates == null ? null : wheeledRates.get(drawerId);
     }
 
@@ -1118,14 +1117,14 @@ public final class BoardSession {
             if (in >= 0) {
                 final String key = pickFor(added, in, originPorts.get(idx));
                 if (key != null) applyInputPick(added, in, key);
-                graph.addEdge(new Edge(UUID.randomUUID(), origin.id, added.id, idx, in));
+                graph.addEdge(new Edge(Uuid.randomUUID(), origin.id, added.id, idx, in));
                 return true;
             }
             // Looked up from what it uses: the new card's input is set to it when the slot takes it among others.
             final Pick pick = pickTaking(originPorts.get(idx), added);
             if (pick == null) return false;
             applyInputPick(added, pick.input(), pick.key());
-            graph.addEdge(new Edge(UUID.randomUUID(), origin.id, added.id, idx, pick.input()));
+            graph.addEdge(new Edge(Uuid.randomUUID(), origin.id, added.id, idx, pick.input()));
             return true;
         }
         final Port<?> want = originPorts.get(idx);
@@ -1134,13 +1133,13 @@ public final class BoardSession {
                 .canConnect(want)) continue;
             final String key = pickFor(origin, idx, added.outputs.get(out));
             if (key != null) applyInputPick(origin, idx, key);
-            graph.addEdge(new Edge(UUID.randomUUID(), added.id, origin.id, out, idx));
+            graph.addEdge(new Edge(Uuid.randomUUID(), added.id, origin.id, out, idx));
             return true;
         }
         final Pick pick = pickTaken(origin, idx, added);
         if (pick == null) return false;
         applyInputPick(origin, idx, pick.key());
-        graph.addEdge(new Edge(UUID.randomUUID(), added.id, origin.id, pick.other(), idx));
+        graph.addEdge(new Edge(Uuid.randomUUID(), added.id, origin.id, pick.other(), idx));
         return true;
     }
 
@@ -1175,7 +1174,7 @@ public final class BoardSession {
         final List<Node> nodes = new ArrayList<>();
         final List<Drawer> drawers = new ArrayList<>();
         final List<com.gtnhplanner.data.flowchart.Note> notes = new ArrayList<>();
-        for (final UUID id : selection) {
+        for (final Uuid id : selection) {
             final Node n = graph.nodes.get(id);
             if (n != null) {
                 nodes.add(n);
@@ -1199,7 +1198,7 @@ public final class BoardSession {
         final List<ClipNote> clipNotes = new ArrayList<>();
         for (final com.gtnhplanner.data.flowchart.Note note : notes)
             clipNotes.add(new ClipNote(note.copy(), note.getX() - x0, note.getY() - y0));
-        final Map<UUID, Integer> index = new HashMap<>();
+        final Map<Uuid, Integer> index = new HashMap<>();
         final List<ClipNode> clipNodes = new ArrayList<>();
         for (final Node n : nodes) {
             index.put(n.id, clipNodes.size());
@@ -1257,7 +1256,7 @@ public final class BoardSession {
      * Pastes the last copy with its top-left at a board point, as one undoable edit, and selects and returns what it
      * made. A card whose recipe NEI no longer knows is left out, with its wires.
      */
-    public List<UUID> paste(final int worldX, final int worldY) {
+    public List<Uuid> paste(final int worldX, final int worldY) {
         return pasteAt(List.of(new int[] { worldX, worldY }));
     }
 
@@ -1265,7 +1264,7 @@ public final class BoardSession {
      * Pastes the last copy once at each board point, all as one undoable edit (the dev harness's stress plans tile a
      * plan this way), and selects and returns what it made.
      */
-    public List<UUID> pasteAt(final List<int[]> origins) {
+    public List<Uuid> pasteAt(final List<int[]> origins) {
         final Clip clip = clipboard;
         if (clip == null || origins.isEmpty()) return List.of();
         final List<Runnable> adds = new ArrayList<>();
@@ -1304,13 +1303,13 @@ public final class BoardSession {
             made.add(n);
         }
         final List<Drawer> madeDrawers = new ArrayList<>();
-        final List<UUID> madeNotes = new ArrayList<>();
+        final List<Uuid> madeNotes = new ArrayList<>();
         return () -> {
             for (final Node n : made) if (n != null) graph.addNode(n);
             for (final ClipEdge e : clip.edges()) {
                 final Node from = made.get(e.from()), to = made.get(e.to());
                 if (from == null || to == null) continue;
-                final Edge edge = new Edge(UUID.randomUUID(), from.id, to.id, e.output(), e.input());
+                final Edge edge = new Edge(Uuid.randomUUID(), from.id, to.id, e.output(), e.input());
                 // Its dots ride along with the copy, as on the website.
                 edge.waypoints = Waypoints.shifted(e.waypoints(), snap(worldX), snap(worldY));
                 graph.addEdge(edge);
@@ -1394,7 +1393,7 @@ public final class BoardSession {
     }
 
     /** Deletes a sticky note, as one undoable step. */
-    public void deleteNote(final UUID id) {
+    public void deleteNote(final Uuid id) {
         selection.remove(id);
         if (!graph.notes.containsKey(id)) return;
         editLayout(() -> graph.notes.remove(id));
@@ -1422,7 +1421,7 @@ public final class BoardSession {
      * The open plan's card as a task link: this plan's id and the card's id as the plan spells it (a card the website
      * made keeps the website's).
      */
-    public Tasks.Link linkOf(final UUID nodeId) {
+    public Tasks.Link linkOf(final Uuid nodeId) {
         final LiveDoc live = live();
         return new Tasks.Link(graph.planId(), live != null ? live.planId("node", nodeId) : nodeId.toString());
     }
@@ -1437,7 +1436,7 @@ public final class BoardSession {
     }
 
     /** Shows a card on the open plan: the plan's board, the card centred and selected. */
-    public void focusCard(final UUID nodeId) {
+    public void focusCard(final Uuid nodeId) {
         if (!graph.nodes.containsKey(nodeId)) {
             Sfx.DENY.play();
             return;
@@ -1457,7 +1456,7 @@ public final class BoardSession {
             flash(Severity.WARN, "That plan is gone");
             return;
         }
-        final UUID node = com.gtnhplanner.cloud.map.PlanIds.uuid(link.node());
+        final Uuid node = com.gtnhplanner.cloud.map.PlanIds.uuid(link.node());
         if (!target.nodes.containsKey(node)) {
             Sfx.DENY.play();
             flash(Severity.WARN, "That card is gone");
@@ -1484,7 +1483,7 @@ public final class BoardSession {
      * the dot on its header.
      */
     @Nullable
-    public Tasks.Status taskStatus(final UUID nodeId) {
+    public Tasks.Status taskStatus(final Uuid nodeId) {
         final long now = System.nanoTime();
         if (now - dotsChecked > 100_000_000L) {
             dotsChecked = now;
@@ -1519,7 +1518,7 @@ public final class BoardSession {
         if (dots.isEmpty()) return null;
         final String plan = graph.planId();
         Tasks.Status most = null;
-        for (final UUID id : sectionsOf(nodeId)) {
+        for (final Uuid id : sectionsOf(nodeId)) {
             final Tasks.Status s = dots.get(new Tasks.Link(plan, id.toString()));
             if (s != null && (most == null || TaskEdits.urgency(s) > TaskEdits.urgency(most))) most = s;
         }
@@ -1589,10 +1588,10 @@ public final class BoardSession {
         return Math.round(v / 10f) * 10;
     }
 
-    private final Set<UUID> selection = new java.util.LinkedHashSet<>();
+    private final Set<Uuid> selection = new java.util.LinkedHashSet<>();
 
     /** Selects a card or drawer; {@code add} keeps the others (Shift), and toggles this one. */
-    public void select(final UUID id, final boolean add) {
+    public void select(final Uuid id, final boolean add) {
         Sfx.CLICK.play(Sfx.SELECT_VOLUME, Sfx.SELECT_PITCH);
         if (!add) {
             selection.clear();
@@ -1600,12 +1599,12 @@ public final class BoardSession {
         } else if (!selection.remove(id)) selection.add(id);
     }
 
-    public boolean isSelected(final UUID id) {
+    public boolean isSelected(final Uuid id) {
         return selection.contains(id);
     }
 
     /** Lets go of one thing in the selection (gone out of sight, or off the plan). */
-    public void deselect(final UUID id) {
+    public void deselect(final Uuid id) {
         selection.remove(id);
     }
 
@@ -1613,12 +1612,12 @@ public final class BoardSession {
      * Whether a card, drawer or note draws its selection outline: only when it is one of several selected, where the
      * outline says what a move or a delete takes. One thing alone is just the thing clicked.
      */
-    public boolean showsSelected(final UUID id) {
+    public boolean showsSelected(final Uuid id) {
         // A picture of the plan shows no selection.
         return selection.size() > 1 && selection.contains(id) && !com.gtnhplanner.ui.canvas.PlanPicture.drawing();
     }
 
-    public Set<UUID> selection() {
+    public Set<Uuid> selection() {
         return java.util.Collections.unmodifiableSet(selection);
     }
 
@@ -1633,9 +1632,9 @@ public final class BoardSession {
     /** Every card, drawer, note and group on the board (not what a collapsed group hides). */
     public void selectAll() {
         selection.clear();
-        for (final UUID id : graph.nodes.keySet())
+        for (final Uuid id : graph.nodes.keySet())
             if (!com.gtnhplanner.data.flowchart.Groups.hidden(graph, id)) selection.add(id);
-        for (final UUID id : graph.drawers.keySet())
+        for (final Uuid id : graph.drawers.keySet())
             if (!com.gtnhplanner.data.flowchart.Groups.hidden(graph, id)) selection.add(id);
         for (final com.gtnhplanner.data.flowchart.Note n : graph.notes.values())
             if (!n.isHidden() && !com.gtnhplanner.data.flowchart.Groups.hidden(graph, n.getId()))
@@ -1649,11 +1648,11 @@ public final class BoardSession {
     public void deleteSelected() {
         if (selection.isEmpty()) return;
         // A shared machine goes whole: every recipe on its card.
-        final List<UUID> ids = new ArrayList<>();
-        for (final UUID id : selection) for (final UUID s : sectionsOf(id)) if (!ids.contains(s)) ids.add(s);
+        final List<Uuid> ids = new ArrayList<>();
+        for (final Uuid id : selection) for (final Uuid s : sectionsOf(id)) if (!ids.contains(s)) ids.add(s);
         // A group goes with everything in it, as deleting a board always did.
-        for (final UUID id : new ArrayList<>(ids)) if (graph.boardGroups.containsKey(id))
-            for (final UUID inside : com.gtnhplanner.data.flowchart.Groups.descendants(graph, id))
+        for (final Uuid id : new ArrayList<>(ids)) if (graph.boardGroups.containsKey(id))
+            for (final Uuid inside : com.gtnhplanner.data.flowchart.Groups.descendants(graph, id))
                 if (!ids.contains(inside)) ids.add(inside);
         selection.clear();
         final boolean notesOnly = ids.stream()
@@ -2047,7 +2046,7 @@ public final class BoardSession {
     }
 
     /** Puts a card on the pin list shown while playing, or takes it off: one undo step, saved. */
-    public void togglePinList(final UUID machine) {
+    public void togglePinList(final Uuid machine) {
         final boolean on = !graph.pinList.contains(machine);
         (on ? com.gtnhplanner.ui.sound.Sfx.TOGGLE_ON : com.gtnhplanner.ui.sound.Sfx.TOGGLE_OFF).play();
         editLayout(() -> {
@@ -2082,24 +2081,24 @@ public final class BoardSession {
     // region Shared machines (Factory Flow's: one card, several recipes time-sharing one machine)
 
     /** Each section's shared machine, as of the last tick. */
-    private Map<UUID, com.gtnhplanner.data.flowchart.MachineGroup> sharedBySection = Map.of();
+    private Map<Uuid, com.gtnhplanner.data.flowchart.MachineGroup> sharedBySection = Map.of();
 
     /** The settings that belong to the machine rather than the recipe: a shared card keeps them the same throughout. */
     private static final Set<String> RECIPE_SETTINGS = Set.of("duration_ticks", "recipe_heat", "machines");
 
     /** The shared machine a recipe is a section of, or null when its card is its own. */
-    public com.gtnhplanner.data.flowchart.MachineGroup sharedOf(final UUID nodeId) {
+    public com.gtnhplanner.data.flowchart.MachineGroup sharedOf(final Uuid nodeId) {
         return sharedBySection.get(nodeId);
     }
 
     /** The recipes on the card a node is on, top first: its shared machine's sections, or just itself. */
-    public List<UUID> sectionsOf(final UUID nodeId) {
+    public List<Uuid> sectionsOf(final Uuid nodeId) {
         final com.gtnhplanner.data.flowchart.MachineGroup g = sharedBySection.get(nodeId);
         return g == null ? List.of(nodeId) : List.copyOf(g.getSections());
     }
 
     /** The node whose card a node is drawn on: the first section of its shared machine, or itself. */
-    public UUID hostOf(final UUID nodeId) {
+    public Uuid hostOf(final Uuid nodeId) {
         final com.gtnhplanner.data.flowchart.MachineGroup g = sharedBySection.get(nodeId);
         return g == null ? nodeId
             : g.getSections()
@@ -2107,11 +2106,11 @@ public final class BoardSession {
     }
 
     /** The cards a set of ids covers, each once, by host: what a selection of cards is. */
-    public List<UUID> cardsIn(final java.util.Collection<UUID> ids) {
-        final List<UUID> out = new ArrayList<>();
-        for (final UUID id : ids) {
+    public List<Uuid> cardsIn(final java.util.Collection<Uuid> ids) {
+        final List<Uuid> out = new ArrayList<>();
+        for (final Uuid id : ids) {
             if (!graph.nodes.containsKey(id)) continue;
-            final UUID host = hostOf(id);
+            final Uuid host = hostOf(id);
             if (!out.contains(host)) out.add(host);
         }
         return out;
@@ -2123,11 +2122,11 @@ public final class BoardSession {
      * (wires find its ports from there).
      */
     private void indexSharedMachines() {
-        final Map<UUID, com.gtnhplanner.data.flowchart.MachineGroup> index = new HashMap<>();
+        final Map<Uuid, com.gtnhplanner.data.flowchart.MachineGroup> index = new HashMap<>();
         for (final com.gtnhplanner.data.flowchart.Group group : new ArrayList<>(graph.getGroups())) {
             if (!(group instanceof final com.gtnhplanner.data.flowchart.MachineGroup g) || g.getSections()
                 .isEmpty()) continue;
-            for (final UUID id : new ArrayList<>(g.getSections())) if (!graph.nodes.containsKey(id)) g.removeSection(id);
+            for (final Uuid id : new ArrayList<>(g.getSections())) if (!graph.nodes.containsKey(id)) g.removeSection(id);
             if (!g.isShared()) {
                 graph.removeGroup(g.getId());
                 continue;
@@ -2135,7 +2134,7 @@ public final class BoardSession {
             final Node host = graph.nodes.get(
                 g.getSections()
                     .get(0));
-            for (final UUID id : g.getSections()) {
+            for (final Uuid id : g.getSections()) {
                 final Node n = graph.nodes.get(id);
                 n.x = host.x;
                 n.y = host.y;
@@ -2146,9 +2145,9 @@ public final class BoardSession {
     }
 
     /** The machines (by NEI catalyst) that run every one of these recipes, in the first one's order. */
-    public List<ItemStack> commonMachines(final List<UUID> nodeIds) {
+    public List<ItemStack> commonMachines(final List<Uuid> nodeIds) {
         List<ItemStack> common = null;
-        for (final UUID id : nodeIds) {
+        for (final Uuid id : nodeIds) {
             final CardModel m = models.get(id);
             if (m == null) return List.of();
             if (common == null) common = new ArrayList<>(m.catalysts);
@@ -2160,16 +2159,16 @@ public final class BoardSession {
     }
 
     /** Every recipe on these cards, card by card, each card's sections in order. */
-    private List<UUID> allSections(final List<UUID> cards) {
-        final List<UUID> out = new ArrayList<>();
-        for (final UUID card : cards) for (final UUID s : sectionsOf(card)) if (!out.contains(s)) out.add(s);
+    private List<Uuid> allSections(final List<Uuid> cards) {
+        final List<Uuid> out = new ArrayList<>();
+        for (final Uuid card : cards) for (final Uuid s : sectionsOf(card)) if (!out.contains(s)) out.add(s);
         return out;
     }
 
     /** Whether these ids are two or more recipe cards that one machine can run all of. */
-    public boolean canCombine(final java.util.Collection<UUID> ids) {
-        for (final UUID id : ids) if (!graph.nodes.containsKey(id)) return false;
-        final List<UUID> cards = cardsIn(ids);
+    public boolean canCombine(final java.util.Collection<Uuid> ids) {
+        for (final Uuid id : ids) if (!graph.nodes.containsKey(id)) return false;
+        final List<Uuid> cards = cardsIn(ids);
         return cards.size() >= 2 && !commonMachines(allSections(cards)).isEmpty();
     }
 
@@ -2179,17 +2178,17 @@ public final class BoardSession {
      * recipes become its sections, their wires with them. A pinned count on the host becomes the machine's. One undo
      * step. Returns the host, or null when they cannot share a machine.
      */
-    public UUID combine(final java.util.Collection<UUID> ids) {
+    public Uuid combine(final java.util.Collection<Uuid> ids) {
         if (!canCombine(ids)) {
             Sfx.DENY.play();
             return null;
         }
-        final List<UUID> cards = cardsIn(ids);
+        final List<Uuid> cards = cardsIn(ids);
         cards.sort(
-            java.util.Comparator.comparingInt((UUID id) -> graph.nodes.get(id).y)
+            java.util.Comparator.comparingInt((Uuid id) -> graph.nodes.get(id).y)
                 .thenComparingInt(id -> graph.nodes.get(id).x));
-        final UUID hostId = cards.get(0);
-        final List<UUID> sections = allSections(cards);
+        final Uuid hostId = cards.get(0);
+        final List<Uuid> sections = allSections(cards);
         final List<ItemStack> common = commonMachines(sections);
         edit(() -> {
             final Node host = graph.nodes.get(hostId);
@@ -2198,13 +2197,13 @@ public final class BoardSession {
                 : host.isMachineCountFixed() ? host.machineConfig.getMachineCount() : 0;
             final boolean pinned = g != null ? g.isPinned() : host.isMachineCountFixed();
             final boolean exact = g != null ? g.isExact() : host.isMachineCountExact();
-            for (final UUID card : cards) {
+            for (final Uuid card : cards) {
                 final com.gtnhplanner.data.flowchart.MachineGroup old = sharedOf(card);
                 if (old != null) graph.removeGroup(old.getId());
             }
             g = new com.gtnhplanner.data.flowchart.MachineGroup();
             g.setHeader("Shared machine");
-            for (final UUID s : sections) g.addSection(s);
+            for (final Uuid s : sections) g.addSection(s);
             g.setMachineCapacity(capacity);
             g.setPinned(pinned && capacity > 0);
             g.setExact(exact && g.isPinned());
@@ -2215,7 +2214,7 @@ public final class BoardSession {
                 && common.stream()
                     .anyMatch(c -> ItemStack.areItemStacksEqual(c, hostModel.machineStack));
             if (!hostCommon) host.machineName = CardDefaults.itemKey(common.get(0));
-            for (final UUID s : sections) {
+            for (final Uuid s : sections) {
                 final Node n = graph.nodes.get(s);
                 n.setMachineCountFixed(false);
                 n.x = host.x;
@@ -2230,8 +2229,8 @@ public final class BoardSession {
     }
 
     /** Gives every section the host's machine and its machine settings; each keeps its own recipe's. */
-    private void copyMachineSettings(final Node host, final List<UUID> sections) {
-        for (final UUID s : sections) {
+    private void copyMachineSettings(final Node host, final List<Uuid> sections) {
+        for (final Uuid s : sections) {
             final Node n = graph.nodes.get(s);
             if (n == null || n == host) continue;
             n.machineName = host.machineName;
@@ -2256,7 +2255,7 @@ public final class BoardSession {
     }
 
     /** Takes a recipe off its shared machine: the recipe and its wires go, as Factory Flow's X does. */
-    public void removeSection(final UUID nodeId) {
+    public void removeSection(final Uuid nodeId) {
         final com.gtnhplanner.data.flowchart.MachineGroup g = sharedOf(nodeId);
         if (g == null) return;
         edit(() -> {
@@ -2268,10 +2267,10 @@ public final class BoardSession {
     }
 
     /** Moves a recipe up (-1) or down (+1) on its shared card; the first one is the host. */
-    public void moveSection(final UUID nodeId, final int step) {
+    public void moveSection(final Uuid nodeId, final int step) {
         final com.gtnhplanner.data.flowchart.MachineGroup g = sharedOf(nodeId);
         if (g == null) return;
-        final List<UUID> sections = g.getSections();
+        final List<Uuid> sections = g.getSections();
         final int i = sections.indexOf(nodeId), j = i + step;
         if (i < 0 || j < 0 || j >= sections.size()) return;
         editLayout(() -> java.util.Collections.swap(sections, i, j));
@@ -2510,7 +2509,7 @@ public final class BoardSession {
     }
 
     /** As {@link #rule(Node)} by id; Any for a node not in the plan. */
-    public PinRule rule(final UUID id) {
+    public PinRule rule(final Uuid id) {
         final Node node = graph.nodes.get(id);
         return node == null ? PinRule.ANY : rule(node);
     }
@@ -2544,15 +2543,15 @@ public final class BoardSession {
     }
 
     /** Each Up to read-out, by every machine of its pool, from the last solve (and the dev harness's stand-ins). */
-    private Map<UUID, UpToReadout> upTo = Map.of();
+    private Map<Uuid, UpToReadout> upTo = Map.of();
     /** Read-outs the dev harness shows in place of the solver's, by machine; null for none. */
-    private Map<UUID, UpToReadout> devUpTo;
+    private Map<Uuid, UpToReadout> devUpTo;
     /** Drawer shortfalls the dev harness adds to the solver's; null for none. */
     private List<DrawerReadout.Shortfall> devShortfalls;
 
     /** Why an Up to card runs where it does, by any of its recipes; null when the solve read none out. */
     @Nullable
-    public UpToReadout upTo(final UUID id) {
+    public UpToReadout upTo(final Uuid id) {
         return upTo.get(id);
     }
 
@@ -2560,19 +2559,19 @@ public final class BoardSession {
      * Dev only: read-outs to show in place of the solver's (by each machine of the pool), and drawer shortfalls to add
      * to its, until cleared with nulls. The cards and notices are rebuilt on the next tick.
      */
-    public void devUpTo(@Nullable final Map<UUID, UpToReadout> readouts,
+    public void devUpTo(@Nullable final Map<Uuid, UpToReadout> readouts,
         @Nullable final List<DrawerReadout.Shortfall> shortfalls) {
         devUpTo = readouts == null ? null : new HashMap<>(readouts);
         devShortfalls = shortfalls == null ? null : new ArrayList<>(shortfalls);
         seenVersion = Long.MIN_VALUE;
     }
 
-    private Map<UUID, UpToReadout> indexUpTo() {
-        final Map<UUID, UpToReadout> out = new HashMap<>();
+    private Map<Uuid, UpToReadout> indexUpTo() {
+        final Map<Uuid, UpToReadout> out = new HashMap<>();
         if (result instanceof final BalanceResult.Solved solved) for (final UpToReadout r : solved.auto()
             .upTo()) {
-            out.put(CoreIds.mod(r.node()), r);
-            for (final UUID m : CoreIds.modList(r.machines())) out.putIfAbsent(m, r);
+            out.put(r.node(), r);
+            for (final Uuid m : new ArrayList<>(r.machines())) out.putIfAbsent(m, r);
         }
         if (devUpTo != null) out.putAll(devUpTo);
         return out.isEmpty() ? Map.of() : out;
@@ -2593,7 +2592,7 @@ public final class BoardSession {
 
     /** The ring a card is in (the first when it is in several), by its id; null for none. */
     @Nullable
-    public com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind loopOf(final UUID card) {
+    public com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind loopOf(final Uuid card) {
         return upToLoops.isEmpty() ? null : CardFace.loopOf(upToLoops, card);
     }
 
@@ -2624,20 +2623,20 @@ public final class BoardSession {
     }
 
     /** The wires along a ring's rows, by wire, in the ring's tone ({@link Loops#wires}); from the last refresh. */
-    private Map<UUID, Loops.Tone> loopWires = Map.of();
+    private Map<Uuid, Loops.Tone> loopWires = Map.of();
     /**
      * The ring each card is in, by its host card, in the ring's tone ({@link Loops#cardTones}); from the last refresh.
      */
-    private Map<UUID, Loops.Tone> loopCards = Map.of();
+    private Map<Uuid, Loops.Tone> loopCards = Map.of();
 
     /** The ring a card is in (by any of its recipes), as its tone; null when it is in none. */
     @Nullable
-    public Loops.Tone loopTone(final UUID card) {
+    public Loops.Tone loopTone(final Uuid card) {
         return loopCards.get(hostOf(card));
     }
 
     /** The wires a ring runs along, by wire id, in its tone: lit steady on the board. */
-    public Map<UUID, Loops.Tone> loopWires() {
+    public Map<Uuid, Loops.Tone> loopWires() {
         return loopWires;
     }
 
@@ -2692,8 +2691,8 @@ public final class BoardSession {
 
     /** Deletes a card: every recipe on it, when it is a shared machine. */
     public void delete(final Node node) {
-        final List<UUID> sections = sectionsOf(node.id);
-        edit(() -> { for (final UUID s : sections) graph.removeNode(s); });
+        final List<Uuid> sections = sectionsOf(node.id);
+        edit(() -> { for (final Uuid s : sections) graph.removeNode(s); });
         Sfx.REMOVE.play();
     }
 
@@ -2704,7 +2703,7 @@ public final class BoardSession {
     public void cloneNode(final Node node) {
         final int[] at = clearSpotUnder(node);
         final List<Node> copies = new ArrayList<>();
-        for (final UUID s : sectionsOf(node.id)) {
+        for (final Uuid s : sectionsOf(node.id)) {
             final Node from = graph.nodes.get(s);
             if (from != null && from.isPower()) {
                 final Node copy = Node.power(from.powerSource, from.powerSettings, at[0], at[1]);
@@ -2827,7 +2826,7 @@ public final class BoardSession {
         seenVersion = graph.version();
         final Set<String> wired = wiredPorts();
         final Map<String, Double> extras = extraFlows();
-        final Map<UUID, CardModel> next = new LinkedHashMap<>();
+        final Map<Uuid, CardModel> next = new LinkedHashMap<>();
         for (final Node node : graph.getNodes()) {
             try {
                 next.put(
@@ -2836,14 +2835,14 @@ public final class BoardSession {
                         node,
                         result == null ? null
                             : result.nodeBalances()
-                                .get(CoreIds.core(node.id)),
+                                .get(node.id),
                         (output, index) -> wired.contains(portKey(node.id, output, index)),
                         (output, index) -> extras.getOrDefault(portKey(node.id, output, index), 0.0)));
             } catch (final RuntimeException e) {
                 GtnhPlanner.LOG.warn("Card for {} failed", node.machineName, e);
             }
         }
-        final Map<UUID, DrawerModel> nextDrawers = new LinkedHashMap<>();
+        final Map<Uuid, DrawerModel> nextDrawers = new LinkedHashMap<>();
         for (final Drawer drawer : graph.getDrawers()) nextDrawers.put(drawer.getId(), DrawerModel.of(drawer, result));
         if (!next.keySet()
             .equals(models.keySet())
@@ -2875,7 +2874,7 @@ public final class BoardSession {
      * The relay when a fresh answer has the plan running where it did not (the first pin or rate that makes it
      * solve). A graph taken up (a tab, an undo, back from NEI) only sets where things stand.
      */
-    private void heardRunning(final Map<UUID, CardModel> cards) {
+    private void heardRunning(final Map<Uuid, CardModel> cards) {
         final boolean now = result instanceof BalanceResult.Solved && !nothingToSolveFor
             && notices.stream()
                 .noneMatch(n -> n.severity() == Severity.ERROR)
@@ -2902,7 +2901,7 @@ public final class BoardSession {
      * One card in the overview's machine list. {@code steamPerSecond}: the steam it burns, L/s, peak or average
      * as the power is; NaN for a machine that burns none.
      */
-    public record MachineLine(UUID nodeId, String name, ItemStack stack, double machines, boolean pinned, String tier,
+    public record MachineLine(Uuid nodeId, String name, ItemStack stack, double machines, boolean pinned, String tier,
         int amps, boolean multiblock, boolean gregtech, double euPerTick, boolean tooLow, double madeEuPerTick,
         PinRule rule, double set, double runs, @Nullable UpToReadout upTo, double steamPerSecond, RailView.Eu eu) {}
 
@@ -2995,7 +2994,7 @@ public final class BoardSession {
         return null;
     }
 
-    private Totals buildTotals(final Map<UUID, CardModel> cards) {
+    private Totals buildTotals(final Map<Uuid, CardModel> cards) {
         // Two ports wired together carry one resource even when their keys differ: counted as one, under the key of
         // the side that makes it.
         final Map<String, String> same = new HashMap<>();
@@ -3098,7 +3097,7 @@ public final class BoardSession {
 
     // region Wiring state and notices
 
-    private static String portKey(final UUID nodeId, final boolean output, final int index) {
+    private static String portKey(final Uuid nodeId, final boolean output, final int index) {
         return nodeId + (output ? ":o:" : ":i:") + index;
     }
 
@@ -3115,9 +3114,9 @@ public final class BoardSession {
             for (final com.gtnhplanner.data.flowchart.balancer.External e : side) {
                 final boolean output = !e.port()
                     .input();
-                final UUID node = CoreIds.mod(
+                final Uuid node = 
                     e.port()
-                        .nodeId());
+                        .nodeId();
                 final int index = e.port()
                     .portIndex();
                 if (e.ratePerSecond() <= 0 || portHasEndDrawer(node, output, index)) continue;
@@ -3134,7 +3133,7 @@ public final class BoardSession {
      * on, what it carries when it bears all of it, and the ports the leftover crosses there (the anchor alone when it
      * bears none now).
      */
-    public record SpareBearer(String key, UUID node, boolean output, int port, String name, String resourceKey,
+    public record SpareBearer(String key, Uuid node, boolean output, int port, String name, String resourceKey,
         ItemStack item, net.minecraftforge.fluids.FluidStack fluid, String machine, double max, boolean solverPick,
         List<com.gtnhplanner.data.flowchart.balancer.PortRef> ports) {
 
@@ -3167,14 +3166,14 @@ public final class BoardSession {
      * drawers' set rates among the cards wired (or sharing a drawer) with the places that could bear it.
      */
     public List<Pin> pinsBehind(final SpareLine line) {
-        final List<UUID> places = new ArrayList<>();
+        final List<Uuid> places = new ArrayList<>();
         for (final SpareBearer b : line.bearers()) places.add(b.node());
         return pinsBehind(places);
     }
 
     /** As above, for what is wired (or shares a drawer) with any of {@code start}. */
-    public List<Pin> pinsBehind(final java.util.Collection<UUID> start) {
-        final Map<UUID, List<UUID>> near = new HashMap<>();
+    public List<Pin> pinsBehind(final java.util.Collection<Uuid> start) {
+        final Map<Uuid, List<Uuid>> near = new HashMap<>();
         for (final Edge e : graph.getEdges()) {
             near.computeIfAbsent(e.sourceNodeId, k -> new ArrayList<>())
                 .add(e.targetNodeId);
@@ -3201,11 +3200,11 @@ public final class BoardSession {
                             .nodeId());
             }
         }
-        final Set<UUID> reach = new HashSet<>();
-        final java.util.ArrayDeque<UUID> next = new java.util.ArrayDeque<>();
-        for (final UUID n : start) if (reach.add(n)) next.add(n);
+        final Set<Uuid> reach = new HashSet<>();
+        final java.util.ArrayDeque<Uuid> next = new java.util.ArrayDeque<>();
+        for (final Uuid n : start) if (reach.add(n)) next.add(n);
         while (!next.isEmpty())
-            for (final UUID to : near.getOrDefault(next.poll(), List.of())) if (reach.add(to)) next.add(to);
+            for (final Uuid to : near.getOrDefault(next.poll(), List.of())) if (reach.add(to)) next.add(to);
         final List<Pin> out = new ArrayList<>();
         final Fmt.RateUnit unit = rateUnit();
         for (final MachineLine m : totals.machines()) if (m.pinned() && reach.contains(m.nodeId())) out.add(
@@ -3338,11 +3337,11 @@ public final class BoardSession {
             spareHoverScope = HoverScope.NONE;
             return;
         }
-        final List<UUID> nodes = new ArrayList<>();
+        final List<Uuid> nodes = new ArrayList<>();
         final List<Boolean> outputs = new ArrayList<>();
         final List<Integer> ports = new ArrayList<>();
         for (final com.gtnhplanner.data.flowchart.balancer.PortRef ref : bearer.ports()) {
-            nodes.add(CoreIds.mod(ref.nodeId()));
+            nodes.add(ref.nodeId());
             outputs.add(!ref.input());
             ports.add(ref.portIndex());
         }
@@ -3366,11 +3365,11 @@ public final class BoardSession {
     }
 
     private static HoverScope scopeOf(final SpareBearer bearer) {
-        final List<UUID> nodes = new ArrayList<>();
+        final List<Uuid> nodes = new ArrayList<>();
         final List<Boolean> outputs = new ArrayList<>();
         final List<Integer> ports = new ArrayList<>();
         for (final com.gtnhplanner.data.flowchart.balancer.PortRef ref : bearer.ports()) {
-            nodes.add(CoreIds.mod(ref.nodeId()));
+            nodes.add(ref.nodeId());
             outputs.add(!ref.input());
             ports.add(ref.portIndex());
         }
@@ -3402,23 +3401,23 @@ public final class BoardSession {
      * cards they feed 1, and so on (the nearest way, so a loop does not run on). A card no wire reaches from a start is
      * left out.
      */
-    private Map<UUID, Integer> depths() {
-        final Map<UUID, List<UUID>> feeds = new HashMap<>();
-        final Set<UUID> fed = new HashSet<>();
+    private Map<Uuid, Integer> depths() {
+        final Map<Uuid, List<Uuid>> feeds = new HashMap<>();
+        final Set<Uuid> fed = new HashSet<>();
         for (final Edge e : graph.getEdges()) {
             feeds.computeIfAbsent(e.sourceNodeId, k -> new ArrayList<>())
                 .add(e.targetNodeId);
             fed.add(e.targetNodeId);
         }
-        final Map<UUID, Integer> depth = new HashMap<>();
-        final java.util.ArrayDeque<UUID> next = new java.util.ArrayDeque<>();
+        final Map<Uuid, Integer> depth = new HashMap<>();
+        final java.util.ArrayDeque<Uuid> next = new java.util.ArrayDeque<>();
         for (final Node n : graph.getNodes()) if (!fed.contains(n.id)) {
             depth.put(n.id, 0);
             next.add(n.id);
         }
         while (!next.isEmpty()) {
-            final UUID at = next.poll();
-            for (final UUID to : feeds.getOrDefault(at, List.of())) if (!depth.containsKey(to)) {
+            final Uuid at = next.poll();
+            for (final Uuid to : feeds.getOrDefault(at, List.of())) if (!depth.containsKey(to)) {
                 depth.put(to, depth.get(at) + 1);
                 next.add(to);
             }
@@ -3427,9 +3426,9 @@ public final class BoardSession {
     }
 
     /** The leftovers on the last solve, as the overview lists them (bearers named by the cards they sit on). */
-    private List<SpareLine> buildSpares(final Map<UUID, CardModel> cards) {
+    private List<SpareLine> buildSpares(final Map<Uuid, CardModel> cards) {
         if (!(result instanceof final BalanceResult.Solved solved) || solved.auto() == null) return List.of();
-        final Map<UUID, Integer> depth = depths();
+        final Map<Uuid, Integer> depth = depths();
         final List<SpareLine> out = new ArrayList<>();
         for (final com.gtnhplanner.data.flowchart.balancer.Spares.Leftover leftover : solved.auto()
             .spares()) {
@@ -3439,7 +3438,7 @@ public final class BoardSession {
             int i = 0;
             for (final com.gtnhplanner.data.flowchart.balancer.Spares.Bearer b : leftover.bearers()) {
                 final com.gtnhplanner.data.flowchart.balancer.PortRef anchor = b.anchor();
-                final CardModel card = cards.get(CoreIds.mod(anchor.nodeId()));
+                final CardModel card = cards.get(anchor.nodeId());
                 final List<CardModel.PortView> side = card == null ? List.of()
                     : anchor.input() ? card.inputs : card.outputs;
                 if (anchor.portIndex() < 0 || anchor.portIndex() >= side.size()) break;
@@ -3450,7 +3449,7 @@ public final class BoardSession {
                 bearers.add(
                     new SpareBearer(
                         b.key(),
-                        CoreIds.mod(anchor.nodeId()),
+                        anchor.nodeId(),
                         !anchor.input(),
                         anchor.portIndex(),
                         port.name(),
@@ -3731,7 +3730,7 @@ public final class BoardSession {
      * rate anywhere along its wires), or the answer leaves it at zero because nothing pinned feeds it or needs it. Its
      * count and rates then ask for a number, however much of the rest of the plan is set.
      */
-    public boolean unset(final UUID id) {
+    public boolean unset(final Uuid id) {
         return nothingToSolveFor || unset.contains(id);
     }
 
@@ -3739,10 +3738,10 @@ public final class BoardSession {
      * What asks for a number: every part of the plan nothing sets, and every machine the answer leaves at zero because
      * nothing pinned feeds it or needs what it makes ({@code SolutionView.unneeded}).
      */
-    private java.util.Set<UUID> unsetParts() {
-        final java.util.Set<UUID> out = new java.util.HashSet<>(com.gtnhplanner.data.flowchart.balancer.Unanchored.of(graph));
+    private java.util.Set<Uuid> unsetParts() {
+        final java.util.Set<Uuid> out = new java.util.HashSet<>(com.gtnhplanner.data.flowchart.balancer.Unanchored.of(graph));
         if (result instanceof final com.gtnhplanner.data.flowchart.balancer.BalanceResult.Solved solved) out.addAll(
-            CoreIds.modList(solved.auto().unneeded));
+            new ArrayList<>(solved.auto().unneeded));
         // A card with a set count never asks for one: an idle Up to card says why on its bar instead.
         out.removeIf(id -> rule(id) != PinRule.ANY);
         return out;
@@ -3755,7 +3754,7 @@ public final class BoardSession {
      * for
      * the log; problems of one kind share a line.
      */
-    private List<Notice> buildNotices(final Map<UUID, CardModel> cards) {
+    private List<Notice> buildNotices(final Map<Uuid, CardModel> cards) {
         nothingToSolveFor = false;
         unset = result == null ? java.util.Set.of() : unsetParts();
         final Notices.Input input = noticeInput(cards);
@@ -3772,7 +3771,7 @@ public final class BoardSession {
     }
 
     /** The solve's notes, rings and shortfalls as the records the core works the list out from. */
-    private Notices.Input noticeInput(final Map<UUID, CardModel> cards) {
+    private Notices.Input noticeInput(final Map<Uuid, CardModel> cards) {
         final List<Notices.Loop> loops = new ArrayList<>();
         final List<Notices.Note> notes = new ArrayList<>();
         Notices.Failure failure = null;
@@ -3786,7 +3785,7 @@ public final class BoardSession {
             // Old Build's rings: a dead loop's cards starve each other, a clog lock's clog each other on a surplus.
             for (final com.gtnhplanner.data.flowchart.balancer.UpToLoop loop : upToLoops()) {
                 final List<String> ring = new ArrayList<>();
-                for (final UUID id : Loops.cards(loop, this::hostOf))
+                for (final Uuid id : Loops.cards(loop, this::hostOf))
                     if (cards.containsKey(id)) ring.add(id.toString());
                 loops.add(
                     new Notices.Loop(
@@ -3823,21 +3822,21 @@ public final class BoardSession {
     private Notices.Note drawerNote(final String type, final Note note) {
         final Object[] a = note.args();
         final List<String> focus = new ArrayList<>();
-        for (final UUID id : idsIn(note)) focus.add(id.toString());
+        for (final Uuid id : idsIn(note)) focus.add(id.toString());
         return blankNote(type, a.length > 1 ? String.valueOf(a[1]) : "", String.valueOf(a[0]), focus);
     }
 
     /** A drawer the plan cannot give its rate, and what holds it back. */
-    private Notices.Note unmet(final DrawerReadout.Shortfall s, final Map<UUID, CardModel> cards) {
-        final DrawerModel d = drawerModels.get(CoreIds.mod(s.drawer()));
+    private Notices.Note unmet(final DrawerReadout.Shortfall s, final Map<Uuid, CardModel> cards) {
+        final DrawerModel d = drawerModels.get(s.drawer());
         final List<String> focus = new ArrayList<>();
         focus.add(
-            CoreIds.mod(s.drawer())
+            s.drawer()
                 .toString());
-        for (final UUID id : CoreIds.modList(s.limitingNodes())) focus.add(id.toString());
-        for (final UUID id : CoreIds.modList(s.limitingDrawers())) focus.add(id.toString());
+        for (final Uuid id : new ArrayList<>(s.limitingNodes())) focus.add(id.toString());
+        for (final Uuid id : new ArrayList<>(s.limitingDrawers())) focus.add(id.toString());
         final List<Notices.Holder> holders = new ArrayList<>();
-        for (final UUID id : CoreIds.modList(s.limitingNodes())) {
+        for (final Uuid id : new ArrayList<>(s.limitingNodes())) {
             final CardModel card = cards.get(id);
             final String name = card == null ? "machine" : card.machineName;
             final UpToReadout readout = upTo(id);
@@ -3850,14 +3849,14 @@ public final class BoardSession {
                     name));
             else holders.add(new Notices.Holder("full", name));
         }
-        for (final UUID id : CoreIds.modList(s.limitingDrawers())) {
+        for (final Uuid id : new ArrayList<>(s.limitingDrawers())) {
             final DrawerModel other = drawerModels.get(id);
             holders.add(new Notices.Holder("drawer", other == null ? "other" : other.label));
         }
         final String resource = d == null ? "item" : d.isPower() ? "power" : d.isFluid() ? "fluid" : "item";
         return new Notices.Note(
             "UNMET",
-            CoreIds.mod(s.drawer())
+            s.drawer()
                 .toString(),
             d == null ? "" : d.label,
             resource,
@@ -3874,17 +3873,17 @@ public final class BoardSession {
     }
 
     /** An output made past its target, said in full. */
-    private Notices.Note overshoot(final Note note, final Map<UUID, CardModel> cards) {
+    private Notices.Note overshoot(final Note note, final Map<Uuid, CardModel> cards) {
         final Object[] a = note.args();
         final String what = String.valueOf(a[1]);
         boolean fluid = false;
-        final CardModel card = a.length > 4 && a[4] instanceof final UUID id ? cards.get(id) : null;
+        final CardModel card = a.length > 4 && a[4] instanceof final Uuid id ? cards.get(id) : null;
         if (card != null) for (final CardModel.PortView p : card.outputs) if (p.name()
             .equals(what)) fluid = p.isFluid();
         final double made = a[2] instanceof final Number n ? n.doubleValue() : 0;
         final double target = a[3] instanceof final Number n ? n.doubleValue() : 0;
         final List<String> focus = new ArrayList<>();
-        for (final UUID id : idsIn(note)) focus.add(id.toString());
+        for (final Uuid id : idsIn(note)) focus.add(id.toString());
         return new Notices.Note("OVERSHOOT", (a.length > 4 ? String.valueOf(a[4]) : "") + ":" + what, what,
             fluid ? "fluid" : "item", false, false, 0, 0, made, target, false, List.of(),
             String.valueOf(named(note).args()[0]), focus);
@@ -3908,7 +3907,7 @@ public final class BoardSession {
             for (final Note pin : clashing) {
                 final String name = String.valueOf(named(pin).args()[0]);
                 if (!names.contains(name)) names.add(name);
-                for (final UUID id : idsIn(pin)) if (!ids.contains(id.toString())) ids.add(id.toString());
+                for (final Uuid id : idsIn(pin)) if (!ids.contains(id.toString())) ids.add(id.toString());
             }
             return new Notices.Failure("PIN_CONFLICT", names, ids);
         }
@@ -3963,10 +3962,10 @@ public final class BoardSession {
     }
 
     /** Node and drawer ids a note names, for "Show me". */
-    private List<UUID> idsIn(final Note note) {
-        final List<UUID> ids = new ArrayList<>();
+    private List<Uuid> idsIn(final Note note) {
+        final List<Uuid> ids = new ArrayList<>();
         for (final Object arg : note.args()) {
-            if (arg instanceof final UUID id && (graph.nodes.containsKey(id) || graph.drawers.containsKey(id)))
+            if (arg instanceof final Uuid id && (graph.nodes.containsKey(id) || graph.drawers.containsKey(id)))
                 ids.add(id);
             else if (arg instanceof final Note nested) ids.addAll(idsIn(nested));
         }

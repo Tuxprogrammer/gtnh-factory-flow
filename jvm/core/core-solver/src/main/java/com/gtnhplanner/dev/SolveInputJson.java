@@ -89,7 +89,7 @@ public final class SolveInputJson {
             j.add("machines", members);
             // Whole machines as a whole number, as every dump before fractional capacities wrote them.
             final double capacity = p.capacity();
-            if (capacity == Math.rint(capacity) && Math.abs(capacity) < Integer.MAX_VALUE)
+            if (capacity == Math.floor(capacity) && Math.abs(capacity) < Integer.MAX_VALUE)
                 j.addProperty("capacity", (int) capacity);
             else j.addProperty("capacity", capacity);
             j.addProperty("exact", p.exact());

@@ -12,10 +12,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Port;
 import com.gtnhplanner.data.properties.RecipeProperty;
@@ -36,7 +36,7 @@ public final class FakeGame implements RecipeIndex, NodeMaker {
     /** Recipe ids the game "does not have". */
     final Set<String> missing = new HashSet<>();
     /** The machine each node was asked to run on. */
-    final Map<UUID, String> machines = new HashMap<>();
+    final Map<Uuid, String> machines = new HashMap<>();
     /** Whether the game builds generators (power cards): a bare node naming its source. */
     boolean generators;
     /** The cells the game knows, by FF id: {its fluid, its litres, its empty cell}. Fluid tanks are made for these. */
@@ -47,7 +47,7 @@ public final class FakeGame implements RecipeIndex, NodeMaker {
     public Node makeTank(final boolean emptying, final String cellId) {
         final String[] c = cells.get(cellId);
         if (c == null) return null;
-        final Node node = new Node(UUID.randomUUID(), 0, 0);
+        final Node node = new Node(Uuid.randomUUID(), 0, 0);
         node.powerSource = com.gtnhplanner.power.FluidTank.ID;
         final Port<?> cell = TestIngredients.port("item|" + cellId, 1),
             fluid = TestIngredients.port("fluid|" + c[0], Double.parseDouble(c[1])),
@@ -72,7 +72,7 @@ public final class FakeGame implements RecipeIndex, NodeMaker {
     @Nullable
     public Node makePower(final String sourceId, final Map<String, String> settings) {
         if (!generators) return null;
-        final Node node = new Node(UUID.randomUUID(), 0, 0);
+        final Node node = new Node(Uuid.randomUUID(), 0, 0);
         node.powerSource = sourceId;
         node.powerSettings.putAll(settings);
         return node;
@@ -90,7 +90,7 @@ public final class FakeGame implements RecipeIndex, NodeMaker {
     /** How each recipe was found, by recipe id: "nei", "crop", "page", "map:<id>" or "machine". */
     final Map<String, String> paths = new LinkedHashMap<>();
     /** The website's machine each node was asked to run on, by its handler id. */
-    final Map<UUID, String> handlerIds = new HashMap<>();
+    final Map<Uuid, String> handlerIds = new HashMap<>();
 
     @Override
     public Lookup find(final FfRecipe recipe) {
@@ -139,7 +139,7 @@ public final class FakeGame implements RecipeIndex, NodeMaker {
     @Override
     public Node make(final GameRecipe recipe, @Nullable final Machine machine) {
         final String machineLabel = machine == null ? null : machine.label();
-        final Node node = new Node(UUID.randomUUID(), 0, 0);
+        final Node node = new Node(Uuid.randomUUID(), 0, 0);
         node.machineName = recipe.handlerName();
         if (machine != null && machine.handlerId() != null) handlerIds.put(node.id, machine.handlerId());
         if (recipe.durationTicks() != null) node.properties.put(DURATION, recipe.durationTicks());

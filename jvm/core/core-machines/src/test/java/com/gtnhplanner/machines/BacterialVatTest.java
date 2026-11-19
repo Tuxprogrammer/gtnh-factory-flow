@@ -110,6 +110,21 @@ class BacterialVatTest {
         assertEquals(20.0 / 1324, BacterialVat.burnPerSecond(MATERIALS.get(3)), 1e-12);
     }
 
+    /** The decay time with the vat's own tanh (exp based, the same on every target) is the JVM's Math.tanh answer. */
+    @Test
+    void decayTicksMatchTheJvmTanh() {
+        for (int sievert = -2000; sievert <= 100000; sievert++) {
+            final long jvm = sievert == 43 ? 5000
+                : sievert == 61 ? 4500
+                : sievert <= 100 ? (long) Math.ceil((8000 * Math.tanh(-sievert / 20.0) + 8000) * 1000)
+                : (long) Math.ceil(8000 * Math.tanh(-sievert / 65.0) + 8000);
+            assertEquals(jvm, BacterialVat.decayTicks(sievert), "sievert " + sievert);
+        }
+        assertEquals(0.0, BacterialVat.tanh(0));
+        assertEquals(-1.0, BacterialVat.tanh(-1000));
+        assertEquals(1.0, BacterialVat.tanh(1000));
+    }
+
     @Test
     void showsItsWorking() {
         final Needs biomass = new Needs(3, 0, false);

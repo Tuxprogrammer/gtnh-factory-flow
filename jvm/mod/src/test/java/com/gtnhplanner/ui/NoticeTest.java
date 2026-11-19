@@ -6,13 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.function.ToIntFunction;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.balancer.Severity;
 import com.gtnhplanner.data.flowchart.balancer.UpToLoop;
 import com.gtnhplanner.harness.LangText;
@@ -25,7 +25,7 @@ class NoticeTest {
 
     /** The game's font runs about six pixels a letter. */
     private static final ToIntFunction<String> SIX = s -> 6 * s.length();
-    private static final List<UUID> CARDS = List.of(new UUID(0, 1), new UUID(0, 2));
+    private static final List<Uuid> CARDS = List.of(new Uuid(0, 1), new Uuid(0, 2));
 
     private LangText lang;
 

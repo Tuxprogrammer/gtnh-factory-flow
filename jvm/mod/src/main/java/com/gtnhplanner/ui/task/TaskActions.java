@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -13,6 +12,7 @@ import net.minecraft.item.ItemStack;
 
 import com.cleanroommc.modularui.screen.ModularPanel;
 import com.gtnhplanner.api.PlanAPI;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.TaskEdits;
 import com.gtnhplanner.data.flowchart.Tasks;
@@ -49,12 +49,12 @@ public final class TaskActions {
 
     /** A card of the open plan by its node, or null when the plan has no such card (or it is not solved yet). */
     @Nullable
-    public static Card card(final BoardSession session, final UUID nodeId) {
-        final UUID host = session.hostOf(nodeId);
+    public static Card card(final BoardSession session, final Uuid nodeId) {
+        final Uuid host = session.hostOf(nodeId);
         final CardModel m = session.model(host);
         if (m == null) return null;
         double builds = 0;
-        for (final UUID s : session.sectionsOf(host)) {
+        for (final Uuid s : session.sectionsOf(host)) {
             final CardModel section = session.model(s);
             if (section != null) builds += CropCards.builds(section.node, section.machines);
         }
@@ -63,7 +63,7 @@ public final class TaskActions {
     }
 
     /** The cards selected on the board, by their host node. */
-    public static List<UUID> selectedCards(final BoardSession session) {
+    public static List<Uuid> selectedCards(final BoardSession session) {
         return session.cardsIn(session.selection());
     }
 
@@ -73,9 +73,9 @@ public final class TaskActions {
      * "Add to a task" on cards: a menu of the player's task boards (and a new one), then of the board's tasks with
      * their status (and a new one); the cards go into the task picked, a machine thing each.
      */
-    public static void addMenu(final BoardSession session, final ModularPanel panel, final Collection<UUID> ids,
+    public static void addMenu(final BoardSession session, final ModularPanel panel, final Collection<Uuid> ids,
         final int sx, final int sy) {
-        final List<UUID> cards = session.cardsIn(ids);
+        final List<Uuid> cards = session.cardsIn(ids);
         if (cards.isEmpty()) {
             Sfx.DENY.play();
             return;
@@ -102,7 +102,7 @@ public final class TaskActions {
     }
 
     /** The second step: the board's tasks, the ones under way first, each with its status dot; and New task. */
-    private static void taskMenu(final BoardSession session, final ModularPanel panel, final List<UUID> cards,
+    private static void taskMenu(final BoardSession session, final ModularPanel panel, final List<Uuid> cards,
         final Graph board, final int sx, final int sy) {
         final List<PickList.Entry> rows = new ArrayList<>();
         rows.add(PickList.Entry.adding("New task", "in To do", () -> addTo(session, cards, board, null)));
@@ -131,10 +131,10 @@ public final class TaskActions {
      * task's id, or null when none of them is a card.
      */
     @Nullable
-    public static String addTo(final BoardSession session, final Collection<UUID> ids, final Graph board,
+    public static String addTo(final BoardSession session, final Collection<Uuid> ids, final Graph board,
         @Nullable final String taskId) {
         final List<Card> cards = new ArrayList<>();
-        for (final UUID id : session.cardsIn(ids)) {
+        for (final Uuid id : session.cardsIn(ids)) {
             final Card c = card(session, id);
             if (c != null) cards.add(c);
         }
@@ -144,7 +144,7 @@ public final class TaskActions {
             return null;
         }
         final String id = into != null ? into.id()
-            : UUID.randomUUID()
+            : Uuid.randomUUID()
                 .toString();
         final String title = into != null ? into.title() : title(cards);
         PlanAPI.recordEdit(board, () -> {
@@ -152,7 +152,7 @@ public final class TaskActions {
                 TaskEdits.add(board, id, title, Tasks.Status.TODO, List.of(), TaskLook.me(), TaskLook.now());
             for (final Card c : cards) TaskEdits.addThing(
                 board,
-                UUID.randomUUID()
+                Uuid.randomUUID()
                     .toString(),
                 id,
                 Tasks.MACHINE,

@@ -1,10 +1,9 @@
 package com.gtnhplanner.ui.world;
 
-import java.util.UUID;
-
 import javax.annotation.Nullable;
 
 import com.gtnhplanner.api.PlanAPI;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Plan;
@@ -60,7 +59,7 @@ public final class WorldLinks {
 
     /** The node of a plan by id, or null when it is gone. */
     @Nullable
-    static Node node(@Nullable final Graph graph, @Nullable final UUID id) {
+    static Node node(@Nullable final Graph graph, @Nullable final Uuid id) {
         return graph == null || id == null ? null : graph.nodes.get(id);
     }
 

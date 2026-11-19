@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -13,6 +12,7 @@ import com.gtnhplanner.GtnhPlanner;
 import com.gtnhplanner.api.PlanAPI;
 import com.gtnhplanner.cloud.map.CloudGame;
 import com.gtnhplanner.cloud.net.LiveClient;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Port;
 import com.gtnhplanner.importer.NodeMaker;
@@ -59,7 +59,7 @@ public final class GameCloud implements CloudGame {
                 final String id = new String(Files.readAllBytes(f.toPath()), StandardCharsets.UTF_8).trim();
                 if (!id.isEmpty()) return "world:" + id;
             }
-            final String id = UUID.randomUUID()
+            final String id = Uuid.randomUUID()
                 .toString();
             f.getParentFile()
                 .mkdirs();

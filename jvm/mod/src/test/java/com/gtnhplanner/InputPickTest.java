@@ -5,10 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Drawer.Link;
 import com.gtnhplanner.data.flowchart.DrawerTypes.Kind;
@@ -95,7 +95,7 @@ class InputPickTest {
         ebf.pickInput(1, "carbon");
         final int in = g.findCompatibleInput(carbonizer, 0, ebf);
         assertEquals(1, in, "set to carbon, it does");
-        g.addEdge(new Edge(UUID.randomUUID(), carbonizer.id, ebf.id, 0, in));
+        g.addEdge(new Edge(Uuid.randomUUID(), carbonizer.id, ebf.id, 0, in));
         final Drawer steel = new Drawer(Kind.PRODUCT, "test:steel");
         steel.setTarget(Rule.EXACTLY, 3);
         g.addDrawer(steel);
@@ -104,7 +104,7 @@ class InputPickTest {
         final Answer answer = GraphSolve.solveWithAlternatives(BalanceMode.AUTO, g, null, Map.of());
         if (!(answer instanceof final Answer.Solved solved)) throw new AssertionError("failed: " + answer);
         final SolutionView s = solved.solution();
-        assertEquals(3, s.machineCounts.get(CoreIds.core(ebf.id)), EPS);
-        assertEquals(3, s.machineCounts.get(CoreIds.core(carbonizer.id)), EPS, "the carbon is made on the plan");
+        assertEquals(3, s.machineCounts.get(ebf.id), EPS);
+        assertEquals(3, s.machineCounts.get(carbonizer.id), EPS, "the carbon is made on the plan");
     }
 }

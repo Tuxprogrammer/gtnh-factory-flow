@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -15,6 +14,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.gtnhplanner.cloud.sync.LiveJson;
 import com.gtnhplanner.cloud.sync.LiveOps;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.importer.FfPlan;
 import com.gtnhplanner.library.PlanExport;
@@ -177,7 +177,7 @@ final class PlanWrite {
         }
         if (!out.has("id")) out.addProperty(
             "id",
-            UUID.randomUUID()
+            Uuid.randomUUID()
                 .toString());
         next.metaState = state;
         next.metaSite = now.site();

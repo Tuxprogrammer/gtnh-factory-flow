@@ -27,7 +27,7 @@ class CloudLinksTest {
             .getAsJsonObject();
     }
 
-    /** The first card of a website plan whose id is the website's own (not a UUID) and that comes onto the board. */
+    /** The first card of a website plan whose id is the website's own (not a Uuid) and that comes onto the board. */
     private static String websiteCard(final JsonObject plan, final Graph board) {
         for (final JsonElement e : plan.getAsJsonArray("nodes")) {
             final String id = e.getAsJsonObject()

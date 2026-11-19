@@ -1,6 +1,7 @@
 package com.gtnhplanner.machines.web;
 
 import com.gtnhplanner.core.base.Float32;
+import com.gtnhplanner.core.base.JsMath;
 
 /**
  * The Neutron Activator's speed and tick rounding (neutron-activator.ts, after MTENeutronActivator's
@@ -20,7 +21,7 @@ public final class NeutronActivator {
         double base = Float32.round(0.9);
         double duration = 1;
         while (exponent > 0) {
-            if (exponent % 2 == 1) duration *= base;
+            if (JsMath.rem(exponent, 2) == 1) duration *= base;
             base *= base;
             exponent = Math.floor(exponent / 2);
         }

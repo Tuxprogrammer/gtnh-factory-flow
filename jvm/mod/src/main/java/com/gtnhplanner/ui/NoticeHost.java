@@ -2,8 +2,8 @@ package com.gtnhplanner.ui;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.core.view.rail.Notices;
 import com.gtnhplanner.data.flowchart.balancer.Severity;
 import com.gtnhplanner.data.flowchart.balancer.UpToLoop;
@@ -21,10 +21,10 @@ public final class NoticeHost {
     public static List<Notice> of(final List<Notices.Notice> list, final Notices.RateFormat rates) {
         final List<Notice> out = new ArrayList<>(list.size());
         for (final Notices.Notice n : list) {
-            final List<UUID> focus = new ArrayList<>(
+            final List<Uuid> focus = new ArrayList<>(
                 n.focus()
                     .size());
-            for (final String id : n.focus()) focus.add(UUID.fromString(id));
+            for (final String id : n.focus()) focus.add(Uuid.fromString(id));
             final String text = Notices.text(n, rates);
             if (n.tag() != null) out.add(
                 Notice.alarm("dead".equals(n.loop()) ? UpToLoop.Kind.DEAD_LOOP : UpToLoop.Kind.CLOG_LOCK, text, focus));

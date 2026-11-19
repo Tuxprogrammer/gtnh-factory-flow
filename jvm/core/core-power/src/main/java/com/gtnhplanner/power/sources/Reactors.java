@@ -10,6 +10,7 @@ import java.util.function.Predicate;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.JsMath;
 import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.power.PowerData;
 import com.gtnhplanner.power.PowerGroup;
@@ -65,7 +66,7 @@ public final class Reactors {
                     List.of(
                         liters("Hot Coolant", hotCoolantPerSecond),
                         items("Burned Out TRISO pebble ball", Math.floor(pebbleCost / 64) / operationSeconds),
-                        items("Burned Out TRISO pebble", (pebbleCost % 64) / operationSeconds)),
+                        items("Burned Out TRISO pebble", JsMath.rem(pebbleCost, 64) / operationSeconds)),
                     List.of(
                         stat("Efficiency", percent(efficiency)),
                         stat("Pebbles per cycle", formatAmount(pebbleCost)),

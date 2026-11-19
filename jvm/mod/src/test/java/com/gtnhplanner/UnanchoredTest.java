@@ -4,10 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Set;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Drawer.Link;
 import com.gtnhplanner.data.flowchart.DrawerTypes.Kind;
@@ -60,17 +60,17 @@ class UnanchoredTest {
                 .isEmpty());
     }
 
-    private static UUID id(final LoadedChart chart, final int machine) {
+    private static Uuid id(final LoadedChart chart, final int machine) {
         return chart.machine(machine).id;
     }
 
-    private static void unwire(final Graph graph, final UUID node) {
+    private static void unwire(final Graph graph, final Uuid node) {
         for (final Edge e : graph.getEdges()
             .toArray(new Edge[0]))
             if (e.sourceNodeId.equals(node) || e.targetNodeId.equals(node)) graph.removeEdge(e.id);
     }
 
-    private static Drawer drawer(final Graph graph, final Rule rule, final double rate, final UUID node,
+    private static Drawer drawer(final Graph graph, final Rule rule, final double rate, final Uuid node,
         final int port) {
         final Drawer drawer = new Drawer(Kind.PRODUCT, "test:" + node + "/" + port);
         drawer.setTarget(rule, rate);

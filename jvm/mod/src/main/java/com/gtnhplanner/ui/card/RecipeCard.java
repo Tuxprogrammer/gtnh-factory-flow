@@ -2,7 +2,6 @@ package com.gtnhplanner.ui.card;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import net.minecraft.item.ItemStack;
 
@@ -15,7 +14,7 @@ import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
 import com.cleanroommc.modularui.theme.WidgetThemeEntry;
 import com.cleanroommc.modularui.widget.ParentWidget;
 import com.cleanroommc.modularui.widget.sizer.Area;
-import com.gtnhplanner.CoreIds;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.MachineConfig;
 import com.gtnhplanner.data.SettingDef;
 import com.gtnhplanner.data.flowchart.Node;
@@ -84,16 +83,16 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
 
     private final BoardSession session;
     /** The card's own node: the recipe it was made for, the first on a shared machine. */
-    public final UUID nodeId;
+    public final Uuid nodeId;
     private CardModel model;
     /** Every recipe on the card, top first, and their models: one, or several on a shared machine. */
-    private List<UUID> sections = List.of();
+    private List<Uuid> sections = List.of();
     private List<CardModel> models = List.of();
     private CardLayout layout;
 
     private boolean moving;
 
-    public RecipeCard(final BoardSession session, final UUID nodeId) {
+    public RecipeCard(final BoardSession session, final Uuid nodeId) {
         this.session = session;
         this.nodeId = nodeId;
         refresh();
@@ -144,12 +143,12 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
     }
 
     /** A recipe's node id, by its place on the card. */
-    public UUID sectionId(final int section) {
+    public Uuid sectionId(final int section) {
         return section >= 0 && section < sections.size() ? sections.get(section) : nodeId;
     }
 
     /** Where a recipe is on the card; -1 when it is not on it. */
-    public int sectionOf(final UUID id) {
+    public int sectionOf(final Uuid id) {
         return sections.indexOf(id);
     }
 
@@ -158,7 +157,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
     }
 
     /** Where a wire meets the card for one recipe's port. */
-    public int anchorY(final UUID node, final boolean output, final int port) {
+    public int anchorY(final Uuid node, final boolean output, final int port) {
         return layout.anchorY(Math.max(0, sectionOf(node)), output, port);
     }
 
@@ -172,9 +171,9 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
 
     /** Re-reads the models after a solve; resizes when the card's shape changed. */
     public void refresh() {
-        final List<UUID> ids = session.sectionsOf(nodeId);
+        final List<Uuid> ids = session.sectionsOf(nodeId);
         final List<CardModel> next = new ArrayList<>(ids.size());
-        for (final UUID id : ids) {
+        for (final Uuid id : ids) {
             final CardModel m = session.model(id);
             if (m == null) return;
             next.add(m);
@@ -203,7 +202,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
 
     /** True when the recipes or their port counts no longer match the slot widgets. */
     public boolean shapeChanged() {
-        final List<UUID> ids = session.sectionsOf(nodeId);
+        final List<Uuid> ids = session.sectionsOf(nodeId);
         if (!ids.equals(sections)) return true;
         for (int s = 0; s < ids.size(); s++) {
             final CardModel next = session.model(ids.get(s)), was = models.get(s);
@@ -350,7 +349,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
      * shared machine, its section).
      */
     @javax.annotation.Nullable
-    public CardFace.Tone why(final UUID node, final boolean output, final int index) {
+    public CardFace.Tone why(final Uuid node, final boolean output, final int index) {
         if (model == null || countless()) return null;
         return CardFace.why(face().rule(), session.upTo(nodeId), node, output, index);
     }
@@ -363,7 +362,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
     /** The name of one of the card's rows, by the solver's port. */
     private String portName(final com.gtnhplanner.data.flowchart.balancer.PortRef ref) {
         for (final CardModel m : models) {
-            if (!m.node.id.equals(CoreIds.mod(ref.nodeId()))) continue;
+            if (!m.node.id.equals(ref.nodeId())) continue;
             for (final CardModel.PortView p : ref.input() ? m.inputs : m.outputs)
                 if (p.index() == ref.portIndex()) return p.name();
         }
@@ -1407,7 +1406,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
                 glow(x, y, w, layout.hasExtra(section, output, p.index()) ? 2 * h : h);
             // What is in hand could go here: green, brighter where it would go if let go now (or home, put back).
             if (board != null) {
-                final UUID id = sectionId(section);
+                final Uuid id = sectionId(section);
                 if (board.portSnapped(id, output, p.index())) acceptGlow(x, y, w, h, true);
                 else if (board.portTakesDrag(id, output, p.index(), p.key())) acceptGlow(x, y, w, h, false);
             }
@@ -2357,7 +2356,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
             case SECTION -> {
                 final int[] key = sectionKeyAt(x, y);
                 if (mouseButton == 0 && key != null) {
-                    final UUID section = sectionId(key[0]);
+                    final Uuid section = sectionId(key[0]);
                     if (key[1] == 2) session.removeSection(section);
                     else session.moveSection(section, key[1] == 0 ? -1 : 1);
                 }
@@ -2866,7 +2865,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
         if (eec()) rows.add(PickList.Entry.of("Put in another mob", () -> RecipePicks.mobs(session, node, sx, sy)));
         if (crop()) rows.add(PickList.Entry.of("Pick another crop", () -> RecipePicks.crops(session, node, sx, sy)));
         // Into a task, with every card selected with it: a machine thing each.
-        final List<UUID> taskCards = session.isSelected(nodeId) ? session.cardsIn(session.selection())
+        final List<Uuid> taskCards = session.isSelected(nodeId) ? session.cardsIn(session.selection())
             : List.of(nodeId);
         rows.add(
             PickList.Entry.of(

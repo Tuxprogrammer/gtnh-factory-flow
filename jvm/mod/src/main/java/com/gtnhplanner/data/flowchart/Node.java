@@ -6,13 +6,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import net.minecraft.item.ItemStack;
 
 import com.gtnhplanner.api.RecipePropertyAPI;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.MachineConfig;
 import com.gtnhplanner.data.MachineProfileRegistry;
 import com.gtnhplanner.data.properties.PropertyProvider;
@@ -28,19 +28,19 @@ import codechicken.nei.recipe.RecipeHandlerRef;
 import lombok.Getter;
 import lombok.Setter;
 
-public class Node {
+public class Node implements PinRule.Card {
 
     /**
      * Set only while the node is built, before any graph holds it: a reader that keeps a shared plan's ids
      * (cloud/map) gives a card the importer made the id its plan knows it by.
      */
-    public UUID id;
+    public Uuid id;
     public int x;
     public int y;
 
     /** The board group it is in ({@link BoardGroup}), or null. Every recipe of a shared machine is in its card's. */
     @Nullable
-    public UUID group;
+    public Uuid group;
 
     public final List<Port<?>> inputs = new ArrayList<>();
     public final List<Port<?>> outputs = new ArrayList<>();
@@ -81,6 +81,18 @@ public class Node {
     /** Whether the set count is Exactly: only with a count set, so never for a fluid tank. */
     public boolean isMachineCountExact() {
         return machineCountExact && isMachineCountFixed();
+    }
+
+    /** A custom rate card's set count is always Exactly: its dial ({@link PinRule#of(PinRule.Card)}). */
+    @Override
+    public boolean countAlwaysExact() {
+        return com.gtnhplanner.power.CustomRate.is(this);
+    }
+
+    /** Sets the machine count in the card's settings (no refresh: the count is not a recipe setting). */
+    @Override
+    public void setMachineCount(final int count) {
+        machineConfig.setMachineCount(count);
     }
 
     /**
@@ -139,7 +151,7 @@ public class Node {
     private int extractorIndex;
 
     public Node(final IRecipeHandler handler, final int recipeIndex, final int x, final int y) {
-        this.id = UUID.randomUUID();
+        this.id = Uuid.randomUUID();
         this.x = x;
         this.y = y;
 
@@ -176,7 +188,7 @@ public class Node {
 
     /** A new power card for a source at the given settings (missing ones read as the source's defaults). */
     public static Node power(final String sourceId, final Map<String, String> settings, final int x, final int y) {
-        final Node node = new Node(UUID.randomUUID(), x, y);
+        final Node node = new Node(Uuid.randomUUID(), x, y);
         node.powerSource = sourceId;
         node.powerSettings.putAll(settings);
         node.refresh();
@@ -390,7 +402,7 @@ public class Node {
     /**
      * To be used only for serialization/deserialization
      */
-    public Node(final UUID id, final int x, final int y) {
+    public Node(final Uuid id, final int x, final int y) {
         this.id = id;
         this.x = x;
         this.y = y;

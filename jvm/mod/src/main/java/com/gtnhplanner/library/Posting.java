@@ -1,6 +1,5 @@
 package com.gtnhplanner.library;
 
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -16,6 +15,7 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.gtnhplanner.GtnhPlanner;
 import com.gtnhplanner.api.PlanAPI;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Plan;
@@ -62,7 +62,7 @@ public final class Posting {
     }
 
     /** A plan as the site's project JSON, as {@link #post} sends it (the dev harness writes it to a file). */
-    public static JsonObject write(final Graph g, final String title, final Function<UUID, Double> machines) {
+    public static JsonObject write(final Graph g, final String title, final Function<Uuid, Double> machines) {
         return PlanExport.project(g, title, new GameWorld(machines));
     }
 
@@ -75,7 +75,7 @@ public final class Posting {
      * board runs each card at. An update of a post that is gone (or not this player's) forgets it and says so; posting
      * again then makes a new one.
      */
-    public static void post(final Graph g, final Face face, final boolean update, final Function<UUID, Double> machines,
+    public static void post(final Graph g, final Face face, final boolean update, final Function<Uuid, Double> machines,
         final Runnable done, final Consumer<String> failed) {
         final String token = Account.token();
         if (token == null) {
@@ -227,7 +227,7 @@ public final class Posting {
      * The game's side of the export: Factory Flow's ids for its items and fluids, its machines and recipes; each card's
      * count from {@code machines}. A shared plan's mapping (cloud/map) writes through it too.
      */
-    public static PlanExport.World world(final Function<UUID, Double> machines) {
+    public static PlanExport.World world(final Function<Uuid, Double> machines) {
         return new GameWorld(machines);
     }
 
@@ -284,7 +284,7 @@ public final class Posting {
     }
 
     /** The game's side of the export: Factory Flow's ids for its items and fluids, and the board's numbers. */
-    private record GameWorld(Function<UUID, Double> counts) implements PlanExport.World {
+    private record GameWorld(Function<Uuid, Double> counts) implements PlanExport.World {
 
         @Override
         @Nullable

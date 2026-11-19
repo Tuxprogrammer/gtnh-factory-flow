@@ -5,7 +5,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
+
+import com.gtnhplanner.core.base.Uuid;
 
 /**
  * The undo histories of a plan's slots, kept outside the graphs.
@@ -22,7 +23,7 @@ import java.util.UUID;
  */
 public final class UndoHistories {
 
-    private final Map<UUID, UndoHistory> bySlot = new HashMap<>();
+    private final Map<Uuid, UndoHistory> bySlot = new HashMap<>();
 
     /** The history of the slot {@code graph} is, created empty on first ask. */
     public UndoHistory of(final Graph graph) {
@@ -36,7 +37,7 @@ public final class UndoHistories {
 
     /** Drops every history whose slot is not one of {@code live}. */
     public void retainOnly(final Collection<Graph> live) {
-        final Set<UUID> keep = new HashSet<>();
+        final Set<Uuid> keep = new HashSet<>();
         for (final Graph graph : live) {
             keep.add(graph.slot());
         }

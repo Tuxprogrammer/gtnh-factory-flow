@@ -1,11 +1,9 @@
 package com.gtnhplanner.data.flowchart;
 
-import com.gtnhplanner.power.CustomRate;
-
 /**
  * A card's machine count rule (docs/design/up-to.md, the website's pin-rule.ts): Any (the plan picks), Up to N (what
- * you have, the default for a set count) or Exactly N. Kept as {@link Node#isMachineCountFixed()} (a count is set) and
- * {@link Node#isMachineCountExact()} (Exactly), and on a shared machine as {@link MachineGroup#isPinned()} and
+ * you have, the default for a set count) or Exactly N. Kept as {@code Node.isMachineCountFixed()} (a count is set) and
+ * {@code Node.isMachineCountExact()} (Exactly), and on a shared machine as {@link MachineGroup#isPinned()} and
  * {@link MachineGroup#isExact()}. The board and the solver input read the rule here, never the flags, so they agree.
  */
 public enum PinRule {
@@ -27,12 +25,36 @@ public enum PinRule {
     }
 
     /**
+     * What a rule reads and sets on a card: the host's card type implements it (the mod's {@code Node}), so the rule
+     * stays plain data while the card does not yet.
+     */
+    public interface Card {
+
+        /** Whether a machine count is set (Up to or Exactly). */
+        boolean isMachineCountFixed();
+
+        /** Whether the set count is Exactly. */
+        boolean isMachineCountExact();
+
+        /** Sets whether a count is set; unsetting it lets go of Exactly too. */
+        void setMachineCountFixed(boolean fixed);
+
+        void setMachineCountExact(boolean exact);
+
+        /** A card whose set count is always Exactly whatever it says (a custom rate card: its dial). */
+        boolean countAlwaysExact();
+
+        /** Sets the card's machine count, whole machines. */
+        void setMachineCount(int count);
+    }
+
+    /**
      * A card's rule. A custom rate card's set count is always Exactly (its dial); a fluid tank's is always Any. A
      * recipe of a shared machine has no count of its own: its machine's is {@link #of(MachineGroup)}.
      */
-    public static PinRule of(final Node node) {
+    public static PinRule of(final Card node) {
         if (!node.isMachineCountFixed()) return ANY;
-        if (CustomRate.is(node)) return EXACT;
+        if (node.countAlwaysExact()) return EXACT;
         return node.isMachineCountExact() ? EXACT : UP_TO;
     }
 
@@ -43,7 +65,7 @@ public enum PinRule {
     }
 
     /** Sets a card's rule and keeps its count: Any lets go of it, Up to and Exactly set it. */
-    public static void set(final Node node, final PinRule rule) {
+    public static void set(final Card node, final PinRule rule) {
         node.setMachineCountFixed(rule != ANY);
         node.setMachineCountExact(rule == EXACT);
     }
@@ -52,12 +74,12 @@ public enum PinRule {
      * Sets a card's rule at a count, the website's withPinRule: Any lets go of the count, Up to and Exactly set it (to
      * whole machines, at least one). A count that is not a positive number means Any.
      */
-    public static void set(final Node node, final PinRule rule, final double count) {
+    public static void set(final Card node, final PinRule rule, final double count) {
         if (rule == ANY || !(count > 0) || Double.isInfinite(count)) {
             set(node, ANY);
             return;
         }
-        node.machineConfig.setMachineCount(machines(count));
+        node.setMachineCount(machines(count));
         set(node, rule);
     }
 

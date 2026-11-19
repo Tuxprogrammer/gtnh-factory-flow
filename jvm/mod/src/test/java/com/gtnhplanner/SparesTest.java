@@ -6,10 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Serializer;
 import com.gtnhplanner.data.flowchart.balancer.BalanceMode;
@@ -52,18 +52,18 @@ class SparesTest {
             .get(0);
     }
 
-    private static Spares.Bearer bearerOn(final Spares.Leftover leftover, final UUID node) {
+    private static Spares.Bearer bearerOn(final Spares.Leftover leftover, final Uuid node) {
         for (final Spares.Bearer b : leftover.bearers()) if (b.anchor()
             .nodeId()
-            .equals(CoreIds.core(node))) return b;
+            .equals(node)) return b;
         return null;
     }
 
-    private static double sinkAt(final SolutionView view, final UUID node) {
+    private static double sinkAt(final SolutionView view, final Uuid node) {
         double total = 0;
         for (final External e : view.gatedSinks) if (e.port()
             .nodeId()
-            .equals(CoreIds.core(node))) total += e.ratePerSecond();
+            .equals(node)) total += e.ratePerSecond();
         return total;
     }
 
@@ -105,8 +105,8 @@ class SparesTest {
             .setSpareSplit(leftover.key(), Map.of(alpha.key(), 0.5, beta.key(), 0.5));
         final SolutionView view = solve(chart.graph());
 
-        assertEquals(0.75, view.machineCounts.get(CoreIds.core(chart.machine(2).id)), EPS, "alpha bender");
-        assertEquals(0.75, view.machineCounts.get(CoreIds.core(chart.machine(3).id)), EPS, "beta bender");
+        assertEquals(0.75, view.machineCounts.get(chart.machine(2).id), EPS, "alpha bender");
+        assertEquals(0.75, view.machineCounts.get(chart.machine(3).id), EPS, "beta bender");
         assertEquals(2.5, sinkAt(view, chart.machine(0).id), EPS, "alpha ingot spare");
         assertEquals(2.5, sinkAt(view, chart.machine(1).id), EPS, "beta ingot spare");
         final Spares.Leftover now = only(view);
@@ -123,7 +123,7 @@ class SparesTest {
         Spares.Bearer plate = null;
         for (final Spares.Bearer b : leftover.bearers()) if (b != alpha && !b.anchor()
             .nodeId()
-            .equals(CoreIds.core(chart.machine(1).id))) plate = b;
+            .equals(chart.machine(1).id)) plate = b;
         assertNotNull(plate);
 
         // 1 : 4, written as 2 and 8: a fifth on alpha ingot, the rest as plates.
@@ -134,8 +134,8 @@ class SparesTest {
         assertEquals(1.0, sinkAt(view, chart.machine(0).id), EPS, "alpha ingot spare");
         assertEquals(0.0, sinkAt(view, chart.machine(1).id), EPS, "no beta ingot spare");
         assertEquals(4.0, sinkAt(view, chart.machine(2).id) + sinkAt(view, chart.machine(3).id), EPS, "plates spare");
-        assertEquals(0.9, view.machineCounts.get(CoreIds.core(chart.machine(2).id)), EPS, "alpha bender");
-        assertEquals(1.0, view.machineCounts.get(CoreIds.core(chart.machine(3).id)), EPS, "beta bender");
+        assertEquals(0.9, view.machineCounts.get(chart.machine(2).id), EPS, "alpha bender");
+        assertEquals(1.0, view.machineCounts.get(chart.machine(3).id), EPS, "beta bender");
     }
 
     @Test

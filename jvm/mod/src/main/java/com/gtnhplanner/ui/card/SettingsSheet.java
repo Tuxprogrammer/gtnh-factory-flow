@@ -2,7 +2,6 @@ package com.gtnhplanner.ui.card;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -11,6 +10,7 @@ import com.cleanroommc.modularui.api.widget.Interactable;
 import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
 import com.cleanroommc.modularui.theme.WidgetThemeEntry;
 import com.cleanroommc.modularui.widget.Widget;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.ui.BoardSession;
 import com.gtnhplanner.ui.canvas.BoardCanvas;
 import com.gtnhplanner.ui.popup.Popup;
@@ -161,7 +161,7 @@ public final class SettingsSheet extends Popup {
         private final BoardCanvas board;
         /** The card the sheet was opened on, and its id on the board. */
         private final RecipeCard opened;
-        private final UUID cardId;
+        private final Uuid cardId;
         private final BoardSession session;
         private final SettingsSheet popup;
         private Sheet sheet;

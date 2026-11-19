@@ -177,7 +177,7 @@ public enum Sfx {
     /** The next take: a shuffled round of them, the first of a round never the last of the one before. */
     private ResourceLocation deal() {
         if (takes == null) {
-            final java.util.List<ResourceLocation> found = new java.util.ArrayList<>();
+            final java.util.List<ResourceLocation> found = new ArrayList<>();
             final net.minecraft.client.audio.SoundHandler handler = Minecraft.getMinecraft()
                 .getSoundHandler();
             for (int k = 1; k <= 16; k++) {
@@ -190,7 +190,7 @@ public enum Sfx {
         if (takes.length == 0) return location;
         if (takes.length == 1) return takes[0];
         if (deck.isEmpty()) {
-            final java.util.List<Integer> round = new java.util.ArrayList<>();
+            final java.util.List<Integer> round = new ArrayList<>();
             for (int k = 0; k < takes.length; k++) round.add(k);
             java.util.Collections.shuffle(round, RANDOM);
             if (round.get(0) == lastTake) java.util.Collections.swap(round, 0, round.size() - 1);

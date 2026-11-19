@@ -11,6 +11,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.gtnhplanner.core.base.Uuid;
 
 /**
  * The dots a player pins on a wire to steer it, the website's edge waypoints: board points, in order, that the wire's
@@ -82,7 +83,7 @@ public final class Waypoints {
      * gone. A wire wholly inside one group keeps them, moved as far as the group moved ({@code groupMoves}: each moved
      * group's {dx, dy}; Arrange moves a group as one block, its insides untouched).
      */
-    public static void afterArrange(final Graph g, final java.util.Map<java.util.UUID, int[]> groupMoves) {
+    public static void afterArrange(final Graph g, final java.util.Map<Uuid, int[]> groupMoves) {
         for (final Edge e : g.getEdges()) {
             if (!e.waypoints.isEmpty())
                 e.waypoints = arranged(g, groupMoves, e.sourceNodeId, e.targetNodeId, e.waypoints);
@@ -104,7 +105,7 @@ public final class Waypoints {
     }
 
     /** Takes the dots off every wire with an end at one of {@code ids} (cards and drawers). */
-    public static void dropAt(final Graph g, final java.util.Set<java.util.UUID> ids) {
+    public static void dropAt(final Graph g, final java.util.Set<Uuid> ids) {
         for (final Edge e : g.getEdges())
             if (ids.contains(e.sourceNodeId) || ids.contains(e.targetNodeId)) e.waypoints = List.of();
         for (final Drawer d : g.getDrawers()) for (final Drawer.Held h : d.held()) {
@@ -120,9 +121,9 @@ public final class Waypoints {
     }
 
     /** A wire's dots after an arrange: moved with the outermost group both its ends are in, else gone. */
-    private static List<int[]> arranged(final Graph g, final java.util.Map<java.util.UUID, int[]> groupMoves,
-        final java.util.UUID a, final java.util.UUID b, final List<int[]> stops) {
-        final List<java.util.UUID> upA = Groups.ancestors(g, a), upB = Groups.ancestors(g, b);
+    private static List<int[]> arranged(final Graph g, final java.util.Map<Uuid, int[]> groupMoves, final Uuid a,
+        final Uuid b, final List<int[]> stops) {
+        final List<Uuid> upA = Groups.ancestors(g, a), upB = Groups.ancestors(g, b);
         if (upA.isEmpty() || upB.isEmpty()
             || !upA.getLast()
                 .equals(upB.getLast()))

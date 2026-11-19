@@ -7,7 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -15,6 +14,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.gtnhplanner.cloud.sync.LiveJson;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.Settings;
 import com.gtnhplanner.data.flowchart.BoardGroup;
 import com.gtnhplanner.data.flowchart.Drawer;
@@ -403,10 +403,10 @@ final class PlanRead {
     private void node(final JsonObject json) {
         final String id = str(json, "id");
         if (id == null) return;
-        final UUID uuid = PlanIds.uuid(id);
+        final Uuid uuid = PlanIds.uuid(id);
         final Node was = keptCard(json, id, uuid);
         final int[] at = place(json);
-        final UUID group = group(json);
+        final Uuid group = group(json);
         if (was != null) {
             // Its own JSON is the same, but its group's frame may have moved.
             was.x = at[0];
@@ -474,7 +474,7 @@ final class PlanRead {
      * there (not a shared machine the website made); else null.
      */
     @Nullable
-    private Node keptCard(final JsonObject json, final String id, final UUID uuid) {
+    private Node keptCard(final JsonObject json, final String id, final Uuid uuid) {
         if (previous == null || !unchanged("nodes", id, json)) return null;
         final JsonElement extra = json.get("extraRecipes");
         if (extra != null && extra.isJsonArray()
@@ -496,7 +496,7 @@ final class PlanRead {
 
     /** A card from its game data, as a load reads it; null when that does not read. */
     @Nullable
-    private Node fromGame(final JsonObject data, final UUID uuid, final int x, final int y) {
+    private Node fromGame(final JsonObject data, final Uuid uuid, final int x, final int y) {
         final JsonObject saved = LiveJson.copy(data);
         saved.addProperty("id", uuid.toString());
         saved.addProperty("x", x);
@@ -516,7 +516,7 @@ final class PlanRead {
      * card's id, a shared machine's later ones ids made from it.
      */
     private Map<Integer, Section> importCard(final FfNode card, @Nullable final FfRecipe recipe, final String id,
-        final UUID uuid, final int x, final int y) {
+        final Uuid uuid, final int x, final int y) {
         final Map<Integer, Section> made = new HashMap<>();
         if (recipe == null) {
             report.add(Kind.UNMATCHED, card.recipeId(), "the plan does not carry this card's recipe");
@@ -669,7 +669,7 @@ final class PlanRead {
         final String id = str(json, "id");
         final FfStorage s = id == null ? null : things.storage(json);
         if (s == null) return;
-        final UUID uuid = PlanIds.uuid(id);
+        final Uuid uuid = PlanIds.uuid(id);
         FfDrawers.Role role = roles.getOrDefault(id, FfDrawers.Role.IDLE);
         // A buffer wired to another drawer or by a cell wire has no drawer on the board (the importer joins its wires
         // instead): it stays in the plan as it is, the game's own or not.
@@ -724,7 +724,7 @@ final class PlanRead {
     }
 
     @Nullable
-    private static Drawer drawerFromGame(final JsonObject data, final UUID uuid, final int x, final int y) {
+    private static Drawer drawerFromGame(final JsonObject data, final Uuid uuid, final int x, final int y) {
         final JsonObject saved = LiveJson.copy(data);
         saved.addProperty("id", uuid.toString());
         saved.addProperty("x", x);
@@ -829,7 +829,7 @@ final class PlanRead {
     /** A wire, steered through {@code stops} (its game data's, to the pixel, or the site's, on its grid). */
     private void wire(final String id, final Node from, final Node to, final int out, final int in,
         final List<int[]> stops) {
-        final UUID uuid = PlanIds.uuid(id);
+        final Uuid uuid = PlanIds.uuid(id);
         final Edge edge = new Edge(uuid, from.id, to.id, out, in);
         edge.waypoints = stops;
         newWires.add(edge);
@@ -862,7 +862,7 @@ final class PlanRead {
     private void note(final JsonObject json) {
         final String id = str(json, "id");
         if (id == null) return;
-        final UUID uuid = PlanIds.uuid(id);
+        final Uuid uuid = PlanIds.uuid(id);
         final int[] at = place(json);
         final int x = at[0], y = at[1];
         final Ext ext = Ext.of(json);
@@ -903,7 +903,7 @@ final class PlanRead {
             if (id == null || groupsByPlan.containsKey(id)) continue;
             final FfPlan.FfBoard b = things.board(json);
             if (b == null) continue;
-            final UUID uuid = PlanIds.uuid(id);
+            final Uuid uuid = PlanIds.uuid(id);
             final Ext ext = Ext.of(json);
             BoardGroup g = ext != null && matches(ext, json) ? groupFromGame(ext.game(), uuid) : null;
             if (g == null) {
@@ -937,7 +937,7 @@ final class PlanRead {
 
     /** A group from its game data, as a load reads it; null when that does not read. */
     @Nullable
-    private static BoardGroup groupFromGame(final JsonObject data, final UUID uuid) {
+    private static BoardGroup groupFromGame(final JsonObject data, final Uuid uuid) {
         final JsonObject saved = LiveJson.copy(data);
         saved.addProperty("id", uuid.toString());
         return Serializer.readBoardGroup(saved);
@@ -961,7 +961,7 @@ final class PlanRead {
 
     /** The group a thing is in: the one its pocket ({@code pocketId}) became; null on the board. */
     @Nullable
-    private UUID group(final JsonObject json) {
+    private Uuid group(final JsonObject json) {
         final BoardGroup g = groupsByPlan.get(str(json, Fresh.POCKET));
         return g == null ? null : g.getId();
     }

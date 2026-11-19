@@ -5,13 +5,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.UUID;
 
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.OreDictionary;
 
 import com.gtnhplanner.api.PlanAPI;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Plan;
@@ -82,8 +82,8 @@ final class DevRecipes {
     static Map<String, Object> clearPlan() {
         final Graph graph = Plan.getActiveGraph();
         PlanAPI.recordEdit(graph, () -> {
-            for (final UUID id : new ArrayList<>(graph.nodes.keySet())) graph.removeNode(id);
-            for (final UUID id : new ArrayList<>(graph.drawers.keySet())) graph.removeDrawer(id);
+            for (final Uuid id : new ArrayList<>(graph.nodes.keySet())) graph.removeNode(id);
+            for (final Uuid id : new ArrayList<>(graph.drawers.keySet())) graph.removeDrawer(id);
             graph.notes.clear();
             graph.groups.clear();
         });

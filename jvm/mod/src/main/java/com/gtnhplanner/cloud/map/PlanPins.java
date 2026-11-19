@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.UUID;
 import java.util.function.Function;
 
 import javax.annotation.Nullable;
@@ -16,6 +15,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Node;
 
@@ -255,9 +255,9 @@ final class PlanPins {
 
     /** A board card's id as the plan names it: its plan id, a website shared machine's later recipe {@code #r<n>}. */
     private static String planCard(final Graph g, final Basis names, final String boardId) {
-        final UUID u;
+        final Uuid u;
         try {
-            u = UUID.fromString(boardId);
+            u = Uuid.fromString(boardId);
         } catch (final IllegalArgumentException e) {
             return boardId;
         }

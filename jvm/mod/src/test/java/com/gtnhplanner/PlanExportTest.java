@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Note;
@@ -102,7 +103,7 @@ class PlanExportTest {
         GtnhFlowLoader.ensureDefaultMachineProfile();
         // Emptying oxygen cells: a cell in, its oxygen and the empty cell out, 40 cells a second.
         final Graph g = new Graph("Tank");
-        final Node tank = new Node(java.util.UUID.randomUUID(), 0, 0);
+        final Node tank = new Node(Uuid.randomUUID(), 0, 0);
         tank.powerSource = com.gtnhplanner.power.FluidTank.ID;
         tank.inputs.add(com.gtnhplanner.harness.TestIngredients.port("Oxygen Cell", 1));
         tank.outputs.add(com.gtnhplanner.harness.TestIngredients.port("Oxygen", 1000));
@@ -179,7 +180,7 @@ class PlanExportTest {
     @Test
     void aCropPostsAsTheWebsitesCropFarmCard() throws IOException {
         final Graph g = new Graph("Crops");
-        final Node beet = new Node(java.util.UUID.randomUUID(), 0, 0);
+        final Node beet = new Node(Uuid.randomUUID(), 0, 0);
         beet.outputs.add(com.gtnhplanner.harness.TestIngredients.port("Sugar Beet", 2.69));
         beet.machineConfig.settings.put(com.gtnhplanner.machines.CropsNh.HARVESTER, "crop-industrial-farm");
         beet.machineConfig.settings.put(com.gtnhplanner.machines.CropsNh.BIOME, "humid");
@@ -293,12 +294,12 @@ class PlanExportTest {
     void aBeePostsAsTheWebsitesBeeCard() throws IOException {
         GtnhFlowLoader.ensureDefaultMachineProfile();
         final Graph g = new Graph("Bees");
-        final Node apiary = new Node(java.util.UUID.randomUUID(), 0, 0);
+        final Node apiary = new Node(Uuid.randomUUID(), 0, 0);
         apiary.outputs.add(com.gtnhplanner.harness.TestIngredients.port("Parched Comb", 0.1));
         apiary.outputs.add(com.gtnhplanner.harness.TestIngredients.port("Pulsating Iron Comb", 0.05));
         apiary.machineConfig.settings.put(com.gtnhplanner.machines.Bees.FRAME + 1, "forestry:proven");
         g.addNode(apiary);
-        final Node ia = new Node(java.util.UUID.randomUUID(), 400, 0);
+        final Node ia = new Node(Uuid.randomUUID(), 400, 0);
         ia.outputs.add(com.gtnhplanner.harness.TestIngredients.port("Parched Comb", 5));
         ia.machineConfig.settings.put(com.gtnhplanner.machines.Bees.HOUSING, "industrial-apiary");
         ia.machineConfig.settings.put(com.gtnhplanner.machines.Bees.IA_SPEED, "speed-4");

@@ -9,8 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.UUID;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.TaskEdits;
@@ -271,7 +271,7 @@ public final class DevTaskBoard {
     private static void task(final Graph g, final Map<String, String> ids, final String key, final String title,
         final Tasks.Status status, final String who, final String priority, final double movedDays,
         final double madeDays, final List<String> waitsOn, final List<Thing> things) {
-        final String id = UUID.randomUUID()
+        final String id = Uuid.randomUUID()
             .toString();
         ids.put(key, id);
         final List<Tasks.Link> links = new ArrayList<>();
@@ -299,7 +299,7 @@ public final class DevTaskBoard {
         for (final Thing t : things) {
             final Tasks.Item item = TaskEdits.addThing(
                 g,
-                UUID.randomUUID()
+                Uuid.randomUUID()
                     .toString(),
                 id,
                 t.link() != null ? Tasks.MACHINE : "",
@@ -316,7 +316,7 @@ public final class DevTaskBoard {
         if (taskId == null) return;
         TaskEdits.addComment(
             g,
-            UUID.randomUUID()
+            Uuid.randomUUID()
                 .toString(),
             taskId,
             id(who),

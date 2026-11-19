@@ -142,10 +142,10 @@ class ArrangeConformanceTest {
     }
 
     /** A host's second thread, as the staged arrange asks for one: each job on a thread of its own. */
-    static final Arrange.Worker THREAD = new Arrange.Worker() {
+    static final com.gtnhplanner.core.base.Worker THREAD = new com.gtnhplanner.core.base.Worker() {
 
         @Override
-        public <T> Arrange.Job<T> start(final Supplier<T> work) {
+        public <T> com.gtnhplanner.core.base.Worker.Job<T> start(final Supplier<T> work) {
             final List<T> answer = new ArrayList<>();
             final List<Throwable> thrown = new ArrayList<>();
             final Thread thread = new Thread(() -> {

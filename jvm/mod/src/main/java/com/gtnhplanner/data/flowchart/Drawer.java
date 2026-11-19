@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
+
+import com.gtnhplanner.core.base.Uuid;
 
 /**
  * A drawer on the board: one resource crossing the plan's boundary, with what the player wants of
@@ -42,24 +43,24 @@ public class Drawer extends GraphData implements DrawerTypes {
      */
     public static final class Link {
 
-        private final UUID nodeId;
+        private final Uuid nodeId;
         private final int portIndex;
         /** The dots steering the link's wire ({@link Waypoints}); null for none, so a save leaves it out. */
         @org.jetbrains.annotations.Nullable
         private final List<int[]> waypoints;
 
-        public Link(final UUID nodeId, final int portIndex) {
+        public Link(final Uuid nodeId, final int portIndex) {
             this(nodeId, portIndex, null);
         }
 
-        private Link(final UUID nodeId, final int portIndex,
+        private Link(final Uuid nodeId, final int portIndex,
             @org.jetbrains.annotations.Nullable final List<int[]> waypoints) {
             this.nodeId = Objects.requireNonNull(nodeId, "nodeId");
             this.portIndex = portIndex;
             this.waypoints = waypoints;
         }
 
-        public UUID nodeId() {
+        public Uuid nodeId() {
             return nodeId;
         }
 
@@ -114,11 +115,11 @@ public class Drawer extends GraphData implements DrawerTypes {
     private String label = "";
     /** The board group it is in ({@link BoardGroup}), or null. */
     @org.jetbrains.annotations.Nullable
-    private UUID group;
+    private Uuid group;
 
     /** A product drawer with no resource, no links and no rule; also Gson's constructor. */
     public Drawer() {
-        super(UUID.randomUUID());
+        super(Uuid.randomUUID());
     }
 
     public Drawer(final Kind kind, final String resourceKey) {
@@ -129,7 +130,7 @@ public class Drawer extends GraphData implements DrawerTypes {
     }
 
     /** Only for tests and loaders that need a fixed id. */
-    public Drawer(final UUID id, final Kind kind, final String resourceKey) {
+    public Drawer(final Uuid id, final Kind kind, final String resourceKey) {
         super(id);
         this.kind = Objects.requireNonNull(kind, "kind");
         this.resourceKey = Objects.requireNonNull(resourceKey, "resourceKey");
@@ -273,7 +274,7 @@ public class Drawer extends GraphData implements DrawerTypes {
     }
 
     /** Drops every link (and every taker) to {@code nodeId}; true when any went. */
-    public boolean removeLinksTo(final UUID nodeId) {
+    public boolean removeLinksTo(final Uuid nodeId) {
         final boolean any = links.removeIf(
             l -> l.nodeId()
                 .equals(nodeId))
@@ -284,7 +285,7 @@ public class Drawer extends GraphData implements DrawerTypes {
         return any;
     }
 
-    public boolean isLinked(final UUID nodeId, final int portIndex) {
+    public boolean isLinked(final Uuid nodeId, final int portIndex) {
         return links.contains(new Link(nodeId, portIndex));
     }
 
@@ -297,11 +298,11 @@ public class Drawer extends GraphData implements DrawerTypes {
     }
 
     @org.jetbrains.annotations.Nullable
-    public UUID getGroup() {
+    public Uuid getGroup() {
         return group;
     }
 
-    public void setGroup(@org.jetbrains.annotations.Nullable final UUID group) {
+    public void setGroup(@org.jetbrains.annotations.Nullable final Uuid group) {
         this.group = group;
     }
 
@@ -358,7 +359,7 @@ public class Drawer extends GraphData implements DrawerTypes {
     }
 
     /** Whether this drawer holds the port, given its own direction. */
-    public boolean holds(final UUID nodeId, final int portIndex, final boolean input) {
+    public boolean holds(final Uuid nodeId, final int portIndex, final boolean input) {
         if (kind == Kind.BUFFER && input) return takers.contains(new Link(nodeId, portIndex));
         return kind.linksInputs() == input && isLinked(nodeId, portIndex);
     }

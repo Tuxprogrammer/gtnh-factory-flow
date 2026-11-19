@@ -7,7 +7,8 @@
 // re-derives a number. `cardMachineMath` keeps one readout per card (see the key below), so the card, its glance face,
 // its tips and the Overview rail share one computation.
 import type { CoreExports } from "./exports.generated";
-import { coreIfLoaded, loadCore } from "./loader";
+import { coreFor, isAdopted } from "./adopt";
+import { loadCore } from "./loader";
 import type { FactoryNode, MachineHandler, Recipe } from "@/lib/model/types";
 import { applyMachineHandlerToRecipe, getSelectedMachineHandler } from "@/lib/model/recipe-rules";
 import { applyRecipeInputOverrides } from "@/lib/model/recipe-input-overrides";
@@ -155,22 +156,19 @@ export function cardMachineMathCore(
 }
 
 /**
- * Stand-in for adopt.ts's `coreFor("machines")` (the web stream's file, agreed, not on this base yet): the area is off,
- * so the TypeScript answers. When adopt.ts lands, `coreForMachines()` becomes `coreFor("machines")` and the flag lives
- * there. With the area on, the first ask starts the load (the cards use the TypeScript until it is there) and the
- * loaded core is warmed in idle time.
+ * The core for the machines area (adopt.ts: off by default): null while the area is off or the core is loading, and
+ * then the cards use the TypeScript. The load the area starts is followed by a warm-up in idle time.
  */
-const MACHINES_ADOPTED = false;
-let loading = false;
+let warmPending = false;
 function coreForMachines(): CoreExports | null {
-  if (!MACHINES_ADOPTED) return null;
-  const c = coreIfLoaded();
-  if (c || loading) return c;
-  loading = true;
-  loadCore().then(warmSoon, () => {
-    // No core here: the TypeScript answers every card, as it does with the area off.
-  });
-  return null;
+  const c = coreFor("machines");
+  if (c) warmSoon(c);
+  else if (!warmPending && isAdopted("machines")) {
+    warmPending = true;
+    // loadCore shares the load coreFor started: this only waits for it.
+    loadCore().then(warmSoon, () => undefined);
+  }
+  return c;
 }
 
 /**

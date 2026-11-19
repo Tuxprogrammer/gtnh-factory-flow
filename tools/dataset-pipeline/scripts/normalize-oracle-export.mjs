@@ -536,6 +536,8 @@ function normalizeThaumcraft(domain) {
         ? [normalizedRecipe.output]
         : [];
     const output = outputs[0];
+    // No output item means no card: a tagged result is its own input to a plan, an
+    // enchantment or wand result depends on what the player feeds in.
     if (!output || outputs.length === 0) {
       continue;
     }

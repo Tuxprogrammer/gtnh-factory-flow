@@ -1,4 +1,5 @@
 import { TGS_MACHINE_TYPE, tgsEuPerTick } from "@/lib/machines/tree-growth-simulator";
+import { getGameRates } from "./game-rates";
 import { applyInputConsumeChances } from "./input-chance";
 import type {
   FactoryNode,
@@ -657,15 +658,18 @@ export function cropsNhGrowthSpeedMultiplier(setup: CropHarvesterSetup): number 
 
 /**
  * What multiplies the drop ROUNDS. The Crop Manager passes
- * `1 + 0.05 * tier` into `crop.harvest`; the farm builds the same number out
- * of its seed bed tier and units in `getHarvestRoundMultiplier`.
+ * `1 + 0.05 * tier` into `crop.harvest`, and the pack's rate mod multiplies that argument again (the dataset's
+ * ic2CropsYield, 1 without one); the farm builds its number out of its seed bed tier and units in
+ * `getHarvestRoundMultiplier`, which the rate mod does not touch.
  */
 export function cropsNhHarvestRoundMultiplier(setup: CropHarvesterSetup): number {
   if (cropsNhIsHandPicked(setup)) {
     return 1;
   }
   if (setup.id === CROP_HARVESTER_MANAGER_ID) {
-    return 1 + CROP_MANAGER_HARVEST_BONUS_PER_TIER * setup.tierIndex;
+    return (
+      (1 + CROP_MANAGER_HARVEST_BONUS_PER_TIER * setup.tierIndex) * getGameRates().ic2CropsYield
+    );
   }
   const additive =
     1 +

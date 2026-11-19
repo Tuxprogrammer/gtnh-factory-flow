@@ -60,6 +60,20 @@ export interface MachineHandlerIconEntry {
   tiers?: Array<{ tier: string; resource: RecipeMapIconEntry["resource"] }>;
 }
 
+/**
+ * What the pack's rate mod (GTNHRates) does to this dataset's game, read by the pipeline from the live server's
+ * gtnhrates.cfg. Every field is a factor and is optional: a dataset with no record, or a record missing a field,
+ * reads as 1 (a pack with no rate mod). The app never holds these as constants, only through getGameRates().
+ */
+export interface GameRates {
+  /** cfg `beesYield`: items a Forestry bee housing (Apiary, Magic Apiary, Alveary) gets from each produce roll. */
+  beesYield?: number;
+  /** cfg `ic2CropsYield`: the Crop Manager's drop-round multiplier. The Industrial Farm and IC2 crops do not use it. */
+  ic2CropsYield?: number;
+  /** cfg `gtRecipesEnergyDiscount`: what recipe durations were divided by (rounded up, at least 1 tick). */
+  recipeDurationDivisor?: number;
+}
+
 export interface DatasetVersion {
   id: string;
   gtnhVersion: string;
@@ -72,6 +86,8 @@ export interface DatasetVersion {
   recipeLookupIndexPath?: string;
   checksumSha256?: string;
   sourceInfo: DatasetSourceInfo;
+  /** Copied from the dataset directory's game-rates.json by the manifest step; not part of the checksum. */
+  gameRates?: GameRates;
 }
 
 export interface DatasetManifest {
@@ -93,6 +109,8 @@ export interface RecipeDataset {
   recipeMaps: string[];
   recipeMapIcons?: RecipeMapIconEntry[];
   machineHandlerIcons?: MachineHandlerIconEntry[];
+  /** The version's manifest record, passed through by the catalog so the client needs no second request. */
+  gameRates?: GameRates;
   generatedAt: string;
 }
 

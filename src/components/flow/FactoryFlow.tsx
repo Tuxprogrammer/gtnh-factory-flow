@@ -154,7 +154,7 @@ import {
   writeDesignCamera,
   type BoardCamera,
 } from "@/lib/designs/design-camera";
-import { isBoardCovered, isEditableKeyboardTarget } from "./keyboard";
+import { isBoardCovered, isDialogKeyboardTarget, isEditableKeyboardTarget } from "./keyboard";
 import {
   didBoardTimelapseEndHeld,
   getBoardTimelapseCameraMode,
@@ -4988,6 +4988,23 @@ export function FactoryFlow() {
     setSelectedBoardIds([]);
   }, [setSelectedBoardIds]);
 
+  /**
+   * Ctrl+A: every node the board lets a marquee take (cards, drawers, groups, frames, notes). Wires follow their
+   * cards. False when there is nothing to select, so the page keeps its own select-all.
+   */
+  const selectAllBoardItems = useCallback((): boolean => {
+    const takes = (node: { hidden?: boolean; selectable?: boolean }) =>
+      !node.hidden && node.selectable !== false;
+    if (!flowNodesRef.current.some(takes)) {
+      return false;
+    }
+
+    setFlowNodes((current) =>
+      current.map((node) => (takes(node) && !node.selected ? { ...node, selected: true } : node)),
+    );
+    return true;
+  }, []);
+
   // The recipe search covers the board; the board's own notices mute while
   // it does.
   const recipeSearchOpen = useFactoryStore((state) => Boolean(state.recipeBrowserResource));
@@ -5118,6 +5135,18 @@ export function FactoryFlow() {
           return;
         }
 
+        if (key === "a") {
+          // Text the player is typing or selecting, and a dialog or menu that has the keyboard, keep select-all.
+          if (isEditableKeyboardTarget(event.target) || isDialogKeyboardTarget(event.target)) {
+            return;
+          }
+
+          if (selectAllBoardItems()) {
+            event.preventDefault();
+          }
+          return;
+        }
+
         if (key === "v") {
           if (isEditableKeyboardTarget(event.target)) {
             return;
@@ -5204,6 +5233,7 @@ export function FactoryFlow() {
     isDeleteMode,
     nodeColorPaintMode,
     pasteBoardClipboard,
+    selectAllBoardItems,
     setNodeColorPaintMode,
     wrapSelectedBoardItems,
   ]);

@@ -56,6 +56,10 @@ afterEach(() => {
   cleanup();
   useFactoryStore.setState(initial);
 });
+// The tooltip opens on an animation frame, outside act, so React commits the preview
+// before it has subscribed to the store. A wheel turned in that gap changes the store
+// but the preview repaints only once the subscription lands; settle it first.
+const settled = () => act(async () => {});
 const share = (storage: string, side: "input" | "output") =>
   getProjectRatioBranches(useFactoryStore.getState().project, side)
     .get(storage)!
@@ -75,6 +79,7 @@ it("previews the full split on hover and keeps every percentage live while scrol
   const output = screen.getByRole("spinbutton", { name: "Outgoing percentage" });
   fireEvent.mouseMove(output, { clientX: 300, clientY: 300, buttons: 0 });
   const preview = await screen.findByRole("tooltip", { name: "Ratio split" });
+  await settled();
   const incoming = within(preview).getByRole("region", { name: "Incoming" });
   const outgoing = within(preview).getByRole("region", { name: "Outgoing" });
   expect(within(incoming).getByText("Source")).toBeTruthy();
@@ -109,6 +114,7 @@ it("opens the same overview from Setup output and updates it as export changes",
   const output = screen.getByRole("spinbutton", { name: "Setup output percentage" });
   fireEvent.mouseMove(output, { clientX: 300, clientY: 300, buttons: 0 });
   const preview = await screen.findByRole("tooltip");
+  await settled();
   fireEvent.wheel(output, { deltaY: -100, shiftKey: true });
   expect(within(preview).getByText("10%")).toBeTruthy();
   expect(within(preview).getAllByText("45%")).toHaveLength(2);

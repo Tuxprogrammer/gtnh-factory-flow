@@ -31,9 +31,14 @@ export const COIL_KNOB = "coil";
 
 const n = formulaNumber;
 
-/** Ticks as the website writes them: whole, or 1/n under one. */
-function ticks(t: number): string {
-  return t >= 1 ? `${n(t)} t` : `1/${Math.round(1 / t)} t`;
+/**
+ * Ticks as the website writes them: whole, or 1/n under one. A run under one tick that the power supply stretches is
+ * not a whole fraction (64 parallels at 170 a tick is 0.376 t) and is written as the plain number.
+ */
+export function ticks(t: number): string {
+  if (t >= 1) return `${n(t)} t`;
+  const per = 1 / t;
+  return Math.abs(per - Math.round(per)) < 1e-9 ? `1/${Math.round(per)} t` : `${n(t)} t`;
 }
 
 function sup(power: number): FormulaTerm {

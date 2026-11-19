@@ -7,6 +7,7 @@ import {
   type TargetMode,
 } from "@/lib/model/storage-target";
 
+import { getGameRates, setActiveGameRates } from "@/lib/model/game-rates";
 import { dissolveProductionGroup, productionGroupDescendants } from "@/lib/model/production-groups";
 import type { ProductionGroup, PoolResourceRule } from "@/lib/model/types";
 
@@ -1327,21 +1328,34 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
     }));
   },
   setDataset: (dataset) => {
-    setPresentation((state) => ({
-      dataset,
-      project: refreshProjectResourceIcons(state.project, dataset),
-      recipeResourceHistory: refreshResourceHistoryIcons(state.recipeResourceHistory, dataset),
-      recipeBrowserResource: state.recipeBrowserResource
-        ? refreshBrowserResourceIcon(state.recipeBrowserResource, dataset)
-        : undefined,
-      pendingResourceConnection: state.pendingResourceConnection
-        ? refreshPendingResourceConnectionIcon(state.pendingResourceConnection, dataset)
-        : undefined,
-      selectedDatasetVersionId: dataset.datasetVersionId,
-      selectedRecipeId: state.selectedRecipeId ?? dataset.recipes[0]?.id,
-      datasetError: undefined,
-      isDatasetLoading: false,
-    }));
+    // Before the presentation update, which re-solves when the rates moved: a plan hydrated before its dataset
+    // arrived was solved without them.
+    const before = getGameRates();
+    setActiveGameRates(dataset.gameRates);
+    const after = getGameRates();
+    const ratesMoved =
+      before.beesYield !== after.beesYield ||
+      before.ic2CropsYield !== after.ic2CropsYield ||
+      before.recipeDurationDivisor !== after.recipeDurationDivisor;
+    setPresentation((state) => {
+      const project = refreshProjectResourceIcons(state.project, dataset);
+      return {
+        dataset,
+        project,
+        ...(ratesMoved ? { lastResult: solveBooks(project) } : {}),
+        recipeResourceHistory: refreshResourceHistoryIcons(state.recipeResourceHistory, dataset),
+        recipeBrowserResource: state.recipeBrowserResource
+          ? refreshBrowserResourceIcon(state.recipeBrowserResource, dataset)
+          : undefined,
+        pendingResourceConnection: state.pendingResourceConnection
+          ? refreshPendingResourceConnectionIcon(state.pendingResourceConnection, dataset)
+          : undefined,
+        selectedDatasetVersionId: dataset.datasetVersionId,
+        selectedRecipeId: state.selectedRecipeId ?? dataset.recipes[0]?.id,
+        datasetError: undefined,
+        isDatasetLoading: false,
+      };
+    });
   },
   refreshProjectRecipes: (recipes, migration = {}) => quietly(() => {
     setPresentation((state) => {
@@ -1407,6 +1421,7 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
     });
   }),
   clearDataset: () => {
+    setActiveGameRates(undefined);
     set({
       dataset: undefined,
       recipeSearch: "",

@@ -55,8 +55,17 @@ public final class Fusion {
     /** getFusionMachine: by name or slug, any case. */
     @Nullable
     public static Machine machine(@Nullable final String name) {
-        return name == null || name.isEmpty() ? null : BY_NAME.get(name.toLowerCase(Locale.ROOT));
+        if (name == null || name.isEmpty()) return null;
+        // Asked for every machine name on every card, over a handful of names: each name's answer is kept.
+        final Machine m = BY_ANY_NAME.computeIfAbsent(name, n -> {
+            final Machine found = BY_NAME.get(n.toLowerCase(Locale.ROOT));
+            return found != null ? found : NOT_A_REACTOR;
+        });
+        return m == NOT_A_REACTOR ? null : m;
     }
+
+    private static final Machine NOT_A_REACTOR = new Machine("", 0, false, "", 0);
+    private static final Map<String, Machine> BY_ANY_NAME = new java.util.concurrent.ConcurrentHashMap<>();
 
     /** isFusionRecipe: off the Fusion Reactor map, or run by a reactor; never a power card. */
     public static boolean isRecipe(final Web.Recipe recipe) {

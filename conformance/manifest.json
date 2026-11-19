@@ -42,12 +42,13 @@
       "generator": "hand-written"
     },
     "machines": {
-      "specifies": "Machine maths as the website computes it: machine-goldens (recipes through the machine table, overclocks, parallels, power), bee-goldens (the bee card's multipliers and handler stats), crop-goldens (CropsNh), and reference-coefficients (the machine table against ShadowTheAge's reference calculator). Gzip files are one JSON object per line.",
+      "specifies": "Machine maths as the website computes it: machine-goldens (recipes through the machine table, overclocks, parallels, power), bee-goldens (the bee card's multipliers and handler stats), crop-goldens (CropsNh), reference-coefficients (the machine table against ShadowTheAge's reference calculator), and website-test-inputs (every recipe and node the website's machine tests hand the maths, for the TypeScript-against-core shadow). Gzip files are one JSON object per line.",
       "readers": [
         "mod: machines/web/MachineGoldensTest, machines/BeesGoldensTest, machines/CropsNhGoldensTest, machines/web/MachineTableTest",
-        "website: src/lib/machines/machine-table.test.ts (reference-coefficients.json)"
+        "website: src/lib/machines/machine-table.test.ts (reference-coefficients.json)",
+        "website: src/lib/core/machines-shadow.test.ts (machine-goldens and website-test-inputs through the TypeScript and the compiled core)"
       ],
-      "generator": "machine-goldens: npx tsx tools/audits/export-mod-machine-goldens.ts --out conformance/machines/machine-goldens.jsonl.gz --dataset stable-2.9.0-tuxmine --rates recipeDurationDivisor=64,beesYield=4,ic2CropsYield=4 (the instance's dataset, checksumSha256 7c6fbe83d7be4863518e88c615b0299033d7a4b6c4e32bb497225979ac35b3c2, at its pack's GTNHRates config); crop-goldens: npx tsx tools/audits/export-mod-crop-goldens.ts --out conformance/machines/crop-goldens.jsonl.gz --dataset stable-2.9.0-tuxmine (same dataset); bee-goldens: BEE_GOLDENS_OUT=$PWD/conformance/machines/bee-goldens.jsonl.gz node node_modules/vitest/vitest.mjs run --config jvm/mod/tools/dev/bees/vitest.bees.config.mjs; reference-coefficients: see src/lib/machines/CLAUDE.md"
+      "generator": "machine-goldens: npx tsx tools/audits/export-mod-machine-goldens.ts --out conformance/machines/machine-goldens.jsonl.gz --dataset stable-2.9.0-tuxmine --rates recipeDurationDivisor=64,beesYield=4,ic2CropsYield=4 (the instance's dataset, checksumSha256 7c6fbe83d7be4863518e88c615b0299033d7a4b6c4e32bb497225979ac35b3c2, at its pack's GTNHRates config); crop-goldens: npx tsx tools/audits/export-mod-crop-goldens.ts --out conformance/machines/crop-goldens.jsonl.gz --dataset stable-2.9.0-tuxmine (same dataset); bee-goldens: BEE_GOLDENS_OUT=$PWD/conformance/machines/bee-goldens.jsonl.gz node node_modules/vitest/vitest.mjs run --config jvm/mod/tools/dev/bees/vitest.bees.config.mjs; reference-coefficients: see src/lib/machines/CLAUDE.md; website-test-inputs: node tools/audits/machine-test-inputs/record.mjs"
     },
     "pending": {
       "specifies": "Files that disagree with a copy in the tree and wait for a decision. No suite reads them. Each subdirectory says in its README.md what it is and which file it would replace.",
@@ -202,6 +203,11 @@
       "area": "machines",
       "bytes": 643054,
       "sha256": "d32b2163d3f0c9cc69100c6e7a273dfe5cba8249cbea21e3e3bc062a0fe98ec6"
+    },
+    "machines/website-test-inputs.jsonl.gz": {
+      "area": "machines",
+      "bytes": 120878,
+      "sha256": "9264f9be65f716e43774850747604716dbc9b2733eb30e629cf246be89cc1678"
     },
     "plans/invalid/fuel-profile-empty-id.json": {
       "area": "plans",

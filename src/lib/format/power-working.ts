@@ -1,12 +1,12 @@
 import { applyMachineHandlerToRecipe } from "@/lib/model/recipe-rules";
-import { formatCompact } from "@/lib/model/resources";
+import { formatCompact } from "./numbers";
 import { getVoltageTierMaxEuT } from "@/lib/model/tiers";
 import type { Recipe } from "@/lib/model/types";
-import { getHeatDiscountMultiplier } from "./heat";
-import { getEffectiveVoltageOrdinal } from "./power";
-import { getMachineEutMultiplier } from "./machine-effects";
-import { getOverclockedRecipeStats } from "./overclock";
-import { getNodePowerReport, describePowerStall, type NodePowerReport } from "./power-report";
+import { getHeatDiscountMultiplier } from "@/lib/solver/heat";
+import { getEffectiveVoltageOrdinal } from "@/lib/solver/power";
+import { getMachineEutMultiplier } from "@/lib/solver/machine-effects";
+import { getOverclockedRecipeStats } from "@/lib/solver/overclock";
+import { getNodePowerReport, describePowerStall, type NodePowerReport } from "@/lib/solver/power-report";
 import {
   powerNodeAtBudget,
   listPowerWinsCached,
@@ -14,7 +14,7 @@ import {
   previousPowerWin,
   type PowerWin,
   type PowerWinNode,
-} from "./power-wins";
+} from "@/lib/solver/power-wins";
 
 /**
  * One rung of the ladder: what the recipe is on its own, and what it is with

@@ -1,11 +1,11 @@
-import type { FactoryNode, Recipe } from "./types";
-import { applyRecipeInputOverrides } from "./recipe-input-overrides";
+import type { FactoryNode, Recipe } from "@/lib/model/types";
+import { applyRecipeInputOverrides } from "@/lib/model/recipe-input-overrides";
 import {
   applyMachineHandlerToRecipe,
   getRecipeCoilTierControl,
   getRecipeMachineConfigTierControls,
   getSelectedMachineHandler,
-} from "./recipe-rules";
+} from "@/lib/model/recipe-rules";
 
 /**
  * The settings last changed on each machine, so the next card for it starts with them (the mod's `SettingMemory`):

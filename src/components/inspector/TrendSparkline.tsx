@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
-import { formatCompact } from "@/lib/model";
+import { formatCompact } from "@/lib/format/numbers";
 import { useBoardMotion, useMotionPoints, useMotionValue } from "@/components/flow/board-motion";
 
 /**

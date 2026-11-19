@@ -7,8 +7,8 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { ResourceIcon } from "@/components/nei/ResourceIcon";
-import { formatCompact } from "@/lib/model/resources";
-import { rateMultiplierForKind, rateSuffixForKind } from "@/lib/model/rate-unit";
+import { formatCompact } from "@/lib/format/numbers";
+import { rateMultiplierForKind, rateSuffixForKind } from "@/lib/format/rate-unit";
 import { useFactoryStore, useRateDisplayUnits } from "@/store/factory-store";
 import { mixHex } from "../colors";
 import { CC } from "../tokens";

@@ -17,7 +17,7 @@ import {
 import { makeResourceKey } from "@/lib/model";
 import type { FactoryStorage } from "@/lib/model/types";
 import type { StorageRole } from "@/lib/model/storage-role";
-import { rateMultiplierForKind } from "@/lib/model/rate-unit";
+import { rateMultiplierForKind } from "@/lib/format/rate-unit";
 import { resourceLabel } from "@/lib/model/resources";
 import { getCategoryPresentation } from "@/lib/model/category-presentation";
 import { playBoardSound, suppressBoardSound } from "@/lib/board-sounds";

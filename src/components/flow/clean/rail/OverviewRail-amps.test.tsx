@@ -3,7 +3,7 @@ import { afterEach, beforeAll, expect, it, vi } from "vitest";
 import { act, cleanup, render } from "@testing-library/react";
 import { mockLeftovers } from "@/lib/solver/plan/__fixtures__/mock-extras";
 import type { FactoryNode, FactoryProject } from "@/lib/model/types";
-import { formatCompact } from "@/lib/model/resources";
+import { formatCompact } from "@/lib/format/numbers";
 import { getVoltageTierMaxEuT } from "@/lib/model/tiers";
 import { buildPowerRecipe, powerCardTier } from "@/lib/power/power-recipe";
 import { solveBooks } from "@/store/solve-books";

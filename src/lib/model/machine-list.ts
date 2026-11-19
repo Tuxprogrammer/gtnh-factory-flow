@@ -220,10 +220,3 @@ export function buildMachineList(
       a.tierIndex - b.tierIndex || (b.euT ?? 0) - (a.euT ?? 0) || a.label.localeCompare(b.label),
   );
 }
-
-/** Keep fractional answers at large counts too; never round up to a build. */
-export function formatMachineListCount(count: number): string {
-  return count > 0 && count < 0.000001
-    ? "<0.000001"
-    : count.toLocaleString("en-US", { maximumFractionDigits: 6 });
-}

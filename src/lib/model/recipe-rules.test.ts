@@ -175,7 +175,12 @@ describe("recipe machine handlers", () => {
     for (const machineType of ["Shaped Crafting", "Shapeless Crafting"]) {
       const handlers = getRecipeMachineHandlers(testRecipe(machineType, "NONE"));
 
-      expect(handlers.map((handler) => handler.label)).toEqual(["Auto Workbench", machineType]);
+      // The hand-craft reads as the machine a player uses, under the map's id (saved plans name it by id).
+      expect(handlers.map((handler) => handler.label)).toEqual([
+        "Auto Workbench",
+        "Crafting Table",
+      ]);
+      expect(handlers[1]!.id).toBe(machineType.toLowerCase().replace(" ", "-"));
       expect(handlers[0]).toMatchObject({
         minimumTier: "LV",
         durationTicks: 64,

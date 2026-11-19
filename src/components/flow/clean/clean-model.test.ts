@@ -631,10 +631,11 @@ describe("the card's picture", () => {
     const icons = new Map([["Mixer", mixer]]) as unknown as Parameters<typeof cardPicture>[4];
     const none = new Map() as Parameters<typeof cardPicture>[3];
     expect(cardPicture(recipe, beeNode, face("mixer"), none, icons).machineIcon?.displayName).toBe("Basic Mixer");
-    expect(cardPicture(recipe, beeNode, face("mixer"), none, icons).name).toBe("Basic Mixer");
+    // The map's machine is one tier's item ("Basic Mixer" is the LV one): it lends its picture, not its name.
+    expect(cardPicture(recipe, beeNode, face("mixer"), none, icons).name).toBe("mixer");
   });
 
-  it("is named by the machine it runs on, never by the map's machine it borrowed a picture from", () => {
+  it("is named by its machine, as the Overview names it, never by the map's machine it borrowed a picture from", () => {
     type Args = Parameters<typeof cardPicture>;
     const none = new Map() as Args[3];
     const named = (id: string, label: string) =>
@@ -655,7 +656,7 @@ describe("the card's picture", () => {
     const tableIcons = new Map([["Shaped Crafting", table]]) as unknown as Args[4];
     const workbench = named("auto-workbench", "Auto Workbench");
     expect(cardPicture(crafting, beeNode, workbench, none, tableIcons).name).toBe("Auto Workbench");
-    const tableHandler = named("shaped-crafting", "Shaped Crafting");
+    const tableHandler = named("shaped-crafting", "Crafting Table");
     expect(cardPicture(crafting, beeNode, tableHandler, none, tableIcons).name).toBe(
       "Crafting Table",
     );
@@ -685,6 +686,22 @@ describe("the card's picture", () => {
     const multi = named("industrial-centrifuge", "Industrial Centrifuge");
     expect(cardPicture(spin, beeNode, multi, none, spinIcons).name).toBe("Industrial Centrifuge");
     const own = named("centrifuge", "Centrifuge");
-    expect(cardPicture(spin, beeNode, own, none, spinIcons).name).toBe("Basic Centrifuge");
+    expect(cardPicture(spin, beeNode, own, none, spinIcons).name).toBe("Centrifuge");
+    // A family with its own icon is named by that icon at the card's tier: the machine a player builds.
+    const tiered = new Map([
+      [
+        "centrifuge",
+        {
+          familyId: "centrifuge",
+          resource: basic,
+          tiers: [
+            { tier: "LV", resource: basic },
+            { tier: "MV", resource: { ...basic, displayName: "Advanced Centrifuge" } },
+          ],
+        },
+      ],
+    ]) as unknown as Args[3];
+    const mv = { ...beeNode, overclockTier: "MV" } as FactoryNode;
+    expect(cardPicture(spin, mv, own, tiered, spinIcons).name).toBe("Advanced Centrifuge");
   });
 });

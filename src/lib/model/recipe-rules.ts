@@ -76,7 +76,8 @@ export function getRecipeMachineHandlers(
     kind: "single",
   };
   if (isHandCraftingRecipeMap(recipe)) {
-    return [autoWorkbenchHandler(), fallback];
+    // The hand-craft is the crafting table, not the map ("Shaped Crafting"); its id stays the map's for saved plans.
+    return [autoWorkbenchHandler(), { ...fallback, label: "Crafting Table" }];
   }
   return [normalizeFusionHandler(fallback, recipe)];
 }

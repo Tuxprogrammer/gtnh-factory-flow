@@ -16,6 +16,14 @@
       ],
       "generator": "number-text: node tools/conformance/core-base/gen-vectors.mjs; uuid: ./gradlew :core-base:test --tests '*UuidTest.writeVectors' -PwriteVectors (from jvm/); then node tools/conformance/manifest.mjs --write"
     },
+    "format": {
+      "specifies": "How the two sides spell numbers: values.json is the shared input list; website-out.json, mod-out.json and mod-recipe-overlay-out.json are what each side's formatters return for it (the website's compact, brief, power, rate, machine-count, percent and multiplier formatters; the mod's Fmt and the recipe overlay's GuiHelper formatters); COMPARISON.md is the generated table of where they differ. The sides are not required to agree: the table is the work order for the view item.",
+      "readers": [
+        "website: src/test-support/format-conformance.test.ts, tools/conformance/format/compare.test.mjs",
+        "mod: core-view com.gtnhplanner.ui.FmtConformanceTest; mod RecipeOverlayFormatTest"
+      ],
+      "generator": "website-out.json: GTNH_WRITE_GOLDEN=1 vitest run src/test-support/format-conformance.test.ts; mod-out.json: ./gradlew :core-view:test --tests '*FmtConformanceTest*' -PwriteVectors; mod-recipe-overlay-out.json: ./gradlew :mod:test --tests '*RecipeOverlayFormatTest*' -PwriteVectors; COMPARISON.md: node tools/conformance/format/compare.mjs; then node tools/conformance/manifest.mjs --write"
+    },
     "layout": {
       "specifies": "The wire router: every router call the website's router tests make (router-tests.json: solves with boards in and routes out, IncrementalRouter step sequences, cardRimDocks vectors) and the reference boards (boards.json.gz: the layout benchmark's plans as boxes and wires, each routed fresh, its busiest box dragged three beats and dropped), all answered by the website's TypeScript router; the Java router (core-layout) must give the same routes and search work to the bit.",
       "readers": [
@@ -111,6 +119,31 @@
       "area": "core-base",
       "bytes": 39121,
       "sha256": "23347b689fcef8d736c3e56f37bad34af5fe7efbde19cee759cd43cf827f39da"
+    },
+    "format/COMPARISON.md": {
+      "area": "format",
+      "bytes": 17611,
+      "sha256": "9fdbcd835f24bb8c1c63e367185bf7c52821824aaa412fd1c75c6092e098766b"
+    },
+    "format/mod-out.json": {
+      "area": "format",
+      "bytes": 5901,
+      "sha256": "565adc51b46300d06fd61bfa22ea39301292ebbf5f4287ef45a25158f7dc7ba7"
+    },
+    "format/mod-recipe-overlay-out.json": {
+      "area": "format",
+      "bytes": 921,
+      "sha256": "5ee271fb6e9fab09349e2c6f4dcd6c06d4614a8c96ee167d9ff9afaaa9e49d83"
+    },
+    "format/values.json": {
+      "area": "format",
+      "bytes": 5272,
+      "sha256": "6bfe3c8a4bb7b6322a9060b1fe4f7ca6759bbe6f79fec20aaa5438f4e09a40f3"
+    },
+    "format/website-out.json": {
+      "area": "format",
+      "bytes": 7455,
+      "sha256": "e4a4041cd55e4c64491ba45e3925fcde73d659774643889c34ef115120841c0d"
     },
     "layout/boards.json.gz": {
       "area": "layout",

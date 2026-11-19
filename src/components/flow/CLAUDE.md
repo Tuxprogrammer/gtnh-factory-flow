@@ -141,6 +141,9 @@ The board must stay smooth with 100+ cards on weak PCs.
   leave it (`costOutsideHome`); wires leaving pay per px spent inside (`costInsideExempt`).
 - Every dial is in `router-tuning.ts` (`DEFAULT_ROUTER_TUNING`), editable per device in the
   dev menu. Arrange dials are left out of `routerTuningKey` so they never re-route.
+  `router-tuning.ts` holds no browser code: where the dials are kept is an injected
+  `RouterTuningStorage`, set by `router-tuning-browser.ts` (imported for effect by
+  `FactoryFlow.tsx` and `DevMenu.tsx`, before the first `getRouterTuning`).
 - Past `ASYNC_ROUTE_EDGE_LIMIT` wires, routing runs in a worker (`grid-route-solve.ts`).
   A worker file must never import the module that spawns it (Turbopack hangs). Negotiation budgets count
   the wires that can move, not pinned ones.

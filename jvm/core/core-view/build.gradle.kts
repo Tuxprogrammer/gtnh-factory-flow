@@ -13,3 +13,10 @@ dependencies {
     // Gson as Minecraft 1.7.10 ships it, to read tokens.json in the test.
     testImplementation("com.google.code.gson:gson:2.2.4")
 }
+
+tasks.named<Test>("test") {
+    // -PwriteVectors rewrites conformance/format/mod-out.json from Fmt (FmtConformanceTest.writeVectors).
+    if (providers.gradleProperty("writeVectors").isPresent) {
+        systemProperty("gtnh.writeVectors", "true")
+    }
+}

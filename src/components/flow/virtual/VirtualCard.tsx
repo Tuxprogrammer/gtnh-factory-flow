@@ -248,13 +248,13 @@ export function CardShell({
       data-unset={face.unset ? "" : undefined}
       data-tone={face.tone}
       data-loop={face.loop}
-      data-name={face.name}
       style={style}
     >
       <div
         className="cc-glance"
         data-node-detail="glance"
         data-count={face.count}
+        data-name={face.name}
         data-bar={glance["data-bar"]}
         data-tone={glance["data-tone"]}
         data-product={glance["data-product"]}

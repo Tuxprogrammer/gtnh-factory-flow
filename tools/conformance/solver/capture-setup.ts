@@ -6,7 +6,7 @@
  * with the test that asked, go to $SOLVE_CAPTURE_OUT/<test file path with / as ~>.json. Answers are not kept here:
  * the export solves each input again through the public entry, as the Java kernel will.
  */
-import { afterAll, expect, vi } from "vitest";
+import { afterAll, beforeEach, expect, vi } from "vitest";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
@@ -53,6 +53,19 @@ function wrap<A extends unknown[], R>(fn: (...args: A) => R): (...args: A) => R 
     }
   };
 }
+
+// Ids a test makes at random (crypto.randomUUID: new cards, pasted plans) are made in turn instead, so every capture
+// run records the same inputs.
+let made = 0;
+beforeEach(() => {
+  made = 0;
+  vi.spyOn(globalThis.crypto, "randomUUID").mockImplementation(() => {
+    made += 1;
+    return `10000000-0000-4000-8000-${made.toString(16).padStart(12, "0")}` as ReturnType<
+      typeof crypto.randomUUID
+    >;
+  });
+});
 
 vi.mock("@/lib/solver/plan/solve-plan", async (importOriginal) => {
   const original = await importOriginal<typeof import("@/lib/solver/plan/solve-plan")>();

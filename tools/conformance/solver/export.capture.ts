@@ -1,8 +1,9 @@
 /**
  * Writes conformance/solver/website/cases.json.gz from what capture.config.ts recorded (tools/conformance/solver/
  * generate.mjs): every distinct solve input the website's tests and the reference plans handed the plan solver, as
- * both engines read it (ids made UUIDs, the mod's dump format, a chance rounded to the Java float it is there), with
- * the website's answer to it through the public entry (`solvePlan`, no cache) as the golden digest. Inputs already in
+ * both engines read it (ids made UUIDs and renamed in their order, the mod's dump format, a chance rounded to the Java
+ * float it is there), with the website's answer to it through the public entry (`solvePlan`, no cache) as the golden
+ * digest. Inputs already in
  * the corpus or the Up to plans are left out (those are checked there), and so are inputs a JSON file cannot hold
  * (a non-finite number). Run only by export.config.ts.
  */
@@ -14,7 +15,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 import { initLpEngine } from "@/lib/solver/lp-engine";
 import { websiteCaseAnswer } from "@/lib/solver/plan/__fixtures__/website-cases";
-import { toDump, withUuids } from "@/lib/solver/plan/__fixtures__/dump";
+import { toDump, withOrderedIds, withUuids } from "@/lib/solver/plan/__fixtures__/dump";
 import { caseNames, loadInput, parseSolveInput } from "@/lib/solver/plan/__fixtures__/load";
 import type { SolveInput } from "@/lib/solver/plan/types";
 import { conformancePath } from "@/test-support/conformance";
@@ -27,6 +28,15 @@ interface Captured {
   inputs: Array<{ name: string; input: SolveInput; nonFinite?: true }>;
 }
 
+/**
+ * An input as both engines read it: ids made UUIDs and renamed in their own order (a test that makes random ids writes
+ * the same case every run), the dump format, the chance a Java float as `load.ts` reads every dump.
+ */
+function asCase(input: SolveInput): { read: SolveInput; text: string } {
+  const read = parseSolveInput(toDump(withOrderedIds(withUuids(input))));
+  return { read, text: JSON.stringify(toDump(read)) };
+}
+
 describe("website solver cases", () => {
   beforeAll(async () => {
     await initLpEngine();
@@ -34,13 +44,11 @@ describe("website solver cases", () => {
 
   it("writes every recorded input with the website's answer", () => {
     const known = new Set<string>();
-    for (const name of caseNames()) known.add(JSON.stringify(toDump(loadInput(name))));
+    for (const name of caseNames()) known.add(asCase(loadInput(name)).text);
     const upTo = conformancePath("solver", "up-to");
     for (const f of readdirSync(upTo).filter((n) => n.endsWith(".json")))
       known.add(
-        JSON.stringify(
-          toDump(parseSolveInput(JSON.parse(readFileSync(join(upTo, f), "utf8")).input)),
-        ),
+        asCase(parseSolveInput(JSON.parse(readFileSync(join(upTo, f), "utf8")).input)).text,
       );
 
     const files = readdirSync(IN)
@@ -57,10 +65,7 @@ describe("website solver cases", () => {
           skippedNonFinite += 1;
           continue;
         }
-        const dump = toDump(withUuids(input));
-        // The input as both engines read it: the chance a Java float, as `load.ts` reads every dump.
-        const read = parseSolveInput(dump);
-        const text = JSON.stringify(toDump(read));
+        const { read, text } = asCase(input);
         if (known.has(text)) {
           skippedKnown += 1;
           continue;

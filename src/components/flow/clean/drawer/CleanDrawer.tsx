@@ -576,7 +576,6 @@ export function CleanDrawer({
             <span className="cd-forced-num" data-unit={view.spill.unit}>
               {view.spill.number}
             </span>
-            <span className="cd-forced-name">Forced out</span>
           </div>
         ) : null}
         {rowBrowse.menu}

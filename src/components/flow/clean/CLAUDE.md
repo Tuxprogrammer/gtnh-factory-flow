@@ -59,3 +59,8 @@ holder, a crop card. Bees, the Extreme Entity Crusher and every other machine ar
 - Plan-mode edits (`updateNode`) reach the solver seam, which throws until the plan solver lands.
 - Check by eye with `/dev/clean-card` (development only): it exposes `window.__ccStore` and
   `window.__ccMocks` (the mock results of `solver/plan/__fixtures__/mock-extras.ts`).
+- `minimap/`: `minimap-scene.ts` makes the scene (tiles, wires, bounds) the map and the Feedback picture draw. Which boxes
+  are tiles, their tint, a card's count, which wires are kept and their lifted colour are one rule with the core's
+  `MinimapBuilder` (the mod's map in the world draws from it): `minimap-conformance.test.ts` holds the website to
+  `conformance/view/minimap/cases.json`. A change to those rules changes the website, the core and the file together.
+  A tile's label, picture and rate text are the host's own and are not in the cases.

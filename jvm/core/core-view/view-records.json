@@ -1,8 +1,9 @@
 {
- "roots": ["DrawerInput", "DrawerView", "GroupInput", "GroupView", "NoteLookInput", "NoteLookView", "NoticesInput", "NoticesNotice", "RailInput", "RailView"],
+ "roots": ["DrawerInput", "DrawerView", "GroupInput", "GroupView", "MinimapInput", "MinimapView", "NoteLookInput", "NoteLookView", "NoticesInput", "NoticesNotice", "RailInput", "RailView"],
  "cases": {
   "drawer/cases": { "input": "DrawerInput", "view": "DrawerView" },
   "group/cases": { "input": "GroupInput", "view": "GroupView" },
+  "minimap/cases": { "input": "MinimapInput", "view": "MinimapView" },
   "note/look": { "input": "NoteLookInput", "view": "NoteLookView" },
   "notices/cases": { "input": "NoticesInput", "view": "NoticesNotice[]" },
   "rail/cases": { "input": "RailInput", "view": "RailView" }

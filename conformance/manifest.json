@@ -1146,10 +1146,20 @@
       "bytes": 16300,
       "sha256": "5589c24af6f41a5ddcc3da29c9c253ca80662aa578c71f3eaa180f5188d134fe"
     },
+    "view/minimap/cases.json": {
+      "area": "view",
+      "bytes": 19183,
+      "sha256": "25ed149d7f24291be7fbf30b073be760342eabca80997ab9b0472dfd9fbab2ad"
+    },
     "view/note/look.json": {
       "area": "view",
       "bytes": 4891,
       "sha256": "893ad1786a962fb0a433273d6088c970c436c554dfeed52f59cb3ee60f081020"
+    },
+    "view/note/menu.json": {
+      "area": "view",
+      "bytes": 830,
+      "sha256": "52c66c8da1096947f69e2390496b116adac67b4df601713f9b6e4af466802e6b"
     },
     "view/notices/cases.json": {
       "area": "view",
@@ -1168,8 +1178,8 @@
     },
     "view/records.json": {
       "area": "view",
-      "bytes": 10479,
-      "sha256": "cc2558961fa8eb028cf8c9134e96b70bd0c410973ded2d11a4fcf4f6a0933113"
+      "bytes": 12262,
+      "sha256": "bd4d097f61aaa4dd250d25f85a3d4e2bdb0eefe4c6793e90af16d026ecb21027"
     }
   }
 }

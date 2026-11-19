@@ -758,7 +758,7 @@ public final class BoardSession {
 
     /**
      * A port dragged onto a drawer: linked when the drawer holds the same resource on a side it takes. An input on a
-     * product, or an output on a source, makes it a buffer ({@code docs/design/buffer-drawers.md}); dropped again, it
+     * product, or an output on a source, makes it a buffer ({@code docs/buffer-drawers.md}); dropped again, it
      * lets go, and a buffer left with one side is the end it still is.
      */
     public boolean dropPortOnDrawer(final Uuid fromNode, final boolean output, final int port, final Drawer drawer) {

@@ -89,5 +89,18 @@ The same in both:
   plain wire (a buffer is not an end of the plan, so it never takes it).
 - **Overview.** A buffer adds no input or output line; its resource is internal.
 - **Sounds.** As any drawer: linking clacks, bubbles or sparks by what it carries.
-- **Menu.** In the mod, the rule menu (Any, At least, Exactly, At most) and Delete; on the website, Delete alone. No
-  product/trash cycle in either.
+- **Menu.** On both sides the rule menu (Any, At least, Exactly, At most) and Delete; the rule key and the rate box
+  work as a product's (click or Enter opens the menu, the wheel steps the rule, a typed rate sets it; a typed rate on
+  an Any buffer makes it At least). No product/trash cycle in either.
+- **Fit (website).** A buffer costs 17 elements with its icon loaded, 19 with a spill tile (the tile's name is its
+  `::after`; `CleanDrawer.test.tsx` pins it). A spilling buffer is 166 px wide so its rule row sits right of the tile.
+
+## Plans that already store a rule on a buffer
+
+A rule is the storage's `targetMode` and `targetPerSecond`, so a plan saved before the website dropped the rule
+(4.0.0 to 4.3.2 drew it, 4.4.0 hid it), or exported by the mod, can carry one. It is honoured: the adapter sends it, and
+the drawer shows it on its key and box, so nothing applies that is not on the board. Setting the key to Any
+(`targetMode: "ignore"`) clears its effect; the stored number stays and is ignored. A plan not yet in plan mode is
+converted on open (`convertBuildToPlan`), which parks every buffer's rate at Any, so only a plan already in plan mode
+can bring a live rule. A wire whose resource id differs in case from the recipe port's id (some mod exports) does not
+connect, so a buffer wired that way is disconnected on the website and its rule does nothing there.

@@ -315,7 +315,7 @@ every annotation kind, groups (pockets), port rates, setting pins and leftover s
   a card the website drops into a pocket stays the game's own.
 - Annotations: sticky notes, boxes, zones, arrows (`arrowHeads`, `arrowWidth`, a level arrow's 0 axis) and pictures
   (kept, never shown) are the board's notes of that kind, both ways (`FfConverter.note`, `PlanExport.note`).
-- Buffer drawers (`docs/design/buffer-drawers.md`): a buffer is its storage, a wire into it from each maker and a wire
+- Buffer drawers (`docs/buffer-drawers.md`): a buffer is its storage, a wire into it from each maker and a wire
   from it to each user. Links are told apart by side (an input a drawer feeds, an output that feeds it), never by the
   drawer's kind, so a drawer that becomes a buffer (or stops being one) keeps its wires. A storage the website wires
   both ways reads as a buffer; one wired to another drawer or by a cell wire stays in the plan untouched (the

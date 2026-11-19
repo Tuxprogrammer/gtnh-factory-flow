@@ -7,6 +7,7 @@ import java.util.Map;
 import com.gtnhplanner.core.view.note.NoteLookBuilder;
 import com.gtnhplanner.core.view.note.NoteLookInput;
 import com.gtnhplanner.core.view.note.NoteLookView;
+import com.gtnhplanner.core.view.note.NoteMenu;
 
 /**
  * A sticky note's colours, from Factory Flow's colour tags (the sixteen dyes and the app's own inks): the paper is
@@ -17,19 +18,8 @@ public final class NoteColors {
 
     private NoteColors() {}
 
-    /** The colours the note menu offers, in order, with their names. */
-    public static final List<String[]> MENU = List.of(
-        new String[] { "yellow", "Yellow" },
-        new String[] { "orange", "Orange" },
-        new String[] { "pink", "Pink" },
-        new String[] { "scarlet", "Red" },
-        new String[] { "lime", "Lime" },
-        new String[] { "emerald", "Green" },
-        new String[] { "light_blue", "Light blue" },
-        new String[] { "azure", "Blue" },
-        new String[] { "purple", "Purple" },
-        new String[] { "white", "White" },
-        new String[] { "steel", "Grey" });
+    /** The colours the note menu offers, in order, with their names (the core's list, shared with the website). */
+    public static final List<String[]> MENU = NoteMenu.ENTRIES;
 
     /** The tag's swatch, opaque; an unknown tag reads as yellow. */
     public static int swatch(final String tag) {

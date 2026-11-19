@@ -17,7 +17,7 @@ import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Serializer;
 
 /**
- * A buffer drawer's data ({@code docs/design/buffer-drawers.md}): how a product or a source becomes one when a port of
+ * A buffer drawer's data ({@code docs/buffer-drawers.md}): how a product or a source becomes one when a port of
  * the other side is linked, how it goes back to the end it still is, and that a save keeps it.
  */
 class BufferDrawerModelTest {

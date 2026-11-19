@@ -11,6 +11,7 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import org.lwjgl.opengl.GL11;
 
 import com.gtnhplanner.core.base.Uuid;
+import com.gtnhplanner.core.view.minimap.MinimapView;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Plan;
 import com.gtnhplanner.ui.PlannerSettings;
@@ -180,8 +181,8 @@ public final class Minimap {
         final float ox = x0 + size / 2f - centreX * z, oy = y0 + size / 2f - centreY * z;
         clipBegin(x0, y0, size, circle, scissor);
         LABELS.clear();
-        drawGroups(snap.groups(), ox, oy, z);
-        drawWires(snap.wires(), ox, oy, z, lit);
+        drawGroups(snap.scene(), ox, oy, z);
+        drawWires(snap.wires(), snap.scene(), ox, oy, z, lit);
         if (zoom() > WHOLE_FROM) {
             // Close in, as the board: whole cards and drawers.
             for (final PlanSnapshot.Box b : snap.drawers()) whole(
@@ -337,14 +338,21 @@ public final class Minimap {
         roundR = Float.MAX_VALUE;
     }
 
-    /** The wires as the board routed them; {@code lit} on top, in the highlight with a soft halo. */
-    private static void drawWires(final List<PlanSnapshot.Line> lines, final float ox, final float oy, final float z,
-        @Nullable final PlanSnapshot.Line lit) {
+    /**
+     * The wires as the board routed them, in the scene's colour (the website's map lifts a wire the same fifth towards
+     * white); {@code lit} on top, in the highlight with a soft halo.
+     */
+    private static void drawWires(final List<PlanSnapshot.Line> lines, final MinimapView scene, final float ox,
+        final float oy, final float z, @Nullable final PlanSnapshot.Line lit) {
+        final int[] colour = new int[lines.size()];
+        for (final MinimapView.Wire w : scene.wires()) colour[Integer.parseInt(w.id())] = 0xFF000000
+            | Integer.parseInt(w.color().substring(1), 16);
         Hyb.beginBatch();
-        for (final PlanSnapshot.Line l : lines) {
-            if (l == lit) continue;
+        for (int i = 0; i < lines.size(); i++) {
+            final PlanSnapshot.Line l = lines.get(i);
+            if (l == lit || colour[i] == 0) continue;
             final float w = Math.max(1, l.width() * z * 0.8f);
-            path(l, ox, oy, z, w, l.flowing() ? l.color() : l.color() & 0x00FFFFFF | 0x80000000);
+            path(l, ox, oy, z, w, l.flowing() ? colour[i] : colour[i] & 0x00FFFFFF | 0x80000000);
         }
         if (lit != null) {
             final float w = Math.max(1.5f, lit.width() * z * 0.8f);
@@ -400,19 +408,22 @@ public final class Minimap {
     }
 
     /**
-     * Groups as the board draws them (docs/design/groups.md, the website's minimap the same): an open one its colour at
-     * 25% with a 1 px border in it, a collapsed one its summary card's box in 30% of it over the card surface.
+     * Groups as the board draws them (docs/design/groups.md, the website's minimap the same), from the scene's tiles: an
+     * open one its colour at 25% with a 1 px border in it, a collapsed one its summary card's box in 30% of it over the
+     * card surface.
      */
-    private static void drawGroups(final List<PlanSnapshot.GroupBox> groups, final float ox, final float oy,
-        final float z) {
-        for (final PlanSnapshot.GroupBox g : groups) {
-            final float x = ox + g.x() * z, y = oy + g.y() * z, w = g.w() * z, h = g.h() * z;
-            if (g.collapsed()) {
-                Hyb.rect(x, y, w, h, Hyb.mix(g.color(), com.gtnhplanner.ui.card.CardPaint.SURFACE, 0.3f));
+    private static void drawGroups(final MinimapView scene, final float ox, final float oy, final float z) {
+        for (final MinimapView.Tile g : scene.tiles()) {
+            if (!g.kind().equals("board") && !g.kind().equals("group")) continue;
+            final float x = ox + (float) g.x() * z, y = oy + (float) g.y() * z, w = (float) g.w() * z,
+                h = (float) g.h() * z;
+            final int color = 0xFF000000 | Integer.parseInt(g.tint().substring(1), 16);
+            if (g.kind().equals("group")) {
+                Hyb.rect(x, y, w, h, Hyb.mix(color, com.gtnhplanner.ui.card.CardPaint.SURFACE, 0.3f));
                 continue;
             }
-            Hyb.rect(x, y, w, h, 0x40000000 | g.color() & 0xFFFFFF);
-            Hyb.ring(x, y, w, h, 1, g.color());
+            Hyb.rect(x, y, w, h, 0x40000000 | color & 0xFFFFFF);
+            Hyb.ring(x, y, w, h, 1, color);
         }
     }
 

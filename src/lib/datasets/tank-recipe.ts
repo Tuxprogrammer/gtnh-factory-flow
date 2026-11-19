@@ -29,7 +29,15 @@ export async function fetchFluidTankRecipe(
       recipeMap: FLUID_TANK_MAP,
       resource: { kind: resource.kind, id: resource.id },
     });
-    const fits = result.recipes.filter((recipe) => recipe.recipeMap === FLUID_TANK_MAP);
+    // The search pairs a fluid with its filled cell, so the answer can hold the other direction's recipe: only one
+    // with the resource on the tank's own side fits.
+    const fits = result.recipes.filter(
+      (recipe) =>
+        recipe.recipeMap === FLUID_TANK_MAP &&
+        (takes ? recipe.inputs : recipe.outputs).some(
+          (slot) => slot.kind === resource.kind && slot.id === resource.id,
+        ),
+    );
     const plain = (recipe: {
       name?: string;
       inputs?: ResourceAmount[];

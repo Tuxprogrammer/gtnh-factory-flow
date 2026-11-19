@@ -99,7 +99,10 @@ export interface NodePowerReport {
  * through crops, bees, or zero-EU manual work. A recipe whose EU lives on the node's machine
  * rather than the recipe (smelting: 0 EU on the map, 4 EU/t on GT's furnaces) asks the machine.
  */
-export function hasPowerReport(recipe: Recipe, node?: Pick<FactoryNode, "machineHandlerId">): boolean {
+export function hasPowerReport(
+  recipe: Recipe,
+  node?: Pick<FactoryNode, "machineHandlerId">,
+): boolean {
   const eut =
     !(Math.abs(recipe.eut) > 0) && node && recipe.machineType
       ? applyMachineHandlerToRecipe(recipe, node).eut

@@ -73,7 +73,9 @@ describe("furnace modes of multiblocks and the pack's rate mod (GTNHRates GTFurn
   });
 
   it("bills the Helioflare's smelting module FurnaceBackend's 4 EU/t, not the map's 0", () => {
-    const forge = applyMachineHandlerToRecipe(SMELT, { machineHandlerId: "helioflare-power-forge" });
+    const forge = applyMachineHandlerToRecipe(SMELT, {
+      machineHandlerId: "helioflare-power-forge",
+    });
     expect(forge.eut).toBe(4);
     expect(hasPowerReport(SMELT, { machineHandlerId: "helioflare-power-forge" })).toBe(true);
     // The vanilla furnace stays unpowered.

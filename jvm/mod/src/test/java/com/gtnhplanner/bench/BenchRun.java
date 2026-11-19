@@ -7,7 +7,9 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.gtnhplanner.layout.RouteMetrics;
-import com.gtnhplanner.layout.WireRouter;
+import com.gtnhplanner.core.layout.BoxRouter;
+import com.gtnhplanner.core.layout.GridRoutedEdge;
+import com.gtnhplanner.core.layout.IncrementalStats;
 
 /**
  * Routes and arranges a {@link BenchBoard} the way the board does (WireLayer, BoardCanvas.arrange), and measures it.
@@ -20,50 +22,76 @@ public final class BenchRun {
     public record Routed(BenchBoard board, Map<UUID, List<int[]>> routes, List<UUID> fellBack, double millis,
         RouteMetrics.Result metrics) {}
 
-    private static final WireRouter NEW_ROUTER = new WireRouter();
-
     public static Routed route(final BenchBoard board) {
         return routeNew(board);
     }
 
-    /** The board's router: boxes and wires box to box, a loop from a card back to itself right side to left side. */
-    public static Routed routeNew(final BenchBoard board) {
-        final List<WireRouter.Box> boxes = new ArrayList<>();
+    /** The board's boxes as the router takes them: drawers met square. */
+    static List<BoxRouter.Box> boxes(final BenchBoard board) {
+        final List<BoxRouter.Box> boxes = new ArrayList<>();
+        for (final BenchBoard.Item i : board.items()) boxes.add(
+            new BoxRouter.Box(
+                i.id()
+                    .toString(),
+                i.x(),
+                i.y(),
+                i.w(),
+                i.h(),
+                i.drawer()));
+        return boxes;
+    }
+
+    /** The board's wires box to box, a loop from a card back to itself right side to left side, all 4 px. */
+    static List<BoxRouter.Wire> wires(final BenchBoard board) {
         final Map<UUID, Integer> index = new HashMap<>();
-        for (final BenchBoard.Item i : board.items()) {
-            index.put(i.id(), boxes.size());
-            boxes.add(new WireRouter.Box(i.x(), i.y(), i.w(), i.h()));
-        }
-        final List<WireRouter.Wire> wires = new ArrayList<>();
+        for (int i = 0; i < board.items()
+            .size(); i++)
+            index.put(
+                board.items()
+                    .get(i)
+                    .id(),
+                i);
+        final List<BoxRouter.Wire> wires = new ArrayList<>();
         for (final BenchBoard.Link l : board.links()) {
             final int a = index.get(l.from()), b = index.get(l.to());
+            final String key = l.id()
+                .toString();
             wires.add(
-                a == b ? new WireRouter.Wire(l.id(), a, b, WireRouter.RIGHT, WireRouter.LEFT, 0)
-                    : new WireRouter.Wire(l.id(), a, b, 0));
+                a == b ? new BoxRouter.Wire(key, a, b, BoxRouter.RIGHT, BoxRouter.LEFT, 4, List.of())
+                    : new BoxRouter.Wire(key, a, b, BoxRouter.ANY, BoxRouter.ANY, 4, List.of()));
         }
-        final List<UUID> fellBack = new ArrayList<>();
-        NEW_ROUTER.route(boxes, wires, new ArrayList<>(), true);
+        return wires;
+    }
+
+    /** The board's router (core.layout, the website's), warmed once, then timed on a fresh router. */
+    public static Routed routeNew(final BenchBoard board) {
+        final List<BoxRouter.Box> boxes = boxes(board);
+        final List<BoxRouter.Wire> wires = wires(board);
+        new BoxRouter().route(boxes, wires, true, null);
+        final IncrementalStats stats = new IncrementalStats();
         final long t0 = System.nanoTime();
-        final Map<UUID, List<int[]>> routes = NEW_ROUTER.route(boxes, wires, fellBack, true);
+        final Map<String, GridRoutedEdge> solved = new BoxRouter().route(boxes, wires, true, stats);
         final double ms = (System.nanoTime() - t0) / 1e6;
+        final Map<UUID, List<int[]>> routes = new HashMap<>();
+        final List<UUID> fellBack = new ArrayList<>();
+        for (final GridRoutedEdge r : solved.values()) {
+            final UUID key = UUID.fromString(r.edgeId());
+            routes.put(key, BoxRouter.pixels(r));
+            if (r.vertices() == null) fellBack.add(key);
+        }
         System.out.printf(
             java.util.Locale.ROOT,
-            "[router] %-40s %7.1f ms  wires %4d  searches %5d  widened %4d  failed %3d  rerouted %4d  sealed %3d  pops %,11d (first pass %,11d)  avg window %,7d  max %,8d  grid %,d%n",
+            "[router] %-40s %7.1f ms  wires %4d  searches %,7.0f  rerouted %4d  fell back %3d  pops %,11.0f  priced %,11.0f%n",
             board.name()
                 .length() > 40 ? board.name()
                     .substring(0, 40) : board.name(),
             ms,
             wires.size(),
-            NEW_ROUTER.statSearches,
-            NEW_ROUTER.statWidened,
-            NEW_ROUTER.statFailed,
-            NEW_ROUTER.statRerouted,
-            NEW_ROUTER.statSealed,
-            NEW_ROUTER.statPops,
-            NEW_ROUTER.statFirstPassPops,
-            NEW_ROUTER.statSearches == 0 ? 0 : NEW_ROUTER.statWindowCells / NEW_ROUTER.statSearches,
-            NEW_ROUTER.statMaxWindow,
-            NEW_ROUTER.gridCells());
+            stats.searches,
+            stats.rerouted,
+            fellBack.size(),
+            stats.pops,
+            stats.priced);
         return new Routed(board, routes, fellBack, ms, measure(board, routes));
     }
 

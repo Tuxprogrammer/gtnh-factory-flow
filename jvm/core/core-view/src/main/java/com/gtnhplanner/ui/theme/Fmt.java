@@ -1,9 +1,12 @@
 package com.gtnhplanner.ui.theme;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
+import com.gtnhplanner.core.base.Format;
 
-/** Number and rate formatting for the board, following Factory Flow's rules so both apps read the same. */
+/**
+ * Number and rate formatting for the board. The rules are core-base's {@link Format}, one formatter for the mod and the
+ * website, held to the website's answers by conformance/format; this class keeps the names the mod's views call and
+ * the mod's own width-fitting {@link #brief}.
+ */
 public final class Fmt {
 
     /**
@@ -12,54 +15,31 @@ public final class Fmt {
      */
     public enum RateUnit {
 
-        TICK("/t", 1.0 / 20.0),
-        SECOND("/s", 1.0),
-        MINUTE("/min", 60.0),
-        HOUR("/hr", 3600.0);
+        TICK(com.gtnhplanner.core.base.RateUnit.TICK),
+        SECOND(com.gtnhplanner.core.base.RateUnit.SECOND),
+        MINUTE(com.gtnhplanner.core.base.RateUnit.MINUTE),
+        HOUR(com.gtnhplanner.core.base.RateUnit.HOUR);
 
         public final String suffix;
         public final double perSecond;
+        private final com.gtnhplanner.core.base.RateUnit core;
 
-        RateUnit(final String suffix, final double perSecond) {
-            this.suffix = suffix;
-            this.perSecond = perSecond;
+        RateUnit(final com.gtnhplanner.core.base.RateUnit core) {
+            this.core = core;
+            this.suffix = "/" + core.per;
+            this.perSecond = core.perSecond;
         }
     }
 
-    private static final String[] SUFFIXES = { "", "k", "M", "G", "T", "P" };
-
     private Fmt() {}
 
-    /** Below this a number is the solver's round-off and is shown as 0. */
-    private static final double NOTHING = 1e-6;
-
     /**
-     * Compact number: exact 0 (or round-off below a millionth) prints "0"; below 1 keeps 2 significant digits;
-     * otherwise 2 decimals (1 from 100, none from 1000 before the suffix steps in) with trailing zeros dropped, then
-     * k, M, G... e.g. 6930 -> "6.93k".
+     * Compact number: exact 0 prints "0"; below 1 keeps 2 significant digits (down to twelve places, so a trickle
+     * never reads as nothing); otherwise 2 decimals (1 from 100) with trailing zeros dropped, then k, M, G... to E, e.g.
+     * 6930 -> "6.93k". A number that is not finite reads "unbounded".
      */
     public static String compact(final double value) {
-        if (value == 0 || Double.isNaN(value)) return "0";
-        final String sign = value < 0 ? "-" : "";
-        double v = Math.abs(value);
-        // Below a millionth is the solver's round-off, not a rate: it reads as nothing.
-        if (v < NOTHING) return "0";
-        if (v < 1) return sign + strip(new BigDecimal(v).round(new java.math.MathContext(2)));
-        int tier = 0;
-        while (v >= 1000 && tier < SUFFIXES.length - 1) {
-            v /= 1000;
-            tier++;
-        }
-        // Rounding up across a boundary (999.999 -> 1000) moves to the next suffix.
-        int decimals = v >= 100 ? 1 : 2;
-        BigDecimal rounded = BigDecimal.valueOf(v)
-            .setScale(decimals, RoundingMode.HALF_UP);
-        if (rounded.compareTo(BigDecimal.valueOf(1000)) >= 0 && tier < SUFFIXES.length - 1) {
-            tier++;
-            rounded = BigDecimal.valueOf(v / 1000)
-                .setScale(2, RoundingMode.HALF_UP);
-        }
-        return sign + strip(rounded) + SUFFIXES[tier];
+        return Format.compact(value);
     }
 
     /**
@@ -67,25 +47,12 @@ public final class Fmt {
      * zoomed-out drawer ("167", "33.3", "33.3k"). Below 1 it keeps two, as {@link #compact} does.
      */
     public static String brief(final double value) {
-        if (value == 0 || Double.isNaN(value)) return "0";
-        final String sign = value < 0 ? "-" : "";
-        double v = Math.abs(value);
-        // Below a millionth is the solver's round-off, not a rate: it reads as nothing.
-        if (v < NOTHING) return "0";
-        if (v < 1) return sign + strip(new BigDecimal(v).round(new java.math.MathContext(2)));
-        int tier = 0;
-        // 999.5 and up rounds to 1000, which reads as the next suffix.
-        while (v >= 999.5 && tier < SUFFIXES.length - 1) {
-            v /= 1000;
-            tier++;
-        }
-        return sign + strip(new BigDecimal(v).round(new java.math.MathContext(3))) + SUFFIXES[tier];
+        return Format.brief(value);
     }
 
     /** A per-second rate in the given unit, e.g. "900/hr"; fluids get " L" before the unit ("180k L/hr"). */
     public static String rate(final double perSecond, final RateUnit unit, final boolean fluid) {
-        final String number = compact(perSecond * unit.perSecond);
-        return fluid ? number + " L" + unit.suffix : number + unit.suffix;
+        return Format.slotRate(perSecond, unit.core, fluid ? "fluid" : "item");
     }
 
     /**
@@ -93,18 +60,12 @@ public final class Fmt {
      * zeros dropped; 100 or more rounds up to a whole number (you cannot build part of a machine at that scale).
      */
     public static String machines(final double count) {
-        if (count <= 0) return "0";
-        if (count < 0.001) return "<0.001";
-        if (count >= 100) return Long.toString((long) Math.ceil(count - 1e-9));
-        final int decimals = count < 1 ? 3 : count < 10 ? 2 : 1;
-        return strip(
-            BigDecimal.valueOf(count)
-                .setScale(decimals, RoundingMode.HALF_UP));
+        return Format.solvedMachines(count);
     }
 
-    /** EU/t with the compact rules, e.g. "6.93k". */
+    /** EU/t as the power display prints it: "<0.01" for a trickle, else the compact rules, e.g. "6.93k". */
     public static String power(final double euPerTick) {
-        return compact(euPerTick);
+        return Format.powerValue(euPerTick);
     }
 
     /**
@@ -114,18 +75,11 @@ public final class Fmt {
      * row keeps its rate instead of reading infinity.
      */
     public static double euEach(final double euPerTick, final double perSecond) {
-        if (!Double.isFinite(euPerTick) || !Double.isFinite(perSecond) || perSecond <= 1e-12) return Double.NaN;
-        return Math.max(0, euPerTick) * 20 / perSecond;
+        return Format.energyPerUnit(euPerTick, perSecond);
     }
 
     /** The unit the EU reading wears, as the website's: per item, or per litre for a fluid. */
     public static String euEachSuffix(final boolean fluid) {
-        return fluid ? " EU/L" : " EU/Item";
-    }
-
-    private static String strip(final BigDecimal value) {
-        final BigDecimal stripped = value.stripTrailingZeros();
-        return stripped.scale() < 0 ? stripped.setScale(0)
-            .toPlainString() : stripped.toPlainString();
+        return Format.energyPerUnitSuffix(fluid ? "fluid" : "item");
     }
 }

@@ -16,10 +16,12 @@
 - On load, `resynthesizePowerRecipes` must run before `dropCrossFormConnections`, or power
   cards lose their fuel wires. A cloned power card remints its owned recipe.
 - The closed-plan rule waives unwired power outputs, or old generators load dead.
-- The Java to check against is GT5U tag `5.09.54.20`, not the newer local clone. Table
+- The Java to check against is the pack's: GregTech `5.09.54.265` (GTNH 2.9.0) and the mods at the refs it ships. Table
   fixes where it beats the workbook go in the extractor's "Java corrections" section;
   never hand-edit `power-planner-data.json`. Regenerate from
   `~/Downloads/Copy of GTNH Power Planner 2.9.xlsx` (the copy whose EOH sheet is "13. EOH").
+  Without the workbook, `node tools/power-planner-extract.mjs --reapply` runs the corrections again
+  over the committed JSON (every correction is idempotent; the rotor one needs the sheet and is skipped).
 - The generated tables (`power-planner-data.json`, `resource-map.json`, `machine-icons.json`, and
   `src/lib/machines/data/fusion-startups.json`) are copies: the core module's resources under
   `jvm/core/core-power` and `jvm/core/core-machines` are the source. The extractors write there; run

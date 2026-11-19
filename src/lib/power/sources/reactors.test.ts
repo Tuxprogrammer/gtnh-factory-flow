@@ -94,7 +94,7 @@ describe("HTGR", () => {
     expect(run.waterPerTick).toBe(0);
     expect(run.cycleTicks).toBe(270);
     // A full glowstone reactor keeps both speedups: 202 ticks.
-    expect(htgrOperation({ base: 2, mult: 1.2, exp: 1.1 }, 10_000).cycleTicks).toBe(202);
+    expect(htgrOperation({ base: 0.65, mult: 1.2, exp: 1.1 }, 10_000).cycleTicks).toBe(202);
   });
 });
 

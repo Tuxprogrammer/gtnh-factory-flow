@@ -112,8 +112,11 @@ export function recipeCardRows(recipe: RecipeSummary): CardRows {
     if (isProgrammedCircuitResource(input)) continue;
     inputs.add([input.kind, input.id, input.consumed === false ? "nc" : "c"].join("|"));
   }
+  // The card draws the Auto Workbench's power for a crafting recipe, which is exported with none (LookupRecipeCard).
+  const primary = getRecipeMachineHandlers(summaryToPreviewRecipe(recipe))[0];
+  const eut = primary?.id === AUTO_WORKBENCH_HANDLER_ID ? (primary.eut ?? recipe.eut) : recipe.eut;
   return {
-    inputs: inputs.size + (recipe.eut > 0 ? 1 : 0),
+    inputs: inputs.size + (eut > 0 ? 1 : 0),
     outputs: mergeChipResources(recipe.outputs).length,
   };
 }

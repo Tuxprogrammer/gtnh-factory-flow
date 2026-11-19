@@ -230,8 +230,10 @@
   overflow: hidden;
   padding: 4px 0;
 }
+/* Scroll, not auto: a bar that came and went with the page's cards would change the width the columns are counted from,
+   re-page the recipes and come back, without end. */
 .nrw-page[data-overflow] {
-  overflow-y: auto;
+  overflow-y: scroll;
 }
 .nrw-grid {
   display: grid;

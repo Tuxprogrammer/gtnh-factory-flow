@@ -65,6 +65,15 @@ describe("large rocket engine", () => {
     expect(Math.abs(model.euPerTick - 59_858)).toBeLessThan(5);
   });
 
+  it("makes nothing below 2000 euProduction, where its efficiency never climbs", () => {
+    // RP-1 at 20 L/s: 20 x 1536 x 1.05 / 20 = 1,612.8 euProduction, so a gain of 0 a tick.
+    const low = compute("large-rocket-engine", { fuel: "RP-1 (red)", throttle: "20" });
+    expect(low.euPerTick).toBe(0);
+    expect(low.warnings).toEqual(["Too little fuel: the engine never warms up and makes no EU."]);
+    const enough = compute("large-rocket-engine", { fuel: "RP-1 (red)", throttle: "25" });
+    expect(enough.euPerTick).toBeCloseTo(1.6384 * 2016, 6);
+  });
+
   it("boost meters the falloff on a third of the fuel, with no step at the knee", () => {
     const boosted = compute("large-rocket-engine", { fuel: "RP-1 (red)", throttle: "1500", boost: "1" });
     expect(Math.abs(boosted.euPerTick - 179_576) / 179_576).toBeLessThan(1e-4);

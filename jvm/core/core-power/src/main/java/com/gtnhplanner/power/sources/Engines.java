@@ -241,7 +241,10 @@ public final class Engines {
                 // euProduction is what the game meters air and hydrogen against; getMaxEfficiency returns it, so the
                 // output is 16384 x euProduction / 10000.
                 final double euProduction = boost ? 3 * rocketFalloff(power / 3) : rocketFalloff(power);
-                final double euPerTick = Math.max(0, 1.6384 * euProduction);
+                // Efficiency climbs euProduction / 2000 (whole) a tick and output needs 2000 of it, and a burn below
+                // 5 L (90% of the hatch, 30% boosted) fails and resets it: either way no EU.
+                final boolean stalls = euProduction < 2000 || Math.floor((throttle * 1.05) / kneeFactor) < 5;
+                final double euPerTick = stalls ? 0 : Math.max(0, 1.6384 * euProduction);
 
                 final List<Flow> inputs = new ArrayList<>();
                 inputs.add(liters(fuel.name, throttle));
@@ -259,7 +262,8 @@ public final class Engines {
                     List.of(),
                     List.of(
                         stat("EU per L", formatAmount(throttle > 0 ? euPerTick / (throttle / 20) : 0)),
-                        stat("Power knees", formatAmount(knee1) + " / " + formatAmount(knee2) + " L/s")));
+                        stat("Power knees", formatAmount(knee1) + " / " + formatAmount(knee2) + " L/s")),
+                    stalls ? List.of("Too little fuel: the engine never warms up and makes no EU.") : List.of());
             });
     }
 

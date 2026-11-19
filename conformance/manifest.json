@@ -381,8 +381,8 @@
     },
     "power/power-goldens.jsonl.gz": {
       "area": "power",
-      "bytes": 268985,
-      "sha256": "b351f2adfd034edc8a428fc2c3370bc915ea306b8b9effad7d6acf4a82272045"
+      "bytes": 269023,
+      "sha256": "4d59ec0e0bc79ad1ded9863e97e83da60e7271978d1d06b6e3c173ddf28c3b8c"
     },
     "power/rocket-exact.json": {
       "area": "power",

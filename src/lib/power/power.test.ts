@@ -590,6 +590,21 @@ describe("reactors and endgame", () => {
     expect(model.inputs).toHaveLength(2);
   });
 
+  it("offers a second recipe for the same plasma under its inputs", () => {
+    // Deuterium + Tritium: 125 L in 16 ticks at 3840 EU/t, 40M EU to start.
+    const model = compute("fusion-reactor", {
+      recipe: "Helium Plasma (Deuterium + Tritium)",
+      mark: "1",
+    });
+    expect(model.euPerTick).toBe(-3840);
+    expect(model.inputs.map((flow) => flow.name)).toEqual(["Deuterium", "Tritium"]);
+    expect(model.stats.find((line) => line.label === "Startup")?.value).toBe("40M EU");
+    const settings = getPowerSource("fusion-reactor")?.settings ?? [];
+    const recipe = settings.find((setting) => setting.id === "recipe");
+    const keys = recipe?.type === "select" ? recipe.options.map((option) => option.key) : [];
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
   it("finds an interior antimatter optimum with positive net power", () => {
     const model = compute("antimatter", { amount: "0" });
     expect(model.euPerTick).toBeGreaterThan(1e12);

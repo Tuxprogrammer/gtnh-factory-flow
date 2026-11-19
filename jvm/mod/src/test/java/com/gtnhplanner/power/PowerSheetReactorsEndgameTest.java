@@ -355,6 +355,17 @@ class PowerSheetReactorsEndgameTest {
     }
 
     @Test
+    @DisplayName("offers a second recipe for the same plasma under its inputs")
+    void secondHeliumRecipe() {
+        // Deuterium + Tritium: 125 L in 16 ticks at 3840 EU/t, 40M EU to start.
+        final PowerModel model = compute(
+            "fusion-reactor",
+            Map.of("recipe", "Helium Plasma (Deuterium + Tritium)", "mark", "1"));
+        assertEquals(-3840, model.euPerTick(), 0);
+        assertEquals("40M EU", model.stat("Startup"));
+    }
+
+    @Test
     @DisplayName("finds an interior antimatter optimum with positive net power")
     void antimatterOptimum() {
         final PowerModel model = compute("antimatter", Map.of("amount", "0"));

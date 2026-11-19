@@ -105,6 +105,25 @@ const lnr: PowerSourceDefinition = {
   },
 };
 
+/** The fusion recipes the card offers: those whose product is a plasma with a fuel value. */
+const FUSION_PLASMAS = powerPlannerData.fusionRecipes.filter(
+  (entry) => (entry.euPerLiter ?? 0) > 0,
+);
+
+function fusionInputs(entry: (typeof FUSION_PLASMAS)[number]): string {
+  return `${entry.name} (${entry.input1} + ${entry.input2})`;
+}
+
+/**
+ * A recipe's option key is its product, as shipped plans store it; a later recipe for the same product (Helium
+ * Plasma from Deuterium and Tritium) adds its inputs, or it could never be picked.
+ */
+function fusionKey(entry: (typeof FUSION_PLASMAS)[number], index: number): string {
+  return FUSION_PLASMAS.findIndex((other) => other.name === entry.name) === index
+    ? entry.name
+    : fusionInputs(entry);
+}
+
 function buildFusion(compact: boolean): PowerSourceDefinition {
   const marks = compact ? ["MK-I", "MK-II", "MK-III", "MK-IV", "MK-V"] : ["Mk-I", "Mk-II", "Mk-III", "Mk-IV", "Mk-V"];
   return {
@@ -120,9 +139,13 @@ function buildFusion(compact: boolean): PowerSourceDefinition {
         type: "select",
         id: "recipe",
         label: "Plasma",
-        options: powerPlannerData.fusionRecipes
-          .filter((entry) => (entry.euPerLiter ?? 0) > 0)
-          .map((entry) => ({ key: entry.name, label: entry.name })),
+        options: FUSION_PLASMAS.map((entry, index) => ({
+          key: fusionKey(entry, index),
+          label:
+            FUSION_PLASMAS.filter((other) => other.name === entry.name).length > 1
+              ? fusionInputs(entry)
+              : entry.name,
+        })),
         defaultKey: "Helium Plasma",
       },
       {
@@ -135,6 +158,7 @@ function buildFusion(compact: boolean): PowerSourceDefinition {
     ],
     compute(read): PowerModel {
       const recipe =
+        FUSION_PLASMAS.find((entry, index) => fusionKey(entry, index) === read.select("recipe")) ??
         powerPlannerData.fusionRecipes.find((entry) => entry.name === read.select("recipe")) ??
         powerPlannerData.fusionRecipes[0];
       const markIndex = Number(read.select("mark")) - 1;

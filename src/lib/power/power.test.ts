@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { buildPowerRecipe, resynthesizePowerRecipes } from "./power-recipe";
+import { buildPowerRecipe, powerCardTier, resynthesizePowerRecipes } from "./power-recipe";
+import { getVoltageTierForEuT } from "@/lib/model/tiers";
 import {
   hitPlacementSettings,
   POWER_EU_CLAUSE_ID,
@@ -798,6 +799,21 @@ describe("power recipes", () => {
     expect(recipe?.power?.euPerTick).toBe(32);
     expect(recipe?.durationTicks).toBe(20);
     expect(recipe?.inputs[0]).toMatchObject({ kind: "fluid", id: "benzene" });
+  });
+
+  it("counts a generator's EU in the tier one amp of its output needs (GTUtility.getTier)", () => {
+    const gas = (tier: string) => buildPowerRecipe("gas-turbine", { tier, fuel: "Benzene" }, "r");
+    expect(powerCardTier(gas("LV"))).toBe("LV");
+    expect(powerCardTier(gas("HV"))).toBe("HV");
+    const lgt = buildPowerRecipe("large-gas-turbine", undefined, "r-lgt");
+    expect(powerCardTier(lgt)).toBe(getVoltageTierForEuT(lgt!.power!.euPerTick));
+    const card = (euPerTick: number) => ({
+      category: "power-source",
+      power: { sourceId: "x", euPerTick, stats: [] },
+    });
+    expect(powerCardTier(card(100))).toBe("MV");
+    expect(powerCardTier(card(-50))).toBeUndefined();
+    expect(powerCardTier({ category: "gregtech" })).toBeUndefined();
   });
 
   it("puts the EU output first on the rail, per second, byproduct-marked", () => {

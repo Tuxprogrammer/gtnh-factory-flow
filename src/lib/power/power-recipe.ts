@@ -8,6 +8,7 @@
  * stored plans always carry the current math.
  */
 import type { FactoryNode, Recipe, RecipeInput, RecipeOutput } from "@/lib/model/types";
+import { getVoltageTierForEuT } from "@/lib/model/tiers";
 import { resolvePowerResource } from "./planner-data";
 import { getPowerSource } from "./registry";
 import { buildPowerSettingsReader, type PowerFlowLine, type PowerModel } from "./types";
@@ -43,6 +44,18 @@ export function isPowerRecipe(
   recipe: Pick<Recipe, "power" | "category"> | undefined,
 ): recipe is Recipe & { power: RecipePowerInfo } {
   return Boolean(recipe?.power);
+}
+
+/**
+ * The tier a power card's EU counts in under the Amps dial: the lowest tier
+ * whose one amp carries one machine's output (GTUtility.getTier), the
+ * smallest 1 A dynamo it fits. Undefined for a card that is not a generator.
+ */
+export function powerCardTier(
+  recipe: Pick<Recipe, "power" | "category"> | undefined,
+): string | undefined {
+  if (!isPowerRecipe(recipe) || !(recipe.power.euPerTick > 0)) return undefined;
+  return getVoltageTierForEuT(recipe.power.euPerTick);
 }
 
 function flowToSlot(flow: PowerFlowLine): (RecipeInput & RecipeOutput) | undefined {

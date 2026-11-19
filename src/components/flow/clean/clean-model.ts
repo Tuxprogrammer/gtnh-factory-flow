@@ -45,6 +45,7 @@ import { parseSectionNodeId, sectionHandleId } from "@/lib/model/shared-machine"
 import type { PlanUpTo, UpToReason } from "@/lib/solver/plan/types";
 import { PIN_RULE_LABEL, pinRuleOf, withPinRule, type PinRule } from "@/lib/model/pin-rule";
 import { getMachineStructureArt } from "@/lib/power/structure-art";
+import { powerCardTier } from "@/lib/power/power-recipe";
 import { useFactoryStore, useRateDisplayUnits } from "@/store/factory-store";
 import { useWorkspaceView } from "@/lib/workspace-view";
 import { formatEnergyPerUnitParts, formatSlotRateBare, portReadsEnergy } from "../flow-explainers";
@@ -361,17 +362,25 @@ export function buildPortView(
   node: Pick<FactoryNode, "portRates">,
   forcedAt: ReadonlyMap<string, number> | undefined,
   spillAt?: ReadonlyMap<string, string>,
+  powerTier?: string,
 ): CleanPortView {
   const portKey = makePortKey(nodeId, port.side === "input" ? "i" : "o", port.handleId);
   const forcedRate = forcedAt?.get(portKey);
   const spillTo = spillAt?.get(portKey);
   const shown = portRowPerSecond(port, forcedRate);
+  // A generator's EU row follows the power dial in its own card's tier, as a machine's power row does.
+  const powerRow = (perSecond: number) => ({
+    number: formatPowerValue(powerDisplayFromEuT(perSecond / 20, powerTier)),
+    unit: powerDisplaySuffix(powerTier),
+  });
   let number: string;
   let unit: string;
   if (portReadsEnergy(port)) {
     const parts = formatEnergyPerUnitParts(port.energyPerUnit!, port.kind);
     number = parts.value;
     unit = parts.unit;
+  } else if (port.kind === "power") {
+    ({ number, unit } = powerRow(shown));
   } else {
     number = formatSlotRateBare(shown, port.kind);
     unit = rateSuffixForKind(port.kind).trim();
@@ -409,10 +418,12 @@ export function buildPortView(
     resourceKey: makeResourceKey(port.kind, port.resourceId),
     forced:
       forcedRate !== undefined && forcedRate > 0
-        ? {
-            number: formatSlotRateBare(forcedRate, port.kind),
-            unit: rateSuffixForKind(port.kind).trim(),
-          }
+        ? port.kind === "power"
+          ? powerRow(forcedRate)
+          : {
+              number: formatSlotRateBare(forcedRate, port.kind),
+              unit: rateSuffixForKind(port.kind).trim(),
+            }
         : undefined,
     ...(spillTo !== undefined && forcedRate !== undefined && forcedRate > 0 ? { spillTo } : {}),
   };
@@ -1099,12 +1110,17 @@ export function useCleanCardModel(
   const strip = layoutStrip(rawChips);
 
   // The rows an Up to card's reason names are lit in its colour (only while the card is Up to: `upTo` is its own).
+  const powerTier = powerCardTier(recipe);
   const inputs = withReasonPorts(
-    rails.inputs.map((port) => buildPortView(projectNode.id, port, projectNode, forcedAt, spillAt)),
+    rails.inputs.map((port) =>
+      buildPortView(projectNode.id, port, projectNode, forcedAt, spillAt, powerTier),
+    ),
     countState.upTo,
   );
   const outputs = withReasonPorts(
-    rails.outputs.map((port) => buildPortView(projectNode.id, port, projectNode, forcedAt, spillAt)),
+    rails.outputs.map((port) =>
+      buildPortView(projectNode.id, port, projectNode, forcedAt, spillAt, powerTier),
+    ),
     countState.upTo,
   );
   const loop = cardLoop(plan?.loops, projectNode.id);

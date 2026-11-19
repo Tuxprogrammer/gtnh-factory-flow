@@ -41,16 +41,18 @@ class WaypointsTest {
 
     @Test
     void dotsSitOnTheRoutersLinesAndCrossToTheWebsitesGrid() {
-        assertEquals(585, Waypoints.onLine(580));
-        assertEquals(585, Waypoints.onLine(589));
-        assertEquals(-215, Waypoints.onLine(-220));
-        assertEquals(-215, Waypoints.onLine(-211));
-        // The website's grid corners come over on the line through their cell and go back to the same corner.
+        // The router's grid is the website's: a dot sits on the nearest 20 px corner.
+        assertEquals(580, Waypoints.onLine(580));
+        assertEquals(580, Waypoints.onLine(589));
+        assertEquals(600, Waypoints.onLine(590));
+        assertEquals(-220, Waypoints.onLine(-220));
+        assertEquals(-220, Waypoints.onLine(-211));
+        // The website's grid corners come over as they are and go back to the same corner.
         for (final int site : new int[] { -220, -200, 0, 20, 580, 600, 1240 })
             assertEquals(site, Waypoints.toSite(Waypoints.onLine(site)), "corner " + site);
         final List<int[]> read = Waypoints
             .fromSite(new JsonParser().parse("[{\"x\":100,\"y\":-220},{\"x\":\"bad\"},{\"x\":580.4,\"y\":20}]"));
-        assertEquals("(105,-215)(585,25)", text(read));
+        assertEquals("(100,-220)(580,20)", text(read));
         assertEquals(
             "[{\"x\":100,\"y\":-220},{\"x\":580,\"y\":20}]",
             Waypoints.toSite(read)

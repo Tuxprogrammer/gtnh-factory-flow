@@ -69,7 +69,7 @@ import { CC, CC_GEOMETRY } from "./tokens";
 import { mixHex } from "./colors";
 import { UP_TO_COLOR } from "./up-to-reason";
 import { cardLoop, LOOP_WORD, type LoopTone } from "./loops";
-import { glanceBar, type GlanceBar } from "./glance";
+import { glanceBar, glanceProduct, type GlanceBar, type GlanceProduct } from "./glance";
 import { idleTradeOf, type IdleTrade } from "./idle-trade";
 import { isPinned, pinMachineKey, settingControls } from "./menus/settings-model";
 import { mcTextWidth, measureClean, measureRowFigure, measureRowName, useFontEpoch } from "./text-measure";
@@ -241,6 +241,8 @@ export interface CleanCardView {
   art?: string;
   /** What the zoomed-out view draws: the structure render, or the machine item. */
   glanceArt?: string;
+  /** What the card makes, in the zoomed-out view's corner (glance.ts). */
+  glanceProduct?: GlanceProduct;
   count: CleanCountView;
   /** The bar along the foot; absent when there is nothing to say (Any, or Exactly with nothing forced). */
   foot?: CleanFootView;
@@ -1294,6 +1296,7 @@ export function useCleanCardModel(
     power,
     art,
     glanceArt: art ?? machineIcon?.iconPath,
+    glanceProduct: glanceProduct(recipe.outputs),
     count,
     foot,
     loop,

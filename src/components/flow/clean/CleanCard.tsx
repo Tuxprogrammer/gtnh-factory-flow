@@ -874,7 +874,11 @@ export interface CleanCardProps {
 export function CleanCard({ view, actions, context, recipe, node }: CleanCardProps) {
   const { wasClick, onPointerDownCapture } = useClickSlop();
   const { zoomedOutNames: glanceNames, problemOutlines } = useDeviceSettings();
-  const glance = glanceFace(view.glanceArt ? `url(${view.glanceArt})` : undefined, view.glance);
+  const glance = glanceFace(
+    view.glanceArt ? `url(${view.glanceArt})` : undefined,
+    view.glance,
+    view.glanceProduct,
+  );
   // A task board somewhere on this device is about this card: the most pressing one's colour, a dot before the name.
   const taskStatus = useCardTaskStatus(view.nodeId);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -1148,6 +1152,7 @@ export function CleanCard({ view, actions, context, recipe, node }: CleanCardPro
         data-name={glanceNames ? view.name : undefined}
         data-bar={glance["data-bar"]}
         data-tone={glance["data-tone"]}
+        data-product={glance["data-product"]}
         aria-hidden
         style={glance.style}
       >

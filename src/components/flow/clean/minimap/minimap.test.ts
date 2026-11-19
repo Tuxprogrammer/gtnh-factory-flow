@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from "vitest";
 import { fitView, toBoard, toMap, tileVisible, drawMinimap } from "./minimap-draw";
-import { mapCamera } from "./minimap-engine";
+import { mapCamera, readExtras } from "./minimap-engine";
 import { dockPadding } from "./dock-clearance";
 import {
   DEFAULT_MINIMAP,
@@ -372,5 +372,16 @@ describe("search field beside the map", () => {
         corner: "top-right",
       }),
     ).toEqual({ left: 0, right: 0 });
+  });
+});
+
+describe("a card's picture on the minimap", () => {
+  it("is the glance layer's picture, not the product drawn over it", () => {
+    const root = document.createElement("div");
+    root.innerHTML =
+      '<div data-id="c"><div class="cc-glance" style="background-image: url(/t/acid.png), url(/art.png)"></div></div>';
+    expect(readExtras(root, "c", "recipeNode", () => root.firstElementChild)).toEqual({
+      art: "/art.png",
+    });
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { glanceBar, glanceFace } from "./glance";
+import { glanceBar, glanceFace, glanceProduct } from "./glance";
 
 describe("the zoomed-out bar", () => {
   it("fills to what runs over the count, in the reason's tone with its word", () => {
@@ -62,5 +62,33 @@ describe("the zoomed-out bar", () => {
     // An icon is square: the stylesheet's default.
     const icon = glanceFace("url(/icons/x.png)", bar).style as Record<string, string>;
     expect(icon["--glance-art-ratio"]).toBeUndefined();
+  });
+
+  it("shows what the card makes in its corner: the first output's icon, on top of the picture and the bar", () => {
+    const acid = glanceProduct([
+      { kind: "fluid", iconPath: "/t/nitric_acid.png" },
+      { kind: "fluid", iconPath: "/t/water.png" },
+    ])!;
+    expect(acid).toEqual({ image: "url(/t/nitric_acid.png)", fluid: true });
+    const plain = glanceFace("url(/art.png)", undefined, acid);
+    expect(plain["data-product"]).toBe("fluid");
+    expect(plain.style).toEqual({ backgroundImage: "url(/t/nitric_acid.png), url(/art.png)" });
+    const dust = glanceProduct([{ kind: "item", iconPath: "/t/dust.png" }])!;
+    const barred = glanceFace("url(/art.png)", { tone: "full", fill: 1, word: "FULL" }, dust);
+    expect(barred["data-product"]).toBe("item");
+    const layers = (barred.style as Record<string, string>).backgroundImage.split(", ");
+    // The product on top, the picture still last (the minimap reads it from there).
+    expect(layers[0]).toBe("url(/t/dust.png)");
+    expect(layers.at(-1)).toBe("url(/art.png)");
+    // Power, or a first output with no picture, shows nothing; a card with none keeps its old face.
+    expect(glanceProduct([{ kind: "power" }])).toBeUndefined();
+    expect(
+      glanceProduct([{ kind: "item" }, { kind: "item", iconPath: "/t/byproduct.png" }]),
+    ).toBeUndefined();
+    expect(glanceProduct(undefined)).toBeUndefined();
+    expect(glanceFace("url(/art.png)", undefined, undefined)).toEqual({
+      style: { backgroundImage: "url(/art.png)" },
+      text: "",
+    });
   });
 });

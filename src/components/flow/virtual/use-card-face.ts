@@ -13,7 +13,7 @@ import {
 } from "../clean/clean-model";
 import { CC_GEOMETRY } from "../clean/tokens";
 import { cardLoop, type LoopTone } from "../clean/loops";
-import { glanceBar, type GlanceBar } from "../clean/glance";
+import { glanceBar, glanceProduct, type GlanceBar, type GlanceProduct } from "../clean/glance";
 import { mayIdleTrade } from "../clean/idle-trade";
 import { mayTurbineFlow, turbinesFor } from "@/lib/power/turbine-flow";
 import { useDeviceSettings } from "@/lib/device-settings";
@@ -45,6 +45,8 @@ export interface ShellFace {
   count: string;
   /** The picture the glance face draws. */
   art?: string;
+  /** What the card makes, in the glance face's corner. */
+  product?: GlanceProduct;
   /** The box to use when React Flow has not measured the card yet. */
   fallbackWidth: number;
   fallbackHeight: number;
@@ -162,6 +164,7 @@ export function useCardFace(
     bar: glanceBar(count.upTo, cardLoop(plan?.loops, projectNode.id)),
     count: `×${formatSolvedMachines(count.value)}`,
     art: art ?? machineIcon?.iconPath,
+    product: glanceProduct(recipe.outputs),
     fallbackWidth: CC_GEOMETRY.cardWidth,
     // The first paint of a card nobody has drawn: the rows its recipe would give it, before the solve says which
     // flow and which forced lines it has. The draw measures the real box.

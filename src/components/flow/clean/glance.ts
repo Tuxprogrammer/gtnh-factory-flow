@@ -2,7 +2,8 @@
  * The zoomed-out face (`.cc-glance`, one element): the card's picture and count, and along its foot the Up to bar, so
  * how hard each machine runs reads at a glance. The bar is two background layers over the picture (the fill in the
  * reason's tone, the track under it), the reason's word is the element's own text, sized in card pixels so a zoom
- * re-lays nothing out. Pure.
+ * re-lays nothing out. The card's product (its recipe's first output) sits in the top-left corner as one more
+ * background layer, so a row of one machine reads as what each makes. Pure.
  */
 import type { CSSProperties } from "react";
 import type { PlanUpTo } from "@/lib/solver/plan/types";
@@ -44,13 +45,54 @@ export function glanceBar(upTo: PlanUpTo | undefined, loop?: LoopTone): GlanceBa
   return { tone: upTo.reason ? TONE[upTo.reason] : "plain", fill, word: upTo.reason ?? "" };
 }
 
-/** The glance layer's attributes: its picture (a CSS image, `url(...)`), and the bar along its foot when it has one. */
+/** What a card makes, as its zoomed-out face shows it: the icon of its recipe's first output. */
+export interface GlanceProduct {
+  /** The icon as a CSS image, `url(...)`. */
+  image: string;
+  /** A fluid's exported texture fills only the middle half of its canvas, so it is drawn twice the size. */
+  fluid: boolean;
+}
+
+/**
+ * The product a card's zoomed-out face shows: its recipe's first output (the one the recipe is named after), when that
+ * is an item or a fluid with an icon. None for a recipe whose first output is power or has no picture.
+ */
+export function glanceProduct(
+  outputs: ReadonlyArray<{ kind: string; iconPath?: string }> | undefined,
+): GlanceProduct | undefined {
+  const first = outputs?.[0];
+  if (!first?.iconPath || (first.kind !== "item" && first.kind !== "fluid")) return undefined;
+  return { image: `url(${first.iconPath})`, fluid: first.kind === "fluid" };
+}
+
+/**
+ * The glance layer's attributes: its picture (a CSS image, `url(...)`), the bar along its foot when it has one, and the
+ * product in its corner when it has one (`data-product`, clean.css places each layer).
+ */
 export function glanceFace(
   art: string | undefined,
   bar: GlanceBar | undefined,
-): { style: CSSProperties | undefined; "data-bar"?: ""; "data-tone"?: FootTone; text: string } {
-  if (!bar) return { style: art ? { backgroundImage: art } : undefined, text: "" };
+  product?: GlanceProduct,
+): {
+  style: CSSProperties | undefined;
+  "data-bar"?: "";
+  "data-tone"?: FootTone;
+  "data-product"?: "item" | "fluid";
+  text: string;
+} {
+  const productAttr = product
+    ? { "data-product": product.fluid ? ("fluid" as const) : ("item" as const) }
+    : {};
+  if (!bar) {
+    const layers = [...(product ? [product.image] : []), ...(art ? [art] : [])];
+    return {
+      style: layers.length ? { backgroundImage: layers.join(", ") } : undefined,
+      ...productAttr,
+      text: "",
+    };
+  }
   const layers = [
+    ...(product ? [product.image] : []),
     "linear-gradient(var(--glance-fill-ink), var(--glance-fill-ink))",
     "linear-gradient(var(--glance-track), var(--glance-track))",
     ...(art ? [art] : []),
@@ -65,6 +107,7 @@ export function glanceFace(
     } as CSSProperties,
     "data-bar": "",
     "data-tone": bar.tone,
+    ...productAttr,
     text: bar.word,
   };
 }

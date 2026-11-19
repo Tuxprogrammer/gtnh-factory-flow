@@ -20,14 +20,27 @@ final class MachineTableEntries {
     /**
      * STEAM_MULTIBLOCK: the eight bronze/steel steam multiblocks (MTESteamMacerator and its siblings). No
      * overclocking, 8 fixed parallels, duration x 1.6 / tierMachine (1 bronze, 2 high pressure): 0.625x and 1.25x
-     * throughput. Steam is billed elsewhere, not by a power coefficient.
+     * throughput. Steam is billed elsewhere, not by a power coefficient. Each run rounds up to a whole tick and banks
+     * no sub-tick speed ({@link #quantiseSteamMultiblockDuration}).
      */
     private static final Behaviour STEAM_MULTIBLOCK = machine().overclock(none())
         .parallels(8)
         .speed(c -> 0.625 * (c.tier(STEAM_PRESSURE) + 1))
+        .quantiseDuration(MachineTableEntries::quantiseSteamMultiblockDuration)
         .controls(STEAM_PRESSURE_CONTROL)
         // The Steam Blender's handler inherited the mixer map's scraped pipe knob; its pipes are the build's.
         .hidesControls(PIPE);
+
+    /**
+     * steam-multiblock.ts quantiseSteamMultiblockDuration: the steam multiblocks' processing logic builds
+     * OverclockCalculator.ofNoOverclock(recipe), which sets noOverclock, so calculateOverclock returns (int)
+     * Math.ceil(duration x durationModifier): the duration rounds UP. With noOverclock set,
+     * calculateMultiplierUnderOneTick returns 1, so a run shorter than a tick is billed as a whole tick and banks no
+     * parallels.
+     */
+    static double quantiseSteamMultiblockDuration(final double durationTicks) {
+        return Double.isFinite(durationTicks) && durationTicks > 1 ? Math.ceil(durationTicks) : 1;
+    }
 
     private static boolean distillery(final Context c) {
         return DangoteDistillus.distillery(c.recipeMap);
@@ -602,12 +615,14 @@ final class MachineTableEntries {
         machines.put("Steam Blender", STEAM_MULTIBLOCK);
         machines.put("Steam Fuser", STEAM_MULTIBLOCK);
         // MTESteamFurnaceMulti: its map is vanilla smelting (200 ticks) while the machine runs GT's 128t furnace
-        // recipe; 200 / (128 x 1.6) = 0.9765625 lands on the game's own 204 ticks basic and 102 high pressure.
+        // recipe; 200 / (128 x 1.6) = 0.9765625 lands on the game's own 205 ticks basic and 103 high pressure (128 x
+        // 1.6 and 128 x 0.8, rounded up).
         machines.put(
             "Steam Hearth",
             machine().overclock(none())
                 .parallels(8)
                 .speed(c -> 0.9765625 * (c.tier(STEAM_PRESSURE) + 1))
+                .quantiseDuration(MachineTableEntries::quantiseSteamMultiblockDuration)
                 .controls(STEAM_PRESSURE_CONTROL));
 
         // MTESpinmatron: light mode 4x, standard and heavy 3x; heavy pays 16x EU and divides parallels by 32.

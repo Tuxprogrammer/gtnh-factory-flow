@@ -8,6 +8,7 @@ import { layoutRail, spareHeight, visibleSlice, SECTION_H, ROW_H } from "./rail-
 import { buildRailModel, visibleLines } from "./rail-model";
 import { buildSpares, cardDepths, effectiveShares, sparedByResource } from "./spare-model";
 import { calculateThroughput } from "@/lib/solver/throughput";
+import { cardPicture, deriveCardFace } from "../clean-model";
 import { node, project, recipe } from "@/lib/solver/plan/adapter/test-kit";
 
 const model = (mock: typeof mockForced) => buildRailModel(mock.project, mock.result);
@@ -345,5 +346,47 @@ describe("an unwired ore dictionary input", () => {
     const line = rail.inputs.find((l) => l.resourceId === "oredict:wireGt01Copper")!;
     expect(line.label).toBe("Any 1x Copper Wire");
     expect(line.resource.displayName).toBe("Any 1x Copper Wire");
+  });
+});
+
+describe("a machine's name", () => {
+  it("is the same on the Overview's machine line and on the card", () => {
+    const table = {
+      kind: "item" as const,
+      id: "minecraft:crafting_table",
+      displayName: "Crafting Table",
+      amount: 1,
+    };
+    const crafting = { ...recipe("c", [], [["resistor", 1]]), machineType: "Shaped Crafting" };
+    const assembling = { ...recipe("a", [], [["plate", 1]]), machineType: "Assembler" };
+    const p = project({
+      recipes: [crafting, assembling],
+      nodes: [
+        node("bench", "c", { solvePin: 1, solvePinExact: true }),
+        node("hand", "c", {
+          solvePin: 1,
+          solvePinExact: true,
+          machineHandlerId: "shaped-crafting",
+        }),
+        node("asm", "a", { solvePin: 1, solvePinExact: true }),
+      ],
+    });
+    const rail = buildRailModel(p, calculateThroughput(p, { generatedAt: "t" }));
+    // The maps' icons are one machine's item each: they lend a picture, never a name.
+    const mapIcons = new Map([
+      ["Shaped Crafting", table],
+      ["Assembler", { ...table, displayName: "Elite Assembling Machine" }],
+    ]) as unknown as Parameters<typeof cardPicture>[4];
+    for (const card of p.nodes) {
+      const recipeOf = p.recipes.find((r) => r.id === card.recipeId)!;
+      const face = deriveCardFace(recipeOf, card);
+      const named = cardPicture(recipeOf, card, face, new Map(), mapIcons).name;
+      expect(rail.machines.find((m) => m.nodeId === card.id)?.label).toBe(named);
+    }
+    expect(rail.machines.map((m) => m.label).sort()).toEqual([
+      "Assembler",
+      "Auto Workbench",
+      "Crafting Table",
+    ]);
   });
 });

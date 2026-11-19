@@ -5,20 +5,19 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraftforge.fluids.FluidContainerRegistry;
-import net.minecraftforge.fluids.FluidStack;
-
 import com.gtnhplanner.api.RecipePropertyAPI;
+import com.gtnhplanner.core.model.FluidContainers;
+import com.gtnhplanner.core.model.ResourceKey;
+import com.gtnhplanner.core.model.ResourceRegistry;
+import com.gtnhplanner.core.model.SavedKeys;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Port;
-import com.gtnhplanner.ui.Resources;
 
 /**
  * The fluid tank card (the website's Tank, its free mirror of every fluid Canner recipe): it empties a filled cell into
- * its fluid and the empty cell, or fills empty cells, for nothing and at once. The litres a cell holds are the game's
- * own (Forge's fluid container registry, where every cell, bucket and capsule is listed), never a guessed 1000.
+ * its fluid and the empty cell, or fills empty cells, for nothing and at once. What it can do is GregTech's Canner's,
+ * as on the website ({@link FluidContainers}): the litres a container holds are the Canner recipe's, never a guessed
+ * 1000, and it empties a container only where the Canner does (never the five platinum-group molten metals).
  * <p>
  * Like the custom rate card it holds nothing until a port is dropped on it, and lets go when nothing is wired to it:
  * a cell it is given is emptied, a cell asked of it is filled, a fluid asked of it comes out of cells, a fluid given to
@@ -66,78 +65,48 @@ public final class FluidTank {
         return !FILL.equals(MODE_SETTING.value(node.powerSettings.get(MODE)));
     }
 
-    /** A filled container, its fluid (the litres it holds) and the container it leaves. */
-    public record Pair(ItemStack cell, FluidStack fluid, ItemStack empty) {}
-
-    /** What a filled container's key holds; null when it is no container this game knows. */
-    @Nullable
-    public static Pair pair(@Nullable final String cellKey) {
-        if (cellKey == null) return null;
-        final ItemStack cell = Resources.item(cellKey);
-        if (cell == null) return null;
-        cell.stackSize = 1;
-        final FluidStack fluid = FluidContainerRegistry.getFluidForFilledItem(cell);
-        final ItemStack empty = FluidContainerRegistry.drainFluidContainer(cell);
-        if (fluid == null || fluid.amount <= 0 || empty == null) return null;
-        return new Pair(cell, fluid, empty);
-    }
-
     /**
-     * The cell a fluid goes in: the plain Empty Cell's, else any cell's, else any container's (a bucket); null when the
-     * fluid has none.
+     * What a filled container's key (the mod's spelling, as saved) holds when a tank handles it in a direction
+     * ({@code emptying}): the Canner's pair; null when the Canner has no such recipe.
      */
     @Nullable
-    public static String cellFor(final String fluidKey) {
-        // Asked every frame while a wire is in hand (which cards would take it): the registry is walked once a fluid.
-        final String known = CELLS.computeIfAbsent(fluidKey, k -> {
-            final String found = findCell(k);
-            return found == null ? "" : found;
-        });
-        return known.isEmpty() ? null : known;
+    public static FluidContainers.Pair pair(@Nullable final String cellKey, final boolean emptying) {
+        final ResourceKey cell = SavedKeys.resource(cellKey);
+        return cell == null ? null : FluidContainers.pair(cell, emptying, ResourceRegistry.get());
     }
 
-    private static final Map<String, String> CELLS = new java.util.concurrent.ConcurrentHashMap<>();
-
+    /** What the card holds: its pair in its own direction; null while it is empty or holds what the Canner refuses. */
     @Nullable
-    private static String findCell(final String fluidKey) {
-        final FluidStack fluid = Resources.fluid(fluidKey);
-        if (fluid == null) return null;
-        String cell = null, other = null;
-        for (final FluidContainerRegistry.FluidContainerData data : FluidContainerRegistry
-            .getRegisteredFluidContainerData()) {
-            if (data == null || data.fluid == null
-                || data.filledContainer == null
-                || data.emptyContainer == null
-                || !data.fluid.isFluidEqual(fluid)) continue;
-            final String key = com.gtnhplanner.ui.card.CardDefaults.itemKey(data.filledContainer);
-            if (PLAIN_CELL.equals(String.valueOf(Item.itemRegistry.getNameForObject(data.emptyContainer.getItem()))))
-                return key;
-            if (cell == null && data.emptyContainer.getDisplayName()
-                .toLowerCase(java.util.Locale.ROOT)
-                .contains("cell")) cell = key;
-            if (other == null) other = key;
-        }
-        return cell != null ? cell : other;
+    public static FluidContainers.Pair pair(final Node node) {
+        return pair(cell(node), emptying(node));
     }
-
-    /** IC2's Empty Cell, which GregTech fills with every fluid it has. */
-    private static final String PLAIN_CELL = "IC2:itemCellEmpty";
 
     /**
      * The pair a resource on a side makes it handle ({@code supply}: it gives that resource out, else takes it in), as
-     * {mode, cell key}; null when it cannot (an empty cell, a fluid with no cell, an item that holds no fluid).
+     * {mode, cell key}; null when it cannot (an empty cell, a fluid with no cell, an item that holds no fluid, a
+     * container the Canner never empties given to it).
      */
     @Nullable
     public static String[] take(final String key, final boolean supply) {
-        if (key.startsWith("fluid:")) {
-            final String cell = cellFor(key);
-            // A fluid asked of it comes out of cells; a fluid given to it goes into them.
-            return cell == null ? null : new String[] { supply ? EMPTY : FILL, cell };
-        }
-        if (pair(key) == null) return null;
-        // A cell given to it is emptied; a cell asked of it is filled.
-        return new String[] { supply ? FILL : EMPTY, key };
+        final ResourceKey resource = SavedKeys.resource(key);
+        if (resource == null) return null;
+        // Asked every frame while a wire is in hand (which cards would take it): kept per resource and side.
+        final String[] known = TAKES.computeIfAbsent(key + (supply ? ">" : "<"), k -> {
+            final FluidContainers.Hold hold = FluidContainers.take(resource, supply, ResourceRegistry.get());
+            // The cell as the game spells it (its port's key), which is what a tank keeps.
+            final Port<?> cell = hold == null ? null
+                : ResourceRegistry.get()
+                    .port(
+                        hold.pair()
+                            .cell(),
+                        1);
+            return cell == null ? NONE : new String[] { hold.emptying() ? EMPTY : FILL, cell.key() };
+        });
+        return known == NONE ? null : known.clone();
     }
+
+    private static final String[] NONE = new String[0];
+    private static final Map<String, String[]> TAKES = new java.util.concurrent.ConcurrentHashMap<>();
 
     /** Takes the pair for a resource on a side; false, changing nothing, when it cannot. */
     public static boolean hold(final Node node, final String key, final boolean supply) {
@@ -170,13 +139,12 @@ public final class FluidTank {
         node.powerModel = SOURCE.compute(node.powerSettings);
         node.machineName = SOURCE.name();
         node.properties.put(RecipePropertyAPI.DURATION_TICKS, 20);
-        final Pair p = pair(cell(node));
+        final FluidContainers.Pair p = pair(node);
         if (p == null) return;
-        final Port<ItemStack> cell = items(p.cell()), empty = items(p.empty());
-        final FluidStack litres = p.fluid()
-            .copy();
-        final Port<FluidStack> fluid = new Port<>(RecipePropertyAPI.FLUID, litres, 1f);
-        fluid.setExactAmount(litres.amount);
+        final ResourceRegistry game = ResourceRegistry.get();
+        final Port<?> cell = game.port(p.cell(), 1), empty = game.port(p.empty(), 1),
+            fluid = game.port(p.fluid(), p.litres());
+        if (cell == null || empty == null || fluid == null) return;
         if (emptying(node)) {
             node.inputs.add(cell);
             node.outputs.add(fluid);
@@ -186,13 +154,5 @@ public final class FluidTank {
             node.inputs.add(empty);
             node.outputs.add(cell);
         }
-    }
-
-    private static Port<ItemStack> items(final ItemStack stack) {
-        final ItemStack one = stack.copy();
-        one.stackSize = 1;
-        final Port<ItemStack> port = new Port<>(RecipePropertyAPI.ITEM, one, 1f);
-        port.setExactAmount(1);
-        return port;
     }
 }

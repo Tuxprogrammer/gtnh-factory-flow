@@ -9,8 +9,6 @@ import java.util.TreeMap;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.item.ItemStack;
-
 import com.gtnhplanner.api.RecipePropertyAPI;
 import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.MachineConfig;
@@ -21,7 +19,6 @@ import com.gtnhplanner.data.provider.DefaultProvider;
 import com.gtnhplanner.power.PowerModel;
 import com.gtnhplanner.power.game.PowerPorts;
 
-import codechicken.nei.PositionedStack;
 import codechicken.nei.recipe.IRecipeHandler;
 import codechicken.nei.recipe.Recipe;
 import codechicken.nei.recipe.RecipeHandlerRef;
@@ -89,9 +86,9 @@ public class Node implements PinRule.Card {
         return com.gtnhplanner.power.CustomRate.is(this);
     }
 
-    /** Sets the machine count in the card's settings (no refresh: the count is not a recipe setting). */
+    /** Sets the machine count in the card's settings (no refresh: the count is not a recipe setting); any fraction. */
     @Override
-    public void setMachineCount(final int count) {
+    public void setMachineCount(final double count) {
         machineConfig.setMachineCount(count);
     }
 
@@ -215,62 +212,11 @@ public class Node implements PinRule.Card {
             this.properties.putAll(props);
         }
 
-        readAlternatives(handler, recipeIndex);
+        com.gtnhplanner.nei.SlotAlternatives.read(inputs, handler, recipeIndex);
         deduplicate(inputs, false);
         deduplicate(outputs, true);
         applyPicks();
         afterRefresh.accept(this);
-    }
-
-    /**
-     * Each item input's alternatives: every item NEI shows in the slot the input's item is in (an ore dictionary
-     * slot's members, GregTech's alternatives), the port's own first; no other is a wildcard.
-     */
-    private void readAlternatives(final IRecipeHandler handler, final int recipeIndex) {
-        final List<PositionedStack> slots;
-        try {
-            slots = handler.getIngredientStacks(recipeIndex);
-        } catch (final RuntimeException e) {
-            return;
-        }
-        if (slots == null) return;
-        for (final Port<?> port : inputs) {
-            if (!(port.getValue() instanceof final ItemStack own) || own.getItem() == null) continue;
-            for (final PositionedStack slot : slots) {
-                if (slot == null || slot.items == null || slot.items.length < 2 || !holds(slot, own)) continue;
-                final List<ItemStack> items = new ArrayList<>();
-                items.add(own.copy());
-                for (final ItemStack s : slot.items) {
-                    if (s == null || s.getItem() == null
-                        || s.getItemDamage() == net.minecraftforge.oredict.OreDictionary.WILDCARD_VALUE) continue;
-                    boolean seen = false;
-                    for (final ItemStack had : items) seen |= had.getItem() == s.getItem()
-                        && had.getItemDamage() == s.getItemDamage();
-                    if (!seen) items.add(s.copy());
-                }
-                if (items.size() > 1) setAlternatives(port, items);
-                break;
-            }
-        }
-    }
-
-    /**
-     * Whether a slot shows the item among its permutations. A wildcard on either side holds every meta: GregTech's
-     * recipe keeps an ore slot's wildcard log (the Industrial Coke Oven's) while NEI lists each log.
-     */
-    private static boolean holds(final PositionedStack slot, final ItemStack item) {
-        final int wildcard = net.minecraftforge.oredict.OreDictionary.WILDCARD_VALUE;
-        for (final ItemStack s : slot.items) {
-            if (s == null || s.getItem() != item.getItem()) continue;
-            if (s.getItemDamage() == item.getItemDamage() || s.getItemDamage() == wildcard
-                || item.getItemDamage() == wildcard) return true;
-        }
-        return false;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static void setAlternatives(final Port<?> port, final List<ItemStack> items) {
-        ((Port<ItemStack>) port).setAlternatives(items);
     }
 
     /**
@@ -325,7 +271,7 @@ public class Node implements PinRule.Card {
                 if (same ? aggregate.get(i)
                     .same(aggregate.get(j))
                     : aggregate.get(i)
-                        .canConnect(aggregate.get(j))) {
+                        .folds(aggregate.get(j))) {
                     aggregate.get(i)
                         .merge(aggregate.get(j));
                     aggregate.remove(j);

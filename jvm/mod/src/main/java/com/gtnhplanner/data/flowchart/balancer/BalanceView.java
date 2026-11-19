@@ -107,7 +107,7 @@ public final class BalanceView {
     private static void collectConfigured(final Node node, final Set<PortRef> wired, final boolean input,
         final List<Boundary> out) {
         final MachineConfig cfg = node.machineConfig;
-        final double count = cfg.getMachineCount();
+        final double count = cfg.machineCount();
         if (count <= 0) return;
         final var eff = cfg.computeEffect(node.properties);
         final double durTicks = eff.duration() > 0 ? eff.duration() : 1;

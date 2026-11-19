@@ -358,7 +358,7 @@ public final class CardModel {
                 new PortView(
                     i,
                     output,
-                    fluid ? port.getDisplayStack() : value instanceof final ItemStack stack ? stack : null,
+                    fluid ? com.gtnhplanner.ui.Resources.displayStack(port) : value instanceof final ItemStack stack ? stack : null,
                     fluid ? (FluidStack) value : null,
                     port.getDisplayName(),
                     port.getChance(),

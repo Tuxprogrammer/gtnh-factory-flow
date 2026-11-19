@@ -141,12 +141,30 @@ public class MachineConfig {
         if (count != null) settings.put(Settings.MACHINES.key(), count);
     }
 
+    /**
+     * The machine count as set: a whole number of machines, or a fraction where a plan set one (a website pin of 0.5:
+     * the model and the solver take any positive count).
+     */
+    public double machineCount() {
+        final Object v = settings.get(Settings.MACHINES.key());
+        return v instanceof final Number n ? n.doubleValue() : 0;
+    }
+
+    /** The count in whole machines: a fraction rounded up, since a part of a machine is still a machine to build. */
     public int getMachineCount() {
-        return getInt(Settings.MACHINES.key());
+        final double count = machineCount();
+        return Math.floor(count) == count ? (int) count : (int) Math.min(Integer.MAX_VALUE, Math.ceil(count));
     }
 
     public void setMachineCount(final int count) {
         settings.put(Settings.MACHINES.key(), count);
+    }
+
+    /** Sets the count: a whole one is kept as the whole number it always was (so it saves as before), else as is. */
+    public void setMachineCount(final double count) {
+        if (Math.floor(count) == count && Math.abs(count) <= Integer.MAX_VALUE)
+            settings.put(Settings.MACHINES.key(), (int) count);
+        else settings.put(Settings.MACHINES.key(), count);
     }
 
     public float inputMultiplier(final int inputIndex) {

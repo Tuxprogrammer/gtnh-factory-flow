@@ -998,8 +998,8 @@ class FfConverterTest {
                 assertTrue(e.targetInputIndex >= 0 && e.targetInputIndex < to.inputs.size(), name);
                 assertTrue(
                     from.outputs.get(e.sourceOutputIndex)
-                        .canConnect(to.inputs.get(e.targetInputIndex)),
-                    name + ": a wire joins one resource");
+                        .feeds(to.inputs.get(e.targetInputIndex)),
+                    name + ": a wire lands on a slot that takes it");
             }
             for (final Node n : g.getNodes()) {
                 assertTrue(n.x >= FfConverter.MARGIN && n.y >= FfConverter.MARGIN, name);

@@ -2162,19 +2162,14 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
     private Tip tankTip() {
         final com.gtnhplanner.data.flowchart.Node n = model.node;
         final Tip tip = Tip.of("Fluid Tank");
-        final com.gtnhplanner.power.FluidTank.Pair p = com.gtnhplanner.power.FluidTank
-            .pair(com.gtnhplanner.power.FluidTank.cell(n));
+        final com.gtnhplanner.core.model.FluidContainers.Pair p = com.gtnhplanner.power.FluidTank.pair(n);
         if (p == null)
             return tip.muted("Wire a cell or a fluid to it: it empties cells, or fills them, free and instant.");
-        final String cell = p.cell()
-            .getDisplayName();
+        final com.gtnhplanner.core.model.ResourceRegistry game = com.gtnhplanner.core.model.ResourceRegistry.get();
+        final String cell = game.displayName(p.cell());
         return (com.gtnhplanner.power.FluidTank.emptying(n) ? tip.sub("Empties " + cell) : tip.sub("Fills " + cell))
             .muted("Free and instant: as much as the plan needs.")
-            .row(
-                "Holds",
-                Fmt.compact(p.fluid().amount) + " L of "
-                    + p.fluid()
-                        .getLocalizedName());
+            .row("Holds", Fmt.compact((int) p.litres()) + " L of " + game.displayName(p.fluid()));
     }
 
     private Tip powerTip(final Part part) {

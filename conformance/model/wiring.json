@@ -1,0 +1,197 @@
+{
+  "specifies": "Which wires a plan allows: a slot takes its own resource and what its recipe lists in its place, and nothing that only shares an ore name with them (parity decision: by the slot's own alternatives). Keys are the plan JSON's kind:id.",
+  "cases": [
+    {
+      "name": "the same item",
+      "slot": "item:gregtech:gt.metaitem.01@2377",
+      "alternatives": [],
+      "offered": "item:gregtech:gt.metaitem.01@2377",
+      "takes": true
+    },
+    {
+      "name": "another damage of the item",
+      "slot": "item:gregtech:gt.metaitem.01@2377",
+      "alternatives": [],
+      "offered": "item:gregtech:gt.metaitem.01@2378",
+      "takes": false
+    },
+    {
+      "name": "an item never feeds a fluid slot of the same id",
+      "slot": "fluid:water",
+      "alternatives": [],
+      "offered": "item:water",
+      "takes": false
+    },
+    {
+      "name": "a filled cell never feeds its fluid's slot",
+      "slot": "fluid:water",
+      "alternatives": [],
+      "offered": "item:ic2:itemcellwater",
+      "takes": false
+    },
+    {
+      "name": "a fluid never feeds a cell slot",
+      "slot": "item:ic2:itemcellwater",
+      "alternatives": [],
+      "offered": "fluid:water",
+      "takes": false
+    },
+    {
+      "name": "the same fluid",
+      "slot": "fluid:molten.iron",
+      "alternatives": [],
+      "offered": "fluid:molten.iron",
+      "takes": true
+    },
+    {
+      "name": "EU feeds EU",
+      "slot": "power:eu",
+      "alternatives": [],
+      "offered": "power:eu",
+      "takes": true
+    },
+    {
+      "name": "a wildcard slot takes any damage",
+      "slot": "item:minecraft:log@32767",
+      "alternatives": [],
+      "offered": "item:minecraft:log@1",
+      "takes": true
+    },
+    {
+      "name": "a wildcard slot takes the bare damage-0 id",
+      "slot": "item:minecraft:log@32767",
+      "alternatives": [],
+      "offered": "item:minecraft:log",
+      "takes": true
+    },
+    {
+      "name": "a wildcard is anchored on @",
+      "slot": "item:minecraft:log@32767",
+      "alternatives": [],
+      "offered": "item:minecraft:log2@1",
+      "takes": false
+    },
+    {
+      "name": "a concrete slot takes a wildcard offer",
+      "slot": "item:minecraft:log@2",
+      "alternatives": [],
+      "offered": "item:minecraft:log@32767",
+      "takes": true
+    },
+    {
+      "name": "a listed alternative",
+      "slot": "item:minecraft:planks",
+      "alternatives": [
+        "item:minecraft:planks",
+        "item:minecraft:planks@1",
+        "item:minecraft:planks@2"
+      ],
+      "offered": "item:minecraft:planks@1",
+      "takes": true
+    },
+    {
+      "name": "an item the slot does not list",
+      "slot": "item:minecraft:planks",
+      "alternatives": [
+        "item:minecraft:planks",
+        "item:minecraft:planks@1"
+      ],
+      "offered": "item:minecraft:wooden_slab",
+      "takes": false
+    },
+    {
+      "name": "an ore dictionary slot takes its listed members",
+      "slot": "item:oredict:plankwood",
+      "alternatives": [
+        "item:minecraft:planks@32767",
+        "item:minecraft:planks@3"
+      ],
+      "offered": "item:minecraft:planks@3",
+      "takes": true
+    },
+    {
+      "name": "an ore dictionary slot with no list takes only itself",
+      "slot": "item:oredict:plankwood",
+      "alternatives": [],
+      "offered": "item:minecraft:planks",
+      "takes": false
+    },
+    {
+      "name": "an ore dictionary offer feeds the same ore dictionary slot",
+      "slot": "item:oredict:plankwood",
+      "alternatives": [],
+      "offered": "item:oredict:plankwood",
+      "takes": true
+    },
+    {
+      "name": "an alternative given as a wildcard",
+      "slot": "item:minecraft:log",
+      "alternatives": [
+        "item:minecraft:log@32767"
+      ],
+      "offered": "item:minecraft:log@3",
+      "takes": true
+    },
+    {
+      "name": "two items that only share an ore name do not wire (Lapis Lazuli into a Lapis Dust slot)",
+      "slot": "item:gregtech:gt.metaitem.01@2526",
+      "alternatives": [],
+      "offered": "item:minecraft:dye@4",
+      "takes": false
+    },
+    {
+      "name": "unless the slot lists it",
+      "slot": "item:gregtech:gt.metaitem.01@2526",
+      "alternatives": [
+        "item:gregtech:gt.metaitem.01@2526",
+        "item:minecraft:dye@4"
+      ],
+      "offered": "item:minecraft:dye@4",
+      "takes": true
+    },
+    {
+      "name": "a slot set to one of its items still takes the others it lists",
+      "slot": "item:minecraft:planks@2",
+      "alternatives": [
+        "item:minecraft:planks",
+        "item:minecraft:planks@1",
+        "item:minecraft:planks@2"
+      ],
+      "offered": "item:minecraft:planks",
+      "takes": true
+    },
+    {
+      "name": "an alternative fluid",
+      "slot": "fluid:water",
+      "alternatives": [
+        "fluid:water",
+        "fluid:ic2distilledwater"
+      ],
+      "offered": "fluid:ic2distilledwater",
+      "takes": true
+    },
+    {
+      "name": "an alternative of the other kind never counts",
+      "slot": "item:ic2:itemcellwater",
+      "alternatives": [
+        "fluid:water"
+      ],
+      "offered": "fluid:water",
+      "takes": false
+    },
+    {
+      "name": "ids compare exactly: case",
+      "slot": "item:minecraft:log",
+      "alternatives": [],
+      "offered": "item:Minecraft:log",
+      "takes": false
+    },
+    {
+      "name": "ids compare exactly: a written @0",
+      "slot": "item:minecraft:log",
+      "alternatives": [],
+      "offered": "item:minecraft:log@0",
+      "takes": false
+    }
+  ]
+}

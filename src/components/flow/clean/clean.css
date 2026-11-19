@@ -1076,7 +1076,8 @@
   line-height: var(--glance-bar-h);
   color: var(--glance-tone);
   white-space: nowrap;
-  overflow: hidden;
+  /* Sideways only: the card's name hangs below the face ("Names when zoomed out"). */
+  overflow-x: clip;
 }
 .cc-glance[data-bar]::after {
   bottom: calc(var(--glance-bar-h) + 2px + 4px / var(--board-zoom, 1));

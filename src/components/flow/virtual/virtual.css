@@ -76,3 +76,22 @@
   pointer-events: none !important;
 }
 
+/*
+ * "Names when zoomed out" on a shell (clean.css draws it under the card): a fixed font scaled from its corner, as the
+ * count is, so a zoom step re-sizes no text. No wider on screen than its card: names that ran past their cards' edges
+ * doubled the frame time of a pan over a few hundred cards. Below 0.12 a name would be under 6 px tall: it scales to
+ * nothing there and is not painted, and its width stops following the zoom, so a whole plan in view lays none out.
+ */
+.factory-flow-board[data-detail-level="glance"]
+  .cc-card[data-shell]
+  > .cc-glance[data-name]::before {
+  margin-top: 0;
+  width: calc(100% * max(var(--board-zoom, 1), 0.12));
+  max-width: none;
+  font-size: 11px;
+  transform-origin: left top;
+  transform: translateY(calc(3px / var(--board-zoom, 1)))
+    scale(
+      calc(min(1 / var(--board-zoom, 1), 4.5) * clamp(0, (var(--board-zoom, 1) - 0.12) * 1000, 1))
+    );
+}

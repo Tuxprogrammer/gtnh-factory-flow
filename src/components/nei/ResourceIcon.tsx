@@ -11,13 +11,8 @@ import {
 import { Zap } from "lucide-react";
 import type { ResourceAmount, ResourceIconAtlasRef, ResourceKind } from "@/lib/model/types";
 import { NEI_TEXTURES } from "@/lib/nei-renderer/theme/textures";
-import {
-  formatNumberWithThousands,
-  resourceLabel,
-  isOreDictionaryResource,
-  stripOreDictionaryPrefix,
-  trimTrailingDecimalZeros,
-} from "@/lib/model/resources";
+import { resourceLabel, isOreDictionaryResource, stripOreDictionaryPrefix } from "@/lib/model/resources";
+import { formatNumberWithThousands, trimTrailingDecimalZeros } from "@/lib/format/numbers";
 import { isProgrammedCircuitResource } from "@/lib/model/programmed-circuit";
 import { MinecraftTooltip } from "./MinecraftTooltip";
 import { getSpriteFitScale, spriteFitStyle } from "./sprite-fit";

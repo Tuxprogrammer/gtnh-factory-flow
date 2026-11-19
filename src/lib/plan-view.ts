@@ -11,7 +11,7 @@ import { isCompactViewport } from "./compact-view";
 import type { BoardCamera } from "./designs/design-camera";
 import type { PlanViewState } from "./model/types";
 import { readWorkspaceViewSnapshot, writeWorkspaceView } from "./workspace-view";
-import { getActiveRateUnit } from "./model/rate-unit";
+import { getActiveRateUnit } from "./format/rate-unit";
 import { useFactoryStore } from "@/store/factory-store";
 
 /**

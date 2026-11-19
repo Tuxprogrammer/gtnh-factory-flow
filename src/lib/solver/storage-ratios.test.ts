@@ -7,11 +7,8 @@ import {
 } from "@/lib/model/types";
 import { factoryProjectSchema, factoryEdgeSchema } from "@/lib/model/schemas";
 import { normalizeLoadedProject } from "@/lib/model/project-normalize";
-import {
-  formatRatioShare,
-  getProjectRatioBranches,
-  setStorageRatioPercentage,
-} from "@/lib/model/storage-ratios";
+import { getProjectRatioBranches, setStorageRatioPercentage } from "@/lib/model/storage-ratios";
+import { formatRatioShare } from "@/lib/format/numbers";
 import { calculateThroughput } from "./throughput";
 import { useFactoryStore } from "@/store/factory-store";
 

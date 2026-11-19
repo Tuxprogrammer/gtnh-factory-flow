@@ -28,7 +28,7 @@ import { isCustomRateRecipe } from "@/lib/model/custom-rate";
 import { type MachineListEntry } from "@/lib/model/machine-list";
 import type { ResourceAmount, FactoryStorage, ProductionGroup } from "@/lib/model/types";
 import { getStorageRoles, type StorageRole } from "@/lib/model/storage-role";
-import { powerDisplayFromEuT, powerDisplaySuffix, rateSuffixForKind } from "@/lib/model/rate-unit";
+import { powerDisplayFromEuT, powerDisplaySuffix, rateSuffixForKind } from "@/lib/format/rate-unit";
 import { ResourceIcon } from "../nei/ResourceIcon";
 import { getCategoryPresentation } from "@/lib/model/category-presentation";
 import { MinecraftTooltip } from "../nei/MinecraftTooltip";

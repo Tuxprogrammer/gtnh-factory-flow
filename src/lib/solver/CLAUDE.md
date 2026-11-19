@@ -111,3 +111,11 @@ The verdict and ring-diagnosis code lives in `src/components/flow/` (`node-verdi
 
 `overclock.ts` and `hatch-input.ts` live here; the rules are in
 `src/lib/machines/CLAUDE.md`. Steam litres: `getNodeSteamReport` in `power-report.ts`.
+
+## What lives elsewhere
+
+Number and rate display (`formatCompact`, `formatRate`, the rate-unit and power-display
+dials, `setting-memory`) is in `src/lib/format`, not here. This directory, `solver`,
+`machines` and `power` are the code the shared Java core replaces: they import no React,
+DOM, storage, Next, Zustand or `src/lib/format`. `src/test-support/core-boundary.test.ts`
+enforces it over the real import graph.

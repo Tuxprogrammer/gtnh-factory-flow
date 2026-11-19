@@ -1,12 +1,7 @@
 import { useMemo } from "react";
 import type { FactoryNode, Recipe } from "@/lib/model/types";
-import {
-  applyMachineHandlerToRecipe,
-  applyRecipeInputOverrides,
-  formatCompact,
-  isSteamMachineHandler,
-  getSelectedMachineHandler,
-} from "@/lib/model";
+import { applyMachineHandlerToRecipe, applyRecipeInputOverrides, isSteamMachineHandler, getSelectedMachineHandler } from "@/lib/model";
+import { formatCompact } from "@/lib/format/numbers";
 import { getOverclockedRecipeStats } from "@/lib/solver/overclock";
 import { getNodePowerReport, getNodeSteamReport, hasPowerReport } from "@/lib/solver/power-report";
 import { getMachineParallelMultiplier } from "@/lib/solver/machine-effects";

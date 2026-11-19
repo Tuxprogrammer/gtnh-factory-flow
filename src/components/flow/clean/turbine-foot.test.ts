@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest";
-import { setActivePowerDisplayUnit } from "@/lib/model/rate-unit";
+import { setActivePowerDisplayUnit } from "@/lib/format/rate-unit";
 import { buildPowerRecipe } from "@/lib/power/power-recipe";
 import { turbineFlowCheck } from "@/lib/power/turbine-flow";
 import { buildFootView, type TurbineFoot } from "./clean-model";

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { formatPowerValue } from "./resources";
+import { formatPowerValue } from "./numbers";
 
 import {
   formatPortRate,

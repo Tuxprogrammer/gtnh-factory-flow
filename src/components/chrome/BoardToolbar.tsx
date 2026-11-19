@@ -6,7 +6,7 @@ import { useRef, useState } from "react";
 import { useDeviceSettings } from "@/lib/device-settings";
 import { isLiveConfigured } from "@/lib/live/live-config";
 import { leaveLibrary } from "@/lib/library/library-tab";
-import type { RateUnit } from "@/lib/model/rate-unit";
+import type { RateUnit } from "@/lib/format/rate-unit";
 import { requestNewTask, setTaskView, useTaskView } from "@/lib/tasks/task-board-ui";
 import { tipAttrs } from "@/components/flow/clean/interaction";
 import "@/components/tasks/tasks.css";

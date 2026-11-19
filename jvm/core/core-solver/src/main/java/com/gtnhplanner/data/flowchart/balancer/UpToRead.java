@@ -283,10 +283,10 @@ public final class UpToRead {
     /** Whether every machine of a pool stands still at the committed point (within the solve's dust). */
     private static boolean idle(final SolveContext ctx, final int pool) {
         final StageOutcome point = ctx.point();
-        final double dust = ctx.heuristics.numerics().dust
-            * ctx.solutionScale(point.extents, point.flows, point.externals);
+        final double[] scales = ctx.dustScales(point.extents, point.flows, point.externals)
+            .machines();
         for (final int m : ctx.model.pools.get(pool)
-            .machines()) if (point.extents[m] > dust) return false;
+            .machines()) if (point.extents[m] > ctx.heuristics.numerics().dust * scales[m]) return false;
         return true;
     }
 
@@ -492,8 +492,8 @@ public final class UpToRead {
     private static double forcedDemand(final SolveContext ctx, final int pool) {
         final ModelData model = ctx.model;
         final StageOutcome point = ctx.point();
-        final double dust = ctx.heuristics.numerics().dust
-            * ctx.solutionScale(point.extents, point.flows, point.externals);
+        final double[] scales = ctx.dustScales(point.extents, point.flows, point.externals)
+            .ports();
         final Set<Integer> counted = new HashSet<>();
         double demand = 0;
         for (final int m : model.pools.get(pool)
@@ -509,7 +509,8 @@ public final class UpToRead {
                     if (!port.input() || model.portComponent[q] != network
                         || counted.contains(q)
                         || ctx.drawnPorts.contains(q)) continue;
-                    if (!isExact(ctx, port.machine()) || !(point.externals[q] > dust)) continue;
+                    if (!isExact(ctx, port.machine())
+                        || !(point.externals[q] > ctx.heuristics.numerics().dust * scales[q])) continue;
                     counted.add(q);
                     demand += point.externals[q] / perMachine;
                 }

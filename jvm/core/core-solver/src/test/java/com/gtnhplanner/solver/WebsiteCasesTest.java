@@ -44,13 +44,9 @@ class WebsiteCasesTest {
 
     private static final String REPORT = System.getProperty("gtnhplanner.solver.casesReport", "");
 
-    private static final String DUST = "the website judges solver dust per wire network, the kernel over the whole point"
-        + " (website 95b196cf): billions of EU a second zero a real 0.03/s wire and the answer fails its own check";
     private static final String RELAXATION = "the website checks the drawer relaxation's point as every other model's;"
         + " the kernel takes it unchecked, so a pin it cannot hold (negative crafts) explains a drawer the website does not";
     private static final String OIL_LINE = "the oil line of website 07b310f3 (loosened holds): see the state note";
-    private static final String ALTERNATIVES = "one other place for a leftover found by each engine, not the same one:"
-        + " see the state note";
 
     /**
      * Cases the two engines answer differently, with why. A listed case that agrees fails, so the list never outlives
@@ -74,17 +70,9 @@ class WebsiteCasesTest {
                 + " plan > Up to 2 solves at the 0.3 machines it needs (forward columns) #4",
             OIL_LINE),
         Map.entry(
-            "src/lib/solver/plan/solve-core.test.ts > dust is judged per network > billions of EU a second leave a"
-                + " 0.03/s item flow standing #15",
-            DUST),
-        Map.entry(
             "src/lib/solver/plan/solve-plan.test.ts > unneeded and idle islands > islands whose pins cannot hold leave"
                 + " the others solved and say why #20",
-            RELAXATION),
-        Map.entry(
-            "src/lib/solver/plan/to-plan.test.ts > example 'alumina-line-shared-reactor' > a Pool plan is wired per"
-                + " resource and runs with the old Pool's counts #7",
-            ALTERNATIVES));
+            RELAXATION));
 
     private static final List<String> reported = new ArrayList<>();
 

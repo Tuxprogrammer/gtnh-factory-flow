@@ -1092,8 +1092,8 @@
     },
     "solver/website/cases.json.gz": {
       "area": "solver/website",
-      "bytes": 167578,
-      "sha256": "5dd4f49e7d68c9904fb8c835c4f8b415e7a4aab66b82c6d9a9896f11d649b7b7"
+      "bytes": 116856,
+      "sha256": "29c20dd6ba231e2cb2905198dd0be4dff25519b3c56b16e3d8baf22ce1d8a902"
     },
     "tasks/order-key-vectors.json": {
       "area": "tasks",

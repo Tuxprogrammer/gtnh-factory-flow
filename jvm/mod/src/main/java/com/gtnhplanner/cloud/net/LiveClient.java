@@ -20,7 +20,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.gtnhplanner.GtnhPlanner;
+import com.gtnhplanner.core.base.Log;
 
 /**
  * The live service's protocol (version 1, {@code docs/design/cloud-live.md}) over {@link LiveSocket}: hello and
@@ -313,7 +313,7 @@ public final class LiveClient {
             if (("close:" + LiveSocket.CLOSE_TOO_BIG).equals(reason) && culprit != null) {
                 // The service closed on a frame it found too big: that batch can never succeed, so it is refused here
                 // (and not sent again) rather than looping through reconnects.
-                GtnhPlanner.LOG
+                Log.get()
                     .error("Live: the service closed on a frame too big (an edit to {}); dropping it", culprit[0]);
                 for (final Listener l : listeners)
                     l.onRefused(culprit[0], culprit[1], "too_big", "the batch was too big for the service");
@@ -324,7 +324,8 @@ public final class LiveClient {
 
     private void received(final String text) {
         if (tooDeep(text)) {
-            GtnhPlanner.LOG.warn("Live: dropped a frame nested more than {} deep", MAX_DEPTH);
+            Log.get()
+                .warn("Live: dropped a frame nested more than {} deep", MAX_DEPTH);
             return;
         }
         final JsonObject o;
@@ -332,10 +333,12 @@ public final class LiveClient {
             o = new JsonParser().parse(text)
                 .getAsJsonObject();
         } catch (final StackOverflowError e) {
-            GtnhPlanner.LOG.warn("Live: dropped a frame too deeply nested to read");
+            Log.get()
+                .warn("Live: dropped a frame too deeply nested to read");
             return;
         } catch (final RuntimeException e) {
-            GtnhPlanner.LOG.debug("Live: unreadable frame", e);
+            Log.get()
+                .debug("Live: unreadable frame", e);
             return;
         }
         final String t = str(o, "t");
@@ -423,9 +426,11 @@ public final class LiveClient {
                 }
             }
         } catch (final StackOverflowError e) {
-            GtnhPlanner.LOG.warn("Live: dropped a '{}' frame too deeply nested to read", t);
+            Log.get()
+                .warn("Live: dropped a '{}' frame too deeply nested to read", t);
         } catch (final RuntimeException e) {
-            GtnhPlanner.LOG.warn("Live: a '{}' frame did not read", t, e);
+            Log.get()
+                .warn("Live: a '{}' frame did not read", t, e);
         }
     }
 

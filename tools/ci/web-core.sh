@@ -59,7 +59,22 @@ done
 full=()
 if [ "${CI_WEB_CORE_FULL:-}" = true ] || [ "${WEB_CORE_FULL:-}" = 1 ]; then full=(--full); fi
 say "conformance: ${full[*]:-sampled on the JavaScript target}"
-node tools/web-core/run.mjs --build "$teavm" --random "$build/random/cases.jsonl" "${full[@]}" || fail "the compiled core differs from the vectors or from the JVM (above)"
+# One Node process per target, side by side: the JavaScript target is the slow one and nothing it computes is read by the
+# other, so the run takes as long as the longer of the two. The JVM-against-Node check of the random cases does not depend on
+# the target and runs in the WebAssembly process only. Each process's lines are printed whole, WebAssembly first.
+logs="$build/conformance"
+rm -rf "$logs"; mkdir -p "$logs"
+run_target() { # target, extra run.mjs arguments
+  local target="$1"; shift
+  pin node tools/web-core/run.mjs --build "$teavm" --random "$build/random/cases.jsonl" --targets "$target" "$@" "${full[@]}" >"$logs/$target.log" 2>&1
+}
+run_target wasm & wasm_pid=$!
+run_target js --no-jvm-node & js_pid=$!
+status=0
+wait "$wasm_pid" || status=1
+wait "$js_pid" || status=1
+cat "$logs/wasm.log" "$logs/js.log"
+[ "$status" = 0 ] || fail "the compiled core differs from the vectors or from the JVM (above)"
 done=$(date +%s)
 say "build $((built - started))s, conformance $((done - built))s"
 say "PASS"

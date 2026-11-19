@@ -4,6 +4,9 @@
 //   platline-x4, platline-x10                   the platline tiled 4 and 10 times (the inputs are built here as the mod's
 //                                               SolverCorpus.tile does); x10 only with `bench`
 //   conformance/solver/up-to/*.json             74 plans, each with the website's answer
+//   conformance/solver/website/cases.json.gz    223 inputs the website's own tests and reference plans solve, each with the
+//                                               website's answer (WebsiteCasesTest): 219 equal by the rule below, 3 listed as
+//                                               differing and 1 as equal within the LP's tolerance, each with its reason
 // The rule, from SolverCorpus.differences: the same keys, the same array lengths and order, and numbers equal when
 // p == q or |p - q| <= 1e-6 * max(1, |p|, |q|). Three Up to plans are held to the part of the answer the JVM test holds
 // them to (UpToParityTest.WITHIN_TOLERANCE). With `jvmDir` (digests the JVM's DigestDump wrote) each answer is also
@@ -11,6 +14,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
+import { gunzipSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { sampleOf } from "./sample.mjs";
 
@@ -20,6 +24,20 @@ const readJson = (file) => JSON.parse(readFileSync(file, "utf8"));
 
 /** Plans the website's engine and the mod's answer alike only to within the LP's tolerance (UpToParityTest). */
 const WITHIN_TOLERANCE = new Set(["mv-every-count-up-to.json", "idle-noise.json", "idle-noise-beside-a-lone-card.json"]);
+
+/**
+ * Website cases the two engines answer differently (WebsiteCasesTest.DIFFERS): the website's HiGHS missed a held row by about
+ * 1e-7 and its least flow found no point, so it ran again with every hold loosened by 1e-6; ojAlgo keeps the rows to 1e-12 and
+ * the core's answer is the exact one. A listed case that agrees fails, so the list never outlives its reason.
+ */
+const OIL_LINE = "src/lib/solver/plan/loosened-holds.test.ts > held levels read off a slightly inexact point never fail the plan > ";
+const WEBSITE_DIFFERS = new Set([
+  `${OIL_LINE}Up to 0.31 solves at the 0.3 machines it needs (forward columns) #3`,
+  `${OIL_LINE}Up to 0.5 solves at the 0.3 machines it needs (forward columns) #2`,
+  `${OIL_LINE}Up to 1 solves at the 0.3 machines it needs (forward columns) #1`,
+]);
+/** Website cases equal only to within the LP's own tolerance (WebsiteCasesTest.WITHIN_TOLERANCE): read-outs and counts. */
+const WEBSITE_WITHIN_TOLERANCE = new Set([`${OIL_LINE}Up to 2 solves at the 0.3 machines it needs (forward columns) #4`]);
 
 export const TILES = { "platline-x4": 4, "platline-x10": 10 };
 
@@ -157,6 +175,7 @@ export function solverCases({ bench = false } = {}) {
       tolerance: WITHIN_TOLERANCE.has(f),
     });
   }
+  cases.push(...websiteCases());
   return cases;
 }
 
@@ -167,10 +186,38 @@ export function solverCases({ bench = false } = {}) {
 const HEAVY = ["gtnh-flow-palladium_line", "platline-x4"];
 const UP_TO_EVERY = 4;
 
+/** The website's cases, as the cases of solverCases. */
+function websiteCases() {
+  const file = solverDir("website/cases.json.gz");
+  const { cases } = JSON.parse(gunzipSync(readFileSync(file)).toString("utf8"));
+  return cases.map((c) => ({
+    name: `website: ${c.name}`,
+    kind: "website",
+    input: JSON.stringify(c.input),
+    expected: c.answer,
+    differs: WEBSITE_DIFFERS.has(c.name),
+    tolerance: WEBSITE_WITHIN_TOLERANCE.has(c.name),
+    listed: WEBSITE_DIFFERS.has(c.name) || WEBSITE_WITHIN_TOLERANCE.has(c.name),
+  }));
+}
+
+/** WebsiteCasesTest.engineWords: what a SOLVER_UNSATISFIABLE note says after its key is the LP engine's own status. */
+function engineWords(digest) {
+  if (Array.isArray(digest)) digest.forEach(engineWords);
+  else if (digest && typeof digest === "object") {
+    if (digest.message === "SOLVER_UNSATISFIABLE") digest.args = ["(the engine's status)"];
+    Object.values(digest).forEach(engineWords);
+  }
+  return digest;
+}
+
+/** The digest of a failed answer as the website writes it: the name of its failure. */
+const asWebsiteDigest = (digest) => (digest.failure ? { failed: digest.failure.message } : digest);
+
 /** The cases of the JavaScript sample. */
 export function jsSample(cases) {
   const light = cases.filter((c) => !HEAVY.some((h) => c.name.includes(h)));
-  const group = (c) => (c.kind === "up to" && c.file.endsWith("every-count-up-to.json") ? "every count Up to" : c.name);
+  const group = (c) => (c.kind === "up to" && c.file.endsWith("every-count-up-to.json") ? "every count Up to" : c.kind === "website" ? "website cases" : c.name);
   return sampleOf(light, UP_TO_EVERY, group);
 }
 
@@ -202,7 +249,7 @@ export function runSolver(api, tally, { bench = false, jvmDir = null, runs = 1, 
   }
   const cases = select(solverCases({ bench }));
   for (const c of cases) {
-    const group = c.kind === "golden" ? "solver goldens" : "solver up to";
+    const group = c.kind === "golden" ? "solver goldens" : c.kind === "website" ? "solver website" : "solver up to";
     let actual = null;
     let ms = 0;
     try {
@@ -227,6 +274,22 @@ export function runSolver(api, tally, { bench = false, jvmDir = null, runs = 1, 
       const own = c.dropUnneeded ? structuredClone(actual) : actual;
       if (c.dropUnneeded) delete own.solution.unneeded;
       diffs = differences(expected, own);
+    } else if (c.kind === "website") {
+      const expected = engineWords(normalised(structuredClone(c.expected)));
+      const own = engineWords(structuredClone(asWebsiteDigest(actual)));
+      const d = differences(expected, own);
+      if (c.differs) {
+        // The listed difference must still be there, and both sides must have solved.
+        const solved = Boolean(expected.solution) && Boolean(own.solution);
+        diffs = d.length > 0 && solved ? [] : [d.length === 0 ? "is listed as differing but now agrees: take it off the list" : "must solve on both sides"];
+      } else if (c.tolerance) {
+        diffs = [
+          ...(d.length === 0 ? ["is listed as within tolerance but now agrees exactly"] : []),
+          ...differences(part(expected, "upTo"), part(own, "upTo")),
+          ...differences(part(expected, "upToLoops"), part(own, "upToLoops")),
+          ...countsDiffer(part(expected, "machineCounts"), part(own, "machineCounts")),
+        ];
+      } else diffs = d;
     } else if (c.tolerance) {
       const expected = normalised(structuredClone(c.expected));
       diffs = [

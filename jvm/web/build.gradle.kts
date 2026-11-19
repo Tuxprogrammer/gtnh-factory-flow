@@ -68,6 +68,10 @@ val webModules: List<WebModule> = run {
 }
 val plain = providers.gradleProperty("plain").isPresent // readable names, for debugging
 val firstModule = webModules.first()
+// BALANCED, not AGGRESSIVE: the same speed on the conformance run (within its noise) in 22 to 34 percent fewer gzipped bytes on the
+// wire (README.md, "Compiler options"). -PwebOptimization=AGGRESSIVE|NONE rebuilds with another level to compare.
+val webOptimization = providers.gradleProperty("webOptimization").map { OptimizationLevel.valueOf(it) }
+    .orElse(OptimizationLevel.BALANCED)
 
 teavm {
     js {
@@ -76,14 +80,14 @@ teavm {
         moduleType.set(JSModuleType.ES2015)
         obfuscated.set(!plain)
         sourceMap.set(true)
-        optimization.set(OptimizationLevel.AGGRESSIVE)
+        optimization.set(webOptimization)
         targetFileName.set("${firstModule.name}.js")
     }
     wasmGC {
         mainClass.set(firstModule.main)
         preservedClasses.addAll(firstModule.exports)
         obfuscated.set(!plain)
-        optimization.set(OptimizationLevel.AGGRESSIVE)
+        optimization.set(webOptimization)
         targetFileName.set("${firstModule.name}.wasm")
     }
 }

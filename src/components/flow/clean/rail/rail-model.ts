@@ -1,6 +1,10 @@
 import { isCustomRateRecipe } from "@/lib/model/custom-rate";
 import { isFluidTankRecipe } from "@/lib/model/fluid-tank";
-import { buildMachineList, type MachineListEntry } from "@/lib/model/machine-list";
+import {
+  buildMachineList,
+  machinesFromUnits,
+  type MachineListEntry,
+} from "@/lib/model/machine-list";
 import { pinRuleOf, type PinRule } from "@/lib/model/pin-rule";
 import type { PlanUpTo } from "@/lib/solver/plan/types";
 import { makeResourceKey } from "@/lib/model/resources";
@@ -239,13 +243,14 @@ export function buildRailModel(
       const pinned = rule !== "any" && pin !== undefined && pin > 0;
       const upTo = rule === "upTo" ? result.plan?.upTo?.[entry.nodeId] : undefined;
       // An Up to card lists what runs, not what is set.
-      const count = upTo ? Math.max(0, upTo.reached) : entry.count;
+      // A crop card's solved units are seeds: the line counts the harvesters they fill.
+      const count = upTo ? machinesFromUnits(entry, Math.max(0, upTo.reached)) : entry.count;
       return {
         ...entry,
         count,
         pinned,
         rule,
-        ...(pinned ? { pin } : {}),
+        ...(pinned ? { pin: machinesFromUnits(entry, pin) } : {}),
         ...(upTo ? { upTo } : {}),
       };
     });

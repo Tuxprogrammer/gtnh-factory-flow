@@ -9,7 +9,9 @@ import java.lang.classfile.constantpool.ClassEntry;
 import java.lang.classfile.constantpool.MemberRefEntry;
 import java.lang.classfile.constantpool.PoolEntry;
 import java.lang.classfile.constantpool.Utf8Entry;
+import java.lang.classfile.Instruction;
 import java.lang.classfile.instruction.ConstantInstruction;
+import java.lang.classfile.instruction.ConvertInstruction;
 import java.lang.classfile.instruction.ExceptionCatch;
 import java.lang.classfile.instruction.FieldInstruction;
 import java.lang.classfile.instruction.InvokeDynamicInstruction;
@@ -18,6 +20,7 @@ import java.lang.classfile.instruction.LineNumber;
 import java.lang.classfile.instruction.NewMultiArrayInstruction;
 import java.lang.classfile.instruction.NewObjectInstruction;
 import java.lang.classfile.instruction.NewReferenceArrayInstruction;
+import java.lang.classfile.instruction.OperatorInstruction;
 import java.lang.classfile.instruction.TypeCheckInstruction;
 import java.lang.constant.ClassDesc;
 import java.lang.constant.ConstantDesc;
@@ -148,6 +151,12 @@ public final class PurityCheck {
                 case "classpath", "member" -> anyGlob(f[2]);
                 case "source" -> Pattern.compile(f[2]);
                 case "class", "concat" -> null;
+                case "op" -> {
+                    if (!OPS.containsKey(f[2].strip())) {
+                        throw new IllegalArgumentException("rules.txt:" + n + ": no operation " + f[2]);
+                    }
+                    yield null;
+                }
                 default -> throw new IllegalArgumentException("rules.txt:" + n + ": no kind " + f[1]);
             };
             matches.add(new Match(f[0], f[1], f[2], regex));
@@ -299,6 +308,9 @@ public final class PurityCheck {
                             line,
                             hit);
                         else if (e instanceof InvokeDynamicInstruction d) indy(d, line, hit);
+                        else if (e instanceof OperatorInstruction || e instanceof ConvertInstruction) op(((Instruction) e)
+                            .opcode()
+                            .name(), line, hit);
                         else if (e instanceof TypeCheckInstruction t) classRef(t.type()
                             .asInternalName(), line, hit);
                         else if (e instanceof NewObjectInstruction o) classRef(o.className()
@@ -378,6 +390,33 @@ public final class PurityCheck {
         for (final Match m : matches) {
             if (m.kind.equals("member") && m.regex.matcher(text)
                 .matches()) hit.add(m.rule, line, "call " + owner + "." + name + type);
+        }
+    }
+
+    /** The arithmetic and conversion instructions an {@code op} rule can name, and how a finding spells them. */
+    static final Map<String, String> OPS = new LinkedHashMap<>();
+    static {
+        OPS.put("D2F", "cast of a double to float");
+        OPS.put("I2F", "int converted to float");
+        OPS.put("L2F", "long converted to float");
+        OPS.put("FADD", "float addition");
+        OPS.put("FSUB", "float subtraction");
+        OPS.put("FMUL", "float multiplication");
+        OPS.put("FDIV", "float division");
+        OPS.put("FREM", "float remainder (%)");
+        OPS.put("DREM", "double remainder (%)");
+        OPS.put("FNEG", "float negation");
+        OPS.put("DNEG", "double negation");
+        OPS.put("D2I", "cast of a double to int");
+        OPS.put("D2L", "cast of a double to long");
+        OPS.put("F2I", "cast of a float to int");
+        OPS.put("F2L", "cast of a float to long");
+    }
+
+    void op(final String opcode, final int line, final Hit hit) {
+        for (final Match m : matches) {
+            if (m.kind.equals("op") && m.text.strip()
+                .equals(opcode)) hit.add(m.rule, line, OPS.get(opcode));
         }
     }
 

@@ -185,3 +185,24 @@ rule log4j No log4j or other logging library: log through core-base's Log, which
 log4j classpath org.apache.logging.log4j:*
 log4j class org/apache/logging/
 log4j class org/slf4j/
+
+rule float-narrow The web compile's JavaScript target does not narrow a float: a cast from double, float arithmetic and an int or long converted to float all stay doubles there (0.1 stays 0.1, 16777217 stays exact), where the JVM and the WebAssembly target round to single precision; a float field, local, parameter, return, record component or boxed Float then carries the wrong number. Literals, float[] stores and Float.floatToIntBits narrow on every target. Round at the point of the narrowing through core-base's Float32 (Float32.of(double) for a cast, Float32.add, sub, mul, div for the four operations, Float32.of(int or long) for a conversion), which narrows on every target.
+float-narrow op D2F
+float-narrow op I2F
+float-narrow op L2F
+float-narrow op FADD
+float-narrow op FSUB
+float-narrow op FMUL
+float-narrow op FDIV
+
+rule remainder The web compile's WebAssembly GC target computes % on a double or float as x - trunc(x / y) * y, which is not the exact remainder: 123456.789 % 0.001 gives 0 (the JVM and JavaScript give 1.7374062258324052e-12), 3.4028236e38 % 2 gives 3.4028236e38 (not 0), -0.1 % 0.1 gives 0 (not -0), and 0 % -0 gives 0 (not NaN). Use core-base's JsMath.rem, the exact remainder (fmod) on every target.
+remainder op DREM
+remainder op FREM
+
+rule negate The web compile's WebAssembly GC target compiles -x on a double or float as 0.0 - x, so the negation of 0 is 0 where the JVM and JavaScript give -0. Wherever the sign of a zero can reach a result (division, Math.atan2, copySign, Double.compare, a boxed Double used as a key or text), write the negation as x * -1.0.
+negate op DNEG
+negate op FNEG
+
+rule double-to-integer The web compile's JavaScript target converts a double to int or long by wrapping where the JVM and the WebAssembly target saturate: (int) 1e10 is 2147483647 on the JVM and 1410065408 on JavaScript. A cast of a value that can leave the range of the integer type must clamp first.
+double-to-integer op D2I
+double-to-integer op D2L

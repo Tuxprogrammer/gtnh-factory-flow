@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { VIEW_SETTINGS } from "@/lib/view-settings.generated";
 
 /**
  * The minimap's settings, the mod's: show, size, shape, corner, and whether it follows the card you select. Its
@@ -9,7 +10,7 @@ import { useSyncExternalStore } from "react";
  * rows both write through `setMinimap`.
  */
 
-export const MINIMAP_KEY = "boardMinimap";
+export const MINIMAP_KEY: string = VIEW_SETTINGS.minimapShow.key;
 
 export type MinimapSize = "small" | "medium" | "large" | "huge";
 export type MinimapShape = "square" | "circle";
@@ -24,26 +25,27 @@ export interface MinimapSettings {
   follow: boolean;
 }
 
-/** The mod's 110/160/220/300 GUI px, x1.19 for the page. */
-export const MINIMAP_SIZES: Record<MinimapSize, number> = { small: 130, medium: 190, large: 260, huge: 355 };
-export const MINIMAP_SIZE_LABELS: Record<MinimapSize, string> = {
-  small: "Small",
-  medium: "Medium",
-  large: "Large",
-  huge: "Huge",
-};
-export const MINIMAP_CORNER_LABELS: Record<MinimapCorner, string> = {
-  "top-left": "Top left",
-  "top-right": "Top right",
-  "bottom-left": "Bottom left",
-  "bottom-right": "Bottom right",
-};
+const SIZE = VIEW_SETTINGS.minimapSize;
+const CORNER = VIEW_SETTINGS.minimapCorner;
+
+/** The sizes in GUI px as the mod has them, scaled for the page (settings.json). */
+export const MINIMAP_SIZES = Object.fromEntries(SIZE.ids.map((id, i) => [id, SIZE.values[i]])) as Record<
+  MinimapSize,
+  number
+>;
+export const MINIMAP_SIZE_LABELS = Object.fromEntries(SIZE.ids.map((id, i) => [id, SIZE.labels[i]])) as Record<
+  MinimapSize,
+  string
+>;
+export const MINIMAP_CORNER_LABELS = Object.fromEntries(
+  CORNER.ids.map((id, i) => [id, CORNER.labels[i]]),
+) as Record<MinimapCorner, string>;
 export const DEFAULT_MINIMAP: MinimapSettings = {
-  show: false,
-  size: "small",
-  shape: "square",
-  corner: "bottom-right",
-  follow: false,
+  show: VIEW_SETTINGS.minimapShow.default,
+  size: SIZE.default,
+  shape: VIEW_SETTINGS.minimapCircle.default ? "circle" : "square",
+  corner: CORNER.default,
+  follow: VIEW_SETTINGS.minimapFollow.default,
 };
 
 const SIZES = Object.keys(MINIMAP_SIZES) as MinimapSize[];

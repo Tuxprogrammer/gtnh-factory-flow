@@ -6,19 +6,22 @@
  */
 
 import { PHONE_MAX_HEIGHT, PHONE_MAX_WIDTH } from "@/lib/viewport-breakpoints";
+import { VIEW_SETTINGS } from "@/lib/view-settings.generated";
 
-export const UI_SCALE_STORAGE_KEY = "gtnh-factory-flow.ui-scale.v1";
+const UI_SCALE = VIEW_SETTINGS.uiScalePercent;
+
+export const UI_SCALE_STORAGE_KEY: string = UI_SCALE.key;
 
 /** What the setting's 100% renders at, on a desktop-sized window. */
-export const UI_SCALE_BASE = 1.17;
+export const UI_SCALE_BASE: number = UI_SCALE.base;
 
 /** What the setting's 100% renders at on a phone-sized window. */
-export const UI_SCALE_PHONE_BASE = 0.9;
+export const UI_SCALE_PHONE_BASE: number = UI_SCALE.phoneBase;
 
-export const UI_SCALE_MIN_PERCENT = 60;
-export const UI_SCALE_MAX_PERCENT = 200;
-export const UI_SCALE_STEP_PERCENT = 10;
-export const DEFAULT_UI_SCALE_PERCENT = 100;
+export const UI_SCALE_MIN_PERCENT: number = UI_SCALE.min;
+export const UI_SCALE_MAX_PERCENT: number = UI_SCALE.max;
+export const UI_SCALE_STEP_PERCENT: number = UI_SCALE.step;
+export const DEFAULT_UI_SCALE_PERCENT: number = UI_SCALE.default;
 
 export const UI_SCALE_VAR = "--ui-scale";
 export const UI_SCALE_INVERSE_VAR = "--ui-scale-inverse";

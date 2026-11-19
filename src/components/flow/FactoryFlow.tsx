@@ -315,6 +315,7 @@ import { isPowerDisplayUnit, type RateUnit } from "@/lib/model/rate-unit";
 import { useIsCompactViewport } from "@/lib/compact-view";
 import { useUiScale } from "@/lib/ui-scale";
 import { subscribeDeviceSettings, wheelChangesValues } from "@/lib/device-settings";
+import { VIEW_SETTINGS } from "@/lib/view-settings.generated";
 import { BOARD_TOOL_SCALE, useToolbarFold } from "./toolbar-fold";
 import { browseHoveredPort } from "./port-browse";
 import { useBoardTouchGestures } from "./board-touch-gestures";
@@ -7510,7 +7511,7 @@ const SourceToolbar = memo(function SourceToolbar({
   useFoldoutDismiss(isPowerUnitMenuOpen, powerUnitRef, closePowerUnitMenu);
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("gtnh-factory-flow.power-display-unit.v1");
+      const saved = localStorage.getItem(VIEW_SETTINGS.powerDisplay.key);
       if (isPowerDisplayUnit(saved)) setPowerDisplayUnit(saved);
     } catch { /* Use EU/t when storage is unavailable. */ }
   }, [setPowerDisplayUnit]);

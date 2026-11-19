@@ -2,6 +2,10 @@ import type { FactoryProject, ResourceKind } from "@/lib/model/types";
 import { pinRuleOf } from "@/lib/model/pin-rule";
 import { GT_VOLTAGE_TIERS } from "@/lib/model/tiers";
 import type { SfxName } from "./sfx";
+import { VIEW_SOUNDS } from "@/lib/view-sounds.generated";
+
+const { tier: TIER_LADDER, coil: COIL_LADDER, drawerRule: RULE_LADDER } = VIEW_SOUNDS.ladders;
+const { wheelUp: WHEEL_UP, wheelDown: WHEEL_DOWN } = VIEW_SOUNDS.pitches;
 
 /**
  * What the board's edits sound of, read off the plan before and after (the mod plays these from `BoardSession`'s
@@ -154,7 +158,7 @@ export const cutSound = (kind: ResourceKind | undefined): SfxName =>
   kind === "power" ? "wire.power_cut" : kind === "fluid" ? "wire.fluid_cut" : "wire.cut";
 
 /** The tier dial's pitch (`Sfx.tier`). */
-export const tierPitch = (tier: number) => 0.62 * Math.pow(1.085, Math.max(0, tier));
+export const tierPitch = (tier: number) => TIER_LADDER.base * Math.pow(TIER_LADDER.ratio, Math.max(0, tier));
 const step = (rung: number, base: number, ratio: number) =>
   base * Math.pow(ratio, Math.max(0, rung));
 
@@ -218,7 +222,7 @@ export function soundForDiff(prev: BoardShot, next: BoardShot): DiffSound | unde
       return { name: "dial.tier", pitch: tierPitch(tierIndex(card.hatchTier)) };
     }
     if (card.coil !== was.coil)
-      return { name: "board.adjust", pitch: step(COILS.indexOf(card.coil), 0.8, 1.05) };
+      return { name: "board.adjust", pitch: step(COILS.indexOf(card.coil), COIL_LADDER.base, COIL_LADDER.ratio) };
     if (card.rest !== was.rest || card.tier !== was.tier || card.sections !== was.sections)
       return { name: "board.adjust" };
   }
@@ -228,14 +232,14 @@ export function soundForDiff(prev: BoardShot, next: BoardShot): DiffSound | unde
     if (drawer.rule !== was.rule)
       return {
         name: "board.adjust",
-        pitch: step(RULES.indexOf(drawer.rule || "ignore"), 0.9, 1.12),
+        pitch: step(RULES.indexOf(drawer.rule || "ignore"), RULE_LADDER.base, RULE_LADDER.ratio),
       };
     if (drawer.rate !== was.rate)
       return { name: drawer.rate > 0 ? "board.pin" : "board.unpin", settles: true };
     if (drawer.role !== was.role)
-      return { name: "board.adjust", pitch: step(drawer.role === "" ? 0 : 1, 0.9, 1.12) };
+      return { name: "board.adjust", pitch: step(drawer.role === "" ? 0 : 1, RULE_LADDER.base, RULE_LADDER.ratio) };
     if (drawer.buffer !== was.buffer)
-      return { name: "board.adjust", pitch: step(BUFFERS.indexOf(drawer.buffer), 0.9, 1.12) };
+      return { name: "board.adjust", pitch: step(BUFFERS.indexOf(drawer.buffer), RULE_LADDER.base, RULE_LADDER.ratio) };
     if (drawer.rest !== was.rest) return { name: "board.adjust" };
   }
   for (const [id, note] of next.notes) {
@@ -243,7 +247,7 @@ export function soundForDiff(prev: BoardShot, next: BoardShot): DiffSound | unde
     if (!was) continue;
     if (note.color !== was.color) return { name: "board.adjust" };
     if (note.font !== was.font)
-      return { name: "ui.tick", pitch: note.font > was.font ? 1.12 : 0.9 };
+      return { name: "ui.tick", pitch: note.font > was.font ? WHEEL_UP : WHEEL_DOWN };
   }
   return undefined;
 }

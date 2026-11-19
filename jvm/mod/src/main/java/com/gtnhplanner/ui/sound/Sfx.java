@@ -9,6 +9,7 @@ import java.util.Random;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
 
+import com.gtnhplanner.core.view.ViewSounds;
 import com.gtnhplanner.ui.PlannerSettings;
 import com.gtnhplanner.ui.Resources;
 import com.gtnhplanner.ui.tutorial.Tutorial;
@@ -70,24 +71,24 @@ public enum Sfx {
     WORLD_REMOVE("world.remove");
 
     /** The volume our click plays at to be as loud as the game's own click, which plays at a quarter. */
-    private static final float BASE = 0.573f;
+    private static final float BASE = (float) ViewSounds.BASE;
     /** Each play's loudness, up to this many decibels either way. */
-    private static final float LOUDNESS_DB = 1f;
+    private static final float LOUDNESS_DB = (float) ViewSounds.LOUDNESS_DB;
     /** Each play's pitch step in semitones, one picked at random; then the pitch lands on {@link #SCALE}. */
-    private static final int[] PITCH_STEPS = { -2, 0, 0, 0, 2 };
+    private static final int[] PITCH_STEPS = ViewSounds.PITCH_STEPS;
     /** The pentatonic scale every pitch lands on, in semitones within the octave (12 closes it). */
-    private static final int[] SCALE = { 0, 2, 4, 7, 9, 12 };
+    private static final int[] SCALE = ViewSounds.SCALE;
     /** A second play of a sound this soon is the same event twice (keys come in twice), and dropped. */
-    private static final long SAME_MS = 30;
+    private static final long SAME_MS = ViewSounds.SAME_MS;
     /**
      * Repeats inside this window play quieter, by {@link #DUCK} a time up to {@link #DUCK_FLOOR} times: the ear sums
      * pulses closer than ~200 ms, so a wheel spun would swell. Tight, so two deliberate actions do not duck.
      */
-    private static final long REPEAT_MS = 120;
-    private static final float DUCK = 0.6f;
-    private static final int DUCK_FLOOR = 3;
+    private static final long REPEAT_MS = ViewSounds.REPEAT_MS;
+    private static final float DUCK = (float) ViewSounds.DUCK;
+    private static final int DUCK_FLOOR = ViewSounds.DUCK_FLOOR;
     /** How near a click and a sound that says more must be to be one action. */
-    private static final long SAME_ACTION_MS = 80;
+    private static final long SAME_ACTION_MS = ViewSounds.SAME_ACTION_MS;
 
     private static final Random RANDOM = new Random();
     private static long quietUntil, lastSpecificAt = -1, lastClickAt = -1;
@@ -158,7 +159,8 @@ public enum Sfx {
         final float duck = (float) Math.pow(DUCK, Math.min(streak, DUCK_FLOOR));
         // A few cents either way, so a sound played over and over is never stamped out.
         final float step = vary ? (float) Math.pow(2, PITCH_STEPS[RANDOM.nextInt(PITCH_STEPS.length)] / 12.0) : 1f;
-        final float p = Math.max(0.5f, Math.min(2f, onScale(pitch * step)));
+        final float p = Math
+            .max((float) ViewSounds.PITCH_MIN, Math.min((float) ViewSounds.PITCH_MAX, onScale(pitch * step)));
         final float loud = (float) Math.pow(10, (RANDOM.nextFloat() * 2 - 1) * LOUDNESS_DB / 20);
         final ResourceLocation take = deal();
         final UiSound sound = new UiSound(take, Math.min(1f, BASE * gain * volume * duck * loud), p);
@@ -229,8 +231,23 @@ public enum Sfx {
 
     /** A voltage tier stepped to: pitched up the ladder, ULV low to MAX high. */
     public static void tier(final int tier) {
-        TIER.playStep(tier, 0.62f, 1.085f);
+        TIER.playStep(tier, (float) ViewSounds.TIER_LADDER_BASE, (float) ViewSounds.TIER_LADDER_RATIO);
     }
+
+    /** A coil tier chosen, pitched by its rung. */
+    public static void coil(final int rung) {
+        ADJUST.playStep(rung, (float) ViewSounds.COIL_LADDER_BASE, (float) ViewSounds.COIL_LADDER_RATIO);
+    }
+
+    /** A drawer rule, a drawer kind or a buffer mode chosen, pitched by its rung. */
+    public static void drawerRule(final int rung) {
+        ADJUST.playStep(rung, (float) ViewSounds.DRAWER_RULE_LADDER_BASE, (float) ViewSounds.DRAWER_RULE_LADDER_RATIO);
+    }
+
+    /** The pitch of a wheel step up and down, and the volume and pitch of a selection's click. */
+    public static final float WHEEL_UP = (float) ViewSounds.WHEEL_UP, WHEEL_DOWN = (float) ViewSounds.WHEEL_DOWN;
+    public static final float SELECT_VOLUME = (float) ViewSounds.SELECT_VOLUME,
+        SELECT_PITCH = (float) ViewSounds.SELECT_PITCH;
 
     /** No sounds for a moment: a plan loading, a tab switching (its cards are not landing, they were there). */
     public static void quietFor(final long ms) {

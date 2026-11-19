@@ -177,7 +177,8 @@ class LiveSocketTest {
         socket = open("ws", null);
         final Log log = new Log();
         socket.start();
-        await(log, socket, () -> socket.state() == LiveSocket.State.CLOSED);
+        // The event loop sets the state itself, so CLOSED can be read before its reason has been polled: wait for both.
+        await(log, socket, () -> socket.state() == LiveSocket.State.CLOSED && !log.reasons.isEmpty());
         assertEquals(LiveSocket.AUTH, log.reasons.get(log.reasons.size() - 1));
         Thread.sleep(500);
         socket.poll(log);

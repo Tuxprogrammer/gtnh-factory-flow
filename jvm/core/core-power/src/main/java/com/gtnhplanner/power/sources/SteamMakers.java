@@ -158,14 +158,14 @@ public final class SteamMakers {
      *
      * @param energyPerSecond energyConsumption x 20 / (cooldownInterval + 1), from the machine's class.
      */
-    private record SmallBoilerSpec(String id, String name, String unlock, double steamPerSecond, double energyPerSecond,
-        boolean automatable) {}
+    private record SmallBoilerSpec(String id, String name, String unlock, double steamPerSecond,
+        double energyPerSecond) {}
 
     private static final List<SmallBoilerSpec> SMALL_BOILER_SPECS = List.of(
         // MTEBoilerBronze: 120 L/s, consumption 1, cooldown interval 45.
-        new SmallBoilerSpec("small-coal-boiler", "Small Coal Boiler", "ULV", 120, 20.0 / 46, false),
+        new SmallBoilerSpec("small-coal-boiler", "Small Coal Boiler", "ULV", 120, 20.0 / 46),
         // MTEBoilerSteel, in-game name "Large Coal Boiler": 300 L/s, consumption 2, interval 40.
-        new SmallBoilerSpec("large-coal-boiler", "Large Coal Boiler", "LV", 300, 40.0 / 41, false));
+        new SmallBoilerSpec("large-coal-boiler", "Large Coal Boiler", "LV", 300, 40.0 / 41));
 
     private static final Pattern ASH_FUELS = Pattern
         .compile("coal|lignite|charcoal|coke|diamond", Pattern.CASE_INSENSITIVE);
@@ -204,10 +204,8 @@ public final class SteamMakers {
                 // euPerItem in the solid table IS the furnace burn time in ticks.
                 final double energyPerItem = (fuel.euPerItem != null ? fuel.euPerItem : 0) / 10;
                 final double secondsPerItem = energyPerItem / spec.energyPerSecond();
-                final List<String> warnings = new ArrayList<>();
-                if (!spec.automatable()) {
-                    warnings.add("GTNH turns small boiler automation off. Fuel goes in by hand.");
-                }
+                // GTNH's allowSmallBoilerAutomation=false locks only the bucket and cell slots: MTEBoiler.allowPutStack
+                // lets hoppers and pipes fill the fuel slot either way.
                 return new PowerModel(
                     0,
                     List.of(
@@ -216,8 +214,7 @@ public final class SteamMakers {
                     List.of(liters("Steam", spec.steamPerSecond())),
                     List.of(
                         stat("Steam", formatAmount(spec.steamPerSecond() / 20) + " L/t"),
-                        stat("One item burns", formatAmount(secondsPerItem) + "s")),
-                    warnings);
+                        stat("One item burns", formatAmount(secondsPerItem) + "s")));
             });
     }
 

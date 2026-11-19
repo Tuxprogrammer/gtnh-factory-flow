@@ -159,7 +159,6 @@ interface SmallBoilerSpec {
   steamPerSecond: number;
   /** energyConsumption x 20 / (cooldownInterval + 1), from the machine's class. */
   energyPerSecond: number;
-  automatable: boolean;
 }
 
 const SMALL_BOILER_SPECS: SmallBoilerSpec[] = [
@@ -170,7 +169,6 @@ const SMALL_BOILER_SPECS: SmallBoilerSpec[] = [
     unlock: "ULV",
     steamPerSecond: 120,
     energyPerSecond: 20 / 46,
-    automatable: false,
   },
   // MTEBoilerSteel, in-game name "Large Coal Boiler": 300 L/s, consumption 2, interval 40.
   {
@@ -179,7 +177,6 @@ const SMALL_BOILER_SPECS: SmallBoilerSpec[] = [
     unlock: "LV",
     steamPerSecond: 300,
     energyPerSecond: 40 / 41,
-    automatable: false,
   },
 ];
 
@@ -221,10 +218,8 @@ function buildSmallBoiler(spec: SmallBoilerSpec): PowerSourceDefinition {
       // euPerItem in the solid table IS the furnace burn time in ticks.
       const energyPerItem = (fuel.euPerItem ?? 0) / 10;
       const secondsPerItem = energyPerItem / spec.energyPerSecond;
-      const warnings: string[] = [];
-      if (!spec.automatable) {
-        warnings.push("GTNH turns small boiler automation off. Fuel goes in by hand.");
-      }
+      // GTNH's allowSmallBoilerAutomation=false locks only the bucket and cell slots:
+      // MTEBoiler.allowPutStack lets hoppers and pipes fill the fuel slot either way.
       return {
         euPerTick: 0,
         inputs: [
@@ -236,7 +231,6 @@ function buildSmallBoiler(spec: SmallBoilerSpec): PowerSourceDefinition {
           stat("Steam", `${formatAmount(spec.steamPerSecond / 20)} L/t`),
           stat("One item burns", `${formatAmount(secondsPerItem)}s`),
         ],
-        warnings,
       };
     },
   };

@@ -315,7 +315,8 @@ describe("singleblock boilers (game source constants)", () => {
     expect(model.inputs[0]).toMatchObject({ name: "Coal", unit: "item" });
     expect(model.inputs[0].perSecond).toBeCloseTo(1 / 368, 12);
     expect(model.inputs[1]).toEqual({ name: "Water", perSecond: 120 / 160, unit: "L" });
-    expect(model.warnings?.some((line) => line.includes("by hand"))).toBe(true);
+    // MTEBoiler.allowPutStack takes fuel from hoppers and pipes even with automation off.
+    expect(model.warnings ?? []).toEqual([]);
   });
 
   it("burns the Large Coal Boiler at 2 energy per 41t: one coal is 164s of 300 L/s", () => {

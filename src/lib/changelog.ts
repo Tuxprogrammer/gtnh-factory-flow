@@ -40,6 +40,23 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "4.7.0-tux.1",
+    date: "2026-11-19",
+    headline: "Bug fixes for this server's pack",
+    notes: [
+      "The planner follows this pack's rates: crops and bees yield what they do in game, and furnaces, the Scanner and the Rock Breaker run at their real speed.",
+      "Steam machines round each run up to a whole tick and are only offered for recipes they can run.",
+      "Furnaces, the Multi Smelter and the Algae Farm now show their power draw, and the Multi Smelter, Industrial Sledgehammer and Large Thermal Refinery have their coil and solenoid settings.",
+      "Bee cards can use a plain Apiary or Bee House, and the Railcraft boiler burns wood and coal dusts.",
+      "Cards no longer turn invisible after switching tabs, and zoomed out each card shows its name and what it makes.",
+      "A chain of buffer drawers keeps its surplus, and a second drawer on one port says why it gets nothing.",
+      "The Overview updates at once when you change the rate unit, names machines as their cards do, and shows Avg and Peak power.",
+      "Recipe search no longer flickers between page layouts, and scrolling a multi-choice input moves one choice per wheel click.",
+      "Arcane workbench recipes list their materials, and crafting recipes from AE2 and other mods show their real ingredients.",
+      "Image exports keep the planner's font, and bug reports now go to this server's own tracker.",
+    ],
+  },
+  {
     version: "4.7.0",
     date: "2026-10-26",
     headline: "Arrange with or without groups",

@@ -6,6 +6,8 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.view.card.CardModel;
+import com.gtnhplanner.core.view.card.CardTiers;
 import com.gtnhplanner.power.PowerModel;
 import com.gtnhplanner.power.PowerSetting;
 import com.gtnhplanner.power.PowerSource;
@@ -28,14 +30,16 @@ public final class PowerTiles {
 
     public static List<Tile> of(final CardModel model) {
         final List<Tile> tiles = new ArrayList<>();
-        final PowerSource source = model.power.source();
+        final PowerSource source = model.power()
+            .source();
         if (source != null) {
             for (final PowerSetting setting : source.settings()) {
                 if (setting == tierSetting(source)) continue;
                 tiles.add(new Tile(setting, null));
             }
         }
-        for (final PowerModel.Stat stat : model.power.stats()) tiles.add(new Tile(null, stat));
+        for (final PowerModel.Stat stat : model.power()
+            .stats()) tiles.add(new Tile(null, stat));
         return tiles;
     }
 
@@ -44,7 +48,7 @@ public final class PowerTiles {
     public static PowerSetting.Select tierSetting(@Nullable final PowerSource source) {
         if (source == null) return null;
         return source.setting("tier") instanceof final PowerSetting.Select select
-            && CardDefaults.tierIndex(select.defaultKey()) >= 0 ? select : null;
+            && CardTiers.tierIndex(select.defaultKey()) >= 0 ? select : null;
     }
 
     /** A setting's live value as stored, its default filled in (settingValue). */

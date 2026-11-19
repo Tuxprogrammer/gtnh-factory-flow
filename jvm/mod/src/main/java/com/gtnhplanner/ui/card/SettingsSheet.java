@@ -75,7 +75,7 @@ public final class SettingsSheet extends Popup {
         List<com.gtnhplanner.machines.FormulaLine> formulas, int formulasX, int formulasW) {
 
         static Sheet of(final CardModel m) {
-            return of(SettingControls.of(m), com.gtnhplanner.machines.game.MachineModels.formulas(m.node, m.machines));
+            return of(CardSettings.of(m), com.gtnhplanner.machines.game.MachineModels.formulas(m.node, m.machines));
         }
 
         static Sheet of(final List<SettingControls.Control> controls,
@@ -487,7 +487,7 @@ public final class SettingsSheet extends Popup {
             int lx = x + 18;
             // A number's icon (a farm unit's block) goes before its name; a list shows the one picked in its box.
             if (c.icon() != null && c.type() == SettingControls.Type.NUMBER) {
-                Hyb.item(c.icon(), lx, y + 3, 12, 0);
+                Hyb.item(IconKeys.stack(c.icon()), lx, y + 3, 12, 0);
                 org.lwjgl.opengl.GL11.glDisable(org.lwjgl.opengl.GL11.GL_LIGHTING);
                 org.lwjgl.opengl.GL11.glDisable(org.lwjgl.opengl.GL11.GL_DEPTH_TEST);
                 lx += 16;
@@ -539,7 +539,7 @@ public final class SettingsSheet extends Popup {
                     well(x, y, w, hot && live && cx >= 0);
                     int tx = x + 5;
                     if (c.icon() != null) {
-                        Hyb.item(c.icon(), tx, y + 3, 12, 0);
+                        Hyb.item(IconKeys.stack(c.icon()), tx, y + 3, 12, 0);
                         org.lwjgl.opengl.GL11.glDisable(org.lwjgl.opengl.GL11.GL_LIGHTING);
                         org.lwjgl.opengl.GL11.glDisable(org.lwjgl.opengl.GL11.GL_DEPTH_TEST);
                         tx += 15;

@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
 
 /**
@@ -77,7 +78,44 @@ public final class Arrange {
      * @param cancelled    checked between steps and trials (null: never)
      */
     public record Input(List<ArrangeCard> cards, List<ArrangeWire> wires, Point origin, String spacing, Judge judge,
-        Integer polishBudget, Prices prices, Consumer<Progress> onProgress, BooleanSupplier cancelled) {}
+        Integer polishBudget, Prices prices, Consumer<Progress> onProgress, BooleanSupplier cancelled, Worker worker) {
+
+        /** With no second thread: the side-by-side searches run one after the other. */
+        public Input(final List<ArrangeCard> cards, final List<ArrangeWire> wires, final Point origin,
+            final String spacing, final Judge judge, final Integer polishBudget, final Prices prices,
+            final Consumer<Progress> onProgress, final BooleanSupplier cancelled) {
+            this(cards, wires, origin, spacing, judge, polishBudget, prices, onProgress, cancelled, null);
+        }
+    }
+
+    /**
+     * The host's second thread, for the searches that run side by side (the free placement beside the challenger,
+     * the second polish beside the first). The core starts no thread itself: without one ({@link Input#worker} null)
+     * each job runs on the caller's thread when it is awaited. Every job has its own judge, so the answer is the same
+     * either way.
+     */
+    public interface Worker {
+
+        <T> Job<T> start(Supplier<T> work);
+
+        /** The arrange is over (finished, failed or cancelled): let go of the thread. */
+        default void stop() {}
+    }
+
+    /** A job on the worker: its result, its failure rethrown as it was (a cancel stays a cancel). */
+    public interface Job<T> {
+
+        T await();
+    }
+
+    /** No second thread: the job runs when it is awaited. */
+    private static final Worker INLINE = new Worker() {
+
+        @Override
+        public <T> Job<T> start(final Supplier<T> work) {
+            return work::get;
+        }
+    };
 
     /** Every card's new top-left, the islands' rectangles, which candidate won, and its points (with air). */
     public record Result(Map<String, Point> positions, List<ColumnArrange.Island> islands, String chosen,
@@ -127,24 +165,20 @@ public final class Arrange {
             return best;
         }
         progress(input, 1, "Searching for a better layout", 0, 1);
-        // The challenger and the free placement search at once, on two threads; then the two polishes do.
-        final java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(1, r -> {
-            final Thread t = new Thread(r, "GTNH Planner arrange");
-            t.setDaemon(true);
-            return t;
-        });
+        // The challenger and the free placement search at once, on two threads where the host gives one; then the two
+        // polishes do.
+        final Worker pool = input.worker() == null ? INLINE : input.worker();
         try {
             return judged(input, prices, air, judge, spacing, plainPass, plain, pool);
         } finally {
-            pool.shutdownNow();
+            pool.stop();
         }
     }
 
     private static Result judged(final Input input, final Prices prices, final ToDoubleFunction<Map<String, Point>> air,
-        final Judge judge, final String spacing, final ColumnArrange plainPass, final Result plain,
-        final java.util.concurrent.ExecutorService pool) {
+        final Judge judge, final String spacing, final ColumnArrange plainPass, final Result plain, final Worker pool) {
         final long started = System.nanoTime();
-        final java.util.concurrent.Future<Result> freeJob = pool.submit(() -> {
+        final Job<Result> freeJob = pool.start(() -> {
             final Result r = free(input, prices, plainPass.rowGap(), spacing);
             if (TIMES) System.out.printf("[arrange] free placement %.0f ms%n", (System.nanoTime() - started) / 1e6);
             return r;
@@ -164,7 +198,7 @@ public final class Arrange {
             "challenger");
         if (TIMES) System.out.printf("[arrange] challenger %.0f ms%n", (System.nanoTime() - started) / 1e6);
         check(input);
-        final Result free = await(freeJob);
+        final Result free = freeJob.await();
         check(input);
         progress(input, 2, "Routing the candidates", 0, 3);
         // The two best by the router are polished: they start from different structures and the polish is greedy, so
@@ -190,8 +224,8 @@ public final class Arrange {
                 verdicts.get(b)
                     .points()));
         final Judge other = judge.fork();
-        final java.util.concurrent.Future<Result> secondJob = pool
-            .submit(() -> polish(input, other, prices, candidates.get(ranked.get(1)), verdicts.get(ranked.get(1)), 4));
+        final Job<Result> secondJob = pool
+            .start(() -> polish(input, other, prices, candidates.get(ranked.get(1)), verdicts.get(ranked.get(1)), 4));
         final Result first = polish(
             input,
             judge,
@@ -199,28 +233,13 @@ public final class Arrange {
             candidates.get(ranked.get(0)),
             verdicts.get(ranked.get(0)),
             3);
-        final Result second = await(secondJob);
+        final Result second = secondJob.await();
         progress(input, 5, "Choosing the better board", 1, 1);
         final double a = judge.judge(first.positions(), false, null)
             .points(),
             b = judge.judge(second.positions(), false, null)
                 .points();
         return b < a ? withPoints(second, b) : withPoints(first, a);
-    }
-
-    /** A job's result, its failure rethrown as it was (a cancel stays a cancel). */
-    private static <T> T await(final java.util.concurrent.Future<T> job) {
-        try {
-            return job.get();
-        } catch (final InterruptedException e) {
-            Thread.currentThread()
-                .interrupt();
-            throw new Cancelled();
-        } catch (final java.util.concurrent.ExecutionException e) {
-            if (e.getCause() instanceof final RuntimeException r) throw r;
-            if (e.getCause() instanceof final Error r) throw r;
-            throw new IllegalStateException(e.getCause());
-        }
     }
 
     private static Result of(final ColumnArrange.Result r, final String name) {

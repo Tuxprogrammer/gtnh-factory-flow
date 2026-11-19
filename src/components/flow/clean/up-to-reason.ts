@@ -3,6 +3,7 @@
  * by the overview and the tooltips. Pure.
  */
 import type { PlanUpTo } from "@/lib/solver/plan/types";
+import { TOKEN_COLORS } from "./tokens.generated";
 
 type Reason = NonNullable<PlanUpTo["reason"]>;
 
@@ -18,12 +19,12 @@ export const UP_TO_WORD: Record<Reason, string> = {
 
 /** The colour of a reason's word: the card's foot bar tones (clean.css `.cc-foot[data-tone]`). */
 export const UP_TO_COLOR: Record<Reason, string> = {
-  FULL: "#5ee9b5",
-  BOTTLENECK: "#f06262",
-  STARVED: "#e0a63a",
-  CLOGGED: "#b49cf0",
-  UNUSED: "#8a8e97",
-  LIMITED: "#f472b6",
+  FULL: TOKEN_COLORS.tone.full.toLowerCase(),
+  BOTTLENECK: TOKEN_COLORS.tone.bottleneck.toLowerCase(),
+  STARVED: TOKEN_COLORS.tone.starved.toLowerCase(),
+  CLOGGED: TOKEN_COLORS.tone.clogged.toLowerCase(),
+  UNUSED: TOKEN_COLORS.tone.unused.toLowerCase(),
+  LIMITED: TOKEN_COLORS.tone.limited.toLowerCase(),
 };
 
 /** The reason worth showing: none when the card is full or the solver gave none. */

@@ -8,6 +8,13 @@
       ],
       "generator": "mod-answers.json: tools/parity/s1/README.md (S1ParityTest, a throwaway JUnit run in a mod checkout)"
     },
+    "layout": {
+      "specifies": "The wire router: every router call the website's router tests make (router-tests.json: solves with boards in and routes out, IncrementalRouter step sequences, cardRimDocks vectors) and the reference boards (boards.json.gz: the layout benchmark's plans as boxes and wires, each routed fresh, its busiest box dragged three beats and dropped), all answered by the website's TypeScript router; the Java router (core-layout) must give the same routes and search work to the bit.",
+      "readers": [
+        "jvm: core-layout com.gtnhplanner.core.layout.RouterConformanceTest"
+      ],
+      "generator": "node tools/conformance/layout/generate.mjs [--boards jvm/mod/build/bench/versus/boards]"
+    },
     "live": {
       "specifies": "The live-plan op engine: every rule of put, patch, del, meta, apply, diff and invert as a vector (plan, ops, expected result), run by both engines.",
       "readers": [
@@ -70,6 +77,16 @@
       "area": "board",
       "bytes": 29350,
       "sha256": "0fa167c57c6b686b695d8d6125f20fc04ee6a7ac8740e5fab34f9ae1550e1512"
+    },
+    "layout/boards.json.gz": {
+      "area": "layout",
+      "bytes": 355403,
+      "sha256": "df8629460a87d6e64533be8dbdd5af66aa0c50f1f901e2cad0acff53ee9296cd"
+    },
+    "layout/router-tests.json": {
+      "area": "layout",
+      "bytes": 1688373,
+      "sha256": "6dacfaedf0c5eb1744e2e4f774747b5c56b0bd246006f2ad73653697d2f385d7"
     },
     "live/live-vectors.json": {
       "area": "live",

@@ -11,12 +11,15 @@ import java.util.UUID;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import com.gtnhplanner.core.layout.BoxRouter;
+import com.gtnhplanner.core.layout.GridRoutedEdge;
+import com.gtnhplanner.core.layout.IncrementalStats;
 import com.gtnhplanner.layout.RouteMetrics;
-import com.gtnhplanner.layout.WireRouter;
 
 /**
  * Drags a card across a board as the board does while the mouse moves: the busiest card, then a quiet one, forty steps,
- * each routed again incrementally ({@link WireRouter#reroute}), then dropped (routed again thoroughly); and compares
+ * each routed again incrementally and roughly ({@link BoxRouter#route}), then dropped (routed again thoroughly); and
+ * compares
  * what that leaves with routing the final board afresh. {@code -Pbench=drag --tests '*DragBench*'}.
  */
 @Tag("bench")
@@ -54,36 +57,38 @@ class DragBench {
     }
 
     private static void drag(final BenchBoard board, final BenchBoard.Item moving, final int wiresAt) {
-        final WireRouter router = new WireRouter();
-        final List<WireRouter.Wire> wires = wires(board);
+        final BoxRouter router = new BoxRouter();
+        final List<BoxRouter.Wire> wires = BenchRun.wires(board);
         // Warm up, then the board as it opens.
-        router.route(boxes(board, moving, 0, 0), wires, null, true);
+        new BoxRouter().route(boxes(board, moving, 0, 0), wires, true, null);
         long t0 = System.nanoTime();
-        router.route(boxes(board, moving, 0, 0), wires, null, true);
+        router.route(boxes(board, moving, 0, 0), wires, true, null);
         final double openMs = (System.nanoTime() - t0) / 1e6;
         double worst = 0, total = 0;
         int redone = 0;
         final int steps = 40, dx = 14, dy = 6;
         for (int k = 1; k <= steps; k++) {
+            final IncrementalStats stats = new IncrementalStats();
             t0 = System.nanoTime();
-            router.reroute(boxes(board, moving, k * dx, k * dy), wires, null, false);
+            router.route(boxes(board, moving, k * dx, k * dy), wires, false, stats);
             final double ms = (System.nanoTime() - t0) / 1e6;
             worst = Math.max(worst, ms);
             total += ms;
-            redone += router.statRouted;
+            redone += stats.routed;
         }
+        final IncrementalStats drop = new IncrementalStats();
         t0 = System.nanoTime();
-        final Map<UUID, List<int[]>> dropped = router
-            .reroute(boxes(board, moving, steps * dx, steps * dy), wires, null, true);
+        final Map<UUID, List<int[]>> dropped = pixels(
+            router.route(boxes(board, moving, steps * dx, steps * dy), wires, true, drop));
         final double dropMs = (System.nanoTime() - t0) / 1e6;
-        final int dropRedone = router.statRouted;
+        final int dropRedone = drop.routed;
         final Map<UUID, int[]> at = new HashMap<>();
         at.put(moving.id(), new int[] { moving.x() + steps * dx, moving.y() + steps * dy });
         final BenchBoard after = board.placed(at);
         final RouteMetrics.Result kept = BenchRun.measure(after, dropped);
-        final WireRouter fresh = new WireRouter();
         t0 = System.nanoTime();
-        final Map<UUID, List<int[]>> afresh = fresh.route(boxes(after, null, 0, 0), wires, null, true);
+        final Map<UUID, List<int[]>> afresh = pixels(
+            new BoxRouter().route(boxes(after, null, 0, 0), wires, true, null));
         final double freshMs = (System.nanoTime() - t0) / 1e6;
         final RouteMetrics.Result clean = BenchRun.measure(after, afresh);
         System.out.printf(
@@ -106,34 +111,29 @@ class DragBench {
             clean.crossings());
     }
 
-    /** The board's boxes, {@code moving} (if given) shifted by (dx, dy). */
-    private static List<WireRouter.Box> boxes(final BenchBoard board, final BenchBoard.Item moving, final int dx,
-        final int dy) {
-        final List<WireRouter.Box> out = new ArrayList<>();
-        for (final BenchBoard.Item i : board.items()) {
-            final boolean m = moving != null && i.id()
-                .equals(moving.id());
-            out.add(new WireRouter.Box(i.x() + (m ? dx : 0), i.y() + (m ? dy : 0), i.w(), i.h()));
-        }
+    private static Map<UUID, List<int[]>> pixels(final Map<String, GridRoutedEdge> routes) {
+        final Map<UUID, List<int[]>> out = new HashMap<>();
+        for (final GridRoutedEdge r : routes.values()) out.put(UUID.fromString(r.edgeId()), BoxRouter.pixels(r));
         return out;
     }
 
-    private static List<WireRouter.Wire> wires(final BenchBoard board) {
-        final Map<UUID, Integer> index = new HashMap<>();
-        for (int i = 0; i < board.items()
-            .size(); i++)
-            index.put(
-                board.items()
-                    .get(i)
-                    .id(),
-                i);
-        final List<WireRouter.Wire> wires = new ArrayList<>();
-        for (final BenchBoard.Link l : board.links()) {
-            final int a = index.get(l.from()), b = index.get(l.to());
-            wires.add(
-                a == b ? new WireRouter.Wire(l.id(), a, b, WireRouter.RIGHT, WireRouter.LEFT, 0)
-                    : new WireRouter.Wire(l.id(), a, b, 0));
+    /** The board's boxes, {@code moving} (if given) shifted by (dx, dy). */
+    private static List<BoxRouter.Box> boxes(final BenchBoard board, final BenchBoard.Item moving, final int dx,
+        final int dy) {
+        final List<BoxRouter.Box> out = new ArrayList<>();
+        for (final BenchBoard.Item i : board.items()) {
+            final boolean m = moving != null && i.id()
+                .equals(moving.id());
+            out.add(
+                new BoxRouter.Box(
+                    i.id()
+                        .toString(),
+                    i.x() + (m ? dx : 0),
+                    i.y() + (m ? dy : 0),
+                    i.w(),
+                    i.h(),
+                    i.drawer()));
         }
-        return wires;
+        return out;
     }
 }

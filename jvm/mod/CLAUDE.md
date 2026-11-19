@@ -65,13 +65,14 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   that takes it and is sold at the brick wall), then the least internal flow; machine steps in `ModelData.portSteps`,
   a loop counting as one, settled level by level in `TradeStage`. A machine nothing pinned feeds or needs sits at zero
   and asks for a count (`SolutionView.unneeded`). There is no setting for it: the owner dropped one.
-- Wires are routed by `layout/WireRouter`: exact A* on a 10 px grid with planned docks, kept per board so a change
-  re-routes only what it touched. Arrange is `layout/arrange/`, a port of the website's arrange (column pass,
+- Wires are routed by the website's router, written once in Java (`jvm/core/core-layout`, `core.layout.GridEdgeRouter`,
+  through `BoxRouter`): A* on the website's 20 px grid with planned docks, kept per board so a change re-routes only
+  what it touched; `conformance/layout` holds it to the website's TypeScript router to the bit. Arrange is `layout/arrange/`, a port of the website's arrange (column pass,
   optimiser, free placement, polish) judged by that router, run in the background from the top bar's key.
   `docs/design/routing-and-arrange.md` has both designs and the benchmark they are tuned against.
 - Steering dots (the website's edge waypoints; `data/flowchart/Waypoints`): points a wire's route passes through in
-  order, kept on `Edge.waypoints` and a drawer's `Link.waypoints()` on the router's lines (cell middles), routed leg by
-  leg (`WireRouter.steered`). A double-click on a wire pins one, a dot carried past the slop steers it live, a second
+  order, kept on `Edge.waypoints` and a drawer's `Link.waypoints()` on the corners of the router's 20 px grid (the
+  website's), routed leg by leg. A double-click on a wire pins one, a dot carried past the slop steers it live, a second
   press on it within 400 ms takes it off (`BoardCanvas`, `WireLayer.dotAt`). Arrange clears them (a wire inside a
   group it moves whole keeps them, moved), as does opening or shutting a group at its wires. They travel both ways on
   the website's 20 px grid (importer, `PlanExport.edge`, `cloud/map` with the game's own to the pixel).

@@ -44,8 +44,8 @@ class CloudWaypointsTest {
         final JsonObject plan = Boards.website("pa-cell-loop-plan");
         final TestGame game = new TestGame();
         final CloudPlans.Read r = CloudPlans.read(plan, game);
-        // The website's (100, -220), on the line through its cell.
-        assertEquals(List.of("105,-215"), dots(r.graph()));
+        // The website's (100, -220), as it is: the router's grid is the website's.
+        assertEquals(List.of("100,-220"), dots(r.graph()));
         assertEquals(
             List.of(),
             CloudPlans.diff(
@@ -84,7 +84,7 @@ class CloudWaypointsTest {
                 new JsonParser().parse("[{\"x\":400,\"y\":400},{\"x\":460,\"y\":220}]")
                     .getAsJsonArray());
         final CloudPlans.Read edited = CloudPlans.read(dragged, game, back);
-        assertEquals(List.of("405,405", "465,225"), dots(edited.graph()));
+        assertEquals(List.of("400,400", "460,220"), dots(edited.graph()));
         // And takes them all off: none.
         final JsonObject cleared = com.gtnhplanner.cloud.sync.LiveJson.copy(dragged);
         steered(cleared).getFirst()

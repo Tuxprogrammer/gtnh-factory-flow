@@ -5,6 +5,10 @@
 # <path> is a source file relative to jvm/ (core/<module>/src/main/java/...); * matches within a name, ** across
 # directories. <rule> is a rule id from rules.txt, or * for every rule (only for a file still to be cut). The reason is
 # required. An entry that no longer matches any finding fails the check, so the list only shrinks as seams land.
+core/core-layout/src/main/java/com/gtnhplanner/layout/RouteMetrics.java string-format line() is a log line for the layout bench, no data; goes with the mod's metrics in W5
+core/core-layout/src/main/java/com/gtnhplanner/layout/arrange/Arrange.java host-env the bench's -Pstages timing switch (Boolean.getBoolean); one Arrange (W5) takes it out
+core/core-layout/src/main/java/com/gtnhplanner/layout/arrange/Arrange.java string-format the printf of that bench timing; one Arrange (W5) takes it out
+core/core-layout/src/main/java/com/gtnhplanner/layout/arrange/Arrange.java float-text two tried-set keys spelled from doubles, only ever compared within one run; W5 spells them with NumberText
 
 # core-machines and core-power: moved from the mod unchanged (no rewrite on a move). Each goes when its site moves to
 # core-base's NumberText or JsMath, the display formatters, or a tree-API reader; the machines stream owns them.

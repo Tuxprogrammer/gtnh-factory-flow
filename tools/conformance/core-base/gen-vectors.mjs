@@ -1,13 +1,15 @@
-// Writes number-text-vectors.json beside this file from JavaScript itself (Node), the ground truth for core-base's
+// Writes conformance/core-base/number-text/number-text-vectors.json from JavaScript itself (Node), the ground truth for core-base's
 // NumberText and JsMath: String(n), JSON.stringify(n), n.toFixed(d), Number(s) and Math.round(n).
-//   node gen-vectors.mjs [scale]     scale multiplies the random sample (default 1; the committed file is scale 1)
+//   node tools/conformance/core-base/gen-vectors.mjs [scale [out]]   scale multiplies the random sample (default 1; the
+//   committed file is scale 1); out is another file to write, for a larger evidence run
+// Then: node tools/conformance/manifest.mjs --write
 // Doubles are written as their 64 bits in hex, so nothing depends on a reader's own float parsing.
 import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const scale = Number(process.argv[2] ?? 1);
-const out = process.argv[3] ?? join(dirname(fileURLToPath(import.meta.url)), "number-text-vectors.json");
+const out = process.argv[3] ?? join(dirname(fileURLToPath(import.meta.url)), "../../../conformance/core-base/number-text/number-text-vectors.json");
 
 const view = new DataView(new ArrayBuffer(8));
 const bitsOf = (x) => (view.setFloat64(0, x), view.getBigUint64(0).toString(16).padStart(16, "0"));

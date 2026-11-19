@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "plan-1",
+  "name": "Empty",
+  "recipes": [],
+  "nodes": [],
+  "edges": [],
+  "fuelProfiles": [
+    {
+      "id": "f1",
+      "name": "Diesel",
+      "fuelFluidId": "x"
+    }
+  ]
+}

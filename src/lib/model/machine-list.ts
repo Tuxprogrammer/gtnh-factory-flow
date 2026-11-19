@@ -19,7 +19,7 @@ import {
   isCropProductionRecipe,
 } from "./passive-production";
 import type { NodePowerState } from "@/lib/solver/power-report";
-import { cardMachineMath } from "@/lib/core/machines";
+import { cardMachineMath } from "@/lib/machines/card-readout";
 import { getEnergyHatchType } from "@/lib/machines/energy-hatches";
 
 type VoltageTier = Exclude<MachineTier, "DEMO">;
@@ -98,7 +98,7 @@ export function buildMachineList(
 
     const sections = listNodeSections(node).map(({ node: view }) => {
       const raw = recipes.get(view.recipeId);
-      // The card's one readout (lib/core/machines.ts): an edit recomputes the edited card's figures only.
+      // The card's one readout (lib/machines/card-readout.ts): an edit recomputes the edited card's figures only.
       const machine = raw ? cardMachineMath(raw, view) : undefined;
       const steam = machine?.steamReport;
       return {

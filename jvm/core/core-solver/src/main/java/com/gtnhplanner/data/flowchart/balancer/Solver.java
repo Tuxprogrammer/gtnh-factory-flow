@@ -6,10 +6,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import org.ojalgo.optimisation.Expression;
-import org.ojalgo.optimisation.Optimisation;
-import org.ojalgo.optimisation.Variable;
-import org.ojalgo.optimisation.linear.LinearSolver;
+import com.gtnhplanner.core.solver.lp.LinearProgram;
 
 /**
  * The LP/MILP machinery shared by every stage. Model ASSEMBLY now lives in one fluent place,
@@ -36,41 +33,22 @@ public final class Solver {
     private Solver() {}
 
     /**
-     * The simplex set-ups an AUTO model is solved under, in turn: ojAlgo's revised simplex with Ruiz equilibration
-     * (scaled, the fastest here), then its own pick. ojAlgo 57.3.1 is not sure-footed on these models: one set-up can
-     * call a model infeasible that the other solves, or return a point that does not conserve.
-     */
-    private static final List<LinearSolver.Configuration> OPINIONS = List
-        .of(new LinearSolver.Configuration().equilibration(5), new LinearSolver.Configuration());
-
-    /**
-     * The one place an AUTO model runs: under each simplex set-up in turn ({@link #OPINIONS}) until one returns a
-     * point that passes the independent conservation check. A point that passes proves the model has one; that it has
-     * none is believed only when every set-up says so. The profiler hears every attempt.
+     * The one place an AUTO model runs: under each of the engine's set-ups in turn ({@link LinearProgram#setups()})
+     * until one returns a point that passes the independent conservation check. A point that passes proves the model has
+     * one; that it has none is believed only when every set-up says so. The profiler hears every attempt.
      */
     public static SolveResult run(final SolveContext ctx, final Handles h, final String label) {
         SolveResult last = null;
-        for (final LinearSolver.Configuration opinion : OPINIONS) {
+        final LinearProgram lp = h.lp();
+        for (int setup = 0; setup < lp.setups(); setup++) {
             ctx.checkStop();
-            h.model().options.linear(opinion);
             final long start = System.currentTimeMillis();
-            final Optimisation.Result result = h.model()
-                .minimise();
+            final LinearProgram.Result result = lp.solve(setup);
             final long millis = System.currentTimeMillis() - start;
             if (ctx.profiler.enabled()) {
-                ctx.profiler.modelSolved(
-                    label,
-                    millis,
-                    result.getState()
-                        .toString(),
-                    h.model()
-                        .countVariables(),
-                    h.model()
-                        .countExpressions());
+                ctx.profiler.modelSolved(label, millis, result.word(), lp.columns(), lp.rows());
             }
-            last = result.getState()
-                .isFeasible() ? fromHandles(ctx, h, false)
-                    : rejected(ctx, result, millis >= h.model().options.time_abort);
+            last = result.feasible() ? fromHandles(ctx, h, false) : rejected(ctx, result);
             if (!last.isRejected()) return last;
         }
         return last;
@@ -108,15 +86,15 @@ public final class Solver {
      * at an output (the Up to read-out's probes). Enters the port's conservation row as its external does; the
      * independent check counts it as the port's external.
      */
-    public static Variable feedPort(final SolveContext ctx, final Handles h, final int p) {
+    public static int feedPort(final SolveContext ctx, final Handles h, final int p) {
         final double scale = 1.0 / Math.max(
             1.0,
             ctx.model.connectedPorts.get(p)
                 .qtyPerCraft());
-        final Variable v = h.model()
-            .addVariable("feed_" + p)
-            .lower(0);
-        h.conservation()[p].add(v, scale);
+        final LinearProgram lp = h.lp();
+        final int v = lp.addColumn("feed_" + p);
+        lp.columnLower(v, 0);
+        lp.add(h.conservation()[p], v, scale);
         h.fed()
             .add(new Handles.Fed(v, p));
         return v;
@@ -128,10 +106,16 @@ public final class Solver {
      */
     public static final class Terms {
 
-        final List<Variable> vars = new ArrayList<>();
+        private final LinearProgram lp;
+        final List<Integer> vars = new ArrayList<>();
         final List<Double> vals = new ArrayList<>();
 
-        public Terms add(final Variable v, final double val) {
+        /** No terms yet, over {@code lp}'s columns. */
+        public Terms(final LinearProgram lp) {
+            this.lp = lp;
+        }
+
+        public Terms add(final int v, final double val) {
             vars.add(v);
             vals.add(val);
             return this;
@@ -148,36 +132,28 @@ public final class Solver {
         }
 
         /** A row of these terms in {@code h}'s model, between {@code lo} and {@code hi} (NaN or infinite: none). */
-        public Expression row(final Handles h, final String name, final double lo, final double hi) {
-            // A model keeps its rows by name: each gets its own.
-            final Expression row = h.model()
-                .addExpression(
-                    name + "#"
-                        + h.model()
-                            .countExpressions());
-            for (int i = 0; i < vars.size(); i++) row.add(vars.get(i), vals.get(i));
-            if (Double.isFinite(lo)) row.lower(lo);
-            if (Double.isFinite(hi)) row.upper(hi);
+        public int row(final Handles h, final String name, final double lo, final double hi) {
+            // Each row gets its own name.
+            final LinearProgram m = h.lp();
+            final int row = m.addRow(name + "#" + m.rows());
+            for (int i = 0; i < vars.size(); i++) m.add(row, vars.get(i), vals.get(i));
+            if (Double.isFinite(lo)) m.rowLower(row, lo);
+            if (Double.isFinite(hi)) m.rowUpper(row, hi);
             return row;
         }
 
         /** Adds {@code weight} times these terms to the objective (minimised). */
         public void price(final double weight) {
             for (int i = 0; i < vars.size(); i++) {
-                final Variable v = vars.get(i);
-                final java.math.BigDecimal had = v.getContributionWeight();
-                v.weight((had == null ? 0 : had.doubleValue()) + weight * vals.get(i));
+                final int v = vars.get(i);
+                lp.cost(v, lp.cost(v) + weight * vals.get(i));
             }
         }
 
         /** Their value at the model's solution. */
         public double value() {
             double total = 0;
-            for (int i = 0; i < vars.size(); i++) {
-                final Number x = vars.get(i)
-                    .getValue();
-                total += vals.get(i) * (x == null ? 0 : x.doubleValue());
-            }
+            for (int i = 0; i < vars.size(); i++) total += vals.get(i) * lp.value(vars.get(i));
             return total;
         }
     }
@@ -185,7 +161,7 @@ public final class Solver {
     /** A pool's level (machine time over capacity) as row terms over the extents. */
     public static Terms levelTerms(final SolveContext ctx, final Handles h, final int pool) {
         final ModelData.Pool data = ctx.model.pools.get(pool);
-        final Terms t = new Terms();
+        final Terms t = new Terms(h.lp());
         for (final int m : data.machines())
             t.add(h.extentVars()[m], ctx.model.machines.get(m).durTicks / Numerics.TICKS_PER_SECOND / data.capacity());
         return t;
@@ -322,7 +298,7 @@ public final class Solver {
     /** The least the plan can trade at {@code level}, with {@code held}'s levels held. */
     public static SolveResult leastAt(final SolveContext ctx, final Trades held, final Level level) {
         final Handles h = tradeModel(ctx, held);
-        for (final int p : level.ports()) h.extVars()[p].weight(ctx.externalWeight(p));
+        for (final int p : level.ports()) h.cost(h.extVars()[p], ctx.externalWeight(p));
         return run(ctx, h, (level.buying() ? "least buying at " : "least selling at ") + level.steps() + " steps");
     }
 
@@ -340,16 +316,10 @@ public final class Solver {
     public static StageOutcome canonicalHolding(final SolveContext ctx, final Trades held, final StageOutcome s3) {
         final Handles h = tradeModel(ctx, held);
         for (int p = 0; p < h.extVars().length; p++) {
-            h.extVars()[p].weight(EDGE_FIRST * tieWeight(p) * ctx.externalWeight(p));
+            h.cost(h.extVars()[p], EDGE_FIRST * tieWeight(p) * ctx.externalWeight(p));
         }
         final double qtyEps = ctx.heuristics.numerics().qtyEps;
-        final Expression flowCap = h.model()
-            .addExpression("flow_cap");
-        for (int e = 0; e < h.flowVars().length; e++) {
-            flowCap.set(h.flowVars()[e], 1.0);
-            h.flowVars()[e].weight(tieWeight(e));
-        }
-        flowCap.upper(s3.internalFlow * (1 + qtyEps) + qtyEps * Math.max(1.0, s3.internalFlow));
+        flowCap(h, s3.internalFlow * (1 + qtyEps) + qtyEps * Math.max(1.0, s3.internalFlow));
         final SolveResult canonical = run(ctx, h, "canonicalise");
         return canonical.isRejected() ? s3 : canonical.point(); // the uncanonical point is still a correct answer
     }
@@ -365,13 +335,15 @@ public final class Solver {
             final double cap = held.caps()
                 .get(i);
             if (cap <= 0) {
-                for (final int p : level.ports()) h.extVars()[p].upper(0);
+                for (final int p : level.ports()) h.upper(h.extVars()[p], 0);
                 continue;
             }
-            final Expression hold = h.model()
-                .addExpression("hold_level_" + i);
-            for (final int p : level.ports()) hold.set(h.extVars()[p], ctx.externalWeight(p));
-            hold.upper(cap);
+            final int hold = h.lp()
+                .addRow("hold_level_" + i);
+            for (final int p : level.ports()) h.lp()
+                .set(hold, h.extVars()[p], ctx.externalWeight(p));
+            h.lp()
+                .rowUpper(hold, cap);
         }
         // The push's bands, as rows (the TypeScript port's columns must start at 0; the same values held either way).
         for (int i = 0; i < held.floors()
@@ -391,9 +363,9 @@ public final class Solver {
             // diagnosePins uses it to test whether the pins are the conflict, and it must not
             // clamp anything or it would report infeasible.
             if (open != null && !open.contains(ctx.model.portGate[p]) && !ctx.bankPorts.containsKey(p)) {
-                h.extVars()[p].upper(0);
+                h.upper(h.extVars()[p], 0);
             } else {
-                h.extVars()[p].weight(ctx.importTilt(ctx.model.portGate[p]));
+                h.cost(h.extVars()[p], ctx.importTilt(ctx.model.portGate[p]));
             }
         }
         return run(ctx, h, "externals");
@@ -406,7 +378,7 @@ public final class Solver {
         for (int p = 0; p < ctx.model.connectedPorts.size(); p++) {
             // What a buffer banks is no gate and no trade (docs/design/up-to.md): never closed, never counted.
             if (ctx.bankPorts.containsKey(p)) continue;
-            h.extVars()[p].weight(ctx.externalWeight(p));
+            h.cost(h.extVars()[p], ctx.externalWeight(p));
         }
         return run(ctx, h, "stage 2 fixed quantity");
     }
@@ -417,31 +389,24 @@ public final class Solver {
     /** The one canonical point among a stage-3 optimum: redistributes within it, deterministically. */
     public static StageOutcome canonicalize(final SolveContext ctx, final Set<Integer> open, final StageOutcome s3) {
         final Handles h = baseModel(ctx);
-        final Expression qty = open.isEmpty() ? null
-            : h.model()
-                .addExpression("qty_cap");
+        final LinearProgram lp = h.lp();
+        final int qty = open.isEmpty() ? -1 : lp.addRow("qty_cap");
         final double qtyEps = ctx.heuristics.numerics().qtyEps;
         final int ports = ctx.model.connectedPorts.size();
         for (int p = 0; p < ports; p++) {
-            if (qty != null && open.contains(ctx.model.portGate[p])) {
-                qty.set(h.extVars()[p], ctx.externalWeight(p));
+            if (qty >= 0 && open.contains(ctx.model.portGate[p])) {
+                lp.set(qty, h.extVars()[p], ctx.externalWeight(p));
                 // Far above any flow's weight, so the quantity's rounding room is never spent moving material across
                 // the plan's edge to save flow inside it: that would be a leftover a millionth of a unit wide.
-                h.extVars()[p].weight(EDGE_FIRST * tieWeight(p) * ctx.externalWeight(p));
+                h.cost(h.extVars()[p], EDGE_FIRST * tieWeight(p) * ctx.externalWeight(p));
             } else {
-                h.extVars()[p].upper(0);
+                h.upper(h.extVars()[p], 0);
             }
         }
-        if (qty != null) {
-            qty.upper(s3.externalQuantity * (1 + qtyEps) + qtyEps);
+        if (qty >= 0) {
+            lp.rowUpper(qty, s3.externalQuantity * (1 + qtyEps) + qtyEps);
         }
-        final Expression flowCap = h.model()
-            .addExpression("flow_cap");
-        for (int e = 0; e < h.flowVars().length; e++) {
-            flowCap.set(h.flowVars()[e], 1.0);
-            h.flowVars()[e].weight(tieWeight(e));
-        }
-        flowCap.upper(s3.internalFlow * (1 + qtyEps) + qtyEps * Math.max(1.0, s3.internalFlow));
+        flowCap(h, s3.internalFlow * (1 + qtyEps) + qtyEps * Math.max(1.0, s3.internalFlow));
         final SolveResult canonical = run(ctx, h, "canonicalise");
         return canonical.isRejected() ? s3 : canonical.point(); // the uncanonical point is still a correct answer
     }
@@ -459,10 +424,21 @@ public final class Solver {
         return 1.0 + (z >>> 11) * 0x1.0p-53;
     }
 
+    /** Total internal flow held at most {@code cap}, each wire priced by its fixed tie weight (the canonical point). */
+    private static void flowCap(final Handles h, final double cap) {
+        final LinearProgram lp = h.lp();
+        final int row = lp.addRow("flow_cap");
+        for (int e = 0; e < h.flowVars().length; e++) {
+            lp.set(row, h.flowVars()[e], 1.0);
+            h.cost(h.flowVars()[e], tieWeight(e));
+        }
+        lp.rowUpper(row, cap);
+    }
+
     /** Closes every external outside {@code open}'s gates, except what a buffer banks (it is no gate: up-to.md). */
     public static void closeGatesOutside(final SolveContext ctx, final Handles h, final Set<Integer> open) {
         for (int p = 0; p < ctx.model.connectedPorts.size(); p++) {
-            if (!open.contains(ctx.model.portGate[p]) && !ctx.bankPorts.containsKey(p)) h.extVars()[p].upper(0);
+            if (!open.contains(ctx.model.portGate[p]) && !ctx.bankPorts.containsKey(p)) h.upper(h.extVars()[p], 0);
         }
     }
 
@@ -472,39 +448,36 @@ public final class Solver {
      * up looking - ojAlgo returns INFEASIBLE for both - so a model that ran into its safety limit
      * ({@link Numerics#modelSafetyMillis}) says so in the reason too.
      */
-    private static SolveResult rejected(final SolveContext ctx, final Optimisation.Result result,
-        final boolean outOfTime) {
-        final Note note = outOfTime ? new Note(SolverMessage.SOLVER_BUDGET, result.getState())
-            : new Note(SolverMessage.SOLVER_UNSATISFIABLE, result.getState());
+    private static SolveResult rejected(final SolveContext ctx, final LinearProgram.Result result) {
+        final Note note = result.outOfTime() ? new Note(SolverMessage.SOLVER_BUDGET, result.word())
+            : new Note(SolverMessage.SOLVER_UNSATISFIABLE, result.word());
         ctx.profiler.pointRejected("solve", note.describe());
         return SolveResult.rejected(note);
     }
 
     private static void holdQuantity(final SolveContext ctx, final Handles h, final double optimum) {
-        final Expression cap = h.model()
-            .addExpression("hold_least_excess");
+        final LinearProgram lp = h.lp();
+        final int cap = lp.addRow("hold_least_excess");
         for (int p = 0; p < ctx.model.connectedPorts.size(); p++) {
-            cap.set(h.extVars()[p], ctx.externalWeight(p));
+            lp.set(cap, h.extVars()[p], ctx.externalWeight(p));
         }
         final double slack = ctx.heuristics.numerics().qtyEps;
-        cap.upper(optimum * (1 + slack) + slack);
+        lp.rowUpper(cap, optimum * (1 + slack) + slack);
     }
 
     private static void flowObjective(final Handles h) {
-        for (final Variable v : h.flowVars()) {
-            v.weight(1.0);
+        for (final int v : h.flowVars()) {
+            h.cost(v, 1.0);
         }
     }
 
     public static SolveResult fromHandles(final SolveContext ctx, final Handles h, final boolean provenOptimal) {
-        final double[] extents = values(h.extentVars());
-        final double[] flows = values(h.flowVars());
-        final double[] externals = values(h.extVars());
+        final double[] extents = h.values(h.extentVars());
+        final double[] flows = h.values(h.flowVars());
+        final double[] externals = h.values(h.extVars());
         // A probe's free crossings cross the plan's edge at their port, as its external does.
         for (final Handles.Fed fed : h.fed()) {
-            final Number v = fed.variable()
-                .getValue();
-            externals[fed.port()] += v == null ? 0 : v.doubleValue();
+            externals[fed.port()] += h.value(fed.column());
         }
         final String residual = ctx.validate(extents, flows, externals);
         if (residual != null) {
@@ -515,20 +488,6 @@ public final class Solver {
         return SolveResult.solved(StageOutcome.of(ctx, extents, flows, externals, provenOptimal));
     }
 
-    /** A variable's value at the model's solution (0 when it has none). */
-    public static double valueOf(final Variable v) {
-        final Number n = v.getValue();
-        return n == null ? 0 : n.doubleValue();
-    }
-
-    private static double[] values(final Variable[] vars) {
-        final double[] out = new double[vars.length];
-        for (int i = 0; i < vars.length; i++) {
-            final Number v = vars[i].getValue();
-            out[i] = v == null ? 0 : v.doubleValue();
-        }
-        return out;
-    }
 
     /**
      * Reads an extent-flow point (built with {@link ModelBuilder#portRows(boolean)}) with the
@@ -544,17 +503,17 @@ public final class Solver {
      */
     public static SolveResult readExtentFlowModel(final SolveContext ctx, final Handles h, final boolean inputPriority,
         final boolean provenOptimal, final boolean counts) {
-        final double[] countsOut = values(h.extentVars());
+        final double[] countsOut = h.values(h.extentVars());
         final double[] extents = new double[countsOut.length];
         for (int i = 0; i < countsOut.length; i++) {
             extents[i] = counts ? countsOut[i] * (double) Numerics.TICKS_PER_SECOND / ctx.model.machines.get(i).durTicks
                 : countsOut[i];
         }
-        final double[] flows = values(h.flowVars());
+        final double[] flows = h.values(h.flowVars());
         // The no-import model declares no externals at all (an empty array), which reads as a zero
         // import on every port rather than an index miss.
         final double[] externals = h.extVars().length == 0 ? new double[ctx.model.connectedPorts.size()]
-            : values(h.extVars());
+            : h.values(h.extVars());
         final double floor = -ctx.heuristics.numerics().dust;
         for (final double extent : extents) {
             if (extent < floor) {
@@ -617,17 +576,10 @@ public final class Solver {
             .flows()
             .portRows(inputPriority)
             .drawers();
-        final Optimisation.Result naturalResult = natural.solve("extent-min");
-        if (naturalResult.getState()
-            .isFeasible()) {
+        final LinearProgram.Result naturalResult = natural.solve("extent-min");
+        if (naturalResult.feasible()) {
             final Handles h = natural.handles();
-            return readExtentFlowModel(
-                ctx,
-                h,
-                inputPriority,
-                naturalResult.getState()
-                    .isOptimal(),
-                true);
+            return readExtentFlowModel(ctx, h, inputPriority, naturalResult.optimal(), true);
         }
         final ModelBuilder rescue = ModelBuilder.over(ctx)
             .extentCounts()
@@ -638,18 +590,11 @@ public final class Solver {
             .importsWeighted(IMPORT_WEIGHT)
             .portRows(inputPriority)
             .drawers();
-        final Optimisation.Result rescueResult = rescue.solve("extent-min rescue");
-        if (!rescueResult.getState()
-            .isFeasible()) {
+        final LinearProgram.Result rescueResult = rescue.solve("extent-min rescue");
+        if (!rescueResult.feasible()) {
             return SolveResult.rejected(ctx.rejection);
         }
         final Handles h = rescue.handles();
-        return readExtentFlowModel(
-            ctx,
-            h,
-            inputPriority,
-            rescueResult.getState()
-                .isOptimal(),
-            true);
+        return readExtentFlowModel(ctx, h, inputPriority, rescueResult.optimal(), true);
     }
 }

@@ -444,7 +444,21 @@ function rotorClass(row, effTight, effLoose, optTight, optLoose) {
 
 const withoutNames = (rows, names) => rows.filter((row) => !names.includes(row.name));
 
+/** Adds a fuel row in EU/L order (the tables are sorted that way), once. */
+function withFuel(rows, fuel) {
+  if (rows.some((row) => row.name === fuel.name)) return rows;
+  const at = rows.findIndex((row) => row.euPerLiter > fuel.euPerLiter);
+  return at < 0 ? [...rows, fuel] : [...rows.slice(0, at), fuel, ...rows.slice(at)];
+}
+
 function correctEngineFuels() {
+  // FuelLoader registers EnderIO's Rocket Fuel (fluid rocket_fuel) as a gas turbine
+  // fuel at 250 EU/L; the gas turbines, the SOFCs and the UCFE (gas coefficient
+  // 0.04) burn it. The boiler tables already call it EIO Rocket Fuel.
+  const rocketFuel = { name: "EIO Rocket Fuel", euPerLiter: 250 };
+  data.gasFuels = withFuel(data.gasFuels, rocketFuel);
+  data.gasFuelsXl = withFuel(data.gasFuelsXl, rocketFuel);
+  data.ucfeFuels = withFuel(data.ucfeFuels, { ...rocketFuel, promoterCoefficient: 0.04 });
   // Not registered anywhere in the pack (no fuel recipe, no fluid in the 2.9 dataset).
   data.semifluidFuels = withoutNames(data.semifluidFuels, [
     "Raw Animal Waste",

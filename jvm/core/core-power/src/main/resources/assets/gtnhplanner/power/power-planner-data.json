@@ -97,6 +97,10 @@
    "euPerLiter": 232
   },
   {
+   "name": "EIO Rocket Fuel",
+   "euPerLiter": 250
+  },
+  {
    "name": "Butene",
    "euPerLiter": 256
   },
@@ -205,6 +209,10 @@
   {
    "name": "Propane",
    "euPerLiter": 232
+  },
+  {
+   "name": "EIO Rocket Fuel",
+   "euPerLiter": 250
   },
   {
    "name": "Butene",
@@ -1287,6 +1295,11 @@
   {
    "name": "Propane",
    "euPerLiter": 232,
+   "promoterCoefficient": 0.04
+  },
+  {
+   "name": "EIO Rocket Fuel",
+   "euPerLiter": 250,
    "promoterCoefficient": 0.04
   },
   {

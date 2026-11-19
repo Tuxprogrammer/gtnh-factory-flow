@@ -387,7 +387,8 @@ public final class Turbines {
         new TurbineSpec(
             "large-hp-steam-turbine",
             "Large HP Steam Turbine",
-            "EV",
+            // Crafted from an IV hull and IV (circuitElite) circuits.
+            "IV",
             "SH steam in; exhausts plain steam.",
             TurbineClass.STEAM,
             false,
@@ -449,7 +450,8 @@ public final class Turbines {
         new TurbineSpec(
             "large-plasma-generator",
             "Large Plasma Generator",
-            "LuV",
+            // Crafted from a UV hull and ZPM (circuitUltimate) circuits.
+            "UV",
             "Plasma to EU and its cooled gas.",
             TurbineClass.PLASMA,
             false),

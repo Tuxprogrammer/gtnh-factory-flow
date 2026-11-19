@@ -13,6 +13,7 @@ import { getMachineParallelMultiplier } from "@/lib/solver/machine-effects";
 import { PIN_RULE_LABEL } from "@/lib/model/pin-rule";
 import {
   formatSolvedMachines,
+  turbineEuText,
   type CleanCardView,
   type CleanChipView,
   type CleanFootView,
@@ -258,6 +259,30 @@ export function footTip(nodeId: string, foot: CleanFootView): TipSpec {
     for (const line of f.forced) rows.push({ label: "Forced in", value: line, tone: "warn" });
     notes.push({ text: "Set it to Up to and it runs what its inputs allow.", tone: "muted" });
     return { id: `${nodeId}|foot`, title: `Exactly ${n(f.capacity)} running`, rows, notes };
+  }
+  if (f.reason === "FLOW" && f.turbine) {
+    const t = f.turbine;
+    const whole = (value: number) => Math.round(value).toLocaleString("en-US");
+    const flow = `${whole(t.flow)} ${t.unit}`;
+    const many = t.turbines > 1;
+    rows.push({
+      label: many ? "Each turbine gets" : "It gets",
+      value: `${flow} of ${whole(t.optimal)} (${Math.round((100 * t.flow) / t.optimal)}%)`,
+      tone: "warn",
+    });
+    if (many) rows.push({ label: "Turbines", value: String(t.turbines) });
+    rows.push({ label: "Makes", value: turbineEuText(t.euMade, t.tier), tone: "warn" });
+    rows.push({ label: "The plan counts", value: turbineEuText(t.euCounted, t.tier) });
+    notes.push({
+      text: `A turbine loses efficiency the further its flow is from optimal. Set its flow to Custom ${flow} to plan it exactly.`,
+      tone: "muted",
+    });
+    return {
+      id: `${nodeId}|foot`,
+      title: t.flow < t.optimal ? "Below optimal flow" : "Above optimal flow",
+      rows,
+      notes,
+    };
   }
   if (f.reason === "IDLE") {
     const input = f.sentOut ?? "its input";

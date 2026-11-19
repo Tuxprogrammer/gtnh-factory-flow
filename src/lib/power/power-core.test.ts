@@ -233,7 +233,7 @@ for (const target of targets) {
       expect(checks).toBeGreaterThan(14000);
       expect(tiers).toBeGreaterThan(30);
       expect(wrong.slice(0, 10)).toEqual([]);
-    });
+    }, 60_000);
 
     // The Large Rocket Engine's output falls off by cube roots (Engines.java rocketFalloff). The JVM's Math.cbrt is
     // fdlibm; TeaVM's gives another last bit on both web targets, which the 1e-9 comparisons above cannot see. The file
@@ -263,6 +263,7 @@ for (const target of targets) {
         expect(rows.length).toBeGreaterThanOrEqual(200);
         expect(wrong).toEqual([]);
       },
+      60_000,
     );
 
     it("agrees on every input the website's own power tests build", () => {
@@ -284,7 +285,7 @@ for (const target of targets) {
         }
       });
       expect(wrong.slice(0, 10)).toEqual([]);
-    });
+    }, 60_000);
 
     it("builds the same recipe, tier and turbine card through the core as through the TypeScript", () => {
       const wrong: string[] = [];

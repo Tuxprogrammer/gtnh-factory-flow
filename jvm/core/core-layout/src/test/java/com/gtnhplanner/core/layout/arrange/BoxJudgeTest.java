@@ -37,7 +37,7 @@ class BoxJudgeTest {
         return out;
     }
 
-    private static Arrange.Input input(final Arrange.Worker worker) {
+    private static Arrange.Input input(final com.gtnhplanner.core.base.Worker worker) {
         return new Arrange.Input(
             CARDS,
             WIRES,
@@ -74,10 +74,10 @@ class BoxJudgeTest {
     @Test
     void theStagedArrangeOnASecondThreadLandsWhereTheSerialOneDoes() {
         final ArrangeResult serial = Arrange.arrangeBoard(input(null));
-        final ArrangeResult staged = Arrange.arrangeStaged(input(new Arrange.Worker() {
+        final ArrangeResult staged = Arrange.arrangeStaged(input(new com.gtnhplanner.core.base.Worker() {
 
             @Override
-            public <T> Arrange.Job<T> start(final java.util.function.Supplier<T> work) {
+            public <T> com.gtnhplanner.core.base.Worker.Job<T> start(final java.util.function.Supplier<T> work) {
                 final T result = work.get();
                 return () -> result;
             }

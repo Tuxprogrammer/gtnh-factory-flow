@@ -210,7 +210,7 @@ final class DrawerRelaxation {
 
     /** A capacity as the note says it: whole machines as a whole number. */
     private static Object machines(final double capacity) {
-        return capacity == Math.rint(capacity) && Math.abs(capacity) < Integer.MAX_VALUE ? (Object) (int) capacity
+        return capacity == Math.floor(capacity) && Math.abs(capacity) < Integer.MAX_VALUE ? (Object) (int) capacity
             : (Object) capacity;
     }
 

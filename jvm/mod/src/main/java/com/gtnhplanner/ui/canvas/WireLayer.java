@@ -979,10 +979,16 @@ final class WireLayer {
     /** A hopped wire {@code width} wide, offset by (dx, dy): its straight runs, then its bumps as smooth ribbons. */
     private static void drawHopped(final WireHops.Hopped h, final float width, final int color, final float dx,
         final float dy) {
-        for (final List<float[]> run : h.straights()) {
+        for (final List<double[]> run : h.straights()) {
             for (int i = 1; i < run.size(); i++) {
-                final float[] a = run.get(i - 1), b = run.get(i);
-                segment(a[0] + dx, a[1] + dy, b[0] + dx, b[1] + dy, width, color);
+                final double[] a = run.get(i - 1), b = run.get(i);
+                segment(
+                    (float) (a[0] + dx),
+                    (float) (a[1] + dy),
+                    (float) (b[0] + dx),
+                    (float) (b[1] + dy),
+                    width,
+                    color);
             }
         }
         for (final WireHops.Bump b : h.bumps()) ribbon(b.points(BUMP_STEPS), width, color, dx, dy);
@@ -994,20 +1000,20 @@ final class WireLayer {
      * A curve {@code width} wide through the points: each point pushed out both ways along the curve's normal there,
      * the band between filled with triangles, so the curve has no steps at its joints.
      */
-    private static void ribbon(final List<float[]> pts, final float width, final int color, final float dx,
+    private static void ribbon(final List<double[]> pts, final float width, final int color, final float dx,
         final float dy) {
         final int n = pts.size();
         final float h = width / 2;
         final float[] lx = new float[n], ly = new float[n], rx = new float[n], ry = new float[n];
         for (int i = 0; i < n; i++) {
-            final float[] prev = pts.get(Math.max(0, i - 1)), next = pts.get(Math.min(n - 1, i + 1));
-            final float tx = next[0] - prev[0], ty = next[1] - prev[1], len = (float) Math.hypot(tx, ty);
-            final float nx = len == 0 ? 0 : -ty / len * h, ny = len == 0 ? 0 : tx / len * h;
-            final float[] p = pts.get(i);
-            lx[i] = p[0] + dx + nx;
-            ly[i] = p[1] + dy + ny;
-            rx[i] = p[0] + dx - nx;
-            ry[i] = p[1] + dy - ny;
+            final double[] prev = pts.get(Math.max(0, i - 1)), next = pts.get(Math.min(n - 1, i + 1));
+            final double tx = next[0] - prev[0], ty = next[1] - prev[1], len = Math.hypot(tx, ty);
+            final double nx = len == 0 ? 0 : -ty / len * h, ny = len == 0 ? 0 : tx / len * h;
+            final double[] p = pts.get(i);
+            lx[i] = (float) (p[0] + dx + nx);
+            ly[i] = (float) (p[1] + dy + ny);
+            rx[i] = (float) (p[0] + dx - nx);
+            ry[i] = (float) (p[1] + dy - ny);
         }
         for (int i = 1; i < n; i++) {
             Hyb.triangle(lx[i - 1], ly[i - 1], lx[i], ly[i], rx[i], ry[i], color);
@@ -1082,7 +1088,7 @@ final class WireLayer {
      * one
      * every {@value #ARROW_EVERY} on a long run, and at least one per wire, on its longest run.
      */
-    private static void arrows(final List<int[]> path, final int color, final float width, final List<float[]> hops) {
+    private static void arrows(final List<int[]> path, final int color, final float width, final List<double[]> hops) {
         final float len = 1.25f * Math.max(7, Math.min(12, 2f * width + 3));
         final float half = 1.25f * Math.max(3.5f, Math.min(6, width * 0.9f + 1.5f));
         final float clear = len + 8;
@@ -1119,8 +1125,8 @@ final class WireLayer {
     }
 
     /** Whether an arrowhead ending {@code tip} along the wire keeps off every hop, with its own length to spare. */
-    private static boolean offHops(final float tip, final float len, final List<float[]> hops) {
-        for (final float[] span : hops) {
+    private static boolean offHops(final float tip, final float len, final List<double[]> hops) {
+        for (final double[] span : hops) {
             if (tip > span[0] - len && tip - len < span[1] + len) return false;
         }
         return true;

@@ -7,6 +7,7 @@ import java.util.TreeMap;
 
 import javax.annotation.Nonnull;
 
+import com.gtnhplanner.core.base.Float32Ops;
 import com.gtnhplanner.core.base.Uuid;
 
 public class Group extends GraphData {
@@ -44,9 +45,9 @@ public class Group extends GraphData {
     protected Group(final Uuid id) {
         super(id);
         final Random byId = new Random(id.getMostSignificantBits() ^ id.getLeastSignificantBits());
-        color = 0x7F000000 | (int) (byId.nextFloat() * 255) << 16
-            | (int) (byId.nextFloat() * 255) << 8
-            | (int) (byId.nextFloat() * 255);
+        color = 0x7F000000 | (int) Float32Ops.mul(byId.nextFloat(), 255) << 16
+            | (int) Float32Ops.mul(byId.nextFloat(), 255) << 8
+            | (int) Float32Ops.mul(byId.nextFloat(), 255);
     }
 
     @Override
@@ -56,8 +57,9 @@ public class Group extends GraphData {
 
     private int getRandomColor() {
         // Plain ARGB, half opaque: the data model stays free of the UI library (and testable without it).
-        final int r = (int) (colorRandom.nextFloat() * 255), g = (int) (colorRandom.nextFloat() * 255);
-        final int b = (int) (colorRandom.nextFloat() * 255);
+        final int r = (int) Float32Ops.mul(colorRandom.nextFloat(), 255),
+            g = (int) Float32Ops.mul(colorRandom.nextFloat(), 255);
+        final int b = (int) Float32Ops.mul(colorRandom.nextFloat(), 255);
         return 0x7F000000 | r << 16 | g << 8 | b;
     }
 

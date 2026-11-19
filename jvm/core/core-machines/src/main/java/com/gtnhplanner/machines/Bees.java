@@ -9,7 +9,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import com.gtnhplanner.core.base.Float32;
+import com.gtnhplanner.core.base.Float32Ops;
 import com.gtnhplanner.core.machines.GameRates;
 
 /**
@@ -232,7 +232,7 @@ public final class Bees {
     /** The allele nearest a gene's value (a species' own speed). */
     public static Allele nearestSpeed(final float value) {
         Allele best = SPEEDS.get(3);
-        for (final Allele a : SPEEDS) if (Math.abs(single(a.value() - value)) < Math.abs(single(best.value() - value))) best = a;
+        for (final Allele a : SPEEDS) if (Math.abs(Float32Ops.sub(a.value(), value)) < Math.abs(Float32Ops.sub(best.value(), value))) best = a;
         return best;
     }
 
@@ -254,7 +254,7 @@ public final class Bees {
             return switch (rule) {
                 case FORESTRY -> sum < 10.0f ? 1.0f : 0.0f;
                 case CONSTANT -> value;
-                case CEILING -> value < 0.0f ? value : sum >= max ? 0.0f : Math.min(value, single(max - sum));
+                case CEILING -> value < 0.0f ? value : sum >= max ? 0.0f : Math.min(value, Float32Ops.sub(max, sum));
             };
         }
     }
@@ -402,33 +402,34 @@ public final class Bees {
                 .upgraded()) return UPGRADED_PRODUCTION;
             return s.productionUpgrades() > 0 ? single(4.0 * single(powInt(1.2, s.productionUpgrades()))) : h.production();
         }
-        if (h == ALVEARY) return single(
+        if (h == ALVEARY) return Float32Ops.add(
             s.alvearyFrames()
-                .production()
-                + s.stimulator()
-                    .production());
+                .production(),
+            s.stimulator()
+                .production());
         float sum = h == MAGIC_APIARY && s.aura() ? MAGIC_AURA_PRODUCTION : h.production();
-        if (h.frames()) for (final Frame f : s.frames()) if (f != null) sum = single(sum + f.production(sum));
+        if (h.frames()) for (final Frame f : s.frames()) if (f != null) sum = Float32Ops.add(sum, f.production(sum));
         return sum;
     }
 
     /** p + t, the production term the chance grows with. */
     public static float term(final Setup s) {
-        return single(
-            productionModifier(s) + s.housing()
+        return Float32Ops.add(
+            productionModifier(s),
+            s.housing()
                 .t());
     }
 
     /** Forestry's Bee.getFinalChance, in the game's float arithmetic: a roll's chance (above 1 in the GT apiary). */
     public static float finalChance(float chance, final float beeSpeed, final float productionModifier, final float t) {
-        final float total = single(productionModifier + t);
+        final float total = Float32Ops.add(productionModifier, t);
         if (total <= 0.0F) return 0.0F;
-        chance = single(chance * 100.0F);
-        return single(
+        chance = Float32Ops.mul(chance, 100.0F);
+        return Float32Ops.div(
             single(
                 2.8D * Math.pow(chance, 0.52D) * Math.pow(total, 0.52D)
-                    * Math.pow(beeSpeed, 0.37D))
-                / 100.0F);
+                    * Math.pow(beeSpeed, 0.37D)),
+            100.0F);
     }
 
     /**
@@ -436,12 +437,12 @@ public final class Bees {
      * float operation rounds here, as it does on the JVM and in WebAssembly.
      */
     private static float single(final double value) {
-        return (float) Float32.round(value);
+        return Float32Ops.of(value);
     }
 
     /** {@code Float::sum}, rounded to a float on every target. */
     private static Float sum(final Float a, final Float b) {
-        return single(a + b);
+        return Float32Ops.add(a, b);
     }
 
     /** GTUtility.powInt: by squaring, as GTApiaryUpgrade takes its powers. */
@@ -483,18 +484,18 @@ public final class Bees {
             .works();
         final boolean jubilant = jubilant(s, species);
         // The queen's life: health / (1 / (housing lifespan x mode lifespan)), the IA's own lifespan modifier 1.
-        float lifespan = single(1.0F * MODE_LIFESPAN);
-        lifespan = single(1.0F / lifespan);
-        final float cycles = single(single(species.lifespan()) / lifespan);
+        float lifespan = Float32Ops.mul(1.0F, MODE_LIFESPAN);
+        lifespan = Float32Ops.div(1.0F, lifespan);
+        final float cycles = Float32Ops.div(Float32Ops.of(species.lifespan()), lifespan);
         // Primary products, the second species' at half chance, then the specialties: summed per item as floats.
         final Map<String, Float> drops = new LinkedHashMap<>();
         for (final Product pr : species.products()) if (!pr.specialty())
-            drops.merge(pr.id(), single(single(finalChance(pr.chance(), speed, p, t) * pr.stack()) * cycles), Bees::sum);
+            drops.merge(pr.id(), Float32Ops.mul(Float32Ops.mul(finalChance(pr.chance(), speed, p, t), Float32Ops.of(pr.stack())), cycles), Bees::sum);
         for (final Product pr : species.products()) if (!pr.specialty())
-            drops.merge(pr.id(), single(single(finalChance(pr.chance() / 2.0F, speed, p, t) * pr.stack()) * cycles), Bees::sum);
+            drops.merge(pr.id(), Float32Ops.mul(Float32Ops.mul(finalChance(Float32Ops.div(pr.chance(), 2.0F), speed, p, t), Float32Ops.of(pr.stack())), cycles), Bees::sum);
         for (final Product pr : species.products()) if (pr.specialty()) drops
-            .merge(pr.id(), jubilant ? single(single(finalChance(pr.chance(), speed, p, t) * pr.stack()) * cycles) : 0f, Bees::sum);
-        final int life = (int) single(cycles * CYCLE_TICKS);
+            .merge(pr.id(), jubilant ? Float32Ops.mul(Float32Ops.mul(finalChance(pr.chance(), speed, p, t), Float32Ops.of(pr.stack())), cycles) : 0f, Bees::sum);
+        final int life = (int) Float32Ops.mul(cycles, CYCLE_TICKS);
         final int limit = life / 100;
         final int accel = 1 << s.acceleration()
             .speed();
@@ -566,7 +567,7 @@ public final class Bees {
             double rolls = 0;
             if (works && pr.specialty()) rolls = jubilant ? roll(finalChance(pr.chance(), speed, p, t), capped) : 0;
             else if (works) rolls = roll(finalChance(pr.chance(), speed, p, t), capped)
-                + roll(finalChance(pr.chance() / 2.0F, speed, p, t), capped);
+                + roll(finalChance(Float32Ops.div(pr.chance(), 2.0F), speed, p, t), capped);
             out.merge(pr.id(), rolls * pr.stack() * (capped ? yield : 1), Double::sum);
         }
         return out;
@@ -584,7 +585,7 @@ public final class Bees {
         final int speed = s.acceleration()
             .speed();
         final int accel = 1 << speed;
-        long eut = (int) single(single(INDUSTRIAL_EUT * energy(s)) * accel);
+        long eut = (int) Float32Ops.mul(Float32Ops.mul(INDUSTRIAL_EUT, energy(s)), Float32Ops.of(accel));
         if (accel == 2) eut += 32;
         else if (accel > 2) eut += 32L * (accel << (speed - 2));
         return eut;
@@ -644,13 +645,13 @@ public final class Bees {
                     .get(i);
                 if (f == null) continue;
                 final float add = f.production(sum);
-                sum = single(sum + add);
+                sum = Float32Ops.add(sum, add);
                 terms.add(add < 0 ? " − " : " + ");
                 terms.add(FormulaLine.knob(num(Math.abs(add)), FRAME + (i + 1)));
             }
         }
         terms.add(" + " + num(h.t()));
-        lines.add(FormulaLine.of("p + t", num(single(p + h.t())), terms.toArray()));
+        lines.add(FormulaLine.of("p + t", num(Float32Ops.add(p, h.t())), terms.toArray()));
         lines.add(
             FormulaLine.of(
                 "speed",
@@ -673,7 +674,7 @@ public final class Bees {
                 "F(b)",
                 "2.8·(100b)",
                 FormulaLine.sup("0.52"),
-                "·" + num(single(p + h.t())),
+                "·" + num(Float32Ops.add(p, h.t())),
                 FormulaLine.sup("0.52"),
                 "·s",
                 FormulaLine.sup("0.37"),
@@ -698,7 +699,7 @@ public final class Bees {
                 if (pr.specialty()) {
                     math.add(stack + "F(" + pct(pr.chance()) + ")");
                     if (!jubilant) math.add(FormulaLine.knob(" not jubilant", CLIMATE));
-                } else math.add(stack + "F(" + pct(pr.chance()) + ") + " + stack + "F(" + pct(pr.chance() / 2f) + ")");
+                } else math.add(stack + "F(" + pct(pr.chance()) + ") + " + stack + "F(" + pct(Float32Ops.div(pr.chance(), 2f)) + ")");
             }
             lines.add(
                 FormulaLine.of(

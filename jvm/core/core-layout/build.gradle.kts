@@ -1,7 +1,8 @@
 // core-layout: the wire router and the live-drag rule (the website's, in Java: core.layout), the Arrange (the website's,
 // in Java: core.layout.arrange), and the mod's measures, crossing hops and Unstack (layout, moved from the mod). Plain
-// Java, no dependencies.
+// Java, one dependency: core-base (Worker, Float32Ops, JsMath).
 dependencies {
+    api(project(":core-base"))
     // javax.annotation.Nullable, as the mod uses it; annotations only, not shipped.
     compileOnly("com.google.code.findbugs:jsr305:3.0.2")
     testCompileOnly("com.google.code.findbugs:jsr305:3.0.2")

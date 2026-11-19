@@ -250,8 +250,11 @@ public final class Singleblocks {
 
     /** log2, exact on powers of two as JavaScript's Math.log2 is. */
     private static double log2(final double value) {
-        if (value > 0 && Double.isFinite(value) && value == Math.scalb(1.0, Math.getExponent(value))) {
-            return Math.getExponent(value);
+        // A normal power of two has an empty mantissa; read from the bits so no Math function is needed.
+        final long bits = Double.doubleToLongBits(value);
+        final int exponent = (int) ((bits >>> 52) & 0x7ff) - 1023;
+        if (value > 0 && Double.isFinite(value) && (bits & 0xfffffffffffffL) == 0 && exponent > -1023) {
+            return exponent;
         }
         return Math.log(value) / Math.log(2);
     }

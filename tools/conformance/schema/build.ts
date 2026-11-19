@@ -10,6 +10,7 @@ import { z } from "zod";
 
 import * as datasetSchemas from "../../../src/lib/datasets/schemas";
 import * as modelSchemas from "../../../src/lib/model/schemas";
+import * as solverSchemas from "../../../src/lib/solver/plan/schemas";
 import { OVERLAYS, applyOverlays, type Overlay } from "./overlays";
 
 export type SchemaFile = {
@@ -33,10 +34,13 @@ export function defName(exportName: string): string {
   return base.charAt(0).toUpperCase() + base.slice(1);
 }
 
-/** Exports that are shared pieces worth a name in `$defs`: whole objects and enums, not wrappers or one-line strings. */
+/**
+ * Exports that are shared pieces worth a name in `$defs`: whole objects and enums (and a lazy one, which is how a
+ * recursive type is written), not wrappers or one-line strings.
+ */
 function nameable(s: z.ZodType): boolean {
   const type = (s as unknown as { _zod: { def: { type: string } } })._zod.def.type;
-  return type === "object" || type === "enum" || s === modelSchemas.gtnhplannerDataSchema;
+  return type === "object" || type === "enum" || type === "lazy" || s === modelSchemas.gtnhplannerDataSchema;
 }
 
 export const SCHEMA_FILES: SchemaFile[] = [
@@ -57,6 +61,18 @@ export const SCHEMA_FILES: SchemaFile[] = [
     title: "Recipe dataset",
     root: datasetSchemas.recipeDatasetSchema,
     modules: [modelSchemas, datasetSchemas],
+  },
+  {
+    file: "solve-input.schema.json",
+    title: "Solver input (SolveInput)",
+    root: solverSchemas.solveInputSchema,
+    modules: [solverSchemas],
+  },
+  {
+    file: "solve-digest.schema.json",
+    title: "Solver answer as both engines digest it",
+    root: solverSchemas.solveDigestSchema,
+    modules: [solverSchemas],
   },
   {
     file: "dataset-manifest.schema.json",

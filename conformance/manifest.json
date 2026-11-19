@@ -317,6 +317,16 @@
       "bytes": 60300,
       "sha256": "5c3fac9a8598e4ddf1300e1f40f593d76825885d106c1e6ea10fa3e50aafa2bb"
     },
+    "schema/solve-digest.schema.json": {
+      "area": "schema",
+      "bytes": 12848,
+      "sha256": "3e6fd462ce61bff14a543084c9484b95c5d565229272498069a1ab7cb4aa74f8"
+    },
+    "schema/solve-input.schema.json": {
+      "area": "schema",
+      "bytes": 6531,
+      "sha256": "2fecabecbdfc7c3e47418f3df7e974c177efec2a08314ddd1c26447be6b4be16"
+    },
     "solver/corpus/goldens/alumina-line-shared-reactor.json": {
       "area": "solver/corpus",
       "bytes": 30130,

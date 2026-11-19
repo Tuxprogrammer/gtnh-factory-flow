@@ -25,6 +25,8 @@ describe("conformance/schema matches the Zod schemas", () => {
       "dataset-manifest.schema.json",
       "dataset.schema.json",
       "plan.schema.json",
+      "solve-digest.schema.json",
+      "solve-input.schema.json",
     ]);
   });
 
@@ -54,7 +56,7 @@ function customPlaces(): string[] {
   const names = new Map<z.ZodType, string>();
   const isZod = (v: unknown): v is z.ZodType => typeof v === "object" && v !== null && "_zod" in v;
   const nameable = (s: z.ZodType) =>
-    defOf(s).type === "object" || defOf(s).type === "enum" || s === modelSchemas.gtnhplannerDataSchema;
+    defOf(s).type === "object" || defOf(s).type === "enum" || defOf(s).type === "lazy" || s === modelSchemas.gtnhplannerDataSchema;
   for (const mod of [modelSchemas, datasetSchemas] as Array<Record<string, unknown>>) {
     for (const [name, v] of Object.entries(mod)) {
       if (!isZod(v) || names.has(v) || !nameable(v)) continue;

@@ -131,6 +131,8 @@ async function addFromUsesOf(
   loader.recipe = recipe;
   useFactoryStore.getState().browseResource(browsed, "uses");
   render(<RecipeBrowser onLoadDatasetVersion={() => {}} />);
+  // A generator that burns the item answers too, and its tab comes first: pick the recipe's own machine.
+  fireEvent.click(await screen.findByRole("tab", { name: recipe.machineType }));
   await screen.findAllByText(recipe.machineType);
   fireEvent.click(await screen.findByLabelText("Add recipe node"));
   await waitFor(() => expect(useFactoryStore.getState().project.nodes).toHaveLength(1));

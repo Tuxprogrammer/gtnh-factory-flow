@@ -248,6 +248,14 @@ const AUX_NAMES = [
   ["Potassium Hydroxide Dust", "item"],
   ["Caesium Hydroxide Dust", "item"],
   ["Francium Hydroxide Dust", "item"],
+  // The Railcraft boiler's solid fuels the workbook tables lack: any furnace fuel burns in its firebox.
+  ["Oak Log", "item"],
+  ["Oak Planks", "item"],
+  ["Oak Sapling", "item"],
+  ["Wood Pulp", "item"],
+  ["Coal Dust", "item"],
+  ["Charcoal Dust", "item"],
+  ["Lignite Coal Dust", "item"],
   // The Railcraft boiler's liquid fuels the workbook tables lack (Railcraft's FuelManager, EnderIO's IMC).
   ["Hootch", "fluid"],
   ["Fire Water", "fluid"],

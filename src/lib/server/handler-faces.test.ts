@@ -9,6 +9,10 @@ describe("faces for the machines the app adds", () => {
   const catalog = {
     machineHandlerIcons: [],
     resources: [
+      // Harvestcraft also has an "Apiary"; listed first, a name lookup would take it.
+      resource("harvestcraft:apiary", "Apiary"),
+      resource("forestry:apiculture", "Apiary"),
+      resource("forestry:apiculture@2", "Bee House"),
       resource("magicbees:magicapiary", "Magic Apiary"),
       resource("forestry:alveary", "Alveary"),
       resource("gregtech:gt.blockmachines@9399", "Industrial Apiary"),
@@ -20,6 +24,8 @@ describe("faces for the machines the app adds", () => {
   const faces = new Map(withSynthesizedHandlerIcons(catalog).map((entry) => [entry.familyId, entry.resource]));
 
   it("give each bee housing its own block", () => {
+    expect(faces.get("apiary")?.id).toBe("forestry:apiculture");
+    expect(faces.get("bee-house")?.id).toBe("forestry:apiculture@2");
     expect(faces.get("magic-apiary")?.id).toBe("magicbees:magicapiary");
     expect(faces.get("alveary")?.id).toBe("forestry:alveary");
     expect(faces.get("industrial-apiary")?.id).toBe("gregtech:gt.blockmachines@9399");

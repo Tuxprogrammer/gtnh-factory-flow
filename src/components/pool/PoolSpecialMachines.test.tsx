@@ -99,14 +99,14 @@ describe("Pool specialized machines", () => {
   it("switches bee housing and exposes controls even when the board panel was folded", () => {
     useFactoryStore.getState().setProject(plan(bee()));
     const { container } = render(<PoolWorksheet />);
-    expect(container.querySelector('.pool-machine-title')?.textContent).toBe("Magic Apiary");
-    fireEvent.click(screen.getByRole("button", { name: "Settings for Magic Apiary" }));
-    const settings = screen.getByRole("region", { name: "Machine settings for Magic Apiary" });
+    expect(container.querySelector('.pool-machine-title')?.textContent).toBe("Apiary");
+    fireEvent.click(screen.getByRole("button", { name: "Settings for Apiary" }));
+    const settings = screen.getByRole("region", { name: "Machine settings for Apiary" });
     expect(within(settings).getByText("Speed Gene")).toBeTruthy();
     expect(within(settings).getAllByText("Frame 1")).toHaveLength(1);
-    fireEvent.click(screen.getByRole("button", { name: "Change machine: Magic Apiary" }));
-    for (const label of ["Magic Apiary", "Alveary", "Industrial Apiary", "Mega Apiary"]) {
-      expect(screen.getByRole("option", { name: new RegExp(label) })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Change machine: Apiary" }));
+    for (const label of ["Apiary", "Bee House", "Magic Apiary", "Alveary", "Industrial Apiary", "Mega Apiary"]) {
+      expect(screen.getByRole("option", { name: new RegExp(`^${label}`) })).toBeTruthy();
     }
     fireEvent.click(screen.getByRole("option", { name: /Industrial Apiary/ }));
     expect(useFactoryStore.getState().project.nodes[0].machineHandlerId).toBe("industrial-apiary");

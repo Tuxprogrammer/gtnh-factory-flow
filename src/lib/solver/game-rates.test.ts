@@ -176,14 +176,16 @@ describe("a Forestry housing's produce rolls", () => {
     expect(beeMultiplier("apiary") * 0.3).toBeCloseTo(0.0841469, 6);
   });
 
-  it("give beesYield items a roll in the Apiary, Magic Apiary and Alveary", () => {
+  it("give beesYield items a roll in the Apiary, Bee House, Magic Apiary and Alveary", () => {
     const base = {
       apiary: beeMultiplier("apiary"),
+      house: beeMultiplier("bee-house"),
       magic: beeMultiplier("magic-apiary"),
       alveary: beeMultiplier("alveary"),
     };
     setActiveGameRates(PACK);
     expect(beeMultiplier("apiary")).toBeCloseTo(base.apiary * 4, 10);
+    expect(beeMultiplier("bee-house")).toBeCloseTo(base.house * 4, 10);
     expect(beeMultiplier("magic-apiary")).toBeCloseTo(base.magic * 4, 10);
     expect(beeMultiplier("alveary")).toBeCloseTo(base.alveary * 4, 10);
   });

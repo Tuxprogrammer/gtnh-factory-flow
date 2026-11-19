@@ -100,6 +100,7 @@ function withCellWireNotice(
 }
 
 function normalizeLegacyProject(project: FactoryProject): FactoryProject {
+  project = pinMagicApiaryDefault(project);
   project = normalizeProductionGroups(project);
   project = repairWiredInputOverrides(project);
   project = dropSelfLoopInputOverrides(project);
@@ -350,6 +351,27 @@ function renameOpvTier(project: FactoryProject): FactoryProject {
     }
     changed = true;
     return { ...node, overclockTier: "UXV" as const };
+  });
+  return changed ? { ...project, nodes } : project;
+}
+
+/**
+ * A bee card with no housing of its own ran in the first one its recipe lists, which was the Magic Apiary before the
+ * plain Apiary and the Bee House joined the list ahead of it. Such a card keeps the Magic Apiary, so its numbers do
+ * not move under a plan saved with it; a card a player picks a housing for already says so.
+ */
+function pinMagicApiaryDefault(project: FactoryProject): FactoryProject {
+  let changed = false;
+  const nodes = project.nodes.map((node) => {
+    if (node.machineHandlerId !== undefined) {
+      return node;
+    }
+    const recipe = project.recipes.find((entry) => entry.id === node.recipeId);
+    if (recipe?.machineHandlers?.[0]?.id !== "magic-apiary") {
+      return node;
+    }
+    changed = true;
+    return { ...node, machineHandlerId: "magic-apiary" };
   });
   return changed ? { ...project, nodes } : project;
 }

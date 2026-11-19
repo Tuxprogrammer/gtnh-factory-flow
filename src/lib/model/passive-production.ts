@@ -59,7 +59,12 @@ export const BEE_ALVEARY_SUPPORT_CONTROL_ID = "beeAlvearySupport";
 export const BEE_INDUSTRIAL_SPEED_CONTROL_ID = "beeIndustrialSpeed";
 export const BEE_INDUSTRIAL_PRODUCTION_CONTROL_ID = "beeIndustrialProduction";
 export const BEE_MEGA_ROYAL_JELLY_CONTROL_ID = "beeMegaRoyalJelly";
+/**
+ * p + t with no frames, t being 1 in Forestry's housings: the housing's own `IBeeModifier.getProductionModifier`
+ * (ApiaryBeeModifier -0.9, BeehouseBeeModifier -0.75, AlvearyBeeModifier none) plus that 1.
+ */
 export const BEE_APIARY_BASE_PRODUCTION_TERM = 0.1;
+const BEE_HOUSE_BASE_PRODUCTION_TERM = 0.25;
 const BEE_MAGIC_APIARY_BASE_PRODUCTION_TERM = 0.9;
 const BEE_ALVEARY_BASE_PRODUCTION_TERM = 1;
 const BEE_INDUSTRIAL_APIARY_BASE_PRODUCTION_TERM = 10;
@@ -877,6 +882,9 @@ export function getBeeBaseProductionTerm(machineType: string) {
   if (label.includes("alveary")) {
     return BEE_ALVEARY_BASE_PRODUCTION_TERM;
   }
+  if (label.includes("bee house")) {
+    return BEE_HOUSE_BASE_PRODUCTION_TERM;
+  }
   return BEE_APIARY_BASE_PRODUCTION_TERM;
 }
 
@@ -1624,8 +1632,36 @@ function beeFrameSlotControl(slotIndex: number): MachineConfigControl {
   });
 }
 
+/**
+ * Forestry's Bee House (TileBeehouse) has no frame slots and one modifier, BeehouseBeeModifier: production -0.75,
+ * lifespan x3, mutation 0 (it cannot breed), none of which reach a rate here but the production. So its card
+ * carries the gene and the climate only.
+ */
+function beeHouseProductionControls(): MachineConfigControl[] {
+  return [beeSpeedGeneControl(), beeEnvironmentControl()];
+}
+
 function beeMachineHandlers(): MachineHandler[] {
   return [
+    // The map's own machine comes first: a card with no handler of its own runs in the first one.
+    {
+      id: "apiary",
+      label: "Apiary",
+      machineType: "Apiary",
+      minimumTier: "NONE",
+      eut: 0,
+      kind: "single",
+      machineConfigControls: apiaryProductionControls(),
+    },
+    {
+      id: "bee-house",
+      label: "Bee House",
+      machineType: "Bee House",
+      minimumTier: "NONE",
+      eut: 0,
+      kind: "single",
+      machineConfigControls: beeHouseProductionControls(),
+    },
     {
       id: "magic-apiary",
       label: "Magic Apiary",

@@ -108,6 +108,23 @@ describe("bee maths from the game's code", () => {
     expect(perCycle("apiary", { beeSpeedGene: "fast" })).toBeCloseTo(0.0900192, 6);
   });
 
+  it("a Bee House has a production term of 0.25 and takes no frames", () => {
+    // BeehouseBeeModifier: production -0.75, so p + t = 0.25 against the Apiary's 0.1. F(30%) + F(15%) and F(15%).
+    expect(perCycle("bee-house", {})).toBeCloseTo(0.1355086, 6);
+    expect(perCycle("bee-house", {}, 1)).toBeCloseTo(0.0556742, 6);
+    expect(perCycle("bee-house", { beeSpeedGene: "fast" })).toBeCloseTo(0.1449653, 6);
+    // The block has no frame slots: a frame left in a saved plan's settings counts for nothing.
+    expect(
+      perCycle("bee-house", {
+        beeFrameSlot1: "forestry:proven",
+        beeFrameSlot2: "forestry:proven",
+        beeFrameSlot3: "forestry:proven",
+      }),
+    ).toBeCloseTo(0.1355086, 6);
+    expect(perCycle("bee-house", { beeEnvironment: "tolerated" }, 1)).toBe(0);
+    expect(perCycle("bee-house", { beeEnvironment: "wrong" })).toBe(0);
+  });
+
   it("a Forestry roll is at most certain", () => {
     const tiers = {
       beeFrameSlot1: "magicbees:magic",

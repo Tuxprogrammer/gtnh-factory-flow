@@ -3,12 +3,14 @@ package com.gtnhplanner.power.sources;
 import static com.gtnhplanner.power.sources.Helpers.*;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import com.gtnhplanner.power.PowerData;
 import com.gtnhplanner.power.PowerData.Fuel;
 import com.gtnhplanner.power.PowerGroup;
 import com.gtnhplanner.power.PowerModel;
+import com.gtnhplanner.power.PowerModel.Alternative;
 import com.gtnhplanner.power.PowerModel.Flow;
 import com.gtnhplanner.power.PowerSetting;
 import com.gtnhplanner.power.PowerSetting.Option;
@@ -16,7 +18,7 @@ import com.gtnhplanner.power.PowerSource;
 
 /**
  * The website's sources/railcraft.ts: Railcraft's Water Tank and its steam boiler, from Railcraft's source at the
- * version GTNH 2.9 ships (GTNewHorizons/Railcraft tag 9.17.26; research/railcraft-water-tank-and-boilers.md has the
+ * version GTNH 2.9 ships (GTNewHorizons/Railcraft tag 9.17.36; research/railcraft-water-tank-and-boilers.md has the
  * links). Both are modelled at steady state: the tank as it fills, the boiler at full heat.
  */
 public final class Railcraft {
@@ -114,19 +116,41 @@ public final class Railcraft {
     private static final List<Pressure> BOILER_PRESSURES = List
         .of(new Pressure("low", "Low pressure", 16, 500), new Pressure("high", "High pressure", 8, 1000));
 
-    private record Solid(String name, double burnTicks) {}
+    private record Solid(String name, String label, double burnTicks, List<Alternative> alternatives) {}
+
+    /** Every vanilla wood's item ({@code @32767} is any damage): a firebox burns any log, planks or sapling alike. */
+    private static List<Alternative> anyWood(final String displayName, final String... ids) {
+        final List<Alternative> out = new ArrayList<>();
+        for (final String id : ids) out.add(new Alternative("item", id + "@32767", displayName));
+        return out;
+    }
 
     /**
-     * The solid firebox burns whatever a furnace burns, at its furnace value (FuelPlugin): the workbook's furnace
-     * table, with Railcraft's own 1000 for a blaze rod. Lava containers (1000 a bucket, worse than coal, leaving the
-     * container) and wood are left out.
+     * The solid firebox burns whatever a furnace burns, at its furnace value (TileBoilerFireboxSolid takes
+     * FuelPlugin.getBurnTime > 0): the workbook's furnace table, with Railcraft's own 1000 for a blaze rod, and the
+     * furnace fuels that table lacks. TileEntityFurnace.getItemBurnTime: any wooden block 300, a stick or sapling 100
+     * (the pack's CustomFuels.xml changes none of them); GTProxy.getBurnTime's ore dictionary table: dustCoal and
+     * dustCharcoal 1600, dustLignite 1200, dustWood 100. Any log or planks burn alike; oak is the port. Lava containers
+     * (1000 a bucket, worse than coal, leaving the container) are left out. Sorted by burn time, equal ones in the
+     * order listed.
      */
     private static List<Solid> boilerSolids() {
         final List<Solid> out = new ArrayList<>();
         for (final Fuel entry : PowerData.get().boilerFuels.get("bronzeSolid")) out.add(
             new Solid(
                 entry.name,
-                "Blaze Rod".equals(entry.name) ? 1000 : entry.euPerItem != null ? entry.euPerItem : 0));
+                entry.name,
+                "Blaze Rod".equals(entry.name) ? 1000 : entry.euPerItem != null ? entry.euPerItem : 0,
+                List.of()));
+        out.add(new Solid("Oak Log", "Log (any wood)", 300, anyWood("Log", "minecraft:log", "minecraft:log2")));
+        out.add(new Solid("Oak Planks", "Planks (any wood)", 300, anyWood("Planks", "minecraft:planks")));
+        out.add(new Solid("Stick", "Stick", 100, List.of()));
+        out.add(new Solid("Oak Sapling", "Sapling (any)", 100, anyWood("Sapling", "minecraft:sapling")));
+        out.add(new Solid("Wood Pulp", "Wood Pulp", 100, List.of()));
+        out.add(new Solid("Coal Dust", "Coal Dust", 1600, List.of()));
+        out.add(new Solid("Charcoal Dust", "Charcoal Dust", 1600, List.of()));
+        out.add(new Solid("Lignite Coal Dust", "Lignite Coal Dust", 1200, List.of()));
+        out.sort(Comparator.comparingDouble(Solid::burnTicks));
         return out;
     }
 
@@ -164,7 +188,7 @@ public final class Railcraft {
         for (final Pressure row : BOILER_PRESSURES) pressures.add(new Option(row.key(), row.label()));
         // One fuel list: a solid needs the Solid Fueled Firebox, a liquid the Liquid Fueled one.
         final List<Option> fuels = new ArrayList<>();
-        for (final Solid row : solids) fuels.add(new Option(row.name(), row.name()));
+        for (final Solid row : solids) fuels.add(new Option(row.name(), row.label()));
         for (final Liquid row : BOILER_LIQUIDS) fuels.add(new Option(row.name(), row.label()));
         return new PowerSource(
             "railcraft-boiler",
@@ -206,7 +230,8 @@ public final class Railcraft {
                 if (liquid != null) {
                     inputs.add(liters(liquid.name(), (fuelPerSecond * 1000) / liquid.heat()));
                 } else if (solid.burnTicks() > 0) {
-                    inputs.add(items(solid.name(), fuelPerSecond / solid.burnTicks()));
+                    inputs.add(
+                        items(solid.name(), fuelPerSecond / solid.burnTicks()).withAlternatives(solid.alternatives()));
                 }
                 inputs.add(liters("Water", waterPerSecond));
 

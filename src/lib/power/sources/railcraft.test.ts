@@ -8,7 +8,7 @@ import { boilerWarmUpTicks, waterTankFill } from "./railcraft";
 
 /**
  * Railcraft's Water Tank and boiler against Railcraft's source (GTNH fork,
- * tag 9.17.26). The mod's RailcraftTest pins the same values.
+ * tag 9.17.36). The mod's RailcraftTest pins the same values.
  */
 function compute(sourceId: string, settings: Record<string, string> = {}) {
   const source = getPowerSource(sourceId);

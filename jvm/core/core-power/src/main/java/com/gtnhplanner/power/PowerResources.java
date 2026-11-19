@@ -1,5 +1,6 @@
 package com.gtnhplanner.power;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.annotation.Nullable;
@@ -37,25 +38,30 @@ public final class PowerResources {
         }
     }
 
-    private static class ResourceFile {
-
-        Map<String, Ref> resources;
-    }
-
-    private static class MachineFile {
-
-        Map<String, Ref> machines;
+    private static Map<String, Ref> refs(final String resource, final String field) {
+        final Map<String, Ref> out = new LinkedHashMap<>();
+        final Map<String, Object> table = JsonTree.object(JsonTree.object(JsonTree.parse(PowerData.readText(resource))).get(field));
+        for (final Map.Entry<String, Object> entry : table.entrySet()) {
+            final Map<String, Object> m = JsonTree.object(entry.getValue());
+            final Ref ref = new Ref();
+            ref.kind = JsonTree.str(m, "kind");
+            ref.id = JsonTree.str(m, "id");
+            ref.displayName = JsonTree.str(m, "displayName");
+            ref.dominantColor = JsonTree.str(m, "dominantColor");
+            out.put(entry.getKey(), ref);
+        }
+        return out;
     }
 
     private static Map<String, Ref> resources, machines;
 
     private static synchronized Map<String, Ref> resources() {
-        if (resources == null) resources = PowerData.read(RESOURCE_MAP, ResourceFile.class).resources;
+        if (resources == null) resources = refs(RESOURCE_MAP, "resources");
         return resources;
     }
 
     private static synchronized Map<String, Ref> machines() {
-        if (machines == null) machines = PowerData.read(MACHINE_ICONS, MachineFile.class).machines;
+        if (machines == null) machines = refs(MACHINE_ICONS, "machines");
         return machines;
     }
 

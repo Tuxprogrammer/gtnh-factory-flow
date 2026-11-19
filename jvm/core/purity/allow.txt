@@ -22,14 +22,3 @@ core/core-machines/src/main/java/com/gtnhplanner/machines/web/Js.java float-pars
 core/core-machines/src/main/java/com/gtnhplanner/machines/web/Js.java float-text JavaScript String(n) stand-in; becomes NumberText.of
 core/core-machines/src/main/java/com/gtnhplanner/machines/web/MachineEffects.java float-parse a numeric setting key read as a number; becomes NumberText.parse
 core/core-machines/src/main/java/com/gtnhplanner/machines/web/PowerReport.java string-format a stall's EU/t printed with "%.1f"; becomes NumberText.fixed (the website uses toFixed)
-core/core-power/src/main/java/com/gtnhplanner/power/PowerData.java reflection the workbook tables bound by Gson into classes; becomes a tree-API read
-core/core-power/src/main/java/com/gtnhplanner/power/PowerSetting.java float-parse a stored number setting read with parseDouble; becomes NumberText.parse
-core/core-power/src/main/java/com/gtnhplanner/power/sources/Endgame.java float-parse a numeric option key read as a number; becomes NumberText.parse
-core/core-power/src/main/java/com/gtnhplanner/power/sources/Endgame.java float-text a stat number printed as JavaScript would; becomes NumberText.of
-core/core-power/src/main/java/com/gtnhplanner/power/sources/Engines.java float-text a stat number printed as JavaScript would; becomes NumberText.of
-core/core-power/src/main/java/com/gtnhplanner/power/sources/Helpers.java float-text the workbook's number format (Intl en-US, two decimals); becomes the shared display formatter
-core/core-power/src/main/java/com/gtnhplanner/power/sources/Helpers.java java-text the workbook's number format (Intl en-US, two decimals) with DecimalFormat; becomes the shared display formatter
-core/core-power/src/main/java/com/gtnhplanner/power/sources/Reactors.java float-parse a numeric option key read as a number; becomes NumberText.parse
-core/core-power/src/main/java/com/gtnhplanner/power/sources/Reactors.java float-text a stat number printed as JavaScript would; becomes NumberText.of
-core/core-power/src/main/java/com/gtnhplanner/power/sources/Singleblocks.java float-text a stat number printed as JavaScript would; becomes NumberText.of
-core/core-power/src/main/java/com/gtnhplanner/power/sources/SteamMakers.java float-text a stat number printed as JavaScript would; becomes NumberText.of

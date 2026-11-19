@@ -1,0 +1,12 @@
+{
+  "about": "Differences between a compiled target and JavaScript or the JVM that are findings sent to the stream that owns the code, and not yet fixed there. Each is counted and printed as KNOWN, never hidden; the run fails if an entry stops matching (delete it with the fix) or if anything else differs. An entry names the finding, so nothing is listed without one.",
+  "known": [
+    {
+      "id": "wasm-negation-of-zero",
+      "target": "wasm",
+      "match": "negative-zero-read-as-zero",
+      "groups": ["number-text/parse", "random/parse"],
+      "finding": "TeaVM's Wasm GC backend compiles -x on a double as 0.0 - x, so -(0.0) is +0.0. NumberText.decimal ends with `return negative ? -v : v;`, so texts that read as negative zero ('-0', negative underflow) give +0 on the Wasm target; the JS target and the JVM give -0. Reported to the kernel stream; fix there, for example -1.0 * v."
+    }
+  ]
+}

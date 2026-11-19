@@ -146,7 +146,10 @@ public final class ZoomedOutLabels {
                 };
                 final float[] box = { lx, ly, lw, lh };
                 final float[] room = { lx - apart, ly - gap, lw + 2 * apart, lh + 2 * gap };
-                if (placed.overlaps(room) || solid.overlaps(box)) continue;
+                // A name keeps the gap it keeps from its own box from every other card and drawer too: above a card
+                // one cell under another (Arrange's compact rows), it would sit on the card above.
+                final float[] clear = { lx - gap, ly - gap, lw + 2 * gap, lh + 2 * gap };
+                if (placed.overlaps(room) || solid.overlaps(clear, r)) continue;
                 placed.add(box);
                 out.add(new Laid(text, lx, ly, lw, lh));
                 break;
@@ -172,9 +175,14 @@ public final class ZoomedOutLabels {
         }
 
         boolean overlaps(final float[] a) {
+            return overlaps(a, null);
+        }
+
+        /** As {@link #overlaps(float[])}, leaving out the box of {@code own} (the name's own card or drawer). */
+        boolean overlaps(final float[] a, @javax.annotation.Nullable final Request own) {
             for (int cx = c(a[0]); cx <= c(a[0] + a[2]); cx++) for (int cy = c(a[1]); cy <= c(a[1] + a[3]); cy++) {
                 final List<float[]> in = cells.get((long) cx << 32 | cy & 0xFFFFFFFFL);
-                if (in != null && overlapsAny(a, in)) return true;
+                if (in != null && overlapsAny(a, in, own)) return true;
             }
             return false;
         }
@@ -184,8 +192,9 @@ public final class ZoomedOutLabels {
         }
     }
 
-    private static boolean overlapsAny(final float[] a, final List<float[]> others) {
+    private static boolean overlapsAny(final float[] a, final List<float[]> others, final Request own) {
         for (final float[] b : others) {
+            if (own != null && b[0] == own.x() && b[1] == own.y() && b[2] == own.w() && b[3] == own.h()) continue;
             if (a[0] < b[0] + b[2] && b[0] < a[0] + a[2] && a[1] < b[1] + b[3] && b[1] < a[1] + a[3]) return true;
         }
         return false;

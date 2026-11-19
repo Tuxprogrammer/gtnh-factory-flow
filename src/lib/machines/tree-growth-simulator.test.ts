@@ -14,6 +14,8 @@ import {
   tgsTier,
   tgsTierMultiplier,
 } from "./tree-growth-simulator";
+import { enrichPassiveProductionRecipe } from "@/lib/model/passive-production";
+import { hasPowerReport } from "@/lib/solver/power-report";
 import type { Recipe } from "@/lib/model/types";
 
 // Values from GT5U 5.09.54.205's MTETreeFarm and ForestryMC 4.11.39 (javap), docs/design/bio-vat-and-tgs.md.
@@ -29,6 +31,23 @@ const oak: Partial<Recipe> = {
 };
 
 describe("Tree Growth Simulator", () => {
+  it("starts a dataset recipe at LV and 30 EU/t, so its card has a power section", () => {
+    // NEI lists the recipe at ULV and 0 EU/t; the card reads the recipe's own EU to show power.
+    const recipe = enrichPassiveProductionRecipe({
+      id: "tgs-oak",
+      name: "Tree Growth Simulator: Oak Log",
+      machineType: "Tree Growth Simulator",
+      minimumTier: "ULV",
+      durationTicks: 2,
+      eut: 0,
+      inputs: [],
+      outputs: oak.outputs ?? [],
+    } as Recipe);
+    expect(recipe.minimumTier).toBe("LV");
+    expect(recipe.eut).toBe(30);
+    expect(hasPowerReport(recipe)).toBe(true);
+  });
+
   it("multiplies by 2t^2 - 2t + 5 and draws VP[t]", () => {
     expect([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map(tgsTierMultiplier)).toEqual([
       5, 9, 17, 29, 45, 65, 89, 117, 149, 185, 225, 269, 317, 369,

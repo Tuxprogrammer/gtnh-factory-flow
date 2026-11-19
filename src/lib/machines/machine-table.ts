@@ -33,6 +33,7 @@ import { TGS_TICKS, getTgsControls } from "./tree-growth-simulator";
 import { getVatControls, getVatGateReason } from "./bacterial-vat";
 import { EEC_CONTROLS, EEC_MODE } from "./extreme-entity-crusher";
 import { neutronActivatorSpeed, quantiseNeutronActivatorDuration } from "./neutron-activator";
+import { quantiseSteamMultiblockDuration } from "./steam-multiblock";
 import { HILE_SOURCE_CONTROL, hileSourceAt, normalizeHileSettings } from "./hile";
 import { PRASS_NORMAL_CASING, PRASS_PRECISE_CASING, PRASS_MACHINE_CASING, prassInputVoltageLimit } from "./precise-assembler";
 
@@ -656,6 +657,7 @@ const STEAM_MULTIBLOCK: MachineBehaviour = {
   overclock: OVERCLOCK.none(),
   parallels: 8,
   speed: (c) => 0.625 * (c.tier(STEAM_PRESSURE) + 1),
+  quantiseDuration: quantiseSteamMultiblockDuration,
   controls: [STEAM_PRESSURE_CONTROL],
   // The Steam Blender's handler inherited the mixer map's scraped pipe knob.
   // Its pipes are bronze or steel with the rest of the build: the pressure.
@@ -1288,11 +1290,12 @@ const MACHINES: Record<string, MachineBehaviour> = {
     // MTESteamFurnaceMulti, same logic as its seven siblings, but its map is
     // vanilla smelting: the dataset's base is the 200-tick vanilla smelt while
     // the machine runs GT's fixed 128t/4EU furnace recipe. 200 / (128 x 1.6)
-    // = 0.9765625, so the shown duration lands on the game's own 204 ticks
-    // basic and 102 high pressure.
+    // = 0.9765625, so the shown duration lands on the game's own 205 ticks
+    // basic and 103 high pressure (128 x 1.6 and 128 x 0.8, rounded up).
     overclock: OVERCLOCK.none(),
     parallels: 8,
     speed: (c) => 0.9765625 * (c.tier(STEAM_PRESSURE) + 1),
+    quantiseDuration: quantiseSteamMultiblockDuration,
     controls: [STEAM_PRESSURE_CONTROL],
   },
 

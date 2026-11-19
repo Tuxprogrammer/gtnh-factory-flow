@@ -26,7 +26,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.gtnhplanner.conformance.Conformance;
 import com.gtnhplanner.data.flowchart.balancer.Balancer;
-import com.gtnhplanner.dev.SolveInputJson;
 
 /**
  * The kernel answers the website's own cases as the website does ({@code conformance/solver/website/cases.json.gz},
@@ -98,7 +97,7 @@ class WebsiteCasesTest {
     }
 
     private static void check(final String name, final JsonObject c) {
-        final Balancer.Answer answer = Balancer.solveWithAlternatives(SolveInputJson.read(c.getAsJsonObject("input")));
+        final Balancer.Answer answer = Balancer.solveWithAlternatives(SolverCorpus.read(c.getAsJsonObject("input")));
         final JsonElement expected = engineWords(c.get("answer"));
         final JsonElement actual = engineWords(UpToParityTest.normalised(UpToParityTest.digest(answer)));
         final List<String> d = SolverCorpus.differences(expected, actual);

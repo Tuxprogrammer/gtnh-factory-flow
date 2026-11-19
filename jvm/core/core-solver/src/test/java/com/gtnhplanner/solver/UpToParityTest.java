@@ -18,7 +18,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.gtnhplanner.conformance.Conformance;
 import com.gtnhplanner.data.flowchart.balancer.Balancer;
-import com.gtnhplanner.dev.SolveInputJson;
 
 /**
  * The Up to rule answers the same in the mod as on the website (docs/design/up-to.md): every plan the website's
@@ -78,7 +77,7 @@ class UpToParityTest {
         final JsonObject plan = new JsonParser().parse(Files.readString(file, StandardCharsets.UTF_8))
             .getAsJsonObject();
         final Balancer.Answer answer = Balancer
-            .solveWithAlternatives(SolveInputJson.read(plan.getAsJsonObject("input")));
+            .solveWithAlternatives(SolverCorpus.read(plan.getAsJsonObject("input")));
         final JsonElement expected = plan.get("answer"), actual = normalised(digest(answer));
         final String why = WITHIN_TOLERANCE.get(
             file.getFileName()

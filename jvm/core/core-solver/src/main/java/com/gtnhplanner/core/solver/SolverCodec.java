@@ -1,4 +1,4 @@
-package com.gtnhplanner.web.solver;
+package com.gtnhplanner.core.solver;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -31,8 +31,9 @@ import com.gtnhplanner.data.flowchart.balancer.alternatives.Alternatives;
 /**
  * The solver's exchange text: a solve input read from JSON and an answer written as the corpus's digest
  * ({@code conformance/schema/solve-digest}), both with {@link JsonTree} and no reflection, so the same code runs on the
- * JVM and in the web build. Nothing here depends on the web build; the shared codec for the mod and the website is
- * this class moved into the solver module.
+ * JVM and in the web build. One codec: the web build's solver export answers with it, and the JVM tests read the
+ * corpus and compare answers through it ({@code SolverCodecTest} holds it to the tests' reflective digest on every
+ * case).
  *
  * <p>
  * The input is the file format of {@code conformance/solver/corpus/inputs} ({@code SolveInputJson.write}). The answer

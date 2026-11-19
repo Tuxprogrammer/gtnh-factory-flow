@@ -1,4 +1,4 @@
-package com.gtnhplanner.web.solver;
+package com.gtnhplanner.core.solver;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;

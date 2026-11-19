@@ -437,9 +437,10 @@ function rotorClass(row, effTight, effLoose, optTight, optLoose) {
 
 // --------------------------------------------------------- Java corrections
 //
-// Where the workbook and the pack's Java (GT5U tag 5.09.54.20) disagree, the
-// Java wins. Each correction names the class or loader it follows, so the JSON
-// stays a pure function of workbook + this file. Never hand-edit the JSON.
+// Where the workbook and the pack's Java (GregTech 5.09.54.265 and the mods the
+// GTNH 2.9.0 pack ships) disagree, the Java wins. Each correction names the class
+// or loader it follows, so the JSON stays a pure function of workbook + this
+// file. Never hand-edit the JSON.
 
 const withoutNames = (rows, names) => rows.filter((row) => !names.includes(row.name));
 
@@ -643,6 +644,13 @@ function correctReactors() {
   // (LiFBeF2ThF4), not T Salt.
   data.lftrFuels = data.lftrFuels.map((row) =>
     row.name === "LFTR Fuel 2" ? { ...row, tSalt: 0, tbSalt: 100 } : row,
+  );
+  // HTGRLoader FUEL_MODIFICATOR, Triple.of(base, mult, exp) as the reactor reads it
+  // (getLeft/getMiddle/getRight): Uranium-235 pebbles are (1.1, 1.1, 1.1), Glowstone
+  // pebbles (0.65, 1.2, 1.1).
+  const pebbleBase = { "Uranium-235": 1.1, Glowstone: 0.65 };
+  data.htgrPebbles = data.htgrPebbles.map((row) =>
+    row.name in pebbleBase ? { ...row, base: pebbleBase[row.name] } : row,
   );
 }
 

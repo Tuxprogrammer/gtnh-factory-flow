@@ -2018,7 +2018,7 @@
  "htgrPebbles": [
   {
    "name": "Glowstone",
-   "base": 2,
+   "base": 0.65,
    "mult": 1.2,
    "exp": 1.1
   },
@@ -2042,7 +2042,7 @@
   },
   {
    "name": "Uranium-235",
-   "base": 1,
+   "base": 1.1,
    "mult": 1.1,
    "exp": 1.1
   },

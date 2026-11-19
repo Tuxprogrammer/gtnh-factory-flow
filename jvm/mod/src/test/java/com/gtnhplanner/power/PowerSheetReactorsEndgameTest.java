@@ -131,7 +131,7 @@ class PowerSheetReactorsEndgameTest {
     void htgrOperation() {
         // Glowstone at a full 10,000 balls: exponent 1.1 gives 16,528 ticks of progress, and full coolant + water
         // add 57 + 24 a tick, so 202 ticks.
-        final Reactors.Pebble pebble = new Reactors.Pebble(2, 1.2, 1.1);
+        final Reactors.Pebble pebble = new Reactors.Pebble(0.65, 1.2, 1.1);
         final Reactors.HtgrOperation run = Reactors.htgrOperation(pebble, 10_000);
         assertEquals(202, run.cycleTicks(), 0);
         assertCloseTo(14.159265, run.burned(), 5);
@@ -147,11 +147,11 @@ class PowerSheetReactorsEndgameTest {
         assertEquals("kubatech:htgr_item_triso_fuel@1", PowerResources.resolve("TRISO Fuel (Uranium 235)").id);
         // A half-full reactor keeps its fuel base: the ball count alone scales the draw.
         final Reactors.HtgrOperation half = Reactors.htgrOperation(pebble, 5_000);
-        assertCloseTo(2 * Math.pow(1.1, 1.05), half.energyMultiplier(), 9);
+        assertCloseTo(0.65 * Math.pow(1.1, 1.05), half.energyMultiplier(), 9);
     }
 
     @Test
-    @DisplayName("computes the HTGR glowstone multiplier (2.444)")
+    @DisplayName("computes the HTGR glowstone multiplier (0.794)")
     void htgrGlowstoneMultiplier() {
         // COOLANT_PER_BALL is a per-tick figure; hot coolant out = 0.5 x fill x multiplier L/t, and the steam line is
         // the water line x160.
@@ -159,7 +159,8 @@ class PowerSheetReactorsEndgameTest {
         final double multiplier = model.outputs()
             .get(0)
             .perSecond() / (0.5 * 10000 * 20);
-        assertCloseTo(2.444, multiplier, 2);
+        // HTGRLoader: Glowstone pebbles are (0.65, 1.2, 1.1), so 0.65 x 1.2^1.1.
+        assertCloseTo(0.794, multiplier, 2);
         final Flow water = find(model.inputs(), "Distilled Water");
         final Flow steam = find(model.outputs(), "Steam");
         assertCloseTo(water.perSecond() * 160, steam.perSecond(), 6);

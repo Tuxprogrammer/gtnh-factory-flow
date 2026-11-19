@@ -82,7 +82,7 @@ const SUNNARIUM: Recipe = {
 const node = (machineHandlerId: string, pressure?: "normal" | "high") => ({
   overclockTier: "LV" as const,
   machineHandlerId,
-  machineConfigTiers: pressure ? { steamPressure: pressure } : {},
+  machineConfigTiers: (pressure ? { steamPressure: pressure } : {}) as Record<string, string>,
 });
 
 /** What OverclockCalculator.ofNoOverclock(..).setDurationModifier(1.6 / tierMachine) returns: Java's double maths, rounded up. */

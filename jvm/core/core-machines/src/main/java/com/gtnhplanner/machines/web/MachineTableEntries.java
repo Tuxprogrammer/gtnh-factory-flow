@@ -665,10 +665,12 @@ final class MachineTableEntries {
             machine().overclock(normal())
                 .speed(6)
                 .parallels(c -> c.voltageTier * 6));
-        // MTEIndustrialChisel: setSpeedBonus(1F / 3F), setEuModifier(0.75F), 16 * GTUtility.getTier.
+        // MTEIndustrialChisel: setSpeedBonus(1F / 3F), setEuModifier(0.75F), 16 * GTUtility.getTier. The only machine
+        // on its map, so its recipes arrive under the map's name.
         machines.put(
             "Industrial 3D Copying Machine",
-            machine().overclock(normal())
+            machine().aliases("Industrial Chisel")
+                .overclock(normal())
                 .speed(3)
                 .power(0.75)
                 .parallels(c -> c.voltageTier * 16));
@@ -690,10 +692,11 @@ final class MachineTableEntries {
                 .controls(WIDTH_EXPANSION_CONTROL)
                 .note("Assumes max speed."));
         // MTELatex: setSpeedBonus(1F / 2F), setEuModifier(0.85F), 8 * GTUtility.getTier doubled by an Elastic
-        // Singularity in the controller slot.
+        // Singularity in the controller slot. The only machine on its map, so its recipes arrive under the map's name.
         machines.put(
             "L.A.T.E.X.",
-            machine().overclock(normal())
+            machine().aliases("Cable Coating")
+                .overclock(normal())
                 .speed(2)
                 .power(0.85)
                 .parallels(c -> c.voltageTier * (c.tier(LATEX_SINGULARITY) == 1 ? 16 : 8))

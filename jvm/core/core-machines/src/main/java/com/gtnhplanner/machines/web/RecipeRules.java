@@ -14,6 +14,8 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.machines.SteamRecipeLimits;
+
 /**
  * What runs a recipe and how its settings resolve, as the website does it (src/lib/model/recipe-rules.ts): the
  * recipe's machine handlers (dataset handlers folded into families, a fallback from the map's name, the Auto
@@ -30,7 +32,10 @@ public final class RecipeRules {
 
     // region Handlers
 
-    /** getRecipeMachineHandlers: one handler per family, the map's primary machine first. */
+    /**
+     * getRecipeMachineHandlers: one handler per family, the map's primary machine first. A steam machine that cannot run
+     * the recipe (over 32 EU/t, or a fluid input it has no hatch for) is not offered ({@link SteamRecipeLimits}).
+     */
     public static List<Web.Handler> machineHandlers(final Web.Recipe recipe) {
         final Map<String, Web.Handler> byFamily = new LinkedHashMap<>();
         final Integer fusionMark = Fusion.isRecipe(recipe) ? Fusion.recipeMark(recipe) : null;
@@ -38,6 +43,7 @@ public final class RecipeRules {
             final Web.Handler normalized = Fusion.normalizeHandler(normalizeHandler(handler), recipe);
             final Fusion.Machine fusion = Fusion.machine(normalized.machineType);
             if (fusion != null && fusionMark != null && fusion.mark() < fusionMark) continue;
+            if (isSteamHandler(normalized) && !SteamRecipeLimits.runs(normalized, recipe)) continue;
             final String familyId = (normalized.kind != null ? normalized.kind : "single") + ":"
                 + slug(normalized.label);
             byFamily.putIfAbsent(familyId, normalized);

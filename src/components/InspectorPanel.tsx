@@ -25,7 +25,7 @@ import {
   isEnergyRateUnit,
   rateMultiplierForKind,
   rateSuffixForKind,
-} from "@/lib/model/rate-unit";
+} from "@/lib/format/rate-unit";
 import { ENERGY_READING_TEXT, formatEnergyPerUnitParts } from "./flow/flow-explainers";
 import type {
   FactoryProject,

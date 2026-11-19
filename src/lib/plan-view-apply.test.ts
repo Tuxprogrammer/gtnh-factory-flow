@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 import { readBoardViewSnapshot, writeBoardView } from "@/components/flow/board-view";
-import { getActiveRateUnit } from "./model/rate-unit";
+import { getActiveRateUnit } from "./format/rate-unit";
 import type { PlanViewState } from "./model/types";
 import { applyPlanView, capturePlanView } from "./plan-view";
 import { readWorkspaceViewSnapshot, writeWorkspaceView } from "./workspace-view";

@@ -7,7 +7,7 @@ import {
   getRecipeSpecialValue,
   snapNumericSetting,
 } from "@/lib/model";
-import { rememberSetting, settingMemoryMachine } from "@/lib/model/setting-memory";
+import { rememberSetting, settingMemoryMachine } from "@/lib/format/setting-memory";
 import { getMachineBehaviour } from "@/lib/machines/machine-table";
 import { isHeatOverclockMachine } from "@/lib/solver/heat";
 

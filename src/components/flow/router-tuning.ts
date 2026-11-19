@@ -7,7 +7,8 @@
  * thread is using. `DEFAULT_ROUTER_TUNING` is the shipped behaviour; the
  * dev menu's overrides persist on this device only and never touch a plan.
  *
- * Pure and worker-safe: no React, no DOM beyond a guarded localStorage.
+ * Pure and worker-safe: no React, no DOM. Persistence goes through a storage the host
+ * injects (`setRouterTuningStorage`); `router-tuning-browser.ts` supplies localStorage.
  */
 
 export interface RouterTuning {
@@ -340,7 +341,19 @@ export const ROUTER_TUNING_FIELDS: RouterTuningField[] = [
   },
 ];
 
-const STORAGE_KEY = "gtnh-factory-flow.router-tuning.v1";
+/** Where the dials persist. The host injects it; with none, they live for the session only. */
+export interface RouterTuningStorage {
+  read(): string | null;
+  write(raw: string): void;
+}
+
+let storage: RouterTuningStorage | undefined;
+
+/** Install the storage before the first read; a later install re-reads the stored dials. */
+export function setRouterTuningStorage(next: RouterTuningStorage | undefined) {
+  storage = next;
+  loaded = false;
+}
 
 let current: RouterTuning = { ...DEFAULT_ROUTER_TUNING };
 let loaded = false;
@@ -352,10 +365,10 @@ function load() {
   }
   loaded = true;
   try {
-    if (typeof localStorage === "undefined") {
+    if (!storage) {
       return;
     }
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = storage.read();
     if (!raw) {
       return;
     }
@@ -401,7 +414,7 @@ let lastEditAt = 0;
 function commit(next: RouterTuning) {
   current = next;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+    storage?.write(JSON.stringify(current));
   } catch {
     // Storage is a convenience; the live value is what matters.
   }

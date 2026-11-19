@@ -1,8 +1,8 @@
 import type { FactoryStorage, StorageThroughputResult } from "@/lib/model/types";
-import { formatCompact, formatPowerValue } from "@/lib/model";
+import { formatCompact, formatPowerValue } from "@/lib/format/numbers";
 import type { StorageRole } from "@/lib/model/storage-role";
 import { storageTargetMode, type TargetMode } from "@/lib/model/storage-target";
-import { rateMultiplierForKind, rateSuffixForKind } from "@/lib/model/rate-unit";
+import { rateMultiplierForKind, rateSuffixForKind } from "@/lib/format/rate-unit";
 import { RULE_MARK, RULE_NAME, trimFlow } from "../../rate-rule";
 import type { DrawerKind } from "../tokens";
 import { mcTextWidth, measureRowFigure, measureRowName } from "../text-measure";

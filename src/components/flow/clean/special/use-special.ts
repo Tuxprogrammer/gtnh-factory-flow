@@ -2,20 +2,14 @@
 
 import { useMemo } from "react";
 import type { FactoryNode, Recipe } from "@/lib/model/types";
-import {
-  applyMachineHandlerToRecipe,
-  applyRecipeInputOverrides,
-  formatCompact,
-  formatPowerValue,
-  getSelectedMachineHandler,
-  isSteamMachineHandler,
-} from "@/lib/model";
+import { applyMachineHandlerToRecipe, applyRecipeInputOverrides, getSelectedMachineHandler, isSteamMachineHandler } from "@/lib/model";
+import { formatCompact, formatPowerValue } from "@/lib/format/numbers";
 import {
   powerDisplayFromEuT,
   powerDisplaySuffix,
   rateMultiplierForKind,
   rateSuffixForKind,
-} from "@/lib/model/rate-unit";
+} from "@/lib/format/rate-unit";
 import { getRecipeProgrammedCircuit } from "@/lib/model/programmed-circuit";
 import {
   getCustomRateDial,

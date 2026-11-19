@@ -83,12 +83,6 @@ export function ratioExportShare(
   return Number.isFinite(value) ? Math.min(100, Math.max(0, value)) / 100 : 0;
 }
 
-export function formatRatioShare(share: number): string {
-  if (share > 0 && share < 0.0001) return "<0.01%";
-  if (share < 1 && share > 0.9999) return ">99.99%";
-  return `${Number((share * 100).toFixed(2))}%`;
-}
-
 /** Inputs total 100%; outputs plus the unwired Export share total another 100%.
  * Editing one share preserves the proportions of all remaining shares. */
 export function setStorageRatioPercentage(

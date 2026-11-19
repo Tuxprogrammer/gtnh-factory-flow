@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "about": "Values both sides format. Each row names the website formatter and the mod formatter it is compared with; a group is a list of inputs (the strings NaN, Infinity and -Infinity stand for those doubles; a pair is [euPerTick, perSecond]). Outputs: website-out.json (src/test-support/format-conformance.test.ts), mod-out.json (core-view FmtConformanceTest) and mod-recipe-overlay-out.json (mod GuiHelperFormatTest); COMPARISON.md is built from the three by tools/conformance/format/compare.mjs.",
+  "groups": {
+    "tinyRates": [1e-12, 1e-09, 4e-07, 1e-06, 1.5e-06, 4.9e-06, 5e-06, 1e-05, 0.000123, 0.0004, 0.00049, 0.0005, 0.004, 0.00333, 0.0099, 0.01, 0.05, 0.25, 0.5, 0.999, 0.9999, -0.004, -1e-07, -0.5],
+    "ordinary": [0, 1, 1.005, 2.5, 9.995, 10, 12.5, 33.333, 99.5, 99.96, 100, 123.45, 167, 899.99, 999, 999.4, 999.5, 999.96, -1, -12.5, -166.67, -900],
+    "thousands": [1000, 1234, 1234.5, 6930, 9949, 9950, 9999.5, 12345.678, 99949, 99950, 99999.9, 180000, 999499, 999949, 999950, 999999.9, -1500],
+    "millions": [1000000, 1200000, 1440000, 2560000, 33333333, 999999999, 1000000000, 2147483648, 1000000000000.0, 1500000000000000.0, 1e+18, 1e+21, 1e+24, -2147483648],
+    "euPerTick": [8, 32, 128, 512, 1920, 2048, 8192, 32768, 131072, 524288, 2097152, 8388608, 33554432, 134217728, 536870912, 2147483648, 8589934592, 34359738368],
+    "machineCounts": [0, 1e-07, 4e-07, 5e-07, 6e-07, 0.0004, 0.0005, 0.0009, 0.001, 0.0333, 0.5, 0.9995, 1, 1.005, 2.345, 9.995, 10, 12.25, 99.95, 99.99, 100, 100.0000001, 101.375, 1000.5, 12345.678],
+    "shares": [0, 1e-07, 9e-05, 0.0001, 0.00012, 0.0049, 0.33333, 0.5, 0.9999, 0.99995, 1],
+    "percents": [0, 0.4, 0.5, 1.5, 12.34, 99.5, 100, 999, 999.4, 999.5, 1000, 41200, -3],
+    "ratios": [0, 0.5, 0.999, 1, 1.234, 9.95, 10, 10.5, 99.99, 1234.5, 9999.4, 9999.5, 10000],
+    "specials": ["NaN", "Infinity", "-Infinity"],
+    "energyPairs": [[120, 0.1], [1200, 1], [8, 0.004], [32, 2.5], [2147483648, 0.0003], [120, 0], [120, 1e-13], [-50, 1], [0, 1]],
+    "kinds": ["item", "fluid"]
+  },
+  "rows": [
+    {"id": "compact", "what": "the board's number ladder", "inputs": ["tinyRates", "ordinary", "thousands", "millions", "specials"], "web": "formatCompact (src/lib/format/numbers.ts)", "mod": "Fmt.compact"},
+    {"id": "compact.recipeOverlay", "what": "the same ladder as the mod's recipe overlay spells it", "inputs": ["tinyRates", "ordinary", "thousands", "millions", "specials"], "web": "formatCompact", "mod": "GuiHelper.formatRate (float)"},
+    {"id": "brief", "what": "short, fixed-width numbers (drawer glance, animated figures)", "inputs": ["tinyRates", "ordinary", "thousands", "millions", "specials"], "web": "formatCompactStable", "mod": "Fmt.brief"},
+    {"id": "power", "what": "EU/t, the power display dial at its default", "inputs": ["euPerTick", "tinyRates", "ordinary", "thousands", "specials"], "web": "formatPowerValue", "mod": "Fmt.power"},
+    {"id": "rate.second.item", "what": "a per-second item rate with its unit", "inputs": ["tinyRates", "ordinary", "thousands", "millions"], "unit": "second", "kind": "item", "web": "formatSlotRate", "mod": "Fmt.rate"},
+    {"id": "rate.tick.item", "what": "an item rate per tick", "inputs": ["tinyRates", "ordinary", "thousands", "millions"], "unit": "tick", "kind": "item", "web": "formatSlotRate", "mod": "Fmt.rate"},
+    {"id": "rate.minute.fluid", "what": "a fluid rate per minute", "inputs": ["tinyRates", "ordinary", "thousands", "millions"], "unit": "minute", "kind": "fluid", "web": "formatSlotRate", "mod": "Fmt.rate"},
+    {"id": "rate.hour.fluid", "what": "a fluid rate per hour", "inputs": ["tinyRates", "ordinary", "thousands", "millions"], "unit": "hour", "kind": "fluid", "web": "formatSlotRate", "mod": "Fmt.rate"},
+    {"id": "machines", "what": "a solved machine count on a card", "inputs": ["machineCounts", "specials"], "web": "formatSolvedMachines (components/flow/clean/clean-model.ts)", "mod": "Fmt.machines"},
+    {"id": "machines.recipeOverlay", "what": "a machine count as the mod's recipe overlay spells it", "inputs": ["machineCounts", "specials"], "web": "formatSolvedMachines", "mod": "GuiHelper.formatCount"},
+    {"id": "machines.list", "what": "a count in the machine list panel", "inputs": ["machineCounts"], "web": "formatMachineListCount", "mod": null},
+    {"id": "euEach", "what": "EU spent per unit made", "inputs": ["energyPairs"], "web": "energyPerUnit (src/lib/format/rate-unit.ts)", "mod": "Fmt.euEach"},
+    {"id": "euEach.suffix", "what": "the unit that reading wears", "inputs": ["kinds"], "web": "energyPerUnitSuffix", "mod": "Fmt.euEachSuffix"},
+    {"id": "percent.share", "what": "a ratio drawer branch's share, a fraction of one", "inputs": ["shares"], "web": "formatRatioShare", "mod": null},
+    {"id": "percent.whole", "what": "a whole percent chip", "inputs": ["percents", "specials"], "web": "formatPct (components/flow/flow-explainers.ts)", "mod": null},
+    {"id": "percent.supply", "what": "a supply ratio as a percent", "inputs": ["ratios"], "web": "formatSupplyPercent (components/flow/edge-labels.ts)", "mod": null},
+    {"id": "times", "what": "an ask bigger than the machine, as a multiplier", "inputs": ["ratios", "specials"], "web": "formatTimes", "mod": null}
+  ]
+}

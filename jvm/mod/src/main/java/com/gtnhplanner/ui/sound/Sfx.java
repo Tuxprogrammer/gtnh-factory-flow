@@ -159,7 +159,8 @@ public enum Sfx {
         final float duck = (float) Math.pow(DUCK, Math.min(streak, DUCK_FLOOR));
         // A few cents either way, so a sound played over and over is never stamped out.
         final float step = vary ? (float) Math.pow(2, PITCH_STEPS[RANDOM.nextInt(PITCH_STEPS.length)] / 12.0) : 1f;
-        final float p = Math.max((float) ViewSounds.PITCH_MIN, Math.min((float) ViewSounds.PITCH_MAX, onScale(pitch * step)));
+        final float p = Math
+            .max((float) ViewSounds.PITCH_MIN, Math.min((float) ViewSounds.PITCH_MAX, onScale(pitch * step)));
         final float loud = (float) Math.pow(10, (RANDOM.nextFloat() * 2 - 1) * LOUDNESS_DB / 20);
         final ResourceLocation take = deal();
         final UiSound sound = new UiSound(take, Math.min(1f, BASE * gain * volume * duck * loud), p);

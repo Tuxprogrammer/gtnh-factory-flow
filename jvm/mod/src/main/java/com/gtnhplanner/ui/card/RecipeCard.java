@@ -2477,7 +2477,8 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
                 stepSetting(layout.chips.get(i), step);
             }
             case AMPS -> {
-                com.gtnhplanner.ui.sound.Sfx.TICK.play(step > 0 ? com.gtnhplanner.ui.sound.Sfx.WHEEL_UP : com.gtnhplanner.ui.sound.Sfx.WHEEL_DOWN);
+                com.gtnhplanner.ui.sound.Sfx.TICK
+                    .play(step > 0 ? com.gtnhplanner.ui.sound.Sfx.WHEEL_UP : com.gtnhplanner.ui.sound.Sfx.WHEEL_DOWN);
                 pendingAmps = stepAmps(pendingAmps > 0 ? pendingAmps : model.amps, step);
                 wheelAt = System.currentTimeMillis();
                 committedOver = null;
@@ -2555,7 +2556,8 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
             if (model.isPower()) stepPowerTier(step);
             else stepTier(step);
         } else if (part == Part.AMPS && headAmps() > 0) {
-            com.gtnhplanner.ui.sound.Sfx.TICK.play(step > 0 ? com.gtnhplanner.ui.sound.Sfx.WHEEL_UP : com.gtnhplanner.ui.sound.Sfx.WHEEL_DOWN);
+            com.gtnhplanner.ui.sound.Sfx.TICK
+                .play(step > 0 ? com.gtnhplanner.ui.sound.Sfx.WHEEL_UP : com.gtnhplanner.ui.sound.Sfx.WHEEL_DOWN);
             pendingAmps = stepAmps(pendingAmps > 0 ? pendingAmps : model.amps, step);
             wheelAt = System.currentTimeMillis();
             committedOver = null;

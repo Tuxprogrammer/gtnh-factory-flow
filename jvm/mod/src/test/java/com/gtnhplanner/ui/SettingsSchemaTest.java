@@ -60,8 +60,7 @@ class SettingsSchemaTest {
             final JsonObject spec = e.getValue()
                 .getAsJsonObject();
             if (!spec.has("mod") || spec.getAsJsonObject("mod")
-                .has("store"))
-                continue;
+                .has("store")) continue;
             if (!source.contains("ViewSettings." + upper(e.getKey()) + "_KEY")) missing.add(e.getKey());
         }
         assertEquals(List.of(), missing, "settings PlannerSettings does not read by the schema's key");

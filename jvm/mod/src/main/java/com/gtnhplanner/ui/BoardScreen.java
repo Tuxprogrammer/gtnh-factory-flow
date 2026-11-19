@@ -669,7 +669,8 @@ public final class BoardScreen extends ModularScreen {
             if (!enabled.getAsBoolean() || !PlannerSettings.scrollChangesValues()) return false;
             final int step = direction == com.cleanroommc.modularui.api.UpOrDown.UP ? 1 : -1;
             wheel.accept(step);
-            com.gtnhplanner.ui.sound.Sfx.TICK.play(step > 0 ? com.gtnhplanner.ui.sound.Sfx.WHEEL_UP : com.gtnhplanner.ui.sound.Sfx.WHEEL_DOWN);
+            com.gtnhplanner.ui.sound.Sfx.TICK
+                .play(step > 0 ? com.gtnhplanner.ui.sound.Sfx.WHEEL_UP : com.gtnhplanner.ui.sound.Sfx.WHEEL_DOWN);
             return true;
         }
     }

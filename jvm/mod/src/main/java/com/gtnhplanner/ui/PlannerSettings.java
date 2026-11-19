@@ -43,7 +43,9 @@ public final class PlannerSettings {
 
     /** A corner id of the settings schema ("top-right") as the corner. */
     private static Corner corner(final String id) {
-        return Corner.valueOf(id.toUpperCase(java.util.Locale.ROOT).replace('-', '_'));
+        return Corner.valueOf(
+            id.toUpperCase(java.util.Locale.ROOT)
+                .replace('-', '_'));
     }
 
     private static final Corner MINIMAP_CORNER_AT_FIRST = corner(
@@ -86,7 +88,9 @@ public final class PlannerSettings {
 
     /** How a task board shows on this computer, by its plan id: "chain" for its chains, else its columns. */
     public static String taskView(final String planId) {
-        return load().getProperty(ViewSettings.TASK_VIEW_KEY + planId, ViewSettings.TASK_VIEW_IDS[ViewSettings.TASK_VIEW_DEFAULT]);
+        return load().getProperty(
+            ViewSettings.TASK_VIEW_KEY + planId,
+            ViewSettings.TASK_VIEW_IDS[ViewSettings.TASK_VIEW_DEFAULT]);
     }
 
     public static void setTaskView(final String planId, final String view) {
@@ -159,7 +163,9 @@ public final class PlannerSettings {
      */
     public static boolean scrollChangesValues() {
         Boolean on = scrollChangesValues;
-        if (on == null) scrollChangesValues = on = bool(ViewSettings.SCROLL_CHANGES_VALUES_KEY, ViewSettings.SCROLL_CHANGES_VALUES_DEFAULT);
+        if (on == null) scrollChangesValues = on = bool(
+            ViewSettings.SCROLL_CHANGES_VALUES_KEY,
+            ViewSettings.SCROLL_CHANGES_VALUES_DEFAULT);
         return on;
     }
 
@@ -196,7 +202,11 @@ public final class PlannerSettings {
         MINIMAP_SEE_THROUGH_MAX = ViewSettings.MINIMAP_SEE_THROUGH_MAX;
 
     public static int minimapSeeThrough() {
-        return Math.max(0, Math.min(MINIMAP_SEE_THROUGH_MAX, integer(ViewSettings.MINIMAP_SEE_THROUGH_KEY, ViewSettings.MINIMAP_SEE_THROUGH_DEFAULT)));
+        return Math.max(
+            0,
+            Math.min(
+                MINIMAP_SEE_THROUGH_MAX,
+                integer(ViewSettings.MINIMAP_SEE_THROUGH_KEY, ViewSettings.MINIMAP_SEE_THROUGH_DEFAULT)));
     }
 
     public static void setMinimapSeeThrough(final int percent) {
@@ -253,7 +263,8 @@ public final class PlannerSettings {
 
     public static Corner pinListCorner() {
         try {
-            return Corner.valueOf(load().getProperty(ViewSettings.PIN_LIST_CORNER_KEY, PIN_LIST_CORNER_AT_FIRST.name()));
+            return Corner
+                .valueOf(load().getProperty(ViewSettings.PIN_LIST_CORNER_KEY, PIN_LIST_CORNER_AT_FIRST.name()));
         } catch (final IllegalArgumentException e) {
             return PIN_LIST_CORNER_AT_FIRST;
         }
@@ -297,7 +308,9 @@ public final class PlannerSettings {
     public static final int WIRE_LABELS_ALWAYS = 0, WIRE_LABELS_LOOKED = 1, WIRE_LABELS_OFF = 2;
 
     public static int arWireLabels() {
-        return clamp(integer(ViewSettings.AR_WIRE_LABELS_KEY, ViewSettings.AR_WIRE_LABELS_DEFAULT), AR_WIRE_LABEL_NAMES.length);
+        return clamp(
+            integer(ViewSettings.AR_WIRE_LABELS_KEY, ViewSettings.AR_WIRE_LABELS_DEFAULT),
+            AR_WIRE_LABEL_NAMES.length);
     }
 
     public static void setArWireLabels(final int i) {
@@ -482,7 +495,8 @@ public final class PlannerSettings {
      * Normal.
      */
     public static final String[] SIZE_NAMES = ViewSettings.UI_SIZE_LABELS;
-    public static final int SIZE_NORMAL = ViewSettings.UI_SIZE_DEFAULT, SIZE_LARGE = ViewSettings.UI_SIZE_IDS.length - 1;
+    public static final int SIZE_NORMAL = ViewSettings.UI_SIZE_DEFAULT,
+        SIZE_LARGE = ViewSettings.UI_SIZE_IDS.length - 1;
 
     public static int size() {
         return clamp(integer(ViewSettings.UI_SIZE_KEY, ViewSettings.UI_SIZE_DEFAULT), SIZE_NAMES.length);

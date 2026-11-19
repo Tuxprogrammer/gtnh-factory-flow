@@ -46,6 +46,12 @@ import type { PlanUpTo, UpToReason } from "@/lib/solver/plan/types";
 import { PIN_RULE_LABEL, pinRuleOf, withPinRule, type PinRule } from "@/lib/model/pin-rule";
 import { getMachineStructureArt } from "@/lib/power/structure-art";
 import { powerCardTier } from "@/lib/power/power-recipe";
+import {
+  mayTurbineFlow,
+  turbineFlowCheck,
+  turbinesFor,
+  type TurbineFlowCheck,
+} from "@/lib/power/turbine-flow";
 import { useFactoryStore, useRateDisplayUnits } from "@/store/factory-store";
 import { useWorkspaceView } from "@/lib/workspace-view";
 import { formatEnergyPerUnitParts, formatSlotRateBare, portReadsEnergy } from "../flow-explainers";
@@ -189,7 +195,7 @@ export interface CleanFootView {
   ghost?: { left: number; width: number };
   /** For the tip. */
   facts: {
-    reason: UpToReason | null | "FORCED" | "IDLE";
+    reason: UpToReason | null | "FORCED" | "IDLE" | "FLOW";
     /** The ring the card is in, when it is in one. */
     loop?: LoopTone;
     rule: PinRule;
@@ -206,7 +212,17 @@ export interface CleanFootView {
     forced: string[];
     /** IDLE: the input that is sent out instead (`resource` is the output running it would send out). */
     sentOut?: string;
+    /** FLOW: what its turbines really make at the flow each gets (turbine-flow.ts), and the card's power tier. */
+    turbine?: TurbineFoot;
   };
+}
+
+/** A turbine card's flow check with the tier its EU counts in under the Amps dial. */
+export type TurbineFoot = TurbineFlowCheck & { tier?: string };
+
+/** "342,636 EU/t", or amps of the card's tier under the Amps dial. */
+export function turbineEuText(eu: number, tier: string | undefined): string {
+  return `${formatPowerValue(powerDisplayFromEuT(eu, tier))} ${powerDisplaySuffix(tier)}`;
 }
 
 export interface CleanCardView {
@@ -726,8 +742,43 @@ export function buildFootView(
   cardName: (id: string) => string | undefined = () => undefined,
   loop?: LoopTone,
   idle?: IdleTrade,
+  turbine?: TurbineFoot,
 ): CleanFootView | undefined {
   const fmt = formatSolvedMachines;
+  // A turbine fed off its set flow makes what that flow makes, not its share of the set flow's EU: say so before
+  // any read-out, since a turbine short of fuel is exactly this case.
+  if (turbine && !loop) {
+    const pct = `${Math.round((100 * turbine.flow) / turbine.optimal)}%`;
+    const eu = turbineEuText(turbine.euMade, turbine.tier);
+    const many = turbine.turbines > 1 ? `${turbine.turbines} at ` : "";
+    const word = "FLOW";
+    const room = FOOT_TEXT - measureClean(word, FOOT_SIZE) - FOOT_GAP;
+    return {
+      tone: "starved",
+      word,
+      say: fitLine(
+        [
+          `${many}${pct} of optimal, ${turbine.turbines > 1 ? "make" : "makes"} ${eu}`,
+          `${many}${pct} of optimal, ${eu}`,
+          `${many}${pct} of optimal`,
+          `${pct} of optimal`,
+        ],
+        room,
+      ),
+      frac: "",
+      fill: 0,
+      facts: {
+        reason: "FLOW",
+        rule: count.rule,
+        running: turbine.turbines,
+        capacity: turbine.turbines,
+        tied: [],
+        upstream: [],
+        forced: [],
+        turbine,
+      },
+    };
+  }
   if (count.rule === "upTo" && upTo) {
     const capacity = upTo.capacity > 0 ? upTo.capacity : (count.set ?? 0);
     const reached = Math.max(0, upTo.reached);
@@ -1161,6 +1212,12 @@ export function useCleanCardModel(
     count.rule === "any" && count.zero
       ? idleTradeOf(plan, projectNode.id, new Set(inputs.map((port) => port.resourceKey)))
       : undefined;
+  // A turbine card: what its whole turbines really make at the flow each gets.
+  const running = result?.theoreticalMachinesRequired ?? 0;
+  const turbines = turbinesFor(running, count.rule === "exact" ? count.set : undefined);
+  const turbineCheck = mayTurbineFlow(recipe, running, turbines)
+    ? turbineFlowCheck(recipe, projectNode.machineConfigTiers, running, turbines)
+    : undefined;
   const foot = buildFootView(
     count,
     countState.upTo,
@@ -1168,6 +1225,7 @@ export function useCleanCardModel(
     (id) => cardNameIn(liveProject, id),
     loop,
     idle,
+    turbineCheck ? { ...turbineCheck, tier: powerTier } : undefined,
   );
 
   const view: CleanCardView = {

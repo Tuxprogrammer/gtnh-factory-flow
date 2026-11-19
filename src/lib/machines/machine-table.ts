@@ -803,9 +803,11 @@ const MACHINES: Record<string, MachineBehaviour> = {
   },
   "Multi Smelter": {
     // MTEMultiFurnace: parallels double per coil tier from 8, and every
-    // operation is a fixed 4 EU/t, 128 tick smelt.
+    // operation is a fixed 4 EU/t, 128 tick smelt. The dataset's handler
+    // offers no coil, so the table does.
     overclock: OVERCLOCK.normal(),
     parallels: (c) => 8 * Math.pow(2, c.tier(COIL)),
+    controls: [HEATING_COIL_CONTROL],
   },
   "Mega Alloy Blast Smelter": {
     overclock: OVERCLOCK.normal(),

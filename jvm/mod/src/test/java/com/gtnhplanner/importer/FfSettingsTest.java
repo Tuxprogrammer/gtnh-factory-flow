@@ -432,7 +432,7 @@ class FfSettingsTest {
                 .get("voltage"),
             "a housing has no voltage to pick");
         assertEquals(3, ia.machines());
-        // The website's bee card with no machine is its first, the Magic Apiary; its Alveary is not modelled yet.
+        // The website's bee card with no machine runs in its first housing, the Apiary.
         final FfSettings.Mapped plain = FfSettings.map(
             card("NONE", null, null, null, null, 0, null, null, 1, Map.of("beeSpeedGene", "fast"), 1, null),
             bee,
@@ -440,7 +440,7 @@ class FfSettingsTest {
             true,
             true);
         assertEquals(
-            "magic-apiary",
+            "apiary",
             plain.settings()
                 .get(com.gtnhplanner.machines.Bees.HOUSING));
         assertEquals(
@@ -478,14 +478,26 @@ class FfSettingsTest {
         final FfSettings.Mapped alveary = FfSettings
             .map(card("NONE", null, null, null, null, 0, "alveary", null, 1, Map.of(), 1, null), bee, 0, true, true);
         assertEquals(
-            "apiary",
+            "alveary",
             alveary.settings()
-                .get(com.gtnhplanner.machines.Bees.HOUSING));
+                .get(com.gtnhplanner.machines.Bees.HOUSING),
+            "the core models the Alveary");
         assertTrue(
             alveary.notes()
                 .stream()
-                .anyMatch(n -> n.contains("alveary")),
-            "the report says so");
+                .noneMatch(n -> n.contains("alveary")),
+            "nothing to report");
+        final FfSettings.Mapped mega = FfSettings
+            .map(card("UV", null, null, null, null, 0, "mega-apiary", null, 1, Map.of(), 1, null), bee, 0, true, true);
+        assertEquals(
+            "mega-apiary",
+            mega.settings()
+                .get(com.gtnhplanner.machines.Bees.HOUSING));
+        assertEquals(
+            "UV",
+            mega.settings()
+                .get(com.gtnhplanner.machines.Bees.VOLTAGE),
+            "the Mega Apiary keeps its tier");
     }
 
     @Test

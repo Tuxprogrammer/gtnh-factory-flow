@@ -229,20 +229,22 @@ public final class FfSettings {
     }
 
     /**
-     * A bee's housing, FF's machine and our setting (machines/Bees), with no voltage of its own. FF's card with no
-     * machine is its first, the Magic Apiary; an Alveary comes in as an Apiary and a Mega Apiary as an Industrial
-     * Apiary, the nearest the mod models. Its speed gene unset is FF's Normal (ours is the species' own).
+     * A bee's housing, FF's machine and our setting (machines/Bees), with no voltage of its own but the Mega Apiary's.
+     * FF's card with no machine is its first, the Apiary; a housing the core does not know comes in as an Apiary. Its
+     * speed gene unset is FF's Normal (ours is the species' own).
      */
     private static void bee(final FfNode node, @Nullable final String handlerId, final Map<String, Object> s,
         final List<String> notes) {
-        final String id = handlerId == null ? com.gtnhplanner.machines.Bees.MAGIC_APIARY.key() : handlerId;
+        final String id = handlerId == null ? com.gtnhplanner.machines.Bees.HOUSINGS.getFirst()
+            .key() : handlerId;
         com.gtnhplanner.machines.Bees.Housing housing = com.gtnhplanner.machines.Bees.housing(id);
         if (housing == null) {
-            housing = id.contains("mega") ? com.gtnhplanner.machines.Bees.INDUSTRIAL
-                : com.gtnhplanner.machines.Bees.APIARY;
+            housing = com.gtnhplanner.machines.Bees.APIARY;
             notes.add("its " + id + " came in as an " + housing.label());
         }
         s.put(com.gtnhplanner.machines.Bees.HOUSING, housing.key());
+        if (housing == com.gtnhplanner.machines.Bees.MEGA_APIARY && tierIndex(node.overclockTier()) >= 0)
+            s.put(com.gtnhplanner.machines.Bees.VOLTAGE, TIERS[tierIndex(node.overclockTier())]);
         if (!node.machineConfigTiers()
             .containsKey(com.gtnhplanner.machines.Bees.SPEED)) s.put(com.gtnhplanner.machines.Bees.SPEED, "normal");
     }

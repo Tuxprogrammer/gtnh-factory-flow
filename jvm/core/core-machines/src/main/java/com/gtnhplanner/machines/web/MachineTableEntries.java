@@ -5,6 +5,8 @@ import static com.gtnhplanner.machines.web.MachineTable.*;
 
 import java.util.Map;
 
+import com.gtnhplanner.core.machines.AlgaePond;
+
 /**
  * The website's machine table entries (machine-table.ts MACHINES), one for one and in its order, keyed by the names
  * the website's dataset uses; {@code aliases} cover the reference calculator's names and handler names. Shared
@@ -20,14 +22,27 @@ final class MachineTableEntries {
     /**
      * STEAM_MULTIBLOCK: the eight bronze/steel steam multiblocks (MTESteamMacerator and its siblings). No
      * overclocking, 8 fixed parallels, duration x 1.6 / tierMachine (1 bronze, 2 high pressure): 0.625x and 1.25x
-     * throughput. Steam is billed elsewhere, not by a power coefficient.
+     * throughput. Steam is billed elsewhere, not by a power coefficient. Each run rounds up to a whole tick and banks
+     * no sub-tick speed ({@link #quantiseSteamMultiblockDuration}).
      */
     private static final Behaviour STEAM_MULTIBLOCK = machine().overclock(none())
         .parallels(8)
         .speed(c -> 0.625 * (c.tier(STEAM_PRESSURE) + 1))
+        .quantiseDuration(MachineTableEntries::quantiseSteamMultiblockDuration)
         .controls(STEAM_PRESSURE_CONTROL)
         // The Steam Blender's handler inherited the mixer map's scraped pipe knob; its pipes are the build's.
         .hidesControls(PIPE);
+
+    /**
+     * steam-multiblock.ts quantiseSteamMultiblockDuration: the steam multiblocks' processing logic builds
+     * OverclockCalculator.ofNoOverclock(recipe), which sets noOverclock, so calculateOverclock returns (int)
+     * Math.ceil(duration x durationModifier): the duration rounds UP. With noOverclock set,
+     * calculateMultiplierUnderOneTick returns 1, so a run shorter than a tick is billed as a whole tick and banks no
+     * parallels.
+     */
+    static double quantiseSteamMultiblockDuration(final double durationTicks) {
+        return Double.isFinite(durationTicks) && durationTicks > 1 ? Math.ceil(durationTicks) : 1;
+    }
 
     private static boolean distillery(final Context c) {
         return DangoteDistillus.distillery(c.recipeMap);
@@ -91,8 +106,16 @@ final class MachineTableEntries {
             machine().overclock(perfect())
                 .speed(2)
                 .parallels(c -> 8 * c.voltageTier));
-        machines.put("IsaMill Grinding Machine", machine().overclock(perfect()));
-        machines.put("Flotation Cell Regulator", machine().overclock(perfect()));
+        // Each is the only machine on its map, so the dataset exports no handler and the recipes arrive under the
+        // map's name. MTEIsaMill and MTEFrothFlotationCell both enablePerfectOverclock, one parallel.
+        machines.put(
+            "IsaMill Grinding Machine",
+            machine().overclock(perfect())
+                .aliases("Milling"));
+        machines.put(
+            "Flotation Cell Regulator",
+            machine().overclock(perfect())
+                .aliases("Flotation Cell"));
 
         // -- Coil-driven, no heat mechanic --
         machines.put(
@@ -128,10 +151,12 @@ final class MachineTableEntries {
                 .speed(c -> 1 + (c.tier(COIL) + 1) * 0.05)
                 .parallels(c -> c.voltageTier * (c.tier(COIL) + 1)));
         // MTEMultiFurnace: parallels double per coil tier from 8; every operation is a fixed 4 EU/t, 128 tick smelt.
+        // The data's handler offers no coil, so the table does.
         machines.put(
             "Multi Smelter",
             machine().overclock(normal())
-                .parallels(c -> 8 * Math.pow(2, c.tier(COIL))));
+                .parallels(c -> 8 * Math.pow(2, c.tier(COIL)))
+                .controls(HEATING_COIL_CONTROL));
         // MTEMegaAlloyBlastSmelter: duration x (1 - 5% per coil tier above TPV), as throughput; a compounding 5% EU
         // discount per coil tier above the RECIPE's own voltage tier, never a penalty.
         machines.put(
@@ -160,7 +185,9 @@ final class MachineTableEntries {
             machine().overclock(normal())
                 .speed(c -> 2.5 + 0.05 * c.tier(COIL))
                 .power(c -> 0.8 * Math.pow(0.95, c.tier(COIL)))
-                .parallels(c -> c.voltageTier * 8 + (c.tier(SOLENOID) + 2) * 2));
+                .parallels(c -> c.voltageTier * 8 + (c.tier(SOLENOID) + 2) * 2)
+                // Its dataset handler has no solenoid knob either.
+                .controls(SOLENOID_CONTROL));
 
         // -- Flat multiblocks --
         machines.put("Alloy Blast Smelter", machine().overclock(normal()));
@@ -317,7 +344,9 @@ final class MachineTableEntries {
             "Industrial Sledgehammer",
             machine().overclock(normal())
                 .speed(2)
-                .parallels(c -> c.voltageTier * (c.tier(SOLENOID) + 2) * 6));
+                .parallels(c -> c.voltageTier * (c.tier(SOLENOID) + 2) * 6)
+                // The dataset gives its handler no solenoid knob.
+                .controls(SOLENOID_CONTROL));
         // MTEMultiLathe: 8 parallels per ITEM pipe casing tier (tin = 1); the scraped fluid pipes are hidden.
         machines.put(
             "Industrial Precision Lathe",
@@ -384,6 +413,16 @@ final class MachineTableEntries {
                 .parallels(c -> c.voltageTier * 16)
                 .controls(ITEM_PIPE_CONTROL)
                 .hidesControls(PIPE));
+        // MTEComponentAssemblyLine, the only machine on its recipe map. Takes normal, multi-amp and laser hatches;
+        // setProcessingLogicPower hands the logic every hatch's voltage x working amps as one voltage at 1 A with
+        // unlimited tier skips, so the whole supply buys normal overclocks. One parallel.
+        machines.put(
+            "Component Assembly Line",
+            machine().overclock(normal())
+                .speed(c -> componentAssemblyLineSpeed(c.tier(COAL_CASING), c.recipeSpecialValue))
+                .parallels(1)
+                .unlimitedTierSkip()
+                .controls(COAL_CASING_CONTROL));
         // MTEPreciseAssembler's normal Assembler handler; its dedicated Precise Assembler map has different math.
         machines.put(
             "Precise Auto-Assembler MT-3662",
@@ -508,6 +547,16 @@ final class MachineTableEntries {
             machine().overclock(none())
                 .cycleTicks(TGS_TICKS)
                 .parallels(1));
+        // MTEAlgaePond (core.machines.AlgaePond): its one energy hatch's tier picks the recipe (one tier higher with
+        // compost), and it draws V x 9/10 of that hatch with no overclocks and one parallel. The only machine on its
+        // map, so its recipes arrive under the map's name.
+        machines.put(
+            AlgaePond.MACHINE_TYPE,
+            machine().overclock(none())
+                .parallels(1)
+                .power(c -> AlgaePond.powerMultiplier(c.recipe, c.settings))
+                .controlsFor(AlgaePond::controls)
+                .recipeGate(c -> AlgaePond.gateReason(c.recipe, c.settings, c.voltageTier)));
         machines.put(
             "Research Station",
             machine().overclock(normal())
@@ -601,14 +650,10 @@ final class MachineTableEntries {
         machines.put("Steam Presser", STEAM_MULTIBLOCK);
         machines.put("Steam Blender", STEAM_MULTIBLOCK);
         machines.put("Steam Fuser", STEAM_MULTIBLOCK);
-        // MTESteamFurnaceMulti: its map is vanilla smelting (200 ticks) while the machine runs GT's 128t furnace
-        // recipe; 200 / (128 x 1.6) = 0.9765625 lands on the game's own 204 ticks basic and 102 high pressure.
-        machines.put(
-            "Steam Hearth",
-            machine().overclock(none())
-                .parallels(8)
-                .speed(c -> 0.9765625 * (c.tier(STEAM_PRESSURE) + 1))
-                .controls(STEAM_PRESSURE_CONTROL));
+        // MTESteamFurnaceMulti, same logic as its seven siblings. Its map is vanilla smelting, but the machine runs
+        // GT's furnace recipe: RecipeRules.gtFurnaceDurationTicks seeds it (128 ticks, divided by the pack's rate mod),
+        // so the stock game's 205 ticks basic and 103 high pressure come from the shared coefficients.
+        machines.put("Steam Hearth", STEAM_MULTIBLOCK);
 
         // MTESpinmatron: light mode 4x, standard and heavy 3x; heavy pays 16x EU and divides parallels by 32.
         // Parallels floor at each step like the code.
@@ -638,10 +683,12 @@ final class MachineTableEntries {
             machine().overclock(normal())
                 .speed(6)
                 .parallels(c -> c.voltageTier * 6));
-        // MTEIndustrialChisel: setSpeedBonus(1F / 3F), setEuModifier(0.75F), 16 * GTUtility.getTier.
+        // MTEIndustrialChisel: setSpeedBonus(1F / 3F), setEuModifier(0.75F), 16 * GTUtility.getTier. The only machine
+        // on its map, so its recipes arrive under the map's name.
         machines.put(
             "Industrial 3D Copying Machine",
-            machine().overclock(normal())
+            machine().aliases("Industrial Chisel")
+                .overclock(normal())
                 .speed(3)
                 .power(0.75)
                 .parallels(c -> c.voltageTier * 16));
@@ -663,10 +710,11 @@ final class MachineTableEntries {
                 .controls(WIDTH_EXPANSION_CONTROL)
                 .note("Assumes max speed."));
         // MTELatex: setSpeedBonus(1F / 2F), setEuModifier(0.85F), 8 * GTUtility.getTier doubled by an Elastic
-        // Singularity in the controller slot.
+        // Singularity in the controller slot. The only machine on its map, so its recipes arrive under the map's name.
         machines.put(
             "L.A.T.E.X.",
-            machine().overclock(normal())
+            machine().aliases("Cable Coating")
+                .overclock(normal())
                 .speed(2)
                 .power(0.85)
                 .parallels(c -> c.voltageTier * (c.tier(LATEX_SINGULARITY) == 1 ? 16 : 8))

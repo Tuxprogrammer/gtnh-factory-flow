@@ -2,6 +2,8 @@ package com.gtnhplanner.machines.web;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.NumberText;
+
 /**
  * Whether a build starts, from the game's own checks (src/lib/solver/power-report.ts): there is no slow mode in GT, so
  * a machine runs as reported or sits idle ("ok", "under-powered", "over-tier"), with the pool, the draw and a reason.
@@ -25,9 +27,16 @@ public final class PowerReport {
         }
     }
 
-    /** hasPowerReport: a recipe with a draw and a duration (crops and bees are the website's alone). */
-    public static boolean has(final Web.Recipe recipe) {
-        return Math.abs(recipe.eut) > 0 && recipe.durationTicks > 0;
+    /**
+     * hasPowerReport: a recipe with a draw and a duration (crops and bees are the website's alone). A recipe whose EU
+     * lives on the node's machine rather than the recipe (smelting: 0 EU on the map, 4 EU/t on GT's furnaces) asks the
+     * machine.
+     */
+    public static boolean has(final Web.Recipe recipe, @Nullable final Web.Node node) {
+        final double eut = !(Math.abs(recipe.eut) > 0) && node != null && recipe.machineType != null
+            ? RecipeRules.applyHandler(recipe, node).eut
+            : recipe.eut;
+        return Math.abs(eut) > 0 && recipe.durationTicks > 0;
     }
 
     /** getNodePowerReport. */
@@ -149,7 +158,7 @@ public final class PowerReport {
     }
 
     private static String formatBudget(final double euT) {
-        return euT == Math.rint(euT) ? Js.str(euT) : String.format(java.util.Locale.ROOT, "%.1f", euT);
+        return euT == Math.rint(euT) ? Js.str(euT) : NumberText.fixed(euT, 1);
     }
 
     /** NodeSteamReport: what a steam machine burns, in L/t. */

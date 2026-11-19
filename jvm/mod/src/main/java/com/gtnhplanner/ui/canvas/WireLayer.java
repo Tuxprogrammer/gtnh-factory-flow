@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.gtnhplanner.CoreIds;
 import com.gtnhplanner.core.layout.BoxRouter;
 import com.gtnhplanner.core.layout.GridRoutedEdge;
 import com.gtnhplanner.core.layout.IncrementalStats;
@@ -499,7 +500,7 @@ final class WireLayer {
                         link,
                         colorOf(port),
                         0,
-                        d.isBuffer() ? bufferFlow(result, d, new PortRef(n.id, link.portIndex(), source))
+                        d.isBuffer() ? bufferFlow(result, d, new PortRef(CoreIds.core(n.id), link.portIndex(), source))
                             : linkFlow(result, n, source, link.portIndex()),
                         null,
                         Resources.key(port),
@@ -616,25 +617,25 @@ final class WireLayer {
     private static double edgeFlow(@Nullable final BalanceResult result, final Edge e) {
         if (result == null) return 0;
         if (result instanceof final BalanceResult.Solved solved && solved.auto() != null) {
-            final Double f = solved.auto().edgeFlowsPerSecond.get(e.id);
+            final Double f = solved.auto().edgeFlowsPerSecond.get(CoreIds.core(e.id));
             if (f != null) return f;
         }
         final Balancer.NodeBalance b = result.nodeBalances()
-            .get(e.sourceNodeId);
+            .get(CoreIds.core(e.sourceNodeId));
         return b == null ? 0 : b.outputPerSecond(e.sourceOutputIndex);
     }
 
     /** What passes through one of a buffer's ports: the solver's flow on its edges there, not the port's whole rate. */
     private static double bufferFlow(@Nullable final BalanceResult result, final Drawer d, final PortRef port) {
         if (!(result instanceof final BalanceResult.Solved solved) || solved.auto() == null) return 0;
-        return solved.auto().drawers.portRate(d.getId(), port);
+        return solved.auto().drawers.portRate(CoreIds.core(d.getId()), port);
     }
 
     private static double linkFlow(@Nullable final BalanceResult result, final Node n, final boolean input,
         final int port) {
         if (result == null) return 0;
         final Balancer.NodeBalance b = result.nodeBalances()
-            .get(n.id);
+            .get(CoreIds.core(n.id));
         if (b == null) return 0;
         return input ? b.inputPerSecond(port) : b.outputPerSecond(port);
     }

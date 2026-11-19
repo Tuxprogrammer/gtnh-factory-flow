@@ -293,7 +293,7 @@ final class DevBoard {
                         .toLowerCase(java.util.Locale.ROOT)
                         .startsWith("dead") ? com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind.DEAD_LOOP
                             : com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind.CLOG_LOCK,
-                    members,
+                    com.gtnhplanner.CoreIds.coreList(members),
                     ports));
             session.devLoops(LOOPS);
         }
@@ -326,15 +326,15 @@ final class DevBoard {
             for (final String s : q.getOrDefault("tied", "")
                 .split(",")) if (!s.isBlank()) tied.add(port(m, s.trim()));
             final com.gtnhplanner.data.flowchart.balancer.UpToReadout r = new com.gtnhplanner.data.flowchart.balancer.UpToReadout(
-                machines.get(0),
-                machines,
+                com.gtnhplanner.CoreIds.core(machines.get(0)),
+                com.gtnhplanner.CoreIds.coreList(machines),
                 Double.parseDouble(q.getOrDefault("capacity", String.valueOf(session.setCount(m.node)))),
                 Double.parseDouble(q.getOrDefault("reached", "0")),
                 "NONE".equals(why) ? null : com.gtnhplanner.data.flowchart.balancer.UpToReason.valueOf(why),
                 q.containsKey("port") ? port(m, q.get("port")) : null,
                 tied,
                 q.containsKey("wants") ? Double.valueOf(q.get("wants")) : null,
-                upstream);
+                com.gtnhplanner.CoreIds.coreList(upstream));
             for (final java.util.UUID id : machines) UP_TO.put(id, r);
         }
         if (q.containsKey("shortfall")) {
@@ -349,12 +349,12 @@ final class DevBoard {
                 .split(",")) if (!s.isBlank()) limitDrawers.add(drawers.get(Integer.parseInt(s.trim())).drawer.getId());
             SHORT.add(
                 new com.gtnhplanner.data.flowchart.balancer.DrawerReadout.Shortfall(
-                    d.drawer.getId(),
+                    com.gtnhplanner.CoreIds.core(d.drawer.getId()),
                     d.rule,
                     Double.parseDouble(q.getOrDefault("target", "2")),
                     Double.parseDouble(q.getOrDefault("reach", "1")),
-                    limits,
-                    limitDrawers,
+                    com.gtnhplanner.CoreIds.coreList(limits),
+                    com.gtnhplanner.CoreIds.coreList(limitDrawers),
                     0));
         }
         session.devUpTo(UP_TO.isEmpty() ? null : UP_TO, SHORT.isEmpty() ? null : SHORT);
@@ -392,7 +392,7 @@ final class DevBoard {
                     "clog".equalsIgnoreCase(q.get("kind"))
                         ? com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind.CLOG_LOCK
                         : com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind.DEAD_LOOP,
-                    nodes,
+                    com.gtnhplanner.CoreIds.coreList(nodes),
                     ports));
         }
         session.devLoops(LOOPS.isEmpty() ? null : LOOPS);
@@ -403,7 +403,7 @@ final class DevBoard {
     private static com.gtnhplanner.data.flowchart.balancer.PortRef port(final CardModel m, final String s) {
         final boolean input = s.startsWith("in");
         return new com.gtnhplanner.data.flowchart.balancer.PortRef(
-            m.node.id,
+            com.gtnhplanner.CoreIds.core(m.node.id),
             Integer.parseInt(s.substring(input ? 2 : 3)),
             input);
     }

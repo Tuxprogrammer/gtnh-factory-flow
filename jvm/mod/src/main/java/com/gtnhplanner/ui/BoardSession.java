@@ -14,6 +14,7 @@ import javax.annotation.Nullable;
 
 import net.minecraft.item.ItemStack;
 
+import com.gtnhplanner.CoreIds;
 import com.gtnhplanner.GtnhPlanner;
 import com.gtnhplanner.api.PlanAPI;
 import com.gtnhplanner.cloud.session.CloudSession;
@@ -31,9 +32,9 @@ import com.gtnhplanner.data.flowchart.Waypoints;
 import com.gtnhplanner.data.flowchart.balancer.BalanceMode;
 import com.gtnhplanner.data.flowchart.balancer.BalanceResult;
 import com.gtnhplanner.data.flowchart.balancer.DrawerReadout;
+import com.gtnhplanner.data.flowchart.balancer.GraphSolve;
 import com.gtnhplanner.data.flowchart.balancer.Note;
 import com.gtnhplanner.data.flowchart.balancer.Severity;
-import com.gtnhplanner.data.flowchart.balancer.SolveInput;
 import com.gtnhplanner.data.flowchart.balancer.SolveService;
 import com.gtnhplanner.data.flowchart.balancer.SolverMessage;
 import com.gtnhplanner.data.flowchart.balancer.UpToReadout;
@@ -2573,8 +2574,8 @@ public final class BoardSession {
         final Map<UUID, UpToReadout> out = new HashMap<>();
         if (result instanceof final BalanceResult.Solved solved) for (final UpToReadout r : solved.auto()
             .upTo()) {
-            out.put(r.node(), r);
-            for (final UUID m : r.machines()) out.putIfAbsent(m, r);
+            out.put(CoreIds.mod(r.node()), r);
+            for (final UUID m : CoreIds.modList(r.machines())) out.putIfAbsent(m, r);
         }
         if (devUpTo != null) out.putAll(devUpTo);
         return out.isEmpty() ? Map.of() : out;
@@ -2812,7 +2813,7 @@ public final class BoardSession {
         }
         follow();
         try {
-            solver.request(graph.solveVersion(), () -> SolveInput.of(graph, BalanceMode.AUTO, null));
+            solver.request(graph.solveVersion(), () -> GraphSolve.input(graph, BalanceMode.AUTO, null));
         } catch (final RuntimeException e) {
             GtnhPlanner.LOG.warn("Could not snapshot the plan for solving", e);
         }
@@ -2838,7 +2839,7 @@ public final class BoardSession {
                         node,
                         result == null ? null
                             : result.nodeBalances()
-                                .get(node.id),
+                                .get(CoreIds.core(node.id)),
                         (output, index) -> wired.contains(portKey(node.id, output, index)),
                         (output, index) -> extras.getOrDefault(portKey(node.id, output, index), 0.0)));
             } catch (final RuntimeException e) {
@@ -3097,8 +3098,9 @@ public final class BoardSession {
             for (final com.gtnhplanner.data.flowchart.balancer.External e : side) {
                 final boolean output = !e.port()
                     .input();
-                final UUID node = e.port()
-                    .nodeId();
+                final UUID node = CoreIds.mod(
+                    e.port()
+                        .nodeId());
                 final int index = e.port()
                     .portIndex();
                 if (e.ratePerSecond() <= 0 || portHasEndDrawer(node, output, index)) continue;
@@ -3323,7 +3325,7 @@ public final class BoardSession {
         final List<Boolean> outputs = new ArrayList<>();
         final List<Integer> ports = new ArrayList<>();
         for (final com.gtnhplanner.data.flowchart.balancer.PortRef ref : bearer.ports()) {
-            nodes.add(ref.nodeId());
+            nodes.add(CoreIds.mod(ref.nodeId()));
             outputs.add(!ref.input());
             ports.add(ref.portIndex());
         }
@@ -3351,7 +3353,7 @@ public final class BoardSession {
         final List<Boolean> outputs = new ArrayList<>();
         final List<Integer> ports = new ArrayList<>();
         for (final com.gtnhplanner.data.flowchart.balancer.PortRef ref : bearer.ports()) {
-            nodes.add(ref.nodeId());
+            nodes.add(CoreIds.mod(ref.nodeId()));
             outputs.add(!ref.input());
             ports.add(ref.portIndex());
         }
@@ -3420,7 +3422,7 @@ public final class BoardSession {
             int i = 0;
             for (final com.gtnhplanner.data.flowchart.balancer.Spares.Bearer b : leftover.bearers()) {
                 final com.gtnhplanner.data.flowchart.balancer.PortRef anchor = b.anchor();
-                final CardModel card = cards.get(anchor.nodeId());
+                final CardModel card = cards.get(CoreIds.mod(anchor.nodeId()));
                 final List<CardModel.PortView> side = card == null ? List.of()
                     : anchor.input() ? card.inputs : card.outputs;
                 if (anchor.portIndex() < 0 || anchor.portIndex() >= side.size()) break;
@@ -3431,7 +3433,7 @@ public final class BoardSession {
                 bearers.add(
                     new SpareBearer(
                         b.key(),
-                        anchor.nodeId(),
+                        CoreIds.mod(anchor.nodeId()),
                         !anchor.input(),
                         anchor.portIndex(),
                         port.name(),
@@ -3723,7 +3725,7 @@ public final class BoardSession {
     private java.util.Set<UUID> unsetParts() {
         final java.util.Set<UUID> out = new java.util.HashSet<>(com.gtnhplanner.data.flowchart.balancer.Unanchored.of(graph));
         if (result instanceof final com.gtnhplanner.data.flowchart.balancer.BalanceResult.Solved solved) out.addAll(
-            solved.auto().unneeded);
+            CoreIds.modList(solved.auto().unneeded));
         // A card with a set count never asks for one: an idle Up to card says why on its bar instead.
         out.removeIf(id -> rule(id) != PinRule.ANY);
         return out;
@@ -3758,13 +3760,13 @@ public final class BoardSession {
                 out.add(Notice.alarm(loop.kind(), Loops.sentence(loop.kind(), ring.size()), ring));
             }
             for (final DrawerReadout.Shortfall s : shortfalls()) {
-                final DrawerModel d = drawerModels.get(s.drawer());
+                final DrawerModel d = drawerModels.get(CoreIds.mod(s.drawer()));
                 final boolean supply = d != null && d.kind == Drawer.Kind.SOURCE;
                 final String label = "The " + (d == null ? "" : d.label + " ") + (supply ? "supply" : "drawer");
                 final List<UUID> focus = new ArrayList<>();
-                focus.add(s.drawer());
-                focus.addAll(s.limitingNodes());
-                focus.addAll(s.limitingDrawers());
+                focus.add(CoreIds.mod(s.drawer()));
+                focus.addAll(CoreIds.modList(s.limitingNodes()));
+                focus.addAll(CoreIds.modList(s.limitingDrawers()));
                 final String reach = d == null ? Fmt.rate(s.reachable(), rateUnit, false)
                     : d.rate(s.reachable(), rateUnit);
                 final String target = d == null ? Fmt.rate(s.target(), rateUnit, false) : d.rate(s.target(), rateUnit);
@@ -3778,8 +3780,8 @@ public final class BoardSession {
                     + target
                     + "."
                     + CardFace.holders(
-                        s.limitingNodes(),
-                        s.limitingDrawers(),
+                        CoreIds.modList(s.limitingNodes()),
+                        CoreIds.modList(s.limitingDrawers()),
                         id -> cards.get(id) == null ? "machine" : cards.get(id).machineName,
                         this::rule,
                         id -> upTo(id) == null ? null : upTo(id).reason(),

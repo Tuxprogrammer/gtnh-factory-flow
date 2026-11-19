@@ -16,12 +16,14 @@ import org.junit.jupiter.api.Test;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.balancer.BalanceMode;
 import com.gtnhplanner.data.flowchart.balancer.BalanceResult;
 import com.gtnhplanner.data.flowchart.balancer.Balancer;
+import com.gtnhplanner.data.flowchart.balancer.GraphSolve;
 import com.gtnhplanner.data.flowchart.balancer.SolveInput;
 import com.gtnhplanner.data.flowchart.balancer.SolveInput.DrawerIn;
 import com.gtnhplanner.data.flowchart.balancer.SolveInput.EdgeIn;
@@ -41,9 +43,9 @@ class SolveInputTest {
     void solvingASnapshotMatchesSolvingTheGraph() {
         for (final String name : new String[] { "light_fuel", "mk1", "loopGraph", "palladium", "excess_choice" }) {
             final LoadedChart chart = GtnhFlowLoader.load(name);
-            final BalanceResult viaGraph = Balancer.balance(chart.graph(), BalanceMode.AUTO);
+            final BalanceResult viaGraph = GraphSolve.balance(chart.graph(), BalanceMode.AUTO);
             final BalanceResult viaSnapshot = Balancer.solve(
-                SolveInput.of(
+                GraphSolve.input(
                     chart.graph(),
                     BalanceMode.AUTO,
                     chart.graph()
@@ -51,10 +53,10 @@ class SolveInputTest {
             for (final Node machine : chart.machines()) {
                 assertEquals(
                     viaGraph.nodeBalances()
-                        .get(machine.id)
+                        .get(CoreIds.core(machine.id))
                         .operations(),
                     viaSnapshot.nodeBalances()
-                        .get(machine.id)
+                        .get(CoreIds.core(machine.id))
                         .operations(),
                     EPS,
                     name + ": " + machine.machineName);
@@ -66,10 +68,10 @@ class SolveInputTest {
     @Test
     void aSnapshotDoesNotSeeLaterEdits() {
         final LoadedChart chart = GtnhFlowLoader.load("mk1"); // target: 10 mk1 fuel/s
-        final SolveInput before = SolveInput.of(chart.graph(), BalanceMode.AUTO, null);
+        final SolveInput before = GraphSolve.input(chart.graph(), BalanceMode.AUTO, null);
         final double fusionBefore = Balancer.solve(before)
             .nodeBalances()
-            .get(chart.machine(0).id)
+            .get(CoreIds.core(chart.machine(0).id))
             .operations();
 
         chart.machine(0).targetOutputRates.put(0, 20.0);
@@ -78,7 +80,7 @@ class SolveInputTest {
 
         final double fusionAgain = Balancer.solve(before)
             .nodeBalances()
-            .get(chart.machine(0).id)
+            .get(CoreIds.core(chart.machine(0).id))
             .operations();
         assertEquals(fusionBefore, fusionAgain, EPS, "the snapshot still holds the old chart");
         assertEquals(
@@ -90,7 +92,7 @@ class SolveInputTest {
     @Test
     void aSnapshotSolvesOnAnotherThread() throws Exception {
         final LoadedChart chart = GtnhFlowLoader.load("light_fuel");
-        final SolveInput input = SolveInput.of(chart.graph(), BalanceMode.AUTO, null);
+        final SolveInput input = GraphSolve.input(chart.graph(), BalanceMode.AUTO, null);
         final BalanceResult here = Balancer.solve(input);
 
         final BalanceResult there = CompletableFuture.supplyAsync(() -> Balancer.solve(input))
@@ -105,8 +107,8 @@ class SolveInputTest {
         // Two machines, no Node anywhere: a 1 s smelter turning 2 ore into 1 ingot, and a 2 s press
         // turning 3 ingots into 1 plate. 1 plate/s is 1 press craft/s, so 2 presses; that eats
         // 3 ingots/s, which is 3 smelter crafts/s, so 3 smelters.
-        final UUID smelter = UUID.randomUUID();
-        final UUID press = UUID.randomUUID();
+        final Uuid smelter = Uuid.randomUUID();
+        final Uuid press = Uuid.randomUUID();
         final PortIn ore = new PortIn(2, 1f, 1f, 0, "ore", false);
         final PortIn ingotOut = new PortIn(1, 1f, 1f, 1, "ingot", false);
         final PortIn ingotIn = new PortIn(3, 1f, 1f, 1, "ingot", false);
@@ -114,8 +116,8 @@ class SolveInputTest {
         final List<Machine> machines = List.of(
             new Machine(smelter, "smelter", 20, 0, 1, List.of(ore), List.of(ingotOut), false, 1, Map.of(), Map.of()),
             new Machine(press, "press", 40, 0, 1, List.of(ingotIn), List.of(plate), false, 1, Map.of(), Map.of()));
-        final List<EdgeIn> edges = List.of(new EdgeIn(UUID.randomUUID(), smelter, 0, press, 0));
-        final UUID product = UUID.randomUUID();
+        final List<EdgeIn> edges = List.of(new EdgeIn(Uuid.randomUUID(), smelter, 0, press, 0));
+        final Uuid product = Uuid.randomUUID();
         final List<DrawerIn> drawers = List.of(
             new DrawerIn(
                 product,
@@ -123,7 +125,7 @@ class SolveInputTest {
                 Drawer.Kind.PRODUCT,
                 Drawer.Rule.EXACTLY,
                 1.0,
-                List.of(new Drawer.Link(press, 0))));
+                List.of(new SolveInput.LinkIn(press, 0))));
         final SolveInput input = new SolveInput(BalanceMode.AUTO, null, machines, edges, List.of(), drawers, Map.of());
 
         final BalanceResult result = Balancer.solve(input);
@@ -151,7 +153,7 @@ class SolveInputTest {
     @Test
     void portsThatConnectShareAnIngredientNumber() {
         final LoadedChart chart = GtnhFlowLoader.load("light_fuel");
-        final SolveInput input = SolveInput.of(chart.graph(), BalanceMode.AUTO, null);
+        final SolveInput input = GraphSolve.input(chart.graph(), BalanceMode.AUTO, null);
         final Machine reactor = input.machines()
             .get(indexOf(input, chart.machine(0).id));
         final Machine distillery = input.machines()
@@ -202,11 +204,11 @@ class SolveInputTest {
     @Test
     void anUpToPoolMakesTheTripThroughTheCorpusFormat() {
         final LoadedChart chart = GtnhFlowLoader.load("light_fuel");
-        final SolveInput plain = SolveInput.of(chart.graph());
+        final SolveInput plain = GraphSolve.input(chart.graph());
         final List<PoolIn> pools = List.of(
-            new PoolIn(List.of(chart.machine(0).id), 2, false, true),
-            new PoolIn(List.of(chart.machine(1).id), 3, true),
-            new PoolIn(List.of(chart.machine(2).id), 4));
+            new PoolIn(List.of(CoreIds.core(chart.machine(0).id)), 2, false, true),
+            new PoolIn(List.of(CoreIds.core(chart.machine(1).id)), 3, true),
+            new PoolIn(List.of(CoreIds.core(chart.machine(2).id)), 4));
         assertFalse(
             pools.get(1)
                 .upTo(),
@@ -249,7 +251,7 @@ class SolveInputTest {
             if (input.machines()
                 .get(i)
                 .id()
-                .equals(id)) return i;
+                .equals(CoreIds.core(id))) return i;
         }
         throw new AssertionError("no machine " + id);
     }

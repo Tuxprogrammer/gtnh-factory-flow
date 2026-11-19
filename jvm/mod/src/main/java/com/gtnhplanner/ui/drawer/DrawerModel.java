@@ -5,6 +5,7 @@ import net.minecraftforge.fluids.FluidStack;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.gtnhplanner.CoreIds;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.balancer.BalanceResult;
 import com.gtnhplanner.data.flowchart.balancer.DrawerReadout;
@@ -51,9 +52,9 @@ public final class DrawerModel {
         final DrawerReadout readout = result.drawers();
         return new DrawerModel(
             drawer,
-            readout.rate(drawer.getId()),
-            !readout.met(drawer.getId()),
-            readout.shortfall(drawer.getId()));
+            readout.rate(CoreIds.core(drawer.getId())),
+            !readout.met(CoreIds.core(drawer.getId())),
+            readout.shortfall(CoreIds.core(drawer.getId())));
     }
 
     public boolean isFluid() {

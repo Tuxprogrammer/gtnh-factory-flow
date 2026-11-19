@@ -16,6 +16,7 @@ import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.balancer.BalanceMode;
 import com.gtnhplanner.data.flowchart.balancer.BalanceResult;
 import com.gtnhplanner.data.flowchart.balancer.Balancer;
+import com.gtnhplanner.data.flowchart.balancer.GraphSolve;
 import com.gtnhplanner.data.flowchart.balancer.SolverMessage;
 import com.gtnhplanner.harness.GtnhFlowLoader;
 import com.gtnhplanner.harness.GtnhFlowLoader.LoadedChart;
@@ -39,12 +40,12 @@ class BalancerSmokeTest {
     @MethodSource("corpus")
     void noneModeUsesConfiguredCounts(final String name) {
         final LoadedChart chart = GtnhFlowLoader.load(name);
-        final BalanceResult result = Balancer.balance(chart.graph(), BalanceMode.NONE);
+        final BalanceResult result = GraphSolve.balance(chart.graph(), BalanceMode.NONE);
         assertNotNull(result);
         for (final Node node : chart.machines()) {
             assertTrue(
                 result.nodeBalances()
-                    .containsKey(node.id),
+                    .containsKey(CoreIds.core(node.id)),
                 "missing balance for " + node.machineName);
         }
     }
@@ -60,7 +61,7 @@ class BalancerSmokeTest {
         final LoadedChart chart = GtnhFlowLoader.load(name);
         final BalanceResult result = assertTimeoutPreemptively(
             Duration.ofSeconds(60),
-            () -> Balancer.balance(chart.graph(), BalanceMode.AUTO),
+            () -> GraphSolve.balance(chart.graph(), BalanceMode.AUTO),
             name + " exceeded the auto-balance budget");
         assertNotNull(result);
         // A failed solve also fills nodeBalances - with zeros - so presence alone would pass even
@@ -69,7 +70,7 @@ class BalancerSmokeTest {
         for (final Node node : chart.machines()) {
             assertTrue(
                 result.nodeBalances()
-                    .containsKey(node.id),
+                    .containsKey(CoreIds.core(node.id)),
                 "missing balance for " + node.machineName);
         }
     }
@@ -86,13 +87,13 @@ class BalancerSmokeTest {
         assertFalse(lcr.isMachineCountFixed());
         lcr.machineConfig.setMachineCount(3);
 
-        final BalanceResult result = Balancer.balance(chart.graph(), BalanceMode.AUTO);
+        final BalanceResult result = GraphSolve.balance(chart.graph(), BalanceMode.AUTO);
 
         assertEquals(3, lcr.machineConfig.getMachineCount(), "configured count must survive viewing");
         assertEquals(
             8.0 / 15.0,
             result.nodeBalances()
-                .get(lcr.id)
+                .get(CoreIds.core(lcr.id))
                 .operations(),
             1e-6,
             "the exact fractional machine count, not a ceiling");
@@ -108,11 +109,11 @@ class BalancerSmokeTest {
     @MethodSource("corpus")
     void outputModeSolvesWholeMachineCounts(final String name) {
         final LoadedChart chart = GtnhFlowLoader.load(name);
-        final BalanceResult result = Balancer.balance(chart.graph(), BalanceMode.OUTPUT);
+        final BalanceResult result = GraphSolve.balance(chart.graph(), BalanceMode.OUTPUT);
 
         for (final Node node : chart.machines()) {
             final double ops = result.nodeBalances()
-                .get(node.id)
+                .get(CoreIds.core(node.id))
                 .operations();
             assertEquals(
                 ops,
@@ -134,12 +135,12 @@ class BalancerSmokeTest {
         final LoadedChart chart = GtnhFlowLoader.load("mk1");
         GtnhFlowLoader.clearTargetPins(chart);
 
-        final BalanceResult result = Balancer.balance(chart.graph(), BalanceMode.AUTO);
+        final BalanceResult result = GraphSolve.balance(chart.graph(), BalanceMode.AUTO);
 
         assertEquals(0.0, result.totalOperations(), 1e-9);
         for (final Node node : chart.machines()) {
             final var nb = result.nodeBalances()
-                .get(node.id);
+                .get(CoreIds.core(node.id));
             assertEquals(0.0, nb.operations(), 1e-9, node.machineName + " must show no count");
             assertTrue(
                 nb.effectiveOutputs()
@@ -164,7 +165,7 @@ class BalancerSmokeTest {
         final LoadedChart chart = GtnhFlowLoader.load("mk1_tiberium");
         GtnhFlowLoader.removeEdgesInto(chart, chart.machine(0), 0);
 
-        final BalanceResult result = Balancer.balance(chart.graph(), BalanceMode.AUTO);
+        final BalanceResult result = GraphSolve.balance(chart.graph(), BalanceMode.AUTO);
 
         assertTrue(
             result.notes()
@@ -180,12 +181,12 @@ class BalancerSmokeTest {
         final LoadedChart chart = GtnhFlowLoader.load(name);
         final BalanceResult result = assertTimeoutPreemptively(
             BUDGET,
-            () -> Balancer.balance(chart.graph(), BalanceMode.OUTPUT),
+            () -> GraphSolve.balance(chart.graph(), BalanceMode.OUTPUT),
             name + " exceeded the " + BUDGET.toSeconds() + "s solve budget");
         assertNotNull(result);
         for (final Node node : chart.machines()) {
             final double ops = result.nodeBalances()
-                .get(node.id)
+                .get(CoreIds.core(node.id))
                 .operations();
             assertTrue(ops >= 1, node.machineName + " solved to " + ops + " machines");
         }

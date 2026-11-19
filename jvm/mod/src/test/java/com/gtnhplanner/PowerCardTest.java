@@ -23,7 +23,7 @@ import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Port;
 import com.gtnhplanner.data.flowchart.balancer.BalanceMode;
 import com.gtnhplanner.data.flowchart.balancer.BalanceResult;
-import com.gtnhplanner.data.flowchart.balancer.Balancer;
+import com.gtnhplanner.data.flowchart.balancer.GraphSolve;
 import com.gtnhplanner.data.properties.ResourceProperty;
 import com.gtnhplanner.harness.TestIngredients;
 import com.gtnhplanner.library.PlanExport;
@@ -88,19 +88,19 @@ class PowerCardTest {
         g.addDrawer(power);
         g.linkDrawer(power.getId(), new Drawer.Link(gen.id, 0));
 
-        final BalanceResult result = Balancer.balance(g, BalanceMode.AUTO);
+        final BalanceResult result = GraphSolve.balance(g, BalanceMode.AUTO);
 
         assertEquals(
             10,
             result.nodeBalances()
-                .get(gen.id)
+                .get(CoreIds.core(gen.id))
                 .operations(),
             1e-6,
             "ten turbines make the drawer's rate");
         assertEquals(
             10 * fuelPerSecond,
             result.nodeBalances()
-                .get(maker.id)
+                .get(CoreIds.core(maker.id))
                 .operations(),
             1e-6,
             "and burn ten turbines' exact fuel");

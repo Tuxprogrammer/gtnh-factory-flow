@@ -22,7 +22,7 @@ import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Port;
 import com.gtnhplanner.data.flowchart.balancer.BalanceMode;
 import com.gtnhplanner.data.flowchart.balancer.BalanceResult;
-import com.gtnhplanner.data.flowchart.balancer.Balancer;
+import com.gtnhplanner.data.flowchart.balancer.GraphSolve;
 import com.gtnhplanner.harness.TestIngredients;
 import com.gtnhplanner.library.PlanExport;
 import com.gtnhplanner.power.CustomRate;
@@ -119,12 +119,12 @@ class CustomRateTest {
         g.addNode(user);
         g.addEdge(new Edge(UUID.randomUUID(), supply.id, user.id, 0, 0));
 
-        final BalanceResult result = Balancer.balance(g, BalanceMode.AUTO);
+        final BalanceResult result = GraphSolve.balance(g, BalanceMode.AUTO);
 
         assertEquals(
             5,
             result.nodeBalances()
-                .get(user.id)
+                .get(CoreIds.core(user.id))
                 .operations(),
             1e-6,
             "five machines use the five a second it supplies");
@@ -139,12 +139,12 @@ class CustomRateTest {
         g.addNode(request);
         g.addEdge(new Edge(UUID.randomUUID(), maker.id, request.id, 0, 0));
 
-        final BalanceResult result = Balancer.balance(g, BalanceMode.AUTO);
+        final BalanceResult result = GraphSolve.balance(g, BalanceMode.AUTO);
 
         assertEquals(
             3,
             result.nodeBalances()
-                .get(maker.id)
+                .get(CoreIds.core(maker.id))
                 .operations(),
             1e-6,
             "three machines make the three a second it drains");

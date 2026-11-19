@@ -41,6 +41,7 @@ import com.gtnhplanner.nei.NodeLookupContext;
 import com.gtnhplanner.ui.card.CardDefaults;
 import com.gtnhplanner.ui.card.CardFace;
 import com.gtnhplanner.ui.card.CardLayout;
+import com.gtnhplanner.ui.card.CardLayouts;
 import com.gtnhplanner.ui.card.CardModel;
 import com.gtnhplanner.ui.card.MachineChoices;
 import com.gtnhplanner.ui.drawer.DrawerCard;
@@ -853,7 +854,9 @@ public final class BoardSession {
         if (node == null || portHasDrawer(fromNode, output, port)) return false;
         // Dropped nearly level with the port: make it level, so the wire runs straight instead of jogging.
         final CardModel card = models.get(fromNode);
-        final int portY = card == null ? worldY : node.y + new CardLayout(card, graph()).anchorY(output, port);
+        final int portY = card == null ? worldY
+            : node.y + CardLayouts.of(card, graph())
+                .anchorY(output, port);
         return dropPortAsDrawer(
             fromNode,
             output,
@@ -949,7 +952,8 @@ public final class BoardSession {
                     .equals(key)) continue;
                 x = source ? card.node.x - DrawerCard.W - 60 : card.node.x + CardLayout.W + 60;
                 // Its wire runs straight: the drawer's anchor level with the port's.
-                y = card.node.y + new CardLayout(card, graph()).anchorY(!source, i) - DrawerCard.ANCHOR_Y;
+                y = card.node.y + CardLayouts.of(card, graph())
+                    .anchorY(!source, i) - DrawerCard.ANCHOR_Y;
                 break search;
             }
         }
@@ -2746,7 +2750,7 @@ public final class BoardSession {
      */
     private int[] clearSpotUnder(final Node node) {
         final CardModel model = models.get(node.id);
-        final int h = model == null ? 150 : new CardLayout(model, graph()).height;
+        final int h = model == null ? 150 : CardLayouts.of(model, graph()).height;
         final int x0 = node.x, y0 = node.y + h + 40, step = 20;
         if (!NewCards.overlapsAnything(graph, x0, y0, CardLayout.W, h, null)) return new int[] { x0, y0 };
         for (int r = 1; r <= 40; r++) {

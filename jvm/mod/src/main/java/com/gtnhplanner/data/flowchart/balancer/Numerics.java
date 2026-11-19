@@ -1,6 +1,6 @@
 package com.gtnhplanner.data.flowchart.balancer;
 
-import com.gtnhplanner.Config;
+import com.gtnhplanner.core.base.CoreSettings;
 
 /**
  * The numeric knobs of a solve: feast/sensitivity tolerances, model time limits and node budgets,
@@ -48,12 +48,15 @@ public final class Numerics {
     public static final double GATE_WEIGHT_FLOOR = 1024.0;
 
     /**
-     * How much of a tuned effort number {@link Config#solverEffortPercent} buys. Applied where each
+     * How much of a tuned effort number {@link CoreSettings#solverEffort} buys. Applied where each
      * number is used rather than folded into the constants, so nothing depends on whether this class
      * initialized before the config loaded. Only numbers that trade time for a better answer are
      * scaled.
      */
     public long effort(final long tuned) {
-        return Math.max(1, tuned * Config.solverEffort() / 100);
+        return Math.max(
+            1,
+            tuned * CoreSettings.get()
+                .solverEffort() / 100);
     }
 }

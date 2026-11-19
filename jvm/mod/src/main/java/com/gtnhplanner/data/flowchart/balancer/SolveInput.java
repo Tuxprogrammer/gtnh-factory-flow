@@ -14,7 +14,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.oredict.OreDictionary;
 
-import com.gtnhplanner.Config;
+import com.gtnhplanner.core.base.CoreSettings;
 import com.gtnhplanner.data.MachineConfig;
 import com.gtnhplanner.data.effect.EffectResult;
 import com.gtnhplanner.data.flowchart.Drawer;
@@ -83,7 +83,7 @@ public record SolveInput(BalanceMode mode, @Nullable ChoiceKey choice, List<Mach
      * @param resource   the ingredient, as a number shared by every port of the same snapshot that
      *                   {@code canConnect}s to it; equal numbers mean the same ingredient.
      * @param name       the ingredient's display name, resolved when the snapshot was taken.
-     * @param free       whether the pack gives this ingredient away ({@link Config#isFreeIngredient}).
+     * @param free       whether the pack gives this ingredient away ({@link CoreSettings#isFreeIngredient}).
      */
     public record PortIn(double amount, float chance, double multiplier, int resource, String name, boolean free) {}
 
@@ -341,7 +341,8 @@ public record SolveInput(BalanceMode mode, @Nullable ChoiceKey choice, List<Mach
                 multiplier,
                 resourceOf(port),
                 name == null ? "" : name,
-                name != null && Config.isFreeIngredient(name));
+                name != null && CoreSettings.get()
+                    .isFreeIngredient(name));
         }
 
         private int resourceOf(final Port<?> port) {

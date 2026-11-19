@@ -8,6 +8,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.Log;
 import com.gtnhplanner.data.flowchart.balancer.alternatives.Alternative;
 import com.gtnhplanner.data.flowchart.balancer.alternatives.Alternatives;
 
@@ -136,7 +137,7 @@ public final class Spares {
                 ctx.commit(StageOutcome.of(ctx, extents, flows, externals, own.provenOptimal));
                 mixed = true;
             } else {
-                com.gtnhplanner.GtnhPlanner.LOG
+                Log.get()
                     .debug("A stored spare split does not conserve here; the solver's own answer stands");
             }
         }

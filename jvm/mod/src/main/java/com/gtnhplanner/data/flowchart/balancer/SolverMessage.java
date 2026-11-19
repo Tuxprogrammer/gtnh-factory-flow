@@ -1,15 +1,12 @@
 package com.gtnhplanner.data.flowchart.balancer;
 
-import java.util.Locale;
-
-import net.minecraft.util.StatCollector;
-
+import com.gtnhplanner.core.base.Text;
 import com.gtnhplanner.data.flowchart.Drawer;
 
 /**
  * The single authority for what the balancer says. Every note, error, preference name, rank reason
  * and boundary label is one constant here - the {@link Severity} the panel colours it by and the key
- * it is localized under (resolved with {@link StatCollector} by {@link #render}). A concrete
+ * it is localized under (resolved with {@link Text} by {@link #render}). A concrete
  * utterance is a {@link Note} built with {@link #toNote}: the constant names WHAT was said, the
  * arguments carry the runtime data (machine names, ingredients, rates) it was said about.
  */
@@ -144,15 +141,12 @@ public enum SolverMessage {
 
     /**
      * The sentence through the language file, with {@code args} spliced into it. A missing
-     * translation resolves to the bare key rather than to a crash. GUI only - this needs a live
-     * {@link StatCollector}.
+     * translation resolves to the bare key rather than to a crash. GUI only - the words come from the
+     * host's {@link Text}.
      */
     public String render(final Object... args) {
-        final String local = StatCollector.translateToLocal(key);
-        if (local.equals(key)) {
-            return key;
-        }
-        return String.format(Locale.ROOT, local, args);
+        return Text.get()
+            .format(key, args);
     }
 
     /** The key itself, Minecraft-free: the pipeline, profiler, logs and tests use this identity. */

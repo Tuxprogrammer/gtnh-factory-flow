@@ -87,6 +87,8 @@ dependencies {
     shadowImplementation('org.ojalgo:ojalgo:57.4.0')
     // The plain-Java core (../core), shaded and downgraded with the mod's own classes.
     shadowImplementation(project(':core-base'))
+    shadowImplementation(project(':core-machines'))
+    shadowImplementation(project(':core-power'))
 
     // Opt-in GTNH pack recipes for the dev client: `./gradlew runClient -PgtnhRecipes`.
     // Loads the GTNH coremod (dreamcraft) so NEI shows the pack's recipe tweaks in dev.

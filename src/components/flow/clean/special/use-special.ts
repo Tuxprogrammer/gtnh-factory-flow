@@ -33,6 +33,7 @@ import {
   cropsNhFarmEut,
   cropsNhHarvestTicks,
   cropsNhHarvesterFromTiers,
+  cropsNhHarvesterTierName,
   cropsNhCropsPerMachine,
   cropsNhHarvesterMachineCount,
   cropsNhIsHandPicked,
@@ -680,11 +681,13 @@ export function useCropCardModel(data: RecipeNodeData, selected: boolean): Speci
   })();
   const usage = Math.min(1, Math.max(0, result?.utilization ?? 1));
   const drawScale = averageDraw ? usage : usage > 0 ? 1 : 0;
+  // The harvester's own voltage: under the Amps dial the draw reads in amps of that tier, as its Overview line does.
+  const drawTier = setup ? cropsNhHarvesterTierName(setup.tierIndex) : undefined;
   const power: SpecialView["power"] =
     drawEuT > 0
       ? {
-          number: formatPowerValue(powerDisplayFromEuT(drawEuT * drawScale)),
-          unit: powerDisplaySuffix(),
+          number: formatPowerValue(powerDisplayFromEuT(drawEuT * drawScale, drawTier)),
+          unit: powerDisplaySuffix(drawTier),
           name: "Power",
           stalled: false,
           title: "What the harvester draws.",

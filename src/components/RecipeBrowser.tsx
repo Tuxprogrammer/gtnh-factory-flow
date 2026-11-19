@@ -15,7 +15,7 @@ import {
 } from "@/lib/datasets/browser-loader";
 import type { RecipeQueryClause, RecipeQuerySideOp } from "@/lib/datasets/recipe-query";
 import type { DatasetResourceIndexEntry, RecipeSummary } from "@/lib/datasets/types";
-import { resourceMatchesInput } from "@/lib/model";
+import { isVirtualChoiceResource, resourceMatchesInput } from "@/lib/model";
 import { MACHINE_PIN_RESOURCE_ID, useFactoryStore } from "@/store/factory-store";
 import { useDesignStore } from "@/store/design-store";
 import { leaveWelcomeTab, readWelcomeTabState } from "@/lib/welcome/welcome-tab";
@@ -987,19 +987,26 @@ function getRecipeAddContextResource(
           resourceMatchesInput({ kind: activeResource.kind, id: activeResource.id }, input),
       );
     if (contextSlotInput && !contextSlotInput.id.startsWith("oredict:")) {
+      // A slot written as one item that takes the browsed one as an alternative (Rubber Wood in the Coke Oven's
+      // "Oak Log" slot, Charcoal Dust in a "Coal Dust" slot) gets the browsed item; only a browsed wildcard takes
+      // the slot's own.
+      const face: Pick<ResourceAmount, "kind" | "id"> & Partial<ResourceAmount> =
+        contextSlotInput.id === activeResource.id || isVirtualChoiceResource(activeResource)
+          ? contextSlotInput
+          : { kind: activeResource.kind, id: activeResource.id, tooltip: activeResource.tooltip };
       return {
-        kind: contextSlotInput.kind,
-        id: contextSlotInput.id,
-        displayName: contextSlotInput.displayName ?? activeResource.displayName,
-        iconPath: contextSlotInput.iconPath ?? activeResource.iconPath,
-        iconAtlas: contextSlotInput.iconAtlas ?? activeResource.iconAtlas,
+        kind: face.kind,
+        id: face.id,
+        displayName: face.displayName ?? activeResource.displayName,
+        iconPath: face.iconPath ?? activeResource.iconPath,
+        iconAtlas: face.iconAtlas ?? activeResource.iconAtlas,
         dominantColor:
-          contextSlotInput.dominantColor ??
-          contextSlotInput.iconAtlas?.dominantColor ??
+          face.dominantColor ??
+          face.iconAtlas?.dominantColor ??
           activeResource.dominantColor ??
           activeResource.iconAtlas?.dominantColor,
-        tooltip: contextSlotInput.tooltip,
-        modId: contextSlotInput.modId,
+        tooltip: face.tooltip,
+        modId: face.modId,
         mode,
         inputIndex: contextInputIndex,
         neiSlot: contextSlotInput.neiSlot,

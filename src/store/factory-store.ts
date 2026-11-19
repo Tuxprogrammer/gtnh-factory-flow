@@ -5669,6 +5669,8 @@ function buildRecipeInputOverrides(
       ...alternative,
       kind: resource.kind,
       id: resource.id,
+      // An alternative's amount is a per-unit ratio; the slot keeps its own count.
+      amount: inputOverrideAmount(input, resource.kind, alternative),
       displayName: resource.displayName ?? alternative?.displayName ?? input.displayName,
       iconPath: resource.iconPath ?? alternative?.iconPath ?? input.iconPath,
       iconAtlas: resource.iconAtlas ?? alternative?.iconAtlas ?? input.iconAtlas,

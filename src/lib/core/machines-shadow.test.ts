@@ -113,18 +113,20 @@ interface Tally {
   readouts: number;
   cards: number;
   leftToWebsite: number;
+  /** Bee and crop inputs, which both sides leave to the passive-production models. */
+  passive: number;
   findings: string[];
 }
 
 function report(target: CoreTarget, what: string, t: Tally): void {
   console.log(
-    `[machines shadow] ${target} ${what}: ${t.inputs} inputs, ${t.readouts} readouts and ${t.cards} card calls compared, ${t.leftToWebsite} left to the website, ${t.findings.length} differ`,
+    `[machines shadow] ${target} ${what}: ${t.inputs} inputs, ${t.readouts} readouts and ${t.cards} card calls compared, ${t.leftToWebsite} left to the website (${t.passive} bee and crop cards, left out by both), ${t.findings.length} differ`,
   );
 }
 
 function shadow(inputs: Input[]): Tally {
   const c = core();
-  const tally: Tally = { inputs: 0, readouts: 0, cards: 0, leftToWebsite: 0, findings: [] };
+  const tally: Tally = { inputs: 0, readouts: 0, cards: 0, leftToWebsite: 0, passive: 0, findings: [] };
   const before = getGameRates();
   try {
     for (const input of inputs) {
@@ -142,39 +144,50 @@ function shadow(inputs: Input[]): Tally {
         rates.recipeDurationDivisor,
       );
       const node = input.node as FactoryNode;
-      let ts: ReturnType<typeof machineReadout>["expected"];
-      let tsCard: ReturnType<typeof cardMachineMathTs>;
+      // Which cards the generic readout answers: both sides say the same. Bees and crops are the passive-production
+      // models' on both (websiteOnly here, PassiveRecipes in NodeMath.covers), the TGS and the Vat the core leaves to
+      // its own models; everything else the core answers.
+      let passive: boolean;
+      let ts: ReturnType<typeof machineReadout>["expected"] | undefined;
+      let tsCard: ReturnType<typeof cardMachineMathTs> | undefined;
       try {
-        if (websiteOnly(input.recipe)) {
-          // Bees and crops: the website's own card maths, which the core's machine readout does not model (their own
-          // goldens judge BeeReadout and CropReadout); the facade never sends them to the core.
-          tally.leftToWebsite++;
-          continue;
+        passive = websiteOnly(input.recipe);
+        if (!passive) {
+          ts = machineReadout(input.recipe, input.node).expected;
+          tsCard = cardMachineMathTs(input.recipe, node);
         }
-        ts = machineReadout(input.recipe, input.node).expected;
-        tsCard = cardMachineMathTs(input.recipe, node);
       } catch {
         // An input the website's own maths throws on (a test's deliberately broken stub) has no answer to hold.
         continue;
       }
+      let readout: string | null;
+      let card: ReturnType<typeof cardMachineMathCore>;
+      let cardText: string | null;
       try {
         keepRecipe(c, input.recipe);
-        const readout = c.MachinesExports.machinesReadout(input.recipe.id, JSON.stringify(node));
-        if (readout == null) {
-          tally.leftToWebsite++;
-          continue;
-        }
-        tally.readouts++;
-        const d = difference(ts, JSON.parse(readout), "readout", true);
-        if (d) tally.findings.push(`${input.name}: ${d}`);
-        const card = cardMachineMathCore(c, input.recipe, node);
-        if (card) {
-          tally.cards++;
-          const e = difference(tsCard, card, "card", false);
-          if (e) tally.findings.push(`${input.name}: ${e}`);
-        }
+        readout = c.MachinesExports.machinesReadout(input.recipe.id, JSON.stringify(node));
+        cardText = c.MachinesExports.machinesCard(input.recipe.id, JSON.stringify(node));
+        card = cardText == null || passive ? null : cardMachineMathCore(c, input.recipe, node);
       } catch (e) {
         tally.findings.push(`${input.name}: the core threw ${String(e).slice(0, 200)}`);
+        continue;
+      }
+      if (passive && (readout != null || cardText != null)) {
+        tally.findings.push(`${input.name}: the core answers a bee or crop card the website keeps to its own models`);
+        continue;
+      }
+      if (readout == null) {
+        tally.leftToWebsite++;
+        if (passive) tally.passive++;
+        continue;
+      }
+      tally.readouts++;
+      const d = difference(ts, JSON.parse(readout), "readout", true);
+      if (d) tally.findings.push(`${input.name}: ${d}`);
+      if (card) {
+        tally.cards++;
+        const e = difference(tsCard, card, "card", false);
+        if (e) tally.findings.push(`${input.name}: ${e}`);
       }
     }
   } finally {
@@ -203,6 +216,8 @@ describe("machine maths shadow: the TypeScript and the compiled core agree", () 
         report(target, "website test inputs", tally);
         expect(tally.findings.slice(0, 20)).toEqual([]);
         expect(tally.readouts).toBeGreaterThan(5000);
+        // The website's bee and crop tests reach the core too, and the core leaves each of them out.
+        expect(tally.passive).toBeGreaterThan(0);
         expect(tally.cards).toBe(tally.readouts);
       }, 300_000);
 

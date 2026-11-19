@@ -21,12 +21,87 @@ import com.gtnhplanner.core.base.JsonTree;
 public final class MachineReadout {
 
     private final Map<String, Web.Recipe> recipes = new HashMap<>();
+    /** Control tables kept under the host's names for them ({@link #addControl}), as parsed JSON. */
+    private final Map<String, Object> controls = new HashMap<>();
 
-    /** Keeps a recipe (the website's JSON) under an id for later questions; a second recipe under an id replaces it. */
+    /**
+     * Keeps a control table (one entry of a {@code machineConfigControls} list, the website's JSON) under a name the
+     * host picks; a recipe sent later may then carry {@code {"$ref": name}} in that list instead of the table. The
+     * tables are most of a recipe's text and the same few on most of a plan's recipes, so each crosses and is read once.
+     */
+    public void addControl(final String ref, final String controlJson) {
+        controls.put(ref, JsonTree.parse(controlJson));
+    }
+
+    /**
+     * Keeps a recipe (the website's JSON) under an id for later questions; a second recipe under an id replaces it. A
+     * control written {@code {"$ref": name}} is the table kept under that name: the recipe reads exactly as if the
+     * table's text stood there.
+     */
     public void addRecipe(final String id, final String recipeJson) {
-        final Web.Recipe recipe = WebJson.recipe(JsonTree.parse(recipeJson));
+        final Object tree = JsonTree.parse(recipeJson);
+        if (tree instanceof Map) {
+            final Map<String, Object> o = JsonTree.object(tree);
+            resolveControls(o);
+            if (o.get("machineHandlers") instanceof List)
+                for (final Object h : JsonTree.array(o.get("machineHandlers"))) if (h instanceof Map) resolveControls(JsonTree.object(h));
+        }
+        final Web.Recipe recipe = WebJson.recipe(tree);
         if (recipe == null) throw new IllegalArgumentException("Not a recipe: " + id);
         recipes.put(id, recipe);
+    }
+
+    private void resolveControls(final Map<String, Object> owner) {
+        if (!(owner.get("machineConfigControls") instanceof List)) return;
+        final List<Object> list = JsonTree.array(owner.get("machineConfigControls"));
+        for (int i = 0; i < list.size(); i++) {
+            if (!(list.get(i) instanceof Map)) continue;
+            final Map<String, Object> c = JsonTree.object(list.get(i));
+            if (c.size() != 1 || !(c.get("$ref") instanceof String)) continue;
+            final Object table = controls.get((String) c.get("$ref"));
+            if (table == null) throw new IllegalArgumentException("No control kept under " + c.get("$ref"));
+            list.set(i, table);
+        }
+    }
+
+    /**
+     * Runs the card maths once on a recipe of each of the first {@code maps} recipe maps (built from handlers.json as the
+     * game builds a card's), at two tiers, and through the JSON readers: the static tables are read and the code the
+     * board calls has run, so a host can do this in idle time after loading and a plan's first cards do not pay for it.
+     * Keeps nothing; answers how many cards it computed.
+     */
+    public static int warm(final int maps) {
+        int done = 0;
+        WebJson.node(JsonTree.parse("{\"id\":\"warm\",\"overclockTier\":\"HV\",\"machineCount\":1,\"parallel\":1}"));
+        for (final HandlerData.MapEntry entry : HandlerData.maps()
+            .values()) {
+            if (done >= maps * 2) break;
+            final Web.Recipe r = new Web.Recipe();
+            r.id = entry.id + ":warm";
+            r.name = "warm";
+            r.machineType = entry.name;
+            r.durationTicks = 100;
+            r.eut = 30;
+            r.minimumTier = HandlerData.recipeMinimumTier(r.eut);
+            r.source = new Web.Source();
+            r.source.recipeMap = entry.name;
+            r.inputs = new ArrayList<>();
+            r.outputs = new ArrayList<>();
+            r.machineConfigControls = HandlerData.recipeControls(entry, 0);
+            r.machineHandlers = HandlerData.handlers(entry, r.minimumTier, r.durationTicks, r.eut, r.machineConfigControls);
+            for (final String tier : new String[] { "LV", "IV" }) {
+                final Web.Node node = new Web.Node();
+                node.overclockTier = tier;
+                try {
+                    final Map<String, Object> out = card(r, node);
+                    if (out != null) JsonTree.write(out);
+                } catch (final RuntimeException ignored) {
+                    // A map the plain recipe does not suit: the next one warms the same code.
+                }
+                done++;
+            }
+        }
+        return done;
     }
 
     /**

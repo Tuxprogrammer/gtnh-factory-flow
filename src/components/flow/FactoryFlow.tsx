@@ -4985,7 +4985,8 @@ export function FactoryFlow() {
    * cards. False when there is nothing to select, so the page keeps its own select-all.
    */
   const selectAllBoardItems = useCallback((): boolean => {
-    const takes = (node: { hidden?: boolean; selectable?: boolean }) => !node.hidden && node.selectable !== false;
+    const takes = (node: { hidden?: boolean; selectable?: boolean }) =>
+      !node.hidden && node.selectable !== false;
     if (!flowNodesRef.current.some(takes)) {
       return false;
     }

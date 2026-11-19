@@ -13,7 +13,10 @@ import type { FactoryEdge, FactoryNode, FactoryProject, Recipe } from "@/lib/mod
 import { leaveWelcomeTab } from "@/lib/welcome/welcome-tab";
 import { useFactoryStore } from "@/store/factory-store";
 
-vi.mock("@/lib/compact-view", () => ({ isCompactViewport: () => false, useIsCompactViewport: () => false }));
+vi.mock("@/lib/compact-view", () => ({
+  isCompactViewport: () => false,
+  useIsCompactViewport: () => false,
+}));
 
 import { FactoryFlow } from "./FactoryFlow";
 
@@ -53,7 +56,15 @@ function recipe(id: string, input: string | undefined, output: string): Recipe {
 }
 
 function node(id: string, recipeId: string, x: number): FactoryNode {
-  return { id, recipeId, machineCount: 1, parallel: 1, overclockTier: "LV", enabled: true, position: { x, y: 0 } };
+  return {
+    id,
+    recipeId,
+    machineCount: 1,
+    parallel: 1,
+    overclockTier: "LV",
+    enabled: true,
+    position: { x, y: 0 },
+  };
 }
 
 function wire(id: string, source: string, target: string, resource: string): FactoryEdge {
@@ -84,11 +95,19 @@ function chainPlan(): FactoryProject {
 const ALL = ["m0", "m1", "m2", "m3", "m4", "m5"];
 const cards = () => useFactoryStore.getState().project.nodes.map((entry) => entry.id);
 const selected = () =>
-  [...document.querySelectorAll(".react-flow__node.selected")].map((el) => el.getAttribute("data-id"));
+  [...document.querySelectorAll(".react-flow__node.selected")].map((el) =>
+    el.getAttribute("data-id"),
+  );
 
 /** Returns whether the page's default (selecting its text) was left alone. */
 function pressCtrlA(target: Element = document.body, init: KeyboardEventInit = {}) {
-  const event = new KeyboardEvent("keydown", { key: "a", ctrlKey: true, bubbles: true, cancelable: true, ...init });
+  const event = new KeyboardEvent("keydown", {
+    key: "a",
+    ctrlKey: true,
+    bubbles: true,
+    cancelable: true,
+    ...init,
+  });
   act(() => {
     target.dispatchEvent(event);
   });
@@ -97,7 +116,9 @@ function pressCtrlA(target: Element = document.body, init: KeyboardEventInit = {
 
 function press(key: string) {
   act(() => {
-    document.body.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
+    document.body.dispatchEvent(
+      new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }),
+    );
   });
 }
 

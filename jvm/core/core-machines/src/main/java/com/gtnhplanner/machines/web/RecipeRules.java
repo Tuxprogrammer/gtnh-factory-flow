@@ -41,6 +41,13 @@ public final class RecipeRules {
      * the recipe (over 32 EU/t, or a fluid input it has no hatch for) is not offered ({@link SteamRecipeLimits}).
      */
     public static List<Web.Handler> machineHandlers(final Web.Recipe recipe) {
+        // Read many times a card (every applyHandler and selectedHandler asks), and the answer depends on the recipe
+        // alone: worked out once per recipe object (a changed recipe is always a copy, which starts without it).
+        if (recipe.familyHandlers == null) recipe.familyHandlers = Collections.unmodifiableList(familyHandlers(recipe));
+        return recipe.familyHandlers;
+    }
+
+    private static List<Web.Handler> familyHandlers(final Web.Recipe recipe) {
         final Map<String, Web.Handler> byFamily = new LinkedHashMap<>();
         final Integer fusionMark = Fusion.isRecipe(recipe) ? Fusion.recipeMark(recipe) : null;
         if (recipe.machineHandlers != null) for (final Web.Handler handler : recipe.machineHandlers) {
@@ -501,6 +508,10 @@ public final class RecipeRules {
 
     /** machineHandlerFamilyLabel: a singleblock's family, without its tier, numeral, grade or tier name. */
     public static String familyLabel(final String label) {
+        return Names.FAMILIES.computeIfAbsent(label, RecipeRules::family);
+    }
+
+    private static String family(final String label) {
         if (Fusion.machine(label) != null) return label;
         final String tierless = NUMERAL_SUFFIX.matcher(
             TIER_SUFFIX.matcher(label)
@@ -562,7 +573,8 @@ public final class RecipeRules {
     private static final class Names {
 
         static final java.util.Map<String, String> SLUGS = new java.util.concurrent.ConcurrentHashMap<>(),
-            MAP_NAMES = new java.util.concurrent.ConcurrentHashMap<>();
+            MAP_NAMES = new java.util.concurrent.ConcurrentHashMap<>(),
+            FAMILIES = new java.util.concurrent.ConcurrentHashMap<>();
     }
 
     private static String normalizeMachineLabel(final String value) {

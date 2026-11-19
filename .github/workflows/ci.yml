@@ -15,8 +15,17 @@ on:
       - "fix/**"
       - "rs/**"
 
+# actions: read lets a job list and download the dependency seeds earlier runs uploaded (tools/ci/seed.sh).
 permissions:
   contents: read
+  actions: read
+
+# npm retries a failed registry request twice by default; give a stalling registry minutes, not seconds.
+env:
+  NPM_CONFIG_FETCH_RETRIES: "6"
+  NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: "5000"
+  NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: "60000"
+  NPM_CONFIG_FETCH_TIMEOUT: "120000"
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -35,6 +44,8 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+      - name: Licence files and version tags agree
+        run: tools/ci/metadata.sh
       - id: changes
         env:
           CI_BRANCH: ${{ github.head_ref || github.ref_name }}
@@ -77,9 +88,24 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - name: Restore the browsers from the last seed
+        run: tools/ci/seed.sh restore playwright
+        env:
+          GH_TOKEN: ${{ github.token }}
       - run: tools/ci/icons.sh
         env:
           CI_INSTALL_BROWSERS: "1"
+      - name: Pack the browsers when they changed
+        id: seed
+        if: ${{ !cancelled() }}
+        run: tools/ci/seed.sh save playwright
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() && steps.seed.outputs.upload == 'true' }}
+        with:
+          name: ${{ steps.seed.outputs.name }}
+          path: ${{ steps.seed.outputs.file }}
+          compression-level: 0
+          retention-days: ${{ steps.seed.outputs.retention }}
 
   jvm:
     name: JVM build, tests and compat check
@@ -89,6 +115,13 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
+      # Everything the build fetches (dependencies, the Gradle distribution, RetroFuturaGradle's Minecraft data and its
+      # decompiled game) comes from the newest seed an earlier run on restructure or rs/** uploaded, so the build does not
+      # need the dependency servers in the usual case. See tools/ci/seed.sh for why this is not the Gradle action's cache.
+      - name: Restore the dependency seed
+        run: tools/ci/seed.sh restore jvm
+        env:
+          GH_TOKEN: ${{ github.token }}
       # Gradle itself runs on 25 (the last version listed is the default JAVA_HOME); the mod compiles
       # against 8 and tests on 17 and 21 through Gradle's toolchains, which find the JAVA_HOME_<n>_X64
       # variables this step sets. Zulu is the vendor the build's toolchains ask for.
@@ -100,18 +133,19 @@ jobs:
             17
             21
             25
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          # Only main and restructure write the cache; other branches read it.
-          cache-read-only: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/restructure' }}
-      # RetroFuturaGradle's deobfuscated game, about 50 MB, takes minutes to rebuild. It checks its own
-      # inputs, so a stale restore is rebuilt, never trusted.
-      - uses: actions/cache@v4
-        with:
-          path: jvm/mod/build/rfg
-          key: rfg-${{ runner.os }}-${{ hashFiles('jvm/**/*.gradle', 'jvm/**/*.gradle.kts', 'jvm/**/gradle.properties', 'jvm/gradle/gradle-daemon-jvm.properties') }}
-          restore-keys: rfg-${{ runner.os }}-
       - run: tools/ci/jvm.sh
+      # Also after a failed build: what it did fetch is kept, so the next run needs less.
+      - name: Pack the seed when it was short
+        id: seed
+        if: ${{ !cancelled() }}
+        run: tools/ci/seed.sh save jvm
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() && steps.seed.outputs.upload == 'true' }}
+        with:
+          name: ${{ steps.seed.outputs.name }}
+          path: ${{ steps.seed.outputs.file }}
+          compression-level: 0
+          retention-days: ${{ steps.seed.outputs.retention }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -140,11 +174,23 @@ jobs:
         with:
           distribution: zulu
           java-version: 25
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          cache-read-only: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/restructure' }}
+      - name: Restore the dependency seed
+        run: tools/ci/seed.sh restore web-core
+        env:
+          GH_TOKEN: ${{ github.token }}
       - run: npm ci
       - run: tools/ci/web-core.sh
+      - name: Pack the seed when it was short
+        id: seed
+        if: ${{ !cancelled() }}
+        run: tools/ci/seed.sh save web-core
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() && steps.seed.outputs.upload == 'true' }}
+        with:
+          name: ${{ steps.seed.outputs.name }}
+          path: ${{ steps.seed.outputs.file }}
+          compression-level: 0
+          retention-days: ${{ steps.seed.outputs.retention }}
 
   ci-ok:
     name: ci-ok

@@ -25,7 +25,7 @@ public final class NoteText {
     }
 
     /** Lays {@code text} out in lines at most {@code maxWidth} wide (in the font's units). */
-    public static NoteText of(final String text, final float maxWidth, final ToIntFunction<String> width) {
+    public static NoteText of(final String text, final double maxWidth, final ToIntFunction<String> width) {
         final List<Line> lines = new ArrayList<>();
         int p = 0;
         while (true) {
@@ -39,7 +39,7 @@ public final class NoteText {
     }
 
     /** One paragraph, {@code from} to {@code to}, into lines. */
-    private static void wrap(final String text, final int from, final int to, final float maxWidth,
+    private static void wrap(final String text, final int from, final int to, final double maxWidth,
         final ToIntFunction<String> width, final List<Line> out) {
         if (from == to) {
             out.add(new Line(from, to));
@@ -98,16 +98,16 @@ public final class NoteText {
     }
 
     /** The caret nearest a point {@code x} along line {@code line}. */
-    public int caretAt(final int line, final float x) {
+    public int caretAt(final int line, final double x) {
         final int i = Math.max(0, Math.min(lines.size() - 1, line));
         final Line l = lines.get(i);
         final boolean soft = i + 1 < lines.size() && lines.get(i + 1).start == l.end;
         // A soft line's last place is its trailing space, which belongs to the next line's start.
         final int last = soft ? Math.max(l.start, l.end - 1) : l.end;
         int best = l.start;
-        float bestGap = Float.MAX_VALUE;
+        double bestGap = Double.MAX_VALUE;
         for (int c = l.start; c <= last; c++) {
-            final float gap = Math.abs(width.applyAsInt(text.substring(l.start, c)) - x);
+            final double gap = Math.abs(width.applyAsInt(text.substring(l.start, c)) - x);
             if (gap < bestGap) {
                 bestGap = gap;
                 best = c;

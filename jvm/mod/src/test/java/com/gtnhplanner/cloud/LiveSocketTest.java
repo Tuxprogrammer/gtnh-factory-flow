@@ -177,7 +177,8 @@ class LiveSocketTest {
         socket = open("ws", null);
         final Log log = new Log();
         socket.start();
-        await(log, socket, () -> socket.state() == LiveSocket.State.CLOSED);
+        // The socket starts closed (start runs on the event loop), so wait for the refusal's reason, not the state.
+        await(log, socket, () -> !log.reasons.isEmpty() && socket.state() == LiveSocket.State.CLOSED);
         assertEquals(LiveSocket.AUTH, log.reasons.get(log.reasons.size() - 1));
         Thread.sleep(500);
         socket.poll(log);

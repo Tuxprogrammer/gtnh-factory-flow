@@ -68,17 +68,25 @@ class SteamMakersTest {
 
     @Test
     void thermalBoilerTurnsLavaIntoPlainSteamAndPahoehoe() {
-        // turns 1000 L/s of lava into 16,000 L/s of plain Steam and pahoehoe lava
+        // turns 1000 L/s of lava into 16,000 L/s of plain Steam, pahoehoe lava and obsidian (the 10% chance per
+        // 1000 L that MTEThermalBoiler keeps without a Lava Filter)
         final PowerModel model = compute("thermal-boiler", Map.of("fluid", "Lava", "intake", "1000"));
-        assertEquals(List.of(liters("Steam", 16_000), liters("Pahoehoe Lava", 1000)), model.outputs());
+        assertEquals(
+            List.of(
+                liters("Steam", 16_000),
+                liters("Pahoehoe Lava", 1000),
+                new Flow("Obsidian", 0.1, PowerModel.Unit.ITEM)),
+            model.outputs());
         assertEquals(100, flow(model, "Water"), 0);
     }
 
     @Test
     void thermalBoilerTurnsPahoehoeIntoPlainSteam() {
-        // turns pahoehoe lava into plain Steam at the same 16 per L
+        // turns pahoehoe lava into plain Steam at the same 16 per L, and obsidian at 37%
         final PowerModel model = compute("thermal-boiler", Map.of("fluid", "Pahoehoe Lava", "intake", "1000"));
-        assertEquals(List.of(liters("Steam", 16_000)), model.outputs());
+        assertEquals(
+            List.of(liters("Steam", 16_000), new Flow("Obsidian", 0.37, PowerModel.Unit.ITEM)),
+            model.outputs());
     }
 
     @Test

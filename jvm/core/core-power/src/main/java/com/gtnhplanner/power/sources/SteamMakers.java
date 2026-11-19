@@ -390,6 +390,12 @@ public final class SteamMakers {
     /** RecipesGregTech.thermalBoilerRecipes: lava makes plain Steam, the rest superheated. */
     private static final Set<String> THERMAL_BOILER_PLAIN_STEAM = Set.of("Lava", "Pahoehoe Lava");
 
+    /**
+     * Obsidian per 1000 L in RecipesGregTech.thermalBoilerRecipes (outputChances 1000 and 3700 of 10,000).
+     * MTEThermalBoiler keeps it without a Lava Filter and voids the recipes' other items.
+     */
+    private static final Map<String, Double> THERMAL_BOILER_OBSIDIAN = Map.of("Lava", 0.1, "Pahoehoe Lava", 0.37);
+
     /** Names as the resource map keys them (the workbook's own spellings). */
     private static final Map<String, String> COLD_RETURN = Map
         .of("Lava", "Pahoehoe Lava", "Hot Coolant", "Coolant", "Hot Solar Salt", "Cold Solar Salt");
@@ -470,6 +476,10 @@ public final class SteamMakers {
                 final String coldReturn = COLD_RETURN.get(fluidName);
                 if (coldReturn != null) {
                     outputs.add(liters(coldReturn, used));
+                }
+                final Double obsidian = isThermalBoiler ? THERMAL_BOILER_OBSIDIAN.get(fluidName) : null;
+                if (obsidian != null) {
+                    outputs.add(items("Obsidian", (used / 1000) * obsidian));
                 }
                 final String waterName = isThermalBoiler ? read.select("waterKind") : "Distilled Water";
                 return new PowerModel(

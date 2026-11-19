@@ -439,6 +439,12 @@ const EXCHANGER_UNLOCK: Record<string, string> = {
 /** RecipesGregTech.thermalBoilerRecipes: lava makes plain Steam, the rest superheated. */
 const THERMAL_BOILER_PLAIN_STEAM = new Set(["Lava", "Pahoehoe Lava"]);
 
+/**
+ * Obsidian per 1000 L in RecipesGregTech.thermalBoilerRecipes (outputChances 1000 and 3700 of 10,000).
+ * MTEThermalBoiler keeps it without a Lava Filter and voids the recipes' other items.
+ */
+const THERMAL_BOILER_OBSIDIAN: Record<string, number | undefined> = { Lava: 0.1, "Pahoehoe Lava": 0.37 };
+
 function buildExchanger(entry: (typeof powerPlannerData.heatExchangers)[number]): PowerSourceDefinition {
   const isThermalBoiler = entry.name === "Thermal Boiler";
   const isExtreme = entry.name === "Extreme Heat Exchanger";
@@ -545,6 +551,10 @@ function buildExchanger(entry: (typeof powerPlannerData.heatExchangers)[number])
       const coldReturn = COLD_RETURN[fluidName];
       if (coldReturn) {
         outputs.push(liters(coldReturn, used));
+      }
+      const obsidian = isThermalBoiler ? THERMAL_BOILER_OBSIDIAN[fluidName] : undefined;
+      if (obsidian) {
+        outputs.push(items("Obsidian", (used / 1000) * obsidian));
       }
       const waterName = isThermalBoiler ? read.select("waterKind") : "Distilled Water";
       return {

@@ -29,18 +29,23 @@ function flow(model: ReturnType<typeof compute>, name: string): number | undefin
 }
 
 describe("Thermal Boiler (RecipesGregTech.thermalBoilerRecipes)", () => {
-  it("turns 1000 L/s of lava into 16,000 L/s of plain Steam and pahoehoe lava", () => {
+  it("turns 1000 L/s of lava into 16,000 L/s of plain Steam, pahoehoe lava and obsidian", () => {
+    // Obsidian is the 10% chance per 1000 L that MTEThermalBoiler keeps without a Lava Filter.
     const model = compute("thermal-boiler", { fluid: "Lava", intake: "1000" });
     expect(model.outputs).toEqual([
       { name: "Steam", perSecond: 16_000, unit: "L" },
       { name: "Pahoehoe Lava", perSecond: 1000, unit: "L" },
+      { name: "Obsidian", perSecond: 0.1, unit: "item" },
     ]);
     expect(flow(model, "Water")).toBe(100);
   });
 
-  it("turns pahoehoe lava into plain Steam at the same 16 per L", () => {
+  it("turns pahoehoe lava into plain Steam at the same 16 per L, and obsidian at 37%", () => {
     const model = compute("thermal-boiler", { fluid: "Pahoehoe Lava", intake: "1000" });
-    expect(model.outputs).toEqual([{ name: "Steam", perSecond: 16_000, unit: "L" }]);
+    expect(model.outputs).toEqual([
+      { name: "Steam", perSecond: 16_000, unit: "L" },
+      { name: "Obsidian", perSecond: 0.37, unit: "item" },
+    ]);
   });
 
   it("keeps hot coolant and hot solar salt on superheated steam", () => {

@@ -2,7 +2,11 @@ package com.gtnhplanner.core.solver.lp;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Nullable;
 
 import org.ojalgo.optimisation.Expression;
 import org.ojalgo.optimisation.ExpressionsBasedModel;
@@ -40,6 +44,45 @@ public final class OjAlgoEngine implements LpEngine {
 
     private OjAlgoEngine() {}
 
+    /**
+     * {@code BigDecimal.valueOf(value)}, null when not finite: exactly what ojAlgo makes of a double it is given
+     * ({@code ModelEntity.toBigDecimal(double)}), handed to it through its BigDecimal overloads, which take one as it
+     * is. A solve passes the same few hundred values to model after model, and the web build turns each into text
+     * and back to make one, so they are kept: once seen by a program, then for every program (bounded, never by
+     * identity, so no answer depends on what was kept).
+     */
+    private static final class Decimals {
+
+        private static final int LIMIT = 1 << 15;
+        private static final Map<Long, BigDecimal> SHARED = new HashMap<>();
+
+        private final Map<Long, BigDecimal> own = new HashMap<>();
+
+        @Nullable
+        BigDecimal of(final double value) {
+            if (!Double.isFinite(value)) return null;
+            final Long key = Double.doubleToRawLongBits(value);
+            BigDecimal decimal = own.get(key);
+            if (decimal == null) {
+                decimal = shared(key, value);
+                own.put(key, decimal);
+            }
+            return decimal;
+        }
+
+        private static BigDecimal shared(final Long key, final double value) {
+            synchronized (SHARED) {
+                BigDecimal decimal = SHARED.get(key);
+                if (decimal == null) {
+                    if (SHARED.size() >= LIMIT) SHARED.clear();
+                    decimal = BigDecimal.valueOf(value);
+                    SHARED.put(key, decimal);
+                }
+                return decimal;
+            }
+        }
+    }
+
     private static Optimisation.Environment environment() {
         final Optimisation.Environment environment = Optimisation.newEnvironment();
         environment.clearPresolvers();
@@ -56,6 +99,7 @@ public final class OjAlgoEngine implements LpEngine {
         private final ExpressionsBasedModel m = ENVIRONMENT.newModel();
         private final List<Variable> columns = new ArrayList<>();
         private final List<Expression> rows = new ArrayList<>();
+        private final Decimals decimals = new Decimals();
 
         Program(final long safetyMillis) {
             // The work a solve does is counted, never timed, so its answer is the same on every computer however busy;
@@ -78,13 +122,13 @@ public final class OjAlgoEngine implements LpEngine {
         @Override
         public void columnLower(final int column, final double lower) {
             columns.get(column)
-                .lower(lower);
+                .lower(decimals.of(lower));
         }
 
         @Override
         public void columnUpper(final int column, final double upper) {
             columns.get(column)
-                .upper(upper);
+                .upper(decimals.of(upper));
         }
 
         @Override
@@ -96,7 +140,7 @@ public final class OjAlgoEngine implements LpEngine {
         @Override
         public void cost(final int column, final double cost) {
             columns.get(column)
-                .weight(cost);
+                .weight(decimals.of(cost));
         }
 
         @Override
@@ -115,31 +159,31 @@ public final class OjAlgoEngine implements LpEngine {
         @Override
         public void set(final int row, final int column, final double coefficient) {
             rows.get(row)
-                .set(columns.get(column), coefficient);
+                .set(columns.get(column), decimals.of(coefficient));
         }
 
         @Override
         public void add(final int row, final int column, final double coefficient) {
             rows.get(row)
-                .add(columns.get(column), coefficient);
+                .add(columns.get(column), decimals.of(coefficient));
         }
 
         @Override
         public void rowLower(final int row, final double lower) {
             rows.get(row)
-                .lower(lower);
+                .lower(decimals.of(lower));
         }
 
         @Override
         public void rowUpper(final int row, final double upper) {
             rows.get(row)
-                .upper(upper);
+                .upper(decimals.of(upper));
         }
 
         @Override
         public void rowLevel(final int row, final double level) {
             rows.get(row)
-                .level(level);
+                .level(decimals.of(level));
         }
 
         @Override

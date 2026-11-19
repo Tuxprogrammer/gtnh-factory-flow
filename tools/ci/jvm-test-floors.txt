@@ -8,3 +8,5 @@ mod 1000
 core-base 5
 core-machines 100
 core-power 8
+core-view 4
+web 3

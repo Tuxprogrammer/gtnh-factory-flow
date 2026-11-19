@@ -15,7 +15,7 @@ extra=("-Dorg.gradle.jvmargs=-Xmx3g -XX:MaxMetaspaceSize=768m -Dfile.encoding=UT
 if [ -n "$envs" ]; then extra+=("-Porg.gradle.java.installations.fromEnv=$envs"); fi
 
 # A result file from an earlier run must never count: a resumed build can report `:test NO-SOURCE` and run nothing.
-rm -rf mod/build/test-results core/*/build/test-results
+rm -rf mod/build/test-results core/*/build/test-results web/*/build/test-results
 
 say "gradle build :mod:compatCheck${CI_CORES:+ on cores $CI_CORES}"
 pin ./gradlew --no-daemon --console=plain "${extra[@]}" build :mod:compatCheck || fail "gradle build or compatCheck failed"

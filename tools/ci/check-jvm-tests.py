@@ -2,7 +2,7 @@
 """Fail unless every JVM module ran tests, and enough of them.
 
 Reads the JUnit result XML Gradle wrote (<module>/build/test-results/test/*.xml) for the mod and for each
-directory under jvm/core/ that has a build.gradle.kts, and compares the count of tests that ran (tests minus
+directory under jvm/core/ and jvm/web/ that has a build.gradle.kts, and compares the count of tests that ran (tests minus
 skipped) with the floors in jvm-test-floors.txt (a module without a line needs at least 1).
 
   check-jvm-tests.py            exit 1 and name every module that falls short
@@ -18,11 +18,12 @@ JVM = ROOT / "jvm"
 
 def modules():
     mods = [("mod", JVM / "mod")]
-    core = JVM / "core"
-    if core.is_dir():
-        for d in sorted(core.iterdir()):
-            if (d / "build.gradle.kts").is_file():
-                mods.append((d.name, d))
+    for group in ("core", "web"):
+        base = JVM / group
+        if base.is_dir():
+            for d in sorted(base.iterdir()):
+                if (d / "build.gradle.kts").is_file():
+                    mods.append((d.name, d))
     return mods
 
 

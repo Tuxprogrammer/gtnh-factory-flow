@@ -59,7 +59,7 @@ for job in "${selected[@]}"; do
     fi
   else
     summary+=("$job: PASS (${secs}s)")
-    [ "${CI_VERBOSE:-0}" = 1 ] || echo "$plain" | grep -E '^ +Tests |Test Files|^\[ci:jvm\] (mod|core-|total)|\[ci:web-core\] STUB' | tail -8
+    [ "${CI_VERBOSE:-0}" = 1 ] || echo "$plain" | grep -E '^ +Tests |Test Files|^\[ci:jvm\] (mod|core-|total)|\[ci:web-core\]' | tail -8
   fi
 done
 

@@ -112,6 +112,7 @@ jobs:
             jvm/mod/build/libs/*.jar
             jvm/mod/build/reports/tests
             jvm/core/*/build/reports/tests
+            jvm/web/*/build/reports/tests
           if-no-files-found: ignore
           retention-days: 7
 

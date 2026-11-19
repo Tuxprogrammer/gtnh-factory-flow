@@ -22,9 +22,10 @@ plugins {
 
 rootProject.name = "gtnh-planner-jvm"
 
-// The mod, and every plain-Java core module: a directory under core/ with a build file, named by its directory
-// (core/core-base is :core-base). A new module needs only its directory.
+// The mod, the web build of the core (web/, TeaVM), and every plain-Java core module: a directory under core/ with a
+// build file, named by its directory (core/core-base is :core-base). A new module needs only its directory.
 include("mod")
+include("web")
 file("core").listFiles { f -> f.isDirectory && File(f, "build.gradle.kts").isFile }
     ?.sortedBy { it.name }
     ?.forEach { dir ->

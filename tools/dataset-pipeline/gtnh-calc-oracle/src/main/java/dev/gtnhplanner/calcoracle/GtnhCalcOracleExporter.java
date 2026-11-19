@@ -179,6 +179,7 @@ public final class GtnhCalcOracleExporter {
                 }
             });
 
+            RockBreakerDurations rockBreaker = RockBreakerDurations.load();
             for (RecipeMap<RecipeMapBackend> map : maps) {
                 Map<String, Object> exportedMap = map();
                 String name = StatCollector.translateToLocal(map.unlocalizedName);
@@ -225,7 +226,13 @@ public final class GtnhCalcOracleExporter {
                     Map<String, Object> exportedRecipe = map();
                     exportedRecipe.put("id", sha1(map.unlocalizedName + ":" + index + ":" + recipe.toString()).substring(0, 16));
                     exportedRecipe.put("enabled", Boolean.TRUE);
-                    exportedRecipe.put("durationTicks", Integer.valueOf(Math.max(1, recipe.mDuration)));
+                    int exportedDuration = recipe.mDuration;
+                    if (RockBreakerDurations.MAP_ID.equals(map.unlocalizedName)) {
+                        // The machine runs its own list, not this display copy.
+                        int machineDuration = rockBreaker.durationFor(recipe);
+                        if (machineDuration >= 0) exportedDuration = machineDuration;
+                    }
+                    exportedRecipe.put("durationTicks", Integer.valueOf(Math.max(1, exportedDuration)));
                     exportedRecipe.put("eut", Long.valueOf(recipe.mEUt));
                     exportedRecipe.put("specialValue", Integer.valueOf(recipe.mSpecialValue));
                     if ("gt.recipe.fusionreactor".equals(map.unlocalizedName)) {

@@ -106,7 +106,9 @@ describe("the rail's totals", () => {
 
   it("counts the harvesters an Up to crop card's seeds fill, not the seeds", () => {
     const project = structuredClone(mockUnneeded.project);
-    const recipe = project.recipes.find((r) => r.id === project.nodes.find((n) => n.id === "comp")!.recipeId)!;
+    const recipe = project.recipes.find(
+      (r) => r.id === project.nodes.find((n) => n.id === "comp")!.recipeId,
+    )!;
     recipe.metadata = {
       cropsNh: {
         tier: 4,
@@ -126,7 +128,12 @@ describe("the rail's totals", () => {
     };
     const rail = buildRailModel(project, { ...mockUnneeded.result, plan });
     // An LV Crop Manager works 362 sticks: fifty seeds are one machine, and the pin reads as one too.
-    expect(rail.machines[0]).toMatchObject({ rule: "upTo", count: 1, pin: 1, seedsPerMachine: 362 });
+    expect(rail.machines[0]).toMatchObject({
+      rule: "upTo",
+      count: 1,
+      pin: 1,
+      seedsPerMachine: 362,
+    });
     expect(rail.wholeMachines).toBe(1);
   });
 

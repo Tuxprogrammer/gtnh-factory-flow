@@ -1,6 +1,10 @@
 import { isCustomRateRecipe } from "@/lib/model/custom-rate";
 import { isFluidTankRecipe } from "@/lib/model/fluid-tank";
-import { buildMachineList, machinesFromUnits, type MachineListEntry } from "@/lib/model/machine-list";
+import {
+  buildMachineList,
+  machinesFromUnits,
+  type MachineListEntry,
+} from "@/lib/model/machine-list";
 import { pinRuleOf, type PinRule } from "@/lib/model/pin-rule";
 import type { PlanUpTo } from "@/lib/solver/plan/types";
 import { makeResourceKey } from "@/lib/model/resources";

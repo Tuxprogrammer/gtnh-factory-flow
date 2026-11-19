@@ -210,7 +210,11 @@ describe("crop cards in the machine list", () => {
       },
     },
   } as Recipe;
-  const cropProject = (seeds: number, handler: string, tiers: Record<string, string>): FactoryProject => ({
+  const cropProject = (
+    seeds: number,
+    handler: string,
+    tiers: Record<string, string>,
+  ): FactoryProject => ({
     schemaVersion: PROJECT_SCHEMA_VERSION,
     id: "crops",
     name: "Crops",

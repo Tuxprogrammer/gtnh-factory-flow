@@ -26,7 +26,7 @@ class ModelCoreTest {
     private static final class Card implements PinRule.Card {
 
         boolean fixed, exact, alwaysExact;
-        int count;
+        double count;
 
         @Override
         public boolean isMachineCountFixed() {
@@ -55,7 +55,7 @@ class ModelCoreTest {
         }
 
         @Override
-        public void setMachineCount(final int count) {
+        public void setMachineCount(final double count) {
             this.count = count;
         }
     }
@@ -65,13 +65,13 @@ class ModelCoreTest {
         final Card c = new Card();
         assertEquals(PinRule.ANY, PinRule.of(c));
         PinRule.set(c, PinRule.UP_TO, 2.6);
-        assertEquals(3, c.count, "a count is whole machines, rounded");
+        assertEquals(2.6, c.count, "a count is kept as set, a fraction too (parity decision: fractional pins)");
         assertEquals(PinRule.UP_TO, PinRule.of(c));
         PinRule.set(c, PinRule.EXACT);
         assertEquals(PinRule.EXACT, PinRule.of(c));
         PinRule.set(c, PinRule.ANY, 5);
         assertEquals(PinRule.ANY, PinRule.of(c));
-        assertEquals(3, c.count, "Any lets go of the count, keeps the number");
+        assertEquals(2.6, c.count, "Any lets go of the count, keeps the number");
         c.setMachineCountFixed(true);
         c.alwaysExact = true;
         assertEquals(PinRule.EXACT, PinRule.of(c), "a custom rate card's set count is Exactly");

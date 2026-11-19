@@ -540,12 +540,14 @@ public final class Summary extends GraphData {
                 return new Line.Measure<>(type, resource, amount);
             }
 
+            /** One line per resource of a kind: the same resource in the plan, not two that only share an ore name. */
             @Override
             @SuppressWarnings("unchecked")
             public boolean equals(final Object o) {
                 return o instanceof ResourceKey<?>(SummaryProperty<?> type1, Object resource1)
                     && type == type1
-                    && type.canConnect(resource, (T) resource1);
+                    && type.resource(resource)
+                        .equals(type.resource((T) resource1));
             }
 
             @Override

@@ -245,6 +245,7 @@ gtnhplanner.notice.pinConflict=The pinned counts on %s can't all be met at once:
 gtnhplanner.notice.cannotRun=Some machines can't run with these rates and pinned counts
 gtnhplanner.notice.noWay=There's no way to meet all these rates and pinned counts: change a rate or unpin a count
 gtnhplanner.notice.failed=The planner couldn't solve this plan (the details are in the log)
+gtnhplanner.notice.wireNotTaken=A wire carries %s into a slot that takes %s and does not take it: it carries nothing. Wire what the slot lists
 gtnhplanner.notice.and=and
 gtnhplanner.notice.unwired=The %s drawer has a rate, but nothing is wired to it
 gtnhplanner.notice.ignored=The %s drawer's rate does nothing: the ports it's on are wired

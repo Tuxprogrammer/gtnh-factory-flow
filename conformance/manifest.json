@@ -50,6 +50,13 @@
       ],
       "generator": "machine-goldens: npx tsx tools/audits/export-mod-machine-goldens.ts --out conformance/machines/machine-goldens.jsonl.gz --dataset stable-2.9.0-tuxmine --rates recipeDurationDivisor=64,beesYield=4,ic2CropsYield=4 (the instance's dataset, checksumSha256 7c6fbe83d7be4863518e88c615b0299033d7a4b6c4e32bb497225979ac35b3c2, at its pack's GTNHRates config); crop-goldens: npx tsx tools/audits/export-mod-crop-goldens.ts --out conformance/machines/crop-goldens.jsonl.gz --dataset stable-2.9.0-tuxmine (same dataset); bee-goldens: BEE_GOLDENS_OUT=$PWD/conformance/machines/bee-goldens.jsonl.gz node node_modules/vitest/vitest.mjs run --config jvm/mod/tools/dev/bees/vitest.bees.config.mjs; reference-coefficients: see src/lib/machines/CLAUDE.md; website-test-inputs: node tools/audits/machine-test-inputs/record.mjs"
     },
+    "model": {
+      "specifies": "The plan model's resource rules both sides hold: wiring.json, which wires a plan allows (a slot takes its own resource and what its recipe lists in its place, never an item that only shares an ore name with them).",
+      "readers": [
+        "website: src/lib/model/wiring-conformance.test.ts (resourceMatchesInput)",
+        "core-model: core/model/ResourcesTest (Wiring.accepts)"
+      ]
+    },
     "pending": {
       "specifies": "Files that disagree with a copy in the tree and wait for a decision. No suite reads them. Each subdirectory says in its README.md what it is and which file it would replace.",
       "readers": []
@@ -208,6 +215,11 @@
       "area": "machines",
       "bytes": 120878,
       "sha256": "9264f9be65f716e43774850747604716dbc9b2733eb30e629cf246be89cc1678"
+    },
+    "model/wiring.json": {
+      "area": "model",
+      "bytes": 5513,
+      "sha256": "7d7a0579c86468b5878af00810433ce97c762a82d12d8b9e009295d6eea338a6"
     },
     "plans/invalid/fuel-profile-empty-id.json": {
       "area": "plans",

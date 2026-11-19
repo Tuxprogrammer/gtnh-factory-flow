@@ -508,7 +508,7 @@ public final class BoardSession {
         final Port<?> want = src.inputs.get(port);
         for (int out = 0; out < dst.outputs.size(); out++) {
             if (!dst.outputs.get(out)
-                .canConnect(want)) continue;
+                .feeds(want)) continue;
             final String key = pickFor(src, port, dst.outputs.get(out));
             if (key != null && !wired(dst.id, out, src.id, port))
                 connectPicking(dst, out, src, new Pick(port, key, out));
@@ -555,7 +555,7 @@ public final class BoardSession {
             final Port<?> in = dst.inputs.get(i);
             if (!in.hasChoices()) continue;
             for (final Object alt : in.getAlternatives())
-                if (out.canConnect(in.withAlternative(alt))) return new Pick(i, in.keyOf(alt), -1);
+                if (out.feeds(in.withAlternative(alt))) return new Pick(i, in.keyOf(alt), -1);
         }
         return null;
     }
@@ -569,7 +569,7 @@ public final class BoardSession {
         for (final Object alt : in.getAlternatives()) {
             final Port<?> as = in.withAlternative(alt);
             for (int out = 0; out < dst.outputs.size(); out++) if (dst.outputs.get(out)
-                .canConnect(as)) return new Pick(input, in.keyOf(alt), out);
+                .feeds(as)) return new Pick(input, in.keyOf(alt), out);
         }
         return null;
     }
@@ -601,7 +601,7 @@ public final class BoardSession {
             if (src == null || e.sourceOutputIndex < 0
                 || e.sourceOutputIndex >= src.outputs.size()
                 || !src.outputs.get(e.sourceOutputIndex)
-                    .canConnect(port))
+                    .feeds(port))
                 graph.removeEdge(e.id);
         }
         final String now = Resources.key(port);
@@ -827,7 +827,7 @@ public final class BoardSession {
             if (port < 0 || port >= src.inputs.size()) return null;
             final Port<?> want = src.inputs.get(port);
             for (int out = 0; out < dst.outputs.size(); out++) if (dst.outputs.get(out)
-                .canConnect(want)) return new PortRef(section, true, out);
+                .feeds(want)) return new PortRef(section, true, out);
             final Pick pick = pickTaken(src, port, dst);
             if (pick != null) return new PortRef(section, true, pick.other());
         }
@@ -1130,7 +1130,7 @@ public final class BoardSession {
         final Port<?> want = originPorts.get(idx);
         for (int out = 0; out < added.outputs.size(); out++) {
             if (!added.outputs.get(out)
-                .canConnect(want)) continue;
+                .feeds(want)) continue;
             final String key = pickFor(origin, idx, added.outputs.get(out));
             if (key != null) applyInputPick(origin, idx, key);
             graph.addEdge(new Edge(Uuid.randomUUID(), added.id, origin.id, out, idx));
@@ -2193,8 +2193,8 @@ public final class BoardSession {
         edit(() -> {
             final Node host = graph.nodes.get(hostId);
             com.gtnhplanner.data.flowchart.MachineGroup g = sharedOf(hostId);
-            final int capacity = g != null ? g.getMachineCapacity()
-                : host.isMachineCountFixed() ? host.machineConfig.getMachineCount() : 0;
+            final double capacity = g != null ? g.machineCount()
+                : host.isMachineCountFixed() ? host.machineConfig.machineCount() : 0;
             final boolean pinned = g != null ? g.isPinned() : host.isMachineCountFixed();
             final boolean exact = g != null ? g.isExact() : host.isMachineCountExact();
             for (final Uuid card : cards) {
@@ -2204,7 +2204,7 @@ public final class BoardSession {
             g = new com.gtnhplanner.data.flowchart.MachineGroup();
             g.setHeader("Shared machine");
             for (final Uuid s : sections) g.addSection(s);
-            g.setMachineCapacity(capacity);
+            g.setMachineCount(capacity);
             g.setPinned(pinned && capacity > 0);
             g.setExact(exact && g.isPinned());
             graph.groups.put(g.getId(), g);
@@ -2517,8 +2517,8 @@ public final class BoardSession {
     /** The count set on a card (its machine's on a shared machine): 0 for Any. */
     public double setCount(final Node node) {
         final com.gtnhplanner.data.flowchart.MachineGroup g = sharedOf(node.id);
-        if (g != null) return PinRule.of(g) == PinRule.ANY ? 0 : g.getMachineCapacity();
-        return PinRule.of(node) == PinRule.ANY ? 0 : node.machineConfig.getMachineCount();
+        if (g != null) return PinRule.of(g) == PinRule.ANY ? 0 : g.machineCount();
+        return PinRule.of(node) == PinRule.ANY ? 0 : node.machineConfig.machineCount();
     }
 
     /**
@@ -2727,7 +2727,7 @@ public final class BoardSession {
             final com.gtnhplanner.data.flowchart.MachineGroup g = new com.gtnhplanner.data.flowchart.MachineGroup();
             g.setHeader("Shared machine");
             for (final Node copy : copies) g.addSection(copy.id);
-            g.setMachineCapacity(shared.getMachineCapacity());
+            g.setMachineCount(shared.machineCount());
             g.setPinned(shared.isPinned());
             g.setExact(shared.isExact());
             graph.groups.put(g.getId(), g);
@@ -3761,7 +3761,34 @@ public final class BoardSession {
         if (input.failure() != null && input.failure()
             .kind()
             .equals("NO_PIN")) nothingToSolveFor = !cards.isEmpty();
-        return NoticeHost.of(Notices.build(input), this::rateText);
+        final List<Notice> out = new ArrayList<>(NoticeHost.of(Notices.build(input), this::rateText));
+        out.addAll(wiresNotTaken());
+        return out;
+    }
+
+    /**
+     * A wire an older save made under the old rule (two items sharing an ore name wired to each other) whose input's
+     * recipe does not take what it carries: it stays on the board and carries nothing ({@code GraphSolve.notTaken}),
+     * so each says so, with both cards to show.
+     */
+    private List<Notice> wiresNotTaken() {
+        final List<Notice> out = new ArrayList<>();
+        for (final Edge e : graph.getEdges()) {
+            if (!com.gtnhplanner.data.flowchart.balancer.GraphSolve.notTaken(graph, e)) continue;
+            final Node src = graph.nodes.get(e.sourceNodeId), dst = graph.nodes.get(e.targetNodeId);
+            out.add(
+                new Notice(
+                    com.gtnhplanner.data.flowchart.balancer.Severity.WARN,
+                    com.gtnhplanner.core.base.Text.get()
+                        .format(
+                            "gtnhplanner.notice.wireNotTaken",
+                            src.outputs.get(e.sourceOutputIndex)
+                                .getDisplayName(),
+                            dst.inputs.get(e.targetInputIndex)
+                                .getDisplayName()),
+                    List.of(src.id, dst.id)));
+        }
+        return out;
     }
 
     /** A rate in units a second of a resource kind, as the board spells it under the player's rate unit. */

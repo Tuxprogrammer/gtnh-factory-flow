@@ -25,6 +25,12 @@ public class MachineGroup extends Group {
     private int machineCapacity;
 
     /**
+     * The set count when it is not whole (a website pin of 2.5), {@link #machineCapacity} then holding it rounded up.
+     * Null, never written, for a whole count, so a save reads and writes as it did before fractions.
+     */
+    private Double machineFraction;
+
+    /**
      * Whether {@link #machineCapacity} is the count the player set rather than a plain cap: Up to that many, or
      * Exactly with {@link #isExact()} ({@link PinRule#of(MachineGroup)}).
      */
@@ -97,6 +103,22 @@ public class MachineGroup extends Group {
 
     public void setMachineCapacity(final int machineCapacity) {
         this.machineCapacity = machineCapacity;
+        this.machineFraction = null;
+    }
+
+    /** The count as set, a fraction included; {@link #getMachineCapacity()} is it in whole machines. */
+    public double machineCount() {
+        return machineFraction != null ? machineFraction : machineCapacity;
+    }
+
+    /** Sets the count: a whole one as the whole capacity it always was, a fraction kept beside it rounded up. */
+    public void setMachineCount(final double count) {
+        if (Math.floor(count) == count && Math.abs(count) <= Integer.MAX_VALUE) {
+            setMachineCapacity((int) count);
+            return;
+        }
+        this.machineCapacity = (int) Math.min(Integer.MAX_VALUE, Math.ceil(count));
+        this.machineFraction = count;
     }
 
     public boolean isPinned() {

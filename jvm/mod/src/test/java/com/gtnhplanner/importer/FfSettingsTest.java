@@ -273,11 +273,12 @@ class FfSettingsTest {
         final FfNode pinned = card("HV", null, null, null, null, 0, null, null, 1, Map.of(), 7, 2.5);
         final FfSettings.Mapped p = FfSettings.map(pinned, SINGLE, 30, true, true);
         assertTrue(p.pinned());
-        assertEquals(3, p.machines());
+        assertEquals(2.5, p.machines(), "the pin as the plan set it, never rounded");
         assertTrue(
             p.notes()
-                .getFirst()
-                .contains("rounded to 3"));
+                .stream()
+                .noneMatch(n -> n.contains("rounded")),
+            "nothing rounded to report");
 
         final FfSettings.Mapped section = FfSettings.map(pinned, SINGLE, 30, true, false);
         assertFalse(section.pinned(), "a shared machine's extra recipe never carries the card's pin");

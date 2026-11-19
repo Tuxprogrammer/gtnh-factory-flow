@@ -387,6 +387,39 @@ class SerializerTest {
     // ── helpers ──
 
     /** A profile carrying GregTech's settings, built directly: the real one needs a running client. */
+    /** The node's saved {@code machineCount} as the save wrote it. */
+    private static String savedCount(final Graph graph, final Node node) {
+        final JsonObject saved = new com.google.gson.JsonParser().parse(gunzip(Serializer.encode(graph)))
+            .getAsJsonObject();
+        for (final com.google.gson.JsonElement n : saved.getAsJsonArray("nodes")) {
+            if (n.getAsJsonObject()
+                .get("id")
+                .getAsString()
+                .equals(node.id.toString()))
+                return n.getAsJsonObject()
+                    .get("machineCount")
+                    .toString();
+        }
+        throw new AssertionError("node not saved");
+    }
+
+    @Test
+    void aFractionalCountSurvivesASaveAndAWholeOneSavesAsBefore() {
+        final LoadedChart chart = GtnhFlowLoader.load("light_fuel");
+        final Node half = chart.machine(0), whole = chart.machine(1);
+        com.gtnhplanner.data.flowchart.PinRule.set(half, com.gtnhplanner.data.flowchart.PinRule.UP_TO, 0.5);
+        com.gtnhplanner.data.flowchart.PinRule.set(whole, com.gtnhplanner.data.flowchart.PinRule.EXACT, 3);
+        assertEquals("0.5", savedCount(chart.graph(), half), "a fraction is saved as it is");
+        assertEquals("3", savedCount(chart.graph(), whole), "a whole count is the whole number it always was");
+        final Graph back = Serializer.decode(Serializer.encode(chart.graph()));
+        assertEquals(0.5, back.nodes.get(half.id).machineConfig.machineCount());
+        assertEquals(1, back.nodes.get(half.id).machineConfig.getMachineCount(), "in whole machines, one");
+        assertEquals(3, back.nodes.get(whole.id).machineConfig.machineCount());
+        assertTrue(
+            back.nodes.get(whole.id).machineConfig.settings.get(Settings.MACHINES.key()) instanceof Integer,
+            "a whole count reads back as the Integer it always was");
+    }
+
     @Test
     void anOldCoilHeatBecomesTheHottestCoilUnderIt() {
         registerGtProfile();

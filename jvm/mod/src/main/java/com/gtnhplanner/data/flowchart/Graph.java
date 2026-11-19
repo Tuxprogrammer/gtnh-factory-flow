@@ -653,7 +653,7 @@ public class Graph {
         if (src == dst || srcOutIdx < 0 || srcOutIdx >= src.outputs.size()) return -1;
         final Port<?> out = src.outputs.get(srcOutIdx);
         for (int i = 0; i < dst.inputs.size(); i++) {
-            if (out.canConnect(dst.inputs.get(i))) return i;
+            if (out.feeds(dst.inputs.get(i))) return i;
         }
         return -1;
     }

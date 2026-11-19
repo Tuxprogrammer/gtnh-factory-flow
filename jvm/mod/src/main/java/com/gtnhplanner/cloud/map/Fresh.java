@@ -157,7 +157,7 @@ final class Fresh {
             final String in = pocket(g, names, n.group);
             out.put(gameKey, new Thing("nodes", id, gameKey, Canon.of(data), data, true, at[0], at[1], in, () -> {
                 final PlanExport.Card card = PlanExport
-                    .card(n, FfPlan.GAME_RECIPE_PREFIX + id, game, n.machineConfig.getMachineCount());
+                    .card(n, FfPlan.GAME_RECIPE_PREFIX + id, game, n.machineConfig.machineCount());
                 final JsonObject site = withoutPlace(card.node());
                 site.addProperty("id", id);
                 return new JsonObject[] { site, Derived.recipe(card.recipe()) };

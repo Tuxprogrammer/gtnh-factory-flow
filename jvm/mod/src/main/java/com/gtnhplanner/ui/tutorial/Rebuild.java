@@ -268,7 +268,7 @@ final class Rebuild {
         CARDS.put(plan.id, n.id);
         s.edit(() -> {
             n.machineConfig.copySettingsFrom(plan.machineConfig);
-            n.machineConfig.setMachineCount(plan.machineConfig.getMachineCount());
+            n.machineConfig.setMachineCount(plan.machineConfig.machineCount());
             n.setMachineCountFixed(plan.isMachineCountFixed());
             n.setMachineCountExact(plan.isMachineCountExact());
             n.targetOutputRates.clear();
@@ -316,7 +316,7 @@ final class Rebuild {
     /** The NEI stack of a card's first output, to search for and look up. */
     private static ItemStack firstOutput(final Node plan) {
         for (final var p : plan.outputs) {
-            final ItemStack s = p.getDisplayStack();
+            final ItemStack s = com.gtnhplanner.ui.Resources.displayStack(p);
             if (s != null) return s;
         }
         return null;

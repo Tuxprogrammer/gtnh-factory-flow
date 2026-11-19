@@ -34,19 +34,18 @@ import javax.annotation.Nullable;
  */
 public final class GridEdgeRouter {
 
-    /** The board grid, px. Token {@code Tokens.Grid.BOARD_GRID}. */
-    public static final int BOARD_GRID = 20;
-    /** One cell of clearance between any wire run and any card. Token {@code Tokens.Wire.WIRE_NODE_MARGIN}. */
-    public static final int WIRE_NODE_MARGIN = BOARD_GRID;
-    /** Usable stroke px inside one orthogonal lane. Token {@code Tokens.Wire.LANE_CAPACITY}. */
-    public static final double LANE_CAPACITY = 16;
-    /** Breathing room between two wires sharing a lane. Token {@code Tokens.Wire.LANE_GAP}. */
-    public static final double LANE_GAP = 2;
-    /** The widths wires draw at, as lane fractions. Token {@code Tokens.Wire.LANE_FRACTIONS}. */
-    private static final double[] LANE_FRACTIONS = { 1.0 / 4, 5.0 / 16, 3.0 / 8, 7.0 / 16, 1.0 / 2, 5.0 / 8, 3.0 / 4,
-        1 };
-    /** Cost per px of distance from a side's centre when choosing a dock. Token {@code Tokens.Wire.DOCK_CENTER_BIAS}. */
-    public static final double DOCK_CENTER_BIAS = 0.25;
+    /** The board grid, px (tokens.json geometry.grid). */
+    public static final int BOARD_GRID = Tokens.Grid.BOARD_GRID;
+    /** One cell of clearance between any wire run and any card. */
+    public static final int WIRE_NODE_MARGIN = Tokens.Wire.WIRE_NODE_MARGIN;
+    /** Usable stroke px inside one orthogonal lane. */
+    public static final double LANE_CAPACITY = Tokens.Wire.LANE_CAPACITY;
+    /** Breathing room between two wires sharing a lane. */
+    public static final double LANE_GAP = Tokens.Wire.LANE_GAP;
+    /** The widths wires draw at, as lane fractions. */
+    private static final double[] LANE_FRACTIONS = Tokens.Wire.LANE_FRACTIONS;
+    /** Cost per px of distance from a side's centre when choosing a dock. */
+    public static final double DOCK_CENTER_BIAS = Tokens.Wire.DOCK_CENTER_BIAS;
 
     /** A* gives up after this many pops, or two per state, whichever is larger. */
     private static final int MIN_ASTAR_POPS = 40_000;

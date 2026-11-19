@@ -7,3 +7,10 @@ dependencies {
     // Gson as Minecraft 1.7.10 ships it, to read the conformance data.
     testImplementation("com.google.code.gson:gson:2.2.4")
 }
+
+// The router's grid and lane constants come from the one tokens file (core-view/tokens/tokens.json), generated into
+// com.gtnhplanner.core.layout.Tokens. Only the router's own groups: card and drawer sizes are the host's, carried in
+// each board's boxes, since the two hosts' card geometry differs on purpose.
+extra["tokensPackage"] = "com.gtnhplanner.core.layout"
+extra["tokensGroups"] = listOf("grid", "wire")
+apply(from = rootProject.file("gradle/tokens.gradle.kts"))

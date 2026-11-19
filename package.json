@@ -19,11 +19,11 @@
     "datasets:manifest": "node tools/dataset-pipeline/scripts/rebuild-manifest.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "predev": "node tools/tokens/generate.mjs && node tools/copy-highs-wasm.mjs && node tools/sync-core-tables.mjs --write",
-    "prebuild": "node tools/tokens/generate.mjs && node tools/copy-highs-wasm.mjs && node tools/sync-core-tables.mjs --write",
-    "predev:local": "node tools/tokens/generate.mjs",
-    "pretypecheck": "node tools/tokens/generate.mjs",
-    "prelint": "node tools/tokens/generate.mjs",
+    "predev": "node tools/tokens/generate.mjs && node tools/web-core/gen-types.mjs && node tools/copy-core.mjs && node tools/copy-highs-wasm.mjs && node tools/sync-core-tables.mjs --write",
+    "prebuild": "node tools/tokens/generate.mjs && node tools/web-core/gen-types.mjs && node tools/copy-core.mjs && node tools/copy-highs-wasm.mjs && node tools/sync-core-tables.mjs --write",
+    "predev:local": "node tools/tokens/generate.mjs && node tools/web-core/gen-types.mjs && node tools/copy-core.mjs",
+    "pretypecheck": "node tools/tokens/generate.mjs && node tools/web-core/gen-types.mjs",
+    "prelint": "node tools/tokens/generate.mjs && node tools/web-core/gen-types.mjs",
     "tokens": "node tools/tokens/generate.mjs"
   },
   "dependencies": {

@@ -5,6 +5,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import org.teavm.jso.JSExport;
 
 import com.gtnhplanner.core.power.PowerCardTier;
@@ -35,6 +37,7 @@ public final class PowerExports {
 
     /** One source's name, group, unlock tier and settings (the golden "describe" record), or null for an unknown id. */
     @JSExport
+    @Nullable
     public static String powerDescribe(final String sourceId) {
         final PowerSource source = PowerCatalog.get(sourceId);
         if (source == null) return null;
@@ -54,6 +57,7 @@ public final class PowerExports {
      * or null for an unknown source.
      */
     @JSExport
+    @Nullable
     public static String powerCompute(final String sourceId, final String settingsJson) {
         final PowerSource source = PowerCatalog.get(sourceId);
         if (source == null) return null;
@@ -66,6 +70,7 @@ public final class PowerExports {
      * unknown source.
      */
     @JSExport
+    @Nullable
     public static String powerTurbineFlow(final String sourceId, final String inputJson) {
         final PowerSource source = PowerCatalog.get(sourceId);
         if (source == null) return null;
@@ -94,6 +99,7 @@ public final class PowerExports {
 
     /** The Amps dial's tier label for an EU/t figure, or null when the figure is not a positive finite number. */
     @JSExport
+    @Nullable
     public static String powerCardTier(final double euPerTick) {
         return PowerCardTier.of(euPerTick);
     }

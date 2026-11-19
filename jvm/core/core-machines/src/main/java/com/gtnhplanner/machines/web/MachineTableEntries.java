@@ -5,6 +5,8 @@ import static com.gtnhplanner.machines.web.MachineTable.*;
 
 import java.util.Map;
 
+import com.gtnhplanner.core.machines.AlgaePond;
+
 /**
  * The website's machine table entries (machine-table.ts MACHINES), one for one and in its order, keyed by the names
  * the website's dataset uses; {@code aliases} cover the reference calculator's names and handler names. Shared
@@ -543,6 +545,16 @@ final class MachineTableEntries {
             machine().overclock(none())
                 .cycleTicks(TGS_TICKS)
                 .parallels(1));
+        // MTEAlgaePond (core.machines.AlgaePond): its one energy hatch's tier picks the recipe (one tier higher with
+        // compost), and it draws V x 9/10 of that hatch with no overclocks and one parallel. The only machine on its
+        // map, so its recipes arrive under the map's name.
+        machines.put(
+            AlgaePond.MACHINE_TYPE,
+            machine().overclock(none())
+                .parallels(1)
+                .power(c -> AlgaePond.powerMultiplier(c.recipe, c.settings))
+                .controlsFor(AlgaePond::controls)
+                .recipeGate(c -> AlgaePond.gateReason(c.recipe, c.settings, c.voltageTier)));
         machines.put(
             "Research Station",
             machine().overclock(normal())

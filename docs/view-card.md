@@ -163,8 +163,22 @@ rows' stripes, port rates and units, the Forced row word, the circuit number.
 
 ## Geometry: the record against the website's DOM
 
-See the state note (`_orch/state/rs-view-b.md`) for the probe and its numbers; in short the website's card is the
-stylesheet's grid and `CardGeometry.web` is that grid written as arithmetic. Where they differ is listed there.
+Measured with a headless Playwright probe on the dev server (every `.cc-card` of five plans with full faces held:
+titanium-line-chembath-slim, titanium-line-posted-alpha5, early-baux-ti-w-boards, crusher-and-empty-crop-farm,
+biodiesel-demo; 63 cards, 58 with a power row, 44 with a foot bar, 7 with a strip, 2 forced rows), against
+`CardGeometry.web` over the same structure:
+
+| | equal | differs |
+|---|---|---|
+| card height and board node height (whole cells) | 59 of 63 | the 3 shared machines (+130 px: section rule rows, not modelled) and the empty crop farm (120 against 160: no rails, a full-width key) |
+| port anchors | 245 of 255 | the 10 on the shared machines (+20: each section's rule row) |
+| strip top | 62 of 62 | |
+| foot bar top | 60 of 60 non-shared | |
+
+One finding the probe made, now in the record: on the website a port with a forced row under it is one element two
+rows tall and its wire docks between the two rows (anchor +20 from the port line); the mod docks at the port's own
+row. Both are drawn as they route; which one is right is an interaction question (the forced row is dragged off as a
+drawer on both). The special cards' geometry comes with their rules.
 
 ## Switching the website to the compiled core (not in this item)
 

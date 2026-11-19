@@ -22,7 +22,7 @@ import com.gtnhplanner.ui.card.CardLayout;
  * @param railsTop   the top of the rails, under the head
  * @param anchors    each port's anchor, inputs then outputs, in rail order
  * @param stripTop   the top of the settings strip; its height {@code stripHeight}, 0 with none
- * @param footTop    the top of the bar along the foot; -1 for none
+ * @param footTop    the top of the bar along the foot (the bar, not its margin); -1 for none
  */
 public record CardGeometry(int width, int height, int railsTop, int railsHeight, List<Anchor> anchors, int stripTop,
     int stripHeight, int footTop) {
@@ -59,7 +59,8 @@ public record CardGeometry(int width, int height, int railsTop, int railsHeight,
         final int out = rail(outputs, true, anchors);
         final int rails = Math.max(WEB_PICTURE, Math.max(in, out));
         final int stripTop = WEB_HEAD + rails;
-        final int footTop = foot ? stripTop + stripHeight : -1;
+        // The bar itself: 16 px with a pixel above and three below (clean.css .cc-foot).
+        final int footTop = foot ? stripTop + stripHeight + 1 : -1;
         return new CardGeometry(Tokens.Card.CARD_WIDTH, stripTop + stripHeight + (foot ? WEB_FOOT : 0), WEB_HEAD,
             rails, anchors, stripTop, stripHeight, footTop);
     }
@@ -67,8 +68,11 @@ public record CardGeometry(int width, int height, int railsTop, int railsHeight,
     private static int rail(final List<Row> rows, final boolean output, final List<Anchor> anchors) {
         int y = 0;
         for (final Row r : rows) {
-            anchors.add(new Anchor(r.handleId(), output, WEB_HEAD + y + WEB_ROW / 2));
-            y += r.forced() ? 2 * WEB_ROW : WEB_ROW;
+            // The row is the wire's anchor (data-resource-edge-anchor): a port with its forced row under it is one
+            // element two rows tall, so its wire docks between the two.
+            final int slot = r.forced() ? 2 * WEB_ROW : WEB_ROW;
+            anchors.add(new Anchor(r.handleId(), output, WEB_HEAD + y + slot / 2));
+            y += slot;
         }
         return y;
     }

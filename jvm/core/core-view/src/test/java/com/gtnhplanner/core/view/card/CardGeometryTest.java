@@ -24,10 +24,10 @@ class CardGeometryTest {
         assertEquals(160, g.railsHeight());
         assertEquals(40, g.railsTop());
         assertEquals(200, g.stripTop());
-        assertEquals(240, g.footTop());
+        assertEquals(241, g.footTop());
         assertEquals(260, g.height());
         assertEquals(260, CardGeometry.webNode(g));
-        assertEquals(List.of(new Anchor("a", false, 60), new Anchor("b", false, 100), new Anchor("c", true, 60)),
+        assertEquals(List.of(new Anchor("a", false, 60), new Anchor("b", false, 120), new Anchor("c", true, 60)),
             g.anchors());
     }
 

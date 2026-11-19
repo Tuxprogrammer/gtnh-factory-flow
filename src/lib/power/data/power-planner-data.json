@@ -2443,27 +2443,27 @@
    {
     "name": "Block of Coal Coke",
     "euPerItem": 32000,
-    "burnTime": 40
+    "burnTime": 40.7
    },
    {
     "name": "Solid Super Fuel",
     "euPerItem": 100000,
-    "burnTime": 125
+    "burnTime": 130.7
    },
    {
     "name": "Diamond",
     "euPerItem": 102400,
-    "burnTime": 128
+    "burnTime": 133.9
    },
    {
     "name": "Magic Solid Super Fuel",
     "euPerItem": 150000,
-    "burnTime": 187.5
+    "burnTime": 198
    },
    {
     "name": "Block of Diamond",
     "euPerItem": 1024000,
-    "burnTime": 1280
+    "burnTime": 1413
    }
   ],
   "steelLiquid": [
@@ -2827,27 +2827,27 @@
    {
     "name": "Block of Coal Coke",
     "euPerItem": 32000,
-    "burnTime": 20
+    "burnTime": 20.35
    },
    {
     "name": "Solid Super Fuel",
     "euPerItem": 100000,
-    "burnTime": 62.5
+    "burnTime": 65.35
    },
    {
     "name": "Diamond",
     "euPerItem": 102400,
-    "burnTime": 64
+    "burnTime": 66.95
    },
    {
     "name": "Magic Solid Super Fuel",
     "euPerItem": 150000,
-    "burnTime": 93.75
+    "burnTime": 99
    },
    {
     "name": "Block of Diamond",
     "euPerItem": 1024000,
-    "burnTime": 640
+    "burnTime": 706.5
    }
   ],
   "titaniumLiquid": [
@@ -2891,12 +2891,12 @@
    {
     "name": "Solid Super Fuel",
     "euPerItem": 100000,
-    "burnTime": 18.75
+    "burnTime": 19.6
    },
    {
     "name": "Magic Solid Super Fuel",
     "euPerItem": 150000,
-    "burnTime": 28.1
+    "burnTime": 29.7
    }
   ],
   "tungstensteelLiquid": [
@@ -2940,12 +2940,12 @@
    {
     "name": "Solid Super Fuel",
     "euPerItem": 100000,
-    "burnTime": 9.35
+    "burnTime": 9.8
    },
    {
     "name": "Magic Solid Super Fuel",
     "euPerItem": 150000,
-    "burnTime": 14.05
+    "burnTime": 14.85
    }
   ]
  },

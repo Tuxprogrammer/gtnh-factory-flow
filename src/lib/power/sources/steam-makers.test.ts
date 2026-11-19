@@ -132,7 +132,12 @@ describe("large boilers (MTELargeBoilerBase, LargeBoilerFuelBackend)", () => {
     }
   });
 
-  it("burns a solid for fuel value / 80 ticks times the tier's runtimeBoost", () => {
+  it("burns a solid for fuel value / 80 ticks, log bonus, times the tier's runtimeBoost", () => {
+    // LargeBoilerFuelBackend.getBurntimeRatioTicks(ticks, 20): seconds x max(1, 1 + ln(s/10) x 0.025), to 0.01 s.
+    const ratioTicks = (ticks: number) => {
+      const seconds = ticks / 20;
+      return Math.trunc(Math.round(seconds * Math.max(1, 1 + Math.log(seconds / 10) * 0.025) * 100) / 5);
+    };
     const boost: Record<string, (ticks: number) => number> = {
       bronzeSolid: (ticks) => ticks * 2,
       steelSolid: (ticks) => ticks,
@@ -145,27 +150,27 @@ describe("large boilers (MTELargeBoilerBase, LargeBoilerFuelBackend)", () => {
     >;
     for (const [table, rule] of Object.entries(boost)) {
       for (const row of tables[table]) {
-        expect(row.burnTime).toBeCloseTo(rule(Math.trunc((row.euPerItem ?? 0) / 80)) / 20, 9);
+        expect(row.burnTime).toBeCloseTo(rule(ratioTicks(Math.trunc((row.euPerItem ?? 0) / 80))) / 20, 9);
       }
     }
   });
 
-  it("burns Solid Super Fuel for 125s in bronze and 18.75s in titanium", () => {
+  it("burns Solid Super Fuel for 130.7s in bronze and 19.6s in titanium", () => {
     const bronze = compute("large-bronze-boiler", {
       liquidFuel: "None",
       solidFuel: "Solid Super Fuel",
     });
-    expect(flow(bronze, "Solid Super Fuel")).toBeCloseTo(1 / 125, 12);
+    expect(flow(bronze, "Solid Super Fuel")).toBeCloseTo(1 / 130.7, 12);
     const titanium = compute("large-titanium-boiler", {
       liquidFuel: "None",
       solidFuel: "Solid Super Fuel",
     });
-    expect(flow(titanium, "Solid Super Fuel")).toBeCloseTo(1 / 18.75, 12);
+    expect(flow(titanium, "Solid Super Fuel")).toBeCloseTo(1 / 19.6, 12);
     const steel = compute("large-steel-boiler", {
       liquidFuel: "None",
       solidFuel: "Block of Diamond",
     });
-    expect(flow(steel, "Block of Diamond")).toBeCloseTo(1 / 640, 12);
+    expect(flow(steel, "Block of Diamond")).toBeCloseTo(1 / 706.5, 12);
   });
 });
 

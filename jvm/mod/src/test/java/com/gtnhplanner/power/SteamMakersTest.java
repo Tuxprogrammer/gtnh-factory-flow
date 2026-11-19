@@ -8,6 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -227,9 +229,18 @@ class SteamMakersTest {
         }
     }
 
+    /** LargeBoilerFuelBackend.getBurntimeRatioTicks(ticks, 20), as the game writes it. */
+    private static double ratioTicks(final double ticks) {
+        final double seconds = ticks / 20;
+        return new BigDecimal(seconds * Math.max(1, 1 + Math.log(seconds / 10) * 0.025))
+            .setScale(2, RoundingMode.HALF_UP)
+            .multiply(new BigDecimal(20))
+            .intValue();
+    }
+
     @Test
     void solidBurnsFuelValueOverEightyTimesRuntimeBoost() {
-        // burns a solid for fuel value / 80 ticks times the tier's runtimeBoost
+        // burns a solid for fuel value / 80 ticks, log bonus, times the tier's runtimeBoost
         final Map<String, DoubleUnaryOperator> boost = new LinkedHashMap<>();
         boost.put("bronzeSolid", ticks -> ticks * 2);
         boost.put("steelSolid", ticks -> ticks);
@@ -242,7 +253,7 @@ class SteamMakersTest {
                 final double euPerItem = row.euPerItem != null ? row.euPerItem : 0;
                 assertEquals(
                     entry.getValue()
-                        .applyAsDouble(trunc(euPerItem / 80)) / 20,
+                        .applyAsDouble(ratioTicks(trunc(euPerItem / 80))) / 20,
                     row.burnTime,
                     0.5e-9,
                     row.name);
@@ -252,19 +263,19 @@ class SteamMakersTest {
 
     @Test
     void solidSuperFuelBurnTimes() {
-        // burns Solid Super Fuel for 125s in bronze and 18.75s in titanium
+        // burns Solid Super Fuel for 130.7s in bronze and 19.6s in titanium
         final PowerModel bronze = compute(
             "large-bronze-boiler",
             Map.of("liquidFuel", "None", "solidFuel", "Solid Super Fuel"));
-        assertEquals(1.0 / 125, flow(bronze, "Solid Super Fuel"), 0.5e-12);
+        assertEquals(1 / 130.7, flow(bronze, "Solid Super Fuel"), 0.5e-12);
         final PowerModel titanium = compute(
             "large-titanium-boiler",
             Map.of("liquidFuel", "None", "solidFuel", "Solid Super Fuel"));
-        assertEquals(1 / 18.75, flow(titanium, "Solid Super Fuel"), 0.5e-12);
+        assertEquals(1 / 19.6, flow(titanium, "Solid Super Fuel"), 0.5e-12);
         final PowerModel steel = compute(
             "large-steel-boiler",
             Map.of("liquidFuel", "None", "solidFuel", "Block of Diamond"));
-        assertEquals(1.0 / 640, flow(steel, "Block of Diamond"), 0.5e-12);
+        assertEquals(1 / 706.5, flow(steel, "Block of Diamond"), 0.5e-12);
     }
 
     // ---- singleblock boilers (MTEBoiler)

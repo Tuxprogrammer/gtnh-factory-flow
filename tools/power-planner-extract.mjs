@@ -623,8 +623,18 @@ function correctSteamMakers() {
     data.boilerFuels.tungstensteelLiquid,
     refusedBySuperheated,
   );
-  // MTELargeBoilerBase burns a solid for fuel value / 80 ticks, then the tier's
-  // runtimeBoost. The log bonus in LargeBoilerFuelBackend only feeds the NEI page.
+  // MTELargeBoilerBase.checkProcessing burns a solid for fuel value / 80 ticks,
+  // stretched by LargeBoilerFuelBackend.getBurntimeRatioTicks(ticks, 20) (s seconds
+  // become s x max(1, 1 + ln(s / 10) x 0.025), rounded half up to 0.01 s, as whole
+  // ticks), then the tier's runtimeBoost.
+  const ratioTicks = (ticks) => {
+    const seconds = ticks / 20;
+    const hundredths = seconds * Math.max(1, 1 + Math.log(seconds / 10) * 0.025) * 100;
+    if (Math.abs((hundredths % 1) - 0.5) < 1e-6) {
+      throw new Error(`Large boiler burn time ${seconds} s sits on a rounding tie.`);
+    }
+    return Math.trunc(Math.round(hundredths) / 5);
+  };
   const runtimeBoost = {
     bronzeSolid: (ticks) => ticks * 2,
     steelSolid: (ticks) => ticks,
@@ -634,7 +644,7 @@ function correctSteamMakers() {
   for (const [table, boost] of Object.entries(runtimeBoost)) {
     data.boilerFuels[table] = data.boilerFuels[table].map((row) => ({
       ...row,
-      burnTime: boost(Math.trunc(row.euPerItem / 80)) / 20,
+      burnTime: boost(ratioTicks(Math.trunc(row.euPerItem / 80))) / 20,
     }));
   }
 }

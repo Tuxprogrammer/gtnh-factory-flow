@@ -225,9 +225,11 @@ Tungstensteel 16000 SH (per boiler). Rules:
   divisors). Water in = steam / 160.
 - Titanium/Tungstensteel chain SH turbines into steam turbines (cascade).
 - Java corrections (`correctSteamMakers`): a solid burns fuel value / 80
-  ticks times the tier's runtimeBoost (x2, x1, x3/10, x15/100,
-  `MTELargeBoilerBase`); the sheet's longer times for Solid Super Fuel, Magic
-  Solid Super Fuel, Diamond and Block of Diamond carry the NEI-only log bonus.
+  ticks, stretched by the log bonus the running boiler applies
+  (`LargeBoilerFuelBackend.getBurntimeRatioTicks`: s seconds become
+  s x max(1, 1 + ln(s/10) x 0.025), to 0.01 s, so only fuels past 16,000 burn
+  value gain), times the tier's runtimeBoost (x2, x1, x3/10, x15/100,
+  `MTELargeBoilerBase`).
   Titanium/Tungstensteel take only `LargeBoilerFuelBackend.ALLOWED_FUELS`, so
   Naquadah Gas, Nefarious Gas and Nitrobenzene are dropped.
 

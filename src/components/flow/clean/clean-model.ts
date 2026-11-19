@@ -1,7 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
-import type { FactoryNode, MachineConfigTierOption, Recipe } from "@/lib/model/types";
+import type {
+  FactoryNode,
+  MachineConfigTierOption,
+  MachineHandler,
+  Recipe,
+} from "@/lib/model/types";
 import {
   GT_OVERCLOCK_TIERS,
   applyMachineHandlerToRecipe,
@@ -520,11 +525,25 @@ export function cardPicture(
     isBeeProductionRecipe(recipe) || isCropProductionRecipe(recipe)
       ? undefined
       : (mapIcons.get(recipe.source?.recipeMap ?? recipe.machineType) as MachineHandlerIcon | undefined);
-  const machineIcon =
-    machineIconAtTier(machineIcons.get(face.selectedMachineHandler.id), pictureTier) ??
-    recipeMapIcon;
+  const ownIcon = machineIconAtTier(machineIcons.get(face.selectedMachineHandler.id), pictureTier);
+  const machineIcon = ownIcon ?? recipeMapIcon;
   const art = getMachineStructureArt(face.selectedMachineHandler.id);
-  return { machineIcon, art };
+  // The map's icon is the map's own machine: it may lend another machine its picture, never its name.
+  const mapName = runsOnMapMachine(recipe, face.selectedMachineHandler)
+    ? recipeMapIcon?.displayName
+    : undefined;
+  const name = ownIcon?.displayName ?? mapName ?? face.selectedMachineHandler.label;
+  return { machineIcon, art, name };
+}
+
+/**
+ * Whether a card runs on its recipe map's own machine. A dataset handler list starts with it; a list the planner
+ * synthesizes ends with it (a crafting map puts the Auto Workbench in front of the crafting table).
+ */
+function runsOnMapMachine(recipe: Recipe, selected: Pick<MachineHandler, "id">): boolean {
+  const handlers = getRecipeMachineHandlers(recipe);
+  const own = recipe.machineHandlers?.length ? handlers[0] : handlers[handlers.length - 1];
+  return own?.id === selected.id;
 }
 
 /** The count a card prints, as the card's count box and its glance face do. */
@@ -1098,8 +1117,13 @@ export function useCleanCardModel(
 
   const { selectedMachineHandler, machineHandlers, tierControl, powerReport, steamReport } =
     derived;
-  const { machineIcon, art } = cardPicture(recipe, projectNode, derived, machineIcons, mapIcons);
-  const name = machineIcon?.displayName ?? selectedMachineHandler.label;
+  const { machineIcon, art, name } = cardPicture(
+    recipe,
+    projectNode,
+    derived,
+    machineIcons,
+    mapIcons,
+  );
 
   const hasPicker = machineHandlers.length > 1;
   const tierLabel = powerReport?.isMultiblock ? powerReport.tier : tierControl?.current;

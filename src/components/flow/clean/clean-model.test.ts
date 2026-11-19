@@ -631,5 +631,60 @@ describe("the card's picture", () => {
     const icons = new Map([["Mixer", mixer]]) as unknown as Parameters<typeof cardPicture>[4];
     const none = new Map() as Parameters<typeof cardPicture>[3];
     expect(cardPicture(recipe, beeNode, face("mixer"), none, icons).machineIcon?.displayName).toBe("Basic Mixer");
+    expect(cardPicture(recipe, beeNode, face("mixer"), none, icons).name).toBe("Basic Mixer");
+  });
+
+  it("is named by the machine it runs on, never by the map's machine it borrowed a picture from", () => {
+    type Args = Parameters<typeof cardPicture>;
+    const none = new Map() as Args[3];
+    const named = (id: string, label: string) =>
+      ({ selectedMachineHandler: { id, label }, tierControl: undefined }) as unknown as Args[2];
+    // A crafting-grid recipe: the Auto Workbench (no icon in the dataset) is synthesized in front of the table.
+    const table = {
+      kind: "item",
+      id: "minecraft:crafting_table",
+      displayName: "Crafting Table",
+      amount: 1,
+    };
+    const crafting = {
+      id: "c",
+      name: "Resistor",
+      machineType: "Shaped Crafting",
+      source: { recipeMap: "Shaped Crafting" },
+    } as unknown as Args[0];
+    const tableIcons = new Map([["Shaped Crafting", table]]) as unknown as Args[4];
+    const workbench = named("auto-workbench", "Auto Workbench");
+    expect(cardPicture(crafting, beeNode, workbench, none, tableIcons).name).toBe("Auto Workbench");
+    const tableHandler = named("shaped-crafting", "Shaped Crafting");
+    expect(cardPicture(crafting, beeNode, tableHandler, none, tableIcons).name).toBe(
+      "Crafting Table",
+    );
+    // A dataset list starts with the map's own machine; another machine with no icon says its own name.
+    const basic = {
+      kind: "item",
+      id: "gregtech:centrifuge",
+      displayName: "Basic Centrifuge",
+      amount: 1,
+    };
+    const spin = {
+      id: "s",
+      name: "Spin",
+      machineType: "Centrifuge",
+      source: { recipeMap: "Centrifuge" },
+      machineHandlers: [
+        { id: "centrifuge", label: "Centrifuge", machineType: "Centrifuge", kind: "single" },
+        {
+          id: "industrial-centrifuge",
+          label: "Industrial Centrifuge",
+          machineType: "Industrial Centrifuge",
+          kind: "multiblock",
+        },
+      ],
+    } as unknown as Args[0];
+    const spinIcons = new Map([["Centrifuge", basic]]) as unknown as Args[4];
+    const multi = named("industrial-centrifuge", "Industrial Centrifuge");
+    expect(cardPicture(spin, beeNode, multi, none, spinIcons).name).toBe("Industrial Centrifuge");
+    const own = named("centrifuge", "Centrifuge");
+    expect(cardPicture(spin, beeNode, own, none, spinIcons).name).toBe("Basic Centrifuge");
   });
 });

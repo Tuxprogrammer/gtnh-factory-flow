@@ -138,7 +138,7 @@ export function run(accept = false) {
   writeIfChanged(path.join(outDir, "tokens.generated.css"), css);
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url))) {
   try {
     run(process.argv.includes("--accept"));
   } catch (e) {

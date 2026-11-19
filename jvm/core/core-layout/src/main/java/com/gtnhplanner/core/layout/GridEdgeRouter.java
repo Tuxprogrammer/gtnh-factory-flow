@@ -589,7 +589,7 @@ public final class GridEdgeRouter {
             candidates.add(claim.hi + LANE_GAP + width / 2);
             candidates.add(claim.lo - LANE_GAP - width / 2);
         }
-        candidates.sort((left, right) -> {
+        JsSort.sort(candidates, (left, right) -> {
             if (prefer != 0) {
                 final int c = JsMath.sign(prefer * (right - left));
                 return c != 0 ? c : JsMath.sign(Math.abs(left) - Math.abs(right));
@@ -822,7 +822,7 @@ public final class GridEdgeRouter {
             NEGOTIATION_POPS_PER_WIRE * requests.size() / 2);
         final List<Planned> planned = planDocks(requests);
         final List<Planned> sorted = new ArrayList<>(planned);
-        sorted.sort((left, right) -> {
+        JsSort.sort(sorted, (left, right) -> {
             int c = JsMath.sign(right.request.strokeWidth() - left.request.strokeWidth());
             if (c != 0) return c;
             c = JsMath.sign(t.longestFirst() ? routeSpan(right) - routeSpan(left) : routeSpan(left) - routeSpan(right));
@@ -1226,7 +1226,7 @@ public final class GridEdgeRouter {
         for (final Map.Entry<String, List<DockEnd>> entry : byCard.entrySet()) {
             final String cardId = entry.getKey();
             final List<DockEnd> ends = entry.getValue();
-            ends.sort((left, right) -> {
+            JsSort.sort(ends, (left, right) -> {
                 if (left.ideal != right.ideal) return JsMath.sign(left.ideal - right.ideal);
                 if (left.angle != right.angle) return JsMath.sign(left.angle - right.angle);
                 final int compared = left.request.edgeId()

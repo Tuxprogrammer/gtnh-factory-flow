@@ -71,7 +71,7 @@ public final class WireMetrics {
         final List<double[]> rays = new ArrayList<>(4);
         for (final double angle : ar) rays.add(new double[] { angle, 0 });
         for (final double angle : br) rays.add(new double[] { angle, 1 });
-        rays.sort((l, r) -> JsMath.sign(l[0] - r[0]));
+        JsSort.sort(rays, (l, r) -> JsMath.sign(l[0] - r[0]));
         for (int i = 0; i < 4; i++) {
             final double[] r = rays.get(i), next = rays.get((i + 1) % 4);
             if (r[1] == next[1]) return false;

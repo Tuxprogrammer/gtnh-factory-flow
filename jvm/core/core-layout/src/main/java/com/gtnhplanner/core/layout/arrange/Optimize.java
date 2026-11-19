@@ -20,6 +20,7 @@ import java.util.function.ToDoubleFunction;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.layout.JsSort;
 import com.gtnhplanner.core.layout.GridEdgeRouter;
 import com.gtnhplanner.core.layout.GridEndpoint;
 import com.gtnhplanner.core.layout.GridObstacle;
@@ -225,10 +226,10 @@ public final class Optimize {
                     .layer())
                     .add(i);
             }
-            for (final List<Integer> column : state.columns) column.sort(this::bySeq);
+            for (final List<Integer> column : state.columns) JsSort.sort(column, this::bySeq);
             // Satellites start stacked in seq order along their side.
             for (final List<Integer> sats : satellitesOf.values()) {
-                sats.sort(this::bySeq);
+                JsSort.sort(sats, this::bySeq);
                 double offset = 0;
                 for (final int sat : sats) {
                     state.satelliteOffset[sat] = offset;
@@ -538,7 +539,7 @@ public final class Optimize {
         }
 
         private void sortCandidates() {
-            candidates.sort((a, b) -> JsMath.sign(a.score - b.score));
+            JsSort.sort(candidates, (a, b) -> JsMath.sign(a.score - b.score));
         }
 
         private void remember(final double value) {

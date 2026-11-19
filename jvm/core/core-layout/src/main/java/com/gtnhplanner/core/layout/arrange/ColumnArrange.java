@@ -17,6 +17,7 @@ import java.util.function.ToIntFunction;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.layout.JsSort;
 import com.gtnhplanner.core.layout.GridEdgeRouter;
 import com.gtnhplanner.core.layout.GridPoint;
 import com.gtnhplanner.core.layout.JsMath;
@@ -373,7 +374,7 @@ final class ColumnArrange {
                 parked.add(members.get(0));
                 continue;
             }
-            members.sort((a, b) -> a.index - b.index);
+            JsSort.sort(members, (a, b) -> a.index - b.index);
             final Set<CardSlot> componentSet = new HashSet<>(members);
             final List<WireLink> componentLinks = new ArrayList<>();
             for (final WireLink link : mainLinks) {
@@ -450,7 +451,7 @@ final class ColumnArrange {
             }
         }
 
-        islandGroups.sort(
+        JsSort.sort(islandGroups, 
             (a, b) -> {
                 final int bySize = b.members.size() + b.satellites.size() - (a.members.size() + a.satellites.size());
                 return bySize != 0 ? bySize : a.members.get(0).index - b.members.get(0).index;
@@ -745,7 +746,7 @@ final class ColumnArrange {
             final GridPoint next;
             if (horizontal) {
                 final boolean rightward = end.x() >= current.x();
-                blockers.sort(
+                JsSort.sort(blockers, 
                     (a, b) -> JsMath.sign(
                         rightward ? a.tight()
                             .left()
@@ -797,7 +798,7 @@ final class ColumnArrange {
                 next = new GridPoint(exitX, laneY);
             } else {
                 final boolean downward = end.y() >= current.y();
-                blockers.sort(
+                JsSort.sort(blockers, 
                     (a, b) -> JsMath.sign(
                         downward ? a.tight()
                             .top()
@@ -1174,7 +1175,7 @@ final class ColumnArrange {
                 Map.entry(e.getKey(), e.getValue()));
         }
         for (final List<Map.Entry<CardSlot, SatellitePlan>> group : satGroups.values()) {
-            group.sort(
+            JsSort.sort(group, 
                 (a, b) -> JsMath.sign(
                     or(
                         a.getValue()
@@ -1480,7 +1481,7 @@ final class ColumnArrange {
                 final List<CardSlot> machines = new ArrayList<>();
                 for (final CardSlot slot : new LinkedHashSet<>(group)) if (!slot.card.storage()) machines.add(slot);
                 if (machines.size() != 2) continue;
-                machines.sort((a, b) -> a.index - b.index);
+                JsSort.sort(machines, (a, b) -> a.index - b.index);
                 final CardSlot p = machines.get(0);
                 final CardSlot q = machines.get(1);
                 final String key = p.index + ":" + q.index;
@@ -1665,7 +1666,7 @@ final class ColumnArrange {
         final Set<Integer> distinct = new LinkedHashSet<>();
         for (final CardSlot slot : members) distinct.add(slot.layer);
         final List<Integer> used = new ArrayList<>(distinct);
-        used.sort((a, b) -> Integer.compare(a, b));
+        JsSort.sort(used, (a, b) -> Integer.compare(a, b));
         final Map<Integer, Integer> packed = new HashMap<>();
         for (int i = 0; i < used.size(); i++) packed.put(used.get(i), i);
         for (final CardSlot slot : members) {
@@ -1881,7 +1882,7 @@ final class ColumnArrange {
                 final List<Map.Entry<CardSlot, Double>> row = new ArrayList<>(
                     e.getValue()
                         .entrySet());
-                row.sort(
+                JsSort.sort(row, 
                     (a, b) -> JsMath.sign(
                         or(b.getValue() - a.getValue(), a.getKey().index - b.getKey().index)));
                 final List<CardSlot> near = new ArrayList<>();
@@ -2066,7 +2067,7 @@ final class ColumnArrange {
             }
             final List<CardSlot> sides = new ArrayList<>();
             for (final CardSlot child : kids) if (child != trunkChild) sides.add(child);
-            sides.sort(
+            JsSort.sort(sides, 
                 (a, b) -> JsMath.sign(
                     or(
                         coupling.getOrDefault(b, 0.0) - coupling.getOrDefault(a, 0.0),
@@ -2147,7 +2148,7 @@ final class ColumnArrange {
                 .add(slot);
         }
         for (final List<CardSlot> layer : layers) {
-            layer.sort((a, b) -> JsMath.sign(or(a.seq - b.seq, a.index - b.index)));
+            JsSort.sort(layer, (a, b) -> JsMath.sign(or(a.seq - b.seq, a.index - b.index)));
         }
         return layers;
     }
@@ -2209,7 +2210,7 @@ final class ColumnArrange {
             final List<List<CardSlot>> blockCards = new ArrayList<>();
             final List<double[]> blockKeys = new ArrayList<>();
             for (final List<CardSlot> cardsInGroup : groups.values()) {
-                cardsInGroup.sort((a, b) -> JsMath.sign(or(wish.get(a)[0] - wish.get(b)[0], a.seq - b.seq)));
+                JsSort.sort(cardsInGroup, (a, b) -> JsMath.sign(or(wish.get(a)[0] - wish.get(b)[0], a.seq - b.seq)));
                 double sum = 0;
                 double weight = 0;
                 for (final CardSlot slot : cardsInGroup) {
@@ -2221,10 +2222,10 @@ final class ColumnArrange {
                 blockCards.add(cardsInGroup);
                 blockKeys.add(new double[] { weight > 0 ? sum / weight : 0, minSeq, blockCards.size() - 1 });
             }
-            blockKeys.sort((a, b) -> JsMath.sign(or(a[0] - b[0], a[1] - b[1])));
+            JsSort.sort(blockKeys, (a, b) -> JsMath.sign(or(a[0] - b[0], a[1] - b[1])));
             final List<Double> seqs = new ArrayList<>();
             for (final CardSlot slot : layer) seqs.add(slot.seq);
-            seqs.sort((a, b) -> JsMath.sign(a - b));
+            JsSort.sort(seqs, (a, b) -> JsMath.sign(a - b));
             int next = 0;
             for (final double[] key : blockKeys) {
                 for (final CardSlot slot : blockCards.get((int) key[2])) {
@@ -2548,7 +2549,7 @@ final class ColumnArrange {
         for (final IslandEdge entry : net.values()) {
             forward.add(entry.weight >= 0 ? entry : new IslandEdge(entry.to, entry.from, -entry.weight));
         }
-        forward.sort((a, b) -> a.from - b.from != 0 ? a.from - b.from : a.to - b.to);
+        JsSort.sort(forward, (a, b) -> a.from - b.from != 0 ? a.from - b.from : a.to - b.to);
 
         final Map<Integer, List<IslandEdge>> outgoing = new HashMap<>();
         for (final IslandEdge edge : forward) {
@@ -2714,7 +2715,7 @@ final class ColumnArrange {
             }
             final List<Block> metaBlocks = new ArrayList<>();
             for (final List<CardSlot> members : componentSlots.values()) {
-                members.sort((a, b) -> a.index - b.index);
+                JsSort.sort(members, (a, b) -> a.index - b.index);
                 final Set<CardSlot> memberSet = new HashSet<>(members);
                 final List<WireLink> componentLinks = new ArrayList<>();
                 for (final WireLink link : mainLinks) {
@@ -2731,7 +2732,7 @@ final class ColumnArrange {
                 metaBlocks.add(
                     layoutIsland(members, componentLinks, componentSatellites, new LinkedHashMap<>(), null, null, null));
             }
-            metaBlocks.sort((a, b) -> JsMath.sign(or(b.size - a.size, a.minIndex - b.minIndex)));
+            JsSort.sort(metaBlocks, (a, b) -> JsMath.sign(or(b.size - a.size, a.minIndex - b.minIndex)));
 
             // The trading constellations stack first, then the islands wired to nothing in rows, then the shelf.
             double cursorY = 0;
@@ -2791,7 +2792,7 @@ final class ColumnArrange {
     Block layoutShelf(final List<CardSlot> parked, final double mainWidth) {
         // Sort by footprint so alike cards sit together, then by input order so the shelf is stable.
         final List<CardSlot> sorted = new ArrayList<>(parked);
-        sorted.sort(
+        JsSort.sort(sorted, 
             (a, b) -> JsMath.sign(
                 or(b.card.height() - a.card.height(), or(b.card.width() - a.card.width(), a.index - b.index))));
         final double targetWidth = Math.max(mainWidth, cells(60));

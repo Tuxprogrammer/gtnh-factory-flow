@@ -13,6 +13,7 @@ import java.util.function.Predicate;
 
 import org.junit.jupiter.api.Test;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Serializer;
 import com.gtnhplanner.data.flowchart.Summary;
@@ -21,6 +22,7 @@ import com.gtnhplanner.data.flowchart.balancer.BalanceView;
 import com.gtnhplanner.data.flowchart.balancer.BalanceView.Boundary;
 import com.gtnhplanner.data.flowchart.balancer.BalanceView.Kind;
 import com.gtnhplanner.data.flowchart.balancer.Balancer;
+import com.gtnhplanner.data.flowchart.balancer.GraphBalance;
 import com.gtnhplanner.data.flowchart.balancer.GraphSolve;
 import com.gtnhplanner.data.flowchart.balancer.Note;
 import com.gtnhplanner.data.flowchart.balancer.SolverMessage;
@@ -84,7 +86,7 @@ class BalanceViewTest {
     void surplusIsNamedAtItsPortAndReadsAsSomethingToCollect() {
         // The reported bug in one assertion: the surplus is pinned to the port it leaves by, and
         // named as a surplus rather than as destruction - a player empties that bus like any other.
-        final List<Boundary> flows = chart("excess_choice").boundary();
+        final List<Boundary> flows = GraphBalance.boundary(chart("excess_choice"));
 
         final List<Boundary> voided = of(flows, Kind.EXCESS);
         assertEquals(1, voided.size());
@@ -131,7 +133,7 @@ class BalanceViewTest {
             alternatives(graph).options()
                 .isEmpty(),
             "no gates, so no question to ask");
-        assertTrue(of(graph.boundary(), Kind.EXCESS).isEmpty(), "and no surplus anywhere");
+        assertTrue(of(GraphBalance.boundary(graph), Kind.EXCESS).isEmpty(), "and no surplus anywhere");
     }
 
     @Test
@@ -222,7 +224,7 @@ class BalanceViewTest {
             alternative.externals()
                 .get(0)
                 .port(),
-            of(graph.boundary(), Kind.EXCESS).stream()
+            of(GraphBalance.boundary(graph), Kind.EXCESS).stream()
                 .map(Boundary::port)
                 .findFirst()
                 .orElse(null),
@@ -255,12 +257,12 @@ class BalanceViewTest {
         // three has nothing to do with the last three.
         final Graph graph = chart("two_decisions");
         final Alternatives a = alternatives(graph);
-        final Map<java.util.UUID, List<Alternative>> byDecision = new LinkedHashMap<>();
+        final Map<Uuid, List<Alternative>> byDecision = new LinkedHashMap<>();
         for (final Alternative option : a.options()) {
             byDecision.computeIfAbsent(
-                CoreIds.mod(
-                    option.replaces()
-                        .nodeId()),
+
+                option.replaces()
+                    .nodeId(),
                 k -> new ArrayList<>())
                 .add(option);
         }

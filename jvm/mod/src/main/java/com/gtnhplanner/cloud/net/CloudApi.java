@@ -289,7 +289,7 @@ public final class CloudApi {
     }
 
     /**
-     * Creates or changes the account's own plan {@code designId} (a UUID the caller makes). A 409 with
+     * Creates or changes the account's own plan {@code designId} (a Uuid the caller makes). A 409 with
      * {@code {"live":true}} is not an error: it comes back as {@link Put#live()}.
      */
     public static Put put(final String token, final String designId, final Upsert body) throws IOException {

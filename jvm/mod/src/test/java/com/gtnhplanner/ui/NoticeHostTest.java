@@ -3,10 +3,10 @@ package com.gtnhplanner.ui;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.core.view.rail.Notices;
 import com.gtnhplanner.data.flowchart.balancer.Severity;
 import com.gtnhplanner.data.flowchart.balancer.UpToLoop;
@@ -22,7 +22,7 @@ class NoticeHostTest {
 
     @Test
     void aRingBecomesAnAlarmWithItsChipAndCards() {
-        final UUID a = new UUID(0, 1), b = new UUID(0, 2);
+        final Uuid a = new Uuid(0, 1), b = new Uuid(0, 2);
         final Notices.Input input = new Notices.Input(
             null,
             true,

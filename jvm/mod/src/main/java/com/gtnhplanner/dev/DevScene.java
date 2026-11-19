@@ -3,11 +3,11 @@ package com.gtnhplanner.dev;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.UUID;
 import java.util.function.Supplier;
 
 import net.minecraft.client.Minecraft;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Node;
@@ -88,7 +88,7 @@ public final class DevScene {
         final String name, client;
         final List<Op> ops = new ArrayList<>();
         float x, y;
-        List<UUID> selected = List.of();
+        List<Uuid> selected = List.of();
         /** Where a slow fidget is centred while it waits. */
         float restX, restY;
         final double seed;
@@ -178,7 +178,7 @@ public final class DevScene {
             return this;
         }
 
-        Actor select(final Supplier<List<UUID>> what) {
+        Actor select(final Supplier<List<Uuid>> what) {
             return act(a -> a.selected = what.get());
         }
 
@@ -197,11 +197,11 @@ public final class DevScene {
         }
 
         /** Carries a card, drawer or note by {@code dx, dy}: the cursor holds it where it took it. */
-        Actor drag(final BoardScreen screen, final Supplier<UUID> what, final int dx, final int dy,
+        Actor drag(final BoardScreen screen, final Supplier<Uuid> what, final int dx, final int dy,
             final double seconds) {
             ops.add(new Op(seconds) {
 
-                UUID id;
+                Uuid id;
                 int ox, oy;
                 float gx, gy;
 
@@ -267,7 +267,7 @@ public final class DevScene {
         final Node tank = pick(board, nodes, "tank", null);
         final float[] box = bounds(nodes);
         // The camera on the busy left of the plan, close enough to read the cards.
-        final List<UUID> shown = new ArrayList<>();
+        final List<Uuid> shown = new ArrayList<>();
         for (final Node n : nodes) if (n.x < electrolyzer.x + 1300) shown.add(n.id);
         screen.canvas()
             .frame(shown);
@@ -434,7 +434,7 @@ public final class DevScene {
         return new float[] { d.getX() + 40, d.getY() + 18 };
     }
 
-    private static int[] posOf(final BoardScreen screen, final UUID id) {
+    private static int[] posOf(final BoardScreen screen, final Uuid id) {
         final Graph g = BoardSession.current()
             .graph();
         final Node n = g.nodes.get(id);

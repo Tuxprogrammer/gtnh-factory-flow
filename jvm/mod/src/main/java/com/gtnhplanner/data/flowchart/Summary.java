@@ -7,12 +7,11 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import com.gtnhplanner.CoreIds;
 import com.gtnhplanner.client.GuiHelper;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.balancer.BalanceResult;
 import com.gtnhplanner.data.flowchart.balancer.BalanceView;
 import com.gtnhplanner.data.flowchart.balancer.ChoiceKey;
@@ -229,7 +228,7 @@ public final class Summary extends GraphData {
     public static final int DEFAULT_Y = 46;
 
     public Summary() {
-        super(UUID.randomUUID());
+        super(Uuid.randomUUID());
         x = DEFAULT_X;
         y = DEFAULT_Y;
         lines.put(
@@ -357,7 +356,7 @@ public final class Summary extends GraphData {
         // Accumulate scaled flows per resource across all ports, connected and unconnected alike.
         for (final Node node : graph.getNodes()) {
             final var nb = balance.nodeBalances()
-                .get(CoreIds.core(node.id));
+                .get(node.id);
             if (nb == null) continue;
 
             final float scale = mode == Mode.THROUGHPUT
@@ -394,7 +393,7 @@ public final class Summary extends GraphData {
         int maxTicks = 0;
         for (final Node node : graph.getNodes()) {
             final var nb = balance.nodeBalances()
-                .get(CoreIds.core(node.id));
+                .get(node.id);
             if (nb != null) maxTicks = Math.max(maxTicks, (int) Math.ceil(nb.durationPerOp()));
         }
         return Math.max(maxTicks, 20);
@@ -464,7 +463,7 @@ public final class Summary extends GraphData {
         final List<Line<?>> out = new ArrayList<>();
         for (final Node node : graph.getNodes()) {
             final var nb = balance.nodeBalances()
-                .get(CoreIds.core(node.id));
+                .get(node.id);
             if (nb == null) continue;
             final double ops = nb.operations();
             if (ops <= 0) continue;

@@ -7,10 +7,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.core.view.rail.RailInput;
 import com.gtnhplanner.core.view.rail.RailMath;
 import com.gtnhplanner.data.flowchart.Drawer;
@@ -51,7 +51,7 @@ final class RailHost {
         final Map<Object, List<CardModel>> shared = new HashMap<>();
         final List<List<CardModel>> grouped = new ArrayList<>();
         for (final CardModel c : cards) {
-            final UUID host = session.sharedOf(c.node.id) == null ? null : session.hostOf(c.node.id);
+            final Uuid host = session.sharedOf(c.node.id) == null ? null : session.hostOf(c.node.id);
             final boolean tank = isTank(c);
             if (host == null || tank) {
                 grouped.add(new ArrayList<>(List.of(c)));
@@ -220,7 +220,7 @@ final class RailHost {
      * already
      * carry the solved rate, so no card is held back for its machine count.
      */
-    static RailInput input(final BoardSession session, final Map<UUID, CardModel> models, final List<CardModel> counted,
+    static RailInput input(final BoardSession session, final Map<Uuid, CardModel> models, final List<CardModel> counted,
         final List<Machine> machines, final Map<String, String> aliases, final String filter) {
         final Graph graph = session.graph();
         final Set<String> held = new HashSet<>();
@@ -364,7 +364,7 @@ final class RailHost {
         return (input ? "i" : "o") + index;
     }
 
-    private static String portKey(final UUID node, final boolean input, final int index) {
+    private static String portKey(final Uuid node, final boolean input, final int index) {
         return node + (input ? "<" : ">") + index;
     }
 }

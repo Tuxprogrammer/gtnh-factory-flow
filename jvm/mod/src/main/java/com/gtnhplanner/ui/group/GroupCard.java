@@ -2,7 +2,6 @@ package com.gtnhplanner.ui.group;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -15,6 +14,7 @@ import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
 import com.cleanroommc.modularui.theme.WidgetThemeEntry;
 import com.cleanroommc.modularui.widget.Widget;
 import com.cleanroommc.modularui.widget.sizer.Area;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.BoardGroup;
 import com.gtnhplanner.ui.BoardSession;
 import com.gtnhplanner.ui.canvas.BoardCanvas;
@@ -48,10 +48,10 @@ public final class GroupCard extends Widget<GroupCard> implements Interactable, 
     private static final int GRIP = 4;
 
     private final BoardSession session;
-    public final UUID groupId;
+    public final Uuid groupId;
     private boolean moving;
 
-    public GroupCard(final BoardSession session, final UUID groupId) {
+    public GroupCard(final BoardSession session, final Uuid groupId) {
         this.session = session;
         this.groupId = groupId;
         sync();

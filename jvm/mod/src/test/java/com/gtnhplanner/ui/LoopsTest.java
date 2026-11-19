@@ -5,12 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.function.Function;
 
 import org.junit.jupiter.api.Test;
 
-import com.gtnhplanner.CoreIds;
 import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.balancer.PortRef;
@@ -30,26 +28,26 @@ class LoopsTest {
         }
     }
 
-    private static final UUID A = id(1), B = id(2), C = id(3), SPLIT = id(4), MAKE = id(5), OTHER = id(6),
+    private static final Uuid A = id(1), B = id(2), C = id(3), SPLIT = id(4), MAKE = id(5), OTHER = id(6),
         SHARED = id(7), SHARED2 = id(8);
 
-    private static UUID id(final int n) {
-        return new UUID(0, n);
+    private static Uuid id(final int n) {
+        return new Uuid(0, n);
     }
 
     /** A node as the solver names it. */
-    private static Uuid c(final UUID id) {
-        return CoreIds.core(id);
+    private static Uuid c(final Uuid id) {
+        return id;
     }
 
-    private static List<Uuid> ids(final UUID... ids) {
-        return CoreIds.coreList(List.of(ids));
+    private static List<Uuid> ids(final Uuid... ids) {
+        return new java.util.ArrayList<>(List.of(ids));
     }
 
     /** Every node its own card, but SHARED2, a recipe on SHARED's card. */
-    private static final Function<UUID, UUID> CARD = n -> n.equals(SHARED2) ? SHARED : n;
+    private static final Function<Uuid, Uuid> CARD = n -> n.equals(SHARED2) ? SHARED : n;
 
-    private static Edge edge(final int n, final UUID from, final int out, final UUID to, final int in) {
+    private static Edge edge(final int n, final Uuid from, final int out, final Uuid to, final int in) {
         return new Edge(id(100 + n), from, to, out, in);
     }
 
@@ -59,7 +57,7 @@ class LoopsTest {
             .of(new UpToLoop(DEAD, ids(A, B, C), List.of()), new UpToLoop(CLOG, ids(SPLIT, MAKE), List.of()));
         assertEquals(0xFFE0A63A, Loops.Tone.of(loops.get(0)).colour);
         assertEquals(0xFFB49CF0, Loops.Tone.of(loops.get(1)).colour);
-        final Map<UUID, Loops.Tone> tones = Loops.cardTones(loops, CARD);
+        final Map<Uuid, Loops.Tone> tones = Loops.cardTones(loops, CARD);
         assertEquals(Loops.Tone.DEAD, tones.get(B));
         assertEquals(Loops.Tone.CLOG, tones.get(MAKE));
         assertNull(tones.get(OTHER));

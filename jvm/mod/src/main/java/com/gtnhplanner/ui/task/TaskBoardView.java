@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -15,6 +14,7 @@ import com.cleanroommc.modularui.drawable.Stencil;
 import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
 import com.cleanroommc.modularui.theme.WidgetThemeEntry;
 import com.cleanroommc.modularui.widget.Widget;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.TaskEdits;
 import com.gtnhplanner.data.flowchart.Tasks;
@@ -782,7 +782,7 @@ public final class TaskBoardView extends Widget<TaskBoardView> implements Intera
 
     /** Adds a task at the bottom of {@code status} at once and opens its box, where the rest of it is written. */
     private void newTask(final Tasks.Status status, final Hit under) {
-        final String id = UUID.randomUUID()
+        final String id = Uuid.randomUUID()
             .toString();
         session.editTasks(
             () -> TaskEdits.add(session.graph(), id, "New task", status, List.of(), TaskLook.me(), TaskLook.now()));

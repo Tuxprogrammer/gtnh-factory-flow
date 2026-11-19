@@ -16,6 +16,7 @@ import com.google.gson.JsonObject;
 import com.gtnhplanner.cloud.sync.LiveJson;
 import com.gtnhplanner.cloud.sync.LiveOp;
 import com.gtnhplanner.cloud.sync.LiveOps;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.PinRule;
@@ -307,7 +308,7 @@ class CloudPlansTest {
 
     /** The board's cards that hold their own count: no generators or tanks, no recipe of a shared machine. */
     private static List<Node> plainCards(final Graph g) {
-        final java.util.Set<java.util.UUID> shared = new java.util.HashSet<>();
+        final java.util.Set<Uuid> shared = new java.util.HashSet<>();
         for (final com.gtnhplanner.data.flowchart.Group group : g.getGroups())
             if (group instanceof final com.gtnhplanner.data.flowchart.MachineGroup m) shared.addAll(m.getNodeIds());
         final List<Node> out = new ArrayList<>();

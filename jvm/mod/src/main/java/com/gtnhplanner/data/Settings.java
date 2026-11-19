@@ -1,6 +1,7 @@
 package com.gtnhplanner.data;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 
 import javax.annotation.Nonnull;
@@ -56,7 +57,7 @@ public enum Settings {
         .of("OFF", "ULV", "LV", "MV", "HV", "EV", "IV", "LuV", "ZPM", "UV", "UHV", "UEV", "UIV", "UMV", "UXV", "MAX"),
         (v, c) -> {
             if ("OFF".equals(v)) return null;
-            return c.getBoolean(PERFECT_OC.key()) ? v + "P" : v;
+            return Boolean.TRUE.equals(c.get(PERFECT_OC.key())) ? v + "P" : v;
         }),
     BURNABLE_OVERRIDE("burnable_override", "OFF", List.of("OFF", "IN", "OUT"), (_, _) -> null),
 
@@ -70,16 +71,17 @@ public enum Settings {
     }
 
     Settings(final String key, final int defaultValue, final int min, final int max,
-        final BiFunction<Integer, MachineConfig, String> badgeFn) {
+        final BiFunction<Integer, Map<String, Object>, String> badgeFn) {
         this.def = SettingDef.intDef(key, defaultValue, min, max, badgeFn);
     }
 
-    Settings(final String key, final boolean defaultValue, final BiFunction<Boolean, MachineConfig, String> badgeFn) {
+    Settings(final String key, final boolean defaultValue,
+        final BiFunction<Boolean, Map<String, Object>, String> badgeFn) {
         this.def = SettingDef.boolDef(key, defaultValue, badgeFn);
     }
 
     Settings(final String key, final String defaultValue, final List<String> options,
-        final BiFunction<String, MachineConfig, String> badgeFn) {
+        final BiFunction<String, Map<String, Object>, String> badgeFn) {
         this.def = SettingDef.enumDef(key, defaultValue, options, badgeFn);
     }
 

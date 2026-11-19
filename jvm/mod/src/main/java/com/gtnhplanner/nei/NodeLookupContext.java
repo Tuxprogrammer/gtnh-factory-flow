@@ -1,9 +1,9 @@
 package com.gtnhplanner.nei;
 
-import java.util.UUID;
+import com.gtnhplanner.core.base.Uuid;
 
 /**
  * The port the user last ran an NEI recipe/usage lookup from.
  * ItemStacks stay at the NEI boundary and wiring happens via {@code Port#canConnect}.
  */
-public record NodeLookupContext(UUID nodeId, boolean output, int portIndex) {}
+public record NodeLookupContext(Uuid nodeId, boolean output, int portIndex) {}

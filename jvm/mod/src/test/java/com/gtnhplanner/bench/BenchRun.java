@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.core.layout.BoxRouter;
 import com.gtnhplanner.core.layout.GridRoutedEdge;
 import com.gtnhplanner.core.layout.IncrementalStats;
@@ -19,7 +19,7 @@ public final class BenchRun {
     private BenchRun() {}
 
     /** A routed board: the wires' corners by link id, which fell back, how long it took, and what it measures. */
-    public record Routed(BenchBoard board, Map<UUID, List<int[]>> routes, List<UUID> fellBack, double millis,
+    public record Routed(BenchBoard board, Map<Uuid, List<int[]>> routes, List<Uuid> fellBack, double millis,
         RouteMetrics.Result metrics) {}
 
     public static Routed route(final BenchBoard board) {
@@ -43,7 +43,7 @@ public final class BenchRun {
 
     /** The board's wires box to box, a loop from a card back to itself right side to left side, all 4 px. */
     static List<BoxRouter.Wire> wires(final BenchBoard board) {
-        final Map<UUID, Integer> index = new HashMap<>();
+        final Map<Uuid, Integer> index = new HashMap<>();
         for (int i = 0; i < board.items()
             .size(); i++)
             index.put(
@@ -72,10 +72,10 @@ public final class BenchRun {
         final long t0 = System.nanoTime();
         final Map<String, GridRoutedEdge> solved = new BoxRouter().route(boxes, wires, true, stats);
         final double ms = (System.nanoTime() - t0) / 1e6;
-        final Map<UUID, List<int[]>> routes = new HashMap<>();
-        final List<UUID> fellBack = new ArrayList<>();
+        final Map<Uuid, List<int[]>> routes = new HashMap<>();
+        final List<Uuid> fellBack = new ArrayList<>();
         for (final GridRoutedEdge r : solved.values()) {
-            final UUID key = UUID.fromString(r.edgeId());
+            final Uuid key = Uuid.fromString(r.edgeId());
             routes.put(key, BoxRouter.pixels(r));
             if (r.vertices() == null) fellBack.add(key);
         }
@@ -95,9 +95,9 @@ public final class BenchRun {
         return new Routed(board, routes, fellBack, ms, measure(board, routes));
     }
 
-    public static RouteMetrics.Result measure(final BenchBoard board, final Map<UUID, List<int[]>> routes) {
+    public static RouteMetrics.Result measure(final BenchBoard board, final Map<Uuid, List<int[]>> routes) {
         final List<RouteMetrics.Box> boxes = new ArrayList<>();
-        final Map<UUID, Integer> index = new HashMap<>();
+        final Map<Uuid, Integer> index = new HashMap<>();
         for (final BenchBoard.Item i : board.items()) {
             index.put(i.id(), boxes.size());
             boxes.add(new RouteMetrics.Box(i.x(), i.y(), i.w(), i.h()));
@@ -120,7 +120,7 @@ public final class BenchRun {
      */
     public static BenchBoard arrangeNew(final BenchBoard board, final double[] millis, final String[] chosen) {
         final List<com.gtnhplanner.core.layout.arrange.ArrangeCard> cards = new ArrayList<>();
-        final Map<UUID, BenchBoard.Item> byId = board.byId();
+        final Map<Uuid, BenchBoard.Item> byId = board.byId();
         for (final BenchBoard.Item i : board.items()) cards.add(
             new com.gtnhplanner.core.layout.arrange.ArrangeCard(
                 i.id()
@@ -184,9 +184,9 @@ public final class BenchRun {
         millis[0] = (System.nanoTime() - t0) / 1e6;
         // The website's arrange does not name the candidate it kept.
         chosen[0] = "-";
-        final Map<UUID, int[]> at = new HashMap<>();
+        final Map<Uuid, int[]> at = new HashMap<>();
         for (final com.gtnhplanner.core.layout.arrange.ArrangeResult.Move m : result.moves()) at.put(
-            UUID.fromString(m.id()),
+            Uuid.fromString(m.id()),
             new int[] { (int) Math.round(
                 m.position()
                     .x()),

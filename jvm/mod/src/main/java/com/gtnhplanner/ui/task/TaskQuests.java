@@ -5,13 +5,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import net.minecraft.item.ItemStack;
 
 import com.gtnhplanner.api.PlanAPI;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Plan;
 import com.gtnhplanner.data.flowchart.TaskEdits;
@@ -129,7 +129,7 @@ public final class TaskQuests {
             board,
             () -> TaskEdits.addQuest(
                 board,
-                UUID.randomUUID()
+                Uuid.randomUUID()
                     .toString(),
                 taskId,
                 quest));

@@ -72,9 +72,9 @@ class SolveModeTest {
         final SolutionView s = solved(chart);
 
         assertEquals(2, count(s, chart, 0), EPS);
-        assertEquals(2, s.drawers.rate(CoreIds.core(heavy.getId())), EPS);
-        assertEquals(8, s.drawers.rate(CoreIds.core(light.getId())), EPS);
-        assertEquals(2, s.drawers.rate(CoreIds.core(oil.getId())), EPS);
+        assertEquals(2, s.drawers.rate(heavy.getId()), EPS);
+        assertEquals(8, s.drawers.rate(light.getId()), EPS);
+        assertEquals(2, s.drawers.rate(oil.getId()), EPS);
         assertTrue(
             s.drawers.unmet()
                 .isEmpty(),
@@ -138,7 +138,7 @@ class SolveModeTest {
 
         assertEquals(0.5, count(s, chart, 0), EPS);
         assertEquals(1, count(s, chart, 1), EPS);
-        assertTrue(s.drawers.met(CoreIds.core(kit.getId())));
+        assertTrue(s.drawers.met(kit.getId()));
     }
 
     @Test
@@ -154,10 +154,10 @@ class SolveModeTest {
         final SolutionView s = solved(chart);
 
         assertEquals(1, count(s, chart, 1), EPS);
-        assertEquals(1, s.drawers.rate(CoreIds.core(kit.getId())), EPS);
-        assertEquals(0, s.extentsPerSecond.get(CoreIds.core(chart.machine(0).id)), EPS, "the stranded lathe is idle");
-        assertEquals(0, s.drawers.rate(CoreIds.core(gear.getId())), EPS);
-        assertTrue(s.drawers.met(CoreIds.core(kit.getId())));
+        assertEquals(1, s.drawers.rate(kit.getId()), EPS);
+        assertEquals(0, s.extentsPerSecond.get(chart.machine(0).id), EPS, "the stranded lathe is idle");
+        assertEquals(0, s.drawers.rate(gear.getId()), EPS);
+        assertTrue(s.drawers.met(kit.getId()));
     }
 
     @Test
@@ -171,7 +171,7 @@ class SolveModeTest {
 
         assertEquals(1.5, count(s, chart, 0), EPS);
         assertEquals(3, count(s, chart, 1), EPS);
-        assertEquals(3, s.drawers.rate(CoreIds.core(kit.getId())), EPS);
+        assertEquals(3, s.drawers.rate(kit.getId()), EPS);
         assertEquals(0, s.openGates, "the gear is all used");
     }
 
@@ -187,8 +187,8 @@ class SolveModeTest {
 
         assertEquals(4, count(s, chart, 0), EPS);
         assertEquals(2, count(s, chart, 1), EPS);
-        assertEquals(2, s.drawers.rate(CoreIds.core(kit.getId())), EPS);
-        assertEquals(6, s.drawers.rate(CoreIds.core(spare.getId())), EPS);
+        assertEquals(2, s.drawers.rate(kit.getId()), EPS);
+        assertEquals(6, s.drawers.rate(spare.getId()), EPS);
     }
 
     @Test
@@ -204,9 +204,9 @@ class SolveModeTest {
 
         assertEquals(0, s.openGates);
         assertEquals(8, count(s, chart, 1), EPS);
-        assertEquals(8, s.drawers.rate(CoreIds.core(kit.getId())), EPS);
-        assertEquals(0, s.drawers.rate(CoreIds.core(spare.getId())), EPS);
-        assertTrue(s.drawers.met(CoreIds.core(kit.getId())));
+        assertEquals(8, s.drawers.rate(kit.getId()), EPS);
+        assertEquals(0, s.drawers.rate(spare.getId()), EPS);
+        assertTrue(s.drawers.met(kit.getId()));
     }
 
     @Test
@@ -257,7 +257,7 @@ class SolveModeTest {
         assertEquals(1, s.gatedSinks.size(), "one gate: " + s.gatedSinks);
         final External sink = s.gatedSinks.get(0);
         assertEquals(
-            CoreIds.core(chart.machine(0).id),
+            chart.machine(0).id,
             sink.port()
                 .nodeId());
         assertEquals(7, sink.ratePerSecond(), EPS);
@@ -316,8 +316,8 @@ class SolveModeTest {
 
         final SolutionView s = solved(chart);
 
-        assertEquals(16, s.drawers.rate(CoreIds.core(ore.getId())), EPS);
-        assertEquals(8, s.drawers.rate(CoreIds.core(ingot.getId())), EPS);
+        assertEquals(16, s.drawers.rate(ore.getId()), EPS);
+        assertEquals(8, s.drawers.rate(ingot.getId()), EPS);
         assertTrue(
             s.drawers.unmet()
                 .isEmpty(),
@@ -335,14 +335,14 @@ class SolveModeTest {
 
         final SolutionView s = solved(chart);
 
-        assertEquals(3, s.drawers.rate(CoreIds.core(ingot.getId())), EPS);
-        assertTrue(s.drawers.met(CoreIds.core(ingot.getId())));
-        assertEquals(6, s.drawers.rate(CoreIds.core(ore.getId())), EPS);
-        assertFalse(s.drawers.met(CoreIds.core(ore.getId())));
-        final DrawerReadout.Shortfall shortfall = s.drawers.shortfall(CoreIds.core(ore.getId()));
+        assertEquals(3, s.drawers.rate(ingot.getId()), EPS);
+        assertTrue(s.drawers.met(ingot.getId()));
+        assertEquals(6, s.drawers.rate(ore.getId()), EPS);
+        assertFalse(s.drawers.met(ore.getId()));
+        final DrawerReadout.Shortfall shortfall = s.drawers.shortfall(ore.getId());
         assertNotNull(shortfall);
         assertEquals(6, shortfall.reachable(), EPS);
-        assertEquals(List.of(CoreIds.core(ingot.getId())), shortfall.limitingDrawers());
+        assertEquals(List.of(ingot.getId()), shortfall.limitingDrawers());
     }
 
     @Test
@@ -356,10 +356,10 @@ class SolveModeTest {
 
         final SolutionView s = solved(chart);
 
-        assertEquals(0, s.drawers.rate(CoreIds.core(ingot.getId())), EPS);
-        assertTrue(s.drawers.met(CoreIds.core(ingot.getId())));
-        assertEquals(0, s.drawers.rate(CoreIds.core(ore.getId())), EPS);
-        assertFalse(s.drawers.met(CoreIds.core(ore.getId())));
+        assertEquals(0, s.drawers.rate(ingot.getId()), EPS);
+        assertTrue(s.drawers.met(ingot.getId()));
+        assertEquals(0, s.drawers.rate(ore.getId()), EPS);
+        assertFalse(s.drawers.met(ore.getId()));
         assertEquals(0, count(s, chart, 0), EPS);
     }
 
@@ -374,13 +374,13 @@ class SolveModeTest {
 
         final SolutionView s = solved(chart);
 
-        assertEquals(0, s.drawers.rate(CoreIds.core(ore.getId())), EPS);
-        assertTrue(s.drawers.met(CoreIds.core(ore.getId())));
-        assertEquals(0, s.drawers.rate(CoreIds.core(ingot.getId())), EPS);
-        assertFalse(s.drawers.met(CoreIds.core(ingot.getId())));
-        final DrawerReadout.Shortfall shortfall = s.drawers.shortfall(CoreIds.core(ingot.getId()));
+        assertEquals(0, s.drawers.rate(ore.getId()), EPS);
+        assertTrue(s.drawers.met(ore.getId()));
+        assertEquals(0, s.drawers.rate(ingot.getId()), EPS);
+        assertFalse(s.drawers.met(ingot.getId()));
+        final DrawerReadout.Shortfall shortfall = s.drawers.shortfall(ingot.getId());
         assertNotNull(shortfall);
-        assertEquals(List.of(CoreIds.core(ore.getId())), shortfall.limitingDrawers());
+        assertEquals(List.of(ore.getId()), shortfall.limitingDrawers());
     }
 
     @Test
@@ -395,14 +395,14 @@ class SolveModeTest {
         final SolutionView s = solved(chart);
 
         assertEquals(6, count(s, chart, 0), EPS);
-        assertEquals(12, s.drawers.rate(CoreIds.core(ore.getId())), EPS);
-        assertFalse(s.drawers.met(CoreIds.core(ore.getId())));
-        final DrawerReadout.Shortfall shortfall = s.drawers.shortfall(CoreIds.core(ore.getId()));
+        assertEquals(12, s.drawers.rate(ore.getId()), EPS);
+        assertFalse(s.drawers.met(ore.getId()));
+        final DrawerReadout.Shortfall shortfall = s.drawers.shortfall(ore.getId());
         assertNotNull(shortfall);
         assertEquals(Rule.AT_MOST, shortfall.rule());
         assertEquals(10, shortfall.target(), 0);
         assertEquals(12, shortfall.reachable(), EPS);
-        assertEquals(List.of(CoreIds.core(chart.machine(0).id)), shortfall.limitingNodes());
+        assertEquals(List.of(chart.machine(0).id), shortfall.limitingNodes());
         assertTrue(hasNote(s.notes, SolverMessage.DRAWER_UNMET), "notes: " + s.notes);
         assertFalse(hasNote(s.notes, SolverMessage.PIN_CONFLICT), "notes: " + s.notes);
     }
@@ -445,7 +445,7 @@ class SolveModeTest {
     }
 
     private static double count(final SolutionView s, final LoadedChart chart, final int machine) {
-        return s.machineCounts.get(CoreIds.core(chart.machine(machine).id));
+        return s.machineCounts.get(chart.machine(machine).id);
     }
 
     private static boolean hasNote(final List<Note> notes, final SolverMessage message) {

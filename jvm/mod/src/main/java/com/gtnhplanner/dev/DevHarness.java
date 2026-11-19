@@ -47,6 +47,7 @@ import com.cleanroommc.modularui.widget.sizer.Area;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.gtnhplanner.GtnhPlanner;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.ui.gt.MultiblockPictures;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
@@ -421,7 +422,7 @@ public final class DevHarness {
                     final com.gtnhplanner.data.flowchart.Graph g = session.graph();
                     String made = null;
                     if (q.containsKey("add")) {
-                        final String id = java.util.UUID.randomUUID()
+                        final String id = Uuid.randomUUID()
                             .toString();
                         final com.gtnhplanner.data.flowchart.Tasks.Status status = com.gtnhplanner.data.flowchart.Tasks.Status
                             .of(q.getOrDefault("status", "todo"));
@@ -447,7 +448,7 @@ public final class DevHarness {
                         session.editTasks(
                             () -> com.gtnhplanner.data.flowchart.TaskEdits.addComment(
                                 g,
-                                java.util.UUID.randomUUID()
+                                Uuid.randomUUID()
                                     .toString(),
                                 task,
                                 q.getOrDefault("by", com.gtnhplanner.ui.task.TaskLook.me()),

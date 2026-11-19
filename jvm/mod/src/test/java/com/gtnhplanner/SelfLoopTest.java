@@ -39,8 +39,8 @@ class SelfLoopTest {
 
         final SolutionView s = solved(chart);
 
-        assertEquals(100, s.machineCounts.get(CoreIds.core(chart.machine(0).id)), EPS);
-        assertEquals(500, s.edgeFlowsPerSecond.get(CoreIds.core(loop.id)), EPS, "the loop carries everything it makes");
+        assertEquals(100, s.machineCounts.get(chart.machine(0).id), EPS);
+        assertEquals(500, s.edgeFlowsPerSecond.get(loop.id), EPS, "the loop carries everything it makes");
         assertEquals(1, s.gatedSources.size(), "one import: " + s.gatedSources);
         assertEquals(0, s.gatedSinks.size());
         final External sand = s.gatedSources.get(0);
@@ -70,8 +70,8 @@ class SelfLoopTest {
 
         final SolutionView s = solved(chart);
 
-        assertEquals(10, s.machineCounts.get(CoreIds.core(chart.machine(0).id)), EPS);
-        assertEquals(10, s.edgeFlowsPerSecond.get(CoreIds.core(loop.id)), EPS);
+        assertEquals(10, s.machineCounts.get(chart.machine(0).id), EPS);
+        assertEquals(10, s.edgeFlowsPerSecond.get(loop.id), EPS);
         assertEquals(0, s.gatedSources.size());
         assertEquals(1, s.gatedSinks.size(), "one void: " + s.gatedSinks);
         final External seed = s.gatedSinks.get(0);

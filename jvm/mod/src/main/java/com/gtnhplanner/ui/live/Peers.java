@@ -8,7 +8,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
@@ -19,6 +18,7 @@ import com.gtnhplanner.cloud.map.PlanIds;
 import com.gtnhplanner.cloud.net.LiveClient;
 import com.gtnhplanner.cloud.session.CloudSession;
 import com.gtnhplanner.cloud.session.LiveDoc;
+import com.gtnhplanner.core.base.Uuid;
 
 /**
  * The other people in the open plan, as the board shows them (docs/design/cloud-live.md, presence): each connection's
@@ -46,7 +46,7 @@ public final class Peers {
         /** Where it was last heard and where it is drawn now, in board units. */
         private float tx, ty, x, y;
         private long heardAt;
-        private List<UUID> selected = List.of();
+        private List<Uuid> selected = List.of();
 
         Peer(final String conn, final String who) {
             this.conn = conn;
@@ -87,7 +87,7 @@ public final class Peers {
         }
 
         /** What it has selected, as the board's ids, in its order. */
-        public List<UUID> selected() {
+        public List<Uuid> selected() {
             return selected;
         }
     }
@@ -166,8 +166,8 @@ public final class Peers {
     }
 
     /** The board's ids of a presence frame's selection (the plan's ids). */
-    private static List<UUID> ids(final JsonArray sel) {
-        final List<UUID> out = new ArrayList<>();
+    private static List<Uuid> ids(final JsonArray sel) {
+        final List<Uuid> out = new ArrayList<>();
         for (final JsonElement e : sel) {
             if (out.size() >= MAX_SELECTED) break;
             if (e.isJsonPrimitive()) out.add(PlanIds.uuid(e.getAsString()));
@@ -175,7 +175,7 @@ public final class Peers {
         return out;
     }
 
-    private void place(final Peer peer, @Nullable final int[] at, final List<UUID> selected) {
+    private void place(final Peer peer, @Nullable final int[] at, final List<Uuid> selected) {
         peer.heardAt = System.currentTimeMillis();
         if (at == null) peer.cursor = false;
         else {
@@ -263,7 +263,7 @@ public final class Peers {
 
     /** A stand-in heard from: its name, client, cursor (null off the board) and selection. Dev only. */
     public void fakeHeard(final int index, final String name, final String client, @Nullable final int[] cursor,
-        final List<UUID> selected) {
+        final List<Uuid> selected) {
         final String id = "fake-" + index;
         final Peer p = byConn.computeIfAbsent(FAKE + index, c -> new Peer(c, id));
         p.username = name;

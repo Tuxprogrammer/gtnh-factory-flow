@@ -10,12 +10,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Node;
@@ -38,7 +38,7 @@ class CustomRateTest {
     /** A custom rate card holding {@code name} at {@code perSecond}, pinned at one, its port built by hand. */
     private static Node card(final String name, final boolean supply, final double perSecond) {
         com.gtnhplanner.harness.GtnhFlowLoader.ensureDefaultMachineProfile();
-        final Node n = new Node(UUID.randomUUID(), 400, 0);
+        final Node n = new Node(Uuid.randomUUID(), 400, 0);
         n.powerSource = CustomRate.ID;
         CustomRate.hold(n, "item:test:" + name + ":0", supply);
         n.powerSettings.put(CustomRate.RATE, Double.toString(perSecond));
@@ -55,14 +55,14 @@ class CustomRateTest {
     /** An empty custom rate card. */
     private static Node blank() {
         com.gtnhplanner.harness.GtnhFlowLoader.ensureDefaultMachineProfile();
-        final Node n = new Node(UUID.randomUUID(), 0, 0);
+        final Node n = new Node(Uuid.randomUUID(), 0, 0);
         n.powerSource = CustomRate.ID;
         return n;
     }
 
     /** A recipe card making or using one {@code name} a second per machine. */
     private static Node machine(final String name, final boolean makes) {
-        final Node n = new Node(UUID.randomUUID(), 0, 0);
+        final Node n = new Node(Uuid.randomUUID(), 0, 0);
         n.machineName = makes ? "Maker" : "User";
         n.properties.put(com.gtnhplanner.harness.GtnhFlowLoader.DURATION_TICKS, 20);
         (makes ? n.outputs : n.inputs).add(TestIngredients.port(name, 1));
@@ -117,14 +117,14 @@ class CustomRateTest {
         final Node user = machine("ilmenite", false);
         g.addNode(supply);
         g.addNode(user);
-        g.addEdge(new Edge(UUID.randomUUID(), supply.id, user.id, 0, 0));
+        g.addEdge(new Edge(Uuid.randomUUID(), supply.id, user.id, 0, 0));
 
         final BalanceResult result = GraphSolve.balance(g, BalanceMode.AUTO);
 
         assertEquals(
             5,
             result.nodeBalances()
-                .get(CoreIds.core(user.id))
+                .get(user.id)
                 .operations(),
             1e-6,
             "five machines use the five a second it supplies");
@@ -137,14 +137,14 @@ class CustomRateTest {
         final Node request = card("rutile", false, 3);
         g.addNode(maker);
         g.addNode(request);
-        g.addEdge(new Edge(UUID.randomUUID(), maker.id, request.id, 0, 0));
+        g.addEdge(new Edge(Uuid.randomUUID(), maker.id, request.id, 0, 0));
 
         final BalanceResult result = GraphSolve.balance(g, BalanceMode.AUTO);
 
         assertEquals(
             3,
             result.nodeBalances()
-                .get(CoreIds.core(maker.id))
+                .get(maker.id)
                 .operations(),
             1e-6,
             "three machines make the three a second it drains");
@@ -157,7 +157,7 @@ class CustomRateTest {
         final Node user = machine("water", false);
         g.addNode(supply);
         g.addNode(user);
-        g.addEdge(new Edge(UUID.randomUUID(), supply.id, user.id, 0, 0));
+        g.addEdge(new Edge(Uuid.randomUUID(), supply.id, user.id, 0, 0));
 
         final JsonObject p = PlanExport.project(g, "Custom rate test", new PlanExport.World() {
 

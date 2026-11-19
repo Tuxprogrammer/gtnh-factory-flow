@@ -9,10 +9,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.balancer.BalanceMode;
 import com.gtnhplanner.data.flowchart.balancer.GraphSolve;
@@ -37,11 +37,11 @@ class PreferenceOrderTest {
         for (final String chart : List.of("mk1", "230_platline", "two_decisions")) {
             final Graph graph = GtnhFlowLoader.load(chart)
                 .graph();
-            final List<UUID> nodeIds = graph.getNodes()
+            final List<Uuid> nodeIds = graph.getNodes()
                 .stream()
                 .map(n -> n.id)
                 .toList();
-            final List<UUID> edgeIds = graph.getEdges()
+            final List<Uuid> edgeIds = graph.getEdges()
                 .stream()
                 .map(e -> e.id)
                 .toList();

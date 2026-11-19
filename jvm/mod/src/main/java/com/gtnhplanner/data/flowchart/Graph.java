@@ -9,14 +9,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.Uuid;
+import com.gtnhplanner.core.model.PlanHost;
 import com.gtnhplanner.data.flowchart.balancer.BalanceMode;
-import com.gtnhplanner.data.flowchart.balancer.BalanceResult;
-import com.gtnhplanner.data.flowchart.balancer.BalanceView;
 import com.gtnhplanner.data.flowchart.balancer.ChoiceKey;
 
 import lombok.Getter;
@@ -30,20 +29,20 @@ public class Graph {
      * reproducible answer gets one without sorting first - the solver, the serializer, the router
      * and the layout all read these directly.
      */
-    public final SortedMap<UUID, Node> nodes = new TreeMap<>();
-    public final SortedMap<UUID, Edge> edges = new TreeMap<>();
-    public final SortedMap<UUID, Note> notes = new TreeMap<>();
-    public final SortedMap<UUID, Group> groups = new TreeMap<>();
+    public final SortedMap<Uuid, Node> nodes = new TreeMap<>();
+    public final SortedMap<Uuid, Edge> edges = new TreeMap<>();
+    public final SortedMap<Uuid, Note> notes = new TreeMap<>();
+    public final SortedMap<Uuid, Group> groups = new TreeMap<>();
     /**
      * The board's drawers. Read through {@link #getDrawers()}; change membership and links through
      * {@link #addDrawer}, {@link #removeDrawer}, {@link #linkDrawer} and {@link #unlinkDrawer} so the
      * version moves.
      */
-    public final SortedMap<UUID, Drawer> drawers = new TreeMap<>();
+    public final SortedMap<Uuid, Drawer> drawers = new TreeMap<>();
     /**
      * The board's groups ({@link BoardGroup}, read and changed through {@link Groups}); nothing to do with the solve.
      */
-    public final SortedMap<UUID, BoardGroup> boardGroups = new TreeMap<>();
+    public final SortedMap<Uuid, BoardGroup> boardGroups = new TreeMap<>();
 
     /** The plan's name; changing it is an edit ({@link #setName}). */
     @Getter
@@ -80,7 +79,7 @@ public class Graph {
      * The cards on the pin list shown while playing ({@code ui/world/PinList}), by node id (a shared machine by its
      * host), in the order they were pinned: the machines to gather for a build. Saved with the plan.
      */
-    public final java.util.LinkedHashSet<UUID> pinList = new java.util.LinkedHashSet<>();
+    public final java.util.LinkedHashSet<Uuid> pinList = new java.util.LinkedHashSet<>();
 
     /**
      * How each leftover is split between the places that could bear it ({@code balancer/Spares}): per leftover (its
@@ -146,7 +145,7 @@ public class Graph {
     /** The id a link names this plan by: its cloud doc key, else its id on this computer. */
     public String planId() {
         if (cloudKey != null) return cloudKey;
-        if (localId == null) localId = UUID.randomUUID()
+        if (localId == null) localId = Uuid.randomUUID()
             .toString();
         return localId;
     }
@@ -181,13 +180,7 @@ public class Graph {
      * {@link UndoHistories}). A graph an undo or redo puts in a slot's place takes over the slot of
      * the graph it replaces; any other graph is a slot of its own.
      */
-    private transient UUID slot = UUID.randomUUID();
-
-    /**
-     * The display view, built on first ask after a solve rather than with it: the canvas wants the
-     * boundary every frame and never the choices, which the summary reads straight from the solve.
-     */
-    private List<BalanceView.Boundary> boundaryView = null;
+    private transient Uuid slot = Uuid.randomUUID();
 
     /** Shared by every graph, so a version names one state of one graph across the whole client. */
     private static final AtomicLong VERSIONS = new AtomicLong();
@@ -201,13 +194,11 @@ public class Graph {
     private transient long version = VERSIONS.incrementAndGet();
 
     /**
-     * Moves on every change that can change the solve - not on a move or a resize. The solve caches
-     * (and a {@code SolveService} request) key on this, so dragging a card never re-solves.
+     * Moves on every change that can change the solve - not on a move or a resize. The solve caches (held outside the
+     * model, {@code balancer.GraphBalance}) and a {@code SolveService} request key on this, so dragging a card never
+     * re-solves.
      */
     private transient long solveVersion = version;
-
-    /** The solve version the solve caches above were built from. */
-    private transient long solvedAt = -1;
 
     /**
      * An imported plan whose cards may lie on each other (sized differently where it was made): the board pulls them
@@ -265,7 +256,7 @@ public class Graph {
     }
 
     /** The slot this graph is; see {@link UndoHistories}. */
-    public UUID slot() {
+    public Uuid slot() {
         return slot;
     }
 
@@ -357,16 +348,15 @@ public class Graph {
         touch();
     }
 
+    /** The answer the player picked among the solve's equally good ones; the host keeps it ({@link PlanHost}). */
     public ChoiceKey getExcessChoice() {
-        return Plan.getInstance()
-            .getSummary()
-            .getExcessChoice();
+        return PlanHost.<Graph>get()
+            .excessChoice(this);
     }
 
     public void setExcessChoice(final ChoiceKey choice) {
-        Plan.getInstance()
-            .getSummary()
-            .setExcessChoice(choice);
+        PlanHost.<Graph>get()
+            .setExcessChoice(this, choice);
         bumpVersion();
     }
 
@@ -376,7 +366,7 @@ public class Graph {
     }
 
     /** Removes the node, every edge touching it and every drawer link to it. */
-    public void removeNode(final UUID id) {
+    public void removeNode(final Uuid id) {
         nodes.remove(id);
         edges.values()
             .removeIf(e -> e.sourceNodeId.equals(id) || e.targetNodeId.equals(id));
@@ -393,7 +383,7 @@ public class Graph {
     }
 
     @Nullable
-    public Drawer getDrawer(final UUID id) {
+    public Drawer getDrawer(final Uuid id) {
         return drawers.get(id);
     }
 
@@ -414,7 +404,7 @@ public class Graph {
         bumpVersion();
     }
 
-    public void removeDrawer(final UUID id) {
+    public void removeDrawer(final Uuid id) {
         drawers.remove(id);
         bumpVersion();
     }
@@ -426,7 +416,7 @@ public class Graph {
      * rate it asked for (at least or exactly: at most is a cap) back to that port, on a card with no pin or rate of its
      * own, so the card runs to it again.
      */
-    public void removeDrawerAndHeal(final UUID id) {
+    public void removeDrawerAndHeal(final Uuid id) {
         final Drawer drawer = drawers.get(id);
         if (drawer == null) return;
         final List<Drawer.Held> held = drawer.held();
@@ -443,9 +433,9 @@ public class Graph {
                     pairs.add(new Drawer.Link[] { makers.get(i), users.get(i) });
             }
             for (final Drawer.Link[] p : pairs) {
-                final UUID from = p[0].nodeId(), to = p[1].nodeId();
+                final Uuid from = p[0].nodeId(), to = p[1].nodeId();
                 if (nodes.containsKey(from) && nodes.containsKey(to) && !from.equals(to))
-                    addEdge(new Edge(UUID.randomUUID(), from, to, p[0].portIndex(), p[1].portIndex()));
+                    addEdge(new Edge(Uuid.randomUUID(), from, to, p[0].portIndex(), p[1].portIndex()));
             }
             return;
         }
@@ -481,7 +471,7 @@ public class Graph {
      * belongs to at most one drawer per direction, so any other drawer holding it lets go. Returns
      * false (and changes nothing) when there is no such drawer.
      */
-    public boolean linkDrawer(final UUID drawerId, final Drawer.Link link) {
+    public boolean linkDrawer(final Uuid drawerId, final Drawer.Link link) {
         final Drawer drawer = drawers.get(drawerId);
         if (drawer == null) return false;
         final boolean input = drawer.getKind()
@@ -497,7 +487,7 @@ public class Graph {
      * given an input, or a source given an output, becomes a buffer ({@link Drawer#addPort}). Any other drawer holding
      * the port that way lets go. False when there is no such drawer or it takes no such port (trash an input).
      */
-    public boolean linkDrawerPort(final UUID drawerId, final Drawer.Link link, final boolean input) {
+    public boolean linkDrawerPort(final Uuid drawerId, final Drawer.Link link, final boolean input) {
         final Drawer drawer = drawers.get(drawerId);
         if (drawer == null || drawer.getKind() == Drawer.Kind.TRASH && input) return false;
         releasePort(drawer, link, input);
@@ -507,7 +497,7 @@ public class Graph {
     }
 
     /** Detaches a node port from a drawer on the port's side; a buffer missing a side becomes an end again. */
-    public boolean unlinkDrawerPort(final UUID drawerId, final Drawer.Link link, final boolean input) {
+    public boolean unlinkDrawerPort(final Uuid drawerId, final Drawer.Link link, final boolean input) {
         final Drawer drawer = drawers.get(drawerId);
         if (drawer == null || !drawer.removePort(link, input)) return false;
         bumpVersion();
@@ -515,7 +505,7 @@ public class Graph {
     }
 
     /** Detaches a node port from a drawer; false when the drawer did not hold it. */
-    public boolean unlinkDrawer(final UUID drawerId, final Drawer.Link link) {
+    public boolean unlinkDrawer(final Uuid drawerId, final Drawer.Link link) {
         final Drawer drawer = drawers.get(drawerId);
         if (drawer == null || !drawer.removePort(
             link,
@@ -528,7 +518,7 @@ public class Graph {
 
     /** The drawer holding a node port in the given direction, or null when the port has none. */
     @Nullable
-    public Drawer drawerAt(final UUID nodeId, final int portIndex, final boolean input) {
+    public Drawer drawerAt(final Uuid nodeId, final int portIndex, final boolean input) {
         for (final Drawer drawer : drawers.values()) {
             if (drawer.holds(nodeId, portIndex, input)) return drawer;
         }
@@ -540,33 +530,6 @@ public class Graph {
         for (final Drawer other : drawers.values()) {
             if (other != keeper && other.holds(link.nodeId(), link.portIndex(), input)) other.removePort(link, input);
         }
-    }
-
-    /**
-     * The balance, solved on the calling thread when the solve version moved since the last ask.
-     * The legacy canvas reads this; the board solves through a {@code SolveService} instead.
-     */
-    public BalanceResult balance() {
-        if (solvedAt != solveVersion) {
-            Plan.getInstance()
-                .getSummary()
-                .recompute(this);
-            solvedAt = solveVersion;
-            boundaryView = null;
-        }
-        return Plan.getInstance()
-            .getSummary()
-            .balance();
-    }
-
-    /**
-     * Everything crossing the chart's boundary. Held from solve to solve because the canvas asks
-     * once per frame and the answer only moves when the chart does.
-     */
-    public List<BalanceView.Boundary> boundary() {
-        balance(); // drops a view built before the last edit
-        if (boundaryView == null) boundaryView = BalanceView.boundary(this);
-        return boundaryView;
     }
 
     public Collection<Node> getNodes() {
@@ -600,10 +563,10 @@ public class Graph {
      * wires took most of a minute to load.
      */
     public void addEdgesLoaded(final List<Edge> loaded) {
-        final Map<String, UUID> byPorts = new HashMap<>();
+        final Map<String, Uuid> byPorts = new HashMap<>();
         for (final Edge e : edges.values()) byPorts.put(ports(e), e.id);
         for (final Edge e : loaded) {
-            final UUID was = byPorts.put(ports(e), e.id);
+            final Uuid was = byPorts.put(ports(e), e.id);
             if (was != null) edges.remove(was);
             edges.put(e.id, e);
         }
@@ -667,7 +630,7 @@ public class Graph {
     }
 
     /** A drawer link read from a plan: the drawer, the port, and the port's side ({@link #linkDrawersLoaded}). */
-    public record LoadedLink(UUID drawer, Drawer.Link link, boolean input) {}
+    public record LoadedLink(Uuid drawer, Drawer.Link link, boolean input) {}
 
     private static String held(final Drawer.Kind kind, final Drawer.Link l) {
         return held(kind.linksInputs(), l);
@@ -677,7 +640,7 @@ public class Graph {
         return input + ">" + l.nodeId() + ">" + l.portIndex();
     }
 
-    public void removeEdge(final UUID id) {
+    public void removeEdge(final Uuid id) {
         edges.remove(id);
         bumpVersion();
     }
@@ -696,7 +659,7 @@ public class Graph {
     }
 
     /** Removes a group; a machine group's capacity is a solve constraint, so this moves the version. */
-    public void removeGroup(final UUID id) {
+    public void removeGroup(final Uuid id) {
         groups.remove(id);
         bumpVersion();
     }

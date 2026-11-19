@@ -1,7 +1,5 @@
 package com.gtnhplanner.ui.world;
 
-import java.util.UUID;
-
 import javax.annotation.Nullable;
 
 import net.minecraft.block.Block;
@@ -17,6 +15,7 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.ui.Planner;
@@ -41,7 +40,7 @@ public final class LinkPicker {
     @Nullable
     private Graph graph;
     @Nullable
-    private UUID nodeId;
+    private Uuid nodeId;
     private String name = "";
     @Nullable
     private ItemStack machine;
@@ -65,21 +64,21 @@ public final class LinkPicker {
      * Starts picking spots for a card, one for each of its {@code machines} (at least one); the planner closes on the
      * next tick.
      */
-    public static void start(final Graph graph, final UUID nodeId, final String name, @Nullable final ItemStack machine,
+    public static void start(final Graph graph, final Uuid nodeId, final String name, @Nullable final ItemStack machine,
         final StructureGhosts.Needs needs, final int machines) {
         begin(graph, nodeId, name, machine, needs);
         INSTANCE.max = Math.max(1, machines);
     }
 
     /** Picks up one of a card's placements, to put it down elsewhere as it is (its facing and size kept). */
-    static void move(final Graph graph, final UUID nodeId, final String name, @Nullable final ItemStack machine,
+    static void move(final Graph graph, final Uuid nodeId, final String name, @Nullable final ItemStack machine,
         final StructureGhosts.Needs needs, final int[] link) {
         begin(graph, nodeId, name, machine, needs);
         INSTANCE.moving = link.clone();
         INSTANCE.size = WorldLinks.size(link);
     }
 
-    private static void begin(final Graph graph, final UUID nodeId, final String name,
+    private static void begin(final Graph graph, final Uuid nodeId, final String name,
         @Nullable final ItemStack machine, final StructureGhosts.Needs needs) {
         // Placing is done looking at the plan over the world: it comes on, if it was off.
         if (!com.gtnhplanner.ui.PlannerSettings.arLens()) com.gtnhplanner.ui.PlannerSettings.setArLens(true);

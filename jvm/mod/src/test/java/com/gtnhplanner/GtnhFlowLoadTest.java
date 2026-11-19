@@ -7,10 +7,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.harness.GtnhFlowLoader;
@@ -153,7 +153,7 @@ class GtnhFlowLoadTest {
 
     /** Weakly-connected components of the loaded chart, by union-find over its edges. */
     private static int componentCount(final LoadedChart chart) {
-        final Map<UUID, UUID> parent = new HashMap<>();
+        final Map<Uuid, Uuid> parent = new HashMap<>();
         for (final Node machine : chart.machines()) {
             parent.put(machine.id, machine.id);
         }
@@ -161,15 +161,15 @@ class GtnhFlowLoadTest {
             .getEdges()) {
             parent.put(find(parent, edge.sourceNodeId), find(parent, edge.targetNodeId));
         }
-        final Set<UUID> roots = new HashSet<>();
-        for (final UUID id : parent.keySet()) {
+        final Set<Uuid> roots = new HashSet<>();
+        for (final Uuid id : parent.keySet()) {
             roots.add(find(parent, id));
         }
         return roots.size();
     }
 
-    private static UUID find(final Map<UUID, UUID> parent, final UUID id) {
-        UUID root = id;
+    private static Uuid find(final Map<Uuid, Uuid> parent, final Uuid id) {
+        Uuid root = id;
         while (!parent.get(root)
             .equals(root)) {
             root = parent.get(root);

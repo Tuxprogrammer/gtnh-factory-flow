@@ -10,12 +10,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.BoardGroup;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Graph;
@@ -199,7 +199,7 @@ class GroupsRoundTripTest {
             final BoardGroup b = back.boardGroups.get(n.group);
             assertTrue(n.x >= b.getX() && n.y >= b.getY(), b.getName());
         }
-        final UUID none = null;
+        final Uuid none = null;
         assertEquals(
             none,
             byName.get("Outer")

@@ -3,12 +3,12 @@ package com.gtnhplanner.ui.live;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import com.google.gson.JsonObject;
 import com.gtnhplanner.cloud.session.LiveDoc;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 
 /**
@@ -31,7 +31,7 @@ public final class PresenceOut {
     /** What was last sent: nothing yet when {@link #sentAt} is 0. */
     private boolean sentCursor;
     private int sentX, sentY;
-    private List<UUID> sentSelection = List.of();
+    private List<Uuid> sentSelection = List.of();
     private float sentViewX = Float.NaN, sentViewY, sentZoom;
     private long sentAt;
 
@@ -60,7 +60,7 @@ public final class PresenceOut {
      * Sends what changed, when the last went long enough ago: to {@code live} (null: the open plan is on this computer
      * only). A plan left for another is told the player has gone.
      */
-    public void update(@Nullable final LiveDoc live, final Graph graph, final Set<UUID> selection) {
+    public void update(@Nullable final LiveDoc live, final Graph graph, final Set<Uuid> selection) {
         if (live != doc) {
             leave();
             doc = live;
@@ -104,10 +104,10 @@ public final class PresenceOut {
         sentViewX = Float.NaN;
     }
 
-    private boolean sameSelection(final Set<UUID> selection) {
+    private boolean sameSelection(final Set<Uuid> selection) {
         if (selection.size() != sentSelection.size()) return false;
         int i = 0;
-        for (final UUID id : selection) if (!id.equals(sentSelection.get(i++))) return false;
+        for (final Uuid id : selection) if (!id.equals(sentSelection.get(i++))) return false;
         return true;
     }
 
@@ -121,9 +121,9 @@ public final class PresenceOut {
     }
 
     /** The plan's ids of the selected cards, drawers, notes and groups. */
-    private static List<String> planIds(final LiveDoc doc, final Graph g, final List<UUID> selection) {
+    private static List<String> planIds(final LiveDoc doc, final Graph g, final List<Uuid> selection) {
         final List<String> out = new ArrayList<>();
-        for (final UUID id : selection) {
+        for (final Uuid id : selection) {
             if (out.size() >= MAX_SELECTED) break;
             final String kind = g.nodes.containsKey(id) ? "node"
                 : g.drawers.containsKey(id) ? "drawer"

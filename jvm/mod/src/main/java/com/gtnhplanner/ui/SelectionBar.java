@@ -2,12 +2,12 @@ package com.gtnhplanner.ui;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import com.cleanroommc.modularui.api.widget.Interactable;
 import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
 import com.cleanroommc.modularui.theme.WidgetThemeEntry;
 import com.cleanroommc.modularui.widget.Widget;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.ui.canvas.BoardCanvas;
 import com.gtnhplanner.ui.theme.Hyb;
 
@@ -34,8 +34,8 @@ final class SelectionBar extends Widget<SelectionBar> implements Interactable {
     }
 
     /** The selected cards, when there are two or more that can share a machine; else empty. */
-    private List<UUID> combinable() {
-        final List<UUID> selected = new ArrayList<>(session.selection());
+    private List<Uuid> combinable() {
+        final List<Uuid> selected = new ArrayList<>(session.selection());
         return session.canCombine(selected) ? session.cardsIn(selected) : List.of();
     }
 
@@ -54,7 +54,7 @@ final class SelectionBar extends Widget<SelectionBar> implements Interactable {
         return tight > 0 ? "Combine " + cards : "Combine " + cards + " into one machine";
     }
 
-    private int combineW(final List<UUID> cards) {
+    private int combineW(final List<Uuid> cards) {
         return cards.isEmpty() ? 0 : Hyb.width(label(cards.size())) + 2 * PAD + ICON + 4;
     }
 
@@ -62,7 +62,7 @@ final class SelectionBar extends Widget<SelectionBar> implements Interactable {
         return groupable() ? tight > 1 ? 2 * PAD + ICON : Hyb.width(GROUP) + 2 * PAD + ICON + 4 : 0;
     }
 
-    private int barW(final List<UUID> cards) {
+    private int barW(final List<Uuid> cards) {
         final int cw = combineW(cards), gw = groupW();
         return cw + gw + (cw > 0 && gw > 0 ? GAP : 0);
     }
@@ -70,7 +70,7 @@ final class SelectionBar extends Widget<SelectionBar> implements Interactable {
     @Override
     public void onUpdate() {
         super.onUpdate();
-        final List<UUID> cards = combinable();
+        final List<Uuid> cards = combinable();
         tight = 0;
         while (tight < 2 && barW(cards) > canvas.getArea().width - 8) tight++;
         final int w = barW(cards);
@@ -103,7 +103,7 @@ final class SelectionBar extends Widget<SelectionBar> implements Interactable {
 
     @Override
     public void draw(final ModularGuiContext context, final WidgetThemeEntry<?> widgetTheme) {
-        final List<UUID> cards = combinable();
+        final List<Uuid> cards = combinable();
         final int cw = combineW(cards), gw = groupW();
         if (cw == 0 && gw == 0) return;
         final boolean hover = isHovering(), onGroup = hover && overGroupKey();

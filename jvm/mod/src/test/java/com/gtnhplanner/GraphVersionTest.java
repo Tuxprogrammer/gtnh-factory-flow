@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.balancer.BalanceResult;
+import com.gtnhplanner.data.flowchart.balancer.GraphBalance;
 import com.gtnhplanner.harness.GtnhFlowLoader;
 import com.gtnhplanner.harness.GtnhFlowLoader.LoadedChart;
 
@@ -46,19 +47,19 @@ class GraphVersionTest {
     void theGraphsOwnSolveIsKeptAcrossLayoutEditsAndRedoneAfterATouch() {
         final LoadedChart chart = GtnhFlowLoader.load("light_fuel");
         final Graph graph = chart.graph();
-        final BalanceResult first = graph.balance();
+        final BalanceResult first = GraphBalance.of(graph);
 
         graph.touchLayout();
-        assertSame(first, graph.balance(), "moving a card is not a reason to solve");
+        assertSame(first, GraphBalance.of(graph), "moving a card is not a reason to solve");
 
         chart.machine(1).machineConfig.setMachineCount(2);
         graph.touch();
-        final BalanceResult second = graph.balance();
+        final BalanceResult second = GraphBalance.of(graph);
         assertNotSame(first, second, "a pin edit is");
         assertEquals(
             2.0,
             second.nodeBalances()
-                .get(CoreIds.core(chart.machine(1).id))
+                .get(chart.machine(1).id)
                 .operations(),
             1e-6);
     }

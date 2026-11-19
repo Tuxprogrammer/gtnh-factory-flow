@@ -10,13 +10,13 @@ import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
 
 import com.gtnhplanner.core.base.Log;
+import com.gtnhplanner.core.base.Uuid;
 
 /**
  * The player's gtnhplanner.com account in this game: who is signed in and the session the site gave them, kept in
@@ -100,7 +100,7 @@ public final class Account {
     static String deviceId() {
         String id = load().getProperty(DEVICE);
         if (id == null) {
-            id = "gtnhplanner-" + UUID.randomUUID();
+            id = "gtnhplanner-" + Uuid.randomUUID();
             load().setProperty(DEVICE, id);
             save();
         }

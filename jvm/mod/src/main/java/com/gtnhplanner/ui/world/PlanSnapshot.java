@@ -1,13 +1,13 @@
 package com.gtnhplanner.ui.world;
 
 import java.util.List;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.ui.card.StructureArt;
 
@@ -23,13 +23,13 @@ import com.gtnhplanner.ui.card.StructureArt;
  * @param pinList      the cards on the plan's pin list, in the order they were pinned
  */
 public record PlanSnapshot(Graph graph, String planName, long graphVersion, List<Card> cards, List<Box> drawers,
-    List<Line> wires, float viewX, float viewY, com.gtnhplanner.ui.theme.Fmt.RateUnit rateUnit, List<UUID> pinList,
+    List<Line> wires, float viewX, float viewY, com.gtnhplanner.ui.theme.Fmt.RateUnit rateUnit, List<Uuid> pinList,
     List<GroupBox> groups) {
 
     /** A plan with no groups. */
     public PlanSnapshot(final Graph graph, final String planName, final long graphVersion, final List<Card> cards,
         final List<Box> drawers, final List<Line> wires, final float viewX, final float viewY,
-        final com.gtnhplanner.ui.theme.Fmt.RateUnit rateUnit, final List<UUID> pinList) {
+        final com.gtnhplanner.ui.theme.Fmt.RateUnit rateUnit, final List<Uuid> pinList) {
         this(graph, planName, graphVersion, cards, drawers, wires, viewX, viewY, rateUnit, pinList, List.of());
     }
 
@@ -37,7 +37,7 @@ public record PlanSnapshot(Graph graph, String planName, long graphVersion, List
      * A group on show (docs/design/groups.md): an open one's frame, or a collapsed one's summary card, in its colour;
      * outer groups first.
      */
-    public record GroupBox(UUID id, float x, float y, float w, float h, int color, boolean collapsed) {}
+    public record GroupBox(Uuid id, float x, float y, float w, float h, int color, boolean collapsed) {}
 
     /**
      * What flows through a port or drawer, per second; {@code why}, the tone the row is lit in when an Up to card's
@@ -68,7 +68,7 @@ public record PlanSnapshot(Graph graph, String planName, long graphVersion, List
      *                  set); null when the board had none to give
      * @param foot      the bar along its foot (an Up to card's reason, an Exactly card's FORCED IN); null for none
      */
-    public record Card(UUID id, List<UUID> nodeIds, float x, float y, float w, float h, String name,
+    public record Card(Uuid id, List<Uuid> nodeIds, float x, float y, float w, float h, String name,
         @Nullable ItemStack machine, @Nullable StructureArt.Art art, int tint, double machines, boolean pinned,
         List<Flow> inputs, List<Flow> outputs, double euPerTick, double madeEuPerTick, List<int[]> links, String tier,
         int amps, @Nullable ItemStack circuit, List<Setting> settings,
@@ -83,7 +83,7 @@ public record PlanSnapshot(Graph graph, String planName, long graphVersion, List
     public record Setting(String label, String value, @Nullable ItemStack icon, boolean warn, boolean reading) {}
 
     /** A drawer: its resource, kind (a source supplies, the rest take) and rate. */
-    public record Box(UUID id, float x, float y, float w, float h, String label, @Nullable ItemStack item,
+    public record Box(Uuid id, float x, float y, float w, float h, String label, @Nullable ItemStack item,
         @Nullable FluidStack fluid, boolean power, com.gtnhplanner.data.flowchart.Drawer.Kind kind, double rate) {
 
         public boolean source() {
@@ -99,8 +99,8 @@ public record PlanSnapshot(Graph graph, String planName, long graphVersion, List
      * A wire: its route on the board, colour and width; {@code flowing} false for one nothing moves along. Between two
      * cards, {@code from} and {@code to} are their recipes' nodes; a drawer's wire has neither.
      */
-    public record Line(List<int[]> path, int color, float width, boolean flowing, String resource, @Nullable UUID from,
-        @Nullable UUID to) {}
+    public record Line(List<int[]> path, int color, float width, boolean flowing, String resource, @Nullable Uuid from,
+        @Nullable Uuid to) {}
 
     private static volatile PlanSnapshot latest;
     /** Where the board's view was last centred, kept apart so panning the board needs no new snapshot. */
@@ -150,11 +150,11 @@ public record PlanSnapshot(Graph graph, String planName, long graphVersion, List
 
     /** The card holding a node (a recipe on a shared machine is on its host's card), or null. */
     @Nullable
-    public Card cardOf(final UUID nodeId) {
+    public Card cardOf(final Uuid nodeId) {
         // Asked for every placed machine every tick: the snapshot's cards by node, made once per snapshot.
         if (indexed != this) {
-            final java.util.Map<UUID, Card> by = new java.util.HashMap<>();
-            for (final Card c : cards) for (final UUID id : c.nodeIds()) by.putIfAbsent(id, c);
+            final java.util.Map<Uuid, Card> by = new java.util.HashMap<>();
+            for (final Card c : cards) for (final Uuid id : c.nodeIds()) by.putIfAbsent(id, c);
             byNode = by;
             indexed = this;
         }
@@ -163,23 +163,23 @@ public record PlanSnapshot(Graph graph, String planName, long graphVersion, List
 
     /** The snapshot {@link #byNode} was made for. */
     private static PlanSnapshot indexed;
-    private static java.util.Map<UUID, Card> byNode;
+    private static java.util.Map<Uuid, Card> byNode;
 
     /**
      * Where in {@link #wires} the wires leaving a node are, in order; empty for none. Made once per snapshot: the world
      * asks for the wires among the machines near the player every frame.
      */
-    public int[] wiresFrom(final UUID nodeId) {
+    public int[] wiresFrom(final Uuid nodeId) {
         if (wiresIndexed != this) {
-            final java.util.Map<UUID, List<Integer>> by = new java.util.HashMap<>();
+            final java.util.Map<Uuid, List<Integer>> by = new java.util.HashMap<>();
             for (int i = 0; i < wires.size(); i++) {
-                final UUID from = wires.get(i)
+                final Uuid from = wires.get(i)
                     .from();
                 if (from != null) by.computeIfAbsent(from, k -> new java.util.ArrayList<>())
                     .add(i);
             }
-            final java.util.Map<UUID, int[]> made = new java.util.HashMap<>();
-            for (final java.util.Map.Entry<UUID, List<Integer>> e : by.entrySet()) made.put(
+            final java.util.Map<Uuid, int[]> made = new java.util.HashMap<>();
+            for (final java.util.Map.Entry<Uuid, List<Integer>> e : by.entrySet()) made.put(
                 e.getKey(),
                 e.getValue()
                     .stream()
@@ -193,5 +193,5 @@ public record PlanSnapshot(Graph graph, String planName, long graphVersion, List
 
     private static final int[] NO_WIRES = {};
     private static PlanSnapshot wiresIndexed;
-    private static java.util.Map<UUID, int[]> wiresByNode;
+    private static java.util.Map<Uuid, int[]> wiresByNode;
 }

@@ -4,15 +4,11 @@ import java.util.Random;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.UUID;
 
-import org.jetbrains.annotations.NotNull;
+import javax.annotation.Nonnull;
 
-import lombok.Getter;
-import lombok.Setter;
+import com.gtnhplanner.core.base.Uuid;
 
-@Getter
-@Setter
 public class Group extends GraphData {
 
     public static final int GROUP_MIN_W = 300;
@@ -32,20 +28,20 @@ public class Group extends GraphData {
      * LinkedTreeMap, so the declared type here is what makes a reloaded group iterate like a
      * built one.
      */
-    @NotNull
-    private final SortedMap<UUID, GraphData> children = new TreeMap<>();
-    @NotNull
-    private final Set<UUID> nodeIds = new java.util.HashSet<>();
+    @Nonnull
+    private final SortedMap<Uuid, GraphData> children = new TreeMap<>();
+    @Nonnull
+    private final Set<Uuid> nodeIds = new java.util.HashSet<>();
 
     public Group() {
-        super(UUID.randomUUID());
+        super(Uuid.randomUUID());
     }
 
     /**
      * A group with a known id (one a shared plan's card gives it), coloured by its id: read again, as a shared plan is
      * on every change, it looks the same.
      */
-    protected Group(final UUID id) {
+    protected Group(final Uuid id) {
         super(id);
         final Random byId = new Random(id.getMostSignificantBits() ^ id.getLeastSignificantBits());
         color = 0x7F000000 | (int) (byId.nextFloat() * 255) << 16
@@ -63,5 +59,61 @@ public class Group extends GraphData {
         final int r = (int) (colorRandom.nextFloat() * 255), g = (int) (colorRandom.nextFloat() * 255);
         final int b = (int) (colorRandom.nextFloat() * 255);
         return 0x7F000000 | r << 16 | g << 8 | b;
+    }
+
+    public int getWidth() {
+        return this.width;
+    }
+
+    public void setWidth(final int width) {
+        this.width = width;
+    }
+
+    public int getHeight() {
+        return this.height;
+    }
+
+    public void setHeight(final int height) {
+        this.height = height;
+    }
+
+    public int getColor() {
+        return this.color;
+    }
+
+    public void setColor(final int color) {
+        this.color = color;
+    }
+
+    public boolean isCollapsed() {
+        return this.collapsed;
+    }
+
+    public void setCollapsed(final boolean collapsed) {
+        this.collapsed = collapsed;
+    }
+
+    public boolean isClampNodes() {
+        return this.clampNodes;
+    }
+
+    public void setClampNodes(final boolean clampNodes) {
+        this.clampNodes = clampNodes;
+    }
+
+    public boolean isCoverChildren() {
+        return this.coverChildren;
+    }
+
+    public void setCoverChildren(final boolean coverChildren) {
+        this.coverChildren = coverChildren;
+    }
+
+    public SortedMap<Uuid, GraphData> getChildren() {
+        return this.children;
+    }
+
+    public Set<Uuid> getNodeIds() {
+        return this.nodeIds;
     }
 }

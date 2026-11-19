@@ -15,6 +15,9 @@ conformance/
   machines/          machine, bee and crop goldens (gzip, one JSON object per line); machine-table reference coefficients
   live/              live-plan op vectors
   tasks/             task order-key vectors
+  core-base/         the kernel's value vectors: number-text (JavaScript's spelling of doubles) and uuid (java.util.UUID)
+  schema/            JSON Schema for the plan, blueprint payload, dataset and solver data, generated from the Zod schemas
+  plans/             plan files both sides read: valid/, invalid/, website/ (what the website writes), mod/ (what the mod writes)
   pending/           files that disagree with a copy above and wait for a decision; no suite reads them
 ```
 

@@ -45,10 +45,10 @@
       "generator": "website/: GTNH_WRITE_PLANS=1 npx vitest run plan-fixtures; mod/: ./gradlew :mod:test --tests '*PlanSchemaTest*' -PwritePlans (from jvm/); valid/ and invalid/ are hand-written; then node tools/conformance/manifest.mjs --write"
     },
     "schema": {
-      "specifies": "JSON Schema (draft 2020-12) for the data that crosses between the website and the mod: plan.schema.json (the plan file), board-selection.schema.json (a blueprint payload), dataset.schema.json and dataset-manifest.schema.json (the recipe dataset). Generated from the website's Zod schemas, which stay the source of truth; overlays add the limits Zod can only state as code. README.md in the directory says what the schema cannot express.",
+      "specifies": "JSON Schema (draft 2020-12) for the data that crosses between the website and the mod: plan.schema.json (the plan file), board-selection.schema.json (a blueprint payload), dataset.schema.json and dataset-manifest.schema.json (the recipe dataset), solve-input.schema.json (the solver's input, as the corpus holds it) and solve-digest.schema.json (the solver's answer as both engines digest it, as the goldens and Up to plans hold it). Generated from the website's Zod schemas, which stay the source of truth; overlays add the limits Zod can only state as code. README.md in the directory says what the schema cannot express.",
       "readers": [
-        "website: src/test-support/schema-drift.test.ts (the files are what tools/conformance/schema/build.ts generates today)",
-        "mod: cloud/map/PlanSchemaTest (the mod's exported plans and every fixture plan validate against plan.schema.json)"
+        "website: src/test-support/schema-drift.test.ts (the files are what tools/conformance/schema/build.ts generates today); solver-contract.test.ts (corpus, goldens, Up to plans and board scenarios through the Zod schemas)",
+        "mod: cloud/map/PlanSchemaTest (the mod's exported plans and every fixture plan validate against plan.schema.json); cloud/map/SolverSchemaTest (corpus inputs, goldens, Up to plans and board scenarios validate against the solver schemas)"
       ],
       "generator": "npx tsx tools/conformance/schema/write.ts (check with --check), which also rewrites this manifest"
     },

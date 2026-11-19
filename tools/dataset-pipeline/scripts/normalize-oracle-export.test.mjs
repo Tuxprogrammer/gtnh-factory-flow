@@ -940,3 +940,34 @@ describe("Thaumcraft arcane crafting", () => {
     expect(itemSlots.map((slot) => [slot.x, slot.y])).toEqual([[48, 33], [75, 33]]);
   });
 });
+
+describe("Thaumcraft recipes with no output item", () => {
+  const aspect = (tag, amount) => ({ kind: "aspect", id: `thaumcraft:aspect:${tag}`, tag, amount, displayName: tag });
+  const raw = (id, fields) => ({
+    id, type: "infusion", className: "thaumcraft.api.crafting.InfusionRecipe", research: "TEST",
+    aspects: [aspect("auram", 16)], durationTicks: 770, ...fields,
+  });
+
+  it("drops infusions whose result is an NBT tag or an enchantment, and keeps item results", () => {
+    const { recipes } = normalize({
+      domains: [{ id: "thaumcraft", recipes: [
+        // Goggles on a helm: the result is the central item with a tag, which a plan cannot tell apart.
+        raw("tagged", {
+          centralInput: item("taintedmagic:itemvoidfortresshelmet@32767", 1, "Void Fortress Helm"),
+          components: [item("minecraft:slime_ball", 1, "Slimeball")],
+        }),
+        // An enchantment infusion has no central item and no output item.
+        raw("enchant", {
+          className: "thaumcraft.api.crafting.InfusionEnchantmentRecipe",
+          components: [item("minecraft:iron_ingot", 1, "Iron Ingot")],
+        }),
+        raw("plain", {
+          output: item("thaumcraft:itemresource@16", 1, "Thaumium Ingot"),
+          centralInput: item("minecraft:iron_ingot", 1, "Iron Ingot"),
+          components: [item("minecraft:slime_ball", 1, "Slimeball")],
+        }),
+      ] }],
+    });
+    expect(recipes.map((recipe) => recipe.outputs[0].displayName)).toEqual(["Thaumium Ingot"]);
+  });
+});

@@ -226,7 +226,8 @@ describe("the mod's top bar", () => {
     expect(rows.slice(0, 2)).toEqual(["Take the tour", "Controls and shortcuts"]);
     fireEvent.click(screen.getByText("Controls and shortcuts"));
     expect(screen.getByRole("dialog", { name: "How the board works" })).toBeTruthy();
-    expect(document.querySelectorAll(".mc-controls-row")).toHaveLength(19);
+    expect(document.querySelectorAll(".mc-controls-row")).toHaveLength(20);
+    expect(screen.getByText("Blue comes into the plan; orange leaves it")).toBeTruthy();
   });
 
   it("the Help menu's Download the mod opens the mod's newest release", () => {

@@ -30,6 +30,13 @@ export function portTip(p: CleanPortView): TipSpec {
   const notes: NonNullable<TipSpec["notes"]> = [];
   const choices = p.port.resource?.alternatives?.length ?? 0;
   if (p.choice) notes.push({ text: `Takes any of ${choices} items.`, tone: "muted" });
+  // A free end (the row's data-open tint in clean.css): which way it crosses the plan's edge.
+  if (!p.wired && !p.zero) {
+    const text = input
+      ? "Not wired: comes into the plan (blue)."
+      : "Not wired: leaves the plan (orange).";
+    notes.push({ text, tone: "muted" });
+  }
   return {
     id: `${p.nodeId}|port|${p.handleId}`,
     title: p.name,

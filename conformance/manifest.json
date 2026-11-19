@@ -62,12 +62,12 @@
       "generator": "website/: GTNH_WRITE_PLANS=1 npx vitest run plan-fixtures; mod/: ./gradlew :mod:test --tests '*PlanSchemaTest*' -PwritePlans (from jvm/); valid/ and invalid/ are hand-written; then node tools/conformance/manifest.mjs --write"
     },
     "power": {
-      "specifies": "The power sources as the website computes them: every source with its settings and option labels, its model (EU/t, flows with their alternatives, stats, warnings, the Amps tier) at its defaults and with each setting moved alone, the turbine flow check at several flow shares, and the voltage-tier boundaries. One JSON object per line, gzip.",
+      "specifies": "The power sources as the website computes them: every source with its settings and option labels, its model (EU/t, flows with their alternatives, stats, warnings, the Amps tier) at its defaults and with each setting moved alone, the turbine flow check at several flow shares, and the voltage-tier boundaries. website-test-inputs.jsonl.gz is every (source, stored settings) pair the website's own power tests build a settings reader for, deduplicated: inputs only, for the shadow to replay through both paths. rocket-exact.json is the Large Rocket Engine to the last bit as the JVM computes it (fuel, fuel rate, boost, EU/t and air bits), for a target whose cube root differs in the last bit. The goldens and inputs files are one JSON object per line, gzip.",
       "readers": [
-        "website: src/lib/power/power-goldens.test.ts",
-        "core-power: power/PowerGoldensTest"
+        "website: src/lib/power/power-goldens.test.ts, src/lib/power/power-core.test.ts",
+        "core-power: power/PowerGoldensTest, power/RocketExactTest"
       ],
-      "generator": "npx tsx tools/audits/export-mod-power-goldens.ts --out conformance/power/power-goldens.jsonl.gz (records in src/lib/power/golden-records.ts), then node tools/conformance/manifest.mjs --write"
+      "generator": "npx tsx tools/audits/export-mod-power-goldens.ts --out conformance/power/power-goldens.jsonl.gz (records in src/lib/power/golden-records.ts), then node tools/conformance/manifest.mjs --write; website-test-inputs: npx vitest run src/lib/power/power-inputs.local.test.ts --config vitest.local.config.ts (needs node tools/tokens/generate.mjs first), then node tools/conformance/manifest.mjs --write; rocket-exact: ./gradlew :core-power:test --tests '*RocketExactTest*' -PwriteVectors (from jvm/), then node tools/conformance/manifest.mjs --write"
     },
     "schema": {
       "specifies": "JSON Schema (draft 2020-12) for the data that crosses between the website and the mod: plan.schema.json (the plan file), board-selection.schema.json (a blueprint payload), dataset.schema.json and dataset-manifest.schema.json (the recipe dataset), solve-input.schema.json (the solver's input, as the corpus holds it) and solve-digest.schema.json (the solver's answer as both engines digest it, as the goldens and Up to plans hold it). Generated from the website's Zod schemas, which stay the source of truth; overlays add the limits Zod can only state as code. README.md in the directory says what the schema cannot express.",
@@ -361,6 +361,16 @@
       "area": "power",
       "bytes": 268201,
       "sha256": "14dbdf7318bd43c48c9e61dd514a68fec7dfbb695b00d268934b612941d4ebab"
+    },
+    "power/rocket-exact.json": {
+      "area": "power",
+      "bytes": 17050,
+      "sha256": "ec6f28fec05a4a8edad540b3740c0d0d2d5e9f61feb9a63131790926e06b91b6"
+    },
+    "power/website-test-inputs.jsonl.gz": {
+      "area": "power",
+      "bytes": 60556,
+      "sha256": "deb0a10fceea16c7608e733e9168b84019fc2967624abe791d37da0374cbaaf5"
     },
     "schema/board-selection.schema.json": {
       "area": "schema",

@@ -130,16 +130,12 @@ export function buildMachineList(
     // Parallel processing affects draw, never the number of physical machines.
     const parallel = Math.max(1, node.parallel);
     const runningCount = solving || usage > 0 ? count : 0;
-    // Peak is every machine the card has drawing at once: a plain card's set count (Up to, Exactly) is those machines,
-    // as its power row bills it, and one with no count is the whole machines its solved fraction needs; the solved
-    // count is only what runs, which is the average. A crop card's pin is seeds, and a shared card's power row bills
-    // each recipe at its solved machines, so both keep the solved count.
-    const pinned = solving && !crop && sections.length === 1 && pinRuleOf(node, recipe) !== "any";
-    const peakCount = peakCountOf(
-      runningCount,
-      pinned ? node.solvePin : undefined,
-      !solving || !!crop || sections.length !== 1,
-    );
+    // Peak is every machine the card has drawing at once: a card's set count (Up to, Exactly) is those machines, as its
+    // power row bills it, and one with no count is the whole machines its solved fraction needs, a shared card's pool
+    // as one; the solved count is only what runs, which is the average. A crop card's pin is seeds, so it keeps the
+    // solved count.
+    const pinned = solving && !crop && pinRuleOf(node, recipe) !== "any";
+    const peakCount = peakCountOf(runningCount, pinned ? node.solvePin : undefined, !solving || !!crop);
     const report = sections[0]?.report;
     const steam = sections[0]?.steam;
     const peakDraw = Math.max(0, ...sections.map((part) => part.report?.drawEuT ?? 0));

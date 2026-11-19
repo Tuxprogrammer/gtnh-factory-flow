@@ -1,0 +1,317 @@
+{
+ "record": "note",
+ "set": "look",
+ "measure": "none",
+ "cases": [
+  {
+   "name": "white",
+   "input": {
+    "tag": "white"
+   },
+   "view": {
+    "paper": "#F4F4F4",
+    "band": "#E3E3E3",
+    "fold": "#C3C3C3",
+    "edge": "#D2D2D2",
+    "ink": "#1E1E22"
+   }
+  },
+  {
+   "name": "orange",
+   "input": {
+    "tag": "orange"
+   },
+   "view": {
+    "paper": "#FBA056",
+    "band": "#E99550",
+    "fold": "#C98045",
+    "edge": "#D88A4A",
+    "ink": "#1E1E22"
+   }
+  },
+  {
+   "name": "magenta",
+   "input": {
+    "tag": "magenta"
+   },
+   "view": {
+    "paper": "#D57ACE",
+    "band": "#C671C0",
+    "fold": "#AA62A5",
+    "edge": "#B769B1",
+    "ink": "#F2F3F7"
+   }
+  },
+  {
+   "name": "light_blue",
+   "input": {
+    "tag": "light_blue"
+   },
+   "view": {
+    "paper": "#6BC6E3",
+    "band": "#64B8D3",
+    "fold": "#569EB6",
+    "edge": "#5CAAC3",
+    "ink": "#1E1E22"
+   }
+  },
+  {
+   "name": "yellow",
+   "input": {
+    "tag": "yellow"
+   },
+   "view": {
+    "paper": "#FEE26E",
+    "band": "#ECD266",
+    "fold": "#CBB558",
+    "edge": "#DAC25F",
+    "ink": "#1E1E22"
+   }
+  },
+  {
+   "name": "lime",
+   "input": {
+    "tag": "lime"
+   },
+   "view": {
+    "paper": "#A0D557",
+    "band": "#95C651",
+    "fold": "#80AA46",
+    "edge": "#8AB74B",
+    "ink": "#1E1E22"
+   }
+  },
+  {
+   "name": "pink",
+   "input": {
+    "tag": "pink"
+   },
+   "view": {
+    "paper": "#F6A8BF",
+    "band": "#E59CB2",
+    "fold": "#C58699",
+    "edge": "#D490A4",
+    "ink": "#1E1E22"
+   }
+  },
+  {
+   "name": "gray",
+   "input": {
+    "tag": "gray"
+   },
+   "view": {
+    "paper": "#757B7D",
+    "band": "#6D7274",
+    "fold": "#5E6264",
+    "edge": "#656A6C",
+    "ink": "#F2F3F7"
+   }
+  },
+  {
+   "name": "light_gray",
+   "input": {
+    "tag": "light_gray"
+   },
+   "view": {
+    "paper": "#B6B6B1",
+    "band": "#A9A9A5",
+    "fold": "#92928E",
+    "edge": "#9D9D98",
+    "ink": "#1E1E22"
+   }
+  },
+  {
+   "name": "cyan",
+   "input": {
+    "tag": "cyan"
+   },
+   "view": {
+    "paper": "#50B5B5",
+    "band": "#4AA8A8",
+    "fold": "#409191",
+    "edge": "#459C9C",
+    "ink": "#1E1E22"
+   }
+  },
+  {
+   "name": "purple",
+   "input": {
+    "tag": "purple"
+   },
+   "view": {
+    "paper": "#A765CA",
+    "band": "#9B5EBC",
+    "fold": "#8651A2",
+    "edge": "#9057AE",
+    "ink": "#F2F3F7"
+   }
+  },
+  {
+   "name": "blue",
+   "input": {
+    "tag": "blue"
+   },
+   "view": {
+    "paper": "#6D73BF",
+    "band": "#656BB2",
+    "fold": "#575C99",
+    "edge": "#5E63A4",
+    "ink": "#F2F3F7"
+   }
+  },
+  {
+   "name": "brown",
+   "input": {
+    "tag": "brown"
+   },
+   "view": {
+    "paper": "#A27F65",
+    "band": "#97765E",
+    "fold": "#826651",
+    "edge": "#8B6D57",
+    "ink": "#F2F3F7"
+   }
+  },
+  {
+   "name": "green",
+   "input": {
+    "tag": "green"
+   },
+   "view": {
+    "paper": "#869D50",
+    "band": "#7D924A",
+    "fold": "#6B7E40",
+    "edge": "#738745",
+    "ink": "#F2F3F7"
+   }
+  },
+  {
+   "name": "red",
+   "input": {
+    "tag": "red"
+   },
+   "view": {
+    "paper": "#C4625C",
+    "band": "#B65B56",
+    "fold": "#9D4E4A",
+    "edge": "#A9544F",
+    "ink": "#F2F3F7"
+   }
+  },
+  {
+   "name": "black",
+   "input": {
+    "tag": "black"
+   },
+   "view": {
+    "paper": "#565659",
+    "band": "#505053",
+    "fold": "#454547",
+    "edge": "#4A4A4D",
+    "ink": "#F2F3F7"
+   }
+  },
+  {
+   "name": "scarlet",
+   "input": {
+    "tag": "scarlet"
+   },
+   "view": {
+    "paper": "#F37373",
+    "band": "#E26B6B",
+    "fold": "#C25C5C",
+    "edge": "#D16363",
+    "ink": "#F2F3F7"
+   }
+  },
+  {
+   "name": "amber",
+   "input": {
+    "tag": "amber"
+   },
+   "view": {
+    "paper": "#E8BC6B",
+    "band": "#D8AF64",
+    "fold": "#BA9656",
+    "edge": "#C8A25C",
+    "ink": "#1E1E22"
+   }
+  },
+  {
+   "name": "emerald",
+   "input": {
+    "tag": "emerald"
+   },
+   "view": {
+    "paper": "#4CCBA1",
+    "band": "#47BD96",
+    "fold": "#3DA281",
+    "edge": "#41AF8A",
+    "ink": "#1E1E22"
+   }
+  },
+  {
+   "name": "azure",
+   "input": {
+    "tag": "azure"
+   },
+   "view": {
+    "paper": "#6CA1F8",
+    "band": "#6496E7",
+    "fold": "#5681C6",
+    "edge": "#5D8AD5",
+    "ink": "#1E1E22"
+   }
+  },
+  {
+   "name": "steel",
+   "input": {
+    "tag": "steel"
+   },
+   "view": {
+    "paper": "#6D6E74",
+    "band": "#65666C",
+    "fold": "#57585D",
+    "edge": "#5E5F64",
+    "ink": "#F2F3F7"
+   }
+  },
+  {
+   "name": "onyx",
+   "input": {
+    "tag": "onyx"
+   },
+   "view": {
+    "paper": "#64656A",
+    "band": "#5D5E63",
+    "fold": "#505155",
+    "edge": "#56575B",
+    "ink": "#F2F3F7"
+   }
+  },
+  {
+   "name": "no tag",
+   "input": {},
+   "view": {
+    "paper": "#FEE26E",
+    "band": "#ECD266",
+    "fold": "#CBB558",
+    "edge": "#DAC25F",
+    "ink": "#1E1E22"
+   }
+  },
+  {
+   "name": "no-such-colour",
+   "input": {
+    "tag": "no-such-colour"
+   },
+   "view": {
+    "paper": "#FEE26E",
+    "band": "#ECD266",
+    "fold": "#CBB558",
+    "edge": "#DAC25F",
+    "ink": "#1E1E22"
+   }
+  }
+ ]
+}

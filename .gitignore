@@ -77,6 +77,7 @@ tools/parity/out/
 
 # the live service bundle (npm run build:live)
 /dist-live/
-# the compiled core (tools/copy-core.mjs) and its generated declarations (tools/web-core/gen-types.mjs)
+# the compiled core (tools/copy-core.mjs) and its generated declarations (tools/web-core/gen-types.mjs, gen-records.mjs)
 public/core/
 src/lib/core/exports.generated.ts
+src/lib/core/records.generated.ts

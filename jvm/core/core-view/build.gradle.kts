@@ -10,9 +10,10 @@ dependencies {
     // The card logic reads power sources and models (core-power), the machine maths' result (core-machines) and the
     // core's id type (core-base); core-power brings the other two.
     "api"(project(":core-power"))
-    // javax.annotation.Nullable, as the mod uses it; annotations only, not shipped.
+    // javax.annotation.Nullable, as the mod uses it; annotations only, not shipped. The tests read it by reflection
+    // (the view record conventions), so it is on their runtime path.
     compileOnly("com.google.code.findbugs:jsr305:3.0.2")
-    testCompileOnly("com.google.code.findbugs:jsr305:3.0.2")
+    testImplementation("com.google.code.findbugs:jsr305:3.0.2")
     // Gson as Minecraft 1.7.10 ships it, to read tokens.json in the test.
     testImplementation("com.google.code.gson:gson:2.2.4")
 }

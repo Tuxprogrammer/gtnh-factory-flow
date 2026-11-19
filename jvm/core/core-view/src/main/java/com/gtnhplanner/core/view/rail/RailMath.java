@@ -11,7 +11,7 @@ import com.gtnhplanner.machines.web.Tiers;
 /**
  * The overview rail's arithmetic: what a rate box accepts, how a spare's shares move, the wheel's step, the machine
  * count a card is billed at its peak, and the power dial. Pure and plain: the website's {@code rail-math.ts} and the
- * dial of {@code rate-unit.ts}, with the vectors in {@code conformance/view/rail-math.json} run by both.
+ * dial of {@code rate-unit.ts}, with the vectors in {@code conformance/view/rail/math.json} run by both.
  */
 public final class RailMath {
 
@@ -147,8 +147,8 @@ public final class RailMath {
     /**
      * The machines a card is billed for at its peak power. A card with a count set is billed that count, or what the
      * solve needs when that is more. A card with none is billed whole machines, since a fractional machine cannot be
-     * built. A crop card's count and a shared machine's pool ({@code keepSolved}) keep the solved figure: neither is a
-     * whole machine of its own. The average draw stays the solved fraction.
+     * built. A shared machine's pool is billed the same way, as one card. A crop card's count ({@code keepSolved}) keeps
+     * the solved figure: its pin is seeds, not machines. The average draw stays the solved fraction.
      */
     public static double peakCount(final double solved, @Nullable final Double set, final boolean keepSolved) {
         if (set != null && set > 0) return Math.max(set, solved);

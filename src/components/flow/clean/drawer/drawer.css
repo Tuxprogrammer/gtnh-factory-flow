@@ -506,19 +506,7 @@
   left: 16px;
 }
 
-/* ---- A buffer: no rule, so no rule key or rate box; its row centres in the body ------------------------------------ */
-
-/* A buffer passes what its users take and asks for nothing, so the row has the body to itself: the icon and the
-   words (figure over name, 23 px) centre on the body's middle (abs 27.5). */
-.cd[data-kind="buffer"] .cd-icon {
-  top: 11px;
-}
-.cd[data-kind="buffer"] .cd-num {
-  top: 9px;
-}
-.cd[data-kind="buffer"] .cd-name {
-  top: 22px;
-}
+/* A buffer carries a rule key and a rate box like a product, so its row sits where a product's does. */
 
 /* Its spill: what its makers force out beyond what its users take, on a Forced tile (the card's flat tint, edge and
    colours of an output's) down the drawer's left, its figure over "Forced out". The drawer is a cell wider while it has

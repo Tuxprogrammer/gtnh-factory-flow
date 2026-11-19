@@ -71,6 +71,15 @@ public record DrawerReadout(Map<Uuid, Double> rates, Set<Uuid> unmet, List<Short
         return 0;
     }
 
+    /** What every maker of a buffer forces out beyond what its users take, summed, units per second; 0 when nothing. */
+    public double spillTotal(final Uuid drawer) {
+        final List<External> list = spills == null ? null : spills.get(drawer);
+        if (list == null) return 0;
+        double sum = 0;
+        for (final External e : list) sum += e.ratePerSecond();
+        return sum;
+    }
+
     /** What a buffer banks, units per second; 0 when it banks nothing. */
     public double bankedRate(final Uuid drawer) {
         return banked == null ? 0 : banked.getOrDefault(drawer, 0.0);

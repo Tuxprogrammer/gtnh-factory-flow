@@ -1,0 +1,996 @@
+{
+ "record": "group",
+ "set": "cases",
+ "measure": "none",
+ "cases": [
+  {
+   "name": "empty group",
+   "input": {
+    "members": []
+   },
+   "view": {
+    "machines": 0,
+    "euT": 0,
+    "inputs": [],
+    "outputs": [],
+    "rows": 1
+   }
+  },
+  {
+   "name": "one machine, nothing moving",
+   "input": {
+    "members": [
+     {
+      "host": "a",
+      "builds": 1,
+      "euT": 30,
+      "flows": []
+     }
+    ]
+   },
+   "view": {
+    "machines": 1,
+    "euT": 30,
+    "inputs": [],
+    "outputs": [],
+    "rows": 1
+   }
+  },
+  {
+   "name": "one machine with an input and an output",
+   "input": {
+    "members": [
+     {
+      "host": "a",
+      "builds": 2,
+      "euT": 60,
+      "flows": [
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 4
+       },
+       {
+        "key": "item:gear",
+        "name": "Iron Gear",
+        "perSecond": -2
+       }
+      ]
+     }
+    ]
+   },
+   "view": {
+    "machines": 2,
+    "euT": 60,
+    "inputs": [
+     {
+      "key": "item:iron",
+      "name": "Iron Ingot",
+      "perSecond": 4
+     }
+    ],
+    "outputs": [
+     {
+      "key": "item:gear",
+      "name": "Iron Gear",
+      "perSecond": 2
+     }
+    ],
+    "rows": 1
+   }
+  },
+  {
+   "name": "a fractional count rounds up",
+   "input": {
+    "members": [
+     {
+      "host": "a",
+      "builds": 1.2,
+      "euT": 10,
+      "flows": []
+     },
+     {
+      "host": "b",
+      "builds": 0.4,
+      "euT": 4,
+      "flows": []
+     }
+    ]
+   },
+   "view": {
+    "machines": 3,
+    "euT": 14,
+    "inputs": [],
+    "outputs": [],
+    "rows": 1
+   }
+  },
+  {
+   "name": "a count a hair over a whole number reads as the whole number",
+   "input": {
+    "members": [
+     {
+      "host": "a",
+      "builds": 3.0000000001,
+      "euT": 0,
+      "flows": []
+     }
+    ]
+   },
+   "view": {
+    "machines": 3,
+    "euT": 0,
+    "inputs": [],
+    "outputs": [],
+    "rows": 1
+   }
+  },
+  {
+   "name": "a count a hair over its rounding step still rounds up",
+   "input": {
+    "members": [
+     {
+      "host": "a",
+      "builds": 3.000001,
+      "euT": 0,
+      "flows": []
+     }
+    ]
+   },
+   "view": {
+    "machines": 4,
+    "euT": 0,
+    "inputs": [],
+    "outputs": [],
+    "rows": 1
+   }
+  },
+  {
+   "name": "a shared machine counts once for all the recipes on it",
+   "input": {
+    "members": [
+     {
+      "host": "host",
+      "builds": 0.75,
+      "euT": 24,
+      "flows": []
+     },
+     {
+      "host": "host",
+      "euT": 0,
+      "flows": [
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 3
+       },
+       {
+        "key": "item:gear",
+        "name": "Iron Gear",
+        "perSecond": -1
+       }
+      ]
+     },
+     {
+      "host": "host",
+      "euT": 0,
+      "flows": [
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 1
+       },
+       {
+        "key": "fluid:water",
+        "name": "Water",
+        "perSecond": -1
+       }
+      ]
+     }
+    ]
+   },
+   "view": {
+    "machines": 1,
+    "euT": 24,
+    "inputs": [
+     {
+      "key": "item:iron",
+      "name": "Iron Ingot",
+      "perSecond": 4
+     }
+    ],
+    "outputs": [
+     {
+      "key": "item:gear",
+      "name": "Iron Gear",
+      "perSecond": 1
+     },
+     {
+      "key": "fluid:water",
+      "name": "Water",
+      "perSecond": 1
+     }
+    ],
+    "rows": 2
+   }
+  },
+  {
+   "name": "a host named twice as a machine is built once",
+   "input": {
+    "members": [
+     {
+      "host": "host",
+      "builds": 2,
+      "euT": 20,
+      "flows": []
+     },
+     {
+      "host": "host",
+      "builds": 5,
+      "euT": 50,
+      "flows": []
+     }
+    ]
+   },
+   "view": {
+    "machines": 2,
+    "euT": 70,
+    "inputs": [],
+    "outputs": [],
+    "rows": 1
+   }
+  },
+  {
+   "name": "a card that is no machine adds flows and no machines",
+   "input": {
+    "members": [
+     {
+      "host": "drawer",
+      "euT": 0,
+      "flows": [
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": -5
+       }
+      ]
+     },
+     {
+      "host": "a",
+      "builds": 1,
+      "euT": 8,
+      "flows": [
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 5
+       }
+      ]
+     }
+    ]
+   },
+   "view": {
+    "machines": 1,
+    "euT": 8,
+    "inputs": [],
+    "outputs": [],
+    "rows": 1
+   }
+  },
+  {
+   "name": "what one card makes the next one uses, and a balance reads as nothing",
+   "input": {
+    "members": [
+     {
+      "host": "a",
+      "builds": 1,
+      "euT": 16,
+      "flows": [
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": -6
+       },
+       {
+        "key": "item:gear",
+        "name": "Iron Gear",
+        "perSecond": 2
+       }
+      ]
+     },
+     {
+      "host": "b",
+      "builds": 1,
+      "euT": 16,
+      "flows": [
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 6
+       },
+       {
+        "key": "item:gear",
+        "name": "Iron Gear",
+        "perSecond": -2
+       }
+      ]
+     }
+    ]
+   },
+   "view": {
+    "machines": 2,
+    "euT": 32,
+    "inputs": [],
+    "outputs": [],
+    "rows": 1
+   }
+  },
+  {
+   "name": "a net flow under the threshold reads as nothing",
+   "input": {
+    "members": [
+     {
+      "host": "a",
+      "builds": 1,
+      "euT": 0,
+      "flows": [
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 5e-7
+       }
+      ]
+     },
+     {
+      "host": "b",
+      "builds": 1,
+      "euT": 0,
+      "flows": [
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 0
+       }
+      ]
+     }
+    ]
+   },
+   "view": {
+    "machines": 2,
+    "euT": 0,
+    "inputs": [],
+    "outputs": [],
+    "rows": 1
+   }
+  },
+  {
+   "name": "a net flow just over the threshold shows",
+   "input": {
+    "members": [
+     {
+      "host": "a",
+      "builds": 1,
+      "euT": 0,
+      "flows": [
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 0.000002
+       }
+      ]
+     }
+    ]
+   },
+   "view": {
+    "machines": 1,
+    "euT": 0,
+    "inputs": [
+     {
+      "key": "item:iron",
+      "name": "Iron Ingot",
+      "perSecond": 0.000002
+     }
+    ],
+    "outputs": [],
+    "rows": 1
+   }
+  },
+  {
+   "name": "inputs and outputs are busiest first",
+   "input": {
+    "members": [
+     {
+      "host": "a",
+      "builds": 1,
+      "euT": 0,
+      "flows": [
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 1
+       },
+       {
+        "key": "fluid:water",
+        "name": "Water",
+        "perSecond": 9
+       },
+       {
+        "key": "item:gear",
+        "name": "Iron Gear",
+        "perSecond": -3
+       },
+       {
+        "key": "power",
+        "name": "EU",
+        "perSecond": -7
+       },
+       {
+        "key": "item:dust",
+        "name": "Dust",
+        "perSecond": -12
+       }
+      ]
+     }
+    ]
+   },
+   "view": {
+    "machines": 1,
+    "euT": 0,
+    "inputs": [
+     {
+      "key": "fluid:water",
+      "name": "Water",
+      "perSecond": 9
+     },
+     {
+      "key": "item:iron",
+      "name": "Iron Ingot",
+      "perSecond": 1
+     }
+    ],
+    "outputs": [
+     {
+      "key": "item:dust",
+      "name": "Dust",
+      "perSecond": 12
+     },
+     {
+      "key": "power",
+      "name": "EU",
+      "perSecond": 7
+     },
+     {
+      "key": "item:gear",
+      "name": "Iron Gear",
+      "perSecond": 3
+     }
+    ],
+    "rows": 3
+   }
+  },
+  {
+   "name": "equal flows keep the order the cards met them in",
+   "input": {
+    "members": [
+     {
+      "host": "a",
+      "builds": 1,
+      "euT": 0,
+      "flows": [
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 2
+       },
+       {
+        "key": "fluid:water",
+        "name": "Water",
+        "perSecond": 2
+       },
+       {
+        "key": "item:sand",
+        "name": "Sand",
+        "perSecond": 2
+       }
+      ]
+     }
+    ]
+   },
+   "view": {
+    "machines": 1,
+    "euT": 0,
+    "inputs": [
+     {
+      "key": "item:iron",
+      "name": "Iron Ingot",
+      "perSecond": 2
+     },
+     {
+      "key": "fluid:water",
+      "name": "Water",
+      "perSecond": 2
+     },
+     {
+      "key": "item:sand",
+      "name": "Sand",
+      "perSecond": 2
+     }
+    ],
+    "outputs": [],
+    "rows": 3
+   }
+  },
+  {
+   "name": "more outputs than inputs makes the longer list the row count",
+   "input": {
+    "members": [
+     {
+      "host": "a",
+      "builds": 1,
+      "euT": 0,
+      "flows": [
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 1
+       },
+       {
+        "key": "item:gear",
+        "name": "Iron Gear",
+        "perSecond": -1
+       },
+       {
+        "key": "fluid:water",
+        "name": "Water",
+        "perSecond": -2
+       },
+       {
+        "key": "power",
+        "name": "EU",
+        "perSecond": -3
+       }
+      ]
+     }
+    ]
+   },
+   "view": {
+    "machines": 1,
+    "euT": 0,
+    "inputs": [
+     {
+      "key": "item:iron",
+      "name": "Iron Ingot",
+      "perSecond": 1
+     }
+    ],
+    "outputs": [
+     {
+      "key": "power",
+      "name": "EU",
+      "perSecond": 3
+     },
+     {
+      "key": "fluid:water",
+      "name": "Water",
+      "perSecond": 2
+     },
+     {
+      "key": "item:gear",
+      "name": "Iron Gear",
+      "perSecond": 1
+     }
+    ],
+    "rows": 3
+   }
+  },
+  {
+   "name": "a resource keeps the name the first card gave it",
+   "input": {
+    "members": [
+     {
+      "host": "a",
+      "builds": 1,
+      "euT": 0,
+      "flows": [
+       {
+        "key": "item:x",
+        "name": "First",
+        "perSecond": 1
+       }
+      ]
+     },
+     {
+      "host": "b",
+      "builds": 1,
+      "euT": 0,
+      "flows": [
+       {
+        "key": "item:x",
+        "name": "Second",
+        "perSecond": 1
+       }
+      ]
+     }
+    ]
+   },
+   "view": {
+    "machines": 2,
+    "euT": 0,
+    "inputs": [
+     {
+      "key": "item:x",
+      "name": "First",
+      "perSecond": 2
+     }
+    ],
+    "outputs": [],
+    "rows": 1
+   }
+  },
+  {
+   "name": "a power producer sums negative EU/t",
+   "input": {
+    "members": [
+     {
+      "host": "a",
+      "builds": 1,
+      "euT": 120,
+      "flows": []
+     },
+     {
+      "host": "gen",
+      "builds": 2,
+      "euT": -80,
+      "flows": []
+     }
+    ]
+   },
+   "view": {
+    "machines": 3,
+    "euT": 40,
+    "inputs": [],
+    "outputs": [],
+    "rows": 1
+   }
+  },
+  {
+   "name": "fractional flows add",
+   "input": {
+    "members": [
+     {
+      "host": "a",
+      "builds": 1,
+      "euT": 0,
+      "flows": [
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 0.25
+       }
+      ]
+     },
+     {
+      "host": "b",
+      "builds": 1,
+      "euT": 0,
+      "flows": [
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 0.5
+       },
+       {
+        "key": "fluid:water",
+        "name": "Water",
+        "perSecond": 0.125
+       }
+      ]
+     }
+    ]
+   },
+   "view": {
+    "machines": 2,
+    "euT": 0,
+    "inputs": [
+     {
+      "key": "item:iron",
+      "name": "Iron Ingot",
+      "perSecond": 0.75
+     },
+     {
+      "key": "fluid:water",
+      "name": "Water",
+      "perSecond": 0.125
+     }
+    ],
+    "outputs": [],
+    "rows": 2
+   }
+  },
+  {
+   "name": "a big group",
+   "input": {
+    "members": [
+     {
+      "host": "m0",
+      "builds": 0.5,
+      "euT": 8,
+      "flows": [
+       {
+        "key": "item:r0",
+        "name": "Resource 0",
+        "perSecond": 1
+       },
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 0.5
+       }
+      ]
+     },
+     {
+      "host": "m1",
+      "builds": 1.5,
+      "euT": 16,
+      "flows": [
+       {
+        "key": "item:r1",
+        "name": "Resource 1",
+        "perSecond": -2
+       },
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 0.5
+       }
+      ]
+     },
+     {
+      "host": "m2",
+      "builds": 2.5,
+      "euT": 24,
+      "flows": [
+       {
+        "key": "item:r2",
+        "name": "Resource 2",
+        "perSecond": 3
+       },
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 0.5
+       }
+      ]
+     },
+     {
+      "host": "m3",
+      "builds": 3.5,
+      "euT": 32,
+      "flows": [
+       {
+        "key": "item:r3",
+        "name": "Resource 3",
+        "perSecond": -4
+       },
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 0.5
+       }
+      ]
+     },
+     {
+      "host": "m4",
+      "builds": 4.5,
+      "euT": 40,
+      "flows": [
+       {
+        "key": "item:r4",
+        "name": "Resource 4",
+        "perSecond": 5
+       },
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 0.5
+       }
+      ]
+     },
+     {
+      "host": "m5",
+      "builds": 5.5,
+      "euT": 48,
+      "flows": [
+       {
+        "key": "item:r5",
+        "name": "Resource 5",
+        "perSecond": -6
+       },
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 0.5
+       }
+      ]
+     },
+     {
+      "host": "m6",
+      "builds": 6.5,
+      "euT": 56,
+      "flows": [
+       {
+        "key": "item:r6",
+        "name": "Resource 6",
+        "perSecond": 7
+       },
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 0.5
+       }
+      ]
+     },
+     {
+      "host": "m7",
+      "builds": 7.5,
+      "euT": 64,
+      "flows": [
+       {
+        "key": "item:r7",
+        "name": "Resource 7",
+        "perSecond": -8
+       },
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 0.5
+       }
+      ]
+     },
+     {
+      "host": "m8",
+      "builds": 8.5,
+      "euT": 72,
+      "flows": [
+       {
+        "key": "item:r8",
+        "name": "Resource 8",
+        "perSecond": 9
+       },
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 0.5
+       }
+      ]
+     },
+     {
+      "host": "m9",
+      "builds": 9.5,
+      "euT": 80,
+      "flows": [
+       {
+        "key": "item:r9",
+        "name": "Resource 9",
+        "perSecond": -10
+       },
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 0.5
+       }
+      ]
+     },
+     {
+      "host": "m10",
+      "builds": 10.5,
+      "euT": 88,
+      "flows": [
+       {
+        "key": "item:r10",
+        "name": "Resource 10",
+        "perSecond": 11
+       },
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 0.5
+       }
+      ]
+     },
+     {
+      "host": "m11",
+      "builds": 11.5,
+      "euT": 96,
+      "flows": [
+       {
+        "key": "item:r11",
+        "name": "Resource 11",
+        "perSecond": -12
+       },
+       {
+        "key": "item:iron",
+        "name": "Iron Ingot",
+        "perSecond": 0.5
+       }
+      ]
+     }
+    ]
+   },
+   "view": {
+    "machines": 78,
+    "euT": 624,
+    "inputs": [
+     {
+      "key": "item:r10",
+      "name": "Resource 10",
+      "perSecond": 11
+     },
+     {
+      "key": "item:r8",
+      "name": "Resource 8",
+      "perSecond": 9
+     },
+     {
+      "key": "item:r6",
+      "name": "Resource 6",
+      "perSecond": 7
+     },
+     {
+      "key": "item:iron",
+      "name": "Iron Ingot",
+      "perSecond": 6
+     },
+     {
+      "key": "item:r4",
+      "name": "Resource 4",
+      "perSecond": 5
+     },
+     {
+      "key": "item:r2",
+      "name": "Resource 2",
+      "perSecond": 3
+     },
+     {
+      "key": "item:r0",
+      "name": "Resource 0",
+      "perSecond": 1
+     }
+    ],
+    "outputs": [
+     {
+      "key": "item:r11",
+      "name": "Resource 11",
+      "perSecond": 12
+     },
+     {
+      "key": "item:r9",
+      "name": "Resource 9",
+      "perSecond": 10
+     },
+     {
+      "key": "item:r7",
+      "name": "Resource 7",
+      "perSecond": 8
+     },
+     {
+      "key": "item:r5",
+      "name": "Resource 5",
+      "perSecond": 6
+     },
+     {
+      "key": "item:r3",
+      "name": "Resource 3",
+      "perSecond": 4
+     },
+     {
+      "key": "item:r1",
+      "name": "Resource 1",
+      "perSecond": 2
+     }
+    ],
+    "rows": 7
+   }
+  }
+ ]
+}

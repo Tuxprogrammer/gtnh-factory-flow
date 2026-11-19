@@ -1,8 +1,8 @@
 package com.gtnhplanner.ui.group;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -11,6 +11,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
 import com.gtnhplanner.core.base.Uuid;
+import com.gtnhplanner.core.view.group.GroupBuilder;
+import com.gtnhplanner.core.view.group.GroupInput;
+import com.gtnhplanner.core.view.group.GroupView;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Groups;
 import com.gtnhplanner.ui.BoardSession;
@@ -28,8 +31,6 @@ public record GroupSummary(int machines, double euPerTick, List<Flow> inputs, Li
 
     public static final GroupSummary EMPTY = new GroupSummary(0, 0, List.of(), List.of());
 
-    private static final double EPS = 1e-6;
-
     /** Rows the summary card draws: the longer list, one at least. */
     public int rows() {
         return Math.max(1, Math.max(inputs.size(), outputs.size()));
@@ -37,44 +38,51 @@ public record GroupSummary(int machines, double euPerTick, List<Flow> inputs, Li
 
     public static GroupSummary of(final BoardSession session, final Uuid group) {
         final Graph g = session.graph();
-        final Set<Uuid> inside = new HashSet<>();
+        final Set<Uuid> inside = new LinkedHashSet<>();
         for (final Uuid id : Groups.descendants(g, group)) if (g.nodes.containsKey(id)) inside.add(id);
-        int machines = 0;
-        double eu = 0;
-        final Map<String, double[]> net = new LinkedHashMap<>();
         final Map<String, Flow> looks = new LinkedHashMap<>();
-        final Set<Uuid> hosts = new HashSet<>();
+        final List<GroupInput.Member> members = new ArrayList<>();
         for (final Uuid id : inside) {
             final CardModel card = session.models()
                 .get(id);
             if (card == null || com.gtnhplanner.power.CustomRate.is(card.node)) continue;
-            // A shared machine is one machine, however many recipes are on it.
-            if (hosts.add(session.hostOf(id)) && (card.machines > 0 || card.pinned)
-                && !com.gtnhplanner.power.FluidTank.is(card.node))
-                machines += (int) Math
-                    .ceil(com.gtnhplanner.machines.game.CropCards.builds(card.node, card.machines) - 1e-9);
-            eu += session.power(card);
-            for (final CardModel.PortView p : card.inputs) add(session, net, looks, p, p.perSecond());
-            for (final CardModel.PortView p : card.outputs) add(session, net, looks, p, -p.perSecond());
+            // A shared machine is one machine, however many recipes are on it (the core counts a host once).
+            final boolean machine = (card.machines > 0 || card.pinned)
+                && !com.gtnhplanner.power.FluidTank.is(card.node);
+            final List<GroupInput.Flow> flows = new ArrayList<>();
+            for (final CardModel.PortView p : card.inputs) add(session, flows, looks, p, p.perSecond());
+            for (final CardModel.PortView p : card.outputs) add(session, flows, looks, p, -p.perSecond());
+            members.add(
+                new GroupInput.Member(
+                    session.hostOf(id)
+                        .toString(),
+                    machine ? com.gtnhplanner.machines.game.CropCards.builds(card.node, card.machines) : null,
+                    session.power(card),
+                    flows));
         }
-        final List<Flow> in = new ArrayList<>(), out = new ArrayList<>();
-        for (final Map.Entry<String, double[]> e : net.entrySet()) {
-            final double v = e.getValue()[0];
-            if (Math.abs(v) <= EPS) continue;
-            final Flow look = looks.get(e.getKey());
-            final Flow f = new Flow(e.getKey(), look.name(), look.item(), look.fluid(), Math.abs(v));
-            (v > 0 ? in : out).add(f);
-        }
-        in.sort((a, b) -> Double.compare(b.perSecond(), a.perSecond()));
-        out.sort((a, b) -> Double.compare(b.perSecond(), a.perSecond()));
-        return new GroupSummary(machines, eu, List.copyOf(in), List.copyOf(out));
+        // The sum, the rounding up and the order are the core's (shared with the website, conformance/view/group).
+        final GroupView view = GroupBuilder.build(new GroupInput(members));
+        return new GroupSummary(
+            view.machines(),
+            view.euT(),
+            flowsOf(view.inputs(), looks),
+            flowsOf(view.outputs(), looks));
     }
 
-    private static void add(final BoardSession session, final Map<String, double[]> net, final Map<String, Flow> looks,
-        final CardModel.PortView p, final double amount) {
+    private static List<Flow> flowsOf(final List<GroupView.Flow> flows, final Map<String, Flow> looks) {
+        final List<Flow> out = new ArrayList<>();
+        for (final GroupView.Flow f : flows) {
+            final Flow look = looks.get(f.key());
+            out.add(new Flow(f.key(), f.name(), look.item(), look.fluid(), f.perSecond()));
+        }
+        return List.copyOf(out);
+    }
+
+    private static void add(final BoardSession session, final List<GroupInput.Flow> flows,
+        final Map<String, Flow> looks, final CardModel.PortView p, final double amount) {
         if (p.key() == null) return;
         final String key = session.canonicalKey(p.key());
-        net.computeIfAbsent(key, k -> new double[1])[0] += amount;
+        flows.add(new GroupInput.Flow(key, p.name(), amount));
         looks.putIfAbsent(key, new Flow(key, p.name(), p.item(), p.fluid(), 0));
     }
 }

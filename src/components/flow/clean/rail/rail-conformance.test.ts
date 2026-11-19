@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { listConformance, readConformanceJson, readConformanceText } from "@/test-support/conformance";
+import { readViewCases, readViewVectors } from "@/test-support/view-corpus";
 import { mockPlans } from "@/lib/solver/plan/__fixtures__/mock-extras";
 import { peakCount } from "@/lib/model/peak-count";
 import { noticeList, NOTICE_WORDS, type NoticeInput } from "./notice-core";
@@ -8,7 +8,6 @@ import {
   mockRailInput,
   noticeCases,
   railCases,
-  viewFiles,
   type NoticeCase,
   type RailCase,
 } from "./rail-conformance";
@@ -25,24 +24,14 @@ import {
 } from "./rail-math";
 
 /**
- * conformance/view/ holds what the rail and the notices bar print for plans, as input records and views. The website's
- * own code must give each stored view from its stored input (the core view module checks the same files from Java), and
- * the files must be what the code makes now (regenerate with `npx tsx tools/conformance/view/generate.ts`, then
- * `node tools/conformance/manifest.mjs --write`).
+ * conformance/view/rail and conformance/view/notices hold what the rail and the notices bar print for plans, as input
+ * records and views. The website's own code must give each stored view from its stored input (the core view module
+ * checks the same files from Java). That the files are what the code makes now is `view-corpus.test.ts`'s check.
  */
-const railFile = readConformanceJson("view", "rail-cases.json") as RailCase[];
-const noticeFile = readConformanceJson("view", "notice-cases.json") as NoticeCase[];
-const mathFile = readConformanceJson("view", "rail-math.json") as ReturnType<typeof mathVectors>;
-
-describe("view conformance files", () => {
-  it("are what the code makes now", () => {
-    const made = viewFiles();
-    expect(listConformance("view")).toEqual(Object.keys(made).sort());
-    for (const [name, text] of Object.entries(made)) {
-      expect(readConformanceText("view", name) === text, `${name} differs: regenerate it`).toBe(true);
-    }
-  });
-});
+const railFile = readViewCases<RailCase["input"], RailCase["view"]>("rail", "cases").cases as RailCase[];
+const noticeFile = readViewCases<NoticeCase["input"], NoticeCase["view"]>("notices", "cases")
+  .cases as NoticeCase[];
+const mathFile = readViewVectors<ReturnType<typeof mathVectors>>("rail", "math").vectors;
 
 describe("the rail's cases", () => {
   it("has a case for every mock plan at every view", () => {
@@ -70,13 +59,13 @@ describe("the rail's cases", () => {
 
 describe("the notices' cases", () => {
   it.each(noticeFile.map((c) => [c.name, c] as const))("%s: the stored input gives the stored list", (_n, c) => {
-    expect(JSON.parse(JSON.stringify(noticeList(c.input as NoticeInput)))).toEqual(c.notices);
+    expect(JSON.parse(JSON.stringify(noticeList(c.input as NoticeInput)))).toEqual(c.view);
   });
 
   it("names only keys the word table has", () => {
     const keys = new Set<string>();
     for (const c of noticeFile) {
-      for (const n of c.notices) {
+      for (const n of c.view) {
         keys.add(n.key);
         if (n.tag) keys.add(n.tag);
       }
@@ -85,7 +74,7 @@ describe("the notices' cases", () => {
   });
 
   it("covers every notice key the word table says outside the holders", () => {
-    const used = new Set(noticeFile.flatMap((c) => c.notices.map((n) => n.key)));
+    const used = new Set(noticeFile.flatMap((c) => c.view.map((n) => n.key)));
     const missing = Object.keys(NOTICE_WORDS).filter(
       (k) => !used.has(k) && !k.includes(".holder.") && !k.endsWith(".tag") && k !== "gtnhplanner.notice.and",
     );

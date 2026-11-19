@@ -1,8 +1,9 @@
-# Typecheck + tests on every pull request and every push to main — the same
-# two commands AGENTS.md names as the verification suite. The full suite is
-# expected green: as of 2026-08-19 there are no tolerated failures, so any
-# red here is a real regression (or a test left pinning copy that changed —
-# update the pin in the same PR that changes the copy).
+# One pipeline for the website and the JVM side. Every job is one script in tools/ci/ and nothing else:
+# the build box's local pipeline (`box.sh <stream> ci`) runs the same scripts, so a green box run is a
+# green run here. Change a job by changing its script, not this file.
+#
+# `changes` decides which jobs a diff needs (tools/ci/changes.sh); a skipped job counts as passed.
+# `ci-ok` is the one check to require on a branch: it fails if any job that ran failed.
 name: CI
 
 on:
@@ -10,7 +11,9 @@ on:
   push:
     branches:
       - main
+      - restructure
       - "fix/**"
+      - "rs/**"
 
 permissions:
   contents: read
@@ -20,25 +23,42 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  changes:
+    name: Which jobs this change needs
+    runs-on: ubuntu-latest
+    outputs:
+      website: ${{ steps.changes.outputs.website }}
+      icons: ${{ steps.changes.outputs.icons }}
+      jvm: ${{ steps.changes.outputs.jvm }}
+      web_core: ${{ steps.changes.outputs.web_core }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - id: changes
+        env:
+          CI_BRANCH: ${{ github.head_ref || github.ref_name }}
+          CI_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: tools/ci/changes.sh
+
+  website:
     name: Typecheck and test
+    needs: changes
+    if: needs.changes.outputs.website == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
-
       - run: npm ci
+      - run: tools/ci/website.sh
 
-      - run: npm run typecheck
-
-      - run: npm run test
-
-  icon-browsers:
+  icons:
     name: Icon sizing in Chromium and Firefox
+    needs: changes
+    if: needs.changes.outputs.icons == 'true'
     runs-on: ubuntu-latest
     # The browser install pulls system packages and has taken over 9 minutes on a slow runner.
     timeout-minutes: 25
@@ -49,5 +69,91 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: node node_modules/playwright-core/cli.js install --with-deps --only-shell chromium firefox
-      - run: npm run test:icons:browsers
+      - run: tools/ci/icons.sh
+        env:
+          CI_INSTALL_BROWSERS: "1"
+
+  jvm:
+    name: JVM build, tests and compat check
+    needs: changes
+    if: needs.changes.outputs.jvm == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      # Gradle itself runs on 25 (the last version listed is the default JAVA_HOME); the mod compiles
+      # against 8 and tests on 17 and 21 through Gradle's toolchains, which find the JAVA_HOME_<n>_X64
+      # variables this step sets. Zulu is the vendor the build's toolchains ask for.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: |
+            8
+            17
+            21
+            25
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          # Only main and restructure write the cache; other branches read it.
+          cache-read-only: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/restructure' }}
+      # RetroFuturaGradle's deobfuscated game, about 50 MB, takes minutes to rebuild. It checks its own
+      # inputs, so a stale restore is rebuilt, never trusted.
+      - uses: actions/cache@v4
+        with:
+          path: jvm/mod/build/rfg
+          key: rfg-${{ runner.os }}-${{ hashFiles('jvm/**/*.gradle', 'jvm/**/*.gradle.kts', 'jvm/**/gradle.properties', 'jvm/gradle/gradle-daemon-jvm.properties') }}
+          restore-keys: rfg-${{ runner.os }}-
+      - run: tools/ci/jvm.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jvm-results
+          path: |
+            jvm/mod/build/libs/*.jar
+            jvm/mod/build/reports/tests
+            jvm/core/*/build/reports/tests
+            jvm/web/*/build/reports/tests
+          if-no-files-found: ignore
+          retention-days: 7
+
+  web-core:
+    name: Core in the browser build (TeaVM and conformance in Node)
+    needs: changes
+    if: needs.changes.outputs.web_core == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 25
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/restructure' }}
+      - run: npm ci
+      - run: tools/ci/web-core.sh
+
+  ci-ok:
+    name: ci-ok
+    needs: [changes, website, icons, jvm, web-core]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every job that ran passed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "job results: $RESULTS"
+          for r in $RESULTS; do
+            case "$r" in
+              success | skipped) ;;
+              *) echo "a job finished as: $r"; exit 1 ;;
+            esac
+          done
+          # `changes` itself must have run: if it was skipped or cancelled, nothing was checked.
+          [ "${{ needs.changes.result }}" = success ]

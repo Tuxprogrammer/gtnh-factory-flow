@@ -6,13 +6,14 @@
 set -euo pipefail
 . "$(dirname "$0")/lib.sh"
 CI_JOB=web-core
+. "$(dirname "$0")/net.sh"
 cd "$CI_ROOT"
 
 node_major=$(node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0)
 [ "$node_major" -ge 24 ] || fail "Node 24 or newer is needed (Wasm GC, module detection); found $(node -v 2>/dev/null || echo none)"
 
 envs=$(compgen -v | grep -E '^JAVA_HOME_[0-9]+_X64$' | paste -sd, - || true)
-extra=()
+extra=("${GRADLE_NET_OPTS[@]}")
 if [ -n "$envs" ]; then extra+=("-Porg.gradle.java.installations.fromEnv=$envs"); fi
 
 # Output of an earlier run must never count.

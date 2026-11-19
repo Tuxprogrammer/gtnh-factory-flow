@@ -7,6 +7,8 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.machines.OutputSlots;
+
 /**
  * What a machine and its settings do to a recipe (src/lib/solver/machine-effects.ts): the context its table entry
  * reads, its parallels (structure, capped by what the power pays for), and its duration, EU/t and output multipliers.
@@ -61,9 +63,13 @@ public final class MachineEffects {
         return -1;
     }
 
-    /** getMachineOutputMultiplier: every setting's output multiplier, multiplied. */
+    /**
+     * getMachineOutputMultiplier: every setting's output multiplier, multiplied; nothing for an item output the machine
+     * has no slot for ({@link OutputSlots}).
+     */
     public static double outputMultiplier(final Web.Recipe recipe, final Web.Node node, final Web.Resource output,
         final String tier) {
+        if (!OutputSlots.hasItemOutputSlot(recipe, output, tier)) return 0;
         if (ExtremeEntityCrusher.isRecipe(recipe)) return ExtremeEntityCrusher
             .outputMultiplier(recipe, output, ExtremeEntityCrusher.settings(node.machineConfigTiers));
         double multiplier = 1;

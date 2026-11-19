@@ -44,8 +44,6 @@ class WebsiteCasesTest {
 
     private static final String REPORT = System.getProperty("gtnhplanner.solver.casesReport", "");
 
-    private static final String RELAXATION = "the website checks the drawer relaxation's point as every other model's;"
-        + " the kernel takes it unchecked, so a pin it cannot hold (negative crafts) explains a drawer the website does not";
     private static final String OIL_LINE = "the oil line of website 07b310f3 (loosened holds): see the state note";
 
     /**
@@ -68,11 +66,7 @@ class WebsiteCasesTest {
         Map.entry(
             "src/lib/solver/plan/loosened-holds.test.ts > held levels read off a slightly inexact point never fail the"
                 + " plan > Up to 2 solves at the 0.3 machines it needs (forward columns) #4",
-            OIL_LINE),
-        Map.entry(
-            "src/lib/solver/plan/solve-plan.test.ts > unneeded and idle islands > islands whose pins cannot hold leave"
-                + " the others solved and say why #20",
-            RELAXATION));
+            OIL_LINE));
 
     private static final List<String> reported = new ArrayList<>();
 
@@ -101,8 +95,8 @@ class WebsiteCasesTest {
 
     private static void check(final String name, final JsonObject c) {
         final Balancer.Answer answer = Balancer.solveWithAlternatives(SolveInputJson.read(c.getAsJsonObject("input")));
-        final JsonElement expected = c.get("answer");
-        final JsonElement actual = UpToParityTest.normalised(UpToParityTest.digest(answer));
+        final JsonElement expected = engineWords(c.get("answer"));
+        final JsonElement actual = engineWords(UpToParityTest.normalised(UpToParityTest.digest(answer)));
         final List<String> d = SolverCorpus.differences(expected, actual);
         if (!REPORT.isEmpty()) {
             if (!d.isEmpty()) {
@@ -124,6 +118,30 @@ class WebsiteCasesTest {
             return;
         }
         assertTrue(d.isEmpty(), name + " answers differently from the website:\n  " + String.join("\n  ", d));
+    }
+
+    /**
+     * The digest with the engine's own words taken out: what a SOLVER_UNSATISFIABLE note says after its key is the LP
+     * engine's status ("infeasible" from HiGHS, "INVALID" or "INFEASIBLE" from ojAlgo), which says nothing about the
+     * plan. Every other part of a note is compared.
+     */
+    static JsonElement engineWords(final JsonElement digest) {
+        if (digest.isJsonArray()) {
+            for (final JsonElement e : digest.getAsJsonArray()) engineWords(e);
+        } else if (digest.isJsonObject()) {
+            final JsonObject o = digest.getAsJsonObject();
+            if (o.has("message") && o.get("message")
+                .isJsonPrimitive()
+                && "SOLVER_UNSATISFIABLE".equals(
+                    o.get("message")
+                        .getAsString())) {
+                final JsonArray args = new JsonArray();
+                args.add(new com.google.gson.JsonPrimitive("(the engine's status)"));
+                o.add("args", args);
+            }
+            for (final Map.Entry<String, JsonElement> e : o.entrySet()) engineWords(e.getValue());
+        }
+        return digest;
     }
 
     @AfterAll

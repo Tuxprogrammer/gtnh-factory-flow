@@ -407,20 +407,22 @@ public final class SolveContext {
     /** The {@link DustScales} of a point; {@code extents} and {@code flows} may be null (externals alone). */
     public DustScales dustScales(@Nullable final double[] extents, @Nullable final double[] flows,
         final double[] externals) {
-        final Map<Integer, Double> network = new HashMap<>();
+        // A network is named by its root port (ModelData.portComponent), so a port-sized array holds them all.
         final int ports = model.connectedPorts.size();
+        final double[] network = new double[ports];
         for (int p = 0; p < ports; p++) {
             final ModelData.ConnectedPort port = model.connectedPorts.get(p);
             double most = Math.abs(externals[p]);
             if (extents != null) most = Math.max(most, Math.abs(extents[port.machine()] * port.qtyPerCraft()));
             if (flows != null) for (final int e : port.edges()) most = Math.max(most, Math.abs(flows[e]));
-            network.merge(model.portComponent[p], most, Math::max);
+            final int c = model.portComponent[p];
+            network[c] = Math.max(network[c], most);
         }
         final double whole = extents != null && flows != null ? solutionScale(extents, flows, externals)
             : scaleOf(externals);
         final double floor = Math.max(heuristics.numerics().networkFloor * whole, Double.MIN_NORMAL);
         final double[] byPort = new double[ports];
-        for (int p = 0; p < ports; p++) byPort[p] = Math.max(network.get(model.portComponent[p]), floor);
+        for (int p = 0; p < ports; p++) byPort[p] = Math.max(network[model.portComponent[p]], floor);
         final double[] machines = new double[model.machines.size()];
         java.util.Arrays.fill(machines, Double.POSITIVE_INFINITY);
         for (int p = 0; p < ports; p++) {

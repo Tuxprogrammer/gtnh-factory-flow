@@ -1,5 +1,5 @@
-import { formatCompact, formatPowerValue } from "@/lib/model/resources";
-import { rateMultiplierForKind } from "@/lib/model/rate-unit";
+import { formatCompact, formatPowerValue } from "@/lib/format/numbers";
+import { rateMultiplierForKind } from "@/lib/format/rate-unit";
 
 /** Shared signed boundary readings: red imports, green exports, unsigned zero. */
 export function formatSignedRate(perSecond: number, kind: string, sign: number): string {

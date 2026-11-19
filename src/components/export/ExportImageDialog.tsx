@@ -31,7 +31,7 @@ import {
   type CanvasThemeId,
 } from "@/components/flow/canvas-themes";
 import { readBoardViewSnapshot } from "@/components/flow/board-view";
-import type { RateUnit } from "@/lib/model/rate-unit";
+import type { RateUnit } from "@/lib/format/rate-unit";
 import { useFactoryStore } from "@/store/factory-store";
 import { useDesignStore } from "@/store/design-store";
 import { ExportFooter, resolveExportFooterWidth, resolveExportTone } from "./ExportFooter";

@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  buildMachineList,
-  formatMachineListCount,
-  machinesFromUnits,
-  unitsFromMachines,
-} from "./machine-list";
+import { buildMachineList, machinesFromUnits, unitsFromMachines } from "./machine-list";
 import { PROJECT_SCHEMA_VERSION, type FactoryProject, type Recipe } from "./types";
 import { calculateThroughput } from "@/lib/solver/throughput";
 import { closeBoundaries } from "@/lib/solver/close-boundaries";
@@ -152,13 +147,6 @@ describe("the machine list follows each board card", () => {
     expect(steam.steamLs).toBeGreaterThan(0);
     expect(steam.avgSteamLs).toBe(steam.steamLs);
     expect(steam.euT).toBeUndefined();
-  });
-
-  it("keeps fractional counts above 100 and never displays a positive sliver as zero", () => {
-    expect(formatMachineListCount(101.375)).toBe("101.375");
-    expect(formatMachineListCount(0.00001)).toBe("0.00001");
-    expect(formatMachineListCount(0.0000001)).toBe("<0.000001");
-    expect(formatMachineListCount(0)).toBe("0");
   });
 });
 

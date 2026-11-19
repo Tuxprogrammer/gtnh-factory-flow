@@ -81,3 +81,11 @@ breaking a schema.
   by `PLAN_TASK_LIMITS`. Live editing treats each as a collection (`src/lib/live/ops.ts`).
 - Exam: `plan-additions.test.ts` (schema, export and import, plan links) and the library
   PUT's `route.test.ts`.
+
+## What lives elsewhere
+
+Number and rate display (`formatCompact`, `formatRate`, the rate-unit and power-display
+dials, `setting-memory`) is in `src/lib/format`, not here. This directory, `solver`,
+`machines` and `power` are the code the shared Java core replaces: they import no React,
+DOM, storage, Next, Zustand or `src/lib/format`. `src/test-support/core-boundary.test.ts`
+enforces it over the real import graph.

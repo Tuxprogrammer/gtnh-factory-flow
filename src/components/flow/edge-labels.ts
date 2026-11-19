@@ -1,9 +1,9 @@
-import { formatCompact } from "@/lib/model";
+import { formatCompact } from "@/lib/format/numbers";
 import {
   rateMultiplierForKind,
   rateSuffixForKind,
   rateUnitMultiplier,
-} from "@/lib/model/rate-unit";
+} from "@/lib/format/rate-unit";
 
 /**
  * The parts of an edge's render data that decide its label. Kept structural so

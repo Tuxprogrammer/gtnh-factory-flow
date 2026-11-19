@@ -209,3 +209,112 @@ describe("HILE issue #50", () => {
     expect(working.edges.ship.transferredPerSecond).toBeGreaterThan(0);
   });
 });
+
+// gt.recipe.laserengraver:deb1c9e6d0b3f15f as this instance's dataset has it:
+// 2 ticks at 491,520 EU/t (UV), with the HILE handler carrying the exporter's
+// own amps-only "laserSource" knob and its baked x3.5 / x0.8 stats.
+const proteus: Recipe = {
+  id: "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-laserengraver:deb1c9e6d0b3f15f",
+  name: "Laser Engraver: Proteus Dungeon Bricks",
+  machineType: "Laser Engraver",
+  minimumTier: "UV",
+  durationTicks: 2,
+  eut: 491520,
+  inputs: [{ kind: "item", id: "galaxyspace:proteusblocks@2", amount: 4 }],
+  outputs: [{ kind: "item", id: "galaxyspace:proteusblocks@3", amount: 1 }],
+  machineHandlers: [
+    {
+      id: "precision-laser-engraver",
+      label: "Precision Laser Engraver",
+      kind: "single",
+      machineType: "Precision Laser Engraver",
+      minimumTier: "UV",
+    },
+    {
+      id: "hyper-intensity-laser-engraver",
+      label: "Hyper-Intensity Laser Engraver",
+      kind: "multiblock",
+      machineType: "Hyper-Intensity Laser Engraver",
+      minimumTier: "UV",
+      durationTicks: 1,
+      eut: 393216,
+      machineConfigControls: [
+        {
+          id: "laserSource",
+          label: "Laser Source",
+          minimumKey: "a256",
+          defaultKey: "a256",
+          tiers: [256, 1024, 4096, 16384, 65536, 262144, 1048576, 4194304, 16777216].map(
+            (amps) => ({
+              key: `a${amps}`,
+              label: `${amps.toLocaleString("en-US")}A Laser`,
+              parallelMultiplier: Math.floor(Math.cbrt(amps)),
+              resource: { kind: "item" as const, id: `source-${amps}`, amount: 1 },
+            }),
+          ),
+        },
+      ],
+    },
+  ],
+};
+
+function hileNode(laserSource: string | Record<string, string>, amps: number): FactoryNode {
+  return {
+    ...node,
+    recipeId: proteus.id,
+    machineHandlerId: "hyper-intensity-laser-engraver",
+    overclockTier: "UHV",
+    hatchVoltageTier: "UHV",
+    hatchAmps: amps,
+    machineConfigTiers: typeof laserSource === "string" ? { laserSource } : laserSource,
+  };
+}
+
+describe("HILE on a real dataset recipe (MTEIndustrialLaserEngraver)", () => {
+  it("offers one laser source setting, the hatch a player builds, over the exporter's amps-only knob", () => {
+    const effective = applyMachineHandlerToRecipe(proteus, hileNode("uhv-65536", 4));
+    const controls = getRecipeMachineConfigTierControls(effective, hileNode("uhv-65536", 4));
+    expect(controls.map((control) => control.id)).toEqual(["laserSource"]);
+    expect(controls[0].tiers).toHaveLength(46);
+    expect(controls[0].current.label).toBe("UHV · 65,536A");
+  });
+
+  it("runs the reporter's UHV 65,536 A source at 40 parallels when the energy hatches pay for them", () => {
+    // 16 UHV hatches (32 A): (int) cbrt(65536) = 40 parallels at 393,216 EU/t,
+    // one overclock (capped at source tier + 1 - UV = 2), and the 2 / 3.5 tick
+    // run banks to 4 a tick: 160 a tick, under the supply's cap of 170.
+    const configured = hileNode("uhv-65536", 32);
+    expect(
+      getMachineStructuralParallels(applyMachineHandlerToRecipe(proteus, configured), configured),
+    ).toBe(40);
+    const report = getNodePowerReport(proteus, configured);
+    const stats = getOverclockedRecipeStats(proteus, configured);
+    expect(report.parallels).toBe(40);
+    expect(stats.overclockSteps).toBe(1);
+    expect(report.parallels / stats.durationTicks).toBe(160);
+  });
+
+  it("holds the same source to what two UHV hatches pay for", () => {
+    // 4 A UHV: floor(8,388,608 / 393,216) = 21 parallels, one run a tick.
+    const configured = hileNode("uhv-65536", 4);
+    const report = getNodePowerReport(proteus, configured);
+    expect(report.parallels).toBe(21);
+    expect(getOverclockedRecipeStats(proteus, configured).durationTicks).toBe(1);
+  });
+
+  it.each([
+    ["uhv-65536", "uhv-65536"],
+    // The exporter's amps-only key: the lowest tier that registers that amperage.
+    ["a65536", "uhv-65536"],
+    // The old separate amperage knob: rounded up to a real hatch.
+    [{ laserAmperage: "64" }, "iv-256"],
+    [{ laserAmperage: "65536" }, "uhv-65536"],
+  ])("loads a plan saved with %j as source %s", (saved, expected) => {
+    const configured = hileNode(saved, 32);
+    const effective = applyMachineHandlerToRecipe(proteus, configured);
+    const source = getRecipeMachineConfigTierControls(effective, configured).find(
+      (control) => control.id === "laserSource",
+    );
+    expect(source?.current.key).toBe(expected);
+  });
+});

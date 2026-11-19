@@ -14,37 +14,38 @@ import com.gtnhplanner.core.base.Uuid;
 
 /**
  * core-base for JavaScript: number spelling and ids. The conformance run checks these against Node's own numbers and
- * against java.util.UUID. Every function name starts with the module ("base"), as the export convention requires: the
- * host sees one flat list of functions. Ids cross as hex text (a 64-bit long does not cross the boundary the same way
- * on both targets), a double crosses as a number.
+ * against java.util.UUID. The host reaches them as {@code BaseExports.numberTextOf(x)}: TeaVM exports this class by its
+ * simple name, so the class is the module's namespace and every exports class is named {@code <Module>Exports}. Ids
+ * cross as hex text (a 64-bit long does not cross the boundary the same way on both targets), a double crosses as a
+ * number.
  */
 public final class BaseExports {
 
     private BaseExports() {}
 
     @JSExport
-    public static String baseNumberTextOf(final double n) {
+    public static String numberTextOf(final double n) {
         return NumberText.of(n);
     }
 
     @JSExport
-    public static String baseNumberTextJson(final double n) {
+    public static String numberTextJson(final double n) {
         return NumberText.json(n);
     }
 
     /** {@code digits} outside 0 to 100 throws (JavaScript's RangeError); the host sees an Error with the message. */
     @JSExport
-    public static String baseNumberTextFixed(final double n, final int digits) {
+    public static String numberTextFixed(final double n, final int digits) {
         return NumberText.fixed(n, digits);
     }
 
     @JSExport
-    public static double baseNumberTextParse(final String text) {
+    public static double numberTextParse(final String text) {
         return NumberText.parse(text);
     }
 
     @JSExport
-    public static double baseJsMathRound(final double n) {
+    public static double jsMathRound(final double n) {
         return JsMath.round(n);
     }
 
@@ -60,17 +61,17 @@ public final class BaseExports {
     }
 
     @JSExport
-    public static String baseUuidToString(final String msbHex, final String lsbHex) {
+    public static String uuidToString(final String msbHex, final String lsbHex) {
         return id(msbHex, lsbHex).toString();
     }
 
     @JSExport
-    public static int baseUuidHash(final String msbHex, final String lsbHex) {
+    public static int uuidHash(final String msbHex, final String lsbHex) {
         return id(msbHex, lsbHex).hashCode();
     }
 
     @JSExport
-    public static int baseUuidCompare(final String aMsbHex, final String aLsbHex, final String bMsbHex,
+    public static int uuidCompare(final String aMsbHex, final String aLsbHex, final String bMsbHex,
         final String bLsbHex) {
         return Integer.signum(id(aMsbHex, aLsbHex).compareTo(id(bMsbHex, bLsbHex)));
     }
@@ -80,7 +81,7 @@ public final class BaseExports {
      * comma-separated; equal ids keep their input order.
      */
     @JSExport
-    public static String baseUuidOrder(final String ids) {
+    public static String uuidOrder(final String ids) {
         final String[] parts = ids.split(",");
         final List<Uuid> list = new ArrayList<>();
         for (final String p : parts) {
@@ -101,14 +102,14 @@ public final class BaseExports {
 
     /** {@code Uuid.nameUUIDFromBytes} of the text's UTF-8 bytes. */
     @JSExport
-    public static String baseUuidName(final String text) {
+    public static String uuidName(final String text) {
         return Uuid.nameUUIDFromBytes(text.getBytes(StandardCharsets.UTF_8))
             .toString();
     }
 
     /** {@code Uuid.fromString(text).toString()}, or the exception's simple class name when the text is not an id. */
     @JSExport
-    public static String baseUuidParse(final String text) {
+    public static String uuidParse(final String text) {
         try {
             return Uuid.fromString(text)
                 .toString();
@@ -128,7 +129,7 @@ public final class BaseExports {
 
     /** The example of the convention's structured-result rule: a JSO object built by a {@code @JSBody}. */
     @JSExport
-    public static UuidInfo baseUuidInfo(final String msbHex, final String lsbHex) {
+    public static UuidInfo uuidInfo(final String msbHex, final String lsbHex) {
         final Uuid u = id(msbHex, lsbHex);
         return uuidInfo(u.toString(), u.hashCode(), u.version(), u.variant());
     }

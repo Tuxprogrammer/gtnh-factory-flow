@@ -5,7 +5,8 @@ import org.teavm.jso.JSExport;
 /**
  * The entry class of the web build: TeaVM needs a main class, and this one holds the exports that are about the build
  * itself, not about a core module. Module exports live in {@code com.gtnhplanner.web.exports}, one class per core
- * module (see README.md for the convention).
+ * module (see README.md for the convention). The main class's own exports are top-level functions, so their names
+ * start with {@code webCore}.
  */
 public final class WebCore {
 

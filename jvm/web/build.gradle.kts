@@ -118,6 +118,19 @@ tasks.named("check") { dependsOn(overrideChecks) }
 tasks.named("generateJavaScript") { dependsOn("checkOverridesJavaScript") }
 tasks.named("generateWasmGC") { dependsOn("checkOverridesWasmGC") }
 
+// The random comparison's cases, made on the JVM by the core's own classes (src/test/java/.../RandomCases.java).
+// tools/web-core/run.mjs --random replays them against each compiled target.
+tasks.register<JavaExec>("webRandomCases") {
+    description = "Writes the random conformance cases (JSON lines) for tools/web-core/run.mjs"
+    group = "verification"
+    classpath = sourceSets["test"].runtimeClasspath
+    mainClass.set("com.gtnhplanner.web.RandomCases")
+    val out = layout.buildDirectory.file("random/cases.jsonl")
+    outputs.file(out)
+    args(out.get().asFile.absolutePath, providers.gradleProperty("randomSeed").getOrElse("20261119"),
+        providers.gradleProperty("randomScale").getOrElse("1"))
+}
+
 // What tools/ci/web-core.sh builds: both targets, the Wasm one with its runtime file.
 tasks.register("webCore") {
     description = "Builds the core for the browser: WebAssembly GC and JavaScript, checked for overrides"

@@ -9,6 +9,7 @@ import com.gtnhplanner.core.base.CoreSettings;
 import com.gtnhplanner.core.base.Log;
 import com.gtnhplanner.core.base.Text;
 import com.gtnhplanner.core.base.Uuid;
+import com.gtnhplanner.data.flowchart.balancer.SolverThreads;
 import com.gtnhplanner.nei.NEIPlanConfig;
 
 import codechicken.nei.NEIClientConfig;
@@ -16,8 +17,9 @@ import codechicken.nei.NEIClientConfig;
 /**
  * The mod's side of the core's seams: log4j for {@link Log}, the Forge config and NEI's settings for
  * {@link CoreSettings} (read on every call, so a changed setting applies at once), Minecraft's language files for
- * {@link Text}, and a secure generator for new ids. Installed when the mod class loads, and before every test run
- * (the test sources' launcher listener), so core code reads the same things it read when it called these directly.
+ * {@link Text}, a secure generator for new ids, and the solver's worker threads ({@link SolverThreads}). Installed when
+ * the mod class loads, and before every test run (the test sources' launcher listener), so core code reads the same
+ * things it read when it called these directly.
  */
 public final class CoreHost {
 
@@ -84,5 +86,6 @@ public final class CoreHost {
         });
         final SecureRandom random = new SecureRandom();
         Uuid.installRandom(random::nextLong);
+        SolverThreads.install();
     }
 }

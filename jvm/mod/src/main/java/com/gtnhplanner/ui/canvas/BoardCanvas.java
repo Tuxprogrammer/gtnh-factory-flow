@@ -23,6 +23,7 @@ import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
 import com.cleanroommc.modularui.theme.WidgetThemeEntry;
 import com.cleanroommc.modularui.widget.ParentWidget;
 import com.cleanroommc.modularui.widget.sizer.Area;
+import com.gtnhplanner.CoreIds;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.Graph;
@@ -1761,7 +1762,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
                 for (final com.gtnhplanner.data.flowchart.balancer.PortRef ref : line.bearers()
                     .get(i)
                     .ports()) {
-                    if (!ref.nodeId()
+                    if (!CoreIds.mod(ref.nodeId())
                         .equals(node) || ref.input() == output || ref.portIndex() != port) continue;
                     final double[] shares = session.spareShares(line);
                     carry = new SpareCarry(line, i, node, output, port, shares);
@@ -1833,7 +1834,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
         for (final com.gtnhplanner.ui.BoardSession.SpareLine line : session.spares()) {
             for (final com.gtnhplanner.ui.BoardSession.SpareBearer b : line.bearers()) {
                 for (final com.gtnhplanner.data.flowchart.balancer.PortRef ref : b.ports()) {
-                    if (!ref.nodeId()
+                    if (!CoreIds.mod(ref.nodeId())
                         .equals(node) || ref.input() == output || ref.portIndex() != port) continue;
                     // Nowhere else to go: nothing to choose (the row's tooltip says so).
                     if (line.bearers()
@@ -1882,7 +1883,9 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
             for (final com.gtnhplanner.data.flowchart.balancer.PortRef ref : carry.line()
                 .bearers()
                 .get(i)
-                .ports()) if (card.sectionOf(ref.nodeId()) >= 0 || card.nodeId.equals(ref.nodeId())) return true;
+                .ports())
+                if (card.sectionOf(CoreIds.mod(ref.nodeId())) >= 0 || card.nodeId.equals(CoreIds.mod(ref.nodeId())))
+                    return true;
         }
         return false;
     }
@@ -1925,11 +1928,12 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
                 .bearers()
                 .get(i)
                 .ports()) {
-                final RecipeCard card = cardHolding(ref.nodeId());
+                final RecipeCard card = cardHolding(CoreIds.mod(ref.nodeId()));
                 if (card == null || card.model() == null || card.layout() == null) continue;
                 final Node n = card.model().node;
                 if (!inside(n.x, n.y, CardLayout.W, card.layout().height, mx, my)) continue;
-                final float d = Math.abs(n.y + card.anchorY(ref.nodeId(), !ref.input(), ref.portIndex()) - my);
+                final float d = Math
+                    .abs(n.y + card.anchorY(CoreIds.mod(ref.nodeId()), !ref.input(), ref.portIndex()) - my);
                 if (d < best) {
                     best = d;
                     carryTarget = i;
@@ -1947,11 +1951,11 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
                 .get(i);
             final com.gtnhplanner.data.flowchart.balancer.PortRef ref = b.ports()
                 .get(0);
-            final RecipeCard card = cardHolding(ref.nodeId());
+            final RecipeCard card = cardHolding(CoreIds.mod(ref.nodeId()));
             if (card == null || card.model() == null || card.layout() == null) continue;
             final Node n = card.model().node;
             final boolean output = !ref.input();
-            final float py = n.y + card.anchorY(ref.nodeId(), output, ref.portIndex());
+            final float py = n.y + card.anchorY(CoreIds.mod(ref.nodeId()), output, ref.portIndex());
             final String what = "+" + spareRate(b, carryPortion);
             final float w = (Hyb.width(what) + 8) * s, h = 13 * s;
             final float lx = output ? n.x + CardLayout.W + 6 * s : n.x - 6 * s - w;
@@ -3236,7 +3240,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
         final float s = 1 / graph().getZoom();
         final java.util.Set<UUID> ringed = new java.util.HashSet<>();
         for (final com.gtnhplanner.data.flowchart.balancer.PortRef ref : bearer.ports()) {
-            final RecipeCard card = cardHolding(ref.nodeId());
+            final RecipeCard card = cardHolding(CoreIds.mod(ref.nodeId()));
             if (card == null || card.model() == null || card.layout() == null || !ringed.add(card.nodeId)) continue;
             final Node n = card.model().node;
             Hyb.ring(n.x - 3 * s, n.y - 3 * s, CardLayout.W + 6 * s, card.layout().height + 6 * s, 1.5f * s, Hyb.GOLD);

@@ -16,8 +16,8 @@ import com.gtnhplanner.data.flowchart.balancer.BalanceMode;
 import com.gtnhplanner.data.flowchart.balancer.Balancer;
 import com.gtnhplanner.data.flowchart.balancer.Balancer.Answer;
 import com.gtnhplanner.data.flowchart.balancer.External;
+import com.gtnhplanner.data.flowchart.balancer.GraphSolve;
 import com.gtnhplanner.data.flowchart.balancer.SolutionView;
-import com.gtnhplanner.data.flowchart.balancer.SolveInput;
 import com.gtnhplanner.data.flowchart.balancer.Spares;
 import com.gtnhplanner.harness.GtnhFlowLoader;
 import com.gtnhplanner.harness.GtnhFlowLoader.LoadedChart;
@@ -37,7 +37,7 @@ class SparesTest {
     private static final double EPS = 1e-6;
 
     private static SolutionView solve(final Graph graph) {
-        final Answer answer = Balancer.solveWithAlternatives(SolveInput.of(graph, BalanceMode.AUTO, null));
+        final Answer answer = Balancer.solveWithAlternatives(GraphSolve.input(graph, BalanceMode.AUTO, null));
         assertTrue(answer instanceof Answer.Solved, "solved: " + answer);
         return ((Answer.Solved) answer).solution();
     }
@@ -55,7 +55,7 @@ class SparesTest {
     private static Spares.Bearer bearerOn(final Spares.Leftover leftover, final UUID node) {
         for (final Spares.Bearer b : leftover.bearers()) if (b.anchor()
             .nodeId()
-            .equals(node)) return b;
+            .equals(CoreIds.core(node))) return b;
         return null;
     }
 
@@ -63,7 +63,7 @@ class SparesTest {
         double total = 0;
         for (final External e : view.gatedSinks) if (e.port()
             .nodeId()
-            .equals(node)) total += e.ratePerSecond();
+            .equals(CoreIds.core(node))) total += e.ratePerSecond();
         return total;
     }
 
@@ -105,8 +105,8 @@ class SparesTest {
             .setSpareSplit(leftover.key(), Map.of(alpha.key(), 0.5, beta.key(), 0.5));
         final SolutionView view = solve(chart.graph());
 
-        assertEquals(0.75, view.machineCounts.get(chart.machine(2).id), EPS, "alpha bender");
-        assertEquals(0.75, view.machineCounts.get(chart.machine(3).id), EPS, "beta bender");
+        assertEquals(0.75, view.machineCounts.get(CoreIds.core(chart.machine(2).id)), EPS, "alpha bender");
+        assertEquals(0.75, view.machineCounts.get(CoreIds.core(chart.machine(3).id)), EPS, "beta bender");
         assertEquals(2.5, sinkAt(view, chart.machine(0).id), EPS, "alpha ingot spare");
         assertEquals(2.5, sinkAt(view, chart.machine(1).id), EPS, "beta ingot spare");
         final Spares.Leftover now = only(view);
@@ -123,7 +123,7 @@ class SparesTest {
         Spares.Bearer plate = null;
         for (final Spares.Bearer b : leftover.bearers()) if (b != alpha && !b.anchor()
             .nodeId()
-            .equals(chart.machine(1).id)) plate = b;
+            .equals(CoreIds.core(chart.machine(1).id))) plate = b;
         assertNotNull(plate);
 
         // 1 : 4, written as 2 and 8: a fifth on alpha ingot, the rest as plates.
@@ -134,8 +134,8 @@ class SparesTest {
         assertEquals(1.0, sinkAt(view, chart.machine(0).id), EPS, "alpha ingot spare");
         assertEquals(0.0, sinkAt(view, chart.machine(1).id), EPS, "no beta ingot spare");
         assertEquals(4.0, sinkAt(view, chart.machine(2).id) + sinkAt(view, chart.machine(3).id), EPS, "plates spare");
-        assertEquals(0.9, view.machineCounts.get(chart.machine(2).id), EPS, "alpha bender");
-        assertEquals(1.0, view.machineCounts.get(chart.machine(3).id), EPS, "beta bender");
+        assertEquals(0.9, view.machineCounts.get(CoreIds.core(chart.machine(2).id)), EPS, "alpha bender");
+        assertEquals(1.0, view.machineCounts.get(CoreIds.core(chart.machine(3).id)), EPS, "beta bender");
     }
 
     @Test

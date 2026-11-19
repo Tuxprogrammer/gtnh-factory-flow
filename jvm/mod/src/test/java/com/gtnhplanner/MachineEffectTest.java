@@ -18,7 +18,7 @@ import com.gtnhplanner.data.effect.steps.GTHeat;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.balancer.BalanceMode;
 import com.gtnhplanner.data.flowchart.balancer.BalanceResult;
-import com.gtnhplanner.data.flowchart.balancer.Balancer;
+import com.gtnhplanner.data.flowchart.balancer.GraphSolve;
 import com.gtnhplanner.data.provider.DefaultProvider;
 import com.gtnhplanner.harness.GtnhFlowLoader;
 import com.gtnhplanner.harness.GtnhFlowLoader.LoadedChart;
@@ -66,10 +66,10 @@ class MachineEffectTest {
         distillery.machineConfig.setMachineCount(3);
         distillery.setMachineCountFixed(true);
 
-        final BalanceResult result = Balancer.balance(chart.graph(), BalanceMode.AUTO);
+        final BalanceResult result = GraphSolve.balance(chart.graph(), BalanceMode.AUTO);
 
         final var balance = result.nodeBalances()
-            .get(distillery.id);
+            .get(CoreIds.core(distillery.id));
         assertEquals(3.0, balance.operations(), 1e-6, "the count is the pin");
         // Effective rates are per cycle; the distillery's cycle is one second.
         assertEquals(
@@ -82,7 +82,7 @@ class MachineEffectTest {
         assertEquals(
             150.0,
             result.nodeBalances()
-                .get(chart.machine(0).id)
+                .get(CoreIds.core(chart.machine(0).id))
                 .effectiveOutputs()
                 .get(1) * 20.0
                 / 160.0,
@@ -91,7 +91,7 @@ class MachineEffectTest {
         assertEquals(
             150.0,
             result.nodeBalances()
-                .get(chart.machine(0).id)
+                .get(CoreIds.core(chart.machine(0).id))
                 .outputPerSecond(1),
             1e-3,
             "and reads per second without the arithmetic");

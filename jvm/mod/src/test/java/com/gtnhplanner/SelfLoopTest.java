@@ -10,9 +10,9 @@ import org.junit.jupiter.api.Test;
 
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.balancer.BalanceMode;
-import com.gtnhplanner.data.flowchart.balancer.Balancer;
 import com.gtnhplanner.data.flowchart.balancer.Balancer.Answer;
 import com.gtnhplanner.data.flowchart.balancer.External;
+import com.gtnhplanner.data.flowchart.balancer.GraphSolve;
 import com.gtnhplanner.data.flowchart.balancer.SolutionView;
 import com.gtnhplanner.harness.GtnhFlowLoader;
 import com.gtnhplanner.harness.GtnhFlowLoader.LoadedChart;
@@ -39,8 +39,8 @@ class SelfLoopTest {
 
         final SolutionView s = solved(chart);
 
-        assertEquals(100, s.machineCounts.get(chart.machine(0).id), EPS);
-        assertEquals(500, s.edgeFlowsPerSecond.get(loop.id), EPS, "the loop carries everything it makes");
+        assertEquals(100, s.machineCounts.get(CoreIds.core(chart.machine(0).id)), EPS);
+        assertEquals(500, s.edgeFlowsPerSecond.get(CoreIds.core(loop.id)), EPS, "the loop carries everything it makes");
         assertEquals(1, s.gatedSources.size(), "one import: " + s.gatedSources);
         assertEquals(0, s.gatedSinks.size());
         final External sand = s.gatedSources.get(0);
@@ -70,8 +70,8 @@ class SelfLoopTest {
 
         final SolutionView s = solved(chart);
 
-        assertEquals(10, s.machineCounts.get(chart.machine(0).id), EPS);
-        assertEquals(10, s.edgeFlowsPerSecond.get(loop.id), EPS);
+        assertEquals(10, s.machineCounts.get(CoreIds.core(chart.machine(0).id)), EPS);
+        assertEquals(10, s.edgeFlowsPerSecond.get(CoreIds.core(loop.id)), EPS);
         assertEquals(0, s.gatedSources.size());
         assertEquals(1, s.gatedSinks.size(), "one void: " + s.gatedSinks);
         final External seed = s.gatedSinks.get(0);
@@ -101,7 +101,7 @@ class SelfLoopTest {
     }
 
     private static SolutionView solved(final LoadedChart chart) {
-        final Answer answer = Balancer.solveWithAlternatives(BalanceMode.AUTO, chart.graph(), null, Map.of());
+        final Answer answer = GraphSolve.solveWithAlternatives(BalanceMode.AUTO, chart.graph(), null, Map.of());
         return assertInstanceOf(Answer.Solved.class, answer, () -> chart.name() + " failed: " + answer).solution();
     }
 }

@@ -13,6 +13,8 @@ import java.util.function.ToIntFunction;
 
 import org.junit.jupiter.api.Test;
 
+import com.gtnhplanner.CoreIds;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.PinRule;
 import com.gtnhplanner.data.flowchart.balancer.PortRef;
 import com.gtnhplanner.data.flowchart.balancer.UpToReadout;
@@ -26,17 +28,19 @@ import com.gtnhplanner.data.flowchart.balancer.UpToReason;
 class CardFaceTest {
 
     private static final UUID CARD = UUID.randomUUID(), OTHER = UUID.randomUUID();
+    /** The same cards as the solver names them. */
+    private static final Uuid CARD_ID = CoreIds.core(CARD), OTHER_ID = CoreIds.core(OTHER);
     /** The game's font runs about six pixels a letter. */
     private static final ToIntFunction<String> SIX = s -> 6 * s.length();
-    private static final PortRef OXYGEN = new PortRef(CARD, 1, true), WATER = new PortRef(CARD, 2, true),
-        ACID = new PortRef(CARD, 0, false);
+    private static final PortRef OXYGEN = new PortRef(CARD_ID, 1, true), WATER = new PortRef(CARD_ID, 2, true),
+        ACID = new PortRef(CARD_ID, 0, false);
     private static final Map<PortRef, String> NAMES = Map.of(OXYGEN, "Oxygen", WATER, "Water", ACID, "Sulfuric Acid");
     private static final Function<PortRef, String> PORTS = NAMES::get;
     private static final Function<UUID, String> CARDS = id -> id.equals(OTHER) ? "Electrolyzer" : null;
 
     private static UpToReadout readout(final double capacity, final double reached, final UpToReason reason,
         final PortRef port, final Double wants) {
-        return new UpToReadout(CARD, List.of(CARD), capacity, reached, reason, port, List.of(), wants, List.of());
+        return new UpToReadout(CARD_ID, List.of(CARD_ID), capacity, reached, reason, port, List.of(), wants, List.of());
     }
 
     // region The count under the machine
@@ -194,15 +198,15 @@ class CardFaceTest {
     @Test
     void starvedNamesTheShortInputAndTheFullCardsUpstream() {
         final UpToReadout r = new UpToReadout(
-            CARD,
-            List.of(CARD),
+            CARD_ID,
+            List.of(CARD_ID),
             24,
             18.2,
             UpToReason.STARVED,
             OXYGEN,
             List.of(WATER),
             null,
-            List.of(OTHER, UUID.randomUUID()));
+            List.of(OTHER_ID, Uuid.randomUUID()));
         final CardFace.Foot f = upTo(r, SIX);
         assertEquals(CardFace.Tone.STARVED, f.tone());
         assertEquals("short of Oxygen", f.say());
@@ -398,8 +402,8 @@ class CardFaceTest {
     @Test
     void starvedLightsItsShortInputAndTheInputsTiedWithIt() {
         final UpToReadout r = new UpToReadout(
-            CARD,
-            List.of(CARD),
+            CARD_ID,
+            List.of(CARD_ID),
             24,
             18.2,
             UpToReason.STARVED,
@@ -435,12 +439,12 @@ class CardFaceTest {
     void aSharedMachinesRowIsMatchedOnItsOwnRecipe() {
         // The read-out names a port on the second recipe: only that recipe's row lights.
         final UpToReadout r = new UpToReadout(
-            CARD,
-            List.of(CARD, OTHER),
+            CARD_ID,
+            List.of(CARD_ID, OTHER_ID),
             4,
             2,
             UpToReason.CLOGGED,
-            new PortRef(OTHER, 0, false),
+            new PortRef(OTHER_ID, 0, false),
             List.of(),
             null,
             List.of());
@@ -486,22 +490,24 @@ class CardFaceTest {
 
     @Test
     void aCardInARingPulsesInTheRingsTone() {
-        final UUID third = UUID.randomUUID();
+        final Uuid third = Uuid.randomUUID();
         final List<com.gtnhplanner.data.flowchart.balancer.UpToLoop> loops = List.of(
             new com.gtnhplanner.data.flowchart.balancer.UpToLoop(
                 com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind.DEAD_LOOP,
-                List.of(CARD, OTHER),
+                List.of(CARD_ID, OTHER_ID),
                 List.of(OXYGEN)),
             new com.gtnhplanner.data.flowchart.balancer.UpToLoop(
                 com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind.CLOG_LOCK,
-                List.of(OTHER, third),
+                List.of(OTHER_ID, third),
                 List.of()));
         assertEquals(com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind.DEAD_LOOP, CardFace.loopOf(loops, CARD));
         assertEquals(
             com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind.DEAD_LOOP,
             CardFace.loopOf(loops, OTHER),
             "in two rings: the first");
-        assertEquals(com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind.CLOG_LOCK, CardFace.loopOf(loops, third));
+        assertEquals(
+            com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind.CLOG_LOCK,
+            CardFace.loopOf(loops, CoreIds.mod(third)));
         assertNull(CardFace.loopOf(loops, UUID.randomUUID()));
         assertNull(CardFace.loopOf(List.of(), CARD));
         // Dead loop amber, clog lock purple; dimmed to 30% over the card's edge in the clock's grey half.

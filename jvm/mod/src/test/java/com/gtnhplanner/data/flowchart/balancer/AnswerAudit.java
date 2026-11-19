@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -61,7 +60,7 @@ class AnswerAudit {
         if (name.startsWith("gtnh-flow-")) {
             final var graph = GtnhFlowLoader.load(name.substring("gtnh-flow-".length()))
                 .graph();
-            return SolveInput.of(graph, graph.getBalanceMode(), null);
+            return GraphSolve.input(graph, graph.getBalanceMode(), null);
         }
         final Path json = corpus.resolve(name + ".json");
         try (InputStream in = Files.newInputStream(json)) {
@@ -113,7 +112,7 @@ class AnswerAudit {
                 final JsonObject ext = e.getAsJsonObject();
                 final JsonObject port = ext.getAsJsonObject("port");
                 final Integer m = model.machineIndex.get(
-                    UUID.fromString(
+                    com.gtnhplanner.core.base.Uuid.fromString(
                         port.get("nodeId")
                             .getAsString()));
                 final Integer p = m == null ? null

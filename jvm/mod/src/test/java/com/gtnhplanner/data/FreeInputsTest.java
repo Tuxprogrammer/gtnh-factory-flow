@@ -8,10 +8,11 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import com.gtnhplanner.CoreIds;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.balancer.BalanceMode;
 import com.gtnhplanner.data.flowchart.balancer.BalanceResult;
-import com.gtnhplanner.data.flowchart.balancer.Balancer;
+import com.gtnhplanner.data.flowchart.balancer.GraphSolve;
 import com.gtnhplanner.data.provider.FreeInputs;
 import com.gtnhplanner.harness.GtnhFlowLoader;
 import com.gtnhplanner.harness.GtnhFlowLoader.LoadedChart;
@@ -59,27 +60,27 @@ class FreeInputsTest {
     void anInputOfAmountZeroIsNeverAskedFor() {
         final LoadedChart chart = GtnhFlowLoader.load("light_fuel");
         final Node pinned = chart.machine(1);
-        final BalanceResult before = Balancer.balance(chart.graph(), BalanceMode.AUTO);
+        final BalanceResult before = GraphSolve.balance(chart.graph(), BalanceMode.AUTO);
         // What GTProvider makes of the lava: a port kept on the card with nothing used up.
         pinned.inputs.add(
             new com.gtnhplanner.data.flowchart.Port<>(
                 TestIngredients.TEST,
                 new TestIngredients.TestIngredient("lava placeholder", 0),
                 1f));
-        final BalanceResult after = Balancer.balance(chart.graph(), BalanceMode.AUTO);
+        final BalanceResult after = GraphSolve.balance(chart.graph(), BalanceMode.AUTO);
         final int lava = pinned.inputs.size() - 1;
         assertEquals(
             0,
             after.nodeBalances()
-                .get(pinned.id)
+                .get(CoreIds.core(pinned.id))
                 .inputPerSecond(lava),
             1e-9);
         for (final Node machine : chart.machines()) assertEquals(
             before.nodeBalances()
-                .get(machine.id)
+                .get(CoreIds.core(machine.id))
                 .operations(),
             after.nodeBalances()
-                .get(machine.id)
+                .get(CoreIds.core(machine.id))
                 .operations(),
             1e-9,
             machine.machineName);

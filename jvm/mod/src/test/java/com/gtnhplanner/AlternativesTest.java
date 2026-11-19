@@ -12,9 +12,9 @@ import org.junit.jupiter.api.Test;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Serializer;
 import com.gtnhplanner.data.flowchart.balancer.BalanceMode;
-import com.gtnhplanner.data.flowchart.balancer.Balancer;
 import com.gtnhplanner.data.flowchart.balancer.Balancer.Answer;
 import com.gtnhplanner.data.flowchart.balancer.ChoiceKey;
+import com.gtnhplanner.data.flowchart.balancer.GraphSolve;
 import com.gtnhplanner.data.flowchart.balancer.SolverMessage;
 import com.gtnhplanner.data.flowchart.balancer.alternatives.Alternative;
 import com.gtnhplanner.data.flowchart.balancer.alternatives.Alternatives;
@@ -25,7 +25,7 @@ import com.gtnhplanner.harness.GtnhFlowLoader.LoadedChart;
 class AlternativesTest {
 
     private static Alternatives alternatives(final String chart) {
-        return Balancer.alternatives(
+        return GraphSolve.alternatives(
             BalanceMode.AUTO,
             GtnhFlowLoader.load(chart)
                 .graph());
@@ -257,7 +257,7 @@ class AlternativesTest {
         final Alternative other = a.options()
             .get(1);
 
-        final Answer picked = Balancer.solveWithAlternatives(BalanceMode.AUTO, chart.graph(), other.key(), Map.of());
+        final Answer picked = GraphSolve.solveWithAlternatives(BalanceMode.AUTO, chart.graph(), other.key(), Map.of());
         final Answer.Solved solved = solved(picked);
         assertEquals(other.key(), solved.solution().key, "the chart came back on the chosen support");
         assertEquals(
@@ -296,7 +296,7 @@ class AlternativesTest {
         // A key from a different chart names ports this one does not have.
         final Alternatives other = alternatives("mk1");
 
-        final Answer r = Balancer.solveWithAlternatives(BalanceMode.AUTO, chart.graph(), other.chosen(), Map.of());
+        final Answer r = GraphSolve.solveWithAlternatives(BalanceMode.AUTO, chart.graph(), other.chosen(), Map.of());
         final Answer.Solved solved = solved(r);
         assertEquals(a.chosen(), solved.solution().key, "fell back to the solver's own answer");
         assertTrue(

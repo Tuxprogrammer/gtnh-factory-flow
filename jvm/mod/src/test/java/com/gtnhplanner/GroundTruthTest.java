@@ -20,9 +20,9 @@ import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Port;
 import com.gtnhplanner.data.flowchart.balancer.BalanceMode;
-import com.gtnhplanner.data.flowchart.balancer.Balancer;
 import com.gtnhplanner.data.flowchart.balancer.Balancer.Answer;
 import com.gtnhplanner.data.flowchart.balancer.External;
+import com.gtnhplanner.data.flowchart.balancer.GraphSolve;
 import com.gtnhplanner.data.flowchart.balancer.Note;
 import com.gtnhplanner.data.flowchart.balancer.PortRef;
 import com.gtnhplanner.data.flowchart.balancer.Severity;
@@ -102,8 +102,12 @@ class GroundTruthTest {
                 .input());
         assertEquals(100.0 / 3.0, source.ratePerSecond(), EPS, "injects exactly 1/3 of the DT's demand");
         assertAllMachinesRun(chart, s);
-        assertEquals(1.0, s.machineCounts.get(chart.machine(0).id), EPS, "pinned DT stays at 1");
-        assertEquals(8.0 / 15.0, s.machineCounts.get(chart.machine(1).id), EPS, "LCR runs at 0.533 machines");
+        assertEquals(1.0, s.machineCounts.get(CoreIds.core(chart.machine(0).id)), EPS, "pinned DT stays at 1");
+        assertEquals(
+            8.0 / 15.0,
+            s.machineCounts.get(CoreIds.core(chart.machine(1).id)),
+            EPS,
+            "LCR runs at 0.533 machines");
     }
 
     @Test
@@ -154,7 +158,11 @@ class GroundTruthTest {
             "the surplus is sold at the oven's charcoal, not at the centrifuge's nitrogen");
         assertEquals(10.6, sink.ratePerSecond(), EPS, "10.6/s charcoal sold");
 
-        assertEquals(0.78, s.extentsPerSecond.get(chart.machine(1).id), EPS, "the oven runs on all the nitrogen");
+        assertEquals(
+            0.78,
+            s.extentsPerSecond.get(CoreIds.core(chart.machine(1).id)),
+            EPS,
+            "the oven runs on all the nitrogen");
         assertEquals(3.12, terminalRate(chart, s.terminalInputs, "oak wood"), EPS, "and burns 3.12/s of wood");
     }
 
@@ -177,8 +185,9 @@ class GroundTruthTest {
 
         final External sink = s.gatedSinks.get(0);
         assertEquals(5.0, sink.ratePerSecond(), EPS, "5/s of plate sold");
-        final UUID soldAt = sink.port()
-            .nodeId();
+        final UUID soldAt = CoreIds.mod(
+            sink.port()
+                .nodeId());
         assertTrue(
             soldAt.equals(chart.machine(2).id) || soldAt.equals(chart.machine(3).id),
             "sold at a bender, not at a furnace");
@@ -198,7 +207,11 @@ class GroundTruthTest {
         assertEquals(25.0, terminalRate(chart, s.terminalOutputs, "light fuel"), EPS, "light fuel out at 25/s");
         assertEquals(25.0 / 12.0, terminalRate(chart, s.terminalOutputs, "oxygen"), EPS);
         assertEquals(25.0 / 12.0, terminalRate(chart, s.terminalOutputs, "hydrogen sulfide"), EPS);
-        assertEquals(1.0 / 60.0, s.machineCounts.get(chart.machine(0).id), EPS, "chemical reactor at 1/60");
+        assertEquals(
+            1.0 / 60.0,
+            s.machineCounts.get(CoreIds.core(chart.machine(0).id)),
+            EPS,
+            "chemical reactor at 1/60");
     }
 
     @Test
@@ -224,9 +237,9 @@ class GroundTruthTest {
         final SolutionView s = solve(chart);
 
         assertEquals(0, s.openGates, "no external heavy naquadah - the bath eats the excess");
-        assertEquals(1.0, s.machineCounts.get(chart.machine(0).id), EPS, "fusion pinned at 1");
-        assertEquals(3.12, s.machineCounts.get(chart.machine(1).id), EPS, "DT at 3.12 machines");
-        assertEquals(1.0 / 6.0, s.machineCounts.get(chart.machine(2).id), EPS, "bath at 1/6 machines");
+        assertEquals(1.0, s.machineCounts.get(CoreIds.core(chart.machine(0).id)), EPS, "fusion pinned at 1");
+        assertEquals(3.12, s.machineCounts.get(CoreIds.core(chart.machine(1).id)), EPS, "DT at 3.12 machines");
+        assertEquals(1.0 / 6.0, s.machineCounts.get(CoreIds.core(chart.machine(2).id)), EPS, "bath at 1/6 machines");
         assertEquals(62.4, terminalRate(chart, s.terminalInputs, "naquadah solution"), EPS);
     }
 
@@ -248,7 +261,11 @@ class GroundTruthTest {
         final SolutionView s = solve(chart);
 
         assertEquals(0, s.openGates, "gate-free as drawn: the bath absorbs all routed heavy");
-        assertEquals(13.0 / 6.0, s.machineCounts.get(chart.machine(2).id), EPS, "bath scales to 2.167 machines");
+        assertEquals(
+            13.0 / 6.0,
+            s.machineCounts.get(CoreIds.core(chart.machine(2).id)),
+            EPS,
+            "bath scales to 2.167 machines");
         assertEquals(
             14.4,
             terminalRate(chart, s.terminalInputs, "heavy naquadah fuel"),
@@ -396,8 +413,8 @@ class GroundTruthTest {
         final Node fusion = chart.machine(0);
         final Node tower = chart.machine(1);
 
-        assertEquals(0.1, s.extentsPerSecond.get(fusion.id), EPS, "fusion runs at 0.1 crafts/s");
-        assertEquals(0.65, s.extentsPerSecond.get(tower.id), EPS, "tower runs at 0.65 crafts/s");
+        assertEquals(0.1, s.extentsPerSecond.get(CoreIds.core(fusion.id)), EPS, "fusion runs at 0.1 crafts/s");
+        assertEquals(0.65, s.extentsPerSecond.get(CoreIds.core(tower.id)), EPS, "tower runs at 0.65 crafts/s");
 
         assertEquals(13.0, terminalRate(chart, s.terminalInputs, "naquadah solution"), EPS, "13/s in");
         assertEquals(10.0, terminalRate(chart, s.terminalOutputs, "naquadah fuel mk1"), EPS, "10/s out");
@@ -427,7 +444,7 @@ class GroundTruthTest {
             if (!edge.targetNodeId.equals(machine.id)) continue;
             if (!TestIngredients.nameOf(machine.inputs.get(edge.targetInputIndex))
                 .equals(ingredient)) continue;
-            rate += s.edgeFlowsPerSecond.getOrDefault(edge.id, 0.0);
+            rate += s.edgeFlowsPerSecond.getOrDefault(CoreIds.core(edge.id), 0.0);
         }
         return rate;
     }
@@ -466,7 +483,9 @@ class GroundTruthTest {
         final SolutionView solved = solved(result, "a machine disconnected from the pin");
         for (final Node machine : chart.machines()) {
             if (machine.id.equals(stranded.id)) continue;
-            assertTrue(solved.extentsPerSecond.get(machine.id) > 1e-9, machine.machineName + " must still run");
+            assertTrue(
+                solved.extentsPerSecond.get(CoreIds.core(machine.id)) > 1e-9,
+                machine.machineName + " must still run");
         }
     }
 
@@ -562,7 +581,7 @@ class GroundTruthTest {
         }
 
         for (final Node node : chart.machines()) {
-            final double extent = s.extentsPerSecond.getOrDefault(node.id, 0.0);
+            final double extent = s.extentsPerSecond.getOrDefault(CoreIds.core(node.id), 0.0);
             for (int side = 0; side < 2; side++) {
                 final boolean input = side == 0;
                 final List<Port<?>> ports = input ? node.inputs : node.outputs;
@@ -575,11 +594,11 @@ class GroundTruthTest {
                         final boolean hit = input ? edge.targetNodeId.equals(node.id) && edge.targetInputIndex == i
                             : edge.sourceNodeId.equals(node.id) && edge.sourceOutputIndex == i;
                         if (hit) {
-                            edges += s.edgeFlowsPerSecond.getOrDefault(edge.id, 0.0);
+                            edges += s.edgeFlowsPerSecond.getOrDefault(CoreIds.core(edge.id), 0.0);
                         }
                     }
                     final double edgeRate = edges;
-                    final double external = externals.getOrDefault(new PortRef(node.id, i, input), 0.0);
+                    final double external = externals.getOrDefault(new PortRef(CoreIds.core(node.id), i, input), 0.0);
                     final double residual = machineRate - edgeRate - external;
                     assertTrue(
                         Math.abs(residual) <= 1e-6 * Math.max(1.0, machineRate),
@@ -609,11 +628,11 @@ class GroundTruthTest {
     }
 
     private static Answer solveWith(final Graph graph) {
-        return Balancer.solveWithAlternatives(BalanceMode.AUTO, graph, null, Map.of());
+        return GraphSolve.solveWithAlternatives(BalanceMode.AUTO, graph, null, Map.of());
     }
 
     private static Answer solveWith(final Graph graph, final Map<UUID, Double> pins) {
-        return Balancer.solveWithAlternatives(BalanceMode.AUTO, graph, null, pins);
+        return GraphSolve.solveWithAlternatives(BalanceMode.AUTO, graph, null, pins);
     }
 
     /** The solved answer's view, failing the test with the rejection when the solve did not commit. */
@@ -643,10 +662,10 @@ class GroundTruthTest {
     /** Every machine the answer leaves at zero is one it reports as needing a count, and none it runs is. */
     private static void assertIdleOnlyWhereUnneeded(final LoadedChart chart, final SolutionView s) {
         for (final Node machine : chart.machines()) {
-            final boolean idle = s.extentsPerSecond.get(machine.id) <= 1e-9;
+            final boolean idle = s.extentsPerSecond.get(CoreIds.core(machine.id)) <= 1e-9;
             assertEquals(
                 idle,
-                s.unneeded.contains(machine.id),
+                s.unneeded.contains(CoreIds.core(machine.id)),
                 machine.machineName + (idle ? " is idle but not reported" : " runs but is reported idle"));
         }
     }
@@ -654,8 +673,8 @@ class GroundTruthTest {
     private static void assertAllMachinesRun(final LoadedChart chart, final SolutionView s) {
         for (final Node machine : chart.machines()) {
             assertTrue(
-                s.extentsPerSecond.get(machine.id) > 1e-9,
-                machine.machineName + " must run, extent=" + s.extentsPerSecond.get(machine.id));
+                s.extentsPerSecond.get(CoreIds.core(machine.id)) > 1e-9,
+                machine.machineName + " must run, extent=" + s.extentsPerSecond.get(CoreIds.core(machine.id)));
         }
     }
 
@@ -665,8 +684,9 @@ class GroundTruthTest {
         double total = 0;
         for (final External t : terminals) {
             final Node node = chart.graph().nodes.get(
-                t.port()
-                    .nodeId());
+                CoreIds.mod(
+                    t.port()
+                        .nodeId()));
             final var ports = t.port()
                 .input() ? node.inputs : node.outputs;
             if (TestIngredients.nameOf(

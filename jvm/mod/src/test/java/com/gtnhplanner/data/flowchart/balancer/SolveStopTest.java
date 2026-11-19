@@ -32,7 +32,7 @@ class SolveStopTest {
 
     private static SolveContext context(final BooleanSupplier stop) {
         final LoadedChart chart = GtnhFlowLoader.load("light_fuel");
-        final SolveInput input = SolveInput.of(chart.graph(), BalanceMode.AUTO, null);
+        final SolveInput input = GraphSolve.input(chart.graph(), BalanceMode.AUTO, null);
         return new SolveContext(
             input,
             Heuristics.auto(),

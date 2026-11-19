@@ -1027,7 +1027,7 @@ public final class DevHarness {
                                     .create()
                                     .toJson(
                                         SolveInputJson
-                                            .write(com.gtnhplanner.data.flowchart.balancer.SolveInput.of(g))));
+                                            .write(com.gtnhplanner.data.flowchart.balancer.GraphSolve.input(g))));
                         } catch (final java.io.IOException e) {
                             return error(String.valueOf(e.getMessage()));
                         }

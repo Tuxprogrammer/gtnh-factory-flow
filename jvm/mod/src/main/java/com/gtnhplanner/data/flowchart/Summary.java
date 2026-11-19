@@ -11,11 +11,12 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.CoreIds;
 import com.gtnhplanner.client.GuiHelper;
 import com.gtnhplanner.data.flowchart.balancer.BalanceResult;
 import com.gtnhplanner.data.flowchart.balancer.BalanceView;
-import com.gtnhplanner.data.flowchart.balancer.Balancer;
 import com.gtnhplanner.data.flowchart.balancer.ChoiceKey;
+import com.gtnhplanner.data.flowchart.balancer.GraphSolve;
 import com.gtnhplanner.data.flowchart.balancer.Note;
 import com.gtnhplanner.data.flowchart.balancer.alternatives.Alternatives;
 import com.gtnhplanner.data.properties.ResourceProperty;
@@ -345,7 +346,7 @@ public final class Summary extends GraphData {
         atMode = mode;
         atSettings = settingsVersion;
 
-        this.balance = Balancer.balance(graph, graph.getBalanceMode());
+        this.balance = GraphSolve.balance(graph, graph.getBalanceMode());
 
         final Map<LineKey, Float> outputs = new HashMap<>();
         final Map<LineKey, Float> inputs = new HashMap<>();
@@ -356,7 +357,7 @@ public final class Summary extends GraphData {
         // Accumulate scaled flows per resource across all ports, connected and unconnected alike.
         for (final Node node : graph.getNodes()) {
             final var nb = balance.nodeBalances()
-                .get(node.id);
+                .get(CoreIds.core(node.id));
             if (nb == null) continue;
 
             final float scale = mode == Mode.THROUGHPUT
@@ -393,7 +394,7 @@ public final class Summary extends GraphData {
         int maxTicks = 0;
         for (final Node node : graph.getNodes()) {
             final var nb = balance.nodeBalances()
-                .get(node.id);
+                .get(CoreIds.core(node.id));
             if (nb != null) maxTicks = Math.max(maxTicks, (int) Math.ceil(nb.durationPerOp()));
         }
         return Math.max(maxTicks, 20);
@@ -463,7 +464,7 @@ public final class Summary extends GraphData {
         final List<Line<?>> out = new ArrayList<>();
         for (final Node node : graph.getNodes()) {
             final var nb = balance.nodeBalances()
-                .get(node.id);
+                .get(CoreIds.core(node.id));
             if (nb == null) continue;
             final double ops = nb.operations();
             if (ops <= 0) continue;

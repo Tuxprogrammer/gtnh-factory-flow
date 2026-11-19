@@ -15,6 +15,7 @@ import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
 import com.cleanroommc.modularui.theme.WidgetThemeEntry;
 import com.cleanroommc.modularui.widget.ParentWidget;
 import com.cleanroommc.modularui.widget.sizer.Area;
+import com.gtnhplanner.CoreIds;
 import com.gtnhplanner.data.MachineConfig;
 import com.gtnhplanner.data.SettingDef;
 import com.gtnhplanner.data.flowchart.Node;
@@ -362,7 +363,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
     /** The name of one of the card's rows, by the solver's port. */
     private String portName(final com.gtnhplanner.data.flowchart.balancer.PortRef ref) {
         for (final CardModel m : models) {
-            if (!m.node.id.equals(ref.nodeId())) continue;
+            if (!m.node.id.equals(CoreIds.mod(ref.nodeId()))) continue;
             for (final CardModel.PortView p : ref.input() ? m.inputs : m.outputs)
                 if (p.index() == ref.portIndex()) return p.name();
         }

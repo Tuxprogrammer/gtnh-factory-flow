@@ -10,10 +10,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 
 import org.yaml.snakeyaml.Yaml;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.MachineProfile;
 import com.gtnhplanner.data.MachineProfileRegistry;
 import com.gtnhplanner.data.Settings;
@@ -210,7 +210,7 @@ public final class GtnhFlowLoader {
 
     /** Removes every edge delivering into the given machine input; returns how many there were. */
     public static int removeEdgesInto(final LoadedChart chart, final Node machine, final int inputIndex) {
-        final List<UUID> ids = chart.graph()
+        final List<Uuid> ids = chart.graph()
             .getEdges()
             .stream()
             .filter(e -> e.targetNodeId.equals(machine.id) && e.targetInputIndex == inputIndex)
@@ -239,11 +239,11 @@ public final class GtnhFlowLoader {
         return fallback;
     }
 
-    private static UUID nodeId(final String chart, final int index) {
-        return UUID.nameUUIDFromBytes((chart + "#node" + index).getBytes(StandardCharsets.UTF_8));
+    private static Uuid nodeId(final String chart, final int index) {
+        return Uuid.nameUUIDFromBytes((chart + "#node" + index).getBytes(StandardCharsets.UTF_8));
     }
 
-    private static UUID edgeId(final String chart, final int index) {
-        return UUID.nameUUIDFromBytes((chart + "#edge" + index).getBytes(StandardCharsets.UTF_8));
+    private static Uuid edgeId(final String chart, final int index) {
+        return Uuid.nameUUIDFromBytes((chart + "#edge" + index).getBytes(StandardCharsets.UTF_8));
     }
 }

@@ -4,13 +4,12 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
 
 import javax.annotation.Nullable;
 
-import com.gtnhplanner.CoreIds;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.core.view.Tokens;
 import com.gtnhplanner.data.flowchart.PinRule;
 import com.gtnhplanner.data.flowchart.balancer.PortRef;
@@ -169,7 +168,7 @@ public final class CardFace {
      */
     @Nullable
     public static Foot foot(final PinRule rule, final double set, @Nullable final UpToReadout upTo,
-        final List<Forced> forced, final Function<PortRef, String> portName, final Function<UUID, String> cardName,
+        final List<Forced> forced, final Function<PortRef, String> portName, final Function<Uuid, String> cardName,
         final ToIntFunction<String> width) {
         return foot(rule, set, upTo, forced, portName, cardName, width, null);
     }
@@ -180,7 +179,7 @@ public final class CardFace {
      */
     @Nullable
     public static Foot foot(final PinRule rule, final double set, @Nullable final UpToReadout upTo,
-        final List<Forced> forced, final Function<PortRef, String> portName, final Function<UUID, String> cardName,
+        final List<Forced> forced, final Function<PortRef, String> portName, final Function<Uuid, String> cardName,
         final ToIntFunction<String> width, @Nullable final UpToLoop.Kind loop) {
         if (rule == PinRule.UP_TO && upTo != null) return upToFoot(set, upTo, portName, cardName, width, loop);
         if (rule == PinRule.EXACT && !forced.isEmpty()) return forcedFoot(set, forced, width);
@@ -188,7 +187,7 @@ public final class CardFace {
     }
 
     private static Foot upToFoot(final double set, final UpToReadout upTo, final Function<PortRef, String> portName,
-        final Function<UUID, String> cardName, final ToIntFunction<String> width, @Nullable final UpToLoop.Kind loop) {
+        final Function<Uuid, String> cardName, final ToIntFunction<String> width, @Nullable final UpToLoop.Kind loop) {
         final double capacity = upTo.capacity() > 0 ? upTo.capacity() : set;
         final double reached = Math.max(0, upTo.reached());
         final UpToReason reason = upTo.reason();
@@ -210,7 +209,7 @@ public final class CardFace {
             if (n != null) tied.add(n);
         }
         final List<String> upstream = new ArrayList<>();
-        for (final UUID id : CoreIds.modList(upTo.upstream())) {
+        for (final Uuid id : new ArrayList<>(upTo.upstream())) {
             final String n = cardName.apply(id);
             upstream.add(n == null ? "a card" : n);
         }
@@ -314,7 +313,7 @@ public final class CardFace {
      * section), {@code index} its port on that recipe.
      */
     @Nullable
-    public static Tone why(final PinRule rule, @Nullable final UpToReadout upTo, final UUID node, final boolean output,
+    public static Tone why(final PinRule rule, @Nullable final UpToReadout upTo, final Uuid node, final boolean output,
         final int index) {
         if (rule != PinRule.UP_TO || upTo == null) return null;
         final UpToReason reason = upTo.reason();
@@ -324,11 +323,11 @@ public final class CardFace {
         return null;
     }
 
-    private static boolean names(@Nullable final PortRef p, final UUID node, final boolean output, final int index) {
+    private static boolean names(@Nullable final PortRef p, final Uuid node, final boolean output, final int index) {
         return p != null && p.input() != output
             && p.portIndex() == index
             && p.nodeId()
-                .equals(CoreIds.core(node));
+                .equals(node);
     }
 
     /**
@@ -390,9 +389,9 @@ public final class CardFace {
 
     /** The ring a card is in (the first when it is in several), by its id; null for none. */
     @Nullable
-    public static UpToLoop.Kind loopOf(final List<UpToLoop> loops, final UUID card) {
+    public static UpToLoop.Kind loopOf(final List<UpToLoop> loops, final Uuid card) {
         for (final UpToLoop loop : loops) if (loop.nodes()
-            .contains(CoreIds.core(card))) return loop.kind();
+            .contains(card)) return loop.kind();
         return null;
     }
 
@@ -459,11 +458,11 @@ public final class CardFace {
      * What holds a drawer's rate back, as short sentences after it (the website's notices.ts): each limiting card by
      * its rule and reason, each limiting drawer by its rate. {@code rule} and {@code reason} read a card's.
      */
-    public static String holders(final List<UUID> cards, final List<UUID> drawers, final Function<UUID, String> name,
-        final Function<UUID, PinRule> rule, final Function<UUID, UpToReason> reason,
-        final Function<UUID, String> drawerName) {
+    public static String holders(final List<Uuid> cards, final List<Uuid> drawers, final Function<Uuid, String> name,
+        final Function<Uuid, PinRule> rule, final Function<Uuid, UpToReason> reason,
+        final Function<Uuid, String> drawerName) {
         final StringBuilder out = new StringBuilder();
-        for (final UUID id : cards) {
+        for (final Uuid id : cards) {
             final String n = name.apply(id);
             final UpToReason why = reason.apply(id);
             final String sentence;
@@ -477,7 +476,7 @@ public final class CardFace {
             out.append(' ')
                 .append(sentence);
         }
-        for (final UUID id : drawers) out.append(" The ")
+        for (final Uuid id : drawers) out.append(" The ")
             .append(drawerName.apply(id))
             .append(" drawer's rate holds it back.");
         return out.toString();

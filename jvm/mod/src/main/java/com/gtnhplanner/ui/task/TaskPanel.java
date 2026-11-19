@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
@@ -20,6 +19,7 @@ import com.cleanroommc.modularui.drawable.Stencil;
 import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
 import com.cleanroommc.modularui.theme.WidgetThemeEntry;
 import com.cleanroommc.modularui.widget.ParentWidget;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.TaskEdits;
 import com.gtnhplanner.data.flowchart.Tasks;
@@ -293,7 +293,7 @@ public final class TaskPanel extends ParentWidget<TaskPanel> implements Interact
         edit(
             () -> TaskEdits.addComment(
                 session.graph(),
-                UUID.randomUUID()
+                Uuid.randomUUID()
                     .toString(),
                 taskId,
                 TaskLook.me(),
@@ -313,7 +313,7 @@ public final class TaskPanel extends ParentWidget<TaskPanel> implements Interact
             Sfx.DENY.play();
             return;
         }
-        final String id = UUID.randomUUID()
+        final String id = Uuid.randomUUID()
             .toString();
         edit(
             () -> TaskEdits
@@ -330,7 +330,7 @@ public final class TaskPanel extends ParentWidget<TaskPanel> implements Interact
             edit(() -> {
                 final Tasks.Item made = TaskEdits.addThing(
                     session.graph(),
-                    UUID.randomUUID()
+                    Uuid.randomUUID()
                         .toString(),
                     taskId,
                     Tasks.MACHINE,

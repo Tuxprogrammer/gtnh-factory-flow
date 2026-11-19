@@ -7,13 +7,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
 
 import org.junit.jupiter.api.Test;
 
-import com.gtnhplanner.CoreIds;
 import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.PinRule;
 import com.gtnhplanner.data.flowchart.balancer.PortRef;
@@ -27,16 +25,16 @@ import com.gtnhplanner.data.flowchart.balancer.UpToReason;
  */
 class CardFaceTest {
 
-    private static final UUID CARD = UUID.randomUUID(), OTHER = UUID.randomUUID();
+    private static final Uuid CARD = Uuid.randomUUID(), OTHER = Uuid.randomUUID();
     /** The same cards as the solver names them. */
-    private static final Uuid CARD_ID = CoreIds.core(CARD), OTHER_ID = CoreIds.core(OTHER);
+    private static final Uuid CARD_ID = CARD, OTHER_ID = OTHER;
     /** The game's font runs about six pixels a letter. */
     private static final ToIntFunction<String> SIX = s -> 6 * s.length();
     private static final PortRef OXYGEN = new PortRef(CARD_ID, 1, true), WATER = new PortRef(CARD_ID, 2, true),
         ACID = new PortRef(CARD_ID, 0, false);
     private static final Map<PortRef, String> NAMES = Map.of(OXYGEN, "Oxygen", WATER, "Water", ACID, "Sulfuric Acid");
     private static final Function<PortRef, String> PORTS = NAMES::get;
-    private static final Function<UUID, String> CARDS = id -> id.equals(OTHER) ? "Electrolyzer" : null;
+    private static final Function<Uuid, String> CARDS = id -> id.equals(OTHER) ? "Electrolyzer" : null;
 
     private static UpToReadout readout(final double capacity, final double reached, final UpToReason reason,
         final PortRef port, final Double wants) {
@@ -330,13 +328,13 @@ class CardFaceTest {
 
     @Test
     void aShortfallNamesWhatHoldsItBack() {
-        final UUID tower = UUID.randomUUID(), electrolyzer = UUID.randomUUID(), mixer = UUID.randomUUID(),
-            other = UUID.randomUUID();
-        final Map<UUID, String> names = Map
+        final Uuid tower = Uuid.randomUUID(), electrolyzer = Uuid.randomUUID(), mixer = Uuid.randomUUID(),
+            other = Uuid.randomUUID();
+        final Map<Uuid, String> names = Map
             .of(tower, "Distillation Tower", electrolyzer, "Electrolyzer", mixer, "Mixer");
-        final Map<UUID, PinRule> rules = Map
+        final Map<Uuid, PinRule> rules = Map
             .of(tower, PinRule.UP_TO, electrolyzer, PinRule.EXACT, mixer, PinRule.UP_TO);
-        final Map<UUID, UpToReason> reasons = Map.of(tower, UpToReason.BOTTLENECK, mixer, UpToReason.STARVED);
+        final Map<Uuid, UpToReason> reasons = Map.of(tower, UpToReason.BOTTLENECK, mixer, UpToReason.STARVED);
         assertEquals(
             " The Distillation Tower is full. The Electrolyzer is set exactly. The Mixer is starved."
                 + " The Benzene drawer's rate holds it back.",
@@ -505,10 +503,8 @@ class CardFaceTest {
             com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind.DEAD_LOOP,
             CardFace.loopOf(loops, OTHER),
             "in two rings: the first");
-        assertEquals(
-            com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind.CLOG_LOCK,
-            CardFace.loopOf(loops, CoreIds.mod(third)));
-        assertNull(CardFace.loopOf(loops, UUID.randomUUID()));
+        assertEquals(com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind.CLOG_LOCK, CardFace.loopOf(loops, third));
+        assertNull(CardFace.loopOf(loops, Uuid.randomUUID()));
         assertNull(CardFace.loopOf(List.of(), CARD));
         // Dead loop amber, clog lock purple; dimmed to 30% over the card's edge in the clock's grey half.
         assertEquals(

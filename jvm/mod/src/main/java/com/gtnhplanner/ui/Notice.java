@@ -3,10 +3,10 @@ package com.gtnhplanner.ui;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.balancer.Severity;
 import com.gtnhplanner.data.flowchart.balancer.UpToLoop;
 
@@ -16,20 +16,20 @@ import com.gtnhplanner.data.flowchart.balancer.UpToLoop;
  * {@code action}): "Open" on a plan someone shared. A ring's notice is an alarm ({@code loop}): a chip naming it before
  * the sentence, in the ring's tone, blinking with its cards' outlines.
  */
-public record Notice(Severity severity, String text, List<UUID> focus, @Nullable String actionLabel,
+public record Notice(Severity severity, String text, List<Uuid> focus, @Nullable String actionLabel,
     @Nullable Runnable action, @Nullable UpToLoop.Kind loop) {
 
-    public Notice(final Severity severity, final String text, final List<UUID> focus) {
+    public Notice(final Severity severity, final String text, final List<Uuid> focus) {
         this(severity, text, focus, null, null, null);
     }
 
-    public Notice(final Severity severity, final String text, final List<UUID> focus,
+    public Notice(final Severity severity, final String text, final List<Uuid> focus,
         @Nullable final String actionLabel, @Nullable final Runnable action) {
         this(severity, text, focus, actionLabel, action, null);
     }
 
     /** A ring's alarm: DEAD LOOP or CLOG LOCK on its chip, its sentence, Show me on its cards. */
-    public static Notice alarm(final UpToLoop.Kind loop, final String text, final List<UUID> cards) {
+    public static Notice alarm(final UpToLoop.Kind loop, final String text, final List<Uuid> cards) {
         return new Notice(Severity.ERROR, text, cards, null, null, loop);
     }
 

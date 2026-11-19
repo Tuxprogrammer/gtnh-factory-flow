@@ -8,7 +8,6 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import com.gtnhplanner.CoreIds;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.balancer.BalanceMode;
 import com.gtnhplanner.data.flowchart.balancer.BalanceResult;
@@ -72,15 +71,15 @@ class FreeInputsTest {
         assertEquals(
             0,
             after.nodeBalances()
-                .get(CoreIds.core(pinned.id))
+                .get(pinned.id)
                 .inputPerSecond(lava),
             1e-9);
         for (final Node machine : chart.machines()) assertEquals(
             before.nodeBalances()
-                .get(CoreIds.core(machine.id))
+                .get(machine.id)
                 .operations(),
             after.nodeBalances()
-                .get(CoreIds.core(machine.id))
+                .get(machine.id)
                 .operations(),
             1e-9,
             machine.machineName);

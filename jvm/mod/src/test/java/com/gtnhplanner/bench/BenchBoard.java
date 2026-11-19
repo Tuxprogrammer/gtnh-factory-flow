@@ -7,8 +7,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.importer.FfHandle;
 import com.gtnhplanner.importer.FfIds;
 import com.gtnhplanner.importer.FfPlan;
@@ -21,7 +21,7 @@ import com.gtnhplanner.importer.FfPlan;
 public record BenchBoard(String name, List<Item> items, List<Link> links) {
 
     /** A card or a drawer: the box, and for a card its input and output rows. */
-    public record Item(UUID id, String label, boolean drawer, boolean supplies, int x, int y, int w, int h, int ins,
+    public record Item(Uuid id, String label, boolean drawer, boolean supplies, int x, int y, int w, int h, int ins,
         int outs) {
 
         Item at(final int nx, final int ny) {
@@ -30,7 +30,7 @@ public record BenchBoard(String name, List<Item> items, List<Link> links) {
     }
 
     /** A wire from one box's port to another's. */
-    public record Link(UUID id, UUID from, int fromPort, UUID to, int toPort, String resource) {}
+    public record Link(Uuid id, Uuid from, int fromPort, Uuid to, int toPort, String resource) {}
 
     /** The game's card and drawer sizes (see CardLayout and DrawerCard). */
     public static final int CARD_W = 320, DRAWER_W = 116, DRAWER_H = 40, RAILS_Y = 38, ROW = 42, PICTURE = 88;
@@ -41,7 +41,7 @@ public record BenchBoard(String name, List<Item> items, List<Link> links) {
     }
 
     /** The same board with boxes moved. */
-    public BenchBoard placed(final Map<UUID, int[]> at) {
+    public BenchBoard placed(final Map<Uuid, int[]> at) {
         final List<Item> moved = new ArrayList<>(items.size());
         for (final Item i : items) {
             final int[] p = at.get(i.id());
@@ -50,14 +50,14 @@ public record BenchBoard(String name, List<Item> items, List<Link> links) {
         return new BenchBoard(name, moved, links);
     }
 
-    public Map<UUID, Item> byId() {
-        final Map<UUID, Item> m = new HashMap<>();
+    public Map<Uuid, Item> byId() {
+        final Map<Uuid, Item> m = new HashMap<>();
         for (final Item i : items) m.put(i.id(), i);
         return m;
     }
 
-    private static UUID uuid(final String s) {
-        return UUID.nameUUIDFromBytes(s.getBytes(StandardCharsets.UTF_8));
+    private static Uuid uuid(final String s) {
+        return Uuid.nameUUIDFromBytes(s.getBytes(StandardCharsets.UTF_8));
     }
 
     /**
@@ -79,7 +79,7 @@ public record BenchBoard(String name, List<Item> items, List<Link> links) {
             if (!seen.add(card)) continue;
             items.add(
                 new Item(
-                    UUID.fromString(card),
+                    Uuid.fromString(card),
                     c.get("machine")
                         .getAsString(),
                     false,
@@ -99,7 +99,7 @@ public record BenchBoard(String name, List<Item> items, List<Link> links) {
             final com.google.gson.JsonObject d = e.getAsJsonObject();
             items.add(
                 new Item(
-                    UUID.fromString(
+                    Uuid.fromString(
                         d.get("id")
                             .getAsString()),
                     d.get("label")
@@ -133,10 +133,10 @@ public record BenchBoard(String name, List<Item> items, List<Link> links) {
             if (from == null || to == null || key == null || "?".equals(from) || "?".equals(to)) continue;
             links.add(
                 new Link(
-                    UUID.fromString(key),
-                    UUID.fromString(from),
+                    Uuid.fromString(key),
+                    Uuid.fromString(from),
                     0,
-                    UUID.fromString(to),
+                    Uuid.fromString(to),
                     0,
                     w.get(0)
                         .getAsString()));
@@ -206,11 +206,11 @@ public record BenchBoard(String name, List<Item> items, List<Link> links) {
                     supplies ? 0 : 1,
                     supplies ? 1 : 0));
         }
-        final Set<UUID> known = new HashSet<>();
+        final Set<Uuid> known = new HashSet<>();
         for (final Item i : items) known.add(i.id());
         final List<Link> links = new ArrayList<>();
         for (final FfPlan.FfEdge e : plan.edges()) {
-            final UUID from = uuid(e.source()), to = uuid(e.target());
+            final Uuid from = uuid(e.source()), to = uuid(e.target());
             if (!known.contains(from) || !known.contains(to)) continue;
             final int out = port(sectionsOf.get(e.source()), sectionBase.get(e.source()), e.sourceHandle(), true);
             final int in = port(sectionsOf.get(e.target()), sectionBase.get(e.target()), e.targetHandle(), false);

@@ -7,7 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import net.minecraft.item.ItemStack;
 
@@ -21,6 +20,7 @@ import com.cleanroommc.modularui.theme.WidgetThemeEntry;
 import com.cleanroommc.modularui.value.StringValue;
 import com.cleanroommc.modularui.widget.ParentWidget;
 import com.cleanroommc.modularui.widgets.textfield.TextFieldWidget;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.PinRule;
 import com.gtnhplanner.ui.canvas.BoardCanvas;
@@ -905,7 +905,7 @@ final class OverviewRail extends ParentWidget<OverviewRail>
         return index;
     }
 
-    private static String portKey(final UUID node, final boolean input, final int index) {
+    private static String portKey(final Uuid node, final boolean input, final int index) {
         return node + (input ? "<" : ">") + index;
     }
 
@@ -1502,7 +1502,7 @@ final class OverviewRail extends ParentWidget<OverviewRail>
 
     /** The card a recipe is on: its own, or the shared machine it is a recipe of. */
     @org.jetbrains.annotations.Nullable
-    private com.gtnhplanner.ui.card.RecipeCard cardOf(final java.util.UUID node) {
+    private com.gtnhplanner.ui.card.RecipeCard cardOf(final Uuid node) {
         final com.gtnhplanner.ui.card.RecipeCard own = canvas.cards()
             .get(node);
         if (own != null) return own;
@@ -1548,7 +1548,7 @@ final class OverviewRail extends ParentWidget<OverviewRail>
 
     /** Frames the next card that makes or uses a resource, cycling each time. */
     private void flyTo(final String key) {
-        final List<UUID> using = new ArrayList<>();
+        final List<Uuid> using = new ArrayList<>();
         for (final CardModel card : session.models()
             .values()) {
             boolean uses = false;
@@ -1564,7 +1564,7 @@ final class OverviewRail extends ParentWidget<OverviewRail>
     }
 
     private void flyToGroup(final String name) {
-        final List<UUID> cards = new ArrayList<>();
+        final List<Uuid> cards = new ArrayList<>();
         for (final BoardSession.MachineLine m : session.totals()
             .machines())
             if (m.name()

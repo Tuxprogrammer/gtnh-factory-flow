@@ -9,13 +9,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Map;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.Graph;
@@ -46,7 +46,7 @@ class PowerCardTest {
 
     private static Node generator(final String sourceId, final Map<String, String> settings) {
         com.gtnhplanner.harness.GtnhFlowLoader.ensureDefaultMachineProfile();
-        final Node gen = new Node(UUID.randomUUID(), 400, 0);
+        final Node gen = new Node(Uuid.randomUUID(), 400, 0);
         gen.powerSource = sourceId;
         gen.powerSettings.putAll(settings);
         final PowerSource source = PowerRegistry.get(sourceId);
@@ -76,13 +76,13 @@ class PowerCardTest {
             .get(0)
             .perSecond();
         assertTrue(fuelPerSecond != Math.rint(fuelPerSecond), "the test wants a fractional rate");
-        final Node maker = new Node(UUID.randomUUID(), 0, 0);
+        final Node maker = new Node(Uuid.randomUUID(), 0, 0);
         maker.machineName = "Benzene maker";
         maker.properties.put(com.gtnhplanner.harness.GtnhFlowLoader.DURATION_TICKS, 20);
         maker.outputs.add(TestIngredients.port("benzene", 1));
         g.addNode(maker);
         g.addNode(gen);
-        g.addEdge(new Edge(UUID.randomUUID(), maker.id, gen.id, 0, 0));
+        g.addEdge(new Edge(Uuid.randomUUID(), maker.id, gen.id, 0, 0));
         final Drawer power = new Drawer(Drawer.Kind.PRODUCT, Energy.KEY);
         power.setTarget(Drawer.Rule.EXACTLY, 10 * gen.powerModel.euPerTick() * 20);
         g.addDrawer(power);
@@ -93,14 +93,14 @@ class PowerCardTest {
         assertEquals(
             10,
             result.nodeBalances()
-                .get(CoreIds.core(gen.id))
+                .get(gen.id)
                 .operations(),
             1e-6,
             "ten turbines make the drawer's rate");
         assertEquals(
             10 * fuelPerSecond,
             result.nodeBalances()
-                .get(CoreIds.core(maker.id))
+                .get(maker.id)
                 .operations(),
             1e-6,
             "and burn ten turbines' exact fuel");

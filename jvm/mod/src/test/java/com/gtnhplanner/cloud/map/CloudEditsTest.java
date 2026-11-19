@@ -13,7 +13,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
@@ -23,6 +22,7 @@ import com.google.gson.JsonParser;
 import com.gtnhplanner.cloud.sync.LiveOp;
 import com.gtnhplanner.cloud.sync.LiveOps;
 import com.gtnhplanner.cloud.sync.LiveState;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.Graph;
@@ -157,7 +157,7 @@ class CloudEditsTest {
         for (final Node from : nodes) {
             for (final Node to : nodes) {
                 if (from == to || from.outputs.isEmpty() || to.inputs.isEmpty()) continue;
-                added = new Edge(UUID.randomUUID(), from.id, to.id, 0, 0);
+                added = new Edge(Uuid.randomUUID(), from.id, to.id, 0, 0);
                 break;
             }
             if (added != null) break;
@@ -448,7 +448,7 @@ class CloudEditsTest {
         return best;
     }
 
-    private static int wiresOf(final Graph g, final UUID node) {
+    private static int wiresOf(final Graph g, final Uuid node) {
         int wires = 0;
         for (final Edge e : g.getEdges()) if (e.sourceNodeId.equals(node) || e.targetNodeId.equals(node)) wires++;
         for (final Drawer d : g.getDrawers()) for (final Drawer.Link l : d.getLinks()) if (l.nodeId()

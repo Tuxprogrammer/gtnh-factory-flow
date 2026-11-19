@@ -14,7 +14,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 import javax.imageio.IIOImage;
@@ -33,6 +32,7 @@ import org.lwjgl.opengl.GL11;
 
 import com.gtnhplanner.GtnhPlanner;
 import com.gtnhplanner.api.PlanAPI;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Plan;
 import com.gtnhplanner.data.flowchart.TaskEdits;
@@ -218,7 +218,7 @@ public final class TaskPictures {
             board,
             () -> TaskEdits.addThing(
                 board,
-                UUID.randomUUID()
+                Uuid.randomUUID()
                     .toString(),
                 taskId,
                 Tasks.PICTURE,

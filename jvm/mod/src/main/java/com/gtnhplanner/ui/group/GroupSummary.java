@@ -6,11 +6,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Groups;
 import com.gtnhplanner.ui.BoardSession;
@@ -35,16 +35,16 @@ public record GroupSummary(int machines, double euPerTick, List<Flow> inputs, Li
         return Math.max(1, Math.max(inputs.size(), outputs.size()));
     }
 
-    public static GroupSummary of(final BoardSession session, final UUID group) {
+    public static GroupSummary of(final BoardSession session, final Uuid group) {
         final Graph g = session.graph();
-        final Set<UUID> inside = new HashSet<>();
-        for (final UUID id : Groups.descendants(g, group)) if (g.nodes.containsKey(id)) inside.add(id);
+        final Set<Uuid> inside = new HashSet<>();
+        for (final Uuid id : Groups.descendants(g, group)) if (g.nodes.containsKey(id)) inside.add(id);
         int machines = 0;
         double eu = 0;
         final Map<String, double[]> net = new LinkedHashMap<>();
         final Map<String, Flow> looks = new LinkedHashMap<>();
-        final Set<UUID> hosts = new HashSet<>();
-        for (final UUID id : inside) {
+        final Set<Uuid> hosts = new HashSet<>();
+        for (final Uuid id : inside) {
             final CardModel card = session.models()
                 .get(id);
             if (card == null || com.gtnhplanner.power.CustomRate.is(card.node)) continue;

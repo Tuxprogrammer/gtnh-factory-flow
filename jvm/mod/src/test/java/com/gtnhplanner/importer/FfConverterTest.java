@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -17,6 +16,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.Graph;
@@ -243,7 +243,7 @@ class FfConverterTest {
             final Node host = g.nodes.get(
                 m.getSections()
                     .getFirst());
-            for (final java.util.UUID id : m.getSections()) {
+            for (final Uuid id : m.getSections()) {
                 assertEquals(host.x, g.nodes.get(id).x, "a section sits where its card does");
                 assertEquals(host.y, g.nodes.get(id).y);
                 assertFalse(
@@ -497,7 +497,7 @@ class FfConverterTest {
             2,
             solved.get(1)
                 .getMachineCapacity());
-        for (final MachineGroup m : solved) for (final java.util.UUID id : m.getSections())
+        for (final MachineGroup m : solved) for (final Uuid id : m.getSections())
             assertEquals(PinRule.ANY, PinRule.of(g.nodes.get(id)), "the count is the machine's, not a recipe's");
     }
 
@@ -983,7 +983,7 @@ class FfConverterTest {
             "alumina-line-shared-reactor.json",
             "biodiesel-demo.json")) {
             final Graph g = fixture(name).graph();
-            final List<UUID> ids = new ArrayList<>(g.nodes.keySet());
+            final List<Uuid> ids = new ArrayList<>(g.nodes.keySet());
             assertEquals(
                 ids.size(),
                 ids.stream()

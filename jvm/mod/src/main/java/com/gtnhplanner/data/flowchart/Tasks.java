@@ -177,7 +177,7 @@ public final class Tasks {
     public record Picture(String thumb, int w, int h, String takenAt, @Nullable String file) {}
 
     /**
-     * A quest in the game's quest book: {@code id} the quest's id there (BetterQuesting's UUID, the same in every
+     * A quest in the game's quest book: {@code id} the quest's id there (BetterQuesting's Uuid, the same in every
      * world of a pack), with what reads where the book is missing: its {@code name}, its {@code icon} (an item key,
      * {@code item:<mod>:<name>:<meta>}) and the name of the quest {@code line} it is in.
      */

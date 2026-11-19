@@ -1,7 +1,5 @@
 package com.gtnhplanner.ui.world;
 
-import java.util.UUID;
-
 import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
@@ -13,6 +11,7 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 
 import org.lwjgl.opengl.GL11;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.ui.PlannerSettings;
@@ -38,7 +37,7 @@ public final class WorldView {
     @Nullable
     private Graph shownGraph;
     @Nullable
-    private UUID shownId;
+    private Uuid shownId;
     private long shownUntil;
     private boolean closing;
     /** A line at the top of the screen for a few seconds (the shown card being somewhere else). */
@@ -78,7 +77,7 @@ public final class WorldView {
     }
 
     /** Outlines a card's blocks for a while, with beams to find them by; the planner closes. */
-    public static void show(final Graph graph, final UUID nodeId) {
+    public static void show(final Graph graph, final Uuid nodeId) {
         INSTANCE.shownGraph = graph;
         INSTANCE.shownId = nodeId;
         INSTANCE.shownPlace = null;

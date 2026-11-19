@@ -7,10 +7,9 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.Function;
 
-import com.gtnhplanner.CoreIds;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.balancer.PortRef;
 import com.gtnhplanner.data.flowchart.balancer.UpToLoop;
@@ -42,17 +41,17 @@ public final class Loops {
     }
 
     /** The ring each card is in (the first, when it is in several), as its tone, by card. */
-    public static Map<UUID, Tone> cardTones(final List<UpToLoop> loops, final Function<UUID, UUID> cardOf) {
-        final Map<UUID, Tone> out = new HashMap<>();
+    public static Map<Uuid, Tone> cardTones(final List<UpToLoop> loops, final Function<Uuid, Uuid> cardOf) {
+        final Map<Uuid, Tone> out = new HashMap<>();
         for (final UpToLoop loop : loops)
-            for (final UUID node : CoreIds.modList(loop.nodes())) out.putIfAbsent(cardOf.apply(node), Tone.of(loop));
+            for (final Uuid node : new ArrayList<>(loop.nodes())) out.putIfAbsent(cardOf.apply(node), Tone.of(loop));
         return out;
     }
 
     /** A ring's cards, each once, in its members' order: a shared machine's recipes are its one card. */
-    public static List<UUID> cards(final UpToLoop loop, final Function<UUID, UUID> cardOf) {
-        final Set<UUID> out = new LinkedHashSet<>();
-        for (final UUID node : CoreIds.modList(loop.nodes())) out.add(cardOf.apply(node));
+    public static List<Uuid> cards(final UpToLoop loop, final Function<Uuid, Uuid> cardOf) {
+        final Set<Uuid> out = new LinkedHashSet<>();
+        for (final Uuid node : new ArrayList<>(loop.nodes())) out.add(cardOf.apply(node));
         return new ArrayList<>(out);
     }
 
@@ -61,17 +60,17 @@ public final class Loops {
      * names (its members' blaming ports: a dead loop's inputs, a clog lock's outputs). By wire id, the ring's tone; a
      * wire on two rings takes the first's.
      */
-    public static Map<UUID, Tone> wires(final Iterable<Edge> edges, final List<UpToLoop> loops,
-        final Function<UUID, UUID> cardOf) {
-        final Map<UUID, Tone> out = new HashMap<>();
+    public static Map<Uuid, Tone> wires(final Iterable<Edge> edges, final List<UpToLoop> loops,
+        final Function<Uuid, Uuid> cardOf) {
+        final Map<Uuid, Tone> out = new HashMap<>();
         for (final UpToLoop loop : loops) {
-            final Set<UUID> cards = new HashSet<>(cards(loop, cardOf));
+            final Set<Uuid> cards = new HashSet<>(cards(loop, cardOf));
             final Set<PortRef> rows = new HashSet<>(loop.ports());
             for (final Edge e : edges) {
                 if (out.containsKey(e.id) || !cards.contains(cardOf.apply(e.sourceNodeId))
                     || !cards.contains(cardOf.apply(e.targetNodeId))) continue;
-                if (rows.contains(new PortRef(CoreIds.core(e.sourceNodeId), e.sourceOutputIndex, false))
-                    || rows.contains(new PortRef(CoreIds.core(e.targetNodeId), e.targetInputIndex, true)))
+                if (rows.contains(new PortRef(e.sourceNodeId, e.sourceOutputIndex, false))
+                    || rows.contains(new PortRef(e.targetNodeId, e.targetInputIndex, true)))
                     out.put(e.id, Tone.of(loop));
             }
         }

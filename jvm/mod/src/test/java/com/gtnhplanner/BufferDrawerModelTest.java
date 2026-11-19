@@ -5,10 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Drawer.Link;
 import com.gtnhplanner.data.flowchart.DrawerTypes.Kind;
@@ -22,8 +22,8 @@ import com.gtnhplanner.data.flowchart.Serializer;
  */
 class BufferDrawerModelTest {
 
-    private static final UUID MAKER = UUID.nameUUIDFromBytes("maker".getBytes()),
-        USER = UUID.nameUUIDFromBytes("user".getBytes()), OTHER = UUID.nameUUIDFromBytes("other".getBytes());
+    private static final Uuid MAKER = Uuid.nameUUIDFromBytes("maker".getBytes()),
+        USER = Uuid.nameUUIDFromBytes("user".getBytes()), OTHER = Uuid.nameUUIDFromBytes("other".getBytes());
 
     @Test
     void aProductGivenAnInputIsABufferAndBackAgain() {
@@ -110,10 +110,10 @@ class BufferDrawerModelTest {
     }
 
     /** Cards for the delete tests, with the ids above. */
-    private static Graph cards(final UUID... ids) {
+    private static Graph cards(final Uuid... ids) {
         com.gtnhplanner.harness.GtnhFlowLoader.ensureDefaultMachineProfile();
         final Graph g = new Graph("t");
-        for (final UUID id : ids) g.addNode(new com.gtnhplanner.data.flowchart.Node(id, 0, 0));
+        for (final Uuid id : ids) g.addNode(new com.gtnhplanner.data.flowchart.Node(id, 0, 0));
         return g;
     }
 
@@ -147,7 +147,7 @@ class BufferDrawerModelTest {
 
     @Test
     void aDeletedJunctionIsAChoiceAndHealsNothing() {
-        final UUID maker2 = UUID.nameUUIDFromBytes("maker2".getBytes());
+        final Uuid maker2 = Uuid.nameUUIDFromBytes("maker2".getBytes());
         final Graph g = cards(MAKER, maker2, USER, OTHER);
         final Drawer d = new Drawer(Kind.PRODUCT, "item:dust");
         g.addDrawer(d);

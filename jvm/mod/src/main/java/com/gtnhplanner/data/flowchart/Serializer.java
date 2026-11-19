@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -37,7 +36,7 @@ public final class Serializer {
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting()
         .enableComplexMapKeySerialization()
         .registerTypeAdapter(GraphData.class, new GraphDataAdapter())
-        // The saved excess choice's ports name their nodes by the core's id: written and read as a UUID always was.
+        // The saved excess choice's ports name their nodes by the core's id: written and read as a Uuid always was.
         .registerTypeAdapter(Uuid.class, CoreIds.GSON)
         .create();
 
@@ -340,7 +339,7 @@ public final class Serializer {
         if (!graph.pinList.isEmpty()) {
             final JsonArray pinList = new JsonArray();
             // Cards since deleted are left out.
-            for (final UUID id : graph.pinList)
+            for (final Uuid id : graph.pinList)
                 if (graph.nodes.containsKey(id)) pinList.add(new com.google.gson.JsonPrimitive(id.toString()));
             if (pinList.size() > 0) root.add("pinList", pinList);
         }
@@ -430,7 +429,7 @@ public final class Serializer {
             .isJsonArray()) {
             for (final JsonElement id : root.getAsJsonArray("pinList")) {
                 try {
-                    graph.pinList.add(UUID.fromString(id.getAsString()));
+                    graph.pinList.add(Uuid.fromString(id.getAsString()));
                 } catch (final IllegalArgumentException ignored) {}
             }
         }
@@ -557,7 +556,7 @@ public final class Serializer {
      */
     @Nonnull
     public static Node jsonToNode(final JsonObject obj) {
-        final UUID id = UUID.fromString(
+        final Uuid id = Uuid.fromString(
             obj.get("id")
                 .getAsString());
         final int x = obj.get("x")
@@ -617,7 +616,7 @@ public final class Serializer {
                 .getAsBoolean());
         if (obj.has("group")) {
             try {
-                node.group = UUID.fromString(
+                node.group = Uuid.fromString(
                     obj.get("group")
                         .getAsString());
             } catch (final RuntimeException ignored) {
@@ -700,13 +699,13 @@ public final class Serializer {
     /** One wire as the save wrote it ({@link #edgeToJson}). */
     @Nonnull
     public static Edge jsonToEdge(final JsonObject obj) {
-        final UUID id = UUID.fromString(
+        final Uuid id = Uuid.fromString(
             obj.get("id")
                 .getAsString());
-        final UUID src = UUID.fromString(
+        final Uuid src = Uuid.fromString(
             obj.get("src")
                 .getAsString());
-        final UUID dst = UUID.fromString(
+        final Uuid dst = Uuid.fromString(
             obj.get("dst")
                 .getAsString());
         final int srcOut = obj.get("srcOut")
@@ -737,7 +736,7 @@ public final class Serializer {
             .entrySet()) {
             if (!e.getValue()
                 .isJsonArray()) continue;
-            final java.util.List<String> keys = new java.util.ArrayList<>();
+            final java.util.List<String> keys = new ArrayList<>();
             for (final JsonElement k : e.getValue()
                 .getAsJsonArray()) keys.add(k.getAsString());
             graph.settingPins.put(e.getKey(), keys);
@@ -940,7 +939,7 @@ public final class Serializer {
     // ── Mermaid helpers ──
 
     @Nonnull
-    private static String mermaidId(final UUID uuid) {
+    private static String mermaidId(final Uuid uuid) {
         return "n" + uuid.toString()
             .replace("-", "")
             .substring(0, 8);

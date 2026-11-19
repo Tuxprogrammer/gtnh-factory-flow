@@ -8,10 +8,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Drawer.Link;
 import com.gtnhplanner.data.flowchart.DrawerTypes.Kind;
@@ -55,10 +55,10 @@ class DrawerRulesTest {
 
         final SolutionView s = solved(chart.graph());
 
-        assertEquals(100, s.drawers.rate(CoreIds.core(fuel.getId())), EPS, "the plan makes what was asked, no more");
-        assertTrue(s.drawers.met(CoreIds.core(fuel.getId())));
-        assertEquals(4.0, s.machineCounts.get(CoreIds.core(chart.machine(1).id)), EPS, "four distilleries: 100 oil/s");
-        assertEquals(100.0 / 12000 * 8, s.machineCounts.get(CoreIds.core(chart.machine(0).id)), EPS);
+        assertEquals(100, s.drawers.rate(fuel.getId()), EPS, "the plan makes what was asked, no more");
+        assertTrue(s.drawers.met(fuel.getId()));
+        assertEquals(4.0, s.machineCounts.get(chart.machine(1).id), EPS, "four distilleries: 100 oil/s");
+        assertEquals(100.0 / 12000 * 8, s.machineCounts.get(chart.machine(0).id), EPS);
         assertTrue(
             s.drawers.unmet()
                 .isEmpty());
@@ -71,8 +71,8 @@ class DrawerRulesTest {
 
         final SolutionView s = solved(chart.graph());
 
-        assertEquals(60, s.drawers.rate(CoreIds.core(fuel.getId())), EPS);
-        assertEquals(2.4, s.machineCounts.get(CoreIds.core(chart.machine(1).id)), EPS);
+        assertEquals(60, s.drawers.rate(fuel.getId()), EPS);
+        assertEquals(2.4, s.machineCounts.get(chart.machine(1).id), EPS);
     }
 
     @Test
@@ -82,8 +82,8 @@ class DrawerRulesTest {
 
         final SolutionView s = solved(chart.graph());
 
-        assertEquals(25, s.drawers.rate(CoreIds.core(fuel.getId())), EPS, "an upper limit does not push the plan up");
-        assertTrue(s.drawers.met(CoreIds.core(fuel.getId())));
+        assertEquals(25, s.drawers.rate(fuel.getId()), EPS, "an upper limit does not push the plan up");
+        assertTrue(s.drawers.met(fuel.getId()));
     }
 
     @Test
@@ -96,22 +96,15 @@ class DrawerRulesTest {
 
         final SolutionView s = solved(chart.graph());
 
-        assertFalse(s.drawers.met(CoreIds.core(fuel.getId())), "1500/s cannot be held at most 1000/s");
-        assertEquals(
-            1500,
-            s.drawers.rate(CoreIds.core(fuel.getId())),
-            1e-3,
-            "the pin wins; the plan keeps its numbers");
-        assertEquals(1.0, s.machineCounts.get(CoreIds.core(chart.machine(0).id)), EPS);
-        final DrawerReadout.Shortfall shortfall = s.drawers.shortfall(CoreIds.core(fuel.getId()));
+        assertFalse(s.drawers.met(fuel.getId()), "1500/s cannot be held at most 1000/s");
+        assertEquals(1500, s.drawers.rate(fuel.getId()), 1e-3, "the pin wins; the plan keeps its numbers");
+        assertEquals(1.0, s.machineCounts.get(chart.machine(0).id), EPS);
+        final DrawerReadout.Shortfall shortfall = s.drawers.shortfall(fuel.getId());
         assertNotNull(shortfall);
         assertEquals(1500, shortfall.reachable(), 1e-3);
         assertEquals(1000, shortfall.target(), 0);
         assertEquals(Rule.AT_MOST, shortfall.rule());
-        assertEquals(
-            List.of(CoreIds.core(chart.machine(0).id)),
-            shortfall.limitingNodes(),
-            "the reactor's pin holds it");
+        assertEquals(List.of(chart.machine(0).id), shortfall.limitingNodes(), "the reactor's pin holds it");
         assertTrue(hasNote(s.notes, SolverMessage.DRAWER_UNMET), "the notice names the drawer: " + s.notes);
         assertTrue(hasNote(s.notes, SolverMessage.DRAWER_LIMITED_BY), "and the limit: " + s.notes);
     }
@@ -126,9 +119,9 @@ class DrawerRulesTest {
 
         final SolutionView s = solved(chart.graph());
 
-        assertTrue(s.drawers.met(CoreIds.core(fuel.getId())));
-        assertEquals(1000, s.drawers.rate(CoreIds.core(fuel.getId())), 1e-3);
-        assertEquals(2 / 3.0, s.machineCounts.get(CoreIds.core(chart.machine(0).id)), EPS);
+        assertTrue(s.drawers.met(fuel.getId()));
+        assertEquals(1000, s.drawers.rate(fuel.getId()), 1e-3);
+        assertEquals(2 / 3.0, s.machineCounts.get(chart.machine(0).id), EPS);
         assertEquals(
             1,
             s.upTo()
@@ -149,10 +142,8 @@ class DrawerRulesTest {
 
         final SolutionView s = solved(chart.graph());
 
-        assertTrue(s.drawers.met(CoreIds.core(fuel.getId())));
-        assertTrue(
-            s.drawers.rate(CoreIds.core(fuel.getId())) <= 20 + EPS,
-            "rate " + s.drawers.rate(CoreIds.core(fuel.getId())));
+        assertTrue(s.drawers.met(fuel.getId()));
+        assertTrue(s.drawers.rate(fuel.getId()) <= 20 + EPS, "rate " + s.drawers.rate(fuel.getId()));
         assertEquals(1, s.gatedSinks.size(), "the rest leaves at the distillery: " + s.gatedSinks);
     }
 
@@ -165,8 +156,8 @@ class DrawerRulesTest {
 
         final SolutionView s = solved(chart.graph());
 
-        assertEquals(50, s.drawers.rate(CoreIds.core(oil.getId())), EPS);
-        assertEquals(2.0, s.machineCounts.get(CoreIds.core(chart.machine(1).id)), EPS, "two distilleries eat 50 oil/s");
+        assertEquals(50, s.drawers.rate(oil.getId()), EPS);
+        assertEquals(2.0, s.machineCounts.get(chart.machine(1).id), EPS, "two distilleries eat 50 oil/s");
         assertEquals(50, terminalRate(s, chart.machine(0).id, 1, false), EPS, "light fuel follows the oil");
     }
 
@@ -181,19 +172,14 @@ class DrawerRulesTest {
         final Answer answer = GraphSolve.solveWithAlternatives(BalanceMode.AUTO, chart.graph(), null, Map.of());
 
         final SolutionView s = assertInstanceOf(Answer.Solved.class, answer, () -> "failed: " + answer).solution();
-        assertFalse(s.drawers.met(CoreIds.core(oxygen.getId())), "10 oxygen/s needs 60 water/s");
-        assertTrue(
-            s.drawers.met(CoreIds.core(water.getId())),
-            "the cheaper miss is the product's (relative shortfall)");
-        assertEquals(5, s.drawers.rate(CoreIds.core(oxygen.getId())), EPS, "the plan runs at what the water allows");
-        assertEquals(30, s.drawers.rate(CoreIds.core(water.getId())), EPS);
-        final DrawerReadout.Shortfall shortfall = s.drawers.shortfall(CoreIds.core(oxygen.getId()));
+        assertFalse(s.drawers.met(oxygen.getId()), "10 oxygen/s needs 60 water/s");
+        assertTrue(s.drawers.met(water.getId()), "the cheaper miss is the product's (relative shortfall)");
+        assertEquals(5, s.drawers.rate(oxygen.getId()), EPS, "the plan runs at what the water allows");
+        assertEquals(30, s.drawers.rate(water.getId()), EPS);
+        final DrawerReadout.Shortfall shortfall = s.drawers.shortfall(oxygen.getId());
         assertNotNull(shortfall);
         assertEquals(5, shortfall.reachable(), EPS);
-        assertEquals(
-            List.of(CoreIds.core(water.getId())),
-            shortfall.limitingDrawers(),
-            "the water cap is what holds it back");
+        assertEquals(List.of(water.getId()), shortfall.limitingDrawers(), "the water cap is what holds it back");
         assertTrue(
             shortfall.limitingNodes()
                 .isEmpty());
@@ -202,10 +188,10 @@ class DrawerRulesTest {
             Map.of(
                 water.getId(),
                 s.drawers.unmet()
-                    .contains(CoreIds.core(water.getId())),
+                    .contains(water.getId()),
                 oxygen.getId(),
                 s.drawers.unmet()
-                    .contains(CoreIds.core(oxygen.getId()))));
+                    .contains(oxygen.getId())));
     }
 
     @Test
@@ -218,23 +204,19 @@ class DrawerRulesTest {
 
         final SolutionView s = solved(chart.graph());
 
-        assertTrue(s.drawers.met(CoreIds.core(fuel.getId())));
-        assertTrue(s.drawers.met(CoreIds.core(oil.getId())));
-        assertEquals(100, s.drawers.rate(CoreIds.core(fuel.getId())), EPS);
+        assertTrue(s.drawers.met(fuel.getId()));
+        assertTrue(s.drawers.met(oil.getId()));
+        assertEquals(100, s.drawers.rate(fuel.getId()), EPS);
         final double imported = s.gatedSources.stream()
             .filter(
                 e -> e.port()
                     .nodeId()
-                    .equals(CoreIds.core(chart.machine(0).id))
+                    .equals(chart.machine(0).id)
                     && e.port()
                         .portIndex() == 1)
             .mapToDouble(External::ratePerSecond)
             .sum();
-        assertEquals(
-            100 - s.drawers.rate(CoreIds.core(oil.getId())),
-            imported,
-            EPS,
-            "the shortfall is imported, and shown");
+        assertEquals(100 - s.drawers.rate(oil.getId()), imported, EPS, "the shortfall is imported, and shown");
     }
 
     // ── Wired ports: the drawer binds the port's external ──
@@ -246,13 +228,13 @@ class DrawerRulesTest {
 
         final SolutionView s = solved(chart.graph());
 
-        assertEquals(5, s.drawers.rate(CoreIds.core(hydrogen.getId())), EPS, "the surplus leaving at the drawer");
+        assertEquals(5, s.drawers.rate(hydrogen.getId()), EPS, "the surplus leaving at the drawer");
         final double h2 = 2000 * 25.0 / 12000;
-        assertEquals((h2 + 5) / 1000 * 1000 / 20, s.machineCounts.get(CoreIds.core(chart.machine(2).id)), EPS);
+        assertEquals((h2 + 5) / 1000 * 1000 / 20, s.machineCounts.get(chart.machine(2).id), EPS);
         assertEquals(1, s.gatedSinks.size());
         final External sink = s.gatedSinks.get(0);
         assertEquals(
-            CoreIds.core(chart.machine(2).id),
+            chart.machine(2).id,
             sink.port()
                 .nodeId());
         assertEquals(5, sink.ratePerSecond(), EPS);
@@ -266,8 +248,8 @@ class DrawerRulesTest {
         final SolutionView s = solved(chart.graph());
 
         final double h2 = 2000 * 25.0 / 12000;
-        assertEquals(2, s.drawers.rate(CoreIds.core(hydrogen.getId())), EPS);
-        assertEquals((h2 - 2) / 1000 * 1000 / 20, s.machineCounts.get(CoreIds.core(chart.machine(2).id)), EPS);
+        assertEquals(2, s.drawers.rate(hydrogen.getId()), EPS);
+        assertEquals((h2 - 2) / 1000 * 1000 / 20, s.machineCounts.get(chart.machine(2).id), EPS);
         assertTrue(
             s.notes.stream()
                 .noneMatch(n -> n.message() == SolverMessage.WIRING_UNLINKED),
@@ -285,17 +267,13 @@ class DrawerRulesTest {
 
         final SolutionView s = solved(chart.graph());
 
-        assertEquals(25.0 / 12, s.drawers.rate(CoreIds.core(oxygen.getId())), EPS);
-        assertEquals(25.0 / 12, s.drawers.rate(CoreIds.core(h2s.getId())), EPS);
-        assertEquals(25, s.drawers.rate(CoreIds.core(any.getId())), EPS);
+        assertEquals(25.0 / 12, s.drawers.rate(oxygen.getId()), EPS);
+        assertEquals(25.0 / 12, s.drawers.rate(h2s.getId()), EPS);
+        assertEquals(25, s.drawers.rate(any.getId()), EPS);
         assertTrue(
             s.drawers.unmet()
                 .isEmpty());
-        assertEquals(
-            1.0,
-            s.machineCounts.get(CoreIds.core(chart.machine(1).id)),
-            EPS,
-            "nothing moved the pinned chart");
+        assertEquals(1.0, s.machineCounts.get(chart.machine(1).id), EPS, "nothing moved the pinned chart");
     }
 
     // ── Anchoring and idle states ──
@@ -325,17 +303,17 @@ class DrawerRulesTest {
         assertInstanceOf(BalanceResult.Solved.class, result, () -> "notes: " + result.notes());
         assertTrue(
             result.unmetDrawers()
-                .contains(CoreIds.core(lonely.getId())));
+                .contains(lonely.getId()));
         assertEquals(
             0,
             result.drawerRates()
-                .get(CoreIds.core(lonely.getId())),
+                .get(lonely.getId()),
             0);
         assertTrue(hasNote(result.notes(), SolverMessage.DRAWER_NOT_CONNECTED));
         assertEquals(
             1.0,
             result.nodeBalances()
-                .get(CoreIds.core(chart.machine(1).id))
+                .get(chart.machine(1).id)
                 .operations(),
             EPS);
     }
@@ -350,7 +328,7 @@ class DrawerRulesTest {
         assertTrue(hasNote(result.notes(), SolverMessage.DRAWER_WIRED_IGNORED), "notes: " + result.notes());
         assertTrue(
             result.unmetDrawers()
-                .contains(CoreIds.core(hydrogen.getId())));
+                .contains(hydrogen.getId()));
     }
 
     // ── Drawers against the existing target pins ──
@@ -367,11 +345,11 @@ class DrawerRulesTest {
 
             final SolutionView byDrawer = solved(chart.graph());
 
-            assertEquals(10, byDrawer.drawers.rate(CoreIds.core(fuel.getId())), EPS, rule.name());
+            assertEquals(10, byDrawer.drawers.rate(fuel.getId()), EPS, rule.name());
             for (final Node machine : chart.machines()) {
                 assertEquals(
-                    byTarget.machineCounts.get(CoreIds.core(machine.id)),
-                    byDrawer.machineCounts.get(CoreIds.core(machine.id)),
+                    byTarget.machineCounts.get(machine.id),
+                    byDrawer.machineCounts.get(machine.id),
                     EPS,
                     rule + ": " + machine.machineName);
             }
@@ -390,11 +368,11 @@ class DrawerRulesTest {
 
         final SolutionView byDrawer = solved(chart.graph());
 
-        assertEquals(2, byDrawer.drawers.rate(CoreIds.core(dust.getId())), EPS);
+        assertEquals(2, byDrawer.drawers.rate(dust.getId()), EPS);
         for (final Node machine : chart.machines()) {
             assertEquals(
-                byTarget.machineCounts.get(CoreIds.core(machine.id)),
-                byDrawer.machineCounts.get(CoreIds.core(machine.id)),
+                byTarget.machineCounts.get(machine.id),
+                byDrawer.machineCounts.get(machine.id),
                 EPS,
                 machine.machineName);
         }
@@ -413,16 +391,12 @@ class DrawerRulesTest {
 
         final SolutionView s = solved(chart.graph());
 
-        assertFalse(s.drawers.met(CoreIds.core(dust.getId())));
-        assertEquals(
-            100 / 112.5,
-            s.drawers.rate(CoreIds.core(dust.getId())),
-            EPS,
-            "the plan runs at what the pin makes");
-        final DrawerReadout.Shortfall shortfall = s.drawers.shortfall(CoreIds.core(dust.getId()));
+        assertFalse(s.drawers.met(dust.getId()));
+        assertEquals(100 / 112.5, s.drawers.rate(dust.getId()), EPS, "the plan runs at what the pin makes");
+        final DrawerReadout.Shortfall shortfall = s.drawers.shortfall(dust.getId());
         assertNotNull(shortfall);
         assertEquals(100 / 112.5, shortfall.reachable(), EPS);
-        assertEquals(List.of(CoreIds.core(chart.machine(0).id)), shortfall.limitingNodes());
+        assertEquals(List.of(chart.machine(0).id), shortfall.limitingNodes());
     }
 
     // ── helpers ──
@@ -466,11 +440,11 @@ class DrawerRulesTest {
             .anyMatch(n -> n.containsMessage(message));
     }
 
-    private static double terminalRate(final SolutionView s, final UUID node, final int port, final boolean input) {
+    private static double terminalRate(final SolutionView s, final Uuid node, final int port, final boolean input) {
         for (final External e : input ? s.terminalInputs : s.terminalOutputs) {
             if (e.port()
                 .nodeId()
-                .equals(CoreIds.core(node))
+                .equals(node)
                 && e.port()
                     .portIndex() == port)
                 return e.ratePerSecond();

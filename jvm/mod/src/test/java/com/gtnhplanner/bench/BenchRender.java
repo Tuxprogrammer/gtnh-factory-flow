@@ -10,9 +10,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.imageio.ImageIO;
+
+import com.gtnhplanner.core.base.Uuid;
 
 /**
  * Draws a routed board to a PNG, so a layout can be looked at without the game: cards grey, drawers blue, wires in
@@ -90,7 +91,7 @@ public final class BenchRender {
             final String label = i.label() == null ? "" : i.label();
             g.drawString(label.length() > 34 ? label.substring(0, 33) + "…" : label, bx + 4, by + 13);
         }
-        final Map<UUID, BenchBoard.Item> byId = b.byId();
+        final Map<Uuid, BenchBoard.Item> byId = b.byId();
         g.setStroke(new BasicStroke((float) Math.max(1.5, 2 * scale), BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
         for (final BenchBoard.Link l : b.links()) {
             final List<int[]> p = r.routes()

@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -15,7 +14,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.oredict.OreDictionary;
 
-import com.gtnhplanner.CoreIds;
 import com.gtnhplanner.core.base.CoreSettings;
 import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.MachineConfig;
@@ -64,7 +62,7 @@ public final class GraphSolve {
      * this computes every node's effect and resolves every ingredient's name.
      */
     public static SolveInput input(final Graph graph, final BalanceMode mode, @Nullable final ChoiceKey choice,
-        final Map<UUID, Double> extentPins) {
+        final Map<Uuid, Double> extentPins) {
         final Ingredients ingredients = new Ingredients();
         final List<Machine> machines = new ArrayList<>(graph.nodes.size());
         final List<PoolIn> pools = new ArrayList<>();
@@ -79,17 +77,17 @@ public final class GraphSolve {
             final int count = node.machineConfig.getMachineCount();
             // An Up to count is a one-machine pool: the solver finds how many run, never above it (docs/design/up-to.md).
             // Exactly is the fixed count it always was.
-            if (rule == PinRule.UP_TO && count > 0) pools.add(new PoolIn(List.of(CoreIds.core(node.id)), count, false, true));
+            if (rule == PinRule.UP_TO && count > 0) pools.add(new PoolIn(List.of(node.id), count, false, true));
             machines.add(machineOf(node, ingredients, rule == PinRule.EXACT));
         }
         final List<EdgeIn> edges = new ArrayList<>(graph.edges.size());
         for (final Edge edge : graph.getEdges()) {
             edges.add(
                 new EdgeIn(
-                    CoreIds.core(edge.id),
-                    CoreIds.core(edge.sourceNodeId),
+                    edge.id,
+                    edge.sourceNodeId,
                     edge.sourceOutputIndex,
-                    CoreIds.core(edge.targetNodeId),
+                    edge.targetNodeId,
                     edge.targetInputIndex));
         }
         for (final Group group : graph.getGroups()) {
@@ -97,15 +95,14 @@ public final class GraphSolve {
                 && !group.getNodeIds()
                     .isEmpty()) {
                 // Sorted: the group's id set is a HashSet, and the pool's member order should be the chart's.
-                final List<UUID> members = new ArrayList<>(group.getNodeIds());
-                members.sort(UUID::compareTo);
+                final List<Uuid> members = new ArrayList<>(group.getNodeIds());
+                members.sort(Uuid::compareTo);
                 // A set count is Up to or Exactly; a capacity nobody set stays the plain cap.
                 final PinRule rule = PinRule.of(machineGroup);
                 final boolean exact = auto ? rule == PinRule.EXACT : machineGroup.isPinned();
                 pools.add(
                     new PoolIn(
                         members.stream()
-                            .map(CoreIds::core)
                             .toList(),
                         machineGroup.getMachineCapacity(),
                         exact,
@@ -123,7 +120,7 @@ public final class GraphSolve {
         for (final Drawer drawer : graph.getDrawers()) {
             drawers.add(
                 new DrawerIn(
-                    CoreIds.core(drawer.getId()),
+                    drawer.getId(),
                     drawer.getLabel()
                         .isEmpty() ? drawer.getResourceKey() : drawer.getLabel(),
                     drawer.getKind(),
@@ -133,14 +130,14 @@ public final class GraphSolve {
                     links(drawer.getTakers())));
         }
         final Map<Uuid, Double> pins = new LinkedHashMap<>();
-        for (final Map.Entry<UUID, Double> e : extentPins.entrySet()) pins.put(CoreIds.core(e.getKey()), e.getValue());
+        for (final Map.Entry<Uuid, Double> e : extentPins.entrySet()) pins.put(e.getKey(), e.getValue());
         return new SolveInput(mode, choice, machines, edges, pools, drawers, pins, graph.spareShares);
     }
 
     /** A drawer's links as the solver reads them: node and port, without the wire's steering dots. */
     private static List<LinkIn> links(final List<Drawer.Link> links) {
         final List<LinkIn> out = new ArrayList<>(links.size());
-        for (final Drawer.Link l : links) out.add(new LinkIn(CoreIds.core(l.nodeId()), l.portIndex()));
+        for (final Drawer.Link l : links) out.add(new LinkIn(l.nodeId(), l.portIndex()));
         return out;
     }
 
@@ -176,7 +173,7 @@ public final class GraphSolve {
         // and its EU is an output port: nothing here for the effect to compute.
         final boolean power = node.isPower();
         return new Machine(
-            CoreIds.core(node.id),
+            node.id,
             node.machineName == null ? "" : node.machineName,
             power ? 20 : effect.duration(),
             power ? 0 : effect.energy(),
@@ -284,7 +281,7 @@ public final class GraphSolve {
      * enumeration) and per-machine extent pins.
      */
     public static Alternatives alternatives(final BalanceMode mode, final Graph graph, @Nullable final ChoiceKey choice,
-        final Map<UUID, Double> extraExtentPins) {
+        final Map<Uuid, Double> extraExtentPins) {
         return Balancer.alternatives(input(graph, mode, choice, extraExtentPins));
     }
 
@@ -296,7 +293,7 @@ public final class GraphSolve {
      * @param extraExtentPins per-machine extent pins (crafts/s), e.g. from a target-rate pin.
      */
     public static Balancer.Answer solveWithAlternatives(final BalanceMode mode, final Graph graph,
-        @Nullable final ChoiceKey choice, final Map<UUID, Double> extraExtentPins) {
+        @Nullable final ChoiceKey choice, final Map<Uuid, Double> extraExtentPins) {
         return Balancer.solveWithAlternatives(input(graph, mode, choice, extraExtentPins));
     }
 

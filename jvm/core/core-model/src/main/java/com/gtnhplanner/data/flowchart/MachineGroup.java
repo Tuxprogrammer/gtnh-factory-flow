@@ -1,7 +1,6 @@
 package com.gtnhplanner.data.flowchart;
 
-import lombok.Getter;
-import lombok.Setter;
+import com.gtnhplanner.core.base.Uuid;
 
 /**
  * A group whose recipes run on the same machines. A plain {@link Group} frames a part of the chart
@@ -14,8 +13,6 @@ import lombok.Setter;
  * shared settings mean nothing for an ordinary group, and the canvas draws this one differently so
  * the two are not mistaken for each other.
  */
-@Getter
-@Setter
 public class MachineGroup extends Group {
 
     public static final String TYPE = "machine_group";
@@ -37,8 +34,6 @@ public class MachineGroup extends Group {
      * Whether the set count is Exactly: its recipes' machine time adds up to it. Null, not false, when it is not, so a
      * save without it reads the same as one written before it (Up to).
      */
-    @Getter(lombok.AccessLevel.NONE)
-    @Setter(lombok.AccessLevel.NONE)
     private Boolean exact;
 
     /** Whether the set count is Exactly: only on a pinned group. */
@@ -61,7 +56,7 @@ public class MachineGroup extends Group {
      * alongside the group's node ids, which have no order. Empty in a group from an older save, which is not drawn as
      * a shared card.
      */
-    private final java.util.List<java.util.UUID> sections = new java.util.ArrayList<>();
+    private final java.util.List<Uuid> sections = new java.util.ArrayList<>();
 
     /** A shared machine: a group drawn as one card, its recipes as sections. */
     public boolean isShared() {
@@ -69,13 +64,13 @@ public class MachineGroup extends Group {
     }
 
     /** Adds a recipe as the last section. */
-    public void addSection(final java.util.UUID nodeId) {
+    public void addSection(final Uuid nodeId) {
         if (sections.contains(nodeId)) return;
         sections.add(nodeId);
         getNodeIds().add(nodeId);
     }
 
-    public void removeSection(final java.util.UUID nodeId) {
+    public void removeSection(final Uuid nodeId) {
         sections.remove(nodeId);
         getNodeIds().remove(nodeId);
     }
@@ -86,7 +81,7 @@ public class MachineGroup extends Group {
     }
 
     /** A machine group with a known id (one a shared plan's card gives it). */
-    public MachineGroup(final java.util.UUID id) {
+    public MachineGroup(final Uuid id) {
         super(id);
         setHeader("Machine Group");
     }
@@ -94,5 +89,21 @@ public class MachineGroup extends Group {
     @Override
     public String getType() {
         return TYPE;
+    }
+
+    public int getMachineCapacity() {
+        return this.machineCapacity;
+    }
+
+    public void setMachineCapacity(final int machineCapacity) {
+        this.machineCapacity = machineCapacity;
+    }
+
+    public boolean isPinned() {
+        return this.pinned;
+    }
+
+    public java.util.List<Uuid> getSections() {
+        return this.sections;
     }
 }

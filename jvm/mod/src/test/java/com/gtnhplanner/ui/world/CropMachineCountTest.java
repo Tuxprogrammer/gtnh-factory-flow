@@ -3,11 +3,11 @@ package com.gtnhplanner.ui.world;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.harness.GtnhFlowLoader;
@@ -43,7 +43,7 @@ class CropMachineCountTest {
     }
 
     private static Node crop(final String harvester, final String tierKey, final String tier) {
-        final Node node = new Node(UUID.randomUUID(), 0, 0);
+        final Node node = new Node(Uuid.randomUUID(), 0, 0);
         node.properties.put(CropCards.STATS, CropCards.write(LAZULIA));
         node.machineConfig.settings.put(CropsNh.HARVESTER, harvester);
         node.machineConfig.settings.put(tierKey, tier);
@@ -81,19 +81,19 @@ class CropMachineCountTest {
 
     @Test
     void anyOtherCardBuildsItsCount() {
-        final Node plain = new Node(UUID.randomUUID(), 0, 0);
+        final Node plain = new Node(Uuid.randomUUID(), 0, 0);
         assertEquals(3.5, CropCards.builds(plain, 3.5), 1e-12);
     }
 
     @Test
     void aFluidTankIsOneTankHoweverManyCellsItHandles() {
-        final Node tank = new Node(UUID.randomUUID(), 0, 0);
+        final Node tank = new Node(Uuid.randomUUID(), 0, 0);
         tank.powerSource = com.gtnhplanner.power.FluidTank.ID;
         assertEquals(1, CropCards.builds(tank, 37.5), 1e-12);
         assertEquals(1, CropCards.builds(tank, 0), 1e-12);
     }
 
-    private static PlanSnapshot.Card card(final UUID id, final String name, final String tier, final double count,
+    private static PlanSnapshot.Card card(final Uuid id, final String name, final String tier, final double count,
         final double builds, final boolean crop) {
         return new PlanSnapshot.Card(
             id,
@@ -128,7 +128,7 @@ class CropMachineCountTest {
     @Test
     void thePinListCountsAFarmsHarvestersNotItsCrops() {
         final Node farm = crop(CropsNh.FARM, CropsNh.SEED_BED_TIER, "4");
-        final UUID cropId = UUID.randomUUID(), mixerId = UUID.randomUUID();
+        final Uuid cropId = Uuid.randomUUID(), mixerId = Uuid.randomUUID();
         final PlanSnapshot snap = new PlanSnapshot(
             new Graph("Lazulia"),
             "Lazulia",

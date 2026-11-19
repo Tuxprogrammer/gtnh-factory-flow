@@ -21,6 +21,7 @@ import com.gtnhplanner.cloud.sync.LiveOp;
 import com.gtnhplanner.cloud.sync.LiveOps;
 import com.gtnhplanner.cloud.sync.LiveState;
 import com.gtnhplanner.core.base.Log;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.importer.ImportReport;
 import com.gtnhplanner.library.PlanExport;
@@ -324,7 +325,7 @@ public final class LiveDoc {
      * The plan's id of a board thing ({@code kind} {@code node}, {@code drawer}, {@code edge}, {@code note} or
      * {@code pocket}), as presence names a selection; {@code cloud.map.PlanIds.uuid} turns one back into the board's.
      */
-    public String planId(final String kind, final java.util.UUID boardId) {
+    public String planId(final String kind, final Uuid boardId) {
         return read.basis()
             .planId(kind, boardId);
     }

@@ -5,10 +5,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.Settings;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Port;
@@ -37,7 +37,7 @@ public final class FfCards {
     public static final class Ports {
 
         private final NodeMaker maker;
-        private final Map<UUID, List<PortInfo>> in = new HashMap<>(), out = new HashMap<>();
+        private final Map<Uuid, List<PortInfo>> in = new HashMap<>(), out = new HashMap<>();
 
         public Ports(final NodeMaker maker) {
             this.maker = maker;

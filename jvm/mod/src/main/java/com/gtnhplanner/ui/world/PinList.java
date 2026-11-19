@@ -14,6 +14,7 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 
 import org.lwjgl.opengl.GL11;
 
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.ui.PlannerSettings;
 import com.gtnhplanner.ui.card.RecipeCard;
 import com.gtnhplanner.ui.theme.Hyb;
@@ -69,7 +70,7 @@ public final class PinList {
     static List<Line> lines(final PlanSnapshot snap) {
         final Map<String, Map<String, int[]>> byName = new LinkedHashMap<>();
         final Map<String, ItemStack> icons = new LinkedHashMap<>();
-        for (final java.util.UUID id : snap.pinList()) {
+        for (final Uuid id : snap.pinList()) {
             for (final PlanSnapshot.Card c : snap.cards()) {
                 if (!c.id()
                     .equals(id)) continue;

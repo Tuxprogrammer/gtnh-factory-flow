@@ -5,11 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
 import com.google.gson.JsonObject;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.harness.GtnhFlowLoader;
 import com.gtnhplanner.power.CustomRate;
 import com.gtnhplanner.power.FluidTank;
@@ -19,7 +19,7 @@ class PinRuleTest {
 
     private static Node card() {
         GtnhFlowLoader.ensureDefaultMachineProfile();
-        return new Node(UUID.randomUUID(), 0, 0);
+        return new Node(Uuid.randomUUID(), 0, 0);
     }
 
     @Test

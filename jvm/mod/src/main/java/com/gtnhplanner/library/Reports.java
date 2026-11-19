@@ -10,7 +10,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -28,6 +27,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.gtnhplanner.GtnhPlanner;
 import com.gtnhplanner.Tags;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 
 /**
@@ -69,7 +69,7 @@ public final class Reports {
 
     /** What goes: the words, the plans and the extras ({@code machines} counts the open plan's cards). */
     public record Report(Kind kind, @Nullable Mood mood, String title, String description, List<Graph> plans,
-        Function<UUID, Double> machines, @Nullable BufferedImage picture, boolean log, @Nullable String crash) {}
+        Function<Uuid, Double> machines, @Nullable BufferedImage picture, boolean log, @Nullable String crash) {}
 
     /** The widest picture sent: enough to see the plan, small enough to send. */
     private static final int PICTURE_MAX_W = 1600;

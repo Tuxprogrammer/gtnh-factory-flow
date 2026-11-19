@@ -7,12 +7,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.gtnhplanner.CoreIds;
 import com.gtnhplanner.conformance.Conformance;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.BoardGroup;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Edge;
@@ -99,7 +98,7 @@ public final class Boards {
             final StringBuilder out = new StringBuilder();
             while (m.find()) m.appendReplacement(
                 out,
-                UUID.nameUUIDFromBytes((k + ":" + m.group()).getBytes(StandardCharsets.UTF_8))
+                Uuid.nameUUIDFromBytes((k + ":" + m.group()).getBytes(StandardCharsets.UTF_8))
                     .toString());
             m.appendTail(out);
             corpusInto(
@@ -119,7 +118,7 @@ public final class Boards {
         int i = 0;
         for (final SolveInput.Machine m : in.machines()) {
             // Places off the board's grid too: the mapping must keep every pixel.
-            final Node n = new Node(CoreIds.mod(m.id()), 37 + i % 6 * 361, dy + 41 + i / 6 * 263);
+            final Node n = new Node(m.id(), 37 + i % 6 * 361, dy + 41 + i / 6 * 263);
             n.machineName = m.name();
             for (final SolveInput.PortIn p : m.inputs()) n.inputs.add(port(p));
             for (final SolveInput.PortIn p : m.outputs()) n.outputs.add(port(p));
@@ -135,13 +134,8 @@ public final class Boards {
             i++;
         }
         final List<Edge> edges = new ArrayList<>();
-        for (final SolveInput.EdgeIn e : in.edges()) edges.add(
-            new Edge(
-                CoreIds.mod(e.id()),
-                CoreIds.mod(e.source()),
-                CoreIds.mod(e.target()),
-                e.sourceOutput(),
-                e.targetInput()));
+        for (final SolveInput.EdgeIn e : in.edges())
+            edges.add(new Edge(e.id(), e.source(), e.target(), e.sourceOutput(), e.targetInput()));
         g.addEdgesLoaded(edges);
         int j = 0;
         for (final SolveInput.DrawerIn d : in.drawers()) {
@@ -150,31 +144,30 @@ public final class Boards {
                 .isEmpty()) {
                 final SolveInput.LinkIn l = d.links()
                     .getFirst();
-                final Node n = g.nodes.get(CoreIds.mod(l.nodeId()));
+                final Node n = g.nodes.get(l.nodeId());
                 final List<Port<?>> side = d.kind()
                     .linksInputs() ? n.inputs : n.outputs;
                 if (l.portIndex() < side.size()) key = new FakeGame().describe(side.get(l.portIndex()))
                     .key();
             }
-            final Drawer drawer = new Drawer(CoreIds.mod(d.id()), d.kind(), key);
+            final Drawer drawer = new Drawer(d.id(), d.kind(), key);
             drawer.setLabel(d.label());
             drawer.setTarget(d.rule(), d.rate());
             drawer.setX(-303);
             drawer.setY(dy + 13 + j++ * 97);
-            for (final SolveInput.LinkIn l : d.links())
-                drawer.addLink(new Drawer.Link(CoreIds.mod(l.nodeId()), l.portIndex()));
+            for (final SolveInput.LinkIn l : d.links()) drawer.addLink(new Drawer.Link(l.nodeId(), l.portIndex()));
             // A buffer's users: the input ports it feeds.
             for (final SolveInput.LinkIn l : d.takers())
-                drawer.addPort(new Drawer.Link(CoreIds.mod(l.nodeId()), l.portIndex()), true);
+                drawer.addPort(new Drawer.Link(l.nodeId(), l.portIndex()), true);
             g.addDrawer(drawer);
         }
         for (final SolveInput.PoolIn p : in.pools()) {
             final MachineGroup group = new MachineGroup(
-                UUID.nameUUIDFromBytes(
+                Uuid.nameUUIDFromBytes(
                     (name + ":pool:"
                         + p.machines()
                             .getFirst()).getBytes(StandardCharsets.UTF_8)));
-            for (final UUID member : CoreIds.modList(p.machines())) group.addSection(member);
+            for (final Uuid member : new ArrayList<>(p.machines())) group.addSection(member);
             group.setMachineCapacity((int) p.capacity());
             group.setPinned(p.exact() || p.upTo());
             group.setExact(p.exact());
@@ -205,7 +198,7 @@ public final class Boards {
         last.x = 1234;
         last.y = -567;
         g.pinList.add(first.id);
-        final Note note = new Note(UUID.nameUUIDFromBytes((g.getName() + ":note").getBytes(StandardCharsets.UTF_8)));
+        final Note note = new Note(Uuid.nameUUIDFromBytes((g.getName() + ":note").getBytes(StandardCharsets.UTF_8)));
         note.setX(-101);
         note.setY(-77);
         note.setWidth(213);
@@ -217,7 +210,7 @@ public final class Boards {
         drawings(g);
         groups(g, first, note);
         final Group frame = Serializer.GSON.fromJson(
-            "{\"id\":\"" + UUID.nameUUIDFromBytes((g.getName() + ":frame").getBytes(StandardCharsets.UTF_8))
+            "{\"id\":\"" + Uuid.nameUUIDFromBytes((g.getName() + ":frame").getBytes(StandardCharsets.UTF_8))
                 + "\",\"type\":\"group\",\"x\":5,\"y\":6,\"width\":700,\"height\":400,\"color\":2134075033,\"header\":\"Ore line\"}",
             Group.class);
         frame.getNodeIds()
@@ -316,8 +309,8 @@ public final class Boards {
         return g;
     }
 
-    private static UUID id(final Graph g, final String what) {
-        return UUID.nameUUIDFromBytes((g.getName() + ":" + what).getBytes(StandardCharsets.UTF_8));
+    private static Uuid id(final Graph g, final String what) {
+        return Uuid.nameUUIDFromBytes((g.getName() + ":" + what).getBytes(StandardCharsets.UTF_8));
     }
 
     /** A box, a zone, an arrow and a picture, each with every field its kind keeps, at places off the grid. */

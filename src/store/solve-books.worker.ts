@@ -15,6 +15,16 @@ const engineReady = initLpEngine({
 });
 
 /**
+ * A HiGHS request that never answers (a stalled fetch) would hold every solve forever. Past this wait the solve runs
+ * as after a failed load, on the homegrown simplex; HiGHS still takes over for later solves if it arrives.
+ */
+const ENGINE_WAIT_MS = 20_000;
+const engineSettled = Promise.race([
+  engineReady,
+  new Promise<boolean>((resolve) => setTimeout(() => resolve(false), ENGINE_WAIT_MS)),
+]);
+
+/**
  * The solver, off the main thread. One message in (a plan and the content key
  * that names it), one message out (the same key and the finished books). The
  * scheduling - coalescing rapid edits, dropping superseded solves, deciding
@@ -24,7 +34,7 @@ const engineReady = initLpEngine({
 self.onmessage = async (event: MessageEvent<{ key: string; project: FactoryProject }>) => {
   const { key, project } = event.data;
   try {
-    await engineReady;
+    await engineSettled;
     const started = performance.now();
     const result = calculateThroughput(project);
     // The clog-lock proof is a second LP over the same board, and on a plan

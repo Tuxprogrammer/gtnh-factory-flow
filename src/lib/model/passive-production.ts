@@ -1,4 +1,4 @@
-import { TGS_MACHINE_TYPE } from "@/lib/machines/tree-growth-simulator";
+import { TGS_MACHINE_TYPE, tgsEuPerTick } from "@/lib/machines/tree-growth-simulator";
 import { applyInputConsumeChances } from "./input-chance";
 import type {
   FactoryNode,
@@ -743,9 +743,10 @@ export function enrichPassiveProductionRecipe(recipe: Recipe): Recipe {
   // Every dataset recipe passes here on its way to search and the board: a chanced input reads its average.
   recipe = applyInputConsumeChances(recipe);
   // The Tree Growth Simulator's NEI page says ULV and 0 EU/t; the machine needs LV at least (it draws VP[t]), so
-  // a new card starts there (tree-growth-simulator.ts).
+  // a new card starts there (tree-growth-simulator.ts). The recipe itself carries that draw: the card's power
+  // section reads the recipe's EU, and a 0 hides it.
   if (recipe.machineType === TGS_MACHINE_TYPE && recipe.minimumTier === "ULV") {
-    return { ...recipe, minimumTier: "LV" };
+    return { ...recipe, minimumTier: "LV", eut: tgsEuPerTick(1) };
   }
   if (isCropProductionRecipe(recipe)) {
     return enrichCropProductionRecipe(recipe);

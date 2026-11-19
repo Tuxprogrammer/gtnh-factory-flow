@@ -116,6 +116,12 @@ interface Tally {
   findings: string[];
 }
 
+function report(target: CoreTarget, what: string, t: Tally): void {
+  console.log(
+    `[machines shadow] ${target} ${what}: ${t.inputs} inputs, ${t.readouts} readouts and ${t.cards} card calls compared, ${t.leftToWebsite} left to the website, ${t.findings.length} differ`,
+  );
+}
+
 function shadow(inputs: Input[]): Tally {
   const c = core();
   const tally: Tally = { inputs: 0, readouts: 0, cards: 0, leftToWebsite: 0, findings: [] };
@@ -194,6 +200,7 @@ describe("machine maths shadow: the TypeScript and the compiled core agree", () 
 
       it("on every input of the website's machine tests", () => {
         const tally = shadow(testInputs());
+        report(target, "website test inputs", tally);
         expect(tally.findings.slice(0, 20)).toEqual([]);
         expect(tally.readouts).toBeGreaterThan(5000);
         expect(tally.cards).toBe(tally.readouts);
@@ -203,6 +210,7 @@ describe("machine maths shadow: the TypeScript and the compiled core agree", () 
         const all = goldenInputs();
         const inputs = target === "js" ? all.filter((_, i) => i % 8 === 0) : all;
         const tally = shadow(inputs);
+        report(target, "machine goldens", tally);
         expect(tally.findings.slice(0, 20)).toEqual([]);
         expect(tally.readouts).toBeGreaterThan(inputs.length * 0.9);
         expect(tally.cards).toBe(tally.readouts);

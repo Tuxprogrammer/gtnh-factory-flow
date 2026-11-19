@@ -194,10 +194,12 @@ public final class NeiRecipes implements RecipeSource {
         if (!(card.hostRecipe instanceof final Hold hold) || hold.extractor == null) return null;
         final Web.Recipe gt = WebCards.recipe(card);
         if (gt != null) return gt;
-        final Recipe.RecipeId id = id(card);
+        final JsonObject id = json(card);
         if (id == null) return null;
         final Web.Recipe r = new Web.Recipe();
-        final String handler = id.getHandlerName() == null ? "" : id.getHandlerName();
+        // From the id's JSON: RecipeId.getHandlerName is missing from the older NEI some supported packs ship.
+        final String handler = id.has("handlerName") ? id.get("handlerName")
+            .getAsString() : "";
         r.id = "nei:" + handler + "#" + card.recipe.index();
         r.name = card.machineName;
         // The dataset has no kind for an NEI page outside its exported maps.

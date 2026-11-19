@@ -131,10 +131,10 @@ export function cardMachineMathCore(
 
 /**
  * Stand-in for adopt.ts's `coreFor("machines")` (the web stream's file, agreed, not on this base yet): the area is off,
- * so the TypeScript answers. When adopt.ts lands this becomes `coreFor("machines")` and the flag lives there.
+ * so the TypeScript answers. When adopt.ts lands, `coreForMachines()` becomes `coreFor("machines")` and the flag lives there.
  */
 const MACHINES_ADOPTED = false;
-function coreFor(_area: "machines"): CoreExports | null {
+function coreForMachines(): CoreExports | null {
   return MACHINES_ADOPTED ? coreIfLoaded() : null;
 }
 
@@ -148,7 +148,7 @@ export function cardMachineMath(recipe: Recipe, node: FactoryNode): CardMachineM
   let byNode = cache.get(recipe);
   const hit = byNode?.get(node);
   if (hit) return hit;
-  const c = coreFor("machines");
+  const c = coreForMachines();
   let fromCore: CardMachineMath | null = null;
   if (c) {
     try {

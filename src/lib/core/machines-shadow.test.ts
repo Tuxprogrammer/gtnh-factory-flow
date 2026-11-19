@@ -94,14 +94,18 @@ function difference(want: unknown, got: unknown, where: string, oneSided: boolea
   if (w && g && typeof w === "object" && typeof g === "object") {
     const wo = w as Record<string, unknown>;
     const go = g as Record<string, unknown>;
-    const keys = oneSided ? Object.keys(go) : [...new Set([...Object.keys(wo), ...Object.keys(go)])];
+    const keys = oneSided
+      ? Object.keys(go)
+      : [...new Set([...Object.keys(wo), ...Object.keys(go)])];
     for (const k of keys) {
       const d = difference(wo[k] ?? null, go[k] ?? null, `${where}.${k}`, oneSided);
       if (d) return d;
     }
     return null;
   }
-  return (w ?? null) === (g ?? null) ? null : `${where}: ${JSON.stringify(g)} for ${JSON.stringify(w)}`;
+  return (w ?? null) === (g ?? null)
+    ? null
+    : `${where}: ${JSON.stringify(g)} for ${JSON.stringify(w)}`;
 }
 
 interface Tally {
@@ -119,9 +123,18 @@ function shadow(inputs: Input[]): Tally {
   try {
     for (const input of inputs) {
       tally.inputs++;
-      const rates = { beesYield: 1, ic2CropsYield: 1, recipeDurationDivisor: 1, ...input.gameRates };
+      const rates = {
+        beesYield: 1,
+        ic2CropsYield: 1,
+        recipeDurationDivisor: 1,
+        ...input.gameRates,
+      };
       setActiveGameRates(rates);
-      c.MachinesExports.machinesSetRates(rates.beesYield, rates.ic2CropsYield, rates.recipeDurationDivisor);
+      c.MachinesExports.machinesSetRates(
+        rates.beesYield,
+        rates.ic2CropsYield,
+        rates.recipeDurationDivisor,
+      );
       const node = input.node as FactoryNode;
       let ts: ReturnType<typeof machineReadout>["expected"];
       let tsCard: ReturnType<typeof cardMachineMathTs>;

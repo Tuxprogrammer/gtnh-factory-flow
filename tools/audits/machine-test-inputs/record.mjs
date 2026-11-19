@@ -12,7 +12,9 @@ import { gzipSync } from "node:zlib";
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const at = process.argv.indexOf("--out");
 const out = path.resolve(
-  at > 0 ? process.argv[at + 1] : path.join(root, "conformance/machines/website-test-inputs.jsonl.gz"),
+  at > 0
+    ? process.argv[at + 1]
+    : path.join(root, "conformance/machines/website-test-inputs.jsonl.gz"),
 );
 const dir = mkdtempSync(path.join(os.tmpdir(), "machine-inputs-"));
 const raw = path.join(dir, "lines.jsonl");

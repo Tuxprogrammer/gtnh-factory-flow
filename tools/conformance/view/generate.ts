@@ -8,6 +8,7 @@
  * Deterministic: the same code gives the same bytes. src/components/flow/clean/rail/rail-conformance.test.ts fails
  * when a file differs from what the code makes now.
  */
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import { viewFiles } from "../../../src/components/flow/clean/rail/rail-conformance";
@@ -18,3 +19,10 @@ for (const [name, text] of Object.entries(viewFiles())) {
   fs.writeFileSync(`${out}/${name}`, text);
   console.log(`${name}: ${text.length} bytes`);
 }
+
+// The recipe card's files come from the website's card builders, which need the test environment (styles, the store):
+// its test writes them (src/components/flow/clean/card-conformance.test.ts).
+execFileSync("npx", ["vitest", "run", "src/components/flow/clean/card-conformance.test.ts"], {
+  env: { ...process.env, GTNH_WRITE_VIEW: "1" },
+  stdio: "inherit",
+});

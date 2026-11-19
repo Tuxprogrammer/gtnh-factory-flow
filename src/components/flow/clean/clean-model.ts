@@ -1042,6 +1042,189 @@ export function cardNameIn(
   }
 }
 
+/**
+ * What `cleanCardView` makes a card's view from: the node, its recipe, its solve and the facts its machine's maths and
+ * pictures give (`useCleanCardModel` works those out). Pure: the shared card cases (card-conformance.ts) run it, and the
+ * core's `CardViews.card` is its translation.
+ */
+export interface CleanCardFacts {
+  projectNode: Pick<
+    FactoryNode,
+    "id" | "solvePin" | "solvePinExact" | "parallel" | "portRates" | "machineConfigTiers"
+  >;
+  recipe: Pick<Recipe, "machineType" | "outputs" | "power"> & Partial<Recipe>;
+  result: RecipeNodeData["result"];
+  plan: PlanExtras;
+  rails: { inputs: RailPort[]; outputs: RailPort[] };
+  name: string;
+  hasPicker: boolean;
+  art?: string;
+  glanceArt?: string;
+  tierControl?: { current: string; fixed: boolean };
+  powerReport?: Pick<
+    NonNullable<ReturnType<typeof getNodePowerReport>>,
+    "state" | "tier" | "amps" | "drawEuT" | "parallels" | "recipeGateReason" | "isMultiblock" | "hatchChip"
+  >;
+  steamReport?: Pick<NonNullable<ReturnType<typeof getNodeSteamReport>>, "drawSteamPerTick" | "highPressure" | "parallels">;
+  showHatchControl: boolean;
+  parallel: number;
+  structuralParallel: number;
+  circuit?: RecipeProgrammedCircuit;
+  pinnedChips: Array<Omit<CleanChipView, "x" | "y" | "width">>;
+  turbineCheck?: TurbineFlowCheck;
+  averageDraw: boolean;
+  selected: boolean;
+  cardName: (id: string) => string | undefined;
+}
+
+/** A card's view from its facts: every string final, the strip laid out, the rows lit, the foot bar worked out. */
+export function cleanCardView(facts: CleanCardFacts): CleanCardView {
+  const { projectNode, recipe, result, plan, rails, name, tierControl, powerReport, steamReport } = facts;
+  // Only this card's forced entries, and its spills into buffers, which it forces out the same way; the plan lists are
+  // short, so no memo.
+  const forcedAt = new Map<string, number>();
+  const spillAt = new Map<string, string>();
+  for (const entry of [...(plan?.forced ?? []), ...(plan?.spills ?? [])]) {
+    if (entry.nodeId !== projectNode.id) continue;
+    forcedAt.set(entry.portKey, (forcedAt.get(entry.portKey) ?? 0) + entry.perSecond);
+    if ("drawerId" in entry) spillAt.set(entry.portKey, entry.drawerId);
+  }
+
+  const hasPicker = facts.hasPicker;
+  const tierLabel = powerReport?.isMultiblock ? powerReport.tier : tierControl?.current;
+  const ampsLabel =
+    powerReport?.isMultiblock && facts.showHatchControl
+      ? (powerReport.hatchChip ?? `${formatCompact(powerReport.amps)}A`)
+      : undefined;
+
+  const G = CC_GEOMETRY;
+  const chipsLeft =
+    G.cardWidth - 8 - (tierLabel ? G.chipWidth : 0) - (ampsLabel ? 2 + G.chipWidth : 0);
+  const nameRoom = Math.max(40, chipsLeft - 8 - 8 - 2 * (G.keySize + 2) - 8 - (hasPicker ? 15 : 0));
+  // The mod's name is x1.25 of its 8 px text (10); Monocraft runs wider than the mod's face, so it steps down to 8 before it clips with an ellipsis.
+  const nameSize = [10, 9].find((size) => measureClean(name, size) <= nameRoom) ?? 8;
+
+  // Count: what runs, big; what you set, small, under it (docs/up-to.md).
+  const countState = cardCountState(result, projectNode, plan, recipe);
+  const { unset } = countState;
+  const count = buildCountView(countState, { ruleFixed: isCustomRateRecipe(recipe as Recipe) });
+
+  // Power row: a machine's draw, or a steam machine's litres.
+  // An Up to card bills its count averaged by how full it got of it (its read-out's reached over capacity).
+  const upTo = countState.upTo;
+  const usage = upTo
+    ? upTo.capacity > 0
+      ? Math.min(1, upTo.reached / upTo.capacity)
+      : 0
+    : Math.min(1, Math.max(0, result?.utilization ?? 1));
+  const drawScale = facts.averageDraw ? usage : usage > 0 ? 1 : 0;
+  // The card's demand is the machines it has (the count set, fractions and all; else the solved count) times one
+  // machine's draw, as the mod prints it; averaged by its use (an Up to card's reached over its count).
+  const solvedNeeded = result?.theoreticalMachinesRequired ?? 0;
+  const machines = (count.set ?? solvedNeeded) * Math.max(1, projectNode.parallel);
+  let power: CleanPowerView | undefined;
+  if (powerReport) {
+    const stalled = powerReport.state !== "ok";
+    power = {
+      number: stalled
+        ? "TIER!"
+        : formatPowerValue(
+            powerDisplayFromEuT(powerReport.drawEuT * machines * drawScale, powerReport.tier),
+          ),
+      unit: stalled ? "" : powerDisplaySuffix(powerReport.tier),
+      name: "Power",
+      stalled,
+      title: stalled
+        ? (powerReport.recipeGateReason ?? "This machine's tier is too low to run the recipe.")
+        : `${powerReport.tier} machine, ${formatCompact(powerReport.amps)}A`,
+    };
+  } else if (steamReport) {
+    power = {
+      number: formatCompact(steamReport.drawSteamPerTick * 20 * machines * drawScale),
+      unit: "L/s",
+      name: steamReport.highPressure ? "HP steam" : "Steam",
+      stalled: false,
+      title: "Steam this machine burns",
+    };
+  }
+
+  const rawChips = [...facts.pinnedChips];
+  const parallelChip = parallelReading(
+    powerReport?.parallels ?? steamReport?.parallels ?? facts.parallel,
+    facts.structuralParallel,
+    powerReport?.state === "ok",
+  );
+  if (parallelChip) rawChips.push(parallelChip);
+  const strip = layoutStrip(rawChips);
+
+  // The rows an Up to card's reason names are lit in its colour (only while the card is Up to: `upTo` is its own).
+  const powerTier = powerCardTier(recipe as Recipe);
+  const inputs = withReasonPorts(
+    rails.inputs.map((port) =>
+      buildPortView(projectNode.id, port, projectNode, forcedAt, spillAt, powerTier),
+    ),
+    countState.upTo,
+  );
+  const outputs = withReasonPorts(
+    rails.outputs.map((port) =>
+      buildPortView(projectNode.id, port, projectNode, forcedAt, spillAt, powerTier),
+    ),
+    countState.upTo,
+  );
+  const loop = cardLoop(plan?.loops, projectNode.id);
+  // On Any and running none: is it because its input is sent out instead of its output?
+  const idle =
+    count.rule === "any" && count.zero
+      ? idleTradeOf(plan, projectNode.id, new Set(inputs.map((port) => port.resourceKey)))
+      : undefined;
+  const turbineCheck = facts.turbineCheck;
+  const foot = buildFootView(
+    count,
+    countState.upTo,
+    { inputs, outputs },
+    facts.cardName,
+    loop,
+    idle,
+    turbineCheck ? { ...turbineCheck, tier: powerTier } : undefined,
+  );
+
+  return {
+    nodeId: projectNode.id,
+    name,
+    nameSize,
+    hasPicker,
+    tier: tierLabel
+      ? {
+          label: tierLabel,
+          fixed: tierControl?.fixed === true,
+          title: tierControl?.fixed
+            ? "Fixed by the reactor mark"
+            : `Tier ${tierLabel}. Click up, right click down.`,
+        }
+      : undefined,
+    amps:
+      ampsLabel && powerReport
+        ? { label: ampsLabel, value: powerReport.amps, editable: true }
+        : undefined,
+    inputs,
+    outputs,
+    power,
+    art: facts.art,
+    glanceArt: facts.glanceArt,
+    glanceProduct: glanceProduct(recipe.outputs),
+    count,
+    foot,
+    loop,
+    glance: glanceBar(countState.upTo, loop),
+    circuit: facts.circuit,
+    chips: strip.chips,
+    stripHeight: strip.height,
+    selected: facts.selected,
+    cannotRun: powerReport !== undefined && powerReport.state !== "ok",
+    unset,
+  };
+}
+
 /** Everything the clean card draws and does, from the same inputs as the classic card. */
 export function useCleanCardModel(
   data: RecipeNodeData,
@@ -1114,18 +1297,7 @@ export function useCleanCardModel(
   );
   const plan = lastResult?.plan;
 
-  // Only this card's forced entries, and its spills into buffers, which it forces out the same way; the plan lists are
-  // short, so no memo.
-  const forcedAt = new Map<string, number>();
-  const spillAt = new Map<string, string>();
-  for (const entry of [...(plan?.forced ?? []), ...(plan?.spills ?? [])]) {
-    if (entry.nodeId !== projectNode.id) continue;
-    forcedAt.set(entry.portKey, (forcedAt.get(entry.portKey) ?? 0) + entry.perSecond);
-    if ("drawerId" in entry) spillAt.set(entry.portKey, entry.drawerId);
-  }
-
-  const { selectedMachineHandler, machineHandlers, tierControl, powerReport, steamReport } =
-    derived;
+  const { selectedMachineHandler, machineHandlers, tierControl, powerReport } = derived;
   const { machineIcon, art, name } = cardPicture(
     recipe,
     projectNode,
@@ -1134,67 +1306,9 @@ export function useCleanCardModel(
     mapIcons,
   );
 
-  const hasPicker = machineHandlers.length > 1;
-  const tierLabel = powerReport?.isMultiblock ? powerReport.tier : tierControl?.current;
-  const ampsLabel =
-    powerReport?.isMultiblock && derived.showHatchControl
-      ? (powerReport.hatchChip ?? `${formatCompact(powerReport.amps)}A`)
-      : undefined;
-
-  const G = CC_GEOMETRY;
-  const chipsLeft =
-    G.cardWidth - 8 - (tierLabel ? G.chipWidth : 0) - (ampsLabel ? 2 + G.chipWidth : 0);
-  const nameRoom = Math.max(40, chipsLeft - 8 - 8 - 2 * (G.keySize + 2) - 8 - (hasPicker ? 15 : 0));
-  // The mod's name is x1.25 of its 8 px text (10); Monocraft runs wider than the mod's face, so it steps down to 8 before it clips with an ellipsis.
-  const nameSize = [10, 9].find((size) => measureClean(name, size) <= nameRoom) ?? 8;
-
-  // Count: what runs, big; what you set, small, under it (docs/up-to.md).
-  const countState = cardCountState(result, projectNode, plan, recipe);
-  const { unset } = countState;
-  const count = buildCountView(countState, { ruleFixed: isCustomRateRecipe(recipe) });
-
-  // Power row: a machine's draw, or a steam machine's litres.
-  // An Up to card bills its count averaged by how full it got of it (its read-out's reached over capacity).
-  const upTo = countState.upTo;
-  const usage = upTo
-    ? upTo.capacity > 0
-      ? Math.min(1, upTo.reached / upTo.capacity)
-      : 0
-    : Math.min(1, Math.max(0, result?.utilization ?? 1));
-  const drawScale = averageDraw ? usage : usage > 0 ? 1 : 0;
-  // The card's demand is the machines it has (the count set, fractions and all; else the solved count) times one
-  // machine's draw, as the mod prints it; averaged by its use (an Up to card's reached over its count).
-  const solvedNeeded = result?.theoreticalMachinesRequired ?? 0;
-  const machines = (count.set ?? solvedNeeded) * Math.max(1, projectNode.parallel);
-  let power: CleanPowerView | undefined;
-  if (powerReport) {
-    const stalled = powerReport.state !== "ok";
-    power = {
-      number: stalled
-        ? "TIER!"
-        : formatPowerValue(
-            powerDisplayFromEuT(powerReport.drawEuT * machines * drawScale, powerReport.tier),
-          ),
-      unit: stalled ? "" : powerDisplaySuffix(powerReport.tier),
-      name: "Power",
-      stalled,
-      title: stalled
-        ? (powerReport.recipeGateReason ?? "This machine's tier is too low to run the recipe.")
-        : `${powerReport.tier} machine, ${formatCompact(powerReport.amps)}A`,
-    };
-  } else if (steamReport) {
-    power = {
-      number: formatCompact(steamReport.drawSteamPerTick * 20 * machines * drawScale),
-      unit: "L/s",
-      name: steamReport.highPressure ? "HP steam" : "Steam",
-      stalled: false,
-      title: "Steam this machine burns",
-    };
-  }
-
   // Settings strip (the mod's pins): the settings pinned to this machine's cards, the coil by default on a heat recipe.
   const settings: CleanCardContext["settings"] = [];
-  const rawChips: Array<Omit<CleanChipView, "x" | "y" | "width">> = [];
+  const pinnedChips: Array<Omit<CleanChipView, "x" | "y" | "width">> = [];
   const pinKey = pinMachineKey(recipe, projectNode);
   for (const control of pinControls) {
     settings.push({
@@ -1204,7 +1318,7 @@ export function useCleanCardModel(
       steps: control.options.length > 1 || control.numeric !== undefined,
     });
     if (!isPinned(liveProject, pinKey, control)) continue;
-    rawChips.push({
+    pinnedChips.push({
       id: control.id,
       label: control.label,
       value: control.value,
@@ -1213,85 +1327,38 @@ export function useCleanCardModel(
       title: `${control.label}: ${control.value}`,
     });
   }
-  const parallelChip = parallelReading(
-    powerReport?.parallels ?? steamReport?.parallels ?? derived.parallel,
-    derived.structuralParallel,
-    powerReport?.state === "ok",
-  );
-  if (parallelChip) rawChips.push(parallelChip);
-  const strip = layoutStrip(rawChips);
 
-  // The rows an Up to card's reason names are lit in its colour (only while the card is Up to: `upTo` is its own).
-  const powerTier = powerCardTier(recipe);
-  const inputs = withReasonPorts(
-    rails.inputs.map((port) =>
-      buildPortView(projectNode.id, port, projectNode, forcedAt, spillAt, powerTier),
-    ),
-    countState.upTo,
-  );
-  const outputs = withReasonPorts(
-    rails.outputs.map((port) =>
-      buildPortView(projectNode.id, port, projectNode, forcedAt, spillAt, powerTier),
-    ),
-    countState.upTo,
-  );
-  const loop = cardLoop(plan?.loops, projectNode.id);
-  // On Any and running none: is it because its input is sent out instead of its output?
-  const idle =
-    count.rule === "any" && count.zero
-      ? idleTradeOf(plan, projectNode.id, new Set(inputs.map((port) => port.resourceKey)))
-      : undefined;
   // A turbine card: what its whole turbines really make at the flow each gets.
   const running = result?.theoreticalMachinesRequired ?? 0;
-  const turbines = turbinesFor(running, count.rule === "exact" ? count.set : undefined);
+  const turbines = turbinesFor(running, pinRuleOf(projectNode, recipe) === "exact" ? projectNode.solvePin : undefined);
   const turbineCheck = mayTurbineFlow(recipe, running, turbines)
     ? turbineFlowCheck(recipe, projectNode.machineConfigTiers, running, turbines)
     : undefined;
-  const foot = buildFootView(
-    count,
-    countState.upTo,
-    { inputs, outputs },
-    (id) => cardNameIn(liveProject, id),
-    loop,
-    idle,
-    turbineCheck ? { ...turbineCheck, tier: powerTier } : undefined,
-  );
 
-  const view: CleanCardView = {
-    nodeId: projectNode.id,
+  const view = cleanCardView({
+    projectNode,
+    recipe,
+    result,
+    plan,
+    rails,
     name,
-    nameSize,
-    hasPicker,
-    tier: tierLabel
-      ? {
-          label: tierLabel,
-          fixed: tierControl?.fixed === true,
-          title: tierControl?.fixed
-            ? "Fixed by the reactor mark"
-            : `Tier ${tierLabel}. Click up, right click down.`,
-        }
-      : undefined,
-    amps:
-      ampsLabel && powerReport
-        ? { label: ampsLabel, value: powerReport.amps, editable: true }
-        : undefined,
-    inputs,
-    outputs,
-    power,
+    hasPicker: machineHandlers.length > 1,
     art,
     glanceArt: art ?? machineIcon?.iconPath,
-    glanceProduct: glanceProduct(recipe.outputs),
-    count,
-    foot,
-    loop,
-    glance: glanceBar(countState.upTo, loop),
+    tierControl,
+    powerReport,
+    steamReport: derived.steamReport,
+    showHatchControl: derived.showHatchControl,
+    parallel: derived.parallel,
+    structuralParallel: derived.structuralParallel,
     circuit: derived.circuit,
-    chips: strip.chips,
-    stripHeight: strip.height,
+    pinnedChips,
+    turbineCheck,
+    averageDraw,
     selected,
-    cannotRun: powerReport !== undefined && powerReport.state !== "ok",
-    unset,
-  };
+    cardName: (id) => cardNameIn(liveProject, id),
+  });
+  const { count, inputs, outputs } = view;
 
   const actions: CleanCardActions = {
     stepTier: (direction) => {

@@ -26,5 +26,11 @@ public enum TextStyle {
      * a decision both hosts must take alike whatever their faces measure (the website steps a port's name down exactly
      * where the mod does).
      */
-    GAME
+    GAME,
+    /** A card's name at its largest. Mod: game font x1.5. Web: 10 px. */
+    NAME_LARGE,
+    /** A card's name one step down. Mod: game font x1.25. Web: 9 px. */
+    NAME_MEDIUM,
+    /** A card's name at its smallest (cut past it). Mod: game font 1x. Web: 8 px. */
+    NAME_SMALL
 }

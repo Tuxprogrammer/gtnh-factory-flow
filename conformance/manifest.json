@@ -1108,6 +1108,16 @@
       "bytes": 6601,
       "sha256": "dad06cb14862c075382f2b43fdffb9edfed3b8534cc221add8dbf7e3bf6a8664"
     },
+    "view/card/cases.json": {
+      "area": "view",
+      "bytes": 471726,
+      "sha256": "81b17ef3ef9227be3ab8e357a8320f88c6dc7c490f04a358cf94fdf25b553fc2"
+    },
+    "view/card/count.json": {
+      "area": "view",
+      "bytes": 2974,
+      "sha256": "001810ce3f822f0a532d7fee95334bdbabf469d288d30dd9ece7838b038f74ea"
+    },
     "view/notice-cases.json": {
       "area": "view",
       "bytes": 32444,

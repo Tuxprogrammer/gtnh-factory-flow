@@ -8,7 +8,8 @@ import {
 import { pinRuleOf, type PinRule } from "@/lib/model/pin-rule";
 import type { PlanUpTo } from "@/lib/solver/plan/types";
 import { powerCardTier } from "@/lib/power/power-recipe";
-import { makeResourceKey } from "@/lib/model/resources";
+import { getCategoryPresentation } from "@/lib/model/category-presentation";
+import { makeResourceKey, resourceLabel } from "@/lib/model/resources";
 import { getStorageRoles, type StorageRole } from "@/lib/model/storage-role";
 import { hasStorageTarget, storageTargetMode, type TargetMode } from "@/lib/model/storage-target";
 import type {
@@ -148,6 +149,16 @@ export function flowHandle(
 ): string {
   const { prefix } = splitResultNodeId(resultNodeId);
   return `${prefix}${makeResourceHandleId(side, { kind, id: resourceId })}`;
+}
+
+/** An ore dictionary slot as the card names it ("Any 1x Copper Wire"), from its members, never its raw tag. */
+export function oredictName(
+  project: FactoryProject,
+  kind: ResourceKind,
+  id: string,
+): string | undefined {
+  const category = getCategoryPresentation(project.recipes, kind, id);
+  return category ? resourceLabel(category) : undefined;
 }
 
 export function buildResourceLookup(project: FactoryProject): Map<string, RailResource> {
@@ -379,14 +390,16 @@ export function buildRailModel(
       id: look.id,
       displayName: look.label,
     };
+    const named = oredictName(project, look.kind, look.id);
+    const label = named ?? look.label;
     return {
       key,
       kind: look.kind,
       resourceId: look.id,
-      label: look.label,
+      label,
       amount,
       energy: look.kind === "power",
-      resource: { ...resource, displayName: resource.displayName ?? look.label },
+      resource: { ...resource, displayName: named ?? resource.displayName ?? look.label },
       drawers:
         side === "i"
           ? (sourceDrawers.get(key) ?? [])

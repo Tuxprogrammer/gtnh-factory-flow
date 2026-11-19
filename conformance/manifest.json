@@ -28,6 +28,14 @@
       "specifies": "Files that disagree with a copy in the tree and wait for a decision. No suite reads them. Each subdirectory says in its README.md what it is and which file it would replace.",
       "readers": []
     },
+    "schema": {
+      "specifies": "JSON Schema (draft 2020-12) for the data that crosses between the website and the mod: plan.schema.json (the plan file), board-selection.schema.json (a blueprint payload), dataset.schema.json and dataset-manifest.schema.json (the recipe dataset). Generated from the website's Zod schemas, which stay the source of truth; overlays add the limits Zod can only state as code. README.md in the directory says what the schema cannot express.",
+      "readers": [
+        "website: src/test-support/schema-drift.test.ts (the files are what tools/conformance/schema/build.ts generates today)",
+        "mod: cloud/map/PlanSchemaTest (the mod's exported plans and every fixture plan validate against plan.schema.json)"
+      ],
+      "generator": "npx tsx tools/conformance/schema/write.ts (check with --check), which also rewrites this manifest"
+    },
     "solver/corpus": {
       "specifies": "The solver's whole answer on a plan. inputs/<case>.json is a SolveInput as the mod's SolveInputJson writes it; goldens/<case>.json is the digest of the answer both solvers must give, equal to 1e-6 relative. platline-x4 and platline-x10 have a golden only: their input is platline tiled 4 and 10 times. The 16 gtnh-flow-* inputs are dumps of yaml charts the mod loads itself.",
       "readers": [
@@ -93,15 +101,25 @@
       "bytes": 187840,
       "sha256": "5773e2097c2849d223b41864cc853a81dd7743954db40ed9f404333519b6d544"
     },
-    "pending/solver-up-to-web-newer/idle-noise-beside-a-lone-card.json": {
-      "area": "pending",
-      "bytes": 57167,
-      "sha256": "ff4fd74ea453e9ef0ccb0cbdbf6ab2f7a10098a06bdb015ba82f82e49c7c6c38"
+    "schema/board-selection.schema.json": {
+      "area": "schema",
+      "bytes": 46493,
+      "sha256": "bcf0792d662a345ed4ff8cbaccb2d4a7946fda8bb42e5203365045b16491bc04"
     },
-    "pending/solver-up-to-web-newer/idle-noise.json": {
-      "area": "pending",
-      "bytes": 55512,
-      "sha256": "9fa420b4d1193a5cf3d8780bb1e30fa351ec0003c1e56bc0d77409dd93792d82"
+    "schema/dataset-manifest.schema.json": {
+      "area": "schema",
+      "bytes": 2726,
+      "sha256": "b192dcb482f93a4df317a2c2b9b78f2be1eb50f0118e9e3e7aa544dfe7b45dcf"
+    },
+    "schema/dataset.schema.json": {
+      "area": "schema",
+      "bytes": 40955,
+      "sha256": "164877833efb30ae5235f0cc4ddd2974b383b6afebe17d9aa6ef27e496a916a4"
+    },
+    "schema/plan.schema.json": {
+      "area": "schema",
+      "bytes": 60300,
+      "sha256": "5c3fac9a8598e4ddf1300e1f40f593d76825885d106c1e6ea10fa3e50aafa2bb"
     },
     "solver/corpus/goldens/alumina-line-shared-reactor.json": {
       "area": "solver/corpus",
@@ -630,13 +648,13 @@
     },
     "solver/up-to/idle-noise-beside-a-lone-card.json": {
       "area": "solver/up-to",
-      "bytes": 56745,
-      "sha256": "9426d4ee7df772bbc1f8cb5f809fe63da214365c8a6f71ccac31754caeeb32f5"
+      "bytes": 57167,
+      "sha256": "ff4fd74ea453e9ef0ccb0cbdbf6ab2f7a10098a06bdb015ba82f82e49c7c6c38"
     },
     "solver/up-to/idle-noise.json": {
       "area": "solver/up-to",
-      "bytes": 55090,
-      "sha256": "c19e87551704bfcf306a672534624ce4af5dc7a5dd167b1b10994bb903f32dc0"
+      "bytes": 55512,
+      "sha256": "9fa420b4d1193a5cf3d8780bb1e30fa351ec0003c1e56bc0d77409dd93792d82"
     },
     "solver/up-to/mega-iv-nitrobenzene-power-plant-every-count-up-to.json": {
       "area": "solver/up-to",

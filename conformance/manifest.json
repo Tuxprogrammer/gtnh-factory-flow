@@ -188,6 +188,11 @@
       "bytes": 643054,
       "sha256": "d32b2163d3f0c9cc69100c6e7a273dfe5cba8249cbea21e3e3bc062a0fe98ec6"
     },
+    "machines/website-test-inputs.jsonl.gz": {
+      "area": "machines",
+      "bytes": 120878,
+      "sha256": "9264f9be65f716e43774850747604716dbc9b2733eb30e629cf246be89cc1678"
+    },
     "plans/invalid/fuel-profile-empty-id.json": {
       "area": "plans",
       "bytes": 234,

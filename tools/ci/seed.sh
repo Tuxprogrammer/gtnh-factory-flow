@@ -110,14 +110,14 @@ if [ "$mode" = save ]; then
   [ ${#targs[@]} -gt 0 ] || { say "$name: none of the seed's directories exist; nothing to save"; exit 0; }
   roots=(); while IFS= read -r r; do [ -e "$r" ] && roots+=("$r"); done < <(fetched_roots)
   fetched=""
-  [ ${#roots[@]} -eq 0 ] || fetched=$(find "${roots[@]}" -type f -newer "$state/marker" ! -name '*.lock' ! -name '*.ok' ! -name auth_uuid_cache.properties 2>/dev/null)
+  [ ${#roots[@]} -eq 0 ] || fetched=$(find "${roots[@]}" -type f -newer "$state/marker" ! -name '*.lock' ! -name '*.ok' ! -name auth_uuid_cache.properties ! -name DEPENDENCIES_VALIDATED ! -path '*/.links/*' 2>/dev/null)
   n=$(printf '%s' "$fetched" | grep -c . || true)
   say "$name: $n downloaded files this run (0 means the seed was complete)"
   if [ "$n" -gt 0 ]; then
     # Dependency files sit at files-2.1/<group>/<artifact>/<version>/<hash>/<file>; show them as group:artifact:version.
     printf '%s\n' "$fetched" | grep '/files-2\.1/' | sed -E 's#^.*/files-2\.1/([^/]+)/([^/]+)/([^/]+)/[^/]+/[^/]+$#dependency \1:\2:\3#' | sort -u | head -40 | sed 's/^/[ci:seed]   /'
     others=$(printf '%s\n' "$fetched" | grep -vc '/files-2\.1/' || true)
-    [ "$others" = 0 ] || say "  and $others files that are not dependencies (Minecraft data, the Gradle distribution, browsers)"
+    [ "$others" = 0 ] || { say "  and $others files that are not dependencies (Minecraft data, the Gradle distribution, browsers):"; printf '%s\n' "$fetched" | grep -v '/files-2\.1/' | head -8 | sed 's#^.*/\.cache/#[ci:seed]     #;s#^.*/\.gradle/#[ci:seed]     #'; }
   fi
   upload=false
   if [ -f "$state/cold" ] || [ "$n" -gt 0 ]; then

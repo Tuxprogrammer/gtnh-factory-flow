@@ -3,6 +3,7 @@ import { buildTextSearchIndex, queryTextSearchIndex } from "@/lib/search";
 import { matchSearchTokens, parseSearchQuery } from "@/lib/search";
 import {
   getChoiceAlternativesByKey,
+  getRecipeMapIcon,
   getWildcardResource,
   orderByRecipeMap,
   withTankMapFace,
@@ -199,5 +200,33 @@ describe("an all-maps page walks the machines in section order", () => {
       recipeMaps,
     );
     expect(ordered.at(-1)?.recipeIndex).toBe(9);
+  });
+});
+
+describe("the Thaumcraft maps' known faces", () => {
+  // The exporter's ids carry "@meta" only when the meta is not 0, and the Arcane
+  // Worktable the NEI tab shows is meta 15. A hand-written "@0" names
+  // an item no recipe holds, and the tab then has no picture.
+  const resource = (id: string, displayName: string) => ({
+    kind: "item" as const,
+    id,
+    displayName,
+    iconPath: `${displayName}.png`,
+  });
+  const catalog = {
+    resources: [],
+    resourceIndex: [
+      resource("Thaumcraft:blockStoneDevice@2", "Infusion Matrix"),
+      resource("Thaumcraft:blockMetalDevice", "Crucible"),
+      resource("Thaumcraft:blockTable@15", "Arcane Worktable"),
+    ],
+  } as never;
+
+  it.each([
+    ["Thaumcraft Infusion", "Thaumcraft:blockStoneDevice@2"],
+    ["Thaumcraft Crucible", "Thaumcraft:blockMetalDevice"],
+    ["Thaumcraft Arcane Crafting", "Thaumcraft:blockTable@15"],
+  ])("%s wears the item the exporter names", (recipeMap, id) => {
+    expect(getRecipeMapIcon(catalog, recipeMap)?.id).toBe(id);
   });
 });

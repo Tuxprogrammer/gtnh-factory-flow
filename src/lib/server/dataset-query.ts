@@ -2924,7 +2924,7 @@ function buildRecipeMapIconMap(
   );
 }
 
-function getRecipeMapIcon(
+export function getRecipeMapIcon(
   catalog: LoadedRecipeIndex,
   recipeMap: string,
 ): DatasetResourceIndexEntry | undefined {
@@ -2984,7 +2984,7 @@ const KNOWN_RECIPE_MAP_ICONS: KnownRecipeMapIcon[] = [
     recipeMaps: ["Thaumcraft Crucible", "Crucible"],
     resource: {
       kind: "item",
-      id: "Thaumcraft:blockMetalDevice@0",
+      id: "Thaumcraft:blockMetalDevice",
       displayName: "Crucible",
     },
   },
@@ -2997,7 +2997,7 @@ const KNOWN_RECIPE_MAP_ICONS: KnownRecipeMapIcon[] = [
     ],
     resource: {
       kind: "item",
-      id: "Thaumcraft:blockTable@0",
+      id: "Thaumcraft:blockTable@15",
       displayName: "Arcane Worktable",
     },
   },

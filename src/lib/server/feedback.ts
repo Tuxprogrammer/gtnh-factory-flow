@@ -22,9 +22,9 @@ const LINK_MAX = 8000;
 /** GitHub refuses an issue body over 65,536 characters; the plans move to a comment past this. */
 const BODY_MAX = 60_000;
 
-/** Where reports go and how each kind is labelled there: the game's to the mod's repo, the web planner's to the website's. */
-export const FEEDBACK_REPO = "jackwrichards/gtnh-planner-mod";
-export const FEEDBACK_WEB_REPO = "jackwrichards/gtnh-factory-flow";
+/** Where reports go and how each kind is labelled there. Both kinds open on this fork; neither default may name an upstream repo. */
+export const FEEDBACK_REPO = "Tuxprogrammer/gtnh-factory-flow";
+export const FEEDBACK_WEB_REPO = "Tuxprogrammer/gtnh-factory-flow";
 
 /** The repo a report opens its issue on (`GITHUB_FEEDBACK_REPO` and `GITHUB_FEEDBACK_WEB_REPO` override). */
 export function feedbackRepo(origin: "game" | "web" | undefined, env: Record<string, string | undefined> = process.env): string {

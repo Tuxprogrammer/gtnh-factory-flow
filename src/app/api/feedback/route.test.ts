@@ -72,7 +72,7 @@ describe("the feedback route", () => {
     });
     const [token, repo, issue] = vi.mocked(openIssue).mock.calls[0]!;
     expect(token).toBe("token");
-    expect(repo).toBe("jackwrichards/gtnh-planner-mod");
+    expect(repo).toBe("Tuxprogrammer/gtnh-factory-flow");
     expect(issue.title).toBe("Idea: Copy a card");
     expect(issue.labels).toEqual(["from game", "enhancement"]);
     expect(issue.body).toContain("[open in the planner](https://gtnhplanner.com/#p=gtnh1.");
@@ -91,8 +91,8 @@ describe("the feedback route", () => {
     const sent = await send(web);
     expect(sent.status).toBe(201);
     expect(vi.mocked(openIssue).mock.calls[0]![2].labels).toEqual(["from web", "enhancement"]);
-    // The web planner's reports open on the website's repo, the game's on the mod's.
-    expect(vi.mocked(openIssue).mock.calls[0]![1]).toBe("jackwrichards/gtnh-factory-flow");
+    // Both kinds open on this fork's repo; the label tells them apart.
+    expect(vi.mocked(openIssue).mock.calls[0]![1]).toBe("Tuxprogrammer/gtnh-factory-flow");
     vi.mocked(openIssue).mockClear();
     // The web's origin with the game's device id and a Java, and the game's shape claiming the web's origin.
     expect((await send({ ...web, deviceId: report.deviceId })).status).toBe(400);

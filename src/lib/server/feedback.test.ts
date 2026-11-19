@@ -174,10 +174,10 @@ describe("feedback reports from the game", () => {
 });
 
 describe("feedbackRepo", () => {
-  it("sends the web planner's reports to the website's repo and the game's to the mod's", () => {
-    expect(feedbackRepo("web", {})).toBe("jackwrichards/gtnh-factory-flow");
-    expect(feedbackRepo("game", {})).toBe("jackwrichards/gtnh-planner-mod");
-    expect(feedbackRepo(undefined, {})).toBe("jackwrichards/gtnh-planner-mod");
+  it("sends both kinds of report to this fork's repo unless the environment names another", () => {
+    expect(feedbackRepo("web", {})).toBe("Tuxprogrammer/gtnh-factory-flow");
+    expect(feedbackRepo("game", {})).toBe("Tuxprogrammer/gtnh-factory-flow");
+    expect(feedbackRepo(undefined, {})).toBe("Tuxprogrammer/gtnh-factory-flow");
     expect(feedbackRepo("web", { GITHUB_FEEDBACK_WEB_REPO: "o/web", GITHUB_FEEDBACK_REPO: "o/game" })).toBe("o/web");
     expect(feedbackRepo("game", { GITHUB_FEEDBACK_WEB_REPO: "o/web", GITHUB_FEEDBACK_REPO: "o/game" })).toBe("o/game");
   });

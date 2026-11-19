@@ -11,7 +11,7 @@ import { leaveLibrary, openLibrary } from "@/lib/library/library-tab";
 import { openWelcomeTab } from "@/lib/welcome/welcome-tab";
 import { APP_VERSION } from "@/lib/version";
 
-export const GITHUB_URL = "https://github.com/jackwrichards/gtnh-factory-flow";
+export const GITHUB_URL = "https://github.com/Tuxprogrammer/gtnh-factory-flow";
 
 /**
  * The planner's thread in the GTNH Discord. A thread, not a server invite,

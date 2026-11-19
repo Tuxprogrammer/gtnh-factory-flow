@@ -1,7 +1,7 @@
 import { isCustomRateRecipe } from "@/lib/model/custom-rate";
 import { pinRuleOf } from "@/lib/model/pin-rule";
 import { isFluidTankRecipe } from "@/lib/model/fluid-tank";
-import { buildMachineList } from "@/lib/model/machine-list";
+import { buildMachineList, machinesFromUnits } from "@/lib/model/machine-list";
 import type {
   FactoryPocket,
   FactoryProject,
@@ -94,7 +94,11 @@ export function computeGroupSummaries(
       // An Up to card builds what runs (the solver's read-out), an Exactly card its set count.
       const running = rule === "upTo" ? result?.plan?.upTo?.[entry.nodeId]?.reached : undefined;
       if (!pinned && !(entry.count > 1e-9)) continue;
-      machines += Math.ceil((running ?? (pinned ? pin : entry.count)) - 1e-9);
+      // A crop card's solved and set counts are seeds: the group builds the harvesters they fill.
+      const seeds = running ?? (pinned ? pin : undefined);
+      machines += Math.ceil(
+        (seeds !== undefined ? machinesFromUnits(entry, seeds) : entry.count) - 1e-9,
+      );
       euT += (peak ? entry.euT : entry.avgEuT) ?? 0;
     }
 

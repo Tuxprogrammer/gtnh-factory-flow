@@ -636,6 +636,33 @@ it("steps a machine's tier from its line as the card does", () => {
   expect(was()).not.toBe("LV");
 });
 
+it("draws a machine whose map has one machine with the map's own icon, as its card does", () => {
+  // Such a recipe carries no handler list: its handler is named after the map and no family icon is keyed by it.
+  load(mockLeftovers);
+  useFactoryStore.setState({
+    dataset: {
+      machineHandlerIcons: [],
+      recipeMapIcons: [
+        {
+          recipeMap: "Mock Machine",
+          resource: {
+            kind: "item",
+            id: "mock:block",
+            displayName: "Mock Block",
+            iconPath: "/mock.png",
+          },
+        },
+      ],
+    } as never,
+  });
+  try {
+    const { container } = render(<OverviewRail />);
+    expect(container.querySelector(".rail-group .rail-icon .rail-icon-art")).toBeTruthy();
+  } finally {
+    useFactoryStore.setState({ dataset: undefined });
+  }
+});
+
 it("repaints its rates and unit labels when the rate unit changes, without a hover", () => {
   load(mockLeftovers);
   const { container } = render(<OverviewRail />);

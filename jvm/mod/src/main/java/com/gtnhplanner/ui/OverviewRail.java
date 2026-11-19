@@ -21,6 +21,8 @@ import com.cleanroommc.modularui.theme.WidgetThemeEntry;
 import com.cleanroommc.modularui.value.StringValue;
 import com.cleanroommc.modularui.widget.ParentWidget;
 import com.cleanroommc.modularui.widgets.textfield.TextFieldWidget;
+import com.gtnhplanner.core.base.Text;
+import com.gtnhplanner.core.view.rail.RailView;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.PinRule;
 import com.gtnhplanner.ui.canvas.BoardCanvas;
@@ -414,9 +416,11 @@ final class OverviewRail extends ParentWidget<OverviewRail>
     /** The list under the heading and filter, from {@code y}: every section in turn. Returns where it ends. */
     private int list(final BoardSession.Totals t, int y, final int w, final float z, final Hit hover) {
         final Set<String> keys = new HashSet<>();
-        y = resources("INPUTS", t.inputs(), y, w, z, Hyb.SOURCE_INK, "-", "Nothing missing.", hover, keys);
-        y = resources("OUTPUTS", t.outputs(), y, w, z, Hyb.PRODUCT_INK, "+", "Nothing coming out yet.", hover, keys);
-        y = resources("INTERNAL", t.internal(), y, w, z, INTERNAL_INK, "", "Nothing internal.", hover, keys);
+        // What the rail shows (its lines, counts, figures and words) is the core's; this draws it.
+        view = session.railView(filter);
+        y = resources("INPUTS", t.inputs(), y, w, z, Hyb.SOURCE_INK, "-", hover, keys);
+        y = resources("OUTPUTS", t.outputs(), y, w, z, Hyb.PRODUCT_INK, "+", hover, keys);
+        y = resources("INTERNAL", t.internal(), y, w, z, INTERNAL_INK, "", hover, keys);
         // A folded section keeps its sliders (a bar in hand among them keeps its place).
         for (final BoardSession.SpareLine line : session.spares())
             if (folded.contains(line.importing() ? "INPUTS" : "OUTPUTS")) keys.add(line.key());
@@ -518,11 +522,20 @@ final class OverviewRail extends ParentWidget<OverviewRail>
         lastHits.addAll(hits);
     }
 
-    private boolean matches(final String label) {
-        final String f = filter.trim()
-            .toLowerCase();
-        return f.isEmpty() || label.toLowerCase()
-            .contains(f);
+    /** The rail as the core worked it out for this frame's plan and filter. */
+    private RailView view;
+
+    private RailView.Section coreSection(final String id) {
+        for (final RailView.Section section : view.sections()) if (section.id()
+            .equals(id)) return section;
+        throw new IllegalStateException(id);
+    }
+
+    /** The words for one of the core's keys. */
+    private static String words(final String key) {
+        return key == null ? ""
+            : Text.get()
+                .translate(key);
     }
 
     /** Where the last section bar's title and count end: what comes after them on the bar gives way first. */
@@ -553,73 +566,37 @@ final class OverviewRail extends ParentWidget<OverviewRail>
         Hyb.textRight(unit, w - 6, y - SECTION_H + 2, Hyb.MUTED);
     }
 
-    /**
-     * How much of each resource the plan's spares with a choice of place carry out ({@code importing} false) or in, by
-     * resource, as the last solve has it: the section's lines leave that to the spare's own block.
-     */
-    private Map<String, Double> spared(final boolean importing) {
-        final Map<String, Double> out = new HashMap<>();
-        for (final BoardSession.SpareLine l : session.spares()) {
-            if (l.importing() != importing || l.bearers()
-                .size() < 2) continue;
-            for (int i = 0; i < l.bearers()
-                .size(); i++) {
-                final BoardSession.SpareBearer b = l.bearers()
-                    .get(i);
-                out.merge(session.canonicalKey(b.resourceKey()), l.solvedShares()[i] * b.max(), Double::sum);
-            }
-        }
-        return out;
-    }
-
-    /**
-     * What an input or output line shows: what goes in or out less what the plan's spares with a choice carry (they
-     * have blocks of their own); an internal line as it is.
-     */
-    private double railAmount(final BoardSession.TotalLine line) {
-        final boolean in = inputs.contains(line), out = !in && session.totals()
-            .outputs()
-            .contains(line);
-        if (!in && !out) return line.amount();
-        return Math.max(0, line.amount() - spared(in).getOrDefault(line.key(), 0.0));
-    }
-
     private int resources(final String title, final List<BoardSession.TotalLine> lines, int y, final int w,
-        final float z, final int ink, final String sign, final String empty, final Hit hover, final Set<String> keys) {
-        // What the plan's spares carry is theirs: a line left with nothing but that (and no drawer) is not listed here.
-        // A line at 0 (an unwired port's resource, or a drawer's) always is, so it can be set from here.
+        final float z, final int ink, final String sign, final Hit hover, final Set<String> keys) {
+        // What the plan's spares carry is theirs, and a line left with nothing but that (and no drawer) is not listed:
+        // the core has already taken both out. A line at 0 (an unwired port's resource, or a drawer's) always is, so
+        // it can be set from here.
         final boolean internal = title.equals("INTERNAL"), sources = title.equals("INPUTS");
-        final Map<String, Double> spared = internal ? Map.of() : spared(sources);
-        final List<BoardSession.TotalLine> kept = new ArrayList<>();
-        final Map<BoardSession.TotalLine, Double> amounts = new HashMap<>();
-        for (final BoardSession.TotalLine line : lines) {
-            final double left = Math.max(0, line.amount() - spared.getOrDefault(line.key(), 0.0));
-            if (!internal && line.amount() > RailTotals.EPS
-                && left <= Math.max(RailTotals.EPS, line.amount() * 1e-4)
-                && drawersFor(line, sources).isEmpty()
-                && pinsFor(line, sources).isEmpty()) continue;
-            kept.add(line);
-            amounts.put(line, internal ? line.amount() : left);
-        }
+        final RailView.Section core = coreSection(title);
+        final Map<String, BoardSession.TotalLine> byKey = new HashMap<>();
+        for (final BoardSession.TotalLine line : lines) byKey.putIfAbsent(line.key(), line);
         final List<BoardSession.TotalLine> shown = new ArrayList<>();
-        for (final BoardSession.TotalLine line : kept) if (matches(line.label())) shown.add(line);
+        for (final RailView.Line l : core.lines()) {
+            final BoardSession.TotalLine line = byKey.get(l.key());
+            if (line != null) shown.add(line);
+        }
         // The spares with a choice of place come after the lines, as blocks of their own.
-        final List<BoardSession.SpareLine> groups = internal ? List.of() : groups(sources);
-        y = section(title, kept.size() + groups.size(), shown.size() + groups.size(), y, w, ink, hover);
+        final List<BoardSession.SpareLine> groups = spareLinesOf(core);
+        y = section(title, core.count(), core.shown(), y, w, ink, hover);
         // Every section's numbers in one column, left of where the drawer controls sit (empty on internal lines).
         final int rateRight = w - 6 - CONTROLS_W - 3;
         // The unit every rate below is in, at the header's end.
         if (!folded.contains(title)) unitAtBar(y, w);
         if (folded.contains(title)) return y + GAP;
         if (shown.isEmpty() && groups.isEmpty()) {
-            Hyb.text(kept.isEmpty() ? empty : "No matches.", 8, y + 3, 0xFF6A6C74);
+            Hyb.text(words(core.empty()), 8, y + 3, 0xFF6A6C74);
             return y + ROW_H + GAP;
         }
         final Fmt.RateUnit unit = session.rateUnit();
         final int tint = Hyb.seeThrough(ink & 0x00FFFFFF | 0x0D000000);
         for (final BoardSession.TotalLine line : shown) {
             final boolean hot = hover != null && hover.data() == line && hover.kind() == Kind.RESOURCE;
-            final double amount = amounts.get(line);
+            final double amount = line.amount();
             // One line per drawer or port: the resource's own line carries the first; any more get a short line each.
             final int setters = internal ? 0 : drawersFor(line, sources).size() + pinsFor(line, sources).size();
             final int rows = Math.max(1, setters);
@@ -691,7 +668,7 @@ final class OverviewRail extends ParentWidget<OverviewRail>
      */
     private int spareGroups(final boolean importing, int y, final int w, final float z, final Hit hover,
         final Set<String> keys) {
-        for (final BoardSession.SpareLine line : groups(importing)) {
+        for (final BoardSession.SpareLine line : spareLinesOf(coreSection(importing ? "INPUTS" : "OUTPUTS"))) {
             y += 2;
             // The slider the mouse is on (or dragging) stays where it is on screen while lines above it come and go:
             // the list scrolls by as much as it moved.
@@ -714,15 +691,16 @@ final class OverviewRail extends ParentWidget<OverviewRail>
         return y;
     }
 
-    /** The spares with a choice of place in one direction that the filter lets through. */
-    private List<BoardSession.SpareLine> groups(final boolean importing) {
+    /** The session's spare for each of the core section's, in the core's order (the filter has let them through). */
+    private List<BoardSession.SpareLine> spareLinesOf(final RailView.Section core) {
         final List<BoardSession.SpareLine> out = new ArrayList<>();
-        for (final BoardSession.SpareLine line : session.spares()) {
-            if (line.importing() != importing || line.bearers()
-                .size() < 2) continue;
-            boolean match = false;
-            for (final BoardSession.SpareBearer b : line.bearers()) match |= matches(b.name());
-            if (match) out.add(line);
+        for (final RailView.Spare spare : core.spares()) {
+            for (final BoardSession.SpareLine line : session.spares()) {
+                if (line.importing() != spare.importing() || !line.key()
+                    .equals(spare.key())) continue;
+                out.add(line);
+                break;
+            }
         }
         return out;
     }
@@ -1028,35 +1006,29 @@ final class OverviewRail extends ParentWidget<OverviewRail>
         }
     }
 
-    /**
-     * The machine lines grouped by machine, and the whole machines in all and shown, for a set of totals and filter.
-     */
-    private record MachineGroups(Object totals, String filter, Map<String, List<BoardSession.MachineLine>> groups,
-        int whole, int shown) {}
+    /** The machine lines of the core's groups, as the session's lines (kept for as long as the core's view is). */
+    private record MachineGroups(Object view, Map<String, List<BoardSession.MachineLine>> groups) {}
 
     private MachineGroups machineGroups;
 
     private int machines(final BoardSession.Totals t, int y, final int w, final float z, final Hit hover) {
-        if (machineGroups == null || machineGroups.totals() != t
-            || !machineGroups.filter()
-                .equals(filter)) {
+        final RailView.Machines core = view.machines();
+        if (machineGroups == null || machineGroups.view() != view) {
+            final Map<UUID, BoardSession.MachineLine> byNode = new HashMap<>();
+            for (final BoardSession.MachineLine m : t.machines()) byNode.put(m.nodeId(), m);
             final Map<String, List<BoardSession.MachineLine>> made = new LinkedHashMap<>();
-            for (final BoardSession.MachineLine m : t.machines()) {
-                if (matches(m.name())) made.computeIfAbsent(m.name(), k -> new ArrayList<>())
-                    .add(m);
+            for (final RailView.Group g : core.groups()) {
+                final List<BoardSession.MachineLine> lines = new ArrayList<>();
+                for (final RailView.Entry e : g.entries()) {
+                    final BoardSession.MachineLine m = byNode.get(UUID.fromString(e.nodeId()));
+                    if (m != null) lines.add(m);
+                }
+                if (!lines.isEmpty()) made.put(g.name(), lines);
             }
-            // Whole machines to build: all of them, and those the filter lets through.
-            int all = 0, through = 0;
-            for (final BoardSession.MachineLine m : t.machines()) {
-                final int n = (int) Math.ceil(m.machines() - 1e-9);
-                all += n;
-                if (made.containsKey(m.name())) through += n;
-            }
-            machineGroups = new MachineGroups(t, filter, made, all, through);
+            machineGroups = new MachineGroups(view, made);
         }
         final Map<String, List<BoardSession.MachineLine>> groups = machineGroups.groups();
-        final int whole = machineGroups.whole(), shown = machineGroups.shown();
-        y = section("MACHINES", whole, shown, y, w, Hyb.INK, hover);
+        y = section("MACHINES", core.count(), core.shown(), y, w, Hyb.INK, hover);
         // Peak / average, at the right of the section heading.
         final int px = w - 6 - TOGGLE_W;
         final boolean peakHot = hover != null && hover.kind() == Kind.PEAK;
@@ -1078,33 +1050,50 @@ final class OverviewRail extends ParentWidget<OverviewRail>
         // What the machines draw, in the bar beside the key; on a narrow overview the unit goes, then the figure, so
         // the
         // title, the count and the key stay whole.
-        final String draw = Fmt.power(t.euPerTick());
-        final String drawn = Hyb.width(draw + " EU/t") <= px - 5 - headEnd - 4 ? draw + " EU/t"
-            : Hyb.width(draw) <= px - 5 - headEnd - 4 ? draw : "";
+        final String draw = Fmt.power(
+            core.total()
+                .value());
+        final String drawn = Hyb.width(
+            draw + " "
+                + core.total()
+                    .suffix())
+            <= px - 5 - headEnd - 4
+                ? draw + " "
+                    + core.total()
+                        .suffix()
+                : Hyb.width(draw) <= px - 5 - headEnd - 4 ? draw : "";
         Hyb.textRight(drawn, px - 5, y - SECTION_H + 2, Hyb.MUTED);
         if (folded.contains("MACHINES")) return y + GAP;
 
-        if (t.euMade() > 0) {
+        if (core.made() != null && core.net() != null) {
             // With generators on the board: what they make, and what is left (what the machines use is in the bar).
-            final double net = t.euMade() - t.euPerTick();
+            final double net = core.net()
+                .value();
             Hyb.text("Made", 8, y + 3, Hyb.MUTED);
-            Hyb.textRight(Fmt.power(t.euMade()) + " EU/t", w - 6, y + 3, 0xFFFCD34D);
+            Hyb.textRight(
+                Fmt.power(
+                    core.made()
+                        .value())
+                    + " "
+                    + core.made()
+                        .suffix(),
+                w - 6,
+                y + 3,
+                0xFFFCD34D);
             y += ROW_H;
             Hyb.text("Net", 8, y + 3, Hyb.MUTED);
             Hyb.textRight(
-                (net >= 0 ? "+" : "-") + Fmt.power(Math.abs(net)) + " EU/t",
+                (net >= 0 ? "+" : "-") + Fmt.power(Math.abs(net))
+                    + " "
+                    + core.net()
+                        .suffix(),
                 w - 6,
                 y + 3,
                 net >= 0 ? Hyb.OK_INK : Hyb.RED_INK);
             y += ROW_H + 2;
         }
         if (groups.isEmpty()) {
-            Hyb.text(
-                t.machines()
-                    .isEmpty() ? "No machines yet." : "No matches.",
-                8,
-                y + 3,
-                0xFF6A6C74);
+            Hyb.text(words(core.empty()), 8, y + 3, 0xFF6A6C74);
             return y + ROW_H + GAP;
         }
         // One block per machine, as the resources have a line each: a faint band, the machine's name, then a line for
@@ -1219,15 +1208,19 @@ final class OverviewRail extends ParentWidget<OverviewRail>
                 if (card != null) hits.add(new Hit(Kind.COUNT, fieldX, y, fieldX + COUNT_W, y + ROW_H, m));
                 // What it draws, grey beside the tier (the unit dropped when there is no room for it).
                 // A steam machine burns steam at no voltage: its steam, L/s.
-                final boolean steam = !m.tooLow() && !(m.madeEuPerTick() > 0) && !Double.isNaN(m.steamPerSecond());
-                final String eu = m.tooLow() ? "TIER!"
-                    : m.madeEuPerTick() > 0 ? "+" + Fmt.power(m.madeEuPerTick())
-                        : steam ? Fmt.compact(m.steamPerSecond()) : Fmt.power(m.euPerTick());
-                final int euInk = m.tooLow() ? Hyb.RED_INK : m.madeEuPerTick() > 0 ? 0xFFE0B04A : Hyb.MUTED;
+                // The figure and its unit are the core's (the power dial's, the peak or the average).
+                final RailView.Eu figure = m.eu();
+                final boolean tooLow = figure.kind()
+                    .equals("tooLow"),
+                    made = figure.kind()
+                        .equals("made");
+                final String eu = tooLow ? "TIER!"
+                    : figure.value() == null ? Fmt.power(m.euPerTick()) : (made ? "+" : "") + Fmt.power(figure.value());
+                final int euInk = tooLow ? Hyb.RED_INK : made ? 0xFFE0B04A : Hyb.MUTED;
                 // Shortened to fit, never cut: the unit goes first, then the number.
                 final int room = numberRight - countW - 4 - cx;
-                final String unit = steam ? " L/s" : " EU/t";
-                final String euText = m.tooLow() || Hyb.width(eu + unit) > room ? eu : eu + unit;
+                final String unit = " " + (figure.suffix() == null ? "EU/t" : figure.suffix());
+                final String euText = tooLow || Hyb.width(eu + unit) > room ? eu : eu + unit;
                 if (Hyb.width(euText) <= room) Hyb.text(euText, cx, y + 3, euInk);
                 hits.add(new Hit(Kind.MACHINE, 0, y, w - 1, y + ROW_H, m));
                 y += ROW_H;
@@ -1341,7 +1334,7 @@ final class OverviewRail extends ParentWidget<OverviewRail>
             Hyb.click();
             edit.start(
                 lineEditKey(line),
-                railAmount(line) * unit.perSecond,
+                line.amount() * unit.perSecond,
                 v -> session.setLineRate(line.key(), line.label(), source, v / unit.perSecond));
             getContext().focus(this);
             return Result.SUCCESS;
@@ -1704,7 +1697,7 @@ final class OverviewRail extends ParentWidget<OverviewRail>
                 final BoardSession.TotalLine line = (BoardSession.TotalLine) hit.data();
                 yield List.of(
                     line.label(),
-                    hint + Fmt.rate(railAmount(line), unit, line.isFluid()),
+                    hint + Fmt.rate(line.amount(), unit, line.isFluid()),
                     hint + "Middle click: go to the cards that make or use it",
                     hint + "Right-click: find public plans that make it",
                     hint + "R, U: its recipes and uses in NEI");
@@ -1838,9 +1831,15 @@ final class OverviewRail extends ParentWidget<OverviewRail>
                                 .reason())
                             + ". "
                             + com.gtnhplanner.ui.card.CardFace.sentence(m.upTo()));
+                final RailView.Eu figure = m.eu();
                 lines.add(
-                    hint + (Double.isNaN(m.steamPerSecond()) ? Fmt.power(m.euPerTick()) + " EU/t "
-                        : Fmt.compact(m.steamPerSecond()) + " L/s steam ")
+                    hint + (figure.value() == null || figure.kind()
+                        .equals("tooLow")
+                            ? Fmt.power(m.euPerTick()) + " EU/t "
+                            : Fmt.power(figure.value()) + " "
+                                + figure.suffix()
+                                + (figure.kind()
+                                    .equals("steam") ? " steam " : " "))
                         + (session.peakPower() ? "peak" : "average"));
                 lines.add(hint + "Click or middle click: go to the card");
                 yield lines;

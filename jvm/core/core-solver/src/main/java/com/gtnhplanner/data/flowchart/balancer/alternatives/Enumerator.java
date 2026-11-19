@@ -301,11 +301,12 @@ public final class Enumerator {
     /** One answer packaged for the UI, carrying only the flows at the gate it opens. */
     private static Alternative asAlternative(final SolveContext ctx, final double[] externals,
         final Set<Integer> support, final int replaced, final int opened, final Rank rank) {
-        final double dust = ctx.heuristics.numerics().dust * SolveContext.scaleOf(externals);
+        final double[] scales = ctx.dustScales(null, null, externals)
+            .ports();
         final List<External> flows = new ArrayList<>();
         for (final int p : ctx.model.gates.get(opened)
             .ports()) {
-            if (externals[p] <= dust) continue;
+            if (externals[p] <= ctx.heuristics.numerics().dust * scales[p]) continue;
             flows.add(new External(ctx.refOf(p), externals[p]));
         }
         return new Alternative(

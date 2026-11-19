@@ -178,6 +178,18 @@
     },
     "banked": {
      "933bcadb-4d59-3a11-aedc-7141cc82e35c": 1
+    },
+    "spills": {
+     "933bcadb-4d59-3a11-aedc-7141cc82e35c": [
+      {
+       "port": {
+        "nodeId": "ae02b412-2e34-33f1-b5a0-3a401d23b5c6",
+        "portIndex": 0,
+        "input": false
+       },
+       "ratePerSecond": 1
+      }
+     ]
     }
    },
    "spares": [],

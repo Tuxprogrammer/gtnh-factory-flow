@@ -76,7 +76,8 @@ public record SolveInput(BalanceMode mode, @Nullable ChoiceKey choice, List<Mach
      * @param energyPerTick     energy per tick of one craft, exactly.
      * @param throughputFactor  how many crafts one machine runs at once (parallels).
      * @param countFixed        whether the machine count is pinned.
-     * @param machineCount      the configured machine count (the pin when {@code countFixed}).
+     * @param machineCount      the configured machine count (the pin when {@code countFixed}): any number of machines
+     *                          not below zero, a fraction too (a player may plan half a machine).
      * @param targetOutputRates the node's target output rates, units/s by output index.
      * @param properties        the node's numeric recipe properties, for the per-run totals ({@link BalanceResult}),
      *                          by the host's own property key (the mod's is its {@code RecipeProperty}): the solver only
@@ -84,7 +85,7 @@ public record SolveInput(BalanceMode mode, @Nullable ChoiceKey choice, List<Mach
      * @param targetInputRates  the node's target input rates, units/s by input index.
      */
     public record Machine(Uuid id, String name, double durationTicks, double energyPerTick, int throughputFactor,
-        List<PortIn> inputs, List<PortIn> outputs, boolean countFixed, int machineCount,
+        List<PortIn> inputs, List<PortIn> outputs, boolean countFixed, double machineCount,
         Map<Integer, Double> targetOutputRates, Map<Object, Number> properties,
         Map<Integer, Double> targetInputRates) {
 
@@ -99,7 +100,7 @@ public record SolveInput(BalanceMode mode, @Nullable ChoiceKey choice, List<Mach
         /** A machine with no input targets. */
         public Machine(final Uuid id, final String name, final double durationTicks, final double energyPerTick,
             final int throughputFactor, final List<PortIn> inputs, final List<PortIn> outputs, final boolean countFixed,
-            final int machineCount, final Map<Integer, Double> targetOutputRates,
+            final double machineCount, final Map<Integer, Double> targetOutputRates,
             final Map<Object, Number> properties) {
             this(
                 id,

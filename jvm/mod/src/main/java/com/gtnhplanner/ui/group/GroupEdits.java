@@ -166,7 +166,7 @@ public final class GroupEdits {
     /** The group goes; what it held stays where it is, in the group it sat in. */
     public void ungroup(final UUID group) {
         if (!graph().boardGroups.containsKey(group)) return;
-        Sfx.SWEEP.play(0.8f, 0.9f);
+        Sfx.SWEEP.play(Sfx.UNGROUP_VOLUME, Sfx.UNGROUP_PITCH);
         session.deselect(group);
         session.editLayout(() -> Groups.ungroup(graph(), group));
     }

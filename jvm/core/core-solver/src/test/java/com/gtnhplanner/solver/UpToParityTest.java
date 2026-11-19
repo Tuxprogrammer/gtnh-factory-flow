@@ -103,14 +103,14 @@ class UpToParityTest {
     }
 
     /** The solution's {@code key} part of a digest. */
-    private static JsonElement part(final JsonElement digest, final String key) {
+    static JsonElement part(final JsonElement digest, final String key) {
         final JsonObject solution = digest.getAsJsonObject()
             .getAsJsonObject("solution");
         return solution == null || !solution.has(key) ? new JsonObject() : solution.get(key);
     }
 
     /** Machine counts further apart than a hundred-thousandth of a machine. */
-    private static List<String> countsDiffer(final JsonElement expected, final JsonElement actual) {
+    static List<String> countsDiffer(final JsonElement expected, final JsonElement actual) {
         final List<String> out = new java.util.ArrayList<>();
         for (final java.util.Map.Entry<String, JsonElement> e : expected.getAsJsonObject()
             .entrySet()) {

@@ -52,7 +52,7 @@ The board sounds exactly like the in-game planner: the mod's own rendered files,
 | `dial.tier` (0.62 x1.085 per tier) | a voltage tier stepped, ULV low to MAX high | `overclockTier` or `hatchVoltageTier` changed, the old `dialPower` kind |
 | `note.stick` / `note.crumple` | a sticky note added; deleted | an annotation added or removed; feedback sent |
 
-Not ported: `world.place` / `world.remove` (there is no world on the website).
+Not ported: `world.place` / `world.remove` (there is no world on the website), and the mod's board groups' sounds (`groupEntered`, `groupLeft`, `groupDissolved` in the sound table; the website has no groups).
 
 Verify with the Playwright probe pattern: hook `AudioBufferSourceNode.prototype.start` and `stop` (map buffers to
 files through `Response.arrayBuffer` and `decodeAudioData`), drive the tour (`window.__tour`) and a few scripted

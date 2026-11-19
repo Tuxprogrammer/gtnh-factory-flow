@@ -47,6 +47,8 @@ export interface ShellFace {
   art?: string;
   /** What the card makes, in the glance face's corner. */
   product?: GlanceProduct;
+  /** The card's name under it, with "Names when zoomed out" on. */
+  name?: string;
   /** The box to use when React Flow has not measured the card yet. */
   fallbackWidth: number;
   fallbackHeight: number;
@@ -145,7 +147,7 @@ export function useCardFace(
   const { projectNode, recipe, result } = data;
   const machineIcons = useMachineHandlerIconEntries();
   const mapIcons = useRecipeMapIcons();
-  const { problemOutlines } = useDeviceSettings();
+  const { zoomedOutNames, problemOutlines } = useDeviceSettings();
   const layoutKey = useCardLayoutKey(data);
   const nodeKey = stableNodeKey(projectNode);
   // Keyed on the node's own data, not its identity: an Arrange gives every card a new position and no new machine.
@@ -154,7 +156,13 @@ export function useCardFace(
   const plan = useFactoryStore.getState().lastResult?.plan;
   // What runs: an Up to card's reached count, as the card's own glance face prints it.
   const count = cardCountState(result, projectNode, plan, recipe);
-  const { machineIcon, art } = cardPicture(recipe, projectNode, derived, machineIcons, mapIcons);
+  const { machineIcon, art, name } = cardPicture(
+    recipe,
+    projectNode,
+    derived,
+    machineIcons,
+    mapIcons,
+  );
   const face: ShellFace = {
     selected,
     cannotRun: derived.powerReport !== undefined && derived.powerReport.state !== "ok",
@@ -165,6 +173,7 @@ export function useCardFace(
     count: `×${formatSolvedMachines(count.value)}`,
     art: art ?? machineIcon?.iconPath,
     product: glanceProduct(recipe.outputs),
+    name: zoomedOutNames ? name : undefined,
     fallbackWidth: CC_GEOMETRY.cardWidth,
     // The first paint of a card nobody has drawn: the rows its recipe would give it, before the solve says which
     // flow and which forced lines it has. The draw measures the real box.

@@ -65,6 +65,26 @@ describe("a card's shell", () => {
     const glance = shell.querySelector(".cc-glance") as HTMLElement;
     expect(glance.getAttribute("data-count")).toBe("×1.5");
     expect(glance.getAttribute("data-node-detail")).toBe("glance");
+    expect(shell.hasAttribute("data-name")).toBe(false);
+  });
+
+  it("carries the card's name for the zoomed-out view when the face has one, still in two elements", () => {
+    boardVirtualizer.useBoard(`board-${Math.random()}`);
+    const { container } = render(
+      <ReactFlowProvider>
+        <div className="react-flow__node" data-id="n">
+          <CardShell
+            nodeId="n"
+            face={{ ...face, name: "Assembling Machine" }}
+            layoutKey="k"
+            far={false}
+          />
+        </div>
+      </ReactFlowProvider>,
+    );
+    const shell = container.querySelector("[data-shell]") as HTMLElement;
+    expect(shell.getAttribute("data-name")).toBe("Assembling Machine");
+    expect(shell.querySelectorAll("*")).toHaveLength(1);
   });
 });
 

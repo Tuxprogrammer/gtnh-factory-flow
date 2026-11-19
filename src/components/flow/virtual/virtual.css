@@ -76,3 +76,26 @@
   pointer-events: none !important;
 }
 
+
+/*
+ * "Names when zoomed out" on a shell: the card's name just under it, at a constant size on screen (the mod draws it
+ * under the card). It hangs off the shell itself, not the face, which clips to the card for an Up to bar. A fixed
+ * font and width scaled from its corner, as the count is, so a zoom step repaints the names and re-lays out none.
+ */
+.factory-flow-board[data-detail-level="glance"] .cc-card[data-shell][data-name]::after {
+  content: attr(data-name);
+  position: absolute;
+  left: 0;
+  top: 100%;
+  width: 200px;
+  font-size: 11px;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--cc-ink);
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+  transform-origin: left top;
+  transform: translateY(calc(3px / var(--board-zoom, 1))) scale(min(calc(1 / var(--board-zoom, 1)), 4.5));
+}

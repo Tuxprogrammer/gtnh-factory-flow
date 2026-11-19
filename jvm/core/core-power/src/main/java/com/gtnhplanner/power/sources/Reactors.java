@@ -10,6 +10,7 @@ import java.util.function.Predicate;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.base.JsMath;
 import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.power.PowerData;
@@ -49,7 +50,7 @@ public final class Reactors {
             List.of(new PowerSetting.Number("fill", "Pebble fill", 100_000, 675_000, 1000, 675_000)),
             read -> {
                 final double fill = read.number("fill");
-                final double efficiency = Math.min(1, 0.01 + Math.pow((fill - 100_000) / 57_500, 2) / 100);
+                final double efficiency = Math.min(1, 0.01 + ExactMath.pow((fill - 100_000) / 57_500, 2) / 100);
                 // MTEThoriumHighTempReactor.checkProcessing: one 648,000-tick (9 hour) operation burns
                 // floor(fill x 0.5% x eff) TRISO pebbles and hands them back burned, a pebble ball per 64 and the
                 // rest loose. Coolant is drawn every tick at (int)(4800 x eff) L.
@@ -105,13 +106,13 @@ public final class Reactors {
      */
     public static HtgrOperation htgrOperation(final Pebble pebble, final double fill) {
         final double x = fill / HTGR_MAX_BALLS;
-        final double efficiency = 0.1 + (1 - Math.pow(1 - x, 3)) * 0.9;
+        final double efficiency = 0.1 + (1 - ExactMath.pow(1 - x, 3)) * 0.9;
         final double burned = fill * HTGR_BURN_PER_BALL * efficiency;
         // Per-ball contributions are defined at a full reactor, so a partial fill weakens the multiplier and
         // exponent - but the fuel base is an average, and the ball count itself multiplies the coolant line below.
         final double fuelMultiplier = 1 + (pebble.mult() - 1) * x;
         final double fuelExponent = 1 + (pebble.exp() - 1) * x;
-        final double energyMultiplier = pebble.base() * Math.pow(fuelMultiplier, fuelExponent);
+        final double energyMultiplier = pebble.base() * ExactMath.pow(fuelMultiplier, fuelExponent);
         // checkProcessing burns the pebbles before it sizes the draw.
         final double remaining = Math.max(0, fill - burned);
         final double coolantPerTick = Math.floor(energyMultiplier * 0.5 * remaining);

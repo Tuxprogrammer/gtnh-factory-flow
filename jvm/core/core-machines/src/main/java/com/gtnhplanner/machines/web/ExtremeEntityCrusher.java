@@ -8,6 +8,7 @@ import java.util.Objects;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.base.Float32;
 import com.gtnhplanner.core.base.JsonTree;
 import com.gtnhplanner.core.base.NumberText;
@@ -355,9 +356,9 @@ public final class ExtremeEntityCrusher {
         if (tiers <= 0) return new Cycle(ticks, eut, 1, 0);
         final int durationTiers = Math.min(tiers, ceilLog4(Math.floor(ticks / MIN_TICKS)));
         return new Cycle(
-            Math.max(MIN_TICKS, Math.floor(ticks / Math.pow(4, durationTiers))),
-            eut * Math.pow(4, tiers),
-            Math.pow(4, tiers - durationTiers),
+            Math.max(MIN_TICKS, Math.floor(ticks / ExactMath.pow(4, durationTiers))),
+            eut * ExactMath.pow(4, tiers),
+            ExactMath.pow(4, tiers - durationTiers),
             tiers);
     }
 

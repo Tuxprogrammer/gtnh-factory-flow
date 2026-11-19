@@ -2,7 +2,8 @@
 // and the plan JSON reader and writer for those records. ojAlgo is the LP engine.
 dependencies {
     "api"(project(":core-base"))
-    "api"("org.ojalgo:ojalgo:57.4.0")
+    // ojAlgo with its maths sent to core-base (../core-ojalgo/build.gradle.kts).
+    "api"(project(":core-ojalgo"))
     // javax.annotation.Nullable, as the mod uses it; annotations only, not shipped.
     "compileOnly"("com.google.code.findbugs:jsr305:3.0.2")
     // SolveInputJson uses Gson's tree API only. Gson as Minecraft 1.7.10 ships it: the game provides it to the mod, so

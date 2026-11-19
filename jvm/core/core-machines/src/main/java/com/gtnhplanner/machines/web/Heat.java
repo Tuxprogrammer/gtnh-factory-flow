@@ -2,6 +2,8 @@ package com.gtnhplanner.machines.web;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
+
 /**
  * The heat overclock (src/lib/solver/heat.ts): machines whose table entry overclocks on heat get a perfect overclock
  * per 1800 K of coil heat over the recipe's requirement and, unless they opt out, 5% off EU/t per 900 K. How the
@@ -80,7 +82,7 @@ public final class Heat {
         return new Stats(
             heatSteps,
             overclockSteps - heatSteps,
-            config != null && Boolean.FALSE.equals(config.discount()) ? 1 : Math.pow(0.95, Math.floor(excess / 900)));
+            config != null && Boolean.FALSE.equals(config.discount()) ? 1 : ExactMath.pow(0.95, Math.floor(excess / 900)));
     }
 
     /** getHeatDiscountMultiplier: the discount alone, which parallels are paid with before the overclock. */

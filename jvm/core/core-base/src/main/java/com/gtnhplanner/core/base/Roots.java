@@ -6,15 +6,11 @@ public final class Roots {
     private Roots() {}
 
     /**
-     * {@link Math#cbrt}, exact for a perfect cube: the JVM and JavaScript give 64 for 262144, TeaVM's version gives
-     * 63.999999999999986, which a floor then turns into 63. Every other value is whatever {@code Math.cbrt} answers,
-     * which on the web compile can be several places off the JVM's (cbrt(1e300) is 9.999999999999872e99, not 1e100):
-     * never compare one for equality.
+     * The cube root, {@link ExactMath#cbrt} (fdlibm, StrictMath's bits on every target): exact on a perfect cube
+     * (262144 gives 64, where the web compile's own Math.cbrt gives 63.999999999999986 and a floor then lands one low).
+     * Kept for its callers; new code calls ExactMath.
      */
     public static double cbrt(final double x) {
-        if (x == 0) return x; // keeps the sign of a zero
-        final double root = Math.cbrt(x);
-        final double whole = Math.floor(root + 0.5);
-        return whole * whole * whole == x ? whole : root;
+        return ExactMath.cbrt(x);
     }
 }

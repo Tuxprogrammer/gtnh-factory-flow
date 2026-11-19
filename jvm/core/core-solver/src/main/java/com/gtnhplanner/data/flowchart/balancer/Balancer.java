@@ -14,6 +14,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.gtnhplanner.core.base.CoreSettings;
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.base.Float32Ops;
 import com.gtnhplanner.core.base.Log;
 import com.gtnhplanner.core.base.Uuid;
@@ -581,7 +582,7 @@ public final class Balancer {
             final double durPerOp = machine.durationTicks();
             final int throughputFactor = machine.throughputFactor();
 
-            final long totalEnergy = Math.round(eutPerOp * durPerOp * count);
+            final long totalEnergy = ExactMath.round(eutPerOp * durPerOp * count);
             if (durPerOp > totalDuration) totalDuration = durPerOp;
 
             final Map<Integer, Float> effOuts = new HashMap<>(
@@ -620,7 +621,7 @@ public final class Balancer {
                 .entrySet()) {
                 propertyTotals.merge(
                     entry.getKey(),
-                    Math.round(
+                    ExactMath.round(
                         entry.getValue()
                             .longValue() * count),
                     Long::sum);

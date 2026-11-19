@@ -8,6 +8,8 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
+
 /**
  * The machine table's shared settings (machine-table.ts): the control ids its formulas read, the helpers that build a
  * setting from a list of options, and the controls and lookup rows several entries share. Transcribed one for one: an
@@ -572,7 +574,7 @@ public final class MachineControls {
      * position on the full LV..MAX ladder; a recipe with no special value counts as 1.
      */
     public static double componentAssemblyLineSpeed(final int casingTier, @Nullable final Integer specialValue) {
-        return Math.pow(2, casingTier + 1 - (specialValue != null ? specialValue : 1));
+        return ExactMath.pow(2, casingTier + 1 - (specialValue != null ? specialValue : 1));
     }
 
     // endregion

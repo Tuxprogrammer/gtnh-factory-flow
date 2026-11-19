@@ -5,6 +5,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.base.Float32Ops;
 import com.gtnhplanner.core.view.Json;
 
@@ -84,7 +85,8 @@ public final class NoteLookBuilder {
     }
 
     private static int channel(final int a, final int b, final float share, final float rest) {
-        return Math.round(Float32Ops.add(Float32Ops.mul(Float32Ops.of(a), share), Float32Ops.mul(Float32Ops.of(b), rest)));
+        return (int) ExactMath.round(
+                Float32Ops.add(Float32Ops.mul(Float32Ops.of(a), share), Float32Ops.mul(Float32Ops.of(b), rest)));
     }
 
     private static String hex(final int rgb) {
@@ -101,6 +103,6 @@ public final class NoteLookBuilder {
 
     private static double linear(final int channel) {
         final double c = channel / 255.0;
-        return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        return c <= 0.03928 ? c / 12.92 : ExactMath.pow((c + 0.055) / 1.055, 2.4);
     }
 }

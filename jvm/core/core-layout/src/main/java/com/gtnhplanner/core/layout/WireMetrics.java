@@ -5,6 +5,8 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
+
 /**
  * Geometry of finished wires, the website's {@code route-metrics.ts}: where they cross, how long they are, how often
  * they bend, and the points a board scores at the router's prices. The router, the arrange and the hosts' score all
@@ -50,10 +52,10 @@ public final class WireMetrics {
             if (t < -EPS || t > 1 + EPS) continue;
             for (final GridPoint q : new GridPoint[] { a, b }) {
                 if (JsMath.hypot(q.x() - p.x(), q.y() - p.y()) < EPS) continue;
-                final double angle = StrictMath.atan2(q.y() - p.y(), q.x() - p.x());
+                final double angle = ExactMath.atan2(q.y() - p.y(), q.x() - p.x());
                 boolean seen = false;
                 for (final double r : rays) {
-                    if (Math.abs(StrictMath.atan2(StrictMath.sin(r - angle), StrictMath.cos(r - angle))) < EPS) {
+                    if (Math.abs(ExactMath.atan2(ExactMath.sin(r - angle), ExactMath.cos(r - angle))) < EPS) {
                         seen = true;
                         break;
                     }
@@ -75,7 +77,7 @@ public final class WireMetrics {
         for (int i = 0; i < 4; i++) {
             final double[] r = rays.get(i), next = rays.get((i + 1) % 4);
             if (r[1] == next[1]) return false;
-            if (!(Math.abs(StrictMath.atan2(StrictMath.sin(r[0] - next[0]), StrictMath.cos(r[0] - next[0]))) > EPS))
+            if (!(Math.abs(ExactMath.atan2(ExactMath.sin(r[0] - next[0]), ExactMath.cos(r[0] - next[0]))) > EPS))
                 return false;
         }
         return true;

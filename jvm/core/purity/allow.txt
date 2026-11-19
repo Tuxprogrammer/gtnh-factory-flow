@@ -8,8 +8,3 @@
 
 # core-base: the places that are the answer to a rule.
 core/core-base/src/main/java/com/gtnhplanner/core/base/Float32Ops.java float-narrow the one place a float is narrowed: through the bit pattern, which rounds on every target
-core/core-base/src/main/java/com/gtnhplanner/core/base/Roots.java math-cbrt the wrapper that makes a perfect cube exact
-core/core-base/src/main/java/com/gtnhplanner/core/base/NumberText.java math-drift an estimate of the decimal point that the code below corrects exactly, so log10 drift cannot change the answer
-
-# core-solver: the LP engine.
-core/core-solver/src/main/java/com/gtnhplanner/core/solver/lp/OjAlgoEngine.java float-text the BigDecimal ojAlgo makes of every double it is given (ModelEntity.toBigDecimal calls BigDecimal.valueOf too), made here once and passed on, so ojAlgo sees the same value on every target as without the call

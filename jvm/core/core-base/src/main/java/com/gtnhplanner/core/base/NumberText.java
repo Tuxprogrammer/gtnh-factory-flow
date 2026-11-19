@@ -1,6 +1,9 @@
 package com.gtnhplanner.core.base;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
+import java.math.RoundingMode;
 
 import javax.annotation.Nullable;
 
@@ -112,6 +115,103 @@ public final class NumberText {
         return decimal(t);
     }
 
+    /**
+     * {@code BigDecimal.valueOf(x)} as JDK 19 and later answer it: the decimal {@link #javaString} spells. The same on
+     * every JVM and target: Java 8 and 17 spell some doubles with more digits than needed, and the web compile's
+     * {@code Double.toString} approximates, so their {@code BigDecimal.valueOf} is another number. ojAlgo turns every
+     * coefficient into a BigDecimal this way (its jar is rewritten to call this, jvm/core/core-ojalgo/RewriteMath.java).
+     *
+     * @throws NumberFormatException for NaN and the infinities, as the JDK does.
+     */
+    public static BigDecimal javaDecimal(final double x) {
+        if (x != x || x == Double.POSITIVE_INFINITY || x == Double.NEGATIVE_INFINITY) {
+            throw new NumberFormatException("Infinite or NaN");
+        }
+        return new BigDecimal(javaString(x));
+    }
+
+    /**
+     * {@code Double.toString(x)} as JDK 19 and later spell it (the specification since JDK 19): the decimal closest to
+     * {@code x} among the shortest that read back as {@code x}, except that when one digit is enough a two-digit decimal
+     * that is closer wins ({@code 4.9E-324}, where JavaScript writes {@code 5e-324}); written plain with at least one
+     * fraction digit from 10^-3 up to below 10^7 ({@code 100.0}, {@code 0.001}), else as {@code d.dddE<n>}.
+     */
+    public static String javaString(final double x) {
+        if (x != x) return "NaN";
+        if (x == Double.POSITIVE_INFINITY) return "Infinity";
+        if (x == Double.NEGATIVE_INFINITY) return "-Infinity";
+        if (x == 0) return 1 / x < 0 ? "-0.0" : "0.0";
+        final double v = Math.abs(x);
+        final StringBuilder out = new StringBuilder(17);
+        int k = fewDigits(v, out);
+        if (k == Integer.MIN_VALUE) k = shortest(v, out);
+        String s = out.toString();
+        if (s.length() == 1 && v < 1e-22) {
+            // One digit: a two-digit decimal that also reads back as v and lies closer to it is Java's choice.
+            final BigDecimal exact = new BigDecimal(v);
+            final BigDecimal two = exact.round(new MathContext(2, RoundingMode.HALF_EVEN));
+            final BigDecimal one = new BigDecimal(new BigInteger(s), 1 - k);
+            if (two.compareTo(one) != 0 && parse(two.toString()) == v) {
+                final int c = two.subtract(exact)
+                    .abs()
+                    .compareTo(one.subtract(exact).abs());
+                final String twoDigits = two.unscaledValue().toString();
+                if (c < 0 || c == 0 && (twoDigits.charAt(twoDigits.length() - 1) - '0') % 2 == 0) {
+                    s = twoDigits;
+                    k = twoDigits.length() - two.scale();
+                }
+            }
+        }
+        final int n = s.length();
+        final StringBuilder b = new StringBuilder(n + 8);
+        if (x < 0) b.append('-');
+        if (v >= 1e-3 && v < 1e7) {
+            if (k <= 0) {
+                b.append("0.");
+                for (int i = 0; i < -k; i++) b.append('0');
+                b.append(s);
+            } else if (k < n) {
+                b.append(s, 0, k).append('.').append(s, k, n);
+            } else {
+                b.append(s);
+                for (int i = n; i < k; i++) b.append('0');
+                b.append(".0");
+            }
+        } else {
+            b.append(s.charAt(0)).append('.');
+            if (n > 1) b.append(s, 1, n);
+            else b.append('0');
+            b.append('E').append(k - 1);
+        }
+        return b.toString();
+    }
+
+    /**
+     * The shortest digits of {@code v} when they are at most 15 and the point is at most 17 places in: whole numbers
+     * and short decimals, most of a plan's numbers. {@code n / 10^d} is the double nearest that decimal (one correctly
+     * rounded division of two exact doubles), so the first {@code d} at which one of the three whole numbers nearest
+     * {@code v * 10^d} reads back as {@code v} gives the shortest digits; at most 15 digits, two decimals of that length
+     * never read back as the same double, so it is also the closest. {@link Integer#MIN_VALUE} when there is none.
+     */
+    private static int fewDigits(final double v, final StringBuilder out) {
+        if (!(v >= 1e-17 && v < 1e15)) return Integer.MIN_VALUE;
+        for (int d = 0; d <= 17; d++) {
+            final double scaled = v * POW10[d];
+            if (scaled >= 1e15) return Integer.MIN_VALUE;
+            final double near = Math.floor(scaled + 0.5);
+            for (final double n : new double[] { near, near - 1, near + 1 }) {
+                if (n >= 1 && n / POW10[d] == v) {
+                    final String all = Long.toString((long) n);
+                    int end = all.length();
+                    while (end > 1 && all.charAt(end - 1) == '0') end--;
+                    out.append(all, 0, end);
+                    return all.length() - d;
+                }
+            }
+        }
+        return Integer.MIN_VALUE;
+    }
+
     // --- String(n) ---
 
     private static String positive(final double v) {
@@ -173,7 +273,7 @@ public final class NumberText {
             mMinus = BigInteger.ONE;
         }
         // An estimate of the point's place, corrected exactly below, so the host's log10 cannot change the answer.
-        int k = (int) Math.ceil(Math.log10(v) - 1e-10);
+        int k = (int) Math.ceil(ExactMath.log10(v) - 1e-10);
         if (k >= 0) {
             s = s.multiply(BigInteger.TEN.pow(k));
         } else {

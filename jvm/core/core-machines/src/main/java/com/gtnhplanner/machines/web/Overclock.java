@@ -2,6 +2,8 @@ package com.gtnhplanner.machines.web;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
+
 /**
  * A recipe overclocked as the website computes it (src/lib/solver/overclock.ts, getOverclockedRecipeStats): the run
  * tier, the steps (perfect first, then normal), the duration in ticks as the game runs it and the EU/t. Branches in the
@@ -101,8 +103,8 @@ public final class Overclock {
         final double steps = perfectSteps + normalSteps;
 
         final MachineTable.Behaviour behaviour = MachineTable.behaviour(effective.machineType);
-        final double raw = effective.durationTicks / Math.pow(rule.multiplier(), perfectSteps)
-            / Math.pow(2, normalSteps)
+        final double raw = effective.durationTicks / ExactMath.pow(rule.multiplier(), perfectSteps)
+            / ExactMath.pow(2, normalSteps)
             * durationMultiplier;
         final double duration = capBankedParallels(
             behaviour != null && behaviour.quantiseDuration != null ? behaviour.quantiseDuration.applyAsDouble(raw)
@@ -120,8 +122,8 @@ public final class Overclock {
             duration,
             effective.eut * heat.heatDiscountMultiplier()
                 * eutMultiplier
-                * Math.pow(rule.euFactor(), perfectSteps)
-                * Math.pow(4, normalSteps));
+                * ExactMath.pow(rule.euFactor(), perfectSteps)
+                * ExactMath.pow(4, normalSteps));
     }
 
     private static int clampInt(final double n) {

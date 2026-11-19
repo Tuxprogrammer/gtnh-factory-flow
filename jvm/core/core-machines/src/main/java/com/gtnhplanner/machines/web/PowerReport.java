@@ -2,6 +2,7 @@ package com.gtnhplanner.machines.web;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.base.NumberText;
 
 /**
@@ -116,7 +117,7 @@ public final class PowerReport {
         if (multiblock) {
             if (poolEuT <= 0 && singleDrawEuT > 0) return UNDER_POWERED;
             // getAllowedTierSkip: a recipe more than one tier above the hatches never runs, however many amps.
-            if (rawEuT > Tiers.maxEuT(tier) * Math.pow(4, Power.maxInputTierSkips(effective.machineType)))
+            if (rawEuT > Tiers.maxEuT(tier) * ExactMath.pow(4, Power.maxInputTierSkips(effective.machineType)))
                 return OVER_TIER;
             // ParallelHelper.determineParallel: the pool must carry one whole parallel.
             if (singleDrawEuT > poolEuT) return UNDER_POWERED;

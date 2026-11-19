@@ -1,0 +1,506 @@
+{
+  "schemaVersion": 1,
+  "name": "single-card-v2",
+  "description": "Made in the game",
+  "icon": {
+    "kind": "item",
+    "resourceId": "minecraft:iron_ingot",
+    "displayName": "minecraft:iron_ingot"
+  },
+  "solveMode": true,
+  "planMode": true,
+  "primaryView": "plan",
+  "metadata": {
+    "source": "GTNH Planner"
+  },
+  "gtnhplanner": {
+    "v": 1,
+    "game": {
+      "balanceMode": "AUTO",
+      "settingPins": {
+        "item:gregtech:gt.blockmachines:1000": [
+          "voltage",
+          "amp"
+        ]
+      },
+      "groups": [
+        {
+          "width": 700,
+          "height": 400,
+          "color": 2146445617,
+          "collapsed": false,
+          "clampNodes": false,
+          "coverChildren": false,
+          "children": {},
+          "nodeIds": [
+            "24f5a8bf-a88d-468b-8037-6ec0476c1cfc"
+          ],
+          "id": "b2f8b06f-653e-3d49-921c-ec86b0417ee1",
+          "x": 5,
+          "y": 6,
+          "header": "Ore line",
+          "type": "group"
+        }
+      ],
+      "icon": "item:minecraft:iron_ingot:0"
+    },
+    "sum": "81a512ade358df27"
+  },
+  "id": "mod-corpus-single-card-v2",
+  "nodes": [
+    {
+      "id": "24f5a8bf-a88d-468b-8037-6ec0476c1cfc",
+      "recipeId": "gtnhplanner:24f5a8bf-a88d-468b-8037-6ec0476c1cfc",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "machineConfigTiers": {
+        "circuit": "3"
+      },
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "portRates": {
+        "input:item:Steam": 2.5
+      },
+      "position": {
+        "x": 1351,
+        "y": -368
+      },
+      "pocketId": "733f1a4e-8273-3dfa-ac88-f287420bab5e",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "Steam Turbine",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputTargets": {
+            "0": 2.5
+          },
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "tick_modifier": 150,
+              "machine:circuit": "3"
+            }
+          },
+          "worlds": {
+            "": [
+              [
+                0,
+                100,
+                64,
+                -200,
+                2
+              ]
+            ]
+          }
+        },
+        "sum": "acd7f8c28a2cb4f0"
+      }
+    }
+  ],
+  "storages": [],
+  "edges": [],
+  "annotations": [
+    {
+      "id": "b21be61e-a919-36b4-a8aa-4fd29676594e",
+      "kind": "text",
+      "colorTag": "lime",
+      "text": "Feed it\nfrom the ME system",
+      "size": {
+        "width": 213,
+        "height": 131
+      },
+      "fontSize": 18,
+      "position": {
+        "x": 16,
+        "y": 122
+      },
+      "pocketId": "733f1a4e-8273-3dfa-ac88-f287420bab5e",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [
+            "Feed it",
+            "from the ME system"
+          ],
+          "width": 213,
+          "height": 131,
+          "color": "lime",
+          "fontSize": 18,
+          "arrowWidth": 0,
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "145fd7223b8c8016"
+      }
+    },
+    {
+      "id": "c5fb13a5-fd7e-3725-bfa0-40b796234526",
+      "kind": "box",
+      "colorTag": "orange",
+      "size": {
+        "width": 377,
+        "height": 151
+      },
+      "style": {
+        "border": "dashed",
+        "borderColor": "red",
+        "fillColor": "light_blue",
+        "fill": "solid",
+        "marks": "graph"
+      },
+      "position": {
+        "x": 112,
+        "y": 78
+      },
+      "pocketId": "0936f5e0-27e1-3008-aaa3-6089d83cc3e5",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [],
+          "width": 377,
+          "height": 151,
+          "color": "orange",
+          "fontSize": 14,
+          "kind": "box",
+          "arrowWidth": 0,
+          "border": "dashed",
+          "borderColor": "red",
+          "fillColor": "light_blue",
+          "fill": "solid",
+          "marks": "graph",
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "15a5b62f1e50e214"
+      }
+    },
+    {
+      "id": "2da440dd-6624-3b21-9d16-ef5e66406e4f",
+      "kind": "image",
+      "text": "The finished line",
+      "size": {
+        "width": 160,
+        "height": 90
+      },
+      "imageUrl": "https://example.com/line.png",
+      "position": {
+        "x": 2011,
+        "y": 733
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [
+            "The finished line"
+          ],
+          "width": 160,
+          "height": 90,
+          "color": "",
+          "fontSize": 14,
+          "kind": "image",
+          "arrowWidth": 0,
+          "imageUrl": "https://example.com/line.png",
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "b0fcbdb76584c1d9"
+      }
+    },
+    {
+      "id": "3667b4f8-6159-3254-9259-645e5d6f293a",
+      "kind": "arrow",
+      "colorTag": "magenta",
+      "size": {
+        "width": 163,
+        "height": 0
+      },
+      "arrowDirection": "up-left",
+      "arrowHeads": "both",
+      "arrowWidth": 4,
+      "position": {
+        "x": 60,
+        "y": 56
+      },
+      "pocketId": "733f1a4e-8273-3dfa-ac88-f287420bab5e",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [],
+          "width": 163,
+          "height": 0,
+          "color": "magenta",
+          "fontSize": 14,
+          "kind": "arrow",
+          "arrowDirection": "up-left",
+          "arrowHeads": "both",
+          "arrowWidth": 4,
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "d585c7abec501f91"
+      }
+    },
+    {
+      "id": "6361508e-2eea-345b-b09a-7919053d1843",
+      "kind": "zone",
+      "colorTag": "lime",
+      "size": {
+        "width": 203,
+        "height": 117
+      },
+      "points": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 203,
+          "y": 13
+        },
+        {
+          "x": 97,
+          "y": 117
+        }
+      ],
+      "style": {
+        "marks": "hatch"
+      },
+      "position": {
+        "x": 1503,
+        "y": -91
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [],
+          "width": 203,
+          "height": 117,
+          "color": "lime",
+          "fontSize": 14,
+          "kind": "zone",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              203,
+              13
+            ],
+            [
+              97,
+              117
+            ]
+          ],
+          "arrowWidth": 0,
+          "marks": "hatch",
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "c9ead1513d170ca4"
+      }
+    }
+  ],
+  "pockets": [
+    {
+      "id": "0936f5e0-27e1-3008-aaa3-6089d83cc3e5",
+      "name": "Ore line",
+      "colorTag": "orange",
+      "expanded": true,
+      "size": {
+        "width": 2741,
+        "height": 1307
+      },
+      "theme": "blueprint",
+      "pattern": "dots",
+      "position": {
+        "x": -523,
+        "y": -311
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "name": "Ore line",
+          "color": "orange",
+          "width": 2741,
+          "height": 1307,
+          "collapsed": false,
+          "theme": "blueprint",
+          "pattern": "dots"
+        },
+        "sum": "57b75893afc6eb92"
+      }
+    },
+    {
+      "id": "733f1a4e-8273-3dfa-ac88-f287420bab5e",
+      "name": "Smelting",
+      "expanded": false,
+      "size": {
+        "width": 613,
+        "height": 421
+      },
+      "position": {
+        "x": 406,
+        "y": 112
+      },
+      "parentPocketId": "0936f5e0-27e1-3008-aaa3-6089d83cc3e5",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "ffId": "pocket-imported-smelting",
+          "name": "Smelting",
+          "width": 613,
+          "height": 421,
+          "collapsed": true
+        },
+        "sum": "4796bda0642ed13f"
+      }
+    }
+  ],
+  "fuelProfiles": [],
+  "tasks": [
+    {
+      "id": "t1",
+      "title": "Build single-card-v2",
+      "text": "Two lines first.",
+      "status": "doing",
+      "order": "a0",
+      "assignees": [
+        "11111111-1111-4111-8111-111111111111"
+      ],
+      "links": [
+        {
+          "plan": "11111111-1111-4111-8111-111111111111:plan",
+          "node": "24f5a8bf-a88d-468b-8037-6ec0476c1cfc"
+        }
+      ],
+      "createdBy": "11111111-1111-4111-8111-111111111111",
+      "createdAt": "2026-10-14T10:00:00.000Z"
+    },
+    {
+      "id": "t1b",
+      "title": "Power single-card-v2",
+      "status": "todo",
+      "order": "a1",
+      "blockedBy": [
+        "t1"
+      ]
+    }
+  ],
+  "taskItems": [
+    {
+      "id": "i1",
+      "taskId": "t1",
+      "text": "Place the machines",
+      "done": false,
+      "order": "a0",
+      "link": {
+        "plan": "11111111-1111-4111-8111-111111111111:plan",
+        "node": "24f5a8bf-a88d-468b-8037-6ec0476c1cfc"
+      }
+    },
+    {
+      "id": "i2",
+      "taskId": "t1",
+      "kind": "location",
+      "text": "Ore field at 1 64 -2 in Overworld",
+      "done": true,
+      "order": "a1",
+      "place": {
+        "x": 1,
+        "y": 64,
+        "z": -2,
+        "dim": 0,
+        "dimName": "Overworld",
+        "world": "server:0123456789abcdef",
+        "label": "Ore field"
+      }
+    },
+    {
+      "id": "i3",
+      "taskId": "t1",
+      "kind": "picture",
+      "text": "Screenshot",
+      "done": false,
+      "order": "a2",
+      "picture": {
+        "thumb": "data:image/jpeg;base64,/9j/AA==",
+        "w": 1920,
+        "h": 1080,
+        "takenAt": "2026-10-15T09:00:00.000Z"
+      }
+    },
+    {
+      "id": "i4",
+      "taskId": "t1",
+      "kind": "quest",
+      "text": "Steam Age",
+      "done": false,
+      "order": "a3",
+      "quest": {
+        "id": "0f2a43a5-6c1e-4d7a-9b3b-6a8f3b0e2c11",
+        "name": "Steam Age",
+        "icon": "item:IC2:itemToolBronzePickaxe:0",
+        "line": "Tier 1 - Steam"
+      }
+    }
+  ],
+  "taskComments": [
+    {
+      "id": "c1",
+      "taskId": "t1",
+      "by": "11111111-1111-4111-8111-111111111111",
+      "byName": "ann",
+      "at": "2026-10-14T10:05:00Z",
+      "text": "On it"
+    }
+  ],
+  "recipes": [
+    {
+      "id": "gtnhplanner:24f5a8bf-a88d-468b-8037-6ec0476c1cfc",
+      "name": "item|EU",
+      "kind": "gregtech_machine",
+      "machineType": "Steam Turbine",
+      "minimumTier": "LV",
+      "durationTicks": 20,
+      "eut": 0,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Steam",
+          "displayName": "Steam",
+          "amount": 1540
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "EU",
+          "displayName": "EU",
+          "amount": 640
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    }
+  ]
+}

@@ -8,6 +8,14 @@
       ],
       "generator": "mod-answers.json: tools/parity/s1/README.md (S1ParityTest, a throwaway JUnit run in a mod checkout)"
     },
+    "core-base": {
+      "specifies": "The kernel's value semantics: number-text/number-text-vectors.json is JavaScript's own answer (String(n), JSON.stringify, toFixed, Number(s), Math.round) for doubles given as 64-bit hex, which NumberText and JsMath must spell and read the same; uuid/uuid-vectors.json is java.util.UUID's answers (toString, hashCode, compareTo order, name-based ids, parsed spellings), which Uuid must reproduce.",
+      "readers": [
+        "mod: core-base NumberTextTest, UuidTest (jvm/core/core-base)",
+        "web: the Node runner that checks the compiled core against them"
+      ],
+      "generator": "number-text: node tools/conformance/core-base/gen-vectors.mjs; uuid: ./gradlew :core-base:test --tests '*UuidTest.writeVectors' -PwriteVectors (from jvm/); then node tools/conformance/manifest.mjs --write"
+    },
     "live": {
       "specifies": "The live-plan op engine: every rule of put, patch, del, meta, apply, diff and invert as a vector (plan, ops, expected result), run by both engines.",
       "readers": [
@@ -27,6 +35,14 @@
     "pending": {
       "specifies": "Files that disagree with a copy in the tree and wait for a decision. No suite reads them. Each subdirectory says in its README.md what it is and which file it would replace.",
       "readers": []
+    },
+    "plans": {
+      "specifies": "Plan files (the project JSON) for the schema in schema/plan.schema.json: valid/ and invalid/ are small hand-made plans the schema must accept and refuse (the Zod schemas agree on every one); website/ is what the website's own writer makes of some of its plans; mod/ is what the mod's two writers make of some of its boards, cloud-* from the shared-plan mapper and export-* from the website export. Every plan is read by both sides.",
+      "readers": [
+        "website: src/test-support/plan-fixtures.test.ts (Zod and the real importer)",
+        "mod: cloud/map/PlanSchemaTest (JSON Schema validation, and mod/ is regenerated and compared)"
+      ],
+      "generator": "website/: GTNH_WRITE_PLANS=1 npx vitest run plan-fixtures; mod/: ./gradlew :mod:test --tests '*PlanSchemaTest*' -PwritePlans (from jvm/); valid/ and invalid/ are hand-written; then node tools/conformance/manifest.mjs --write"
     },
     "schema": {
       "specifies": "JSON Schema (draft 2020-12) for the data that crosses between the website and the mod: plan.schema.json (the plan file), board-selection.schema.json (a blueprint payload), dataset.schema.json and dataset-manifest.schema.json (the recipe dataset). Generated from the website's Zod schemas, which stay the source of truth; overlays add the limits Zod can only state as code. README.md in the directory says what the schema cannot express.",
@@ -71,6 +87,16 @@
       "bytes": 29350,
       "sha256": "0fa167c57c6b686b695d8d6125f20fc04ee6a7ac8740e5fab34f9ae1550e1512"
     },
+    "core-base/number-text/number-text-vectors.json": {
+      "area": "core-base",
+      "bytes": 515066,
+      "sha256": "bac64d56498eae52a4284cd1ca1732870ef74404a51b1ef7843d5c31f08569d6"
+    },
+    "core-base/uuid/uuid-vectors.json": {
+      "area": "core-base",
+      "bytes": 39121,
+      "sha256": "23347b689fcef8d736c3e56f37bad34af5fe7efbde19cee759cd43cf827f39da"
+    },
     "live/live-vectors.json": {
       "area": "live",
       "bytes": 45531,
@@ -100,6 +126,176 @@
       "area": "pending",
       "bytes": 187840,
       "sha256": "5773e2097c2849d223b41864cc853a81dd7743954db40ed9f404333519b6d544"
+    },
+    "plans/invalid/fuel-profile-empty-id.json": {
+      "area": "plans",
+      "bytes": 234,
+      "sha256": "7a531cb9483412b51a901de30e8c62b63e3f43475a18d30d9776382a3d7eb67d"
+    },
+    "plans/invalid/fuel-profile-rate-zero.json": {
+      "area": "plans",
+      "bytes": 236,
+      "sha256": "27fcdcb2e1815da35282bbd684617ba871947c175327767bce5e905c7768c70c"
+    },
+    "plans/invalid/fuel-profile-without-a-rate.json": {
+      "area": "plans",
+      "bytes": 213,
+      "sha256": "14d5ae6435c0ee820a15ecd7755aed9f297abe68beb385595a7261f446be8cf4"
+    },
+    "plans/invalid/no-name.json": {
+      "area": "plans",
+      "bytes": 112,
+      "sha256": "9aee54797c6016ce00d8b7561c878052f5c82f51a0e6c2193c663d16c612561f"
+    },
+    "plans/invalid/node-without-position.json": {
+      "area": "plans",
+      "bytes": 285,
+      "sha256": "79e550a1508842f5f9ac6842b994e027db0cbe090c50228daf9fa1a843d56240"
+    },
+    "plans/invalid/nodes-not-a-list.json": {
+      "area": "plans",
+      "bytes": 131,
+      "sha256": "37dfa276d4e2409a8f312a9ef12ac333ccd114a1d8011b88e4d24918e862988a"
+    },
+    "plans/invalid/port-rates-257.json": {
+      "area": "plans",
+      "bytes": 6946,
+      "sha256": "c372833ce3f90076696a7eac778944dca8b4a73959c1215dffca09315b70ba37"
+    },
+    "plans/invalid/primary-view-unknown.json": {
+      "area": "plans",
+      "bytes": 160,
+      "sha256": "0c10016dc2079aee56c176b594643206402cc81659673bfe0a75148c08a52d00"
+    },
+    "plans/invalid/resource-kind-unknown.json": {
+      "area": "plans",
+      "bytes": 226,
+      "sha256": "50ce14a74e10d912dd3bb8c2cac2e55c373944a21476d7749a7f8f1e504a925f"
+    },
+    "plans/invalid/schema-version-2.json": {
+      "area": "plans",
+      "bytes": 131,
+      "sha256": "01e58da3e18e0d1738d1cb2b7287bb04a90248ce9cd70665852b374fa6f13d5b"
+    },
+    "plans/invalid/spare-share-above-one.json": {
+      "area": "plans",
+      "bytes": 197,
+      "sha256": "3928085b1b7567102b3cd8a4b83ee0ab7b44a343ef6732b5d215d6bf903253f7"
+    },
+    "plans/invalid/target-rate-zero.json": {
+      "area": "plans",
+      "bytes": 227,
+      "sha256": "1a2ac128c7a0216cca9c6865cce2abb954ce173fa65b9d25a818151021a763c0"
+    },
+    "plans/mod/cloud-corpus-benzene.json": {
+      "area": "plans",
+      "bytes": 14747,
+      "sha256": "1a5bfc748b9f771d25662672d69fb54b9281269798e006cdfc6435aa6791eb8d"
+    },
+    "plans/mod/cloud-corpus-glass.json": {
+      "area": "plans",
+      "bytes": 34555,
+      "sha256": "0abd656fa09ae776228489cc7f42180df8f464bfbb3b98970448bdc48024345c"
+    },
+    "plans/mod/cloud-corpus-hv-diesel.json": {
+      "area": "plans",
+      "bytes": 34218,
+      "sha256": "bab90ac97e6c2f1c07eb7d60a852045f01ba214ecdb6c2a83e2abb43aff4e1ed"
+    },
+    "plans/mod/cloud-corpus-mv.json": {
+      "area": "plans",
+      "bytes": 131882,
+      "sha256": "b724545128771b0ce3bb3f75212da652891f980a9e7deb9c3c6daf4aa4cb3e9c"
+    },
+    "plans/mod/cloud-corpus-single-card-v2.json": {
+      "area": "plans",
+      "bytes": 11212,
+      "sha256": "a1b24f0a3bcfad027bab12202177158e3839da12c6e8a294c862eae839f4a902"
+    },
+    "plans/mod/export-corpus-benzene.json": {
+      "area": "plans",
+      "bytes": 6382,
+      "sha256": "65b68d86fcc4cea090ccb64c4e6fc9f8827ce59108a539d93079ab9bcf3badea"
+    },
+    "plans/mod/export-corpus-glass.json": {
+      "area": "plans",
+      "bytes": 18980,
+      "sha256": "6dca8bd5a624d2a009d95d17dd3cd8da5f11997c27ef430aa7140667a0b882ba"
+    },
+    "plans/mod/export-corpus-hv-diesel.json": {
+      "area": "plans",
+      "bytes": 18134,
+      "sha256": "a0b6526bc3bdf91cb45aebe7920a3ba110ea3be9797dab50c880f04176a6b4ce"
+    },
+    "plans/mod/export-corpus-mv.json": {
+      "area": "plans",
+      "bytes": 79306,
+      "sha256": "e789819562d85cffbf3552068f90064bdcabb4a24ae4967576487f828db6172e"
+    },
+    "plans/mod/export-corpus-single-card-v2.json": {
+      "area": "plans",
+      "bytes": 4307,
+      "sha256": "1cad8a815e1aa6b1f70be9082665e2999e4ddb39dfb443c2a3f325995657b047"
+    },
+    "plans/valid/empty.json": {
+      "area": "plans",
+      "bytes": 131,
+      "sha256": "0cfbdb40762d641dda3291ad3f0a6e682d8713ecbd1efc4057c3d100cc7bdf51"
+    },
+    "plans/valid/fuel-profile-per-bucket.json": {
+      "area": "plans",
+      "bytes": 489,
+      "sha256": "c3af8a5f93aea33105e5f7c84b94e1a9238b3eb5fc8f525e1636610c8c27dde0"
+    },
+    "plans/valid/port-rates-256.json": {
+      "area": "plans",
+      "bytes": 6920,
+      "sha256": "2ccb86f720a7c19cd0336dd81c16ce02964f94a58e934eebf8a6c4984f9654be"
+    },
+    "plans/valid/settings-and-pins.json": {
+      "area": "plans",
+      "bytes": 739,
+      "sha256": "c4d5de0b5b987495be558fd5b2f1d8d2c37f02c555e5cdd2cb37ecc5f565d698"
+    },
+    "plans/valid/unknown-keys.json": {
+      "area": "plans",
+      "bytes": 344,
+      "sha256": "017692cce3c70824e5d395cb717bea73555129029544c6bba4eddc0798267bd4"
+    },
+    "plans/website/biodiesel-demo.json": {
+      "area": "plans",
+      "bytes": 10030,
+      "sha256": "4c3f4aedd85026cad17aff8004180cbce6da5d3010e4b6200766cb47f334eec2"
+    },
+    "plans/website/high-amperage-reactor.json": {
+      "area": "plans",
+      "bytes": 15020,
+      "sha256": "b9255f4a1f0b3343808194847180aeb2bf9d5e1ff569fda2d91cec9537479bb7"
+    },
+    "plans/website/old-build.json": {
+      "area": "plans",
+      "bytes": 10010,
+      "sha256": "081f592f4ad40a1e90814abdbdad7def34cf03a1d7e88e2789329b69712b7e80"
+    },
+    "plans/website/old-pool.json": {
+      "area": "plans",
+      "bytes": 8158,
+      "sha256": "4d921b6dea8db92dd474f3b3036597890dbef9b46a9d4b3fbfa55027fdeb01f4"
+    },
+    "plans/website/old-solve.json": {
+      "area": "plans",
+      "bytes": 10020,
+      "sha256": "14143ea870ef64f81bfce569859e9b0fe00282e22c589f5ff0f2e31474599b04"
+    },
+    "plans/website/titanium-line-chembath-slim.json": {
+      "area": "plans",
+      "bytes": 200588,
+      "sha256": "9b490c2841d3c8d063bd1aeab6dc45ad6c1fbe5a6068e25b06cf58dc370e924c"
+    },
+    "plans/website/wooden-axe-categories.json": {
+      "area": "plans",
+      "bytes": 19895,
+      "sha256": "c72b45a8d789e732d174891ba4d0ebc41236ffb9b056452bda4437268467ac0c"
     },
     "schema/board-selection.schema.json": {
       "area": "schema",

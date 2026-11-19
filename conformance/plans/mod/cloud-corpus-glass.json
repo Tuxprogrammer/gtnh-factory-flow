@@ -1,0 +1,1426 @@
+{
+  "schemaVersion": 1,
+  "name": "glass",
+  "description": "Made in the game",
+  "icon": {
+    "kind": "item",
+    "resourceId": "minecraft:iron_ingot",
+    "displayName": "minecraft:iron_ingot"
+  },
+  "solveMode": true,
+  "planMode": true,
+  "primaryView": "plan",
+  "metadata": {
+    "source": "GTNH Planner"
+  },
+  "gtnhplanner": {
+    "v": 1,
+    "game": {
+      "balanceMode": "AUTO",
+      "settingPins": {
+        "item:gregtech:gt.blockmachines:1000": [
+          "voltage",
+          "amp"
+        ]
+      },
+      "groups": [
+        {
+          "width": 700,
+          "height": 400,
+          "color": 2143568624,
+          "collapsed": false,
+          "clampNodes": false,
+          "coverChildren": false,
+          "children": {},
+          "nodeIds": [
+            "80489f5c-d860-4338-9d28-0fa08b0fa2dd"
+          ],
+          "id": "0550940c-aeed-30ef-97ee-58450409be87",
+          "x": 5,
+          "y": 6,
+          "header": "Ore line",
+          "type": "group"
+        }
+      ],
+      "icon": "item:minecraft:iron_ingot:0"
+    },
+    "sum": "81a512ade358df27"
+  },
+  "id": "mod-corpus-glass",
+  "nodes": [
+    {
+      "id": "80489f5c-d860-4338-9d28-0fa08b0fa2dd",
+      "recipeId": "gtnhplanner:80489f5c-d860-4338-9d28-0fa08b0fa2dd",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "machineConfigTiers": {
+        "circuit": "3"
+      },
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "portRates": {
+        "input:item:Cobblestone": 2.5
+      },
+      "position": {
+        "x": 154,
+        "y": 240
+      },
+      "pocketId": "a3000cd9-c36b-373d-b985-958f8584d552",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:612",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputTargets": {
+            "0": 2.5
+          },
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "tick_modifier": 150,
+              "machine:circuit": "3"
+            }
+          },
+          "worlds": {
+            "": [
+              [
+                0,
+                100,
+                64,
+                -200,
+                2
+              ]
+            ]
+          }
+        },
+        "sum": "9bf733a9c713e0ad"
+      }
+    },
+    {
+      "id": "9e5e7c3d-fa44-4e72-900e-289c131f9bcc",
+      "recipeId": "gtnhplanner:9e5e7c3d-fa44-4e72-900e-289c131f9bcc",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 398,
+        "y": 41
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:612",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "003ab00cf6948db7"
+      }
+    },
+    {
+      "id": "a5f8ea31-969e-4e83-b21c-9e8c41a85597",
+      "recipeId": "gtnhplanner:a5f8ea31-969e-4e83-b21c-9e8c41a85597",
+      "machineCount": 3.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 3.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 759,
+        "y": 41
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:582",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 3,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "machines": 3
+            }
+          }
+        },
+        "sum": "59f754cd1ca4c452"
+      }
+    },
+    {
+      "id": "abaf3ea6-930c-4bf4-ace3-ad398e631b39",
+      "recipeId": "gtnhplanner:abaf3ea6-930c-4bf4-ace3-ad398e631b39",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1120,
+        "y": 41
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:612",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "f3feeaa798cf60c3"
+      }
+    },
+    {
+      "id": "b8267b55-c28e-4876-8954-acc200a99b66",
+      "recipeId": "gtnhplanner:b8267b55-c28e-4876-8954-acc200a99b66",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1481,
+        "y": 41
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:442",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "db444d52db4a8e57"
+      }
+    },
+    {
+      "id": "e243d8f8-7f28-44c2-b1c9-86975e49da66",
+      "recipeId": "gtnhplanner:e243d8f8-7f28-44c2-b1c9-86975e49da66",
+      "machineCount": 8.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 8.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1842,
+        "y": 41
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:302",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 8,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 0.8
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "machines": 8
+            }
+          }
+        },
+        "sum": "58ed219c00ee0334"
+      }
+    },
+    {
+      "id": "2f139d94-18e6-4acb-b28e-c2fbcd0b9bac",
+      "recipeId": "gtnhplanner:2f139d94-18e6-4acb-b28e-c2fbcd0b9bac",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 37,
+        "y": 304
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:522",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "6e546ab38e7a11c3"
+      }
+    },
+    {
+      "id": "6d61be59-3f8c-4389-a98b-373b3b221038",
+      "recipeId": "gtnhplanner:6d61be59-3f8c-4389-a98b-373b3b221038",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 398,
+        "y": 304
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:442",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "0064e6cb1a9b75c9"
+      }
+    },
+    {
+      "id": "74d7357f-2468-49f8-b8fc-1dea423bf194",
+      "recipeId": "gtnhplanner:74d7357f-2468-49f8-b8fc-1dea423bf194",
+      "machineCount": 3.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 3.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 759,
+        "y": 304
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:512",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 3,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "machines": 3
+            }
+          }
+        },
+        "sum": "53f123323f6c941c"
+      }
+    },
+    {
+      "id": "7522fd7a-e6dc-4184-a0cc-44c1283faebb",
+      "recipeId": "gtnhplanner:7522fd7a-e6dc-4184-a0cc-44c1283faebb",
+      "machineCount": 2.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 2.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1120,
+        "y": 304
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:302",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 2,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "machines": 2
+            }
+          }
+        },
+        "sum": "c18fde68a759724f"
+      }
+    },
+    {
+      "id": "75ed2c7e-1982-4a3d-a683-1d99108ff3c1",
+      "recipeId": "gtnhplanner:75ed2c7e-1982-4a3d-a683-1d99108ff3c1",
+      "machineCount": 2.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 2.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1234,
+        "y": -567
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:642",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 2,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 0.97
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "machines": 2
+            }
+          }
+        },
+        "sum": "458606bbe69e0301"
+      }
+    }
+  ],
+  "storages": [
+    {
+      "id": "e12a3f88-9e4c-46f1-a7cc-dc937d54ad27",
+      "kind": "item",
+      "resourceId": "glass",
+      "displayName": "glass",
+      "drainMode": "product",
+      "position": {
+        "x": 220,
+        "y": 324
+      },
+      "pocketId": "b43e5299-7cc8-3436-a143-a7b387bbd82c",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "PRODUCT",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:glass:0",
+          "label": "Glass",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "8ef3659d0679d400"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e12a3f88-9e4c-46f1-a7cc-dc937d54ad27:2f139d94-18e6-4acb-b28e-c2fbcd0b9bac:0",
+      "source": "2f139d94-18e6-4acb-b28e-c2fbcd0b9bac",
+      "target": "e12a3f88-9e4c-46f1-a7cc-dc937d54ad27",
+      "sourceHandle": "output:item:glass",
+      "targetHandle": "input:item:glass",
+      "resourceKind": "item",
+      "resourceId": "glass",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 0
+        },
+        "sum": "a487ff19d69a7b37"
+      }
+    },
+    {
+      "id": "81e54bc7-f04f-42a7-b6c8-66c1a84e401f",
+      "source": "a5f8ea31-969e-4e83-b21c-9e8c41a85597",
+      "target": "74d7357f-2468-49f8-b8fc-1dea423bf194",
+      "sourceHandle": "output:item:Glass%20Dust",
+      "targetHandle": "input:item:Glass%20Dust",
+      "resourceKind": "item",
+      "resourceId": "Glass Dust",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "47bf58513bb7b82b"
+      }
+    },
+    {
+      "id": "9f503b4f-f893-42c5-a4e8-7047380c85a9",
+      "source": "7522fd7a-e6dc-4184-a0cc-44c1283faebb",
+      "target": "a5f8ea31-969e-4e83-b21c-9e8c41a85597",
+      "sourceHandle": "output:item:Flint%20Dust",
+      "targetHandle": "input:item:Flint%20Dust",
+      "resourceKind": "item",
+      "resourceId": "Flint Dust",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "321acd4304079aff"
+      }
+    },
+    {
+      "id": "bec89c98-9529-43da-85be-b3e567fcffd6",
+      "source": "74d7357f-2468-49f8-b8fc-1dea423bf194",
+      "target": "2f139d94-18e6-4acb-b28e-c2fbcd0b9bac",
+      "sourceHandle": "output:item:Molten%20Glass",
+      "targetHandle": "input:item:Molten%20Glass",
+      "resourceKind": "item",
+      "resourceId": "Molten Glass",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "6beb5ced8ed581ec"
+      }
+    },
+    {
+      "id": "c4f2c365-c1fd-48b4-994a-22a33833b7e7",
+      "source": "80489f5c-d860-4338-9d28-0fa08b0fa2dd",
+      "target": "75ed2c7e-1982-4a3d-a683-1d99108ff3c1",
+      "sourceHandle": "output:item:Gravel",
+      "targetHandle": "input:item:Gravel",
+      "resourceKind": "item",
+      "resourceId": "Gravel",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "d4cebc0fc29a92c4"
+      }
+    },
+    {
+      "id": "d15ca3df-f7e7-4984-9b98-7753404d3b91",
+      "source": "abaf3ea6-930c-4bf4-ace3-ad398e631b39",
+      "target": "9e5e7c3d-fa44-4e72-900e-289c131f9bcc",
+      "sourceHandle": "output:item:Gravel",
+      "targetHandle": "input:item:Gravel",
+      "resourceKind": "item",
+      "resourceId": "Gravel",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "b282ee8374e6a6fc"
+      }
+    },
+    {
+      "id": "ee2a6a79-ea5e-4378-a29f-9e7ca522164f",
+      "source": "9e5e7c3d-fa44-4e72-900e-289c131f9bcc",
+      "target": "e243d8f8-7f28-44c2-b1c9-86975e49da66",
+      "sourceHandle": "output:item:Sand",
+      "targetHandle": "input:item:Sand",
+      "resourceKind": "item",
+      "resourceId": "Sand",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "1f4829ed93869be8"
+      }
+    },
+    {
+      "id": "0e2a31aa-cb69-4d8d-a51d-9716f80f9293",
+      "source": "75ed2c7e-1982-4a3d-a683-1d99108ff3c1",
+      "target": "7522fd7a-e6dc-4184-a0cc-44c1283faebb",
+      "sourceHandle": "output:item:Flint",
+      "targetHandle": "input:item:Flint",
+      "resourceKind": "item",
+      "resourceId": "Flint",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "9bf24ce97e1cdceb"
+      }
+    },
+    {
+      "id": "1a01af83-2546-4fab-9a96-44ffc37425ca",
+      "source": "b8267b55-c28e-4876-8954-acc200a99b66",
+      "target": "80489f5c-d860-4338-9d28-0fa08b0fa2dd",
+      "sourceHandle": "output:item:Cobblestone",
+      "targetHandle": "input:item:Cobblestone",
+      "resourceKind": "item",
+      "resourceId": "Cobblestone",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "c0cc65769f1b4763"
+      }
+    },
+    {
+      "id": "42149bb9-c4b4-46d3-8902-3c4c76217620",
+      "source": "6d61be59-3f8c-4389-a98b-373b3b221038",
+      "target": "abaf3ea6-930c-4bf4-ace3-ad398e631b39",
+      "sourceHandle": "output:item:Cobblestone",
+      "targetHandle": "input:item:Cobblestone",
+      "resourceKind": "item",
+      "resourceId": "Cobblestone",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "0099a70932fec1a6"
+      }
+    },
+    {
+      "id": "52ee307e-aa26-4325-82b3-c0c7b30fc2b7",
+      "source": "e243d8f8-7f28-44c2-b1c9-86975e49da66",
+      "target": "a5f8ea31-969e-4e83-b21c-9e8c41a85597",
+      "sourceHandle": "output:item:Quartz%20Sand",
+      "targetHandle": "input:item:Quartz%20Sand",
+      "resourceKind": "item",
+      "resourceId": "Quartz Sand",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 1
+        },
+        "sum": "685f7bbfae673df7"
+      }
+    }
+  ],
+  "annotations": [
+    {
+      "id": "b0a77214-569f-32c6-be24-ae796560e5d8",
+      "kind": "box",
+      "colorTag": "orange",
+      "size": {
+        "width": 377,
+        "height": 151
+      },
+      "style": {
+        "border": "dashed",
+        "borderColor": "red",
+        "fillColor": "light_blue",
+        "fill": "solid",
+        "marks": "graph"
+      },
+      "position": {
+        "x": 112,
+        "y": 78
+      },
+      "pocketId": "b43e5299-7cc8-3436-a143-a7b387bbd82c",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [],
+          "width": 377,
+          "height": 151,
+          "color": "orange",
+          "fontSize": 14,
+          "kind": "box",
+          "arrowWidth": 0,
+          "border": "dashed",
+          "borderColor": "red",
+          "fillColor": "light_blue",
+          "fill": "solid",
+          "marks": "graph",
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "f7719449c694dd99"
+      }
+    },
+    {
+      "id": "c1d02227-4382-33ef-a99f-d7a3e6ec1bba",
+      "kind": "text",
+      "colorTag": "lime",
+      "text": "Feed it\nfrom the ME system",
+      "size": {
+        "width": 213,
+        "height": 131
+      },
+      "fontSize": 18,
+      "position": {
+        "x": 16,
+        "y": 122
+      },
+      "pocketId": "a3000cd9-c36b-373d-b985-958f8584d552",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [
+            "Feed it",
+            "from the ME system"
+          ],
+          "width": 213,
+          "height": 131,
+          "color": "lime",
+          "fontSize": 18,
+          "arrowWidth": 0,
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "e1e23a2626d63631"
+      }
+    },
+    {
+      "id": "c4c49306-66fe-3e4f-a962-d15ee0423c9d",
+      "kind": "arrow",
+      "colorTag": "magenta",
+      "size": {
+        "width": 163,
+        "height": 0
+      },
+      "arrowDirection": "up-left",
+      "arrowHeads": "both",
+      "arrowWidth": 4,
+      "position": {
+        "x": 60,
+        "y": 56
+      },
+      "pocketId": "a3000cd9-c36b-373d-b985-958f8584d552",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [],
+          "width": 163,
+          "height": 0,
+          "color": "magenta",
+          "fontSize": 14,
+          "kind": "arrow",
+          "arrowDirection": "up-left",
+          "arrowHeads": "both",
+          "arrowWidth": 4,
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "e88815bc67b29e54"
+      }
+    },
+    {
+      "id": "c6b86ecd-c579-3578-bfbe-6dbb9ffa24e0",
+      "kind": "zone",
+      "colorTag": "lime",
+      "size": {
+        "width": 203,
+        "height": 117
+      },
+      "points": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 203,
+          "y": 13
+        },
+        {
+          "x": 97,
+          "y": 117
+        }
+      ],
+      "style": {
+        "marks": "hatch"
+      },
+      "position": {
+        "x": 1503,
+        "y": -91
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [],
+          "width": 203,
+          "height": 117,
+          "color": "lime",
+          "fontSize": 14,
+          "kind": "zone",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              203,
+              13
+            ],
+            [
+              97,
+              117
+            ]
+          ],
+          "arrowWidth": 0,
+          "marks": "hatch",
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "5ade1b34d692b790"
+      }
+    },
+    {
+      "id": "46dd8809-0594-3045-89e4-a5ac5aef19ce",
+      "kind": "image",
+      "text": "The finished line",
+      "size": {
+        "width": 160,
+        "height": 90
+      },
+      "imageUrl": "https://example.com/line.png",
+      "position": {
+        "x": 2011,
+        "y": 733
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [
+            "The finished line"
+          ],
+          "width": 160,
+          "height": 90,
+          "color": "",
+          "fontSize": 14,
+          "kind": "image",
+          "arrowWidth": 0,
+          "imageUrl": "https://example.com/line.png",
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "66f70ca5febb099c"
+      }
+    }
+  ],
+  "pockets": [
+    {
+      "id": "a3000cd9-c36b-373d-b985-958f8584d552",
+      "name": "Smelting",
+      "expanded": false,
+      "size": {
+        "width": 613,
+        "height": 421
+      },
+      "position": {
+        "x": 406,
+        "y": 112
+      },
+      "parentPocketId": "b43e5299-7cc8-3436-a143-a7b387bbd82c",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "ffId": "pocket-imported-smelting",
+          "name": "Smelting",
+          "width": 613,
+          "height": 421,
+          "collapsed": true
+        },
+        "sum": "47603379280999ee"
+      }
+    },
+    {
+      "id": "b43e5299-7cc8-3436-a143-a7b387bbd82c",
+      "name": "Ore line",
+      "colorTag": "orange",
+      "expanded": true,
+      "size": {
+        "width": 2741,
+        "height": 1307
+      },
+      "theme": "blueprint",
+      "pattern": "dots",
+      "position": {
+        "x": -523,
+        "y": -311
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "name": "Ore line",
+          "color": "orange",
+          "width": 2741,
+          "height": 1307,
+          "collapsed": false,
+          "theme": "blueprint",
+          "pattern": "dots"
+        },
+        "sum": "2edbd6701983b189"
+      }
+    }
+  ],
+  "fuelProfiles": [],
+  "tasks": [
+    {
+      "id": "t1",
+      "title": "Build glass",
+      "text": "Two lines first.",
+      "status": "doing",
+      "order": "a0",
+      "assignees": [
+        "11111111-1111-4111-8111-111111111111"
+      ],
+      "links": [
+        {
+          "plan": "11111111-1111-4111-8111-111111111111:plan",
+          "node": "80489f5c-d860-4338-9d28-0fa08b0fa2dd"
+        }
+      ],
+      "createdBy": "11111111-1111-4111-8111-111111111111",
+      "createdAt": "2026-10-14T10:00:00.000Z"
+    },
+    {
+      "id": "t1b",
+      "title": "Power glass",
+      "status": "todo",
+      "order": "a1",
+      "blockedBy": [
+        "t1"
+      ]
+    }
+  ],
+  "taskItems": [
+    {
+      "id": "i1",
+      "taskId": "t1",
+      "text": "Place the machines",
+      "done": false,
+      "order": "a0",
+      "link": {
+        "plan": "11111111-1111-4111-8111-111111111111:plan",
+        "node": "80489f5c-d860-4338-9d28-0fa08b0fa2dd"
+      }
+    },
+    {
+      "id": "i2",
+      "taskId": "t1",
+      "kind": "location",
+      "text": "Ore field at 1 64 -2 in Overworld",
+      "done": true,
+      "order": "a1",
+      "place": {
+        "x": 1,
+        "y": 64,
+        "z": -2,
+        "dim": 0,
+        "dimName": "Overworld",
+        "world": "server:0123456789abcdef",
+        "label": "Ore field"
+      }
+    },
+    {
+      "id": "i3",
+      "taskId": "t1",
+      "kind": "picture",
+      "text": "Screenshot",
+      "done": false,
+      "order": "a2",
+      "picture": {
+        "thumb": "data:image/jpeg;base64,/9j/AA==",
+        "w": 1920,
+        "h": 1080,
+        "takenAt": "2026-10-15T09:00:00.000Z"
+      }
+    },
+    {
+      "id": "i4",
+      "taskId": "t1",
+      "kind": "quest",
+      "text": "Steam Age",
+      "done": false,
+      "order": "a3",
+      "quest": {
+        "id": "0f2a43a5-6c1e-4d7a-9b3b-6a8f3b0e2c11",
+        "name": "Steam Age",
+        "icon": "item:IC2:itemToolBronzePickaxe:0",
+        "line": "Tier 1 - Steam"
+      }
+    }
+  ],
+  "taskComments": [
+    {
+      "id": "c1",
+      "taskId": "t1",
+      "by": "11111111-1111-4111-8111-111111111111",
+      "byName": "ann",
+      "at": "2026-10-14T10:05:00Z",
+      "text": "On it"
+    }
+  ],
+  "recipes": [
+    {
+      "id": "gtnhplanner:80489f5c-d860-4338-9d28-0fa08b0fa2dd",
+      "name": "item|Gravel",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:612",
+      "minimumTier": "LV",
+      "durationTicks": 5,
+      "eut": 60,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Cobblestone",
+          "displayName": "Cobblestone",
+          "amount": 1
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Gravel",
+          "displayName": "Gravel",
+          "amount": 1
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:9e5e7c3d-fa44-4e72-900e-289c131f9bcc",
+      "name": "item|Sand",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:612",
+      "minimumTier": "LV",
+      "durationTicks": 5,
+      "eut": 60,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Gravel",
+          "displayName": "Gravel",
+          "amount": 1
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Sand",
+          "displayName": "Sand",
+          "amount": 1
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:a5f8ea31-969e-4e83-b21c-9e8c41a85597",
+      "name": "item|Glass Dust",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:582",
+      "minimumTier": "LV",
+      "durationTicks": 400,
+      "eut": 28,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Flint Dust",
+          "displayName": "Flint Dust",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Quartz Sand",
+          "displayName": "Quartz Sand",
+          "amount": 16
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Glass Dust",
+          "displayName": "Glass Dust",
+          "amount": 16
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:abaf3ea6-930c-4bf4-ace3-ad398e631b39",
+      "name": "item|Gravel",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:612",
+      "minimumTier": "LV",
+      "durationTicks": 5,
+      "eut": 60,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Cobblestone",
+          "displayName": "Cobblestone",
+          "amount": 1
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Gravel",
+          "displayName": "Gravel",
+          "amount": 1
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:b8267b55-c28e-4876-8954-acc200a99b66",
+      "name": "item|Cobblestone",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:442",
+      "minimumTier": "LV",
+      "durationTicks": 8,
+      "eut": 120,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "IT'S FREE! Place Lava on Side",
+          "displayName": "IT'S FREE! Place Lava on Side",
+          "amount": 1
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Cobblestone",
+          "displayName": "Cobblestone",
+          "amount": 1
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:e243d8f8-7f28-44c2-b1c9-86975e49da66",
+      "name": "item|Quartz Sand",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:302",
+      "minimumTier": "LV",
+      "durationTicks": 100,
+      "eut": 28,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Sand",
+          "displayName": "Sand",
+          "amount": 1
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Quartz Sand",
+          "displayName": "Quartz Sand",
+          "amount": 2,
+          "chance": 0.8
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:2f139d94-18e6-4acb-b28e-c2fbcd0b9bac",
+      "name": "item|Glass",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:522",
+      "minimumTier": "LV",
+      "durationTicks": 6,
+      "eut": 16,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Molten Glass",
+          "displayName": "Molten Glass",
+          "amount": 144
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Glass",
+          "displayName": "Glass",
+          "amount": 1
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:6d61be59-3f8c-4389-a98b-373b3b221038",
+      "name": "item|Cobblestone",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:442",
+      "minimumTier": "LV",
+      "durationTicks": 8,
+      "eut": 120,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "IT'S FREE! Place Lava on Side",
+          "displayName": "IT'S FREE! Place Lava on Side",
+          "amount": 1
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Cobblestone",
+          "displayName": "Cobblestone",
+          "amount": 1
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:74d7357f-2468-49f8-b8fc-1dea423bf194",
+      "name": "item|Molten Glass",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:512",
+      "minimumTier": "LV",
+      "durationTicks": 24,
+      "eut": 54,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Glass Dust",
+          "displayName": "Glass Dust",
+          "amount": 1
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Molten Glass",
+          "displayName": "Molten Glass",
+          "amount": 144
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:7522fd7a-e6dc-4184-a0cc-44c1283faebb",
+      "name": "item|Flint Dust",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:302",
+      "minimumTier": "LV",
+      "durationTicks": 100,
+      "eut": 8,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Flint",
+          "displayName": "Flint",
+          "amount": 2
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Flint Dust",
+          "displayName": "Flint Dust",
+          "amount": 1
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:75ed2c7e-1982-4a3d-a683-1d99108ff3c1",
+      "name": "item|Flint",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:642",
+      "minimumTier": "LV",
+      "durationTicks": 300,
+      "eut": 60,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Gravel",
+          "displayName": "Gravel",
+          "amount": 1
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Flint",
+          "displayName": "Flint",
+          "amount": 4,
+          "chance": 0.97
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    }
+  ]
+}

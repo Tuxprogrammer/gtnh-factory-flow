@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "id": "plan-1",
+  "name": "Empty",
+  "recipes": [],
+  "nodes": {},
+  "edges": [],
+  "fuelProfiles": []
+}

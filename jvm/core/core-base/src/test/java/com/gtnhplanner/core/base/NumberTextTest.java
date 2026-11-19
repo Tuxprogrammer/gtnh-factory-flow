@@ -18,10 +18,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.gtnhplanner.conformance.Conformance;
 
 /**
- * NumberText and JsMath against JavaScript's own answers (number-text-vectors.json, written by Node with
- * gen-vectors.mjs), so the core spells and reads numbers exactly as the website does.
+ * NumberText and JsMath against JavaScript's own answers (conformance/core-base/number-text, written by Node with
+ * tools/conformance/core-base/gen-vectors.mjs), so the core spells and reads numbers exactly as the website does.
  */
 class NumberTextTest {
 
@@ -30,7 +31,7 @@ class NumberTextTest {
     @BeforeAll
     static void load() throws Exception {
         try (Reader r = new InputStreamReader(
-            NumberTextTest.class.getResourceAsStream("/number-text/number-text-vectors.json"),
+            Conformance.open("core-base/number-text/number-text-vectors.json"),
             StandardCharsets.UTF_8)) {
             vectors = new JsonParser().parse(r)
                 .getAsJsonObject();

@@ -495,7 +495,7 @@ export function deriveCardFace(recipe: Recipe, projectNode: FactoryNode) {
   const machineDrawsEu = effectiveRecipe.eut > 0 && !isSteamMachineHandler(selectedMachineHandler);
   const tierControl = machineDrawsEu ? getNodeTierControl(effectiveRecipe, projectNode) : undefined;
   const powerReport =
-    machineDrawsEu && tierControl && hasPowerReport(nodeRecipe)
+    machineDrawsEu && tierControl && hasPowerReport(nodeRecipe, projectNode)
       ? getNodePowerReport(nodeRecipe, projectNode)
       : undefined;
   return {

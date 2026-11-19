@@ -62,7 +62,7 @@ function computeFacts(recipe: Recipe, node: FactoryNode): CardTipFacts {
     isSteamMachineHandler(getSelectedMachineHandler(recipe, node)) || !(effective.eut > 0);
   const stats = getOverclockedRecipeStats(nodeRecipe, node);
   const power =
-    !steam && hasPowerReport(nodeRecipe) ? getNodePowerReport(nodeRecipe, node) : undefined;
+    !steam && hasPowerReport(nodeRecipe, node) ? getNodePowerReport(nodeRecipe, node) : undefined;
   const steamReport = steam ? getNodeSteamReport(nodeRecipe, node) : undefined;
   return {
     steam: steamReport !== undefined,

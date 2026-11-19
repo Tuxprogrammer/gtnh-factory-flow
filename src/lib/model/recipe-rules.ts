@@ -189,6 +189,28 @@ export function gtFurnaceDurationTicks(
     : Math.max(1, Math.ceil(rated / getGameRates().recipeDurationDivisor));
 }
 
+// Electric multiblocks that smelt at 4 EU/t per parallel, before their own EU math: the Multi
+// Smelter's own RECIPE_EUT (MTEMultiFurnace), and FurnaceBackend's recipe in the Industrial Arc
+// Furnace's furnace mode and the Helioflare's smelting module.
+const GT_FURNACE_EUT_MACHINES = new Set<string | undefined>([
+  "Multi Smelter",
+  "Industrial Arc Furnace",
+  "Helioflare Power Forge",
+]);
+
+/**
+ * The EU/t per parallel of a smelt on a GT_FURNACE_EUT_MACHINES multiblock, where the vanilla map
+ * and the handler say 0. Other handlers keep their own EU (undefined).
+ */
+export function gtFurnaceEut(
+  recipe: Pick<Recipe, "machineType" | "source">,
+  handler: Pick<MachineHandler, "machineType">,
+): number | undefined {
+  return isSmeltingRecipeMap(recipe) && GT_FURNACE_EUT_MACHINES.has(handler.machineType)
+    ? GT_FURNACE_RECIPE_EUT
+    : undefined;
+}
+
 /**
  * Steam singleblocks run the LV recipe on borrowed math the dataset does not
  * carry: SteamOverclockDescriber gives a bronze machine (x1 EU, x2 duration)
@@ -258,7 +280,7 @@ export function applyMachineHandlerToRecipe(
   const handlerDurationTicks = machineCycleTicks(handler.machineType) ?? gtFurnaceDurationTicks(recipe, handler) ?? (seedsFromBase
     ? steamSingleblockDurationTicks(recipe, handler)
     : (handler.durationTicks ?? steamSingleblockDurationTicks(recipe, handler)));
-  const handlerEut = seedsFromBase ? undefined : handler.eut;
+  const handlerEut = gtFurnaceEut(recipe, handler) ?? (seedsFromBase ? undefined : handler.eut);
   // Steam machines burn steam, not EU. Their handlers carry no EU override,
   // so without this they would inherit the electric recipe's EU draw and the
   // planner would bill phantom power for them. The litres they do burn are

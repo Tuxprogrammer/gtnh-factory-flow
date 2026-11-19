@@ -55,7 +55,7 @@ function recipesLine(parallels: number, durationTicks: number): FormulaLine {
 
 export function workingLines(recipe: Recipe, node: FactoryNode): FormulaLine[] {
   const nodeRecipe = applyRecipeInputOverrides(recipe, node);
-  if (!hasPowerReport(nodeRecipe)) return [];
+  if (!hasPowerReport(nodeRecipe, node)) return [];
   const e = applyMachineHandlerToRecipe(nodeRecipe, node);
   if (getFusionMachine(e.machineType)) return [];
   const report = getNodePowerReport(nodeRecipe, node);

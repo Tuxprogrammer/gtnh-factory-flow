@@ -3,6 +3,7 @@ import { setActiveGameRates } from "@/lib/model/game-rates";
 import { gtFurnaceDurationTicks } from "@/lib/model/recipe-rules";
 import type { Recipe } from "@/lib/model/types";
 import { getOverclockedRecipeStats } from "@/lib/solver/overclock";
+import { getNodePowerReport, hasPowerReport } from "@/lib/solver/power-report";
 
 const TIERS = ["LV", "MV", "HV", "EV", "IV", "LuV", "ZPM", "UV", "UHV", "UEV", "UIV", "UMV"];
 
@@ -112,6 +113,58 @@ describe("GT furnace timing and the pack's rate mod (GTNHRates GTFurnaces)", () 
     setActiveGameRates({ recipeDurationDivisor: 64 });
     expect(gtFurnaceDurationTicks(SMELT, handler)).toBe(128);
     expect(ticks("multi-smelter")).toBe(128);
+  });
+
+  it("bills the Multi Smelter 4 EU/t per parallel: MTEMultiFurnace's RECIPE_EUT, not the map's 0", () => {
+    // checkProcessing: parallels = min(coil parallels, supply / 4), overclocks bought with what
+    // the parallels leave of one hatch's voltage, 128 ticks halved per step.
+    const coils = {
+      id: "heatingCoil",
+      label: "Heating Coil",
+      defaultKey: "cupronickel",
+      minimumKey: "cupronickel",
+      tiers: [
+        { key: "cupronickel", label: "Cupronickel" },
+        { key: "kanthal", label: "Kanthal" },
+      ],
+    };
+    const recipe = {
+      ...SMELT,
+      machineHandlers: SMELT.machineHandlers!.map((handler) =>
+        handler.id === "multi-smelter" ? { ...handler, machineConfigControls: [coils] } : handler,
+      ),
+    } as Recipe;
+    const run = (tier: string, coil: string) => {
+      const node = {
+        id: "n",
+        recipeId: recipe.id,
+        enabled: true,
+        machineCount: 1,
+        parallel: 1,
+        position: { x: 0, y: 0 },
+        overclockTier: tier,
+        machineHandlerId: "multi-smelter",
+        coilTier: coil,
+      } as never;
+      const stats = getOverclockedRecipeStats(recipe, node);
+      const report = getNodePowerReport(recipe, node);
+      return [stats.durationTicks, stats.eut, report.parallels, report.drawEuT];
+    };
+    expect(run("LV", "cupronickel")).toEqual([128, 4, 8, 32]);
+    expect(run("MV", "cupronickel")).toEqual([64, 16, 8, 128]);
+    // 16 parallels draw 64 of an MV hatch's 128: no overclock left.
+    expect(run("MV", "kanthal")).toEqual([128, 4, 16, 64]);
+    // An LV hatch powers 32 / 4 = 8 of the 16.
+    expect(run("LV", "kanthal")).toEqual([128, 4, 8, 32]);
+  });
+
+  it("gives the electric furnaces a power section although the smelt itself says 0 EU", () => {
+    const has = (machineHandlerId: string) => hasPowerReport(SMELT, { machineHandlerId });
+    expect(has("multi-smelter")).toBe(true);
+    expect(has("electric-furnace")).toBe(true);
+    expect(has("furnace")).toBe(false);
+    expect(has("steam-furnace")).toBe(false);
+    expect(has("steam-hearth")).toBe(false);
   });
 
   it("leaves the vanilla furnace and non-smelting recipes alone", () => {

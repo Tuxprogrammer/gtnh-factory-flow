@@ -12,6 +12,8 @@ import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.JsonTree;
+
 /**
  * The tables extracted from the community "GTNH Power Planner 2.9" workbook (the website's
  * {@code src/lib/power/data/power-planner-data.json}, copied verbatim to

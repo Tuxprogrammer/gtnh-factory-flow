@@ -7,6 +7,8 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.Float32;
+import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.machines.FormulaLine.Tone;
 
 /**
@@ -88,7 +90,9 @@ public final class BacterialVat {
 
     /** MTERadioHatch.getSievert: the material's sieverts less the shutter's share, in float. */
     public static int effectiveSievert(final int sievert, final int shutter) {
-        return sievert - (int) Math.ceil(sievert / 100f * shutter);
+        // Float arithmetic: each step rounds to a float, as the game's does.
+        final double share = Float32.round(Float32.round(Float32.round(sievert) / 100.0) * Float32.round(shutter));
+        return sievert - (int) Math.ceil(share);
     }
 
     /** The material and shutter a recipe's radiation is met with by default: the least that does it. */
@@ -125,20 +129,16 @@ public final class BacterialVat {
     }
 
     private static int parse(final String s, final int fallback) {
-        try {
-            final int v = (int) Double.parseDouble(s);
-            return v > 0 || "0".equals(s.trim()) ? v : fallback;
-        } catch (final NumberFormatException e) {
-            return fallback;
-        }
+        final double parsed = NumberText.parse(s);
+        if (Double.isNaN(parsed)) return fallback;
+        final int v = (int) parsed;
+        return v > 0 || "0".equals(s.trim()) ? v : fallback;
     }
 
     private static double parseDouble(final String s, final double fallback) {
-        try {
-            return s.isEmpty() ? fallback : Double.parseDouble(s);
-        } catch (final NumberFormatException e) {
-            return fallback;
-        }
+        if (s.isEmpty()) return fallback;
+        final double parsed = NumberText.parse(s);
+        return Double.isNaN(parsed) ? fallback : parsed;
     }
 
     /** MTEBioVat.calcMod + 1, from the litres stored in a hatch of this capacity (Java's doubles). */

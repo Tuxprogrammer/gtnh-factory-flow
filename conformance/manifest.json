@@ -132,13 +132,13 @@
     },
     "format/COMPARISON.md": {
       "area": "format",
-      "bytes": 17611,
-      "sha256": "9fdbcd835f24bb8c1c63e367185bf7c52821824aaa412fd1c75c6092e098766b"
+      "bytes": 15204,
+      "sha256": "e1d742e01eaeb7f7ed6ea14c1ed8256654ab99324ed681fd1212ed74e4a68a34"
     },
     "format/mod-out.json": {
       "area": "format",
-      "bytes": 5901,
-      "sha256": "565adc51b46300d06fd61bfa22ea39301292ebbf5f4287ef45a25158f7dc7ba7"
+      "bytes": 32483,
+      "sha256": "f8988aa98a61819a8d4aa1223934d2df53d61fe1a7ff518dfa3cfc01179092d7"
     },
     "format/mod-recipe-overlay-out.json": {
       "area": "format",
@@ -147,13 +147,13 @@
     },
     "format/values.json": {
       "area": "format",
-      "bytes": 5272,
-      "sha256": "6bfe3c8a4bb7b6322a9060b1fe4f7ca6759bbe6f79fec20aaa5438f4e09a40f3"
+      "bytes": 12154,
+      "sha256": "be7073f8033e7c24bffe0141225ef007f70fc91145358260ad9ee5d137a90258"
     },
     "format/website-out.json": {
       "area": "format",
-      "bytes": 7455,
-      "sha256": "e4a4041cd55e4c64491ba45e3925fcde73d659774643889c34ef115120841c0d"
+      "bytes": 33665,
+      "sha256": "b60c0ba6a3c3dad4366b6ffe8bc9794f07b39249cf9356a9b32d4fe9c09e7ac2"
     },
     "layout/arrange.json.gz": {
       "area": "layout",

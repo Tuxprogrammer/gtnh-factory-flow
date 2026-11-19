@@ -80,9 +80,9 @@ class CrusherAndCropFarmExportTest {
             r.source = new Web.Source();
             r.source.recipeMap = "Extreme Entity Crusher";
             r.source.rawRecipeId = "Zombie";
-            r.metadata = new JsonObject();
-            r.metadata.addProperty("recipeMapId", "kubatech-eec");
-            r.metadata.add("eec", EEC);
+            r.metadata = new java.util.LinkedHashMap<>();
+            r.metadata.put("recipeMapId", "kubatech-eec");
+            r.metadata.put("eec", com.gtnhplanner.core.base.JsonTree.parse(EEC.toString()));
             return r;
         }
     }

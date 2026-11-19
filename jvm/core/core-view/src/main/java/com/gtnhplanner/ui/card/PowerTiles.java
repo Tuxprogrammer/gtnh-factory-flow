@@ -110,10 +110,7 @@ public final class PowerTiles {
 
     /** A number as stored: no grouping, no trailing zeros, no float noise past ten places. */
     public static String plain(final double value) {
-        return java.math.BigDecimal.valueOf(value)
-            .setScale(10, java.math.RoundingMode.HALF_UP)
-            .stripTrailingZeros()
-            .toPlainString();
+        return com.gtnhplanner.core.base.Format.plain(value);
     }
 
     private PowerTiles() {}

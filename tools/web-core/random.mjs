@@ -30,6 +30,9 @@ export function checkJvmAgainstNode(cases, tally) {
       case "round":
         tally.check("jvm!=node/round", sameDouble(Math.round(fromBits(c[1])), c[2]), () => `${c[1]}: JVM ${c[2]}, Node ${bitsOf(Math.round(fromBits(c[1])))}`);
         break;
+      case "f32":
+        tally.check("jvm!=node/f32", sameDouble(Math.fround(fromBits(c[1])), c[2]), () => `${c[1]}: JVM ${c[2]}, Node ${bitsOf(Math.fround(fromBits(c[1])))}`);
+        break;
       default:
     }
   }
@@ -62,6 +65,11 @@ export function runRandom(api, cases, tally) {
       case "round": {
         const a = base.jsMathRound(fromBits(c[1]));
         tally.checkDouble("random/round", a, c[2], () => `${c[1]}: ${bitsOf(a)} (JVM ${c[2]})`);
+        break;
+      }
+      case "f32": {
+        const a = base.float32Round(fromBits(c[1]));
+        tally.checkDouble("random/f32", a, c[2], () => `${c[1]}: ${bitsOf(a)} (JVM ${c[2]})`);
         break;
       }
       case "id": {

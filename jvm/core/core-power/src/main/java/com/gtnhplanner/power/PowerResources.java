@@ -5,6 +5,8 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.JsonTree;
+
 /**
  * Workbook names to game resources ({@code resource-map.json}) and each source's machine item
  * ({@code machine-icons.json}), copied from the website. Ids are the website's: items {@code mod:name@meta} (no

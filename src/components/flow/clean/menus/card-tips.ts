@@ -259,6 +259,21 @@ export function footTip(nodeId: string, foot: CleanFootView): TipSpec {
     notes.push({ text: "Set it to Up to and it runs what its inputs allow.", tone: "muted" });
     return { id: `${nodeId}|foot`, title: `Exactly ${n(f.capacity)} running`, rows, notes };
   }
+  if (f.reason === "IDLE") {
+    const input = f.sentOut ?? "its input";
+    const output = f.resource ?? "an output";
+    rows.push({
+      label: "Sent out",
+      value: f.upstream[0] ? `${input} at ${f.upstream[0]}` : input,
+      tone: "warn",
+    });
+    rows.push({ label: "Would force out", value: output, tone: "warn" });
+    notes.push({
+      text: `Running it would force out ${output}, so the plan sends ${input} out instead. Give ${output} somewhere to go, or set a count.`,
+      tone: "muted",
+    });
+    return { id: `${nodeId}|foot`, title: "None running", rows, notes };
+  }
   const usage = f.capacity > 0 ? Math.min(100, (100 * f.running) / f.capacity) : 0;
   rows.push({ label: "Usage", value: `${formatCompact(usage)}%` });
   const all = f.running >= f.capacity - 0.000001;

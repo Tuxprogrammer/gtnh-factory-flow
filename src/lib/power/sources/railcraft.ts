@@ -1,6 +1,6 @@
 /**
  * Railcraft's Water Tank and its steam boiler, from Railcraft's source at the
- * version GTNH 2.9 ships (GTNewHorizons/Railcraft tag 9.17.26; the mod's
+ * version GTNH 2.9 ships (GTNewHorizons/Railcraft tag 9.17.36; the mod's
  * research/railcraft-water-tank-and-boilers.md has the links). Both are
  * modelled at steady state: the tank as it fills, the boiler at full heat.
  */

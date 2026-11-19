@@ -967,8 +967,7 @@ public final class FfConverter {
         }
 
         /**
-         * A wire's steering dots on the board: moved as the cards were, onto the router's lines (FF keeps them on its
-         * 20 px grid, the router runs wires through the middles of 10 px cells).
+         * A wire's steering dots on the board: moved as the cards were, onto the router's 20 px grid (the website's).
          */
         List<int[]> stops(final FfEdge e) {
             if (e.waypoints()

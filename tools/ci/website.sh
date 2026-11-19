@@ -4,9 +4,13 @@
 set -euo pipefail
 . "$(dirname "$0")/lib.sh"
 CI_JOB=website
+. "$(dirname "$0")/net.sh"
 cd "$CI_ROOT"
 [ -d node_modules ] || fail "node_modules is missing: run npm ci first"
 say "core build (public/core)"
+# Gradle takes the same heap and download retry settings as in the web-core job.
+GTNH_GRADLE_ARGS=$(node -p 'JSON.stringify(process.argv.slice(1))' -- "${GRADLE_NET_OPTS[@]}")
+export GTNH_GRADLE_ARGS
 node tools/copy-core.mjs --build --required || fail "the core did not build"
 say "typecheck"
 npm run typecheck || fail "typecheck failed"

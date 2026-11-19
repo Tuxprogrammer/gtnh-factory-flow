@@ -13,6 +13,7 @@ import { resolvePowerResource } from "./planner-data";
 import { getPowerSource } from "./registry";
 import { buildPowerSettingsReader, type PowerFlowLine, type PowerModel } from "./types";
 import { formatAmount } from "./sources/helpers";
+import { corePowerCard, corePowerCardTier } from "./power-core";
 
 export const POWER_RECIPE_CATEGORY = "power-source";
 
@@ -63,6 +64,8 @@ export function powerCardTier(
   recipe: Pick<Recipe, "power" | "category"> | undefined,
 ): string | undefined {
   if (!isPowerRecipe(recipe) || !(recipe.power.euPerTick > 0)) return undefined;
+  const viaCore = corePowerCardTier(recipe.power.euPerTick);
+  if (viaCore !== undefined) return viaCore ?? undefined;
   return getVoltageTierForEuT(recipe.power.euPerTick);
 }
 
@@ -115,7 +118,9 @@ export function buildPowerRecipe(
   if (!source) {
     return undefined;
   }
-  const model = source.compute(buildPowerSettingsReader(source, settings));
+  // The core answers when the power area is adopted and it is loaded; the TypeScript source is the path otherwise.
+  const card = corePowerCard(sourceId, settings);
+  const model = card?.model ?? source.compute(buildPowerSettingsReader(source, settings));
   const inputs = model.inputs.map(flowToSlot).filter(Boolean) as RecipeInput[];
   const outputs = model.outputs.map(flowToSlot).filter(Boolean) as RecipeOutput[];
   // The EU output port, FIRST on the rail (a generator's product is power).
@@ -145,7 +150,7 @@ export function buildPowerRecipe(
     power: {
       sourceId,
       euPerTick: model.euPerTick,
-      stats: [...model.stats, ...unresolvedFlowStats(model)],
+      stats: card ? card.recipeStats : [...model.stats, ...unresolvedFlowStats(model)],
       warnings: model.warnings,
     },
   };

@@ -8,6 +8,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { gunzipSync } from "node:zlib";
+import { sampleOf } from "./sample.mjs";
 
 const ROOT = fileURLToPath(new URL("../../", import.meta.url));
 const conformance = (rel) => path.join(ROOT, "conformance", rel);
@@ -136,7 +137,8 @@ const strip = (step) => {
   return input;
 };
 
-export function runLayout(api, tally) {
+// `every` thins the reference boards the way the machine goldens are thinned (sample.mjs): every (every / 4)-th board.
+export function runLayout(api, tally, { every = 1 } = {}) {
   const layout = api.LayoutExports;
   const tests = readJson("layout/router-tests.json");
   timed(tally, "layout/solve", () => {
@@ -175,7 +177,7 @@ export function runLayout(api, tally) {
       tally.check("layout/rimDocks", diff == null, () => `${JSON.stringify(c.rect)}: ${diff}`);
     }
   });
-  const boards = readJson("layout/boards.json.gz").boards;
+  const boards = sampleOf(readJson("layout/boards.json.gz").boards, every / 4, () => "boards");
   timed(tally, "layout/boards", () => {
     for (const b of boards) {
       let diff;

@@ -43,6 +43,86 @@ public final class MachineReadout {
         return out == null ? null : JsonTree.write(out);
     }
 
+    /**
+     * What a board card reads of the maths for a kept recipe on a node, in the website's own shapes and names
+     * (src/lib/solver): "stats" (getOverclockedRecipeStats), "power" (getNodePowerReport, present when hasPowerReport),
+     * "steam" (getNodeSteamReport, present for a steam machine), "parallel" and "structuralParallel"
+     * (getMachineParallelMultiplier, getMachineStructuralParallels on the machine's recipe) and "outputMultipliers"
+     * (getMachineOutputMultiplier per output of the machine's recipe, at the overclocked tier). An absent optional field
+     * is left out, never null. Null when this module leaves the machine to the mod's own models.
+     */
+    @Nullable
+    public String card(final String recipeId, final String nodeJson) {
+        final Web.Recipe recipe = recipes.get(recipeId);
+        if (recipe == null) throw new IllegalArgumentException("No recipe kept under " + recipeId);
+        final Web.Node node = WebJson.node(JsonTree.parse(nodeJson));
+        if (node == null) throw new IllegalArgumentException("Not a node");
+        final Map<String, Object> out = card(recipe, node);
+        return out == null ? null : JsonTree.write(out);
+    }
+
+    @Nullable
+    static Map<String, Object> card(final Web.Recipe recipe, final Web.Node node) {
+        if (!NodeMath.covers(recipe, node)) return null;
+        final Map<String, Object> out = new LinkedHashMap<>();
+        final Overclock.Stats s = Overclock.stats(recipe, node);
+        final Map<String, Object> stats = new LinkedHashMap<>();
+        stats.put("tier", s.tier());
+        stats.put("minimumTier", s.minimumTier());
+        stats.put("overclockSteps", s.overclockSteps());
+        stats.put("perfectOverclockSteps", s.perfectOverclockSteps());
+        stats.put("perfectSpeedFactor", n(s.perfectSpeedFactor()));
+        stats.put("perfectEuFactor", n(s.perfectEuFactor()));
+        stats.put("durationTicks", n(s.durationTicks()));
+        stats.put("eut", n(s.eut()));
+        out.put("stats", stats);
+
+        if (PowerReport.has(recipe, node)) {
+            final PowerReport.Report p = PowerReport.report(recipe, node);
+            final Map<String, Object> power = new LinkedHashMap<>();
+            power.put("state", p.state());
+            if (p.recipeGateReason() != null) power.put("recipeGateReason", p.recipeGateReason());
+            power.put("tier", p.tier());
+            power.put("minimumTier", p.minimumTier());
+            power.put("hatches", p.hatches());
+            if (p.hatchTypeLabel() != null) power.put("hatchTypeLabel", p.hatchTypeLabel());
+            if (p.hatchChip() != null) power.put("hatchChip", p.hatchChip());
+            power.put("typedBudget", p.typedBudget());
+            power.put("isMultiblock", p.isMultiblock());
+            power.put("amps", n(p.amps()));
+            power.put("poolEuT", n(p.poolEuT()));
+            power.put("singleDrawEuT", n(p.singleDrawEuT()));
+            power.put("parallels", n(p.parallels()));
+            power.put("drawEuT", n(p.drawEuT()));
+            power.put("overclockSteps", p.overclockSteps());
+            power.put("perfectOverclockSteps", p.perfectOverclockSteps());
+            power.put("perfectSpeedFactor", n(p.perfectSpeedFactor()));
+            power.put("perfectEuFactor", n(p.perfectEuFactor()));
+            power.put("usage", n(p.usage()));
+            out.put("power", power);
+        }
+
+        final PowerReport.Steam steam = PowerReport.steam(recipe, node);
+        if (steam != null) {
+            final Map<String, Object> st = new LinkedHashMap<>();
+            st.put("drawSteamPerTick", n(steam.drawSteamPerTick()));
+            st.put("singleDrawSteamPerTick", n(steam.singleDrawSteamPerTick()));
+            st.put("parallels", n(steam.parallels()));
+            st.put("isMultiblock", steam.isMultiblock());
+            st.put("highPressure", steam.highPressure());
+            out.put("steam", st);
+        }
+
+        final Web.Recipe effective = RecipeRules.applyHandler(recipe, node);
+        out.put("parallel", n(MachineEffects.parallelMultiplier(effective, node)));
+        out.put("structuralParallel", n(MachineEffects.structuralParallels(effective, node)));
+        final List<Object> multipliers = new ArrayList<>();
+        for (final Web.Resource output : effective.outputs)
+            multipliers.add(n(MachineEffects.outputMultiplier(effective, node, output, s.tier())));
+        out.put("outputMultipliers", multipliers);
+        return out;
+    }
+
     /** Whether the number is one the host can read as JSON text: finite as it is, otherwise the file's word for it. */
     static Object n(final double value) {
         if (Double.isNaN(value)) return "NaN";

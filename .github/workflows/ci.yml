@@ -40,6 +40,7 @@ jobs:
       icons: ${{ steps.changes.outputs.icons }}
       jvm: ${{ steps.changes.outputs.jvm }}
       web_core: ${{ steps.changes.outputs.web_core }}
+      web_core_full: ${{ steps.changes.outputs.web_core_full }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -68,11 +69,25 @@ jobs:
         with:
           distribution: zulu
           java-version: 25
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          cache-read-only: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/restructure' }}
+      # The core build fetches what the web-core job's does, so it restores the same seed (tools/ci/seed.sh).
+      - name: Restore the dependency seed
+        run: tools/ci/seed.sh restore web-core
+        env:
+          GH_TOKEN: ${{ github.token }}
       - run: npm ci
       - run: tools/ci/website.sh
+      - name: Pack the seed when it was short
+        id: seed
+        if: ${{ !cancelled() }}
+        run: tools/ci/seed.sh save web-core
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() && steps.seed.outputs.upload == 'true' }}
+        with:
+          name: ${{ steps.seed.outputs.name }}
+          path: ${{ steps.seed.outputs.file }}
+          compression-level: 0
+          retention-days: ${{ steps.seed.outputs.retention }}
+          overwrite: true
 
   icons:
     name: Icon sizing in Chromium and Firefox
@@ -180,6 +195,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
       - run: npm ci
       - run: tools/ci/web-core.sh
+        env:
+          CI_WEB_CORE_FULL: ${{ needs.changes.outputs.web_core_full }}
       - name: Pack the seed when it was short
         id: seed
         if: ${{ !cancelled() }}
@@ -191,6 +208,7 @@ jobs:
           path: ${{ steps.seed.outputs.file }}
           compression-level: 0
           retention-days: ${{ steps.seed.outputs.retention }}
+          overwrite: true
 
   ci-ok:
     name: ci-ok

@@ -42,6 +42,7 @@ import {
 // React Flow's portals, with their target looked up once rather than on every store change.
 import { FlowEdgeLabelPortal as EdgeLabelRenderer, FlowViewportPortal as ViewportPortal } from "./virtual/flow-portals";
 import { toBlob, toSvg } from "html-to-image";
+import { EXPORT_IMAGE_PLACEHOLDER } from "@/lib/import-export/export-image-placeholder";
 import {
   Activity,
   AlignJustify,
@@ -4803,6 +4804,7 @@ export function FactoryFlow() {
         // failed) the export falls back to a default font rather than paying
         // for a per-capture stylesheet walk. See export-fonts.ts.
         skipFonts: true,
+        imagePlaceholder: EXPORT_IMAGE_PLACEHOLDER,
         fontEmbedCSS: await resolveExportFontCss(viewportElement),
       };
       const captureFrame = (kind: FlowExportCapture["kind"]): FlowExportCapture => ({

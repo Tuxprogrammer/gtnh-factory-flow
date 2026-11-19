@@ -8,7 +8,7 @@
  *
  * <raw.json> is the exporter's shape: { domains: [ { id: "mobDrops", machine, infernal, mobs } ] }. The game writes
  * one with `tools/dev/mc.sh call 'eec?dump=<file>'` (PLANNH_GTNH=1 PLANNH_MOBS=1). The website checkout defaults to
- * ~/gtnh-factory-flow; its scripts are read from origin/main (the checkout may be behind) into
+ * this repository's root; its scripts are read from origin/main (the checkout may be behind) into
  * a temporary folder that borrows its node_modules.
  *
  * <out.json>: [ { mob, name, eut, minimumTier, durationTicks, notes, outputs: [{ kind, id, amount, chance }], eec } ]
@@ -17,13 +17,14 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const [rawPath, outPath, checkoutArg] = process.argv.slice(2);
 if (!rawPath || !outPath) {
   console.error("Usage: website-eec.mjs <raw.json> <out.json> [website checkout]");
   process.exit(2);
 }
-const checkout = path.resolve(checkoutArg ?? path.join(os.homedir(), "gtnh-factory-flow"));
+const checkout = path.resolve(checkoutArg ?? path.join(path.dirname(fileURLToPath(import.meta.url)), "../../../../.."));
 const scriptsDir = "tools/dataset-pipeline/scripts";
 
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), "website-eec-"));

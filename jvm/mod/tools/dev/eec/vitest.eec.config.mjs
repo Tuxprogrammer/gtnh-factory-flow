@@ -4,12 +4,12 @@
 //   EEC_RECIPES=<mod>/build/eec/devgame-website.json EEC_CASES=<cases.json> EEC_RATES_OUT=<out.json> \
 //     node node_modules/vitest/vitest.mjs run --config <mod>/tools/dev/eec/vitest.eec.config.mjs
 //
-// FACTORY_FLOW names the website's checkout when it is not C:/Users/jack/gtnh-factory-flow.
+// FACTORY_FLOW names the website's checkout when it is not this repository's root.
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const site = process.env.FACTORY_FLOW ?? "C:/Users/jack/gtnh-factory-flow";
+const site = process.env.FACTORY_FLOW ?? path.resolve(here, "../../../../..");
 
 export default {
   root: site,

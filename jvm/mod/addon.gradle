@@ -19,8 +19,8 @@ test {
     if (project.hasProperty('runs')) systemProperty 'gtnhplanner.bench.runs', project.property('runs')
     if (project.hasProperty('profileBoard')) systemProperty 'gtnhplanner.profile.board', project.property('profileBoard')
     if (project.hasProperty('jfr')) jvmArgs '-XX:FlightRecorderOptions:stackdepth=512', '-XX:StartFlightRecording=filename=build/bench/profile.jfr,settings=profile'
-    // GTNHGradle points this task at the downgraded test classes. On a clean build the configuration cache
-    // captures that directory while it is still empty, and the task then reports NO-SOURCE and runs nothing.
+    // GTNHGradle points this task at the downgraded test classes, which the configuration cache would capture before
+    // they exist (the folders are named at the end of this file).
     notCompatibleWithConfigurationCache('downgraded test classes are captured empty on clean builds')
     testLogging {
         events 'passed', 'skipped', 'failed'
@@ -94,4 +94,63 @@ tasks.register('compatCheck', Exec) {
 // Checkstyle (the wildcard import check) runs out of its default heap on the tour's Callout.java: give it room.
 tasks.withType(Checkstyle).configureEach {
     maxHeapSize = '1g'
+}
+
+// The core modules (:core-*, plain Java under ../core) are shaded into the jar (dependencies.gradle). RetroFuturaGradle
+// asks every dependency of the mod for two attributes a plain java-library lacks; without them the variants are
+// ambiguous. Every core module carries them, so a chain of core modules resolves transitively.
+rootProject.subprojects.findAll { it.name.startsWith('core-') }.each { core ->
+    evaluationDependsOn(core.path)
+    core.configurations.configureEach { c ->
+        if (c.canBeConsumed && c.name in ['apiElements', 'runtimeElements']) {
+            c.attributes {
+                attribute(com.gtnewhorizons.retrofuturagradle.ObfuscationAttribute.OBFUSCATION_ATTRIBUTE,
+                    objects.named(com.gtnewhorizons.retrofuturagradle.ObfuscationAttribute, 'mcp'))
+                attribute(com.gtnewhorizons.retrofuturagradle.modutils.ModUtils.DEOBFUSCATOR_TRANSFORMED, true)
+            }
+        }
+    }
+}
+
+// The mod's version (gtnh.modules.gitVersion is off): the VERSION environment variable when set, else the nearest
+// mod-* tag without its prefix. The repository's other tags are the website's and never name the jar. At the tag with
+// nothing changed under jvm/ it is the tag's version; otherwise GTNH's form,
+// <tag>-<branch>.<commits under jvm/ since the tag>+<hash>, with -dirty for uncommitted changes under jvm/.
+def modVersionOf = { ->
+    def override = providers.environmentVariable('VERSION').orNull
+    if (override) return override
+    def git = { List<String> args ->
+        def run = providers.exec {
+            commandLine(['git', '-C', rootDir.absolutePath] + args)
+            ignoreExitValue = true
+        }
+        run.result.get().exitValue == 0 ? run.standardOutput.asText.get().trim() : null
+    }
+    def tag = git(['describe', '--tags', '--abbrev=0', '--match', 'mod-*', 'HEAD'])
+    if (!tag) {
+        logger.error('No mod-* tag reaches HEAD and VERSION is not set: the jar is NO-GIT-TAG-SET')
+        return 'NO-GIT-TAG-SET'
+    }
+    def base = tag.substring('mod-'.length())
+    def distance = (git(['rev-list', '--count', "${tag}..HEAD", '--', '.']) ?: '0') as int
+    def dirty = git(['status', '--porcelain', '--untracked-files=no', '--', '.']) as boolean
+    if (distance == 0 && !dirty) return base
+    def branch = git(['rev-parse', '--abbrev-ref', 'HEAD'])
+    if (!branch || branch == 'HEAD') branch = providers.environmentVariable('GIT_BRANCH').orElse('git').get()
+    branch = branch.replaceFirst('^origin/', '').replaceAll('[^a-zA-Z0-9-]+', '-')
+    return "${base}-${branch}.${distance}+${git(['rev-parse', '--short=10', 'HEAD'])}${dirty ? '-dirty' : ''}"
+}
+ext.modVersion = modVersionOf()
+version = ext.modVersion
+
+// GTNHGradle points the test task at JvmDowngrader's output folders, which JvmDowngrader lists once, before anything is
+// compiled: on a clean tree the list is empty, and the first build reported the suite NO-SOURCE and ran nothing. The
+// folders by name, as tools/dev/mc.sh reads them, are there on every build.
+afterEvaluate {
+    tasks.named('test', Test) { t ->
+        def downgradedTests = layout.buildDirectory.dir('tmp/downgradeTestClasses/test')
+        def downgradedMain = layout.buildDirectory.dir('tmp/downgradeMainClasses/main')
+        t.testClassesDirs = files(downgradedTests)
+        t.classpath = files(downgradedTests, downgradedMain) + t.classpath
+    }
 }

@@ -4,12 +4,12 @@
 //   BEE_GOLDENS_OUT=<mod>/src/test/resources/bee-goldens.jsonl.gz \
 //     node node_modules/vitest/vitest.mjs run --config <mod>/tools/dev/bees/vitest.bees.config.mjs
 //
-// FACTORY_FLOW names the website's checkout when it is not C:/Users/jack/gtnh-factory-flow.
+// FACTORY_FLOW names the website's checkout when it is not this repository's root.
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const site = process.env.FACTORY_FLOW ?? "C:/Users/jack/gtnh-factory-flow";
+const site = process.env.FACTORY_FLOW ?? path.resolve(here, "../../../../..");
 
 export default {
   root: site,

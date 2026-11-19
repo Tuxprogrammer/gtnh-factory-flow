@@ -146,7 +146,7 @@ start() {
     # JetBrains Runtime + HotswapAgent + a JDWP port so `mc.sh swap` can push recompiled classes into the game.
     [ "$HOTSWAP" = 1 ] && run_args+=(--hotswap
         "--mcJvmArgs=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=127.0.0.1:$JDWP_PORT")
-    (cd "$ROOT" && exec nohup ./gradlew "${run_args[@]}" >"$LOG" 2>&1 </dev/null) &
+    (cd "$ROOT" && exec nohup ../gradlew "${run_args[@]}" >"$LOG" 2>&1 </dev/null) &
     disown
     echo $! >"$PIDFILE"
     echo "launching ($TASK), log: $LOG"
@@ -209,7 +209,7 @@ shot() {
 swap() {
     is_up || die "no client running (run: $0 start)"
     [ "$HOTSWAP" = 1 ] || die "hotswap is off (PLANNH_HOTSWAP=0)"
-    (cd "$ROOT" && ./gradlew downgradeMainClasses --console=plain -q >"$STATE/swap-build.log" 2>&1) ||
+    (cd "$ROOT" && ../gradlew downgradeMainClasses --console=plain -q >"$STATE/swap-build.log" 2>&1) ||
         { grep -E "error:|.java:[0-9]+" "$STATE/swap-build.log" >&2; die "build failed, see $STATE/swap-build.log"; }
     "$JAVA" "$ROOT/tools/dev/Hotswap.java" push "$CLASSES" "$SWAP_MANIFEST" "$JDWP_PORT"
     local rc=$?

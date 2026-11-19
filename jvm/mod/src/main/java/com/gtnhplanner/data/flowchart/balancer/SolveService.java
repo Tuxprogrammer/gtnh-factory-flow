@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
-import com.gtnhplanner.GtnhPlanner;
+import com.gtnhplanner.core.base.Log;
 
 /**
  * Solves plans on one background thread so the board never waits for the solver.
@@ -229,12 +229,13 @@ public final class SolveService implements AutoCloseable {
                 }
                 continue;
             } catch (final Throwable t) {
-                GtnhPlanner.LOG.error("Solve of version {} threw", request.version(), t);
+                Log.get()
+                    .error("Solve of version {} threw", request.version(), t);
                 result = new Result(request.version(), request.input(), null, t, System.currentTimeMillis() - start);
             }
             com.gtnhplanner.dev.DevPerf.time("solve", result.wallMillis() * 1_000_000L);
-            if (result.wallMillis() > 250)
-                GtnhPlanner.LOG.info("[solve] version {} took {} ms", request.version(), result.wallMillis());
+            if (result.wallMillis() > 250) Log.get()
+                .info("[solve] version {} took {} ms", request.version(), result.wallMillis());
             synchronized (lock) {
                 running = false;
                 // Stale: a newer request arrived while this one was solving.

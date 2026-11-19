@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
 
-import com.gtnhplanner.GtnhPlanner;
+import com.gtnhplanner.core.base.Log;
 
 /**
  * The player's gtnhplanner.com account in this game: who is signed in and the session the site gave them, kept in
@@ -121,7 +121,8 @@ public final class Account {
         try (Reader in = new InputStreamReader(new FileInputStream(f), StandardCharsets.UTF_8)) {
             props.load(in);
         } catch (final IOException e) {
-            GtnhPlanner.LOG.warn("Could not read the account file", e);
+            Log.get()
+                .warn("Could not read the account file", e);
         }
         return props;
     }
@@ -133,7 +134,8 @@ public final class Account {
             props
                 .store(out, "GTNH Planner: your library sign-in (a session, never your password). Delete to sign out.");
         } catch (final IOException e) {
-            GtnhPlanner.LOG.warn("Could not write the account file", e);
+            Log.get()
+                .warn("Could not write the account file", e);
         }
     }
 }

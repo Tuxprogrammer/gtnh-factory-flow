@@ -10,7 +10,7 @@ import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
-import com.gtnhplanner.GtnhPlanner;
+import com.gtnhplanner.core.base.Log;
 
 /**
  * The setups the library shows: one query, its pages as they arrive, and whether more are coming. Fetches run on one
@@ -149,7 +149,8 @@ public final class LibraryFeed {
                         .isEmpty()) gameVersions = p.gameVersions();
                 });
             } catch (final Exception e) {
-                GtnhPlanner.LOG.info("Library: could not list setups", e);
+                Log.get()
+                    .info("Library: could not list setups", e);
                 arrived.add(() -> {
                     if (gen != generation) return;
                     loading = false;
@@ -169,7 +170,8 @@ public final class LibraryFeed {
                 final CommunityApi.Download d = CommunityApi.download(setup.id());
                 arrived.add(() -> done.accept(d));
             } catch (final Exception e) {
-                GtnhPlanner.LOG.info("Library: could not download setup {}", setup.id(), e);
+                Log.get()
+                    .info("Library: could not download setup {}", setup.id(), e);
                 arrived.add(() -> failed.accept(e.getMessage() == null ? e.toString() : e.getMessage()));
             }
         });

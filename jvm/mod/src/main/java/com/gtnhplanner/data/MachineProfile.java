@@ -8,11 +8,9 @@ import java.util.function.Consumer;
 import javax.annotation.Nonnull;
 
 import com.gtnhplanner.api.RecipePropertyAPI;
+import com.gtnhplanner.core.base.CoreSettings;
 import com.gtnhplanner.data.effect.EffectComputer;
 import com.gtnhplanner.data.effect.EffectResult;
-import com.gtnhplanner.nei.NEIPlanConfig;
-
-import codechicken.nei.NEIClientConfig;
 
 public record MachineProfile(String id, String displayName, List<SettingDef<?>> settings,
     EffectComputer effectComputer) {
@@ -34,8 +32,7 @@ public record MachineProfile(String id, String displayName, List<SettingDef<?>> 
     private Builder(final String id, final String displayName) {
             this.id = id;
             this.displayName = displayName;
-            if (NEIClientConfig.getSetting(NEIPlanConfig.ConfigBurnableOverride.KEY)
-                .getIntValue(NEIPlanConfig.ConfigBurnableOverride.OFF) == NEIPlanConfig.ConfigBurnableOverride.ON) {
+            if (CoreSettings.get().burnableOverride()) {
                 addSetting(Settings.BURNABLE_OVERRIDE.def());
             }
         }

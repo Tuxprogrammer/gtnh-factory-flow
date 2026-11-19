@@ -12,7 +12,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
-import com.gtnhplanner.Config;
+import com.gtnhplanner.core.base.CoreSettings;
 
 /**
  * The whole solve's answer, shaped for the GUI: per-node extents and machine counts, per-edge
@@ -177,7 +177,7 @@ public final class SolutionView {
      * Severities differ because the two smells do: importing from outside while the chart also
      * makes some is routine, so smell 1 is an observation. Two unlinked islands of the SAME
      * ingredient is a chart that does not describe one factory, so smell 2 is a warning.
-     * Ingredients the pack gives away are filtered out of both - see {@link Config#isFreeIngredient}, read
+     * Ingredients the pack gives away are filtered out of both - see {@link CoreSettings#isFreeIngredient}, read
      * when the snapshot was taken.
      */
     private List<Note> wiringDiagnostics(final SolveContext ctx, final double tol, final List<External> terminalIn) {

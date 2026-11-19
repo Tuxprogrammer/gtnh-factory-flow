@@ -124,7 +124,8 @@ public final class Boards {
             for (final SolveInput.PortIn p : m.outputs()) n.outputs.add(port(p));
             n.properties.put(FakeGame.DURATION, (int) Math.round(m.durationTicks()));
             n.properties.put(FakeGame.EU_PER_TICK, Math.round(m.energyPerTick()));
-            n.machineConfig.setMachineCount(m.machineCount());
+            // The corpus counts are whole machines (the mod's board keeps whole counts).
+            n.machineConfig.setMachineCount((int) m.machineCount());
             n.setMachineCountFixed(m.countFixed());
             // A corpus pin is the solver's exact count: Exactly on the board.
             n.setMachineCountExact(m.countFixed());

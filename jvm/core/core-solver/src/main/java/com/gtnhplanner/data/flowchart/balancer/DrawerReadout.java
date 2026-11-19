@@ -28,9 +28,13 @@ import com.gtnhplanner.data.flowchart.DrawerTypes;
  * @param banked     Up to plans only (docs/design/up-to.md, "Buffers"): per BUFFER with rule ANY, what it banks in
  *                   units per second, what its makers put into it beyond what its takers take (old Build's
  *                   overflow); never a forced flow. Null when the plan has no Up to pool or no such buffer.
+ * @param spills     the same per maker port: per banking buffer, each port feeding it and what it puts in beyond what
+ *                   the buffer's takers take, in the order the buffer's links name them. A board shows it at the maker,
+ *                   as a forced row, and totals it on the buffer. Null exactly when {@code banked} is.
  */
 public record DrawerReadout(Map<Uuid, Double> rates, Set<Uuid> unmet, List<Shortfall> shortfalls,
-    Map<Uuid, List<External>> ports, @Nullable Map<Uuid, Double> banked) {
+    Map<Uuid, List<External>> ports, @Nullable Map<Uuid, Double> banked,
+    @Nullable Map<Uuid, List<External>> spills) {
 
     /** Nothing solved, nothing known. */
     public static final DrawerReadout NONE = new DrawerReadout(Map.of(), Set.of(), List.of(), Map.of());
@@ -44,12 +48,27 @@ public record DrawerReadout(Map<Uuid, Double> rates, Set<Uuid> unmet, List<Short
             copy.put(e.getKey(), List.copyOf(e.getValue()));
         ports = Collections.unmodifiableMap(copy);
         if (banked != null) banked = Collections.unmodifiableMap(new LinkedHashMap<>(banked));
+        if (spills != null) {
+            final Map<Uuid, List<External>> spilled = new LinkedHashMap<>();
+            for (final Map.Entry<Uuid, List<External>> e : spills.entrySet())
+                spilled.put(e.getKey(), List.copyOf(e.getValue()));
+            spills = Collections.unmodifiableMap(spilled);
+        }
     }
 
     /** A read-out that banks nothing (no Up to pool or no bank). */
     public DrawerReadout(final Map<Uuid, Double> rates, final Set<Uuid> unmet, final List<Shortfall> shortfalls,
         final Map<Uuid, List<External>> ports) {
-        this(rates, unmet, shortfalls, ports, null);
+        this(rates, unmet, shortfalls, ports, null, null);
+    }
+
+    /** What one maker port puts into a buffer beyond what its takers take, units per second; 0 when nothing. */
+    public double spillRate(final Uuid drawer, final PortRef port) {
+        final List<External> list = spills == null ? null : spills.get(drawer);
+        if (list == null) return 0;
+        for (final External e : list) if (e.port()
+            .equals(port)) return e.ratePerSecond();
+        return 0;
     }
 
     /** What a buffer banks, units per second; 0 when it banks nothing. */
@@ -120,12 +139,16 @@ public record DrawerReadout(Map<Uuid, Double> rates, Set<Uuid> unmet, List<Short
         if (ctx.bankPorts.isEmpty()) return new DrawerReadout(rates, unmet, ctx.shortfalls, ports);
         // With Up to pools a buffer of rule ANY banks what its takers do not take (docs/design/up-to.md, "Buffers").
         final Map<Uuid, Double> banked = new LinkedHashMap<>();
-        for (final Map.Entry<Integer, Integer> e : ctx.bankPorts.entrySet()) banked.merge(
-            ctx.model.drawers.get(e.getValue())
-                .id(),
-            externals[e.getKey()],
-            Double::sum);
-        return new DrawerReadout(rates, unmet, ctx.shortfalls, ports, banked);
+        final Map<Uuid, List<External>> spills = new LinkedHashMap<>();
+        for (final Map.Entry<Integer, Integer> e : ctx.bankPorts.entrySet()) {
+            final Uuid id = ctx.model.drawers.get(e.getValue())
+                .id();
+            final double rate = externals[e.getKey()];
+            banked.merge(id, rate, Double::sum);
+            spills.computeIfAbsent(id, k -> new ArrayList<>())
+                .add(new External(ctx.refOf(e.getKey()), rate));
+        }
+        return new DrawerReadout(rates, unmet, ctx.shortfalls, ports, banked, spills);
     }
 
     /** Each port of a buffer and the flow on its edges at that port. */

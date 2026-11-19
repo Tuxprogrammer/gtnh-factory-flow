@@ -154,6 +154,8 @@ export const digestDrawersSchema = z.object({
   shortfalls: z.array(digestShortfallSchema),
   ports: z.record(id, z.array(digestExternalSchema)),
   banked: z.record(id, z.number()).optional(),
+  /** Per banking buffer, what each maker port puts in beyond what its takers take; present exactly when `banked` is. */
+  spills: z.record(id, z.array(digestExternalSchema)).optional(),
 });
 
 export const digestUpToSchema = z.object({

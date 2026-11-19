@@ -553,7 +553,7 @@ public final class Balancer {
     private static Map<Uuid, Double> configuredCounts(final SolveInput input) {
         final Map<Uuid, Double> counts = new HashMap<>();
         for (final SolveInput.Machine machine : input.machines()) {
-            counts.put(machine.id(), (double) machine.machineCount());
+            counts.put(machine.id(), machine.machineCount());
         }
         return counts;
     }

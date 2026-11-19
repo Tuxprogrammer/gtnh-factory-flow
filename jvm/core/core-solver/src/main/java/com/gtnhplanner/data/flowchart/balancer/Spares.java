@@ -143,7 +143,8 @@ public final class Spares {
         }
 
         final double[] now = ctx.externals();
-        final double dust = ctx.heuristics.numerics().dust * SolveContext.scaleOf(now);
+        final double[] scales = ctx.dustScales(null, null, now)
+            .ports();
         final List<Leftover> out = new ArrayList<>(drafts.size());
         for (final Draft d : drafts) {
             final boolean custom = mixed && d.shares != null;
@@ -155,7 +156,8 @@ public final class Spares {
                 if (gate != null) {
                     for (final int p : ctx.model.gates.get(gate)
                         .ports()) {
-                        if (now[p] > dust) flowsHere.add(new External(ctx.refOf(p), now[p]));
+                        if (now[p] > ctx.heuristics.numerics().dust * scales[p])
+                            flowsHere.add(new External(ctx.refOf(p), now[p]));
                     }
                 }
                 double max = 0;

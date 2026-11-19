@@ -51,7 +51,11 @@ public final class SolveInputJson {
             j.add("inputs", ports(m.inputs()));
             j.add("outputs", ports(m.outputs()));
             j.addProperty("countFixed", m.countFixed());
-            j.addProperty("machineCount", m.machineCount());
+            // Whole machines as a whole number, as every dump before fractional counts wrote them.
+            final double count = m.machineCount();
+            if (count == Math.floor(count) && Math.abs(count) < Integer.MAX_VALUE)
+                j.addProperty("machineCount", (int) count);
+            else j.addProperty("machineCount", count);
             j.add("targetOutputRates", rates(m.targetOutputRates()));
             j.add("targetInputRates", rates(m.targetInputRates()));
             machines.add(j);
@@ -170,7 +174,7 @@ public final class SolveInputJson {
                     j.get("countFixed")
                         .getAsBoolean(),
                     j.get("machineCount")
-                        .getAsInt(),
+                        .getAsDouble(),
                     rates(j.getAsJsonObject("targetOutputRates")),
                     Map.of(),
                     rates(j.getAsJsonObject("targetInputRates"))));

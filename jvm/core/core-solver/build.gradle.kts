@@ -28,5 +28,7 @@ tasks.named<Test>("test") {
     if (providers.gradleProperty("oneThread").isPresent) systemProperty("gtnhplanner.solver.oneThread", "true")
     // -PwriteGoldens writes the solver goldens (conformance/solver/corpus/goldens) afresh from the solver as it is.
     if (providers.gradleProperty("writeGoldens").isPresent) systemProperty("gtnhplanner.solver.writeGoldens", "true")
+    // -PcasesReport=<file> writes where the kernel and the website differ on the website's cases (WebsiteCasesTest).
+    providers.gradleProperty("casesReport").orNull?.let { systemProperty("gtnhplanner.solver.casesReport", it) }
     testLogging { events("passed", "skipped", "failed") }
 }

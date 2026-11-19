@@ -251,6 +251,8 @@ describe("enrichDatasetRecipes", () => {
     });
     expect(recipe?.inputs[0]?.tooltip).toBeUndefined();
     expect(recipe?.machineHandlers?.map((handler) => handler.label)).toEqual([
+      "Apiary",
+      "Bee House",
       "Magic Apiary",
       "Alveary",
       "Industrial Apiary",

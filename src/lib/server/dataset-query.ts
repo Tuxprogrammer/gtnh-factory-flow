@@ -259,6 +259,9 @@ const SYNTHESIZED_HANDLER_FACES: Array<{
   },
   { familyId: CROP_HARVESTER_INDUSTRIAL_FARM_ID, displayNames: ["Industrial Farm"] },
   // The bee housings (beeMachineHandlers): without a face of their own a bee card wore its map's specimen.
+  // Ids only: Harvestcraft also has an "Apiary".
+  { familyId: "apiary", ids: ["forestry:apiculture"], displayNames: [] },
+  { familyId: "bee-house", ids: ["forestry:apiculture@2"], displayNames: ["Bee House"] },
   { familyId: "magic-apiary", ids: ["magicbees:magicapiary"], displayNames: ["Magic Apiary"] },
   { familyId: "alveary", ids: ["forestry:alveary"], displayNames: ["Alveary"] },
   { familyId: "industrial-apiary", ids: ["gregtech:gt.blockmachines@9399"], displayNames: [] },

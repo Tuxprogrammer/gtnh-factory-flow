@@ -145,10 +145,22 @@ export function isSmeltingRecipeMap(recipe: Pick<Recipe, "machineType" | "source
   return /^(?:smelting|furnace)$/i.test(recipeMapName(recipe).trim());
 }
 
+// Machines whose smelting goes through FurnaceBackend.overwriteFindRecipe, so they run its
+// 128-tick recipe as the rate mod leaves it: the Industrial Arc Furnace in furnace mode
+// (kubatech MTEIndustrialArcFurnace) and the Helioflare's smelting module (tectech
+// MTESmeltingModule) both switch their recipe map to furnaceRecipes.
+const GT_FURNACE_BACKEND_MACHINES = new Set<string | undefined>([
+  "Electric Furnace",
+  "Steam Hearth",
+  "Industrial Arc Furnace",
+  "Helioflare Power Forge",
+]);
+
 /**
  * The one place GT furnace timing is set: the ticks a GT furnace takes for a smelt, before
- * its own speed math. The Electric Furnace and the Steam Hearth run FurnaceBackend's fixed
- * recipe; the bronze and steel steam furnaces set 256 and 128 ticks in their checkRecipe.
+ * its own speed math. The Electric Furnace, the Steam Hearth and the multiblocks' furnace modes
+ * (GT_FURNACE_BACKEND_MACHINES) run FurnaceBackend's fixed recipe; the bronze and steel
+ * steam furnaces set 256 and 128 ticks in their checkRecipe.
  * The pack's rate mod (GTNHRates' GTFurnaces mixin) divides all of those, after the steam
  * furnace's x2, as max(1, ceil(ticks / divisor)). The Multi Smelter (MTEMultiFurnace) runs its
  * own fixed 128 ticks outside that backend, so the rate mod never reaches it. Other handlers
@@ -165,12 +177,11 @@ export function gtFurnaceDurationTicks(
     return GT_FURNACE_RECIPE_TICKS;
   }
   const steamSingle = handler.kind !== "multiblock" && isSteamMachineHandler(handler);
-  const rated =
-    handler.machineType === "Electric Furnace" || handler.machineType === "Steam Hearth"
-      ? GT_FURNACE_RECIPE_TICKS
-      : steamSingle
-        ? GT_FURNACE_RECIPE_TICKS * (isHighPressureSteamHandler(handler) ? 1 : 2)
-        : undefined;
+  const rated = GT_FURNACE_BACKEND_MACHINES.has(handler.machineType)
+    ? GT_FURNACE_RECIPE_TICKS
+    : steamSingle
+      ? GT_FURNACE_RECIPE_TICKS * (isHighPressureSteamHandler(handler) ? 1 : 2)
+      : undefined;
   return rated === undefined
     ? undefined
     : Math.max(1, Math.ceil(rated / getGameRates().recipeDurationDivisor));

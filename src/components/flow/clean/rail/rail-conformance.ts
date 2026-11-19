@@ -617,7 +617,7 @@ function mockNoticeCases(): Array<[string, NoticeInput]> {
     ],
     ["failure no pin", { failure: note("NO_PIN") }],
     ["failure empty graph", { failure: note("EMPTY_GRAPH") }],
-    ["failure cannot run", { failure: note("MACHINES_CANNOT_RUN") }],
+    ["failure cannot run", { failure: note("MACHINES_CANNOT_RUN" as PlanNote["message"]) }],
     ["failure no way", { failure: note("SOLVER_UNSATISFIABLE") }],
     ["failure unknown", { failure: note("STAGE_FAILED_UNKNOWN" as PlanNote["message"]) }],
     ["choice no longer fits", { notes: [note("CHOICE_NO_LONGER_FITS")] }],

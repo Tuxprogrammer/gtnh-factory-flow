@@ -27,8 +27,8 @@ describe("a port wired to two drawers feeds only the first", () => {
     expect(result.storages["d2"]!.producedPerSecond).toBe(0);
     expect(result.plan!.unmetDrawers).toEqual(["d2"]);
     expect(result.plan!.notes).toContainEqual({
-      message: "DRAWER_UNMET",
-      args: ["y", { message: "RULE_AT_LEAST", args: [] }, 0.5, 0],
+      message: "DRAWER_PORT_TAKEN",
+      args: ["y", "d2", { message: "RULE_AT_LEAST", args: [] }, 0.5],
     });
   });
 

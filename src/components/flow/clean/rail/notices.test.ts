@@ -99,6 +99,22 @@ describe("the notices' sentences", () => {
     );
   });
 
+  it("says why a drawer sharing a port with another drawer gets nothing", () => {
+    const result = withExtras(mockUnneeded, {
+      unmetDrawers: ["rods", "iron"],
+      notes: [
+        note("DRAWER_PORT_TAKEN", "Steel Rod", "rods", note("RULE_AT_LEAST"), 0.5),
+        note("DRAWER_PORT_TAKEN", "Iron Ingot", "iron", note("RULE_EXACTLY"), 2),
+      ],
+    });
+    const notices = buildNotices(mockUnneeded.project, result);
+    expect(notices.map((n) => n.text)).toEqual([
+      "The Steel Rod drawer wants 0.5 /s, but the output goes to the other drawer wired to it",
+      "The Iron Ingot supply should give exactly 2 /s, but the input takes from the other drawer wired to it",
+    ]);
+    expect(notices.map((n) => n.focus)).toEqual([["rods"], ["iron"]]);
+  });
+
   it("says a drawer with a rate that does nothing", () => {
     const result = withExtras(mockUnneeded, {
       unmetDrawers: [],

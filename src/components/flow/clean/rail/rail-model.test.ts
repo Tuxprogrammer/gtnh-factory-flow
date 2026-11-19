@@ -7,6 +7,8 @@ import {
 import { layoutRail, spareHeight, visibleSlice, SECTION_H, ROW_H } from "./rail-layout";
 import { buildRailModel, visibleLines } from "./rail-model";
 import { buildSpares, cardDepths, effectiveShares, sparedByResource } from "./spare-model";
+import { calculateThroughput } from "@/lib/solver/throughput";
+import { node, project, recipe } from "@/lib/solver/plan/adapter/test-kit";
 
 const model = (mock: typeof mockForced) => buildRailModel(mock.project, mock.result);
 
@@ -319,5 +321,29 @@ describe("a plan with no answer", () => {
     expect(rail.outputs.filter((l) => l.amount > 0)).toEqual([]);
     expect(rail.internal).toEqual([]);
     expect(rail.inputs.filter((l) => l.amount > 0)).toEqual([]);
+  });
+});
+
+describe("an unwired ore dictionary input", () => {
+  it("is named as the card names it, from the slot's members, not by its raw tag", () => {
+    const oredict = {
+      kind: "item" as const,
+      id: "oredict:wireGt01Copper",
+      displayName: "Ore Dictionary: wireGt01Copper",
+      amount: 1,
+      alternatives: [
+        { kind: "item" as const, id: "gregtech:wire", displayName: "1x Copper Wire", amount: 1 },
+      ],
+    };
+    const r = recipe("resistor", [], [["resistor", 1]]);
+    r.inputs = [oredict];
+    const p = project({
+      recipes: [r],
+      nodes: [node("aw", "resistor", { solvePin: 1, solvePinExact: true })],
+    });
+    const rail = buildRailModel(p, calculateThroughput(p, { generatedAt: "t" }));
+    const line = rail.inputs.find((l) => l.resourceId === "oredict:wireGt01Copper")!;
+    expect(line.label).toBe("Any 1x Copper Wire");
+    expect(line.resource.displayName).toBe("Any 1x Copper Wire");
   });
 });

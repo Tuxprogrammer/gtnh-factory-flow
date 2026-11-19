@@ -216,6 +216,21 @@ export function buildNotices(
         text: `The ${machine} makes ${rate(num(note.args[2]), kind)} of ${text(note.args[1])}, more than its ${rate(num(note.args[3]), kind)} target, because another of its outputs needs more`,
         focus: idsIn(note),
       });
+    } else if (note.message === "DRAWER_PORT_TAKEN") {
+      const id = text(note.args[1]);
+      const supply = roles.get(id) === "source";
+      const ruleNote = note.args[2];
+      const exact = isNote(ruleNote) && RULE_BY_NOTE[ruleNote.message] === "exact";
+      const kind: ResourceKind = storages.find((s) => s.id === id)?.kind ?? "item";
+      const asked = `${exact ? "exactly " : ""}${rate(num(note.args[3]), kind)}`;
+      out.push({
+        id: `unmet:${id}`,
+        severity: "warn",
+        text: supply
+          ? `The ${text(note.args[0])} supply should give ${asked}, but the input takes from the other drawer wired to it`
+          : `The ${text(note.args[0])} drawer wants ${asked}, but the output goes to the other drawer wired to it`,
+        focus: [id],
+      });
     } else if (note.message === "DRAWER_NOT_CONNECTED") {
       out.push({
         id: `unwired:${text(note.args[1])}`,

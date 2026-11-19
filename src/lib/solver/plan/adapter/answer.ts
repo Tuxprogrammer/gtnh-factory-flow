@@ -249,15 +249,15 @@ export function readAnswer(model: PlanModel, answer: Answer): PlanReading {
   };
 }
 
-/** A drawer whose ports all feed an earlier drawer gets nothing: its rule reads unmet at zero. */
+/** A drawer whose ports all feed an earlier drawer gets nothing: its rule reads unmet at zero, and says why. */
 function unfedNotes(model: PlanModel): Note[] {
   return model.unfed.map((d) => ({
-    message: "DRAWER_UNMET",
+    message: "DRAWER_PORT_TAKEN",
     args: [
       d.label,
+      d.id,
       { message: d.rule === "EXACTLY" ? "RULE_EXACTLY" : "RULE_AT_LEAST", args: [] },
       d.rate,
-      0,
     ],
   }));
 }

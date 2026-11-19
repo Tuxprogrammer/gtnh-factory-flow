@@ -24,7 +24,7 @@ import {
   dedupeEdgeWires,
   findDuplicateEdge,
 } from "@/lib/model/edge-identity";
-import { applySettingMemory } from "@/lib/model/setting-memory";
+import { applySettingMemory } from "@/lib/format/setting-memory";
 import { recipeMapName } from "@/lib/model/recipe-rules";
 import {
   edgeSectionAt,
@@ -54,7 +54,7 @@ import {
   setActivePowerDisplayUnit,
   type PowerDisplayUnit,
   type RateUnit,
-} from "@/lib/model/rate-unit";
+} from "@/lib/format/rate-unit";
 import { registerBooksSink, solveBooks } from "./solve-books";
 import { liveUndoHandler, quietly } from "./live-edit-gate";
 import { applyOps, type LiveOp } from "@/lib/live/ops";

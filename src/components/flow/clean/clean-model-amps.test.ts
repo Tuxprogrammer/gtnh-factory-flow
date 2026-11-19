@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest";
 import type { RailPort } from "../node-verdict";
-import { setActivePowerDisplayUnit } from "@/lib/model/rate-unit";
+import { setActivePowerDisplayUnit } from "@/lib/format/rate-unit";
 import { makePortKey } from "@/lib/solver/plan/port-key";
 import { buildPortView } from "./clean-model";
 

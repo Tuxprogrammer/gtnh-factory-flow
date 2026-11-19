@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { FactoryNode, MachineTier, Recipe, RuntimeCalculation } from "@/lib/model/types";
 import { getOverclockedRecipeStats } from "./overclock";
 import { getNodePowerReport } from "./power-report";
-import { describePowerWorking } from "./power-working";
+import { describePowerWorking } from "../format/power-working";
 
 // The game's rule for a multiblock run (ProcessingLogic -> ParallelHelper.determineParallel
 // -> OverclockCalculator), worked by hand for every expectation below:

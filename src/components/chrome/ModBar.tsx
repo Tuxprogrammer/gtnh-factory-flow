@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react
 import { isCompactViewport, useIsCompactViewport } from "@/lib/compact-view";
 import { usePlanLayout } from "@/components/use-plan-layout";
 import { leaveLibrary, openLibrary, useLibraryTab } from "@/lib/library/library-tab";
-import { isPowerDisplayUnit } from "@/lib/model/rate-unit";
+import { isPowerDisplayUnit } from "@/lib/format/rate-unit";
 import { useWorkspaceView, writeWorkspaceView } from "@/lib/workspace-view";
 import { useFactoryStore } from "@/store/factory-store";
 import { useDesignStore } from "@/store/design-store";

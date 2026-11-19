@@ -3,7 +3,7 @@
 import "./menus.css";
 
 import { forwardRef, useMemo, type CSSProperties } from "react";
-import { formatCompact } from "@/lib/model";
+import { formatCompact } from "@/lib/format/numbers";
 import { applyRecipeInputOverrides } from "@/lib/model";
 import { useFactoryStore } from "@/store/factory-store";
 import { tierChipColors } from "../tokens";

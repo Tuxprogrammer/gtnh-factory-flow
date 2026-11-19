@@ -2,11 +2,8 @@
 
 import { memo, useEffect, useRef } from "react";
 import { wheelChangesValues } from "@/lib/device-settings";
-import {
-  formatRatioShare,
-  getProjectRatioBranches,
-  ratioExportShare,
-} from "@/lib/model/storage-ratios";
+import { getProjectRatioBranches, ratioExportShare } from "@/lib/model/storage-ratios";
+import { formatRatioShare } from "@/lib/format/numbers";
 import { ArrowUpRight } from "lucide-react";
 import { useFactoryStore } from "@/store/factory-store";
 import type { RatioWireLabel as Label } from "./ratio-label-layout";

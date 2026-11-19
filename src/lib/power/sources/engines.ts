@@ -118,8 +118,9 @@ function buildEngine(spec: EngineSpec): PowerSourceDefinition {
       }
       const effectiveEu = fuelPerTick > 0 ? output / fuelPerTick : 0;
 
-      // 1 L of lubricant per gate, 2 L while boosted, in every engine class.
-      const lubricantPerSecond = GATE_72_PER_SECOND * (boost ? 2 : 1);
+      // 1 L of lubricant per gate, 2 L while boosted, in every engine class. A fuel
+      // refused unboosted fails the recipe before the lubricant is taken.
+      const lubricantPerSecond = blocked ? 0 : GATE_72_PER_SECOND * (boost ? 2 : 1);
       const inputs = [liters(fuel.name, fuelPerTick * 20), liters("Lubricant", lubricantPerSecond)];
       if (boost) {
         inputs.push(liters(spec.booster, spec.boosterPerSecond));

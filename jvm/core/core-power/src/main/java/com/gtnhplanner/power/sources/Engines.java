@@ -179,8 +179,9 @@ public final class Engines {
         }
         final double effectiveEu = fuelPerTick > 0 ? output / fuelPerTick : 0;
 
-        // 1 L of lubricant per gate, 2 L while boosted, in every engine class.
-        final double lubricantPerSecond = GATE_72_PER_SECOND * (boost ? 2 : 1);
+        // 1 L of lubricant per gate, 2 L while boosted, in every engine class. A fuel refused unboosted fails the
+        // recipe before the lubricant is taken.
+        final double lubricantPerSecond = blocked ? 0 : GATE_72_PER_SECOND * (boost ? 2 : 1);
         final List<Flow> inputs = new ArrayList<>();
         inputs.add(liters(fuel.name, fuelPerTick * 20));
         inputs.add(liters("Lubricant", lubricantPerSecond));

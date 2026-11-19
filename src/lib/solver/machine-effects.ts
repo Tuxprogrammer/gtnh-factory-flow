@@ -6,6 +6,7 @@ import {
 } from "@/lib/machines/extreme-entity-crusher";
 import { getTgsOutputMultiplier, isTgsRecipe } from "@/lib/machines/tree-growth-simulator";
 import { getVatOutputMultiplier, isVatRecipe } from "@/lib/machines/bacterial-vat";
+import { hasItemOutputSlot } from "@/lib/machines/singleblock-output-slots";
 import {
   getRecipeCoilTierControl,
   getRecipeMachineConfigTierControls,
@@ -144,11 +145,15 @@ export function buildMachineContext(
 }
 
 export function getMachineOutputMultiplier(
-  recipe: Pick<Recipe, "machineType" | "source" | "nei" | "machineConfigControls" | "metadata">,
+  recipe: Pick<Recipe, "machineType" | "source" | "nei" | "machineConfigControls" | "metadata"> &
+    Partial<Pick<Recipe, "outputs" | "machineProfile">>,
   node: Pick<FactoryNode, "machineConfigTiers"> & Partial<Pick<FactoryNode, "machineHandlerId">>,
   output: RecipeOutput,
   tier: VoltageTier,
 ): number {
+  if (!hasItemOutputSlot(recipe, output, tier)) {
+    return 0;
+  }
   if (isEecRecipe(recipe)) {
     return getEecOutputMultiplier(
       recipe as Partial<Pick<Recipe, "outputs">> & typeof recipe,

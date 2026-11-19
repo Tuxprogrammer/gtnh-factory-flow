@@ -1,7 +1,6 @@
 package com.gtnhplanner.layout;
 
 import java.util.List;
-import java.util.Locale;
 
 /**
  * What a set of routed wires looks like, in numbers: the yardstick the router and the arrange are tuned against, and
@@ -66,26 +65,6 @@ public final class RouteMetrics {
                 + 120 * jogs
                 + 300 * wrongSides
                 + backtrack;
-        }
-
-        /** One line, for logs and tables. */
-        public String line() {
-            return String.format(
-                Locale.ROOT,
-                "points %.0f  crossings %d  overlap %.0f  bends %d/%d/%d  length %.0f  excess %.0f  backtrack %.0f  jogs %d  wrongSides %d  boxHits %.0f  sharedEnds %d",
-                points(),
-                crossings,
-                overlap,
-                bends45,
-                bends90,
-                sharp,
-                length,
-                excess,
-                backtrack,
-                jogs,
-                wrongSides,
-                boxHits,
-                sharedEnds);
         }
     }
 

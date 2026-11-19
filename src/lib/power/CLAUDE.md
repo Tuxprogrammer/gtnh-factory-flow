@@ -7,7 +7,7 @@
   onRunningTick's speedups, `htgrOperation` in `sources/reactors.ts`).
 - A power card's unlock chip is the tier of the controller's own recipe.
 - EU is a wireable resource. The EU-per-unit rate display never splits energy between a
-  recipe's outputs (`src/lib/model/rate-unit.ts`).
+  recipe's outputs (`src/lib/format/rate-unit.ts`).
 - Coolant cells are ports; the vacuum freezer is a placed machine, not built in.
 - "Free" inputs (`FREE_INPUT_ITEM_IDS`) are never consumed or wired.
 - Tooltips can lie (the ECE's lubricant line) and the workbook can be wrong (MOX rods);

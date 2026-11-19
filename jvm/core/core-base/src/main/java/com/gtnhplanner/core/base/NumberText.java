@@ -373,7 +373,9 @@ public final class NumberText {
             exp10++;
         }
         final double v = end == 0 ? 0 : decimalToDouble(digits.substring(0, end), exp10);
-        return negative ? -v : v;
+        // The sign set as a bit, not by unary minus: the web compile's Wasm GC target negates a double as 0.0 - v,
+        // which turns -0 ("-0", "-0.", a negative underflow) into +0.
+        return negative ? Double.longBitsToDouble(Double.doubleToRawLongBits(v) | Long.MIN_VALUE) : v;
     }
 
     /** The double nearest {@code digits * 10^exp10} ({@code digits} a positive integer, no leading zero). */

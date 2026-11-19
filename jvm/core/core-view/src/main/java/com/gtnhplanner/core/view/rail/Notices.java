@@ -199,7 +199,12 @@ public final class Notices {
 
     // region Words
 
-    /** A host's number format: a rate in units a second of a resource kind, with its unit, as the host spells it. */
+    /**
+     * A host's number format: a rate in units a second of a resource kind, with its unit, as the host spells it. The
+     * mod's goes through {@code Fmt}, which is core-base's {@code Format}; the website's through {@code formatCompact}.
+     * The two are held to the same characters by {@code conformance/format}, so the seam is a unit-and-dial choice, not
+     * a second formatter.
+     */
     public interface RateFormat {
 
         String rate(double perSecond, String resource);

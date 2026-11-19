@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { setActiveRateUnit } from "@/lib/model/rate-unit";
+import { setActiveRateUnit } from "@/lib/format/rate-unit";
 import { formatPoolRate, formatPoolRateBare, formatPoolSignedRate } from "./worksheet-format";
 
 afterEach(() => setActiveRateUnit("second"));

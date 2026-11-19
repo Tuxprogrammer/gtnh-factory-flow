@@ -1,7 +1,7 @@
-import { formatCompact } from "@/lib/model/resources";
+import { formatCompact } from "@/lib/format/numbers";
 import { getStorageRoles } from "@/lib/model/storage-role";
 import type { FactoryProject, ResourceKind, ThroughputResult } from "@/lib/model/types";
-import { rateMultiplierForKind, rateSuffixForKind } from "@/lib/model/rate-unit";
+import { rateMultiplierForKind, rateSuffixForKind } from "@/lib/format/rate-unit";
 import { pinRuleOf } from "@/lib/model/pin-rule";
 import type { LoopTone } from "../loops";
 import type { Note, NoteArg, PlanNote, PlanShortfall } from "@/lib/solver/plan/types";

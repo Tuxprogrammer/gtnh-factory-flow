@@ -2,25 +2,9 @@
 
 import { useMemo } from "react";
 import type { FactoryNode, MachineConfigTierOption, Recipe } from "@/lib/model/types";
-import {
-  GT_OVERCLOCK_TIERS,
-  applyMachineHandlerToRecipe,
-  applyRecipeInputOverrides,
-  formatCompact,
-  formatPowerValue,
-  getRecipeAvailableVoltageTiers,
-  getRecipeCoilTierControl,
-  getRecipeMachineConfigTierControls,
-  getRecipeMachineHandlers,
-  getRecipeMaximumVoltageTier,
-  getRunVoltageTier,
-  getSelectedMachineHandler,
-  getVoltageTierIndex,
-  isSteamMachineHandler,
-  makeResourceKey,
-  type MachineConfigTierControl,
-} from "@/lib/model";
-import { powerDisplayFromEuT, powerDisplaySuffix, rateSuffixForKind } from "@/lib/model/rate-unit";
+import { GT_OVERCLOCK_TIERS, applyMachineHandlerToRecipe, applyRecipeInputOverrides, getRecipeAvailableVoltageTiers, getRecipeCoilTierControl, getRecipeMachineConfigTierControls, getRecipeMachineHandlers, getRecipeMaximumVoltageTier, getRunVoltageTier, getSelectedMachineHandler, getVoltageTierIndex, isSteamMachineHandler, makeResourceKey, type MachineConfigTierControl } from "@/lib/model";
+import { formatCompact, formatPowerValue } from "@/lib/format/numbers";
+import { powerDisplayFromEuT, powerDisplaySuffix, rateSuffixForKind } from "@/lib/format/rate-unit";
 import { isCustomRateRecipe } from "@/lib/model/custom-rate";
 import { isBeeProductionRecipe, isCropProductionRecipe } from "@/lib/model/passive-production";
 import {

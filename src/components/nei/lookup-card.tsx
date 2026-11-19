@@ -11,19 +11,12 @@ import type {
   ReactNode,
 } from "react";
 import type { RecipeSummary } from "@/lib/datasets/types";
-import {
-  AUTO_WORKBENCH_HANDLER_ID,
-  formatRate,
-  getRecipeMachineHandlers,
-  isControllerSlotInput,
-  isFreeRecipeInput,
-  isOreDictionaryResource,
-  isRecipeInputConsumed,
-  machineCycleTicks,
-} from "@/lib/model";
+import { AUTO_WORKBENCH_HANDLER_ID, getRecipeMachineHandlers, isControllerSlotInput, isFreeRecipeInput, isOreDictionaryResource, isRecipeInputConsumed, machineCycleTicks } from "@/lib/model";
+import { formatRate } from "@/lib/format/numbers";
 import type { ResourceAmount } from "@/lib/model/types";
-import { energyPerUnitSuffix, type TimeRateUnit } from "@/lib/model/rate-unit";
-import { formatCompact, resourceLabel } from "@/lib/model/resources";
+import { energyPerUnitSuffix, type TimeRateUnit } from "@/lib/format/rate-unit";
+import { resourceLabel } from "@/lib/model/resources";
+import { formatCompact } from "@/lib/format/numbers";
 import {
   getRecipeProgrammedCircuit,
   isProgrammedCircuitResource,

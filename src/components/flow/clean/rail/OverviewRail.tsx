@@ -24,7 +24,7 @@ import { FoldGlyph } from "../fold/FoldKey";
 import { BoardMenu, MenuRow } from "../menus/BoardMenu";
 import { useMachineHandlerIcons, useRecipeMapIcons } from "../../machine-icons";
 import { getFallbackFluidColor, ResourceIcon } from "@/components/nei/ResourceIcon";
-import { formatCompact } from "@/lib/model/resources";
+import { formatCompact } from "@/lib/format/numbers";
 import { unitsFromMachines } from "@/lib/model/machine-list";
 import {
   powerDisplayFromEuT,
@@ -32,7 +32,7 @@ import {
   rateMultiplierForKind,
   rateSuffixForKind,
   rateUnitSuffix,
-} from "@/lib/model/rate-unit";
+} from "@/lib/format/rate-unit";
 import { getPowerMachineIcon } from "@/lib/power/planner-data";
 import { useFactoryStore, useRateDisplayUnits } from "@/store/factory-store";
 import { useWorkspaceView, writeWorkspaceView } from "@/lib/workspace-view";

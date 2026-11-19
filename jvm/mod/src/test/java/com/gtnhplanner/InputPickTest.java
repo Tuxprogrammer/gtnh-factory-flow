@@ -10,16 +10,16 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 import com.gtnhplanner.data.flowchart.Drawer;
-import com.gtnhplanner.data.flowchart.Drawer.Kind;
 import com.gtnhplanner.data.flowchart.Drawer.Link;
-import com.gtnhplanner.data.flowchart.Drawer.Rule;
+import com.gtnhplanner.data.flowchart.DrawerTypes.Kind;
+import com.gtnhplanner.data.flowchart.DrawerTypes.Rule;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Serializer;
 import com.gtnhplanner.data.flowchart.balancer.BalanceMode;
-import com.gtnhplanner.data.flowchart.balancer.Balancer;
 import com.gtnhplanner.data.flowchart.balancer.Balancer.Answer;
+import com.gtnhplanner.data.flowchart.balancer.GraphSolve;
 import com.gtnhplanner.data.flowchart.balancer.SolutionView;
 import com.gtnhplanner.harness.GtnhFlowLoader;
 import com.gtnhplanner.harness.GtnhFlowLoader.LoadedChart;
@@ -101,10 +101,10 @@ class InputPickTest {
         g.addDrawer(steel);
         g.linkDrawer(steel.getId(), new Link(ebf.id, 0));
 
-        final Answer answer = Balancer.solveWithAlternatives(BalanceMode.AUTO, g, null, Map.of());
+        final Answer answer = GraphSolve.solveWithAlternatives(BalanceMode.AUTO, g, null, Map.of());
         if (!(answer instanceof final Answer.Solved solved)) throw new AssertionError("failed: " + answer);
         final SolutionView s = solved.solution();
-        assertEquals(3, s.machineCounts.get(ebf.id), EPS);
-        assertEquals(3, s.machineCounts.get(carbonizer.id), EPS, "the carbon is made on the plan");
+        assertEquals(3, s.machineCounts.get(CoreIds.core(ebf.id)), EPS);
+        assertEquals(3, s.machineCounts.get(CoreIds.core(carbonizer.id)), EPS, "the carbon is made on the plan");
     }
 }

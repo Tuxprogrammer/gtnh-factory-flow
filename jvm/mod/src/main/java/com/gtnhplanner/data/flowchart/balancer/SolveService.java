@@ -37,7 +37,7 @@ import com.gtnhplanner.core.base.Log;
  *
  * <p>
  * Thread contract: {@code submit}, {@code request}, {@code latest}, {@code busy} and {@code close}
- * may be called from any thread; building the snapshot ({@link SolveInput#of}) is client-thread
+ * may be called from any thread; building the snapshot ({@link GraphSolve#input}) is client-thread
  * work and happens in the caller (inside {@link #request}, on the calling thread).
  */
 public final class SolveService implements AutoCloseable {

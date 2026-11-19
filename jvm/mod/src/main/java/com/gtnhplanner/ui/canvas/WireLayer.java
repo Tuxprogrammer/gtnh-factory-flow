@@ -9,9 +9,11 @@ import java.util.UUID;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.gtnhplanner.CoreIds;
 import com.gtnhplanner.core.layout.BoxRouter;
 import com.gtnhplanner.core.layout.GridRoutedEdge;
 import com.gtnhplanner.core.layout.IncrementalStats;
+import com.gtnhplanner.core.layout.LiveDrag;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.Graph;
@@ -62,6 +64,9 @@ final class WireLayer {
      * wire or a new card routes again only what it touched.
      */
     private final BoxRouter router = new BoxRouter();
+
+    /** When wires follow a card in hand, the website's rule: throttled beats, held past the wire limit. */
+    private final LiveDrag drag = new LiveDrag();
 
     /**
      * A collapsed group's summary card on the board {x, y, w, h}, or null (docs/design/groups.md): wires between what
@@ -154,9 +159,11 @@ final class WireLayer {
 
     /**
      * The wires, routed again when anything they depend on moved. {@code moving}: a card or drawer is being dragged,
-     * so route quickly, and thoroughly once it lands. Routing happens on the router's thread; a route that comes back
-     * within the frame is waited for, so a board that routes quickly never shows a wire out of place, and until a
-     * slower one comes back a wire whose card or drawer moved stretches to follow it.
+     * so route quickly (only what the move touched, at most a beat every {@link LiveDrag#SOLVE_MS}, and not at all
+     * past {@link LiveDrag#ROUTE_EDGE_LIMIT} wires: {@link LiveDrag}), and thoroughly once it lands. Routing happens
+     * on the router's thread; a route that comes back within the frame is waited for, so a board that routes quickly
+     * never shows a wire out of place, and until a slower one comes back, or while wires hold, a wire whose card or
+     * drawer moved stretches to follow it.
      */
     List<Wire> wires(final Map<UUID, RecipeCard> cards, final Map<UUID, DrawerCard> drawers, final boolean moving) {
         final boolean arrived = collect();
@@ -172,7 +179,15 @@ final class WireLayer {
         final long signature = signature();
         if (!arrived && routeKey == builtGeometry && signature == builtSignature) return wires;
         final Plan p = plan(cards, drawers);
-        if (routeKey != routedGeometry && job == null) {
+        // A drag frame: route a beat now, or wait for the throttle window to close (looked at again next frame), or
+        // hold the wires until the drop.
+        final LiveDrag.Beat beat = !moving || routeKey == routedGeometry || job != null ? LiveDrag.Beat.ROUTE
+            : drag.frame(
+                p.requests()
+                    .size(),
+                true,
+                System.nanoTime() / 1e6);
+        if (routeKey != routedGeometry && job == null && beat == LiveDrag.Beat.ROUTE) {
             final long routing = routeKey;
             final boolean thorough = !moving;
             job = WORKER.submit(() -> {
@@ -190,8 +205,14 @@ final class WireLayer {
                 : p.requests()
                     .size() <= WAIT_WIRES) {
                 try {
+                    final long waited = System.nanoTime();
                     took(job.get(WAIT_MILLIS, java.util.concurrent.TimeUnit.MILLISECONDS));
                     job = null;
+                    // A beat the frame waited for held it up: the website meters those.
+                    if (moving) drag.meter(
+                        p.requests()
+                            .size(),
+                        (System.nanoTime() - waited) / 1e6);
                 } catch (final java.util.concurrent.TimeoutException e) {
                     // It comes back on a later frame.
                 } catch (final InterruptedException e) {
@@ -205,7 +226,8 @@ final class WireLayer {
         }
         wires = assemble(p);
         boxes = p.boxes();
-        builtGeometry = routeKey;
+        // A waiting beat leaves the geometry unbuilt, so a later frame routes it even if nothing moves meanwhile.
+        builtGeometry = beat == LiveDrag.Beat.WAIT ? Long.MIN_VALUE : routeKey;
         builtSignature = signature;
         return wires;
     }
@@ -478,7 +500,7 @@ final class WireLayer {
                         link,
                         colorOf(port),
                         0,
-                        d.isBuffer() ? bufferFlow(result, d, new PortRef(n.id, link.portIndex(), source))
+                        d.isBuffer() ? bufferFlow(result, d, new PortRef(CoreIds.core(n.id), link.portIndex(), source))
                             : linkFlow(result, n, source, link.portIndex()),
                         null,
                         Resources.key(port),
@@ -595,25 +617,25 @@ final class WireLayer {
     private static double edgeFlow(@Nullable final BalanceResult result, final Edge e) {
         if (result == null) return 0;
         if (result instanceof final BalanceResult.Solved solved && solved.auto() != null) {
-            final Double f = solved.auto().edgeFlowsPerSecond.get(e.id);
+            final Double f = solved.auto().edgeFlowsPerSecond.get(CoreIds.core(e.id));
             if (f != null) return f;
         }
         final Balancer.NodeBalance b = result.nodeBalances()
-            .get(e.sourceNodeId);
+            .get(CoreIds.core(e.sourceNodeId));
         return b == null ? 0 : b.outputPerSecond(e.sourceOutputIndex);
     }
 
     /** What passes through one of a buffer's ports: the solver's flow on its edges there, not the port's whole rate. */
     private static double bufferFlow(@Nullable final BalanceResult result, final Drawer d, final PortRef port) {
         if (!(result instanceof final BalanceResult.Solved solved) || solved.auto() == null) return 0;
-        return solved.auto().drawers.portRate(d.getId(), port);
+        return solved.auto().drawers.portRate(CoreIds.core(d.getId()), port);
     }
 
     private static double linkFlow(@Nullable final BalanceResult result, final Node n, final boolean input,
         final int port) {
         if (result == null) return 0;
         final Balancer.NodeBalance b = result.nodeBalances()
-            .get(n.id);
+            .get(CoreIds.core(n.id));
         if (b == null) return 0;
         return input ? b.inputPerSecond(port) : b.outputPerSecond(port);
     }

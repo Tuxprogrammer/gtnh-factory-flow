@@ -7,6 +7,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { Tally } from "./compare.mjs";
 import { TARGETS, loadTarget } from "./load.mjs";
+import { runFormat } from "./format.mjs";
 import { checkJvmAgainstNode, readCases, runRandom } from "./random.mjs";
 import { loadVectors, runBuildProbes, runVectors, vectorFile } from "./vectors.mjs";
 
@@ -51,6 +52,7 @@ for (const target of opts.targets) {
   }
   runBuildProbes(api, tally);
   runVectors(api, vectors, tally);
+  runFormat(api, tally);
   if (opts.random) runRandom(api, cases, tally);
   report(`${target} (${label})`, tally);
 }

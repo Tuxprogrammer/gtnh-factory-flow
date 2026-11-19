@@ -21,7 +21,9 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.gtnhplanner.CoreIds;
 import com.gtnhplanner.core.base.Log;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.MachineConfig;
 import com.gtnhplanner.data.MachineProfile;
 import com.gtnhplanner.data.MachineProfileRegistry;
@@ -35,6 +37,8 @@ public final class Serializer {
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting()
         .enableComplexMapKeySerialization()
         .registerTypeAdapter(GraphData.class, new GraphDataAdapter())
+        // The saved excess choice's ports name their nodes by the core's id: written and read as a UUID always was.
+        .registerTypeAdapter(Uuid.class, CoreIds.GSON)
         .create();
 
     // ── Public API ──

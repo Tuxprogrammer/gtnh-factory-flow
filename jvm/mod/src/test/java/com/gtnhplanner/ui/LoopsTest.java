@@ -10,6 +10,8 @@ import java.util.function.Function;
 
 import org.junit.jupiter.api.Test;
 
+import com.gtnhplanner.CoreIds;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.balancer.PortRef;
 import com.gtnhplanner.data.flowchart.balancer.UpToLoop;
@@ -35,6 +37,15 @@ class LoopsTest {
         return new UUID(0, n);
     }
 
+    /** A node as the solver names it. */
+    private static Uuid c(final UUID id) {
+        return CoreIds.core(id);
+    }
+
+    private static List<Uuid> ids(final UUID... ids) {
+        return CoreIds.coreList(List.of(ids));
+    }
+
     /** Every node its own card, but SHARED2, a recipe on SHARED's card. */
     private static final Function<UUID, UUID> CARD = n -> n.equals(SHARED2) ? SHARED : n;
 
@@ -45,7 +56,7 @@ class LoopsTest {
     @Test
     void tonesADeadLoopAsStarvedsAndAClogLockAsCloggeds() {
         final List<UpToLoop> loops = List
-            .of(new UpToLoop(DEAD, List.of(A, B, C), List.of()), new UpToLoop(CLOG, List.of(SPLIT, MAKE), List.of()));
+            .of(new UpToLoop(DEAD, ids(A, B, C), List.of()), new UpToLoop(CLOG, ids(SPLIT, MAKE), List.of()));
         assertEquals(0xFFE0A63A, Loops.Tone.of(loops.get(0)).colour);
         assertEquals(0xFFB49CF0, Loops.Tone.of(loops.get(1)).colour);
         final Map<UUID, Loops.Tone> tones = Loops.cardTones(loops, CARD);
@@ -56,7 +67,7 @@ class LoopsTest {
         // A shared machine's recipe in a ring puts its card in it.
         assertEquals(
             Map.of(A, Loops.Tone.DEAD, SHARED, Loops.Tone.DEAD),
-            Loops.cardTones(List.of(new UpToLoop(DEAD, List.of(A, SHARED2), List.of())), CARD));
+            Loops.cardTones(List.of(new UpToLoop(DEAD, ids(A, SHARED2), List.of())), CARD));
     }
 
     @Test
@@ -66,9 +77,9 @@ class LoopsTest {
         final List<UpToLoop> loops = List.of(
             new UpToLoop(
                 DEAD,
-                List.of(A, B, C),
-                List.of(new PortRef(A, 0, true), new PortRef(B, 0, true), new PortRef(C, 0, true))),
-            new UpToLoop(CLOG, List.of(SPLIT, MAKE), List.of(new PortRef(SPLIT, 0, false))));
+                ids(A, B, C),
+                List.of(new PortRef(c(A), 0, true), new PortRef(c(B), 0, true), new PortRef(c(C), 0, true))),
+            new UpToLoop(CLOG, ids(SPLIT, MAKE), List.of(new PortRef(c(SPLIT), 0, false))));
         final List<Edge> edges = List.of(
             edge(1, A, 0, B, 0),
             edge(2, B, 0, C, 0),
@@ -94,7 +105,7 @@ class LoopsTest {
     void findsASharedMachinesRecipeRowByItsCard() {
         // The wire runs into the second recipe of a shared card; the ring names that recipe's row.
         final List<UpToLoop> ring = List
-            .of(new UpToLoop(DEAD, List.of(A, SHARED2), List.of(new PortRef(SHARED2, 0, true))));
+            .of(new UpToLoop(DEAD, ids(A, SHARED2), List.of(new PortRef(c(SHARED2), 0, true))));
         assertEquals(Map.of(id(101), Loops.Tone.DEAD), Loops.wires(List.of(edge(1, A, 0, SHARED2, 0)), ring, CARD));
         assertEquals(List.of(A, SHARED), Loops.cards(ring.get(0), CARD));
     }
@@ -103,8 +114,11 @@ class LoopsTest {
     void namesEachCardOnce() {
         final UpToLoop loop = new UpToLoop(
             CLOG,
-            List.of(SHARED, SHARED2, MAKE),
-            List.of(new PortRef(SHARED, 0, false), new PortRef(SHARED2, 0, false), new PortRef(MAKE, 2, false)));
+            ids(SHARED, SHARED2, MAKE),
+            List.of(
+                new PortRef(c(SHARED), 0, false),
+                new PortRef(c(SHARED2), 0, false),
+                new PortRef(c(MAKE), 2, false)));
         assertEquals(List.of(SHARED, MAKE), Loops.cards(loop, CARD));
     }
 }

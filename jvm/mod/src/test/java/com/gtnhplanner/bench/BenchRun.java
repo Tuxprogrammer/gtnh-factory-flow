@@ -115,14 +115,14 @@ public final class BenchRun {
     private static final String[] STAGE_NAME = { "" };
 
     /**
-     * The board as Arrange leaves it (layout/arrange, judged by the board's router), how long that took, and which
+     * The board as Arrange leaves it (core.layout.arrange, judged by the board's router), how long that took, and which
      * candidate won. -Pstages prints when each stage starts.
      */
     public static BenchBoard arrangeNew(final BenchBoard board, final double[] millis, final String[] chosen) {
-        final List<com.gtnhplanner.layout.arrange.ArrangeCard> cards = new ArrayList<>();
+        final List<com.gtnhplanner.core.layout.arrange.ArrangeCard> cards = new ArrayList<>();
         final Map<UUID, BenchBoard.Item> byId = board.byId();
         for (final BenchBoard.Item i : board.items()) cards.add(
-            new com.gtnhplanner.layout.arrange.ArrangeCard(
+            new com.gtnhplanner.core.layout.arrange.ArrangeCard(
                 i.id()
                     .toString(),
                 i.x(),
@@ -130,11 +130,11 @@ public final class BenchRun {
                 i.w(),
                 i.h(),
                 i.drawer()));
-        final List<com.gtnhplanner.layout.arrange.ArrangeWire> wires = new ArrayList<>();
+        final List<com.gtnhplanner.core.layout.arrange.ArrangeWire> wires = new ArrayList<>();
         for (final BenchBoard.Link l : board.links()) {
             final BenchBoard.Item a = byId.get(l.from()), b = byId.get(l.to());
             wires.add(
-                new com.gtnhplanner.layout.arrange.ArrangeWire(
+                new com.gtnhplanner.core.layout.arrange.ArrangeWire(
                     l.id()
                         .toString(),
                     l.from()
@@ -150,44 +150,49 @@ public final class BenchRun {
         }
         final boolean stages = Boolean.getBoolean("gtnhplanner.stages");
         final long t0 = System.nanoTime();
-        final com.gtnhplanner.layout.arrange.Arrange.Result result = com.gtnhplanner.layout.arrange.Arrange.arrange(
-            new com.gtnhplanner.layout.arrange.Arrange.Input(
-                cards,
-                wires,
-                null,
-                System.getProperty("gtnhplanner.spacing", "compact"),
-                new com.gtnhplanner.layout.arrange.RouterJudge(cards, wires),
-                null,
-                null,
-                p -> {
-                    if (stages && (p.step() != STAGE[0] || !p.stage()
-                        .equals(STAGE_NAME[0]))) {
-                        STAGE[0] = p.step();
-                        STAGE_NAME[0] = p.stage();
-                        System.out.printf(
-                            java.util.Locale.ROOT,
-                            "[stage] %-40s step %d (%s) at %8.1f ms%n",
-                            board.name(),
-                            p.step(),
-                            p.stage(),
-                            (System.nanoTime() - t0) / 1e6);
-                    }
-                },
-                null));
+        final com.gtnhplanner.core.layout.arrange.ArrangeResult result = com.gtnhplanner.core.layout.arrange.Arrange
+            .arrangeBoard(
+                new com.gtnhplanner.core.layout.arrange.Arrange.Input(
+                    cards,
+                    wires,
+                    null,
+                    null,
+                    System.getProperty("gtnhplanner.spacing", "compact"),
+                    new com.gtnhplanner.core.layout.arrange.BoxJudge(
+                        cards,
+                        wires,
+                        com.gtnhplanner.core.layout.RouterTuning.DEFAULT),
+                    null,
+                    null,
+                    p -> {
+                        if (stages && (p.step() != STAGE[0] || !p.stage()
+                            .equals(STAGE_NAME[0]))) {
+                            STAGE[0] = p.step();
+                            STAGE_NAME[0] = p.stage();
+                            System.out.printf(
+                                java.util.Locale.ROOT,
+                                "[stage] %-40s step %d (%s) at %8.1f ms%n",
+                                board.name(),
+                                p.step(),
+                                p.stage(),
+                                (System.nanoTime() - t0) / 1e6);
+                        }
+                    },
+                    null,
+                    null));
         STAGE[0] = -1;
         millis[0] = (System.nanoTime() - t0) / 1e6;
-        chosen[0] = result.chosen();
+        // The website's arrange does not name the candidate it kept.
+        chosen[0] = "-";
         final Map<UUID, int[]> at = new HashMap<>();
-        for (final Map.Entry<String, com.gtnhplanner.layout.arrange.Point> e : result.positions()
-            .entrySet())
-            at.put(
-                UUID.fromString(e.getKey()),
-                new int[] { (int) Math.round(
-                    e.getValue()
-                        .x()),
-                    (int) Math.round(
-                        e.getValue()
-                            .y()) });
+        for (final com.gtnhplanner.core.layout.arrange.ArrangeResult.Move m : result.moves()) at.put(
+            UUID.fromString(m.id()),
+            new int[] { (int) Math.round(
+                m.position()
+                    .x()),
+                (int) Math.round(
+                    m.position()
+                        .y()) });
         return board.placed(at);
     }
 }

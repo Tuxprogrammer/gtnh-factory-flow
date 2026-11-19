@@ -4,7 +4,7 @@ import {
   getRecipeMachineConfigTierControls,
   type MachineConfigTierControl,
 } from "@/lib/model/recipe-rules";
-import { formatCompact } from "@/lib/model";
+import { formatCompact } from "@/lib/format/numbers";
 import { getOverclockedRecipeStats } from "@/lib/solver/overclock";
 import {
   getNodePowerReport,

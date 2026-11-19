@@ -1,5 +1,5 @@
-import { rateMultiplierForKind, rateSuffixForKind } from "@/lib/model/rate-unit";
-import { formatPowerValue } from "@/lib/model/resources";
+import { rateMultiplierForKind, rateSuffixForKind } from "@/lib/format/rate-unit";
+import { formatPowerValue } from "@/lib/format/numbers";
 import { formatSlotRateBare } from "../flow/flow-explainers";
 
 /** Remove sub-machine-precision residue without changing solver values or saved rates. */

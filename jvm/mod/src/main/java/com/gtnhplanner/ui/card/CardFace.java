@@ -10,6 +10,7 @@ import java.util.function.ToIntFunction;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.CoreIds;
 import com.gtnhplanner.core.view.Tokens;
 import com.gtnhplanner.data.flowchart.PinRule;
 import com.gtnhplanner.data.flowchart.balancer.PortRef;
@@ -209,7 +210,7 @@ public final class CardFace {
             if (n != null) tied.add(n);
         }
         final List<String> upstream = new ArrayList<>();
-        for (final UUID id : upTo.upstream()) {
+        for (final UUID id : CoreIds.modList(upTo.upstream())) {
             final String n = cardName.apply(id);
             upstream.add(n == null ? "a card" : n);
         }
@@ -327,7 +328,7 @@ public final class CardFace {
         return p != null && p.input() != output
             && p.portIndex() == index
             && p.nodeId()
-                .equals(node);
+                .equals(CoreIds.core(node));
     }
 
     /**
@@ -391,7 +392,7 @@ public final class CardFace {
     @Nullable
     public static UpToLoop.Kind loopOf(final List<UpToLoop> loops, final UUID card) {
         for (final UpToLoop loop : loops) if (loop.nodes()
-            .contains(card)) return loop.kind();
+            .contains(CoreIds.core(card))) return loop.kind();
         return null;
     }
 

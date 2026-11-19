@@ -5,10 +5,6 @@
 # <path> is a source file relative to jvm/ (core/<module>/src/main/java/...); * matches within a name, ** across
 # directories. <rule> is a rule id from rules.txt, or * for every rule (only for a file still to be cut). The reason is
 # required. An entry that no longer matches any finding fails the check, so the list only shrinks as seams land.
-core/core-layout/src/main/java/com/gtnhplanner/layout/RouteMetrics.java string-format line() is a log line for the layout bench, no data; goes with the mod's metrics in W5
-core/core-layout/src/main/java/com/gtnhplanner/layout/arrange/Arrange.java host-env the bench's -Pstages timing switch (Boolean.getBoolean); one Arrange (W5) takes it out
-core/core-layout/src/main/java/com/gtnhplanner/layout/arrange/Arrange.java string-format the printf of that bench timing; one Arrange (W5) takes it out
-core/core-layout/src/main/java/com/gtnhplanner/layout/arrange/Arrange.java float-text two tried-set keys spelled from doubles, only ever compared within one run; W5 spells them with NumberText
 
 # core-machines and core-power: moved from the mod unchanged (no rewrite on a move). Each goes when its site moves to
 # core-base's NumberText or JsMath, the display formatters, or a tree-API reader; the machines stream owns them.
@@ -21,13 +17,3 @@ core/core-machines/src/main/java/com/gtnhplanner/machines/web/Hile.java string-f
 core/core-machines/src/main/java/com/gtnhplanner/machines/web/Js.java float-parse JavaScript Number(s) stand-in; becomes NumberText.parse
 core/core-machines/src/main/java/com/gtnhplanner/machines/web/Js.java float-text JavaScript String(n) stand-in; becomes NumberText.of
 core/core-machines/src/main/java/com/gtnhplanner/machines/web/MachineEffects.java float-parse a numeric setting key read as a number; becomes NumberText.parse
-
-# core-view: card logic moved from the mod unchanged (view-b). BigDecimal.valueOf takes a double's shortest decimal
-# digits (the JDK's spelling: the shortest on the JDK 19+ the mod and the tests run on) before the display rounding.
-# Fmt formats the figures the mod's board draws every frame, and NumberText costs about 3 us a non-whole number
-# (kernel's measure), so the swap waits for NumberText's fast path. Swapping changes nothing the player sees:
-# DecimalsAgreeTest (core-view) holds new BigDecimal(NumberText.of(v)) equal in value to BigDecimal.valueOf(v) for
-# every normal double (a subnormal, which both round to 0, can differ), and every use rounds or strips the value,
-# never prints the spelling.
-core/core-view/src/main/java/com/gtnhplanner/ui/theme/Fmt.java float-text display rounding starts from BigDecimal.valueOf; becomes new BigDecimal(NumberText.of(v)) once NumberText has its fast path
-core/core-view/src/main/java/com/gtnhplanner/ui/card/PowerTiles.java float-text a number setting stored as BigDecimal.valueOf to ten places; becomes new BigDecimal(NumberText.of(v)) with Fmt

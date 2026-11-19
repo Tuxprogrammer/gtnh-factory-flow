@@ -58,7 +58,7 @@ class GraphVersionTest {
         assertEquals(
             2.0,
             second.nodeBalances()
-                .get(chart.machine(1).id)
+                .get(CoreIds.core(chart.machine(1).id))
                 .operations(),
             1e-6);
     }

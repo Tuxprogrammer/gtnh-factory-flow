@@ -117,56 +117,97 @@ public final class GridEdgeRouter {
 
     // region Pooled search state
 
+    // What is read together sits together (the website keeps one typed array per field): a state's stamp and g share
+    // one double[] two to a state, its came-from and start one int[]; a heap entry's f and g one double[], its state
+    // and sequence one int[]; a step's stamp and cost one double[]. Stamps are whole numbers below 2^31, exact as
+    // doubles. Only memory traffic changes; every number read is the one the website's arrays hold.
     private int searchPoolCapacity, searchPoolGeneration;
-    private int[] searchPoolStamp = new int[0];
-    private double[] searchPoolG = new double[0];
-    private int[] searchPoolCameFrom = new int[0], searchPoolStartOf = new int[0];
-    private double[] searchHeapF = new double[0], searchHeapG = new double[0];
-    private int[] searchHeapState = new int[0], searchHeapSeq = new int[0];
+    /** Per state: stamp, g. */
+    private double[] searchPoolStampG = new double[0];
+    /** Per state: came from, start index. */
+    private int[] searchPoolLinks = new int[0];
+    /** Per heap entry: f, g. */
+    private double[] searchHeapFG = new double[0];
+    /** Per heap entry: state, sequence. */
+    private int[] searchHeapStateSeq = new int[0];
 
     private int acquireSearchGeneration(final int stateCount) {
         if (stateCount > searchPoolCapacity) {
             searchPoolCapacity = Math.max(Math.max(stateCount, searchPoolCapacity * 2), 4096);
-            searchPoolStamp = new int[searchPoolCapacity];
-            searchPoolG = new double[searchPoolCapacity];
-            searchPoolCameFrom = new int[searchPoolCapacity];
-            searchPoolStartOf = new int[searchPoolCapacity];
+            searchPoolStampG = new double[2 * searchPoolCapacity];
+            searchPoolLinks = new int[2 * searchPoolCapacity];
             searchPoolGeneration = 0;
         }
         searchPoolGeneration += 1;
         if (searchPoolGeneration >= 0x7ffffffe) {
-            Arrays.fill(searchPoolStamp, 0);
+            Arrays.fill(searchPoolStampG, 0);
             searchPoolGeneration = 1;
         }
         return searchPoolGeneration;
     }
 
     private void ensureSearchHeapCapacity(final int size) {
-        if (size <= searchHeapF.length) return;
-        final int capacity = Math.max(Math.max(size, searchHeapF.length * 2), 1024);
-        searchHeapF = Arrays.copyOf(searchHeapF, capacity);
-        searchHeapG = Arrays.copyOf(searchHeapG, capacity);
-        searchHeapState = Arrays.copyOf(searchHeapState, capacity);
-        searchHeapSeq = Arrays.copyOf(searchHeapSeq, capacity);
+        if (2 * size <= searchHeapFG.length) return;
+        final int capacity = Math.max(Math.max(size, searchHeapFG.length), 1024);
+        searchHeapFG = Arrays.copyOf(searchHeapFG, 2 * capacity);
+        searchHeapStateSeq = Arrays.copyOf(searchHeapStateSeq, 2 * capacity);
     }
 
     private int stepPoolCapacity, stepPoolGeneration;
-    private int[] stepPoolStamp = new int[0];
-    private double[] stepPoolCost = new double[0];
+    /** Per step: stamp, cost. */
+    private double[] stepPool = new double[0];
 
     private int acquireStepGeneration(final int stepCount) {
         if (stepCount > stepPoolCapacity) {
             stepPoolCapacity = Math.max(Math.max(stepCount, stepPoolCapacity * 2), 4096);
-            stepPoolStamp = new int[stepPoolCapacity];
-            stepPoolCost = new double[stepPoolCapacity];
+            stepPool = new double[2 * stepPoolCapacity];
             stepPoolGeneration = 0;
         }
         stepPoolGeneration += 1;
         if (stepPoolGeneration >= 0x7ffffffe) {
-            Arrays.fill(stepPoolStamp, 0);
+            Arrays.fill(stepPool, 0);
             stepPoolGeneration = 1;
         }
         return stepPoolGeneration;
+    }
+
+    // Two vertex-keyed maps of the search, dense with stamps instead of hashed by boxed vertex (the website's are
+    // Maps of numbers, which box nothing): a leg's goals by vertex, and a window's clean zone (the start variants
+    // whose clean run passes each vertex). Each holds an index into a list the search or window owns.
+    private int goalPoolCapacity, goalPoolGeneration;
+    private int[] goalPoolStamp = new int[0], goalPoolIndex = new int[0];
+
+    private int acquireGoalGeneration(final int vertexCount) {
+        if (vertexCount > goalPoolCapacity) {
+            goalPoolCapacity = Math.max(Math.max(vertexCount, goalPoolCapacity * 2), 4096);
+            goalPoolStamp = new int[goalPoolCapacity];
+            goalPoolIndex = new int[goalPoolCapacity];
+            goalPoolGeneration = 0;
+        }
+        goalPoolGeneration += 1;
+        if (goalPoolGeneration >= 0x7ffffffe) {
+            Arrays.fill(goalPoolStamp, 0);
+            goalPoolGeneration = 1;
+        }
+        return goalPoolGeneration;
+    }
+
+    private int zonePoolCapacity, zonePoolGeneration;
+    private int[] zonePoolStamp = new int[0], zonePoolIndex = new int[0];
+
+    private int acquireZoneGeneration(final int vertexCount) {
+        if (vertexCount > zonePoolCapacity) {
+            zonePoolCapacity = Math.max(Math.max(vertexCount, zonePoolCapacity * 2), 4096);
+            zonePoolStamp = new int[zonePoolCapacity];
+            zonePoolIndex = new int[zonePoolCapacity];
+            zonePoolGeneration = 0;
+        }
+        zonePoolGeneration += 1;
+        if (zonePoolGeneration >= 0x7ffffffe) {
+            Arrays.fill(zonePoolStamp, 0);
+            zonePoolGeneration = 1;
+        }
+        return zonePoolGeneration;
     }
 
     private int floodPoolCapacity, floodPoolGeneration;
@@ -312,6 +353,24 @@ public final class GridEdgeRouter {
                 }
             }
             return count;
+        }
+
+        /**
+         * Whether {@link #cornerCrossings} is 0 at this vertex whatever the turn: no passer and no bend there. The
+         * search asks once a vertex instead of once a direction.
+         */
+        boolean noCorner(final int x, final int y) {
+            final int cell = cellOf(x, y);
+            if (cell < 0) {
+                final List<Corner> list = corners.get(cell);
+                return list == null || list.isEmpty();
+            }
+            return vertices[cell] == 0 && cornerCount[cell] == 0;
+        }
+
+        /** {@link #usedWidth} of a zero-length step at a vertex (dense index, -1 outside), greater than 0. */
+        boolean occupiedAt(final int axis, final int cell) {
+            return cell >= 0 && totals[axis * cellCount + cell] > 0;
         }
 
         int centreCrossings(final int axis, final int x0, final int y0, final int x1, final int y1) {
@@ -800,15 +859,22 @@ public final class GridEdgeRouter {
         for (final Planned request : sorted) states.add(routeOne(context, request, null));
 
         final double firstPassMs = clock.nowMs() - startedAt;
+        // The measure of the board as it stands, kept until a wire's route changes (every states.set clears it): the
+        // website measures the same unchanged board up to four times a solve, and a measure costs as much as the
+        // board is big. Same routes in, same measure out, so reusing it changes nothing.
+        final Measured now = new Measured(states);
         final List<GridRoutedEdge>[] best = new List[] { routedOf(states) };
-        final double[] bestPoints = { WireMetrics.points(WireMetrics.measureRoutes(best[0]), t) };
+        final WireMetrics.Measure[] bestMeasure = { now.get() };
+        final double[] bestPoints = { WireMetrics.points(bestMeasure[0], t) };
         // The board kept is the one with the fewest points.
         final Runnable retainBest = () -> {
             final List<GridRoutedEdge> routes = routedOf(states);
-            final double points = WireMetrics.points(WireMetrics.measureRoutes(routes), t);
+            final WireMetrics.Measure measure = now.get();
+            final double points = WireMetrics.points(measure, t);
             if (points < bestPoints[0]) {
                 best[0] = routes;
                 bestPoints[0] = points;
+                bestMeasure[0] = measure;
             }
         };
         int rerouted = 0;
@@ -817,7 +883,7 @@ public final class GridEdgeRouter {
         double budget = Math.max(Math.min(12, 4 * movable), JsMath.round(t.negotiationBudget() * movable));
         final double popCap = NEGOTIATION_POPS_PER_WIRE * movable;
         context.widePopCap = popCap;
-        readCrossings(states);
+        readCrossings(states, now.get());
         for (int round = 0; round < t.negotiationRounds() && budget > 0 && workPops < popCap; round += 1) {
             final List<Integer> unhappy = new ArrayList<>();
             for (int i = 0; i < states.size(); i += 1) {
@@ -835,10 +901,11 @@ public final class GridEdgeRouter {
                 if (state.found != null && again.found != null && sameRoute(state.found, again.found))
                     again.stuck = true;
                 states.set(index, again);
+                now.stale();
                 rerouted += 1;
                 budget -= 1;
             }
-            int remaining = readCrossings(states);
+            int remaining = readCrossings(states, now.get());
             retainBest.run();
             if (remaining == 0) break;
             // SWAPS: two wires leaving one card that still cross trade planned docks; kept only if the board's
@@ -861,7 +928,8 @@ public final class GridEdgeRouter {
                     rerouted += 2;
                     states.set(i, nextA);
                     states.set(k, nextB);
-                    final int after = readCrossings(states);
+                    now.stale();
+                    final int after = readCrossings(states, now.get());
                     if (after < remaining) {
                         remaining = after;
                         retainBest.run();
@@ -873,7 +941,8 @@ public final class GridEdgeRouter {
                     swapPlans(a.request, b.request);
                     states.set(i, install(context, a.request, foundA));
                     states.set(k, install(context, b.request, foundB));
-                    readCrossings(states);
+                    now.stale();
+                    readCrossings(states, now.get());
                 }
             }
             if (remaining == 0) break;
@@ -889,6 +958,7 @@ public final class GridEdgeRouter {
                     final RouteState again = install(context, state.request, state.found);
                     again.pinned = pinnedState;
                     states.set(i, again);
+                    now.stale();
                 }
             }
         }
@@ -902,8 +972,7 @@ public final class GridEdgeRouter {
                 if (state.found == null && !state.routed.points()
                     .isEmpty()) fallbacks += 1;
             }
-            stats.crossings = WireMetrics.measureRoutes(best[0])
-                .crossings();
+            stats.crossings = bestMeasure[0].crossings();
             stats.rerouted = rerouted;
             stats.fallbacks = fallbacks;
             stats.pops = workPops;
@@ -956,9 +1025,30 @@ public final class GridEdgeRouter {
         if (y > box[3]) box[3] = y;
     }
 
-    /** Re-reads every placed wire's crossings; returns the total. */
-    private static int readCrossings(final List<RouteState> states) {
-        final WireMetrics.Measure measured = WireMetrics.measureRoutes(routedOf(states));
+    /** The measure of the solve's wires as they stand, worked out once until one of them changes. */
+    private static final class Measured {
+
+        private final List<RouteState> states;
+        @Nullable
+        private WireMetrics.Measure measure;
+
+        Measured(final List<RouteState> states) {
+            this.states = states;
+        }
+
+        WireMetrics.Measure get() {
+            if (measure == null) measure = WireMetrics.measureRoutes(routedOf(states));
+            return measure;
+        }
+
+        /** A route changed: measure again when next asked. */
+        void stale() {
+            measure = null;
+        }
+    }
+
+    /** Re-reads every placed wire's crossings from their measure; returns the total. */
+    private static int readCrossings(final List<RouteState> states, final WireMetrics.Measure measured) {
         final Map<String, RouteState> byId = new HashMap<>();
         for (final RouteState state : states) {
             state.crossings = 0;
@@ -1464,7 +1554,13 @@ public final class GridEdgeRouter {
         private boolean straightOnly, hasExempt, hasHome, selfLoop;
         private byte[] blocked, exemptFlag, homeFlag;
         private List<EndVertex> starts;
-        private final Map<Integer, List<Integer>> cleanZone = new HashMap<>();
+        /**
+         * The clean zone: per vertex where it is stamped {@code zoneGeneration}, the start variants whose clean run
+         * passes it, in the order added ({@code zoneVariants[zonePoolIndex[vertex]]}, {@code zoneSizes} long).
+         */
+        private int zoneGeneration, zoneCount;
+        private int[][] zoneVariants = new int[0][];
+        private int[] zoneSizes = new int[0];
         private double goalLeft, goalRight, goalTop, goalBottom, minTurn;
 
         Window(final SolveContext context, final List<GridObstacle> obstacles, final List<GridObstacle> exemptRects,
@@ -1515,8 +1611,19 @@ public final class GridEdgeRouter {
             if (!inWindow(nxi, nyi)) return STEP_BLOCKED;
             // Canonical orientation: E, SE, S, SW from the lower vertex.
             final int stepIndex = dir < 4 ? vertexAt(xi, yi) * 4 + dir : vertexAt(nxi, nyi) * 4 + (dir - 4);
-            if (stepPoolStamp[stepIndex] == stepGeneration) return stepPoolCost[stepIndex];
-            stepPoolStamp[stepIndex] = stepGeneration;
+            final double[] pool = stepPool;
+            if (pool[2 * stepIndex] == stepGeneration) return pool[2 * stepIndex + 1];
+            return priceNewStep(xi, yi, dir, nxi, nyi, stepIndex);
+        }
+
+        /**
+         * {@link #priceStep} the first time a step is asked for in this window. Kept apart so the cached path stays
+         * small enough for the JIT to inline into the search loop.
+         */
+        private double priceNewStep(final int xi, final int yi, final int dir, final int nxi, final int nyi,
+            final int stepIndex) {
+            final double[] pool = stepPool;
+            pool[2 * stepIndex] = stepGeneration;
             workPriced += 1;
             final int a = vertexAt(xi, yi);
             final int b = vertexAt(nxi, nyi);
@@ -1526,7 +1633,7 @@ public final class GridEdgeRouter {
                 free = blocked[vertexAt(nxi, yi)] == 0 && blocked[vertexAt(xi, nyi)] == 0;
             }
             if (!free) {
-                stepPoolCost[stepIndex] = STEP_BLOCKED;
+                pool[2 * stepIndex + 1] = STEP_BLOCKED;
                 return STEP_BLOCKED;
             }
             final int axis = DIR_AXIS[dir];
@@ -1540,7 +1647,7 @@ public final class GridEdgeRouter {
             // Only centre crossings are undirected; vertex crossings are charged in the search.
             final int crossings = context.occupancy.centreCrossings(axis, xi + cx0, yi + cy0, nxi + cx0, nyi + cy0);
             final double cost = dirLength[dir] * factor * framePenalty + crossings * t.crossing();
-            stepPoolCost[stepIndex] = cost;
+            pool[2 * stepIndex + 1] = cost;
             return cost;
         }
 
@@ -1595,6 +1702,10 @@ public final class GridEdgeRouter {
 
         /** Cost-free four-connected flood over free steps: reached any wanted, and touched the window border. */
         private boolean[] flood(final Set<Integer> seedVertices, final Set<Integer> wanted) {
+            // The wanted vertices, stamped in the goal pool (free until the first leg's search takes it).
+            final int wantedGeneration = acquireGoalGeneration(vertexCount);
+            final int[] wantedStamp = goalPoolStamp;
+            for (final int w : wanted) wantedStamp[w] = wantedGeneration;
             final int generation = acquireFloodGeneration(vertexCount);
             final int[] stamp = floodPoolStamp;
             final int[] queue = floodPoolQueue;
@@ -1610,7 +1721,7 @@ public final class GridEdgeRouter {
             while (head < tail) {
                 final int vertex = queue[head];
                 head += 1;
-                if (wanted.contains(vertex)) return new boolean[] { true, touchedBorder };
+                if (wantedStamp[vertex] == wantedGeneration) return new boolean[] { true, touchedBorder };
                 final int xi = vertex / height;
                 final int yi = vertex % height;
                 if (xi == 0 || yi == 0 || xi == width - 1 || yi == height - 1) touchedBorder = true;
@@ -1650,30 +1761,33 @@ public final class GridEdgeRouter {
             final double diagonal = dx < dy ? dx : dy;
             final double straight = (dx > dy ? dx : dy) - diagonal;
             double cost = (straight * BOARD_GRID + diagonal * diagonalLength) * t.costEmpty() * weight;
-            if (dx != 0 || dy != 0) {
-                final int ddx = DIR_DX[dir];
-                final int ddy = DIR_DY[dir];
-                double lo = 0;
-                double hi = Double.POSITIVE_INFINITY;
-                if (ddx == 0) {
-                    if (xi < goalLeft || xi > goalRight) hi = -1;
-                } else {
-                    final double a = (goalLeft - xi) / ddx;
-                    final double b = (goalRight - xi) / ddx;
-                    lo = Math.max(lo, Math.min(a, b));
-                    hi = Math.min(hi, Math.max(a, b));
-                }
-                if (ddy == 0) {
-                    if (yi < goalTop || yi > goalBottom) hi = -1;
-                } else {
-                    final double a = (goalTop - yi) / ddy;
-                    final double b = (goalBottom - yi) / ddy;
-                    lo = Math.max(lo, Math.min(a, b));
-                    hi = Math.min(hi, Math.max(a, b));
-                }
-                if (hi < lo) cost += minTurn;
-            }
+            if ((dx != 0 || dy != 0) && turnsAway(xi, yi, dir)) cost += minTurn;
             return cost;
+        }
+
+        /** The heuristic's bend: whether the goal box is not straight ahead along {@code dir}. */
+        private boolean turnsAway(final int xi, final int yi, final int dir) {
+            final int ddx = DIR_DX[dir];
+            final int ddy = DIR_DY[dir];
+            double lo = 0;
+            double hi = Double.POSITIVE_INFINITY;
+            if (ddx == 0) {
+                if (xi < goalLeft || xi > goalRight) hi = -1;
+            } else {
+                final double a = (goalLeft - xi) / ddx;
+                final double b = (goalRight - xi) / ddx;
+                lo = Math.max(lo, Math.min(a, b));
+                hi = Math.min(hi, Math.max(a, b));
+            }
+            if (ddy == 0) {
+                if (yi < goalTop || yi > goalBottom) hi = -1;
+            } else {
+                final double a = (goalTop - yi) / ddy;
+                final double b = (goalBottom - yi) / ddy;
+                lo = Math.max(lo, Math.min(a, b));
+                hi = Math.min(hi, Math.max(a, b));
+            }
+            return hi < lo;
         }
 
         private int heapSize, seq;
@@ -1682,72 +1796,76 @@ public final class GridEdgeRouter {
 
         /** The open set's order: (f, g, seq), seq unique, so the pop order is total. */
         private boolean before(final double f, final double g, final int s, final int i) {
-            final double fi = searchHeapF[i];
+            final double fi = searchHeapFG[2 * i];
             if (f != fi) return f < fi;
-            final double gi = searchHeapG[i];
+            final double gi = searchHeapFG[2 * i + 1];
             if (g != gi) return g < gi;
-            return s < searchHeapSeq[i];
+            return s < searchHeapStateSeq[2 * i + 1];
         }
 
         private void push(final double f, final double g, final int state) {
             ensureSearchHeapCapacity(heapSize + 1);
+            final double[] fg = searchHeapFG;
+            final int[] ss = searchHeapStateSeq;
             int i = heapSize;
             heapSize += 1;
             final int s = seq += 1;
             while (i > 0) {
                 final int parent = (i - 1) >> 1;
                 if (!before(f, g, s, parent)) break;
-                searchHeapF[i] = searchHeapF[parent];
-                searchHeapG[i] = searchHeapG[parent];
-                searchHeapState[i] = searchHeapState[parent];
-                searchHeapSeq[i] = searchHeapSeq[parent];
+                fg[2 * i] = fg[2 * parent];
+                fg[2 * i + 1] = fg[2 * parent + 1];
+                ss[2 * i] = ss[2 * parent];
+                ss[2 * i + 1] = ss[2 * parent + 1];
                 i = parent;
             }
-            searchHeapF[i] = f;
-            searchHeapG[i] = g;
-            searchHeapState[i] = state;
-            searchHeapSeq[i] = s;
+            fg[2 * i] = f;
+            fg[2 * i + 1] = g;
+            ss[2 * i] = state;
+            ss[2 * i + 1] = s;
         }
 
         private boolean pop() {
             if (heapSize == 0) return false;
-            popF = searchHeapF[0];
-            popG = searchHeapG[0];
-            popState = searchHeapState[0];
+            final double[] fg = searchHeapFG;
+            final int[] ss = searchHeapStateSeq;
+            popF = fg[0];
+            popG = fg[1];
+            popState = ss[0];
             heapSize -= 1;
             if (heapSize > 0) {
-                final double f = searchHeapF[heapSize];
-                final double g = searchHeapG[heapSize];
-                final int state = searchHeapState[heapSize];
-                final int s = searchHeapSeq[heapSize];
+                final double f = fg[2 * heapSize];
+                final double g = fg[2 * heapSize + 1];
+                final int state = ss[2 * heapSize];
+                final int s = ss[2 * heapSize + 1];
                 int i = 0;
                 for (;;) {
                     int child = i * 2 + 1;
                     if (child >= heapSize) break;
                     final int right = child + 1;
-                    if (right < heapSize && before(searchHeapF[right], searchHeapG[right], searchHeapSeq[right], child))
+                    if (right < heapSize && before(fg[2 * right], fg[2 * right + 1], ss[2 * right + 1], child))
                         child = right;
                     if (before(f, g, s, child)) break;
-                    searchHeapF[i] = searchHeapF[child];
-                    searchHeapG[i] = searchHeapG[child];
-                    searchHeapState[i] = searchHeapState[child];
-                    searchHeapSeq[i] = searchHeapSeq[child];
+                    fg[2 * i] = fg[2 * child];
+                    fg[2 * i + 1] = fg[2 * child + 1];
+                    ss[2 * i] = ss[2 * child];
+                    ss[2 * i + 1] = ss[2 * child + 1];
                     i = child;
                 }
-                searchHeapF[i] = f;
-                searchHeapG[i] = g;
-                searchHeapState[i] = state;
-                searchHeapSeq[i] = s;
+                fg[2 * i] = f;
+                fg[2 * i + 1] = g;
+                ss[2 * i] = state;
+                ss[2 * i + 1] = s;
             }
             return true;
         }
 
         private void touch(final int state, final int generation) {
-            if (searchPoolStamp[state] != generation) {
-                searchPoolStamp[state] = generation;
-                searchPoolG[state] = Double.POSITIVE_INFINITY;
-                searchPoolCameFrom[state] = -1;
-                searchPoolStartOf[state] = -1;
+            if (searchPoolStampG[2 * state] != generation) {
+                searchPoolStampG[2 * state] = generation;
+                searchPoolStampG[2 * state + 1] = Double.POSITIVE_INFINITY;
+                searchPoolLinks[2 * state] = -1;
+                searchPoolLinks[2 * state + 1] = -1;
             }
         }
 
@@ -1758,13 +1876,21 @@ public final class GridEdgeRouter {
         @Nullable
         private LegResult searchLeg(final List<LegSeed> seeds, final List<LegGoal> goals) {
             workSearches += 1;
-            final Map<Integer, List<LegGoal>> goalsByVertex = new HashMap<>();
+            // Goals by vertex, in the order given.
+            final int goalGeneration = acquireGoalGeneration(vertexCount);
+            final int[] goalStamp = goalPoolStamp, goalIndex = goalPoolIndex;
+            final List<List<LegGoal>> goalLists = new ArrayList<>();
             goalLeft = Double.POSITIVE_INFINITY;
             goalRight = Double.NEGATIVE_INFINITY;
             goalTop = Double.POSITIVE_INFINITY;
             goalBottom = Double.NEGATIVE_INFINITY;
             for (final LegGoal goal : goals) {
-                goalsByVertex.computeIfAbsent(goal.vertex, k -> new ArrayList<>())
+                if (goalStamp[goal.vertex] != goalGeneration) {
+                    goalStamp[goal.vertex] = goalGeneration;
+                    goalIndex[goal.vertex] = goalLists.size();
+                    goalLists.add(new ArrayList<>());
+                }
+                goalLists.get(goalIndex[goal.vertex])
                     .add(goal);
                 final int xi = goal.vertex / height;
                 final int yi = goal.vertex % height;
@@ -1776,20 +1902,21 @@ public final class GridEdgeRouter {
             minTurn = Math.min(t.turn45(), t.turn90());
 
             final int generation = acquireSearchGeneration(stateCount);
-            final double[] gScores = searchPoolG;
-            final int[] cameFrom = searchPoolCameFrom;
-            final int[] startOf = searchPoolStartOf;
+            // Per state s: g at stampG[2s + 1], came-from at links[2s], start index at links[2s + 1].
+            final double[] stampG = searchPoolStampG;
+            final int[] links = searchPoolLinks;
             heapSize = 0;
             seq = 0;
 
             for (final LegSeed seed : seeds) {
                 touch(seed.state, generation);
-                if (seed.g < gScores[seed.state]) {
-                    gScores[seed.state] = seed.g;
-                    startOf[seed.state] = seed.startIndex;
+                if (seed.g < stampG[2 * seed.state + 1]) {
+                    stampG[2 * seed.state + 1] = seed.g;
+                    links[2 * seed.state + 1] = seed.startIndex;
                     push(seed.g + heuristic(seed.state), seed.g, seed.state);
                 }
             }
+            final LaneOccupancy occupancy = context.occupancy;
 
             int goalState = -1;
             double goalCost = Double.POSITIVE_INFINITY;
@@ -1800,18 +1927,19 @@ public final class GridEdgeRouter {
                 final double currentG = popG;
                 final int currentState = popState;
                 if (currentF >= goalCost) break;
-                if (currentG > gScores[currentState] + 1e-9) continue;
+                if (currentG > stampG[2 * currentState + 1] + 1e-9) continue;
                 pops += 1;
                 workPops += 1;
                 if (pops > maxPops) return null;
                 final int vertex = currentState >> 3;
                 final int currentDir = currentState & 7;
-                final List<LegGoal> here = goalsByVertex.get(vertex);
+                final int currentStart = links[2 * currentState + 1];
+                final List<LegGoal> here = goalStamp[vertex] == goalGeneration ? goalLists.get(goalIndex[vertex]) : null;
                 if (here != null) {
                     for (final LegGoal goal : here) {
                         if (goal.dir != -1 && goal.dir != currentDir) continue;
-                        if (landsTooClose(startOf[currentState], goal)) continue;
-                        final GridEndpoint source = sources.get(starts.get(startOf[currentState]).endpointIndex);
+                        if (landsTooClose(currentStart, goal)) continue;
+                        final GridEndpoint source = sources.get(starts.get(currentStart).endpointIndex);
                         final GridEndpoint target = targets.get(goal.endpointIndex);
                         double dockCost = goal.landing ? crampedDockCost(request, source, target) : 0;
                         if (dockCost > 0) {
@@ -1821,7 +1949,7 @@ public final class GridEdgeRouter {
                             if (aligned && target.side().outward == (normal + 4) % 8) {
                                 // Exempt the actual straight path, not just aligned docks.
                                 int state = currentState;
-                                while (state >= 0 && (state & 7) == normal) state = cameFrom[state];
+                                while (state >= 0 && (state & 7) == normal) state = links[2 * state];
                                 if (state < 0) dockCost = 0;
                             }
                         }
@@ -1837,17 +1965,21 @@ public final class GridEdgeRouter {
 
                 final int xi = vertex / height;
                 final int yi = vertex % height;
+                final int cell = occupancy.cellOf(xi + cx0, yi + cy0);
                 // Leaving an occupied lane here is half a crossing; joining one is the other half.
-                final double leaveWeave = context.occupancy.usedWidth(
-                    DIR_AXIS[currentDir],
-                    xi + cx0,
-                    yi + cy0,
-                    xi + cx0,
-                    yi + cy0) > 0 ? t.crossing() / 2 : 0;
-                final List<Integer> zoneStarts = cleanZone.get(vertex);
-                final double earlyTurn = zoneStarts != null && zoneStarts.contains(startOf[currentState])
-                    ? t.earlyTurn()
-                    : 0;
+                final double leaveWeave = occupancy.occupiedAt(DIR_AXIS[currentDir], cell) ? t.crossing() / 2 : 0;
+                boolean inZone = false;
+                if (zonePoolStamp[vertex] == zoneGeneration) {
+                    final int at = zonePoolIndex[vertex];
+                    final int[] variants = zoneVariants[at];
+                    for (int k = 0; k < zoneSizes[at]; k++) if (variants[k] == currentStart) {
+                        inZone = true;
+                        break;
+                    }
+                }
+                final double earlyTurn = inZone ? t.earlyTurn() : 0;
+                // No passer and no bend here: every turn crosses nothing.
+                final boolean noCorner = occupancy.noCorner(xi + cx0, yi + cy0);
                 for (int dir = 0; dir < 8; dir += 1) {
                     if (straightOnly && (dir & 1) == 1) continue;
                     final double turn = turnCosts[currentDir * 8 + dir];
@@ -1864,29 +1996,29 @@ public final class GridEdgeRouter {
                     double weave = 0;
                     if (dir != currentDir) {
                         weave = leaveWeave + earlyTurn;
-                        if (context.occupancy.usedWidth(DIR_AXIS[dir], xi + cx0, yi + cy0, xi + cx0, yi + cy0) > 0)
-                            weave += t.crossing() / 2;
+                        if (occupancy.occupiedAt(DIR_AXIS[dir], cell)) weave += t.crossing() / 2;
                     }
                     final int nextState = (vertexAt(xi + DIR_DX[dir] * steps, yi + DIR_DY[dir] * steps) << 3) | dir;
-                    final double cornerCost = context.occupancy.cornerCrossings(xi + cx0, yi + cy0, currentDir, dir)
-                        * t.crossing();
+                    final double cornerCost = (noCorner ? 0
+                        : occupancy.cornerCrossings(xi + cx0, yi + cy0, currentDir, dir)) * t.crossing();
                     final double nextG = currentG + stepCost + turn + weave + cornerCost;
                     touch(nextState, generation);
-                    if (nextG < gScores[nextState] - 1e-9) {
-                        gScores[nextState] = nextG;
-                        cameFrom[nextState] = currentState;
-                        startOf[nextState] = startOf[currentState];
+                    if (nextG < stampG[2 * nextState + 1] - 1e-9) {
+                        stampG[2 * nextState + 1] = nextG;
+                        links[2 * nextState] = currentState;
+                        links[2 * nextState + 1] = currentStart;
                         push(nextG + heuristic(nextState), nextG, nextState);
                     }
                 }
             }
 
             if (goalState < 0 || goalHit == null) return null;
-            final List<Integer> chain = new ArrayList<>();
-            for (int state = goalState; state >= 0; state = cameFrom[state]) chain.add(state >> 3);
-            final int[] vertices = new int[chain.size()];
-            for (int i = 0; i < vertices.length; i++) vertices[i] = chain.get(chain.size() - 1 - i);
-            return new LegResult(startOf[goalState], goalState & 7, vertices, goalHit, goalCost);
+            int length = 0;
+            for (int state = goalState; state >= 0; state = links[2 * state]) length++;
+            final int[] vertices = new int[length];
+            int at = length;
+            for (int state = goalState; state >= 0; state = links[2 * state]) vertices[--at] = state >> 3;
+            return new LegResult(links[2 * goalState + 1], goalState & 7, vertices, goalHit, goalCost);
         }
 
         @Nullable
@@ -1939,6 +2071,8 @@ public final class GridEdgeRouter {
             for (final GridObstacle rect : homeRects) fillRect(homeFlag, rect, 0, false);
 
             stepGeneration = acquireStepGeneration(vertexCount * 4);
+            zoneGeneration = acquireZoneGeneration(vertexCount);
+            zoneCount = 0;
 
             starts = endVertices(sources, request.request.sourceSquare());
             final List<EndVertex> ends = endVertices(targets, request.request.targetSquare());
@@ -1987,8 +2121,7 @@ public final class GridEdgeRouter {
                 int zx = start.apron / height;
                 int zy = start.apron % height;
                 for (int cell = 1; cell < t.cleanCells() && inWindow(zx, zy); cell += 1) {
-                    cleanZone.computeIfAbsent(vertexAt(zx, zy), k -> new ArrayList<>())
-                        .add(variant);
+                    addToZone(vertexAt(zx, zy), variant);
                     zx += DIR_DX[start.outward];
                     zy += DIR_DY[start.outward];
                 }
@@ -2062,6 +2195,26 @@ public final class GridEdgeRouter {
             final List<GridPoint> points = new ArrayList<>(mergedVertices.size());
             for (final int vertex : mergedVertices) points.add(new GridPoint(vertex / height + cx0, vertex % height + cy0));
             return new RouteFound(source, target, compactPoints(points), totalCost);
+        }
+
+        /** Adds a start variant to a vertex's clean zone. */
+        private void addToZone(final int vertex, final int variant) {
+            final int at;
+            if (zonePoolStamp[vertex] != zoneGeneration) {
+                zonePoolStamp[vertex] = zoneGeneration;
+                at = zoneCount++;
+                zonePoolIndex[vertex] = at;
+                if (at >= zoneSizes.length) {
+                    final int capacity = Math.max(8, 2 * zoneSizes.length);
+                    zoneSizes = Arrays.copyOf(zoneSizes, capacity);
+                    zoneVariants = Arrays.copyOf(zoneVariants, capacity);
+                }
+                zoneSizes[at] = 0;
+                if (zoneVariants[at] == null) zoneVariants[at] = new int[4];
+            } else at = zonePoolIndex[vertex];
+            if (zoneSizes[at] == zoneVariants[at].length)
+                zoneVariants[at] = Arrays.copyOf(zoneVariants[at], 2 * zoneVariants[at].length);
+            zoneVariants[at][zoneSizes[at]++] = variant;
         }
 
         /** A leg after the first starts where the last one ended. */

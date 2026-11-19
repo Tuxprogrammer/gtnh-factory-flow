@@ -9,9 +9,9 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 import com.gtnhplanner.data.flowchart.Drawer;
-import com.gtnhplanner.data.flowchart.Drawer.Kind;
 import com.gtnhplanner.data.flowchart.Drawer.Link;
-import com.gtnhplanner.data.flowchart.Drawer.Rule;
+import com.gtnhplanner.data.flowchart.DrawerTypes.Kind;
+import com.gtnhplanner.data.flowchart.DrawerTypes.Rule;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.balancer.Unanchored;

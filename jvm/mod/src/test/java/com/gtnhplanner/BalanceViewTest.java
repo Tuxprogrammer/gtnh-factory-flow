@@ -21,6 +21,7 @@ import com.gtnhplanner.data.flowchart.balancer.BalanceView;
 import com.gtnhplanner.data.flowchart.balancer.BalanceView.Boundary;
 import com.gtnhplanner.data.flowchart.balancer.BalanceView.Kind;
 import com.gtnhplanner.data.flowchart.balancer.Balancer;
+import com.gtnhplanner.data.flowchart.balancer.GraphSolve;
 import com.gtnhplanner.data.flowchart.balancer.Note;
 import com.gtnhplanner.data.flowchart.balancer.SolverMessage;
 import com.gtnhplanner.data.flowchart.balancer.alternatives.Alternative;
@@ -41,7 +42,7 @@ class BalanceViewTest {
     }
 
     private static Alternatives alternatives(final Graph graph) {
-        return Balancer.alternatives(BalanceMode.AUTO, graph);
+        return GraphSolve.alternatives(BalanceMode.AUTO, graph);
     }
 
     private static List<Summary.Line.Choice> choicesOf(final List<Summary.Line<?>> rows) {
@@ -211,7 +212,7 @@ class BalanceViewTest {
         // What the summary panel's click handler does, minus the pixels.
         graph.setExcessChoice(alternative.key());
 
-        final Balancer.Answer picked = Balancer
+        final Balancer.Answer picked = GraphSolve
             .solveWithAlternatives(BalanceMode.AUTO, graph, graph.getExcessChoice(), Map.of());
         assertTrue(
             picked instanceof final Balancer.Answer.Solved solved
@@ -257,8 +258,9 @@ class BalanceViewTest {
         final Map<java.util.UUID, List<Alternative>> byDecision = new LinkedHashMap<>();
         for (final Alternative option : a.options()) {
             byDecision.computeIfAbsent(
-                option.replaces()
-                    .nodeId(),
+                CoreIds.mod(
+                    option.replaces()
+                        .nodeId()),
                 k -> new ArrayList<>())
                 .add(option);
         }

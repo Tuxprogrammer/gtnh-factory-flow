@@ -19,7 +19,7 @@ import { makeResourceHandleId, sectionHandleId } from "./resource-handles";
 import { sectionOwnerId } from "@/lib/model/shared-machine";
 import { getInputSupplyHatch, isHatchSuppliedInput } from "@/lib/model/hatch-supply";
 import { getSetupRules, type ResolvedSetupRules } from "@/lib/model/setup-rules";
-import { energyPerUnit } from "@/lib/model/rate-unit";
+import { energyPerUnit } from "@/lib/format/rate-unit";
 
 type ProjectEdge = FactoryProject["edges"][number];
 

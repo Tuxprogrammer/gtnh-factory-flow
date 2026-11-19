@@ -15,6 +15,7 @@ import com.cleanroommc.modularui.screen.ModularScreen;
 import com.cleanroommc.modularui.screen.UISettings;
 import com.cleanroommc.modularui.widgets.ButtonWidget;
 import com.cleanroommc.modularui.widgets.layout.Flow;
+import com.gtnhplanner.CoreIds;
 import com.gtnhplanner.GtnhPlanner;
 import com.gtnhplanner.nei.NEIPlanConfig;
 import com.gtnhplanner.ui.canvas.BoardCanvas;
@@ -1207,7 +1208,7 @@ public final class BoardScreen extends ModularScreen {
         for (final BoardSession.SpareLine line : session.spares())
             for (final BoardSession.SpareBearer b : line.bearers())
                 for (final com.gtnhplanner.data.flowchart.balancer.PortRef ref : b.ports()) if (ref.nodeId()
-                    .equals(slot.node()) && ref.input() != view.output()
+                    .equals(CoreIds.core(slot.node())) && ref.input() != view.output()
                     && ref.portIndex() == view.index()) {
                         found = line;
                         here = b;

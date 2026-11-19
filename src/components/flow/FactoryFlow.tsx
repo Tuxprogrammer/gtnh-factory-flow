@@ -11,7 +11,8 @@ import { LivePresenceLayer } from "./LivePresenceLayer";
 import { isLiveConfigured } from "@/lib/live/live-config";
 import { PoolWorksheet } from "../pool/PoolWorksheet";
 import { capturePoolWorksheet } from "../export/capture-pool-worksheet";
-import { formatRatioShare, getProjectRatioBranches } from "@/lib/model/storage-ratios";
+import { getProjectRatioBranches } from "@/lib/model/storage-ratios";
+import { formatRatioShare } from "@/lib/format/numbers";
 import { labelRatioArrows, layoutRatioLabels, type RatioWireLabel } from "./ratio-label-layout";
 import { RatioWireLabel as RatioWireLabelControl } from "./RatioWireLabel";
 
@@ -280,6 +281,7 @@ import {
   type GridRoutedEdge,
   measureRoutes,
 } from "./grid-edge-router";
+import "./router-tuning-browser";
 import { getRouterTuning, routerTuningKey, subscribeRouterTuning } from "./router-tuning";
 import { proxyPath } from "@/lib/board-arrange-optimize";
 import { routePoints } from "@/lib/route-metrics";
@@ -311,7 +313,7 @@ import { getFluidTankSlot, isFluidTankRecipe } from "@/lib/model/fluid-tank";
 import { isTrashRecipe, TRASH_ANY_RESOURCE_ID } from "@/lib/model/trash";
 import { GT_VOLTAGE_TIERS } from "@/lib/model/tiers";
 import { GT_TIER_COLORS } from "./tier-colors";
-import { isPowerDisplayUnit, type RateUnit } from "@/lib/model/rate-unit";
+import { isPowerDisplayUnit, type RateUnit } from "@/lib/format/rate-unit";
 import { useIsCompactViewport } from "@/lib/compact-view";
 import { useUiScale } from "@/lib/ui-scale";
 import { subscribeDeviceSettings, wheelChangesValues } from "@/lib/device-settings";

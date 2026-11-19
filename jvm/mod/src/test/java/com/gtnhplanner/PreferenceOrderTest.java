@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.balancer.BalanceMode;
-import com.gtnhplanner.data.flowchart.balancer.Balancer;
+import com.gtnhplanner.data.flowchart.balancer.GraphSolve;
 import com.gtnhplanner.data.flowchart.balancer.alternatives.Alternative;
 import com.gtnhplanner.data.flowchart.balancer.alternatives.Alternatives;
 import com.gtnhplanner.data.flowchart.balancer.alternatives.Rank;
@@ -164,6 +164,6 @@ class PreferenceOrderTest {
     }
 
     private static Alternatives alternatives(final Graph graph) {
-        return Balancer.alternatives(BalanceMode.AUTO, graph);
+        return GraphSolve.alternatives(BalanceMode.AUTO, graph);
     }
 }

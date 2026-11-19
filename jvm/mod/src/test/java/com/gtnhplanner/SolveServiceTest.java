@@ -22,6 +22,7 @@ import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.balancer.BalanceMode;
 import com.gtnhplanner.data.flowchart.balancer.BalanceResult;
 import com.gtnhplanner.data.flowchart.balancer.Balancer;
+import com.gtnhplanner.data.flowchart.balancer.GraphSolve;
 import com.gtnhplanner.data.flowchart.balancer.SolveInput;
 import com.gtnhplanner.data.flowchart.balancer.SolveService;
 import com.gtnhplanner.data.flowchart.balancer.SolverMessage;
@@ -141,7 +142,7 @@ class SolveServiceTest {
     @Test
     void solvesARealChartOffTheCallingThread() throws Exception {
         final LoadedChart chart = GtnhFlowLoader.load("mk1");
-        final BalanceResult direct = Balancer.balance(chart.graph(), BalanceMode.AUTO);
+        final BalanceResult direct = GraphSolve.balance(chart.graph(), BalanceMode.AUTO);
         final List<String> threads = Collections.synchronizedList(new ArrayList<>());
         final Function<SolveInput, BalanceResult> solver = input -> {
             threads.add(
@@ -153,7 +154,7 @@ class SolveServiceTest {
             service.request(
                 chart.graph()
                     .solveVersion(),
-                () -> SolveInput.of(chart.graph(), BalanceMode.AUTO, null));
+                () -> GraphSolve.input(chart.graph(), BalanceMode.AUTO, null));
             assertTrue(service.awaitIdle(WAIT));
 
             final SolveService.Result result = service.latest();
@@ -167,11 +168,11 @@ class SolveServiceTest {
             for (final Node machine : chart.machines()) {
                 assertEquals(
                     direct.nodeBalances()
-                        .get(machine.id)
+                        .get(CoreIds.core(machine.id))
                         .operations(),
                     result.balance()
                         .nodeBalances()
-                        .get(machine.id)
+                        .get(CoreIds.core(machine.id))
                         .operations(),
                     1e-6);
             }

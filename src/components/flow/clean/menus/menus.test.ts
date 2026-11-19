@@ -2,7 +2,7 @@
 import { beforeEach, expect, it } from "vitest";
 import { nextFasterAmps, MAX_AMPS, type PowerRun } from "./power-facts";
 import { isPinned, steppedOption, toggledPins, type SettingControl } from "./settings-model";
-import { rememberSetting } from "@/lib/model/setting-memory";
+import { rememberSetting } from "@/lib/format/setting-memory";
 import { countRowsTip, footTip, ruleTip, stripTip } from "./card-tips";
 import type { CleanCardView, CleanChipView, CleanFootView } from "../clean-model";
 

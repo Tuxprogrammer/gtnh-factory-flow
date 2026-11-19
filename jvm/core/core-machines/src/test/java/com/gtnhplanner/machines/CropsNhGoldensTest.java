@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.gson.JsonArray;
@@ -20,11 +21,13 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.gtnhplanner.conformance.Conformance;
+import com.gtnhplanner.core.machines.GameRates;
 
 /**
  * CropsNh against the website's own crop functions: every crop in its 2.9 dataset (179) on a spread of settings under
- * both harvesters, written by the website's passive-production.ts (growth, harvest time, drops, the harvester's
- * setup, machines, power, and the solver's multipliers as machine-effects.ts takes them).
+ * both harvesters, at the pack's IC2 crop yield of 1 and 4, written by tools/audits/export-mod-crop-goldens.ts from the
+ * website's passive-production.ts (growth, harvest time, drops, the harvester's setup, machines, power, and the
+ * solver's multipliers as machine-effects.ts takes them).
  */
 class CropsNhGoldensTest {
 
@@ -52,7 +55,22 @@ class CropsNhGoldensTest {
             mismatches.size() + " mismatches");
     }
 
+    @AfterEach
+    void noRates() {
+        GameRates.install(GameRates.NONE);
+    }
+
     private static void check(final JsonObject c, final List<String> mismatches) {
+        // The pack's rate-mod factors the case was computed with (its IC2 crop yield reaches the Crop Manager).
+        final JsonObject r = c.has("gameRates") ? c.getAsJsonObject("gameRates") : new JsonObject();
+        GameRates.install(
+            new GameRates(
+                r.has("beesYield") ? r.get("beesYield")
+                    .getAsDouble() : 1,
+                r.has("ic2CropsYield") ? r.get("ic2CropsYield")
+                    .getAsDouble() : 1,
+                r.has("recipeDurationDivisor") ? r.get("recipeDurationDivisor")
+                    .getAsDouble() : 1));
         final CropsNh.Stats stats = stats(c.getAsJsonObject("stats"));
         final Map<String, Object> settings = new HashMap<>();
         for (final Map.Entry<String, JsonElement> e : c.getAsJsonObject("tiers")

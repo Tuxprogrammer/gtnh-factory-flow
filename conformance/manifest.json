@@ -22,7 +22,7 @@
         "mod: machines/web/MachineGoldensTest, machines/BeesGoldensTest, machines/CropsNhGoldensTest, machines/web/MachineTableTest",
         "website: src/lib/machines/machine-table.test.ts (reference-coefficients.json)"
       ],
-      "generator": "bee-goldens: jvm/mod/tools/dev/bees/vitest.bees.config.mjs; reference-coefficients: see src/lib/machines/CLAUDE.md; machine-goldens and crop-goldens have no generator in this repository"
+      "generator": "machine-goldens: npx tsx tools/audits/export-mod-machine-goldens.ts --out conformance/machines/machine-goldens.jsonl.gz --dataset stable-2.9.0-tuxmine --rates recipeDurationDivisor=64,beesYield=4,ic2CropsYield=4 (the instance's dataset, checksumSha256 7c6fbe83d7be4863518e88c615b0299033d7a4b6c4e32bb497225979ac35b3c2, at its pack's GTNHRates config); crop-goldens: npx tsx tools/audits/export-mod-crop-goldens.ts --out conformance/machines/crop-goldens.jsonl.gz --dataset stable-2.9.0-tuxmine (same dataset); bee-goldens: BEE_GOLDENS_OUT=$PWD/conformance/machines/bee-goldens.jsonl.gz node node_modules/vitest/vitest.mjs run --config jvm/mod/tools/dev/bees/vitest.bees.config.mjs; reference-coefficients: see src/lib/machines/CLAUDE.md"
     },
     "pending": {
       "specifies": "Files that disagree with a copy in the tree and wait for a decision. No suite reads them. Each subdirectory says in its README.md what it is and which file it would replace.",
@@ -75,13 +75,13 @@
     },
     "machines/crop-goldens.jsonl.gz": {
       "area": "machines",
-      "bytes": 248927,
-      "sha256": "f39b5dc0c9762a59a0b5dbaa55868f7715631fcf356d74e6ccd594063642d334"
+      "bytes": 544469,
+      "sha256": "1bfec7b9ea5aa2816f0838fcad973a0cdd7600bb0abac484644e0d49be3fb93a"
     },
     "machines/machine-goldens.jsonl.gz": {
       "area": "machines",
-      "bytes": 2557259,
-      "sha256": "2ef0d2aa870ebb512ccf0be448a57d77befcec1ac4587b4f9ab0243629898446"
+      "bytes": 2877971,
+      "sha256": "57b684e0e24eb2892f433ac7b3efad6e3446c76755329e2c1beab1c48ccd8ec7"
     },
     "machines/reference-coefficients.json": {
       "area": "machines",

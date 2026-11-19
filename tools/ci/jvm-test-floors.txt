@@ -6,3 +6,5 @@
 total 1200
 mod 1000
 core-base 5
+core-machines 100
+core-power 8

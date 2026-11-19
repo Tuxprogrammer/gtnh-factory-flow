@@ -153,7 +153,7 @@ public final class CardViews {
      * needs when that is more; with none, whole machines) times one machine's draw.
      */
     @Nullable
-    static CardView.PowerView powerRow(final CardInput in, final CountView count, @Nullable final CardInput.UpTo upTo,
+    public static CardView.PowerView powerRow(final CardInput in, final CountView count, @Nullable final CardInput.UpTo upTo,
         final Dials dials) {
         final CardInput.PowerReport report = in.power();
         final CardInput.SteamReport steam = in.steam();
@@ -327,7 +327,7 @@ public final class CardViews {
     }
 
     /** A per-second power flow under the power dial, in the card's own tier (a generator's EU row). */
-    static Figure powerFigure(final double perSecond, @Nullable final String tier, final Dials dials) {
+    public static Figure powerFigure(final double perSecond, @Nullable final String tier, final Dials dials) {
         return new Figure(
             Format.powerValue(RailMath.dialValue(perSecond / 20, dials.power(), tier)),
             RailMath.dialSuffix(dials.power(), tier));
@@ -337,11 +337,11 @@ public final class CardViews {
      * An energy reading: EU per unit made, under the power dial ("200" "EU/Item"; "6.25" "A LV/Item" in a tier). The
      * website's {@code formatEnergyPerUnitParts}.
      */
-    static Figure energyFigure(final double euPerUnit, final String kind, final String powerUnit) {
+    public static Figure energyFigure(final double euPerUnit, final String kind, final String powerUnit) {
         final boolean plain = powerUnit.equals("eu") || powerUnit.equals("amps");
         final double value = plain ? euPerUnit : euPerUnit / Tiers.maxEuT(powerUnit);
         final String per = "fluid".equals(kind) ? "L" : "Item";
-        return new Figure(Format.powerValue(value), powerUnit.equals("eu") ? "EU/" + per : "A " + powerUnit + "/" + per);
+        return new Figure(Format.powerValue(value), plain ? "EU/" + per : "A " + powerUnit + "/" + per);
     }
 
     /**

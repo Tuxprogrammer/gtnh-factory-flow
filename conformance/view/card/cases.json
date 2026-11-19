@@ -15711,6 +15711,222 @@
    }
   },
   {
+   "name": "ports: EU each on the Amps dial stays EU",
+   "input": {
+    "dials": {
+     "rate": "EU",
+     "power": "amps",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "n",
+     "name": "Chemical Reactor",
+     "hasPicker": false,
+     "tier": "HV",
+     "tierFixed": false,
+     "hatchControl": false,
+     "power": {
+      "ok": true,
+      "tier": "HV",
+      "amps": 1,
+      "drawEuT": 480,
+      "parallels": 1,
+      "multiblock": false
+     },
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "glanceArt": "icons/chemical_reactor.png",
+     "product": {
+      "icon": "icons/sulfuric_acid.png",
+      "fluid": true
+     },
+     "inputs": [
+      {
+       "key": "input:oxygen",
+       "handleId": "input:fluid:oxygen",
+       "output": false,
+       "name": "Oxygen",
+       "kind": "fluid",
+       "resourceId": "oxygen",
+       "perSecond": 720,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      },
+      {
+       "key": "input:sulfur_dust",
+       "handleId": "input:item:sulfur_dust",
+       "output": false,
+       "name": "Sulfur Dust",
+       "kind": "item",
+       "resourceId": "sulfur_dust",
+       "perSecond": 6,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "outputs": [
+      {
+       "key": "output:sulfuric_acid",
+       "handleId": "output:fluid:sulfuric_acid",
+       "output": true,
+       "name": "Sulfuric Acid",
+       "kind": "fluid",
+       "resourceId": "sulfuric_acid",
+       "perSecond": 720,
+       "wired": true,
+       "alternatives": 1,
+       "free": false,
+       "energyPerUnit": 200
+      }
+     ],
+     "count": {
+      "rule": "ANY",
+      "needed": 2.4,
+      "nodeParallel": 1,
+      "customRate": false,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": false,
+      "emptyCropFarm": false,
+      "tasks": false
+     }
+    }
+   },
+   "view": {
+    "nodeId": "n",
+    "name": "Chemical Reactor",
+    "nameStep": 0,
+    "hasPicker": false,
+    "tier": {
+     "label": "HV",
+     "fixed": false,
+     "title": "Tier HV. Click up, right click down."
+    },
+    "inputs": [
+     {
+      "key": "input:oxygen",
+      "handleId": "input:fluid:oxygen",
+      "output": false,
+      "number": "720",
+      "unit": "L/s",
+      "name": "Oxygen",
+      "title": "Oxygen",
+      "zero": false,
+      "gold": false,
+      "numberSmall": false,
+      "nameSmall": false,
+      "nameClipped": false,
+      "wired": true,
+      "choice": false,
+      "resourceKey": "fluid:oxygen",
+      "free": false
+     },
+     {
+      "key": "input:sulfur_dust",
+      "handleId": "input:item:sulfur_dust",
+      "output": false,
+      "number": "6",
+      "unit": "/s",
+      "name": "Sulfur Dust",
+      "title": "Sulfur Dust",
+      "zero": false,
+      "gold": false,
+      "numberSmall": false,
+      "nameSmall": false,
+      "nameClipped": false,
+      "wired": true,
+      "choice": false,
+      "resourceKey": "item:sulfur_dust",
+      "free": false
+     }
+    ],
+    "outputs": [
+     {
+      "key": "output:sulfuric_acid",
+      "handleId": "output:fluid:sulfuric_acid",
+      "output": true,
+      "number": "200",
+      "unit": "EU/L",
+      "name": "Sulfuric Acid",
+      "title": "Sulfuric Acid",
+      "zero": false,
+      "gold": false,
+      "numberSmall": false,
+      "nameSmall": true,
+      "nameClipped": true,
+      "wired": true,
+      "choice": false,
+      "resourceKey": "fluid:sulfuric_acid",
+      "free": false
+     }
+    ],
+    "power": {
+     "number": "2.25",
+     "unit": "A HV",
+     "name": "Power",
+     "stalled": false,
+     "title": "HV machine, 1A"
+    },
+    "glanceArt": "icons/chemical_reactor.png",
+    "glanceProduct": {
+     "icon": "icons/sulfuric_acid.png",
+     "fluid": true
+    },
+    "count": {
+     "text": "×2.4",
+     "value": 2.4,
+     "pinned": false,
+     "rule": "ANY",
+     "ruleWord": "Any",
+     "ruleFixed": false,
+     "setText": "",
+     "box": "Set",
+     "prompt": false,
+     "zero": false,
+     "title": "How many of this machine the plan needs."
+    },
+    "chips": [],
+    "stripHeight": 0,
+    "selected": false,
+    "cannotRun": false,
+    "unset": false,
+    "menu": [
+     {
+      "id": "clone",
+      "label": "Clone node",
+      "danger": false
+     },
+     {
+      "id": "addRecipe",
+      "label": "Add another recipe",
+      "danger": false
+     },
+     {
+      "id": "replace",
+      "label": "Replace the recipe",
+      "danger": false
+     },
+     {
+      "id": "delete",
+      "label": "Delete node",
+      "danger": true
+     }
+    ]
+   }
+  },
+  {
    "name": "ports: EU each in a fixed tier",
    "input": {
     "dials": {

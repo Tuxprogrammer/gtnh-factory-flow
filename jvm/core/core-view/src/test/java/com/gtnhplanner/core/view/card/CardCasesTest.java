@@ -16,7 +16,7 @@ class CardCasesTest extends CorpusTest<CardInput.Case> {
     private static LangText lang;
 
     CardCasesTest() {
-        super("card", "cases", CardInput.Case.class, 98);
+        super("card", "cases", CardInput.Case.class, 99);
     }
 
     @BeforeAll

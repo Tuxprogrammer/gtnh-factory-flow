@@ -493,6 +493,9 @@ export function cardCases(): Array<{ name: string; input: CardCaseInput }> {
     c.outputs = [ACID(720, { energyPerUnit: 13.3333 })];
     c.inputs = [OXYGEN(), SULFUR(6, { energyPerUnit: 200 })];
   }, { ...EU, rate: "EU" }));
+  add("ports: EU each on the Amps dial stays EU", card((c) => {
+    c.outputs = [ACID(720, { energyPerUnit: 200 })];
+  }, { rate: "EU", power: "amps", averageDraw: true }));
   add("ports: EU each in a fixed tier", card((c) => {
     c.outputs = [ACID(720, { energyPerUnit: 200 })];
   }, { rate: "EU", power: "LV", averageDraw: true }));

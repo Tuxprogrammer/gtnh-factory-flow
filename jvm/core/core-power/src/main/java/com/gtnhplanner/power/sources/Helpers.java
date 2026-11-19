@@ -1,14 +1,10 @@
 package com.gtnhplanner.power.sources;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.function.ToDoubleFunction;
 
+import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.power.PowerData;
 import com.gtnhplanner.power.PowerModel;
 import com.gtnhplanner.power.PowerModel.Flow;
@@ -40,9 +36,56 @@ public final class Helpers {
         if (Double.isInfinite(value)) return value > 0 ? "∞" : "-∞";
         // Intl keeps the sign of a negative zero; BigDecimal has none.
         if (value == 0) return 1 / value < 0 ? "-0" : "0";
-        final DecimalFormat format = new DecimalFormat("#,##0.##", DecimalFormatSymbols.getInstance(Locale.US));
-        format.setRoundingMode(RoundingMode.HALF_UP);
-        return format.format(new BigDecimal(Double.toString(value)));
+        final String text = NumberText.of(Math.abs(value));
+        final int exponentAt = text.indexOf('e');
+        final String mantissa = exponentAt < 0 ? text : text.substring(0, exponentAt);
+        final int exponent = exponentAt < 0 ? 0 : Integer.parseInt(text.substring(exponentAt + 1));
+        final int dot = mantissa.indexOf('.');
+        final String digits = dot < 0 ? mantissa : mantissa.substring(0, dot) + mantissa.substring(dot + 1);
+        final int point = (dot < 0 ? mantissa.length() : dot) + exponent;
+        // The decimal as whole digits and fraction digits, then half-up at the second decimal.
+        final StringBuilder whole = new StringBuilder();
+        final StringBuilder fraction = new StringBuilder();
+        if (point <= 0) {
+            whole.append('0');
+            for (int i = 0; i < -point; i++) fraction.append('0');
+            fraction.append(digits);
+        } else if (point >= digits.length()) {
+            whole.append(digits);
+            for (int i = digits.length(); i < point; i++) whole.append('0');
+        } else {
+            whole.append(digits, 0, point);
+            fraction.append(digits, point, digits.length());
+        }
+        final boolean roundUp = fraction.length() > 2 && fraction.charAt(2) >= '5';
+        fraction.setLength(Math.min(fraction.length(), 2));
+        if (roundUp) {
+            // Carry through the kept digits, fraction first.
+            int at = whole.length() + fraction.length() - 1;
+            boolean carry = true;
+            while (carry && at >= 0) {
+                final boolean inFraction = at >= whole.length();
+                final StringBuilder part = inFraction ? fraction : whole;
+                final int index = inFraction ? at - whole.length() : at;
+                if (part.charAt(index) == '9') {
+                    part.setCharAt(index, '0');
+                } else {
+                    part.setCharAt(index, (char) (part.charAt(index) + 1));
+                    carry = false;
+                }
+                at--;
+            }
+            if (carry) whole.insert(0, '1');
+        }
+        while (fraction.length() > 0 && fraction.charAt(fraction.length() - 1) == '0') fraction.setLength(fraction.length() - 1);
+        final StringBuilder out = new StringBuilder();
+        if (value < 0) out.append('-');
+        for (int i = 0; i < whole.length(); i++) {
+            if (i > 0 && (whole.length() - i) % 3 == 0) out.append(',');
+            out.append(whole.charAt(i));
+        }
+        if (fraction.length() > 0) out.append('.').append(fraction);
+        return out.toString();
     }
 
     /** {@link #number} with G and M past a billion and a million; "-" when not finite. */

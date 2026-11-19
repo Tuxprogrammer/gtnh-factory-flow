@@ -104,8 +104,16 @@ final class MachineTableEntries {
             machine().overclock(perfect())
                 .speed(2)
                 .parallels(c -> 8 * c.voltageTier));
-        machines.put("IsaMill Grinding Machine", machine().overclock(perfect()));
-        machines.put("Flotation Cell Regulator", machine().overclock(perfect()));
+        // Each is the only machine on its map, so the dataset exports no handler and the recipes arrive under the
+        // map's name. MTEIsaMill and MTEFrothFlotationCell both enablePerfectOverclock, one parallel.
+        machines.put(
+            "IsaMill Grinding Machine",
+            machine().overclock(perfect())
+                .aliases("Milling"));
+        machines.put(
+            "Flotation Cell Regulator",
+            machine().overclock(perfect())
+                .aliases("Flotation Cell"));
 
         // -- Coil-driven, no heat mechanic --
         machines.put(

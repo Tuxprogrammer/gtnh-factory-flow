@@ -13,6 +13,8 @@
 #   anything under jvm/                      jvm
 #   jvm/web/, jvm/core/, jvm/*.kts, jvm/gradle/   also website (its tests load the core built from them)
 #   jvm/ outside jvm/mod/, src/lib/core/     web-core
+#   jvm/web/, jvm/gradle/, jvm/*.kts, tools/web-core/   web_core_full: the web-core job runs every case on the JavaScript target too
+#                                            (a sample otherwise, tools/web-core/sample.mjs); so does a diff that runs every job
 # An empty or unknowable diff runs every job: a skipped job must never be a guess.
 set -euo pipefail
 . "$(dirname "$0")/lib.sh"
@@ -52,7 +54,7 @@ list_files() {
 files=$(list_files)
 if [ "$mode" = list ]; then echo "$files"; exit 0; fi
 
-all=false website=false jvm=false webcore=false
+all=false website=false jvm=false webcore=false webfull=false
 if [ -z "$files" ]; then all=true; echo "[ci:changes] empty diff; running everything" >&2; fi
 while IFS= read -r f; do
   [ -n "$f" ] || continue
@@ -67,12 +69,14 @@ while IFS= read -r f; do
     *) website=true ;;
   esac
   case "$f" in src/lib/core/*) webcore=true ;; esac
+  case "$f" in jvm/web/* | jvm/gradle/* | jvm/*.kts | jvm/gradle.properties | tools/web-core/*) webfull=true; webcore=true ;; esac
 done <<< "$files"
-if [ "$all" = true ]; then website=true jvm=true webcore=true; fi
+if [ "$all" = true ]; then website=true jvm=true webcore=true webfull=true; fi
 
 out="website=$website
 icons=$website
 jvm=$jvm
-web_core=$webcore"
+web_core=$webcore
+web_core_full=$webfull"
 echo "$out"
 if [ -n "${GITHUB_OUTPUT:-}" ]; then echo "$out" >> "$GITHUB_OUTPUT"; fi

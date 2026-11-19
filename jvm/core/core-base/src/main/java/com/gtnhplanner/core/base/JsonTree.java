@@ -240,8 +240,18 @@ public final class JsonTree {
     }
 
     private String string() {
-        final StringBuilder out = new StringBuilder();
         at++;
+        // Most strings have no escape: one substring, no builder (recipes cross as JSON on every plan open).
+        final int start = at;
+        for (int i = start; i < text.length(); i++) {
+            final char c = text.charAt(i);
+            if (c == '"') {
+                at = i + 1;
+                return text.substring(start, i);
+            }
+            if (c == '\\') break;
+        }
+        final StringBuilder out = new StringBuilder();
         while (at < text.length()) {
             final char c = text.charAt(at++);
             if (c == '"') return out.toString();
@@ -288,6 +298,27 @@ public final class JsonTree {
             else break;
         }
         if (start == at) throw fail("unexpected character");
-        return NumberText.parse(text.substring(start, at));
+        final double whole = wholeNumber(start, at);
+        return Double.isNaN(whole) ? NumberText.parse(text.substring(start, at)) : whole;
+    }
+
+    /**
+     * An integer of at most 15 digits, summed digit by digit: every partial sum is below 2^53, so the double is exact and
+     * equals what NumberText.parse makes of the same text. NaN for anything else (a fraction, an exponent, a longer
+     * number, negative zero), which the full parser reads.
+     */
+    private double wholeNumber(final int start, final int end) {
+        final boolean negative = text.charAt(start) == '-';
+        final int from = negative ? start + 1 : start;
+        if (from == end || end - from > 15) return Double.NaN;
+        double v = 0;
+        for (int i = from; i < end; i++) {
+            final char c = text.charAt(i);
+            if (c < '0' || c > '9') return Double.NaN;
+            v = v * 10 + (c - '0');
+        }
+        if (!negative) return v;
+        // Negative zero needs the sign bit, which 0.0 - 0.0 (WebAssembly GC's form of -x) does not give.
+        return v == 0 ? Double.NaN : -v;
     }
 }

@@ -32,12 +32,7 @@ import { PIN_RULE_LABEL, pinRuleOf, withPinRule, type PinRule } from "@/lib/mode
 import { peakCount } from "@/lib/model/peak-count";
 import { getMachineStructureArt } from "@/lib/power/structure-art";
 import { powerCardTier } from "@/lib/power/power-recipe";
-import {
-  mayTurbineFlow,
-  turbineFlowCheck,
-  turbinesFor,
-  type TurbineFlowCheck,
-} from "@/lib/power/turbine-flow";
+import { turbineCard, type TurbineFlowCheck } from "@/lib/power/turbine-flow";
 import { useFactoryStore, useRateDisplayUnits } from "@/store/factory-store";
 import { useWorkspaceView } from "@/lib/workspace-view";
 import { formatEnergyPerUnitParts, formatSlotRateBare, portReadsEnergy } from "../flow-explainers";
@@ -1335,10 +1330,12 @@ export function useCleanCardModel(
 
   // A turbine card: what its whole turbines really make at the flow each gets.
   const running = result?.theoreticalMachinesRequired ?? 0;
-  const turbines = turbinesFor(running, pinRuleOf(projectNode, recipe) === "exact" ? projectNode.solvePin : undefined);
-  const turbineCheck = mayTurbineFlow(recipe, running, turbines)
-    ? turbineFlowCheck(recipe, projectNode.machineConfigTiers, running, turbines)
-    : undefined;
+  const turbineCheck = turbineCard(
+    recipe,
+    projectNode.machineConfigTiers,
+    running,
+    pinRuleOf(projectNode, recipe) === "exact" ? projectNode.solvePin : undefined,
+  ).check;
 
   const view = cleanCardView({
     projectNode,

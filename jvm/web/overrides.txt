@@ -4,3 +4,5 @@
 # A class is added here in the same commit that adds the override; a plugin upgrade that renames the replaced class
 # shows up as a listed class that replaces nothing.
 org.teavm.classlib.java.lang.TRuntime adds maxMemory (TeaVM's has none; ojAlgo's Hardware calls it): 4 GiB; read back by the webCoreRuntimeMaxMemory export
+org.ojalgo.concurrent.DaemonPoolExecutor replaces ojAlgo's daemon thread pool: a task runs on the calling thread when it is submitted, as the browser has no threads and the solver asks ojAlgo for one
+org.ojalgo.concurrent.MultiviewSet replaces ojAlgo's prioritised set: the same code with a set from Collections.newSetFromMap where ojAlgo calls ConcurrentHashMap.newKeySet, which TeaVM's classlib lacks

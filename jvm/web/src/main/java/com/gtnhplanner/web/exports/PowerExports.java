@@ -14,7 +14,9 @@ import com.gtnhplanner.core.power.PowerCatalog;
 import com.gtnhplanner.core.power.TurbineFlow;
 import com.gtnhplanner.power.PowerModel;
 import com.gtnhplanner.power.PowerSetting;
+import com.gtnhplanner.power.PowerResources;
 import com.gtnhplanner.power.PowerSource;
+import com.gtnhplanner.power.sources.Helpers;
 import com.gtnhplanner.web.json.Json;
 
 /**
@@ -75,13 +77,75 @@ public final class PowerExports {
         final PowerSource source = PowerCatalog.get(sourceId);
         if (source == null) return null;
         final Map<String, Object> in = Json.object(Json.parse(inputJson));
+        final Map<String, Object> out = new LinkedHashMap<>();
+        turbine(source, in, out, false);
+        return Json.write(out);
+    }
+
+    /** The Amps dial's tier label for an EU/t figure, or null when the figure is not a positive finite number. */
+    @JSExport
+    @Nullable
+    public static String powerCardTier(final double euPerTick) {
+        return PowerCardTier.of(euPerTick);
+    }
+
+    /**
+     * Everything one power card shows and the solve reads from it, in one call. Input {"settings":{stored strings},
+     * "running":n,"pin":n|null} (running and pin only matter to a turbine's flow check; 0 and null when the caller has
+     * no solve yet). Output: the model as {@link #powerCompute} gives it, each flow with "resolved" (the workbook name
+     * is a game resource the recipe can wire), "recipeStats" (the stats plus a line for every flow that is not
+     * resolved, as the recipe synthesis writes them), then "turbines", "may" and "check" as {@link #powerTurbineFlow}.
+     * Null for an unknown source.
+     */
+    @JSExport
+    @Nullable
+    public static String powerCard(final String sourceId, final String inputJson) {
+        final PowerSource source = PowerCatalog.get(sourceId);
+        if (source == null) return null;
+        final Map<String, Object> in = Json.object(Json.parse(inputJson));
+        final PowerModel m = source.compute(stored(in.get("settings")));
+        final Map<String, Object> out = model(m);
+        final List<Object> recipeStats = new ArrayList<>(Json.array(out.get("stats")));
+        mark(Json.array(out.get("inputs")), m.inputs(), "in", recipeStats);
+        mark(Json.array(out.get("outputs")), m.outputs(), "out", recipeStats);
+        out.put("recipeStats", recipeStats);
+        turbine(source, in, out, true);
+        return Json.write(out);
+    }
+
+    /** Adds "resolved" to each written flow, and a stat line for each unresolved flow that moves anything. */
+    private static void mark(final List<Object> written, final List<PowerModel.Flow> flows, final String direction,
+        final List<Object> recipeStats) {
+        for (int i = 0; i < flows.size(); i++) {
+            final PowerModel.Flow f = flows.get(i);
+            final boolean resolved = PowerResources.resolve(f.name()) != null;
+            Json.object(written.get(i)).put("resolved", resolved);
+            if (!resolved && f.perSecond() > 0) {
+                final Map<String, Object> line = new LinkedHashMap<>();
+                line.put("label", f.name());
+                line.put("value", Helpers.formatAmount(f.perSecond()) + (f.unit() == PowerModel.Unit.L ? " L" : "") + "/s "
+                    + direction);
+                recipeStats.add(line);
+            }
+        }
+    }
+
+    // ---- shapes
+
+    /**
+     * Puts the turbine fields of a card input {"settings","running","pin"} into {@code out}: turbines, may, check.
+     * {@code gated}: the check is worked out only when {@code may} says the card can show one, as the card does.
+     */
+    private static void turbine(final PowerSource source, final Map<String, Object> in, final Map<String, Object> out,
+        final boolean gated) {
         final double running = Json.num(in, "running", 0);
         final Double pin = Json.boxed(in, "pin");
         final double turbines = TurbineFlow.turbinesFor(running, pin);
-        final Map<String, Object> out = new LinkedHashMap<>();
         out.put("turbines", turbines);
-        out.put("may", TurbineFlow.mayTurbineFlow(source, running, turbines));
-        final TurbineFlow.Check check = TurbineFlow.turbineFlowCheck(source, stored(in.get("settings")), running, turbines);
+        final boolean may = TurbineFlow.mayTurbineFlow(source, running, turbines);
+        out.put("may", may);
+        final TurbineFlow.Check check = gated && !may ? null
+            : TurbineFlow.turbineFlowCheck(source, stored(in.get("settings")), running, turbines);
         if (check == null) out.put("check", null);
         else {
             final Map<String, Object> c = new LinkedHashMap<>();
@@ -94,17 +158,7 @@ public final class PowerExports {
             c.put("euCounted", check.euCounted());
             out.put("check", c);
         }
-        return Json.write(out);
     }
-
-    /** The Amps dial's tier label for an EU/t figure, or null when the figure is not a positive finite number. */
-    @JSExport
-    @Nullable
-    public static String powerCardTier(final double euPerTick) {
-        return PowerCardTier.of(euPerTick);
-    }
-
-    // ---- shapes
 
     private static Map<String, String> stored(final String settingsJson) {
         return stored(settingsJson == null ? null : Json.parse(settingsJson));

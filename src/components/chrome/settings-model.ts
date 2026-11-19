@@ -1,13 +1,10 @@
-import {
-  DEFAULT_UI_SCALE_PERCENT,
-  UI_SCALE_MAX_PERCENT,
-  UI_SCALE_MIN_PERCENT,
-} from "@/lib/ui-scale-boot";
+import { UI_SCALE_MAX_PERCENT, UI_SCALE_MIN_PERCENT } from "@/lib/ui-scale-boot";
 import { ZOOMED_OUT_AT_MAX, ZOOMED_OUT_AT_MIN } from "@/lib/device-settings";
+import { VIEW_SETTINGS } from "@/lib/view-settings.generated";
 
 /** The mod's Board "Size" choices (Tiny, Small, Normal, Large) as the interface size's percent. */
-export const SIZE_NAMES = ["Tiny", "Small", "Normal", "Large"] as const;
-export const SIZE_PERCENT: readonly number[] = [70, 90, DEFAULT_UI_SCALE_PERCENT, 130];
+export const SIZE_NAMES: readonly string[] = VIEW_SETTINGS.uiSize.labels;
+export const SIZE_PERCENT: readonly number[] = VIEW_SETTINGS.uiSize.values;
 
 /** Which Size choice a percent is, or -1 when it sits between them (a custom size from before). */
 export function sizeIndexOf(percent: number): number {
@@ -41,8 +38,8 @@ export function zoomedOutIndexOf(zoom: number): number {
 }
 
 /** The mod's Sounds choices and their gains (`PlannerSettings.SOUND_GAINS`); Off silences. */
-export const SOUND_NAMES = ["Off", "Quiet", "Normal", "Loud"] as const;
-export const SOUND_VOLUME: readonly number[] = [0, 0.5, 1, 1.7];
+export const SOUND_NAMES: readonly string[] = VIEW_SETTINGS.soundLevel.labels;
+export const SOUND_VOLUME: readonly number[] = VIEW_SETTINGS.soundLevel.values;
 
 export function soundIndexOf(enabled: boolean, volume: number): number {
   if (!enabled) return 0;

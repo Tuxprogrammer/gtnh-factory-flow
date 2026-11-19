@@ -5,11 +5,8 @@ import { ArrowUpRight } from "lucide-react";
 import { ResourceIcon } from "@/components/nei/ResourceIcon";
 import { getSelectedMachineHandler } from "@/lib/model/recipe-rules";
 import { getStorageRoles } from "@/lib/model/storage-role";
-import {
-  formatRatioShare,
-  getProjectRatioBranches,
-  ratioExportShare,
-} from "@/lib/model/storage-ratios";
+import { getProjectRatioBranches, ratioExportShare } from "@/lib/model/storage-ratios";
+import { formatRatioShare } from "@/lib/format/numbers";
 import { useFactoryStore } from "@/store/factory-store";
 import { MouseIcon } from "./RecipeTooltip";
 

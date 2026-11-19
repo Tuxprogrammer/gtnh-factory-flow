@@ -10,8 +10,8 @@ export type RateUnit = "tick" | "second" | "minute" | "hour" | "eu";
 /** The four clocks; `eu` is the odd one out (see UNITS). */
 export type TimeRateUnit = Exclude<RateUnit, "eu">;
 
-import { GT_VOLTAGE_TIERS, getVoltageTierMaxEuT } from "./tiers";
-import type { MachineTier } from "./types";
+import { GT_VOLTAGE_TIERS, getVoltageTierMaxEuT } from "@/lib/model/tiers";
+import type { MachineTier } from "@/lib/model/types";
 
 const UNITS: Record<RateUnit, { multiplier: number; per: string }> = {
   // A Minecraft tick is a twentieth of a second, and it is the unit the game

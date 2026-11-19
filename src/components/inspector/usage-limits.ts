@@ -1,4 +1,5 @@
-import { makeResourceKey, formatRate } from "@/lib/model";
+import { makeResourceKey } from "@/lib/model";
+import { formatRate } from "@/lib/format/numbers";
 import type { FactoryProject, ResourceKey, ThroughputResult } from "@/lib/model/types";
 
 /**

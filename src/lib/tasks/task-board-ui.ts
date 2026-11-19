@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { VIEW_SETTINGS } from "@/lib/view-settings.generated";
 
 /**
  * What the task board's header (in the board toolbar) and the board itself share: the task whose box is open, a
@@ -17,7 +18,7 @@ interface TaskBoardUi {
   views: Record<string, TaskView>;
 }
 
-const VIEWS_KEY = "gtnhplanner.task-views.v1";
+const VIEWS_KEY: string = VIEW_SETTINGS.taskView.key;
 
 function readViews(): Record<string, TaskView> {
   try {

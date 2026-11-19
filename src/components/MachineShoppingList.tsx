@@ -5,18 +5,15 @@ import { checklistCursorStyle } from "./flow/ChecklistMode";
 import { useMemo, useRef, useState, type CSSProperties } from "react";
 import { Cloud, Zap } from "lucide-react";
 import { MotionNumberText } from "./flow/board-motion";
-import { powerDisplayFromEuT, powerDisplaySuffix } from "@/lib/model/rate-unit";
+import { powerDisplayFromEuT, powerDisplaySuffix } from "@/lib/format/rate-unit";
 import { GT_TIER_COLORS } from "./flow/tier-colors";
 import { useMachineHandlerIcons, type MachineHandlerIcon } from "./flow/machine-icons";
 import { machineArtPixels } from "./flow/MachinePicker";
 import { ResourceIcon } from "./nei/ResourceIcon";
-import { formatCompact, formatCompactStable, formatPowerValue } from "@/lib/model/resources";
+import { formatCompact, formatCompactStable, formatPowerValue } from "@/lib/format/numbers";
 import { getVoltageTierMaxEuT } from "@/lib/model/tiers";
-import {
-  buildMachineList,
-  formatMachineListCount,
-  type MachineListEntry,
-} from "@/lib/model/machine-list";
+import { buildMachineList, type MachineListEntry } from "@/lib/model/machine-list";
+import { formatMachineListCount } from "@/lib/format/numbers";
 import type { NodePowerState } from "@/lib/solver/power-report";
 import { getPowerMachineIcon } from "@/lib/power/planner-data";
 import { useFactoryStore, useRateDisplayUnits } from "@/store/factory-store";

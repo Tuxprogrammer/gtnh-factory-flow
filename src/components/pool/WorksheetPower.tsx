@@ -1,6 +1,6 @@
 import type { MachineListEntry } from "@/lib/model/machine-list";
 import { formatPoolPowerValue as formatPowerValue } from "./worksheet-format";
-import { powerDisplayFromEuT, powerDisplaySuffix, rateSuffixForKind } from "@/lib/model/rate-unit";
+import { powerDisplayFromEuT, powerDisplaySuffix, rateSuffixForKind } from "@/lib/format/rate-unit";
 import { Zap } from "lucide-react";
 import { formatPoolRateBare as formatSlotRateBare } from "./worksheet-format";
 

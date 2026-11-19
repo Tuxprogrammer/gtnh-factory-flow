@@ -11,7 +11,8 @@ import { LivePresenceLayer } from "./LivePresenceLayer";
 import { isLiveConfigured } from "@/lib/live/live-config";
 import { PoolWorksheet } from "../pool/PoolWorksheet";
 import { capturePoolWorksheet } from "../export/capture-pool-worksheet";
-import { formatRatioShare, getProjectRatioBranches } from "@/lib/model/storage-ratios";
+import { getProjectRatioBranches } from "@/lib/model/storage-ratios";
+import { formatRatioShare } from "@/lib/format/numbers";
 import { labelRatioArrows, layoutRatioLabels, type RatioWireLabel } from "./ratio-label-layout";
 import { RatioWireLabel as RatioWireLabelControl } from "./RatioWireLabel";
 
@@ -280,6 +281,7 @@ import {
   type GridRoutedEdge,
   measureRoutes,
 } from "./grid-edge-router";
+import "./router-tuning-browser";
 import { getRouterTuning, routerTuningKey, subscribeRouterTuning } from "./router-tuning";
 import { proxyPath } from "@/lib/board-arrange-optimize";
 import { routePoints } from "@/lib/route-metrics";
@@ -311,10 +313,11 @@ import { getFluidTankSlot, isFluidTankRecipe } from "@/lib/model/fluid-tank";
 import { isTrashRecipe, TRASH_ANY_RESOURCE_ID } from "@/lib/model/trash";
 import { GT_VOLTAGE_TIERS } from "@/lib/model/tiers";
 import { GT_TIER_COLORS } from "./tier-colors";
-import { isPowerDisplayUnit, type RateUnit } from "@/lib/model/rate-unit";
+import { isPowerDisplayUnit, type RateUnit } from "@/lib/format/rate-unit";
 import { useIsCompactViewport } from "@/lib/compact-view";
 import { useUiScale } from "@/lib/ui-scale";
 import { subscribeDeviceSettings, wheelChangesValues } from "@/lib/device-settings";
+import { VIEW_SETTINGS } from "@/lib/view-settings.generated";
 import { BOARD_TOOL_SCALE, useToolbarFold } from "./toolbar-fold";
 import { browseHoveredPort } from "./port-browse";
 import { useBoardTouchGestures } from "./board-touch-gestures";
@@ -7510,7 +7513,7 @@ const SourceToolbar = memo(function SourceToolbar({
   useFoldoutDismiss(isPowerUnitMenuOpen, powerUnitRef, closePowerUnitMenu);
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("gtnh-factory-flow.power-display-unit.v1");
+      const saved = localStorage.getItem(VIEW_SETTINGS.powerDisplay.key);
       if (isPowerDisplayUnit(saved)) setPowerDisplayUnit(saved);
     } catch { /* Use EU/t when storage is unavailable. */ }
   }, [setPowerDisplayUnit]);

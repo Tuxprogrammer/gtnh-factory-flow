@@ -856,7 +856,7 @@ public final class SettingsPanel extends Widget<SettingsPanel> implements Intera
             if (next != shown) {
                 shown = next;
                 relayout();
-                Sfx.TICK.play(step > 0 ? 1.12f : 0.9f);
+                Sfx.TICK.play(step > 0 ? Sfx.WHEEL_UP : Sfx.WHEEL_DOWN);
             }
             return true;
         }
@@ -892,7 +892,7 @@ public final class SettingsPanel extends Widget<SettingsPanel> implements Intera
                 // The Sounds row clicks at its new loudness.
                 if (row.label()
                     .equals("Sounds")) Hyb.click();
-                else Sfx.TICK.play(up ? 1.12f : 0.9f);
+                else Sfx.TICK.play(up ? Sfx.WHEEL_UP : Sfx.WHEEL_DOWN);
             }
             case BUTTON -> {}
         }

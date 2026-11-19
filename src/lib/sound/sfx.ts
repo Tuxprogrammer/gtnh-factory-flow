@@ -22,64 +22,39 @@
  * plays once it resumes.
  */
 
-export const SFX_NAMES = [
-  "ui.click",
-  "ui.toggle_on",
-  "ui.toggle_off",
-  "ui.open",
-  "ui.close",
-  "ui.deny",
-  "ui.tick",
-  "ui.page",
-  "board.place",
-  "board.remove",
-  "board.lift",
-  "board.drop",
-  "board.clone",
-  "board.merge",
-  "board.sweep",
-  "board.undo",
-  "board.redo",
-  "board.pin",
-  "board.unpin",
-  "board.adjust",
-  "board.running",
-  "wire.grab",
-  "wire.snap",
-  "wire.item",
-  "wire.fluid",
-  "wire.power",
-  "wire.cut",
-  "wire.fluid_cut",
-  "wire.power_cut",
-  "dial.tier",
-  "note.stick",
-  "note.crumple",
-] as const;
+import { VIEW_SETTINGS } from "@/lib/view-settings.generated";
+import { VIEW_SOUNDS } from "@/lib/view-sounds.generated";
+
+/** Every sound the website has, from the shared sound table (jvm/core/core-view/settings/sounds.json). */
+export const SFX_NAMES = VIEW_SOUNDS.ids;
 
 export type SfxName = (typeof SFX_NAMES)[number];
 
+const ENGINE = VIEW_SOUNDS.engine;
+const LADDERS = VIEW_SOUNDS.ladders;
+const PITCHES = VIEW_SOUNDS.pitches;
+
 /** Takes per sound, as the mod's synth renders them. */
-export const SFX_TAKES = 5;
+export const SFX_TAKES: number = ENGINE.takes;
 
 /** The volume the mod plays its click at to match the game's own click (`Sfx.BASE`). */
-export const SFX_BASE = 0.573;
-const LOUDNESS_DB = 1;
-const PITCH_STEPS = [-2, 0, 0, 0, 2];
-const SCALE = [0, 2, 4, 7, 9, 12];
-const SAME_MS = 30;
-const REPEAT_MS = 120;
-const DUCK = 0.6;
-const DUCK_FLOOR = 3;
-export const SAME_ACTION_MS = 80;
+export const SFX_BASE: number = ENGINE.base;
+const LOUDNESS_DB: number = ENGINE.loudnessDb;
+const PITCH_STEPS: readonly number[] = ENGINE.pitchSteps;
+const SCALE: readonly number[] = ENGINE.scale;
+const SAME_MS: number = ENGINE.sameMs;
+const REPEAT_MS: number = ENGINE.repeatMs;
+const DUCK: number = ENGINE.duck;
+const DUCK_FLOOR: number = ENGINE.duckFloor;
+export const SAME_ACTION_MS: number = ENGINE.sameActionMs;
 /** A sound asked for while the files load or the context wakes plays only this late at most. */
-const LATE_MS = 250;
+const LATE_MS: number = VIEW_SOUNDS.webEngine.lateMs;
 
 /** The mod's Sounds setting (`PlannerSettings.SOUND_GAINS`). */
-export const SOUND_LEVEL_NAMES = ["Off", "Quiet", "Normal", "Loud"] as const;
-export const SOUND_LEVEL_GAINS: readonly number[] = [0, 0.5, 1, 1.7];
-export const DEFAULT_SOUND_LEVEL = 2;
-const LEVEL_KEY = "gtnh-factory-flow.sound-level.v2";
+export const SOUND_LEVEL_NAMES: readonly string[] = VIEW_SETTINGS.soundLevel.labels;
+export const SOUND_LEVEL_GAINS: readonly number[] = VIEW_SETTINGS.soundLevel.values;
+export const DEFAULT_SOUND_LEVEL: number = VIEW_SETTINGS.soundLevel.defaultIndex;
+const LEVEL_KEY: string = VIEW_SETTINGS.soundLevel.key;
 
 /** The file one take lives in: `ui.toggle_on` take 3 is `/sounds/ui/toggle_on3.ogg`. */
 export function sfxUrl(name: SfxName, take: number): string {
@@ -227,7 +202,7 @@ interface Voice {
  * How far ahead the click is scheduled: a sound that says more usually lands a task after it (the edit's own sound),
  * and stopping a click that has not started yet keeps even its first milliseconds out.
  */
-const CLICK_AHEAD_S = 0.02;
+const CLICK_AHEAD_S: number = VIEW_SOUNDS.webEngine.clickAheadS;
 
 function startVoice(url: string, volume: number, pitch: number, ahead = 0): Voice {
   const voice: Voice = { cancelled: false };
@@ -418,12 +393,12 @@ export function sfxClick(): void {
 
 /** A card or drawer selected: the click, softer and higher. */
 export function sfxSelect(): void {
-  playSfx("ui.click", 0.6, 1.15);
+  playSfx("ui.click", PITCHES.selectVolume, PITCHES.selectPitch);
 }
 
 /** One wheel step on a value: up a little higher, down a little lower. */
 export function sfxTick(up: boolean): void {
-  playSfx("ui.tick", 1, up ? 1.12 : 0.9);
+  playSfx("ui.tick", 1, up ? PITCHES.wheelUp : PITCHES.wheelDown);
 }
 
 export type SfxResourceKind = "item" | "fluid" | "power" | "aspect" | undefined;
@@ -440,7 +415,7 @@ export function sfxCut(kind: SfxResourceKind): void {
 
 /** A voltage tier stepped to, ULV (0) low to MAX high (`Sfx.tier`). */
 export function sfxTier(tier: number): void {
-  playSfxStep("dial.tier", Math.max(0, tier), 0.62, 1.085);
+  playSfxStep(LADDERS.tier.sound, Math.max(0, tier), LADDERS.tier.base, LADDERS.tier.ratio);
 }
 
 /** Pinned or unpinned: a count, a drawer's rate, a port's rate. */

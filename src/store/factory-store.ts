@@ -24,7 +24,7 @@ import {
   dedupeEdgeWires,
   findDuplicateEdge,
 } from "@/lib/model/edge-identity";
-import { applySettingMemory } from "@/lib/model/setting-memory";
+import { applySettingMemory } from "@/lib/format/setting-memory";
 import { recipeMapName } from "@/lib/model/recipe-rules";
 import {
   edgeSectionAt,
@@ -54,7 +54,7 @@ import {
   setActivePowerDisplayUnit,
   type PowerDisplayUnit,
   type RateUnit,
-} from "@/lib/model/rate-unit";
+} from "@/lib/format/rate-unit";
 import { registerBooksSink, solveBooks } from "./solve-books";
 import { liveUndoHandler, quietly } from "./live-edit-gate";
 import { applyOps, type LiveOp } from "@/lib/live/ops";
@@ -142,6 +142,7 @@ import {
 } from "@/lib/solver/plan/hygiene";
 import { collectPocketMembers, expandPocketSelection } from "@/lib/model/pocket-connections";
 import { paperForBoardId, pickBoardPaper } from "@/lib/model/board-paper";
+import { VIEW_SETTINGS } from "@/lib/view-settings.generated";
 import {
   addToGroup,
   fitGroups,
@@ -1176,7 +1177,7 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
     setActivePowerDisplayUnit(unit);
     set({ powerDisplayUnit: unit });
     try {
-      localStorage.setItem("gtnh-factory-flow.power-display-unit.v1", unit);
+      localStorage.setItem(VIEW_SETTINGS.powerDisplay.key, unit);
     } catch { /* Storage can be unavailable; the display still works. */ }
   },
   setProject: (project, options) => {

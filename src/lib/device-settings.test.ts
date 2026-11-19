@@ -35,12 +35,13 @@ describe("device settings", () => {
     );
   });
 
-  it("keeps a zoomed-out zoom inside the slider's range and drops one outside it", () => {
+  it("holds a zoomed-out zoom to the slider's range and drops a value that is not a number", () => {
     expect(parseDeviceSettings(JSON.stringify({ zoomedOutAt: 0.9 })).zoomedOutAt).toBe(0.9);
     expect(parseDeviceSettings(JSON.stringify({ zoomedOutAt: 0.35 })).zoomedOutAt).toBe(0.35);
     expect(parseDeviceSettings(JSON.stringify({ zoomedOutAt: 1 })).zoomedOutAt).toBe(1);
-    expect(parseDeviceSettings(JSON.stringify({ zoomedOutAt: 0.1 })).zoomedOutAt).toBe(0.65);
-    expect(parseDeviceSettings(JSON.stringify({ zoomedOutAt: 3 })).zoomedOutAt).toBe(0.65);
+    // Outside the range it is held to it, as the mod holds its percent.
+    expect(parseDeviceSettings(JSON.stringify({ zoomedOutAt: 0.1 })).zoomedOutAt).toBe(0.35);
+    expect(parseDeviceSettings(JSON.stringify({ zoomedOutAt: 3 })).zoomedOutAt).toBe(1);
     expect(parseDeviceSettings(JSON.stringify({ zoomedOutAt: "0.9" })).zoomedOutAt).toBe(0.65);
   });
 

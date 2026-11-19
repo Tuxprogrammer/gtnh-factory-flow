@@ -186,8 +186,13 @@ public final class Working {
                 FormulaLine.number(r.machineParallels()) + " · 20 / " + ticks(s.durationTicks())));
     }
 
-    /** Ticks as the website writes them: whole, or 1/n under one. */
+    /**
+     * Ticks as the website writes them: whole, or 1/n under one. A run under one tick that the power supply stretches is
+     * not a whole fraction (64 parallels at 170 a tick is 0.376 t) and is written as the plain number.
+     */
     private static String ticks(final double t) {
-        return t >= 1 ? FormulaLine.number(t) + " t" : "1/" + Math.round(1 / t) + " t";
+        if (t >= 1) return FormulaLine.number(t) + " t";
+        final double per = 1 / t;
+        return Math.abs(per - Math.round(per)) < 1e-9 ? "1/" + Math.round(per) + " t" : FormulaLine.number(t) + " t";
     }
 }

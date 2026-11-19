@@ -21,7 +21,9 @@ public final class NoticeHost {
     public static List<Notice> of(final List<Notices.Notice> list, final Notices.RateFormat rates) {
         final List<Notice> out = new ArrayList<>(list.size());
         for (final Notices.Notice n : list) {
-            final List<UUID> focus = new ArrayList<>(n.focus().size());
+            final List<UUID> focus = new ArrayList<>(
+                n.focus()
+                    .size());
             for (final String id : n.focus()) focus.add(UUID.fromString(id));
             final String text = Notices.text(n, rates);
             if (n.tag() != null) out.add(

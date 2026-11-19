@@ -42,6 +42,8 @@ class NoticeHostTest {
 
     @Test
     void anEmptyBoardHasNoNotices() {
-        assertEquals(List.of(), NoticeHost.of(Notices.build(new Notices.Input(null, false, List.of(), List.of())), RATES));
+        assertEquals(
+            List.of(),
+            NoticeHost.of(Notices.build(new Notices.Input(null, false, List.of(), List.of())), RATES));
     }
 }

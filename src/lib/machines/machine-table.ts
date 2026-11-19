@@ -35,6 +35,11 @@ import { EEC_CONTROLS, EEC_MODE } from "./extreme-entity-crusher";
 import { neutronActivatorSpeed, quantiseNeutronActivatorDuration } from "./neutron-activator";
 import { HILE_SOURCE_CONTROL, hileSourceAt, normalizeHileSettings } from "./hile";
 import { PRASS_NORMAL_CASING, PRASS_PRECISE_CASING, PRASS_MACHINE_CASING, prassInputVoltageLimit } from "./precise-assembler";
+import {
+  COAL_CASING,
+  COAL_CASING_CONTROL,
+  componentAssemblyLineSpeed,
+} from "./component-assembly-line";
 
 /**
  * How a machine spends each step of spare voltage, mirroring the reference's
@@ -1044,6 +1049,17 @@ const MACHINES: Record<string, MachineBehaviour> = {
     parallels: (c) => c.voltageTier * 16,
     controls: [ITEM_PIPE_CONTROL],
     hidesControls: [PIPE],
+  },
+  // MTEComponentAssemblyLine, the only machine on its recipe map. Takes normal,
+  // multi-amp and laser hatches; setProcessingLogicPower hands the logic every
+  // hatch's voltage x working amps as one voltage at 1 A with unlimited tier
+  // skips, so the whole supply buys normal overclocks. One parallel.
+  "Component Assembly Line": {
+    overclock: OVERCLOCK.normal(),
+    speed: (c) => componentAssemblyLineSpeed(c.tier(COAL_CASING), c.recipeSpecialValue),
+    parallels: 1,
+    unlimitedTierSkip: true,
+    controls: [COAL_CASING_CONTROL],
   },
   // MTEPreciseAssembler's normal Assembler handler. Keep its dedicated
   // Precise Assembler recipe map separate: the two modes have different math.

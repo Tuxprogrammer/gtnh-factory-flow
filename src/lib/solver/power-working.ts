@@ -71,8 +71,11 @@ function ticks(value: number): string {
   if (value >= 1) {
     return `${compact(value)} t`;
   }
-  // Under one tick the machine runs whole recipes a tick: 1/2 t, 1/7 t.
-  return `1/${Math.round(1 / value)} t`;
+  // Under one tick the machine runs whole recipes a tick: 1/2 t, 1/7 t. A run
+  // the power supply caps (capBankedParallels in overclock.ts) is no whole
+  // fraction, so it shows as a decimal instead of a fraction it does not run at.
+  const perTick = Math.round(1 / value);
+  return Math.abs(1 / value - perTick) < 1e-9 ? `1/${perTick} t` : `${compact(value)} t`;
 }
 
 /**

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { buildMachineList, formatMachineListCount } from "./machine-list";
+import {
+  buildMachineList,
+  formatMachineListCount,
+  machinesFromUnits,
+  unitsFromMachines,
+} from "./machine-list";
 import { PROJECT_SCHEMA_VERSION, type FactoryProject, type Recipe } from "./types";
 import { calculateThroughput } from "@/lib/solver/throughput";
 import { closeBoundaries } from "@/lib/solver/close-boundaries";
@@ -181,5 +186,73 @@ describe("power card tiers in the machine list", () => {
     const lines = buildMachineList(p, calculateThroughput(p));
     expect(lines.find((line) => line.nodeId === "lhe")?.tier).toBeUndefined();
     expect(lines.find((line) => line.nodeId === "turbine")?.tier).toBe("EV");
+  });
+});
+
+describe("crop cards in the machine list", () => {
+  const crop: Recipe = {
+    id: "oil-berry",
+    name: "Oil Berry",
+    machineType: "Crop Farm",
+    minimumTier: "NONE",
+    durationTicks: 256,
+    eut: 0,
+    inputs: [],
+    outputs: [{ kind: "item", id: "berry", displayName: "Oil Berry", amount: 1 }],
+    metadata: {
+      cropsNh: {
+        tier: 4,
+        growthPoints: 1200,
+        dropChance: 0.8,
+        growthCycleTicks: 256,
+        growthMultiplier: 1,
+        drops: [{ id: "berry", stackSize: 2, weight: 10000 }],
+      },
+    },
+  } as Recipe;
+  const cropProject = (seeds: number, handler: string, tiers: Record<string, string>): FactoryProject => ({
+    schemaVersion: PROJECT_SCHEMA_VERSION,
+    id: "crops",
+    name: "Crops",
+    fuelProfiles: [],
+    recipes: [crop],
+    edges: [],
+    nodes: [
+      {
+        id: "crop",
+        recipeId: "oil-berry",
+        machineCount: seeds,
+        parallel: 1,
+        enabled: true,
+        overclockTier: "NONE",
+        position: { x: 0, y: 0 },
+        machineHandlerId: handler,
+        machineConfigTiers: tiers,
+      },
+    ],
+  });
+  const listed = (p: FactoryProject) => buildMachineList(p, calculateThroughput(p))[0]!;
+
+  it("counts the Crop Managers the seeds fill, and says how many seeds fill one", () => {
+    // An LV Crop Manager works 11 x 11 sticks on three layers, minus its own block: 362.
+    const fifty = listed(cropProject(50, "crop-manager", {}));
+    expect(fifty).toMatchObject({ count: 1, seedsPerMachine: 362 });
+    expect(listed(cropProject(362, "crop-manager", {})).count).toBe(1);
+    expect(listed(cropProject(363, "crop-manager", {})).count).toBe(2);
+  });
+
+  it("counts the Industrial Farms the seeds fill", () => {
+    // A tier 5 (IV) seed bed holds 27 x 27 seeds.
+    const farm = listed(cropProject(50, "crop-industrial-farm", { cropSeedBedTier: "5" }));
+    expect(farm).toMatchObject({ count: 1, seedsPerMachine: 729 });
+  });
+
+  it("converts between a card's own units and machines", () => {
+    expect(machinesFromUnits({ seedsPerMachine: 362 }, 50)).toBe(1);
+    expect(machinesFromUnits({ seedsPerMachine: 362 }, 363)).toBe(2);
+    expect(machinesFromUnits({ seedsPerMachine: 362 }, 0)).toBe(0);
+    expect(machinesFromUnits({}, 4.5)).toBe(4.5);
+    expect(unitsFromMachines({ seedsPerMachine: 362 }, 2)).toBe(724);
+    expect(unitsFromMachines({}, 2)).toBe(2);
   });
 });

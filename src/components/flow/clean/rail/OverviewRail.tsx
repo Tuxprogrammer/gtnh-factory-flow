@@ -25,6 +25,7 @@ import { BoardMenu, MenuRow } from "../menus/BoardMenu";
 import { useMachineHandlerIcons } from "../../machine-icons";
 import { getFallbackFluidColor, ResourceIcon } from "@/components/nei/ResourceIcon";
 import { formatCompact } from "@/lib/model/resources";
+import { unitsFromMachines } from "@/lib/model/machine-list";
 import {
   powerDisplayFromEuT,
   powerDisplaySuffix,
@@ -1131,12 +1132,14 @@ const MachineRow = memo(function MachineRow({
   else if (steam !== undefined) eu = withUnit(formatCompact(steam), "L/s");
   else if (used !== undefined)
     eu = withUnit(formatCompact(powerDisplayFromEuT(used)), powerDisplaySuffix());
-  const togglePin = () => stepPinRule(entry.nodeId, base);
+  // The box counts machines; a crop card's pin is seeds, so what it sets is the seeds those machines fill.
+  const setCount = (machines: number) => pinCount(entry.nodeId, unitsFromMachines(entry, machines));
+  const togglePin = () => stepPinRule(entry.nodeId, unitsFromMachines(entry, base));
   const go = () => frameCards([entry.nodeId]);
   const wheelCount = (direction: 1 | -1) => {
     const now = wheeled ?? (entry.pinned ? entry.pin! : base);
     const next = entry.pinned || wheeled !== undefined ? now + direction : base + direction;
-    state.wheelEdit(countKey, next < 1 ? 0 : next, (v) => pinCount(entry.nodeId, v));
+    state.wheelEdit(countKey, next < 1 ? 0 : next, setCount);
   };
   const lines: TipContent = {
     title: entry.label,
@@ -1265,7 +1268,7 @@ const MachineRow = memo(function MachineRow({
             }}
             onCommit={(value) => {
               state.edit(null);
-              pinCount(entry.nodeId, value);
+              setCount(value);
             }}
             onCancel={() => state.edit(null)}
             onMiddle={() => {
@@ -1274,7 +1277,7 @@ const MachineRow = memo(function MachineRow({
             onWheel={(direction) => wheelCount(direction)}
             // The card's count box steps what it holds the same way, and sets it as it goes.
             onWheelDraft={(text, direction) => wheelDraft(text, { value: entry.count }, direction)}
-            onLive={(value) => pinCount(entry.nodeId, value)}
+            onLive={setCount}
             onRevert={() => restorePin(entry.nodeId, opened.current)}
             tip={() => ({
               title: "Machine count",

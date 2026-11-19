@@ -104,6 +104,32 @@ describe("the rail's totals", () => {
     expect(exact.machines[0]!.upTo).toBeUndefined();
   });
 
+  it("counts the harvesters an Up to crop card's seeds fill, not the seeds", () => {
+    const project = structuredClone(mockUnneeded.project);
+    const recipe = project.recipes.find((r) => r.id === project.nodes.find((n) => n.id === "comp")!.recipeId)!;
+    recipe.metadata = {
+      cropsNh: {
+        tier: 4,
+        growthPoints: 1200,
+        dropChance: 0.8,
+        growthCycleTicks: 256,
+        growthMultiplier: 1,
+        drops: [{ id: "berry", stackSize: 2, weight: 10000 }],
+      },
+    };
+    const node = project.nodes.find((n) => n.id === "comp")!;
+    node.machineHandlerId = "crop-manager";
+    node.solvePin = 50;
+    const plan = {
+      ...mockUnneeded.result.plan!,
+      upTo: { comp: { capacity: 50, reached: 50, reason: "FULL" as const } },
+    };
+    const rail = buildRailModel(project, { ...mockUnneeded.result, plan });
+    // An LV Crop Manager works 362 sticks: fifty seeds are one machine, and the pin reads as one too.
+    expect(rail.machines[0]).toMatchObject({ rule: "upTo", count: 1, pin: 1, seedsPerMachine: 362 });
+    expect(rail.wholeMachines).toBe(1);
+  });
+
   it("lists no machine for a fluid tank: it is free and instant (the mod lists none)", () => {
     const project = structuredClone(mockUnneeded.project);
     const comp = project.nodes.find((n) => n.id === "comp")!;

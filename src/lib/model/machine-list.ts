@@ -6,6 +6,7 @@ import { listNodeSections } from "./shared-machine";
 import { getVoltageTierIndex, isVoltageTierName } from "./tiers";
 import {
   CROP_HARVESTER_INDUSTRIAL_FARM_ID,
+  cropsNhCropsPerMachine,
   cropsNhEnvironmentFromTiers,
   cropsNhFarmEut,
   cropsNhHarvestTicks,
@@ -34,6 +35,12 @@ export interface MachineListEntry {
   handlerId: string;
   powerSourceId?: string;
   count: number;
+  /**
+   * A crop card counts seeds, so what the solver reports for it (an Up to card's
+   * read-out, a set count) is seeds: this many fill one machine. Absent on every
+   * other card, whose count is machines already.
+   */
+  seedsPerMachine?: number;
   hatches: number;
   hatchChip?: string;
   hatchTypeId?: string;
@@ -50,6 +57,23 @@ export interface MachineListEntry {
   avgMadeEuT?: number;
   pressure?: "bronze" | "high-pressure";
   state: NodePowerState;
+}
+
+/** The machines a card's own units fill: seeds on a crop card, machines everywhere else. */
+export function machinesFromUnits(
+  entry: Pick<MachineListEntry, "seedsPerMachine">,
+  units: number,
+): number {
+  const per = entry.seedsPerMachine;
+  return per ? (units > 0 ? Math.ceil(units / per - 0.000001) : 0) : units;
+}
+
+/** The card's own units for a count of machines (seeds on a crop card): the inverse of `machinesFromUnits`. */
+export function unitsFromMachines(
+  entry: Pick<MachineListEntry, "seedsPerMachine">,
+  machines: number,
+): number {
+  return machines * (entry.seedsPerMachine ?? 1);
 }
 
 const nonnegative = (value: number) => (Number.isFinite(value) ? Math.max(0, value) : 0);
@@ -163,6 +187,7 @@ export function buildMachineList(
       handlerId: handler.id,
       powerSourceId: recipe.power?.sourceId,
       count,
+      ...(crop ? { seedsPerMachine: cropsNhCropsPerMachine(crop) } : {}),
       hatches: report?.hatches ?? 1,
       hatchChip: report?.hatchChip,
       hatchTypeId: report?.isMultiblock ? getEnergyHatchType(node.energyHatchType).id : undefined,

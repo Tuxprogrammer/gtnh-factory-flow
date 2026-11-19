@@ -75,6 +75,13 @@ describe("heat exchanger circuit (MTEHeatExchanger, MTEAdvHeatExchanger, MTEExtr
     expect(flow(model, "Lava")).toBe(1700);
   });
 
+  it("truncates the LHE threshold to whole litres, as MTEHeatExchanger's int field does", () => {
+    // Lava on circuit 2: 1000 - 37.5 = 962.5, kept as 962, so the cap is 1924.
+    const model = compute("large-heat-exchanger", { fluid: "Lava", intake: "2000", tier: "2" });
+    expect(flow(model, "Lava")).toBe(1924);
+    expect(model.stats.find((line) => line.label === "Threshold")?.value).toBe("962 L/s");
+  });
+
   it("lowers the LHE threshold down to circuit 25", () => {
     // Hot coolant: 800 - 24 x 30 = 80 L/s, so 100 L/s is over it.
     const model = compute("large-heat-exchanger", {

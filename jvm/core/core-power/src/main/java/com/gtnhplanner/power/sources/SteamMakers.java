@@ -448,7 +448,9 @@ public final class SteamMakers {
                 final double tier = isThermalBoiler ? 1 : read.number("tier");
                 final double intake = read.number("intake");
                 final double lowered = rule.threshold + (tier - 1) * rule.throttle;
-                final double threshold = isExtreme ? Math.max(1, lowered) : lowered;
+                // MTEHeatExchanger keeps the threshold in an int field (superheated_threshold *= the coolant's
+                // multiplier truncates), so lava on an even circuit loses its half litre. It is never negative here.
+                final double threshold = isExtreme ? Math.max(1, lowered) : Math.floor(lowered);
                 final double cap = capAtMax ? rule.max : threshold * 2;
                 final double used = Math.min(intake, cap);
                 final boolean overThreshold = used >= threshold;

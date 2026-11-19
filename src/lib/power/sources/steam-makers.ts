@@ -516,7 +516,9 @@ function buildExchanger(entry: (typeof powerPlannerData.heatExchangers)[number])
       const tier = isThermalBoiler ? 1 : read.number("tier");
       const intake = read.number("intake");
       const lowered = rule.threshold + (tier - 1) * rule.throttle;
-      const threshold = isExtreme ? Math.max(1, lowered) : lowered;
+      // MTEHeatExchanger keeps the threshold in an int field (superheated_threshold *=
+      // the coolant's multiplier truncates), so lava on an even circuit loses its half litre.
+      const threshold = isExtreme ? Math.max(1, lowered) : Math.trunc(lowered);
       const cap = capAtMax ? rule.max : threshold * 2;
       const used = Math.min(intake, cap);
       const overThreshold = used >= threshold;

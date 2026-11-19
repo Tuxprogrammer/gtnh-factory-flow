@@ -137,6 +137,16 @@ class SteamMakersTest {
     }
 
     @Test
+    void lheThresholdIsWholeLitres() {
+        // MTEHeatExchanger's int field: lava on circuit 2 is 1000 - 37.5 = 962.5, kept as 962, so the cap is 1924.
+        final PowerModel model = compute(
+            "large-heat-exchanger",
+            Map.of("fluid", "Lava", "intake", "2000", "tier", "2"));
+        assertEquals(1924, flow(model, "Lava"), 0);
+        assertEquals("962 L/s", model.stat("Threshold"));
+    }
+
+    @Test
     void lheThresholdLowersToCircuitTwentyFive() {
         // lowers the LHE threshold down to circuit 25
         // Hot coolant: 800 - 24 x 30 = 80 L/s, so 100 L/s is over it.

@@ -151,10 +151,12 @@ final class MachineTableEntries {
                 .speed(c -> 1 + (c.tier(COIL) + 1) * 0.05)
                 .parallels(c -> c.voltageTier * (c.tier(COIL) + 1)));
         // MTEMultiFurnace: parallels double per coil tier from 8; every operation is a fixed 4 EU/t, 128 tick smelt.
+        // The data's handler offers no coil, so the table does.
         machines.put(
             "Multi Smelter",
             machine().overclock(normal())
-                .parallels(c -> 8 * Math.pow(2, c.tier(COIL))));
+                .parallels(c -> 8 * Math.pow(2, c.tier(COIL)))
+                .controls(HEATING_COIL_CONTROL));
         // MTEMegaAlloyBlastSmelter: duration x (1 - 5% per coil tier above TPV), as throughput; a compounding 5% EU
         // discount per coil tier above the RECIPE's own voltage tier, never a penalty.
         machines.put(

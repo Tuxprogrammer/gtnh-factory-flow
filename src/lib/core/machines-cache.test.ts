@@ -2,9 +2,18 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { gunzipSync } from "node:zlib";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
-import { PROJECT_SCHEMA_VERSION, type FactoryNode, type FactoryProject, type Recipe } from "@/lib/model/types";
+import {
+  PROJECT_SCHEMA_VERSION,
+  type FactoryNode,
+  type FactoryProject,
+  type Recipe,
+} from "@/lib/model/types";
 import { getGameRates, setActiveGameRates, type ActiveGameRates } from "@/lib/model/game-rates";
-import { applyMachineHandlerToRecipe, getSelectedMachineHandler, isSteamMachineHandler } from "@/lib/model/recipe-rules";
+import {
+  applyMachineHandlerToRecipe,
+  getSelectedMachineHandler,
+  isSteamMachineHandler,
+} from "@/lib/model/recipe-rules";
 import { applyRecipeInputOverrides } from "@/lib/model/recipe-input-overrides";
 import { stripBeeFrameSlotInputs } from "@/lib/model/bee-display";
 import { buildMachineList } from "@/lib/model/machine-list";
@@ -42,14 +51,19 @@ interface Input {
 
 function testInputs(): Input[] {
   const lines = gunzipSync(
-    readFileSync(path.join(process.cwd(), "conformance", "machines", "website-test-inputs.jsonl.gz")),
+    readFileSync(
+      path.join(process.cwd(), "conformance", "machines", "website-test-inputs.jsonl.gz"),
+    ),
   )
     .toString("utf8")
     .split("\n")
     .filter(Boolean)
     .map((line) => JSON.parse(line) as Input);
   // A recorded node is what the maths read; a card always has an id.
-  return lines.map((line, i) => ({ ...line, node: { ...line.node, id: line.node.id ?? `n${i}` } as FactoryNode }));
+  return lines.map((line, i) => ({
+    ...line,
+    node: { ...line.node, id: line.node.id ?? `n${i}` } as FactoryNode,
+  }));
 }
 
 const INPUTS = testInputs();
@@ -72,7 +86,9 @@ function figuresAsBefore(recipe: Recipe, node: FactoryNode) {
     steam: getNodeSteamReport(nodeRecipe, node),
     parallel: getMachineParallelMultiplier(effective, node),
     structural: getMachineStructuralParallels(effective, node),
-    outputs: effective.outputs.map((output) => getMachineOutputMultiplier(effective, node, output, stats.tier)),
+    outputs: effective.outputs.map((output) =>
+      getMachineOutputMultiplier(effective, node, output, stats.tier),
+    ),
     display: applyMachineOutputMultipliers(stripBeeFrameSlotInputs(effective), node, stats.tier),
   };
 }
@@ -86,7 +102,9 @@ function tipsAsBefore(recipe: Recipe, node: FactoryNode) {
   return {
     steam: steamReport !== undefined,
     seconds: f.stats.durationTicks / 20,
-    drawPerMachine: steamReport ? steamReport.drawSteamPerTick * 20 : (power?.drawEuT ?? Math.abs(f.stats.eut)),
+    drawPerMachine: steamReport
+      ? steamReport.drawSteamPerTick * 20
+      : (power?.drawEuT ?? Math.abs(f.stats.eut)),
     parallels: power?.parallels ?? steamReport?.parallels ?? f.parallel,
     recipeTier: f.stats.minimumTier,
     shared: (node.extraRecipes?.length ?? 0) > 0,
@@ -129,12 +147,16 @@ describe("a card's machine readout", () => {
         continue;
       }
       expect(figuresOf(input.recipe, input.node)).toEqual(before);
-      expect(cardTipFacts(input.recipe, input.node)).toEqual(tipsAsBefore(input.recipe, input.node));
+      expect(cardTipFacts(input.recipe, input.node)).toEqual(
+        tipsAsBefore(input.recipe, input.node),
+      );
       const face = deriveCardFace(input.recipe, input.node);
       expect(face.selectedMachineHandler).toEqual(before.handler);
       expect(face.nodeRecipe).toEqual(before.nodeRecipe);
       expect(face.effectiveRecipe).toEqual(before.effective);
-      expect(face.powerReport).toEqual(face.machineDrawsEu && face.tierControl ? before.power : undefined);
+      expect(face.powerReport).toEqual(
+        face.machineDrawsEu && face.tierControl ? before.power : undefined,
+      );
       compared++;
     }
     expect(compared).toBeGreaterThan(7000);
@@ -162,7 +184,10 @@ describe("a card's machine readout", () => {
     const slower: Recipe = { ...input.recipe, durationTicks: input.recipe.durationTicks * 4 };
     const second = cardMachineMath(slower, input.node).stats.durationTicks;
     expect(second).not.toBe(first);
-    expect(second).toBe(getOverclockedRecipeStats(applyRecipeInputOverrides(slower, input.node), input.node).durationTicks);
+    expect(second).toBe(
+      getOverclockedRecipeStats(applyRecipeInputOverrides(slower, input.node), input.node)
+        .durationTicks,
+    );
   });
 
   it("is never stale: a game-rates change drops every kept figure", () => {
@@ -192,7 +217,9 @@ describe("a card's machine readout", () => {
     const slot = input.recipe.inputs[0]!;
     const wired = {
       ...input.node,
-      recipeInputOverrides: { "0": { ...slot, id: `${slot.id}:substitute`, displayName: "Substitute" } },
+      recipeInputOverrides: {
+        "0": { ...slot, id: `${slot.id}:substitute`, displayName: "Substitute" },
+      },
     } as FactoryNode;
     const second = cardMachineMath(input.recipe, wired);
     expect(second).not.toBe(first);
@@ -232,7 +259,10 @@ describe("a card's machine readout", () => {
     const valueOf = (input: Input) => JSON.stringify(input.node[field as keyof FactoryNode]);
     for (const list of byRecipe.values()) {
       // The values the field takes for this recipe (bounded: the pairs are all of each other's values).
-      const values = [...new Map(list.map((input) => [valueOf(input), input])).values()].slice(0, 12);
+      const values = [...new Map(list.map((input) => [valueOf(input), input])).values()].slice(
+        0,
+        12,
+      );
       if (values.length < 2) continue;
       for (const a of list.slice(0, 4)) {
         setActiveGameRates(rates(a));
@@ -294,7 +324,10 @@ describe("exact invalidation on a board", () => {
     buildMachineList(p, result);
     resetCardMachineMathCounts();
 
-    const edited = { ...p, nodes: p.nodes.map((n) => (n.id === "n3" ? { ...n, overclockTier: "MV" } : n)) };
+    const edited = {
+      ...p,
+      nodes: p.nodes.map((n) => (n.id === "n3" ? { ...n, overclockTier: "MV" } : n)),
+    };
     const lines = buildMachineList(edited, calculateThroughput(edited));
     expect(cardMachineMathCounts()).toMatchObject({ readouts: 1, power: 1, steam: 1 });
     expect(lines.find((l) => l.nodeId === "n3")?.tier).toBe("MV");
@@ -309,7 +342,10 @@ describe("exact invalidation on a board", () => {
       setActiveRateUnit("second");
       setActivePowerDisplayUnit("eu");
     }
-    const arranged = { ...edited, nodes: edited.nodes.map((n, i) => ({ ...n, position: { x: 0, y: i * 300 } })) };
+    const arranged = {
+      ...edited,
+      nodes: edited.nodes.map((n, i) => ({ ...n, position: { x: 0, y: i * 300 } })),
+    };
     buildMachineList(arranged, calculateThroughput(arranged));
     expect(cardMachineMathCounts()).toMatchObject({ readouts: 0, stats: 0, power: 0, steam: 0 });
   });
@@ -318,45 +354,58 @@ describe("exact invalidation on a board", () => {
 /** Numbers to 1e-9 relative (the shadow test's rule), everything else exactly. */
 function near(a: unknown, b: unknown): boolean {
   if (typeof a === "number" && typeof b === "number")
-    return a === b || (Number.isNaN(a) && Number.isNaN(b)) || Math.abs(a - b) <= 1e-9 * Math.max(Math.abs(a), Math.abs(b));
-  if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((x, i) => near(x, b[i]));
+    return (
+      a === b ||
+      (Number.isNaN(a) && Number.isNaN(b)) ||
+      Math.abs(a - b) <= 1e-9 * Math.max(Math.abs(a), Math.abs(b))
+    );
+  if (Array.isArray(a) && Array.isArray(b))
+    return a.length === b.length && a.every((x, i) => near(x, b[i]));
   if (a && b && typeof a === "object" && typeof b === "object") {
     const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
-    return [...keys].every((k) => near((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k]));
+    return [...keys].every((k) =>
+      near((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k]),
+    );
   }
   return a === b;
 }
 
 const corePresent = existsSync(path.join(process.cwd(), "public", "core", "manifest.json"));
-describe.skipIf(!corePresent)("a card's machine readout through the core (the machines area forced on)", () => {
-  beforeAll(async () => {
-    resetCoreForTests();
-    await loadCore({ target: wasmGcSupported() ? "wasm-gc" : "js" });
-  });
-  afterAll(() => resetCoreForTests());
-
-  it("gives the consumers the TypeScript's figures, from the core where it covers the card", () => {
-    let throughCore = 0;
-    let compared = 0;
-    withAdopt({ machines: true }, () => {
-      INPUTS.forEach((input, i) => {
-        if (i % 3 !== 0) return;
-        setActiveGameRates(rates(input));
-        let before: ReturnType<typeof figuresAsBefore>;
-        try {
-          before = figuresAsBefore(input.recipe, input.node);
-        } catch {
-          return;
-        }
-        resetCardMachineMathCounts();
-        const got = figuresOf(input.recipe, input.node);
-        throughCore += cardMachineMathCounts().core;
-        compared++;
-        if (!near(got, before)) expect.fail(`${input.recipe.id}: ${JSON.stringify(got).slice(0, 300)}`);
-        expect(near(cardTipFacts(input.recipe, input.node), tipsAsBefore(input.recipe, input.node))).toBe(true);
-      });
+describe.skipIf(!corePresent)(
+  "a card's machine readout through the core (the machines area forced on)",
+  () => {
+    beforeAll(async () => {
+      resetCoreForTests();
+      await loadCore({ target: wasmGcSupported() ? "wasm-gc" : "js" });
     });
-    expect(compared).toBeGreaterThan(2000);
-    expect(throughCore).toBeGreaterThan(compared * 0.8);
-  }, 300_000);
-});
+    afterAll(() => resetCoreForTests());
+
+    it("gives the consumers the TypeScript's figures, from the core where it covers the card", () => {
+      let throughCore = 0;
+      let compared = 0;
+      withAdopt({ machines: true }, () => {
+        INPUTS.forEach((input, i) => {
+          if (i % 3 !== 0) return;
+          setActiveGameRates(rates(input));
+          let before: ReturnType<typeof figuresAsBefore>;
+          try {
+            before = figuresAsBefore(input.recipe, input.node);
+          } catch {
+            return;
+          }
+          resetCardMachineMathCounts();
+          const got = figuresOf(input.recipe, input.node);
+          throughCore += cardMachineMathCounts().core;
+          compared++;
+          if (!near(got, before))
+            expect.fail(`${input.recipe.id}: ${JSON.stringify(got).slice(0, 300)}`);
+          expect(
+            near(cardTipFacts(input.recipe, input.node), tipsAsBefore(input.recipe, input.node)),
+          ).toBe(true);
+        });
+      });
+      expect(compared).toBeGreaterThan(2000);
+      expect(throughCore).toBeGreaterThan(compared * 0.8);
+    }, 300_000);
+  },
+);

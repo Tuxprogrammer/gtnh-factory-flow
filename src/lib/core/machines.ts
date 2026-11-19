@@ -132,7 +132,11 @@ const ratesSent = new WeakMap<CoreExports, ActiveGameRates>();
 function sendRates(c: CoreExports): void {
   const rates = getGameRates();
   if (ratesSent.get(c) === rates) return;
-  c.MachinesExports.machinesSetRates(rates.beesYield, rates.ic2CropsYield, rates.recipeDurationDivisor);
+  c.MachinesExports.machinesSetRates(
+    rates.beesYield,
+    rates.ic2CropsYield,
+    rates.recipeDurationDivisor,
+  );
   ratesSent.set(c, rates);
 }
 
@@ -197,7 +201,8 @@ export function warmSoon(c: CoreExports): void {
       // Warming is only a head start: a failure here leaves the first cards to pay, nothing else.
     }
   };
-  const idle = (globalThis as { requestIdleCallback?: (cb: () => void) => void }).requestIdleCallback;
+  const idle = (globalThis as { requestIdleCallback?: (cb: () => void) => void })
+    .requestIdleCallback;
   if (idle) idle(run);
   else setTimeout(run, 0);
 }
@@ -221,13 +226,25 @@ const nodeKeys = new WeakMap<FactoryNode, string>();
 export function nodeContentKey(node: FactoryNode): string {
   let key = nodeKeys.get(node);
   if (key === undefined) {
-    key = JSON.stringify(node, (name, value) => (name === "position" || name === "solvePin" ? undefined : value));
+    key = JSON.stringify(node, (name, value) =>
+      name === "position" || name === "solvePin" ? undefined : value,
+    );
     nodeKeys.set(node, key);
   }
   return key;
 }
 
-const counts = { readouts: 0, nodeRecipe: 0, stats: 0, power: 0, steam: 0, parallel: 0, outputs: 0, kept: 0, core: 0 };
+const counts = {
+  readouts: 0,
+  nodeRecipe: 0,
+  stats: 0,
+  power: 0,
+  steam: 0,
+  parallel: 0,
+  outputs: 0,
+  kept: 0,
+  core: 0,
+};
 
 /** How many of each figure the TypeScript (or the core) computed since the last reset: for tests and probes. */
 export function cardMachineMathCounts(): Readonly<typeof counts> {
@@ -280,7 +297,8 @@ export class CardReadout implements CardMachineMath {
 
   /** applyMachineHandlerToRecipe(nodeRecipe, node): the machine's recipe. */
   get effectiveRecipe(): Recipe {
-    if (this._effective === UNSET) this._effective = applyMachineHandlerToRecipe(this.nodeRecipe, this.node);
+    if (this._effective === UNSET)
+      this._effective = applyMachineHandlerToRecipe(this.nodeRecipe, this.node);
     return this._effective;
   }
 
@@ -345,7 +363,9 @@ export class CardReadout implements CardMachineMath {
     if (this._parallel === UNSET) {
       const core = this.core();
       if (!core) counts.parallel++;
-      this._parallel = core ? core.parallel : getMachineParallelMultiplier(this.effectiveRecipe, this.node);
+      this._parallel = core
+        ? core.parallel
+        : getMachineParallelMultiplier(this.effectiveRecipe, this.node);
     }
     return this._parallel;
   }
@@ -354,7 +374,9 @@ export class CardReadout implements CardMachineMath {
   get structuralParallel(): number {
     if (this._structural === UNSET) {
       const core = this.core();
-      this._structural = core ? core.structuralParallel : getMachineStructuralParallels(this.effectiveRecipe, this.node);
+      this._structural = core
+        ? core.structuralParallel
+        : getMachineStructuralParallels(this.effectiveRecipe, this.node);
     }
     return this._structural;
   }
@@ -400,7 +422,9 @@ export function applyCardOutputMultipliers(recipe: Recipe, readout: CardReadout)
     const multiplier = multipliers[index]!;
     return multiplier === 1 ? output : { ...output, amount: output.amount * multiplier };
   });
-  return outputs.some((output, index) => output !== recipe.outputs[index]) ? { ...recipe, outputs } : recipe;
+  return outputs.some((output, index) => output !== recipe.outputs[index])
+    ? { ...recipe, outputs }
+    : recipe;
 }
 
 /**

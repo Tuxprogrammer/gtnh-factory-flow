@@ -126,7 +126,14 @@ function report(target: CoreTarget, what: string, t: Tally): void {
 
 function shadow(inputs: Input[]): Tally {
   const c = core();
-  const tally: Tally = { inputs: 0, readouts: 0, cards: 0, leftToWebsite: 0, passive: 0, findings: [] };
+  const tally: Tally = {
+    inputs: 0,
+    readouts: 0,
+    cards: 0,
+    leftToWebsite: 0,
+    passive: 0,
+    findings: [],
+  };
   const before = getGameRates();
   try {
     for (const input of inputs) {
@@ -173,7 +180,9 @@ function shadow(inputs: Input[]): Tally {
         continue;
       }
       if (passive && (readout != null || cardText != null)) {
-        tally.findings.push(`${input.name}: the core answers a bee or crop card the website keeps to its own models`);
+        tally.findings.push(
+          `${input.name}: the core answers a bee or crop card the website keeps to its own models`,
+        );
         continue;
       }
       if (readout == null) {

@@ -1331,8 +1331,10 @@ const MACHINES: Record<string, MachineBehaviour> = {
     parallels: (c) => c.voltageTier * 6,
   },
   // MTEIndustrialChisel: setSpeedBonus(1F / 3F), setEuModifier(0.75F),
-  // 16 * GTUtility.getTier.
+  // 16 * GTUtility.getTier. The only machine on its map, so its recipes
+  // arrive under the map's name.
   "Industrial 3D Copying Machine": {
+    aliases: ["Industrial Chisel"],
     overclock: OVERCLOCK.normal(),
     speed: 3,
     power: 0.75,
@@ -1360,8 +1362,10 @@ const MACHINES: Record<string, MachineBehaviour> = {
   // MTELatex: setSpeedBonus(1F / 2F), setEuModifier(0.85F), 8 * GTUtility
   // .getTier doubled by an Elastic Singularity in the controller slot. The
   // item pipe casings' rubber cost discount changes INPUT amounts, which the
-  // table cannot express.
+  // table cannot express. The only machine on its map, so its recipes arrive
+  // under the map's name.
   "L.A.T.E.X.": {
+    aliases: ["Cable Coating"],
     overclock: OVERCLOCK.normal(),
     speed: 2,
     power: 0.85,

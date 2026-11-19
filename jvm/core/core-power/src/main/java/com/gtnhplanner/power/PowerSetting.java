@@ -5,6 +5,8 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.NumberText;
+
 /**
  * A knob on a power card (types.ts PowerSetting): a select, a number or a toggle. Values are stored on the node as
  * strings under the setting's id, as the website stores them in {@code machineConfigTiers}.
@@ -75,12 +77,7 @@ public sealed interface PowerSetting permits PowerSetting.Select,PowerSetting.Nu
         public double value(@Nullable final String raw) {
             if (raw == null || raw.trim()
                 .isEmpty()) return defaultValue;
-            final double parsed;
-            try {
-                parsed = Double.parseDouble(raw.trim());
-            } catch (final NumberFormatException e) {
-                return defaultValue;
-            }
+            final double parsed = NumberText.parse(raw);
             if (!Double.isFinite(parsed)) return defaultValue;
             return Math.min(max, Math.max(min, parsed));
         }

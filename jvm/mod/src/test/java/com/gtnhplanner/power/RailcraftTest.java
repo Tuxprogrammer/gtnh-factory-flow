@@ -17,7 +17,7 @@ import com.gtnhplanner.power.sources.Railcraft;
 
 /**
  * The website's sources/railcraft.test.ts, case for case: Railcraft's Water Tank and boiler against Railcraft's source
- * (GTNH fork, tag 9.17.26). The same values on both sides keep plans moving between them unchanged.
+ * (GTNH fork, tag 9.17.36). The same values on both sides keep plans moving between them unchanged.
  */
 class RailcraftTest {
 

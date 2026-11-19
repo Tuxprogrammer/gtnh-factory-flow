@@ -624,6 +624,13 @@
    "iconPath": "/datasets/gtnh/local-2.9.0-beta-2/textures/rendered/charcoal-7bf013b0a230.png",
    "dominantColor": "#28241c"
   },
+  "Charcoal Dust": {
+   "kind": "item",
+   "id": "gregtech:gt.metaitem.01@2536",
+   "displayName": "Charcoal Dust",
+   "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/charcoal_dust-260b4b61502d.png",
+   "dominantColor": "#3a2929"
+  },
   "Chipped Amber": {
    "kind": "item",
    "id": "gregtech:gt.metaitem.02@27514",
@@ -686,6 +693,13 @@
    "displayName": "Coal Coke",
    "iconPath": "/datasets/gtnh/local-2.9.0-beta-2/textures/rendered/coal_coke-689cbccd995b.png",
    "dominantColor": "#3a3a47"
+  },
+  "Coal Dust": {
+   "kind": "item",
+   "id": "gregtech:gt.metaitem.01@2535",
+   "displayName": "Coal Dust",
+   "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/coal_dust-3f30e5846147.png",
+   "dominantColor": "#0f0f0f"
   },
   "Coal Gas": {
    "kind": "fluid",
@@ -1968,6 +1982,13 @@
    "iconPath": "/datasets/gtnh/local-2.9.0-beta-2/textures/rendered/lignite_coal-4fe74fdab13f.png",
    "dominantColor": "#4d3636"
   },
+  "Lignite Coal Dust": {
+   "kind": "item",
+   "id": "gregtech:gt.metaitem.01@2538",
+   "displayName": "Lignite Coal Dust",
+   "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/lignite_coal_dust-fcbc32f3b516.png",
+   "dominantColor": "#3e2c2c"
+  },
   "Liquid Air": {
    "kind": "fluid",
    "id": "liquidair",
@@ -3179,6 +3200,27 @@
    "iconPath": "/datasets/gtnh/local-2.9.0-beta-2/textures/rendered/nitrogen_plasma-45cc97f66844.png",
    "dominantColor": "#0093c4"
   },
+  "Oak Log": {
+   "kind": "item",
+   "id": "minecraft:log",
+   "displayName": "Oak Log",
+   "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/oak_log-94b92ef5e0d6.png",
+   "dominantColor": "#55442a"
+  },
+  "Oak Planks": {
+   "kind": "item",
+   "id": "minecraft:planks",
+   "displayName": "Oak Planks",
+   "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/oak_planks-1db6e86ee655.png",
+   "dominantColor": "#6a5635"
+  },
+  "Oak Sapling": {
+   "kind": "item",
+   "id": "minecraft:sapling",
+   "displayName": "Oak Sapling",
+   "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/oak_sapling-7c49c7bbde39.png",
+   "dominantColor": "#614623"
+  },
   "Obsidian": {
    "kind": "item",
    "id": "minecraft:obsidian",
@@ -4277,6 +4319,13 @@
    "displayName": "Wood Gas",
    "iconPath": "/datasets/gtnh/local-2.9.0-beta-2/textures/rendered/wood_gas-5bf9a4440023.png",
    "dominantColor": "#afa26b"
+  },
+  "Wood Pulp": {
+   "kind": "item",
+   "id": "gregtech:gt.metaitem.01@2809",
+   "displayName": "Wood Pulp",
+   "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/wood_pulp-9a7df0aa98df.png",
+   "dominantColor": "#371c00"
   },
   "Wrath Shard": {
    "kind": "item",

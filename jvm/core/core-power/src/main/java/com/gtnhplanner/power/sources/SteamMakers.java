@@ -2,7 +2,6 @@ package com.gtnhplanner.power.sources;
 
 import static com.gtnhplanner.power.sources.Helpers.*;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -12,6 +11,7 @@ import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.power.PowerData;
 import com.gtnhplanner.power.PowerData.Fuel;
 import com.gtnhplanner.power.PowerData.HeatExchanger;
@@ -368,9 +368,7 @@ public final class SteamMakers {
      * prints no exponent). Only small whole numbers are interpolated raw here.
      */
     private static String jsString(final double value) {
-        if (value == Math.rint(value) && Math.abs(value) < 0x1p53) return Long.toString((long) value);
-        return new BigDecimal(Double.toString(value)).stripTrailingZeros()
-            .toPlainString();
+        return NumberText.of(value);
     }
 
     /**

@@ -10,6 +10,9 @@ import java.util.UUID;
 import org.jetbrains.annotations.Nullable;
 
 import com.gtnhplanner.CoreIds;
+import com.gtnhplanner.core.layout.BoxRouter;
+import com.gtnhplanner.core.layout.GridRoutedEdge;
+import com.gtnhplanner.core.layout.IncrementalStats;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.Graph;
@@ -19,7 +22,6 @@ import com.gtnhplanner.data.flowchart.balancer.BalanceResult;
 import com.gtnhplanner.data.flowchart.balancer.Balancer;
 import com.gtnhplanner.data.flowchart.balancer.PortRef;
 import com.gtnhplanner.layout.WireHops;
-import com.gtnhplanner.layout.WireRouter;
 import com.gtnhplanner.ui.BoardSession;
 import com.gtnhplanner.ui.Resources;
 import com.gtnhplanner.ui.card.CardLayout;
@@ -29,7 +31,8 @@ import com.gtnhplanner.ui.theme.Hyb;
 
 /**
  * The board's wires, Factory Flow style: one per resource between two objects, routed around cards and drawers
- * ({@link WireRouter}), drawn in the resource's colour, thicker with more flow, with arrowheads along the run.
+ * ({@link BoxRouter}, the one router the website runs too), drawn in the resource's colour, thicker with more flow,
+ * with arrowheads along the run.
  * Everything is in world space; the canvas draws this under the cards with its pan and zoom applied.
  */
 final class WireLayer {
@@ -59,7 +62,7 @@ final class WireLayer {
      * This board's router, used on the router's thread only: it keeps the board between routes, so a move, a new
      * wire or a new card routes again only what it touched.
      */
-    private final WireRouter router = new WireRouter();
+    private final BoxRouter router = new BoxRouter();
 
     /**
      * A collapsed group's summary card on the board {x, y, w, h}, or null (docs/design/groups.md): wires between what
@@ -175,13 +178,14 @@ final class WireLayer {
             final boolean thorough = !moving;
             job = WORKER.submit(() -> {
                 final long started = System.nanoTime();
-                final Map<UUID, List<int[]>> routed = router.reroute(p.boxes(), p.keys(), p.requests(), null, thorough);
-                return new Routed(
-                    routing,
-                    routed,
-                    endsOf(p),
-                    (System.nanoTime() - started) / 1_000_000,
-                    router.statRouted);
+                final IncrementalStats stats = new IncrementalStats();
+                final Map<String, GridRoutedEdge> solved = router.route(p.boxes(), p.requests(), thorough, stats);
+                final Map<UUID, List<int[]>> routed = new HashMap<>();
+                for (final BoxRouter.Wire w : p.requests()) {
+                    final GridRoutedEdge r = solved.get(w.key());
+                    if (r != null) routed.put(UUID.fromString(w.key()), BoxRouter.pixels(r));
+                }
+                return new Routed(routing, routed, endsOf(p), (System.nanoTime() - started) / 1_000_000, stats.routed);
             });
             if (lastRouteMillis >= 0 ? lastRouteMillis <= WAIT_MILLIS
                 : p.requests()
@@ -208,9 +212,9 @@ final class WireLayer {
     }
 
     /** Every card and drawer as the last route saw them: what a dot carried is kept off. */
-    private List<WireRouter.Box> boxes = List.of();
+    private List<BoxRouter.Box> boxes = List.of();
 
-    List<WireRouter.Box> boxes() {
+    List<BoxRouter.Box> boxes() {
         return boxes;
     }
 
@@ -353,21 +357,25 @@ final class WireLayer {
      * keys, one router wire per wire weighted by its width, the wires themselves (no path yet), and the two boxes at
      * each wire's ends (x, y, w, h each). Plain data, so the router's thread can route it.
      */
-    private record Plan(List<WireRouter.Box> boxes, List<UUID> keys, List<WireRouter.Wire> requests, List<Wire> wires,
-        List<int[]> ends) {}
+    private record Plan(List<BoxRouter.Box> boxes, List<BoxRouter.Wire> requests, List<Wire> wires, List<int[]> ends) {}
 
     private Plan plan(final Map<UUID, RecipeCard> cards, final Map<UUID, DrawerCard> drawers) {
         final Graph graph = session.graph();
-        final List<WireRouter.Box> boxes = new ArrayList<>();
-        final List<UUID> keys = new ArrayList<>();
+        final List<BoxRouter.Box> boxes = new ArrayList<>();
         final Map<RecipeCard, Integer> cardBox = new java.util.IdentityHashMap<>();
         // Once per card: a shared machine's recipes all find the same one.
         for (final RecipeCard card : new java.util.LinkedHashSet<>(cards.values())) {
             final Node n = graph.nodes.get(card.nodeId);
             if (n == null) continue;
             cardBox.put(card, boxes.size());
-            keys.add(card.nodeId);
-            boxes.add(new WireRouter.Box(n.x, n.y, CardLayout.W, card.layout() == null ? 100 : card.layout().height));
+            boxes.add(
+                new BoxRouter.Box(
+                    card.nodeId.toString(),
+                    n.x,
+                    n.y,
+                    CardLayout.W,
+                    card.layout() == null ? 100 : card.layout().height,
+                    false));
         }
         final Map<UUID, Integer> drawerBox = new HashMap<>();
         final java.util.Collection<Drawer> drawerList = drawers();
@@ -375,8 +383,16 @@ final class WireLayer {
             // Out of sight in a collapsed group: its wires dock on the group's summary.
             if (d.getGroup() != null && com.gtnhplanner.data.flowchart.Groups.hidden(graph, d.getId())) continue;
             drawerBox.put(d.getId(), boxes.size());
-            keys.add(d.getId());
-            boxes.add(new WireRouter.Box(d.getX(), d.getY(), DrawerCard.W, DrawerCard.H));
+            // Met square to its side, as on the website: a wire slanting into a two-cell drawer reads as aimed wrong.
+            boxes.add(
+                new BoxRouter.Box(
+                    d.getId()
+                        .toString(),
+                    d.getX(),
+                    d.getY(),
+                    DrawerCard.W,
+                    DrawerCard.H,
+                    true));
         }
         // Collapsed groups on show: one box each, where what they hide is wired to (docs/design/groups.md).
         final Map<UUID, Integer> groupBoxes = new HashMap<>();
@@ -385,8 +401,15 @@ final class WireLayer {
             final int[] b = groupBox.apply(g.getId());
             if (b == null) continue;
             groupBoxes.put(g.getId(), boxes.size());
-            keys.add(g.getId());
-            boxes.add(new WireRouter.Box(b[0], b[1], b[2], b[3]));
+            boxes.add(
+                new BoxRouter.Box(
+                    g.getId()
+                        .toString(),
+                    b[0],
+                    b[1],
+                    b[2],
+                    b[3],
+                    true));
         }
         final java.util.function.Function<UUID, Integer> hiddenIn = id -> {
             final UUID hider = groupBoxes.isEmpty() ? null : com.gtnhplanner.data.flowchart.Groups.hiddenBy(graph, id);
@@ -468,19 +491,37 @@ final class WireLayer {
         // either box's edge, as on the website; a wire from a card back to itself (two recipes on one shared machine)
         // leaves its right side and comes round into its left, so it reads as a loop.
         final List<Wire> sized = withWidths(pending);
-        final List<WireRouter.Wire> requests = new ArrayList<>(sized.size());
+        final List<BoxRouter.Wire> requests = new ArrayList<>(sized.size());
         final List<int[]> ends = new ArrayList<>(sized.size());
         for (int i = 0; i < sized.size(); i++) {
             final int a = between.get(i)[0], b = between.get(i)[1];
             final Wire w = sized.get(i);
             // Steered through its dots, when it has any (the website's waypoints).
             requests.add(
-                a == b ? new WireRouter.Wire(w.key(), a, b, WireRouter.RIGHT, WireRouter.LEFT, w.width(), w.stops())
-                    : new WireRouter.Wire(w.key(), a, b, WireRouter.ANY, WireRouter.ANY, w.width(), w.stops()));
-            final WireRouter.Box from = boxes.get(a), to = boxes.get(b);
-            ends.add(new int[] { from.x(), from.y(), from.w(), from.h(), to.x(), to.y(), to.w(), to.h() });
+                a == b ? new BoxRouter.Wire(
+                    w.key()
+                        .toString(),
+                    a,
+                    b,
+                    BoxRouter.RIGHT,
+                    BoxRouter.LEFT,
+                    w.width(),
+                    w.stops())
+                    : new BoxRouter.Wire(
+                        w.key()
+                            .toString(),
+                        a,
+                        b,
+                        BoxRouter.ANY,
+                        BoxRouter.ANY,
+                        w.width(),
+                        w.stops()));
+            final BoxRouter.Box from = boxes.get(a), to = boxes.get(b);
+            ends.add(
+                new int[] { (int) from.x(), (int) from.y(), (int) from.w(), (int) from.h(), (int) to.x(), (int) to.y(),
+                    (int) to.w(), (int) to.h() });
         }
-        return new Plan(List.copyOf(boxes), List.copyOf(keys), List.copyOf(requests), sized, ends);
+        return new Plan(List.copyOf(boxes), List.copyOf(requests), sized, ends);
     }
 
     /** The plan's wires along the latest routes. */

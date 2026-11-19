@@ -88,6 +88,7 @@ dependencies {
     // The plain-Java core (../core), shaded and downgraded with the mod's own classes.
     shadowImplementation(project(':core-base'))
     shadowImplementation(project(':core-solver'))
+    shadowImplementation(project(':core-layout'))
     shadowImplementation(project(':core-view'))
     shadowImplementation(project(':core-machines'))
     shadowImplementation(project(':core-power'))

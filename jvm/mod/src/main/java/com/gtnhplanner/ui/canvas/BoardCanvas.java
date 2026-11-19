@@ -24,12 +24,12 @@ import com.cleanroommc.modularui.theme.WidgetThemeEntry;
 import com.cleanroommc.modularui.widget.ParentWidget;
 import com.cleanroommc.modularui.widget.sizer.Area;
 import com.gtnhplanner.CoreIds;
+import com.gtnhplanner.core.layout.BoxRouter;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Waypoints;
-import com.gtnhplanner.layout.WireRouter;
 import com.gtnhplanner.ui.BoardSession;
 import com.gtnhplanner.ui.card.CardLayout;
 import com.gtnhplanner.ui.card.CardModel;
@@ -2970,7 +2970,8 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
                     null,
                     null,
                     progress -> arrangeProgress = progress,
-                    () -> arrangeCancelled)));
+                    () -> arrangeCancelled,
+                    new ArrangeThread())));
     }
 
     /**
@@ -3794,7 +3795,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
     }
 
     /**
-     * The middle of a cell the path runs through nearest (wx, wy): of the cells round where the point falls, the one
+     * The grid corner the path runs through nearest (wx, wy): of the corners round where the point falls, the one
      * nearest the path, then the point.
      */
     private static int[] onWire(final List<int[]> path, final float wx, final float wy) {
@@ -3826,26 +3827,29 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
     }
 
     /**
-     * Where a dot carried to (wx, wy) lands: the middle of the cell there, pushed off any card or drawer and the
-     * ring of cells touching it (the website's clamp), where the router would only send a wire through at a price.
+     * Where a dot carried to (wx, wy) lands: the grid corner there, pushed off any card or drawer and the cell of
+     * clearance round it (the website's clamp), where the router would not send a wire through and would drop the dot.
      */
     private int[] clearStop(final float wx, final float wy) {
         int x = Waypoints.onLine(Math.round(wx)), y = Waypoints.onLine(Math.round(wy));
-        final List<WireRouter.Box> boxes = wires.boxes();
-        final int ring = Waypoints.CELL, out = Waypoints.CELL + Waypoints.CELL / 2;
+        final List<BoxRouter.Box> boxes = wires.boxes();
+        final int ring = Waypoints.CELL;
         for (int pass = 0; pass < 4; pass++) {
             boolean moved = false;
-            for (final WireRouter.Box b : boxes) {
-                if (x <= b.x() - ring || x >= b.x() + b.w() + ring || y <= b.y() - ring || y >= b.y() + b.h() + ring)
-                    continue;
-                // Out the nearest way: onto the line of cells just past the ring.
-                final int left = x - (b.x() - out), right = b.x() + b.w() + out - x;
-                final int up = y - (b.y() - out), down = b.y() + b.h() + out - y;
+            for (final BoxRouter.Box b : boxes) {
+                final int bx = (int) b.x(), by = (int) b.y(), bw = (int) b.w(), bh = (int) b.h();
+                if (x <= bx - ring || x >= bx + bw + ring || y <= by - ring || y >= by + bh + ring) continue;
+                // Out the nearest way: onto the first grid line at or past the ring.
+                final int toLeft = Math.floorDiv(bx - ring, Waypoints.CELL) * Waypoints.CELL;
+                final int toRight = -Math.floorDiv(-(bx + bw + ring), Waypoints.CELL) * Waypoints.CELL;
+                final int toUp = Math.floorDiv(by - ring, Waypoints.CELL) * Waypoints.CELL;
+                final int toDown = -Math.floorDiv(-(by + bh + ring), Waypoints.CELL) * Waypoints.CELL;
+                final int left = x - toLeft, right = toRight - x, up = y - toUp, down = toDown - y;
                 final int least = Math.min(Math.min(left, right), Math.min(up, down));
-                if (least == left) x = Waypoints.onLine(b.x() - out);
-                else if (least == right) x = Waypoints.onLine(b.x() + b.w() + out);
-                else if (least == up) y = Waypoints.onLine(b.y() - out);
-                else y = Waypoints.onLine(b.y() + b.h() + out);
+                if (least == left) x = toLeft;
+                else if (least == right) x = toRight;
+                else if (least == up) y = toUp;
+                else y = toDown;
                 moved = true;
             }
             if (!moved) break;

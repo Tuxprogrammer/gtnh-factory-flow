@@ -689,12 +689,16 @@ function normalizeThaumcraftRecipe(rawRecipe) {
     (rawRecipe.aspects ?? []).forEach((entry, index) => addInput(entry, aspectSlots[index], index));
   } else if (type === "arcane") {
     const componentSlots = thaumcraftArcaneComponentSlots();
+    // Materials sit where the arcane workbench grid draws them (`gridSlot`); a raw
+    // export without it falls back to reading order.
     const rawInputs = [
       rawRecipe.centralInput,
       rawRecipe.catalyst,
       ...(rawRecipe.components ?? []),
     ].filter(Boolean);
-    rawInputs.forEach((entry, index) => addInput(entry, componentSlots[index], index));
+    rawInputs.forEach((entry, index) =>
+      addInput(entry, componentSlots[entry.gridSlot ?? index] ?? componentSlots[index], index),
+    );
     const aspectSlots = thaumcraftArcaneAspectSlots((rawRecipe.aspects ?? []).length);
     (rawRecipe.aspects ?? []).forEach((entry, index) => addInput(entry, aspectSlots[index], index));
   } else {

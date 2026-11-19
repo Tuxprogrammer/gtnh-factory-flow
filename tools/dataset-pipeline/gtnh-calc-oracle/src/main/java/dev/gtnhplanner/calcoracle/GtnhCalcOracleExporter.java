@@ -1299,9 +1299,14 @@ public final class GtnhCalcOracleExporter {
         recipe.put("className", className);
         putIfPresent(recipe, "research", firstString(rawRecipe, "research", "researchKey", "key"));
         putIfPresent(recipe, "output", resourceFromUnknown(firstObject(rawRecipe, "getRecipeOutput", "recipeOutput", "output")));
-        putIfPresent(recipe, "centralInput", resourceFromUnknown(firstObject(rawRecipe, "getRecipeInput", "recipeInput", "input")));
-        putIfPresent(recipe, "catalyst", resourceFromUnknown(firstObject(rawRecipe, "getCatalyst", "catalyst")));
-        List<Map<String, Object>> components = resourcesFromUnknown(firstObject(rawRecipe, "getComponents", "components", "recipeItems"));
+        boolean arcane = "arcane".equals(type);
+        if (!arcane) {
+            putIfPresent(recipe, "centralInput", resourceFromUnknown(firstObject(rawRecipe, "getRecipeInput", "recipeInput", "input")));
+            putIfPresent(recipe, "catalyst", resourceFromUnknown(firstObject(rawRecipe, "getCatalyst", "catalyst")));
+        }
+        List<Map<String, Object>> components = arcane
+            ? thaumcraftArcaneComponents(rawRecipe)
+            : resourcesFromUnknown(firstObject(rawRecipe, "getComponents", "components", "recipeItems"));
         List<Map<String, Object>> aspects = aspectResources(firstObject(rawRecipe, "getAspects", "aspects"));
         putIfPresent(recipe, "components", components);
         putIfPresent(recipe, "aspects", aspects);
@@ -1311,6 +1316,36 @@ public final class GtnhCalcOracleExporter {
         }
         putIfPresent(recipe, "instability", firstNumber(rawRecipe, "getInstability", "instability"));
         return recipe;
+    }
+
+    // An arcane recipe's materials are its `input`: a width x height grid for a shaped
+    // recipe (null where the cell is empty), a plain list for a shapeless one. Each
+    // ingredient stays its own entry, because every one is required; only a list nested
+    // inside the grid is a set of alternatives for that cell. `gridSlot` is the cell in the
+    // 3x3 arcane workbench, anchored at the top left as NEI draws it.
+    private List<Map<String, Object>> thaumcraftArcaneComponents(Object rawRecipe) {
+        List<Map<String, Object>> components = new ArrayList<Map<String, Object>>();
+        Object rawInput = firstObject(rawRecipe, "getInput", "input");
+        if (rawInput == null) {
+            return components;
+        }
+        Number rawWidth = rawInput.getClass().isArray() ? firstNumber(rawRecipe, "width") : null;
+        int width = rawWidth == null ? 0 : rawWidth.intValue();
+        int index = 0;
+        int sequential = 0;
+        for (Object entry : iterable(rawInput)) {
+            int cell = index++;
+            Map<String, Object> resource = resourceFromUnknown(entry);
+            if (resource == null) {
+                continue;
+            }
+            Map<String, Object> component = new LinkedHashMap<String, Object>(resource);
+            int gridSlot = width > 0 ? (cell / width) * 3 + (cell % width) : sequential;
+            component.put("gridSlot", Integer.valueOf(Math.min(gridSlot, 8)));
+            components.add(component);
+            sequential++;
+        }
+        return components;
     }
 
     private Map<String, Object> beeSpecies(Object allele) {

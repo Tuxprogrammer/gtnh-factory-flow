@@ -7,6 +7,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.machines.GameRates;
 
 /**
@@ -111,7 +112,7 @@ public final class CropsNh {
      */
     public static double expectedDrop(final Stats stats, final int gain, final Drop drop) {
         final int g = Math.max(1, Math.min(31, gain));
-        final double rounds = stats.dropChance() * Math.pow(1.03, g);
+        final double rounds = stats.dropChance() * ExactMath.pow(1.03, g);
         return rounds * (drop.weight() / 10000.0) * (drop.stackSize() + (g + 1) / 100.0);
     }
 
@@ -329,7 +330,7 @@ public final class CropsNh {
         if (!setup.farm()) return 1;
         final double additive = 1 + setup.growthUnits() * GROWTH_UNIT_SPEED_BONUS;
         return additive * (1 + setup.fertilizerUnits() * FERTILIZER_UNIT_SPEED_MULTIPLIER)
-            * Math.pow(2, setup.overclocks());
+            * ExactMath.pow(2, setup.overclocks());
     }
 
     /**
@@ -354,7 +355,7 @@ public final class CropsNh {
             + base * (setup.environmentUnits() * ENVIRONMENT_UNIT_POWER + setup.growthUnits() * GROWTH_UNIT_POWER
                 + setup.fertilizerUnits() * FERTILIZER_UNIT_POWER
                 + setup.harvestUnits() * HARVEST_UNIT_POWER);
-        return withUnits * Math.pow(4, setup.overclocks()) / squarePerTier(setup.tier());
+        return withUnits * ExactMath.pow(4, setup.overclocks()) / squarePerTier(setup.tier());
     }
 
     /** One whole farm's draw, however full. */
@@ -368,7 +369,7 @@ public final class CropsNh {
     }
 
     public static double voltage(final int tier) {
-        return 8 * Math.pow(4, Math.max(0, tier));
+        return 8 * ExactMath.pow(4, Math.max(0, tier));
     }
 
     // endregion
@@ -524,11 +525,11 @@ public final class CropsNh {
             final double unitFactor = 1 + 1.25 * setup.growthUnits()
                 + 0.5 * (setup.fertilizerUnits() + setup.harvestUnits() + setup.environmentUnits());
             final double farmEu = farmEut(setup);
-            final long baseEu = Math.round(farmEu / (unitFactor * Math.pow(4, setup.overclocks())));
+            final long baseEu = ExactMath.round(farmEu / (unitFactor * ExactMath.pow(4, setup.overclocks())));
             out.add(
                 FormulaLine.of(
                     "power",
-                    FormulaLine.number(Math.round(farmEu * machines)) + " EU/t",
+                    FormulaLine.number(ExactMath.round(farmEu * machines)) + " EU/t",
                     baseEu + "*(1+1.25*",
                     FormulaLine.knob(setup.growthUnits(), GROWTH_UNITS),
                     "+0.5*(",

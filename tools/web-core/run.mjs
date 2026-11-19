@@ -7,6 +7,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { Tally } from "./compare.mjs";
 import { TARGETS, loadTarget } from "./load.mjs";
+import { runExactMath } from "./exact-math.mjs";
 import { runFormat } from "./format.mjs";
 import { runMachines } from "./machines.mjs";
 import { runLayout, runPower } from "./goldens.mjs";
@@ -55,6 +56,7 @@ for (const target of opts.targets) {
   runBuildProbes(api, tally);
   runVectors(api, vectors, tally);
   runFormat(api, tally);
+  runExactMath(api, tally, cases);
   if (opts.random) runRandom(api, cases, tally);
   runMachines(api, tally);
   runPower(api, tally);

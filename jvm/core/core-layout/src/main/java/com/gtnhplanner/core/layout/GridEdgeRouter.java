@@ -11,6 +11,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.base.Float32Ops;
 
 /**
@@ -1213,7 +1214,7 @@ public final class GridEdgeRouter {
                 final double centreX = (rect[0] + rect[2]) / 2;
                 final double centreY = (rect[1] + rect[3]) / 2;
                 final double angle = com.gtnhplanner.core.base.JsMath.rem(
-                    StrictMath.atan2(heading.y() - centreY, heading.x() - centreX) + Math.PI * 1.25 + Math.PI * 4,
+                    ExactMath.atan2(heading.y() - centreY, heading.x() - centreX) + Math.PI * 1.25 + Math.PI * 4,
                     Math.PI * 2);
                 final double ideal = exitParam(rect, heading);
                 byCard.computeIfAbsent(cardId, k -> new ArrayList<>())

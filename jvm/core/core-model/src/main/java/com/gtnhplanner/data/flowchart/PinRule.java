@@ -1,5 +1,8 @@
 package com.gtnhplanner.data.flowchart;
 
+import com.gtnhplanner.core.base.ExactMath;
+
+
 /**
  * A card's machine count rule (docs/design/up-to.md, the website's pin-rule.ts): Any (the plan picks), Up to N (what
  * you have, the default for a set count) or Exactly N. Kept as {@code Node.isMachineCountFixed()} (a count is set) and
@@ -104,6 +107,6 @@ public enum PinRule {
     }
 
     private static int machines(final double count) {
-        return (int) Math.max(1, Math.min(Integer.MAX_VALUE, Math.round(count)));
+        return (int) Math.max(1, Math.min(Integer.MAX_VALUE, ExactMath.round(count)));
     }
 }

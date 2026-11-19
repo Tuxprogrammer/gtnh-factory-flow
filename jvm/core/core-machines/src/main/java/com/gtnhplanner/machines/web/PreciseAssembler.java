@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import com.gtnhplanner.core.base.ExactMath;
+
 /**
  * The Precise Auto-Assembler MT-3662's settings (precise-assembler.ts, after MTEPreciseAssembler): unit casings
  * (casingTier -1..3 is Imprecise and Mk-I..IV) for its normal Assembler mode and its precise mode, and the machine
@@ -44,7 +46,7 @@ public final class PreciseAssembler {
             tiers.add(
                 unitCasing(
                     index,
-                    "Normal Assembler mode: " + 16 * (long) Math.pow(2, index)
+                    "Normal Assembler mode: " + 16 * (long) ExactMath.pow(2, index)
                         + " maximum parallels at 2x speed. Energy supply limits usable parallels."));
         }
         control.tiers = tiers;

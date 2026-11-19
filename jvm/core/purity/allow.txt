@@ -8,5 +8,3 @@
 
 # core-base: the places that are the answer to a rule.
 core/core-base/src/main/java/com/gtnhplanner/core/base/Float32Ops.java float-narrow the one place a float is narrowed: through the bit pattern, which rounds on every target
-core/core-base/src/main/java/com/gtnhplanner/core/base/Roots.java math-cbrt the wrapper that makes a perfect cube exact
-core/core-base/src/main/java/com/gtnhplanner/core/base/NumberText.java math-drift an estimate of the decimal point that the code below corrects exactly, so log10 drift cannot change the answer

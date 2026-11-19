@@ -83,8 +83,7 @@ dependencies {
     compileOnly('org.projectlombok:lombok:1.18.46')
     annotationProcessor('org.projectlombok:lombok:1.18.46')
 
-    // ILP solver
-    shadowImplementation('org.ojalgo:ojalgo:57.4.0')
+    // ILP solver: ojAlgo comes with core-solver (its api), rewritten so its maths is core-base's ExactMath.
     // The plain-Java core (../core), shaded and downgraded with the mod's own classes.
     shadowImplementation(project(':core-base'))
     shadowImplementation(project(':core-solver'))

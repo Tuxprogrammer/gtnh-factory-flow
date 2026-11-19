@@ -99,10 +99,31 @@ the build if a listed override is not first, replaces nothing, or if an unlisted
 `overrides.txt`. The runtime probe `webCoreRuntimeMaxMemory` (4 GiB) is checked in the conformance run, and without the
 override the compile itself fails.
 
+## Java's arithmetic: the build plugin
+
+`src/main/java/com/gtnhplanner/web/teavm/ExactMathPlugin.java` is a TeaVM plugin (found through
+`META-INF/services/org.teavm.vm.spi.TeaVMPlugin`; a build tool, never in the output). It rewrites every class TeaVM
+compiles, the core, ojAlgo and the class library alike, where TeaVM's code differs from the JVM's:
+
+- `java.lang.Math` and `StrictMath`: sin, cos, tan, asin, acos, atan, atan2, exp, log, log10, pow, cbrt, sinh, cosh,
+  tanh, expm1, log1p, hypot, rint, round, toRadians, toDegrees and ulp run core-base's `ExactMath` (fdlibm in plain
+  Java, the JVM's `StrictMath` bits). TeaVM's own are the browser's `Math` (other algorithms) or shortcuts that are
+  wrong (`round(-2.5)` is -3, `cbrt` is a power, `tanh` overflows to NaN). A TeaVM upgrade that drops one of these
+  methods fails the build.
+- Negation of a double or float becomes a multiplication by -1: the WebAssembly backend writes `-x` as `0 - x`, which
+  turns -(+0) into +0.
+- JavaScript target only: a double or float converted to int or long goes through `JavaCasts`, which saturates as Java
+  does; TeaVM writes `x | 0` (wraps) and `BigInt(x)` (throws on NaN).
+
+`tools/web-core/exact-math.mjs` proves each rewrite on both targets (`exact-math/*` against
+`conformance/core-base/exact-math/`, `java-math/*` and `strict-math/*` through `java.lang.Math`, `java/d2i`, `java/d2l`,
+`java/neg` on the random cases). Core code still calls `ExactMath` itself (the purity gate's `math-exact` rule): the
+JVM's `Math` is not `StrictMath` either.
+
 ## Traps
 
-- TeaVM's Wasm GC backend compiles `-x` on a double as `0.0 - x`, so negating `+0.0` gives `+0.0`. Listed in
-  `tools/web-core/known-differences.json`; the run prints it as KNOWN and fails if the entry stops matching.
+- TeaVM's Wasm GC backend compiles `-x` on a double as `0.0 - x`, so negating `+0.0` gives `+0.0`: the build plugin
+  above rewrites every negation, so this no longer shows.
 - No `Long.parseUnsignedLong`; no `long` across the boundary.
 - Gradle's configuration cache: task actions must not read script-level values.
 - Node reads `core.js` as an ES module without a `type` field and prints a harmless

@@ -7,6 +7,7 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.core.base.Roots;
 import com.gtnhplanner.power.PowerData;
@@ -283,7 +284,7 @@ public final class Engines {
                 final double flow = read.number("flow");
                 final double ratio = read.number("promoterRatio");
                 final double coefficient = or(fuel.promoterCoefficient, 0.04);
-                final double efficiency = 1.5 * Math.exp(-coefficient / ratio);
+                final double efficiency = 1.5 * ExactMath.exp(-coefficient / ratio);
                 final double euPerTick = (flow * or(fuel.euPerLiter, 0) * efficiency) / 20;
                 return new PowerModel(
                     euPerTick,
@@ -371,17 +372,17 @@ public final class Engines {
         // IV); one arm lost when a roll of 45 x (tier + 2) each minute lands under the arm count. Residue is the
         // workbook's floor/ceil of the ^12.5.
         final double decayBoost = arms == 0 ? 1
-            : Math.sqrt(arms) * (armTier <= 4 ? Math.pow(1.2, armTier) : Math.pow(1.4, armTier));
+            : Math.sqrt(arms) * (armTier <= 4 ? ExactMath.pow(1.2, armTier) : ExactMath.pow(1.4, armTier));
         final double lossChance = arms / (45 * (armTier + 2));
-        final double residueCore = (0.05 * Math.pow(density, 0.8) * rate) / (structure.baseDecay * decayBoost);
-        final double residueMedian = Math.floor(Math.pow(residueCore, 12.5));
-        final double residueMax = Math.ceil(Math.pow(residueCore * 1.3, 12.5));
+        final double residueCore = (0.05 * ExactMath.pow(density, 0.8) * rate) / (structure.baseDecay * decayBoost);
+        final double residueMedian = Math.floor(ExactMath.pow(residueCore, 12.5));
+        final double residueMax = Math.ceil(ExactMath.pow(residueCore * 1.3, 12.5));
         // The random walk targets 0.7-1.3 uniformly, so residue arrives at an average of exactly 0.05 x density^0.8 x
         // rate per tick. Decay scales with the stored amount (^0.08), so its ceiling is at a full tank: baseDecay x
         // armBoost x capacity^0.08. A positive net there means no equilibrium fits inside the tank and the engine
         // eventually explodes.
-        final double residuePerTick = 0.05 * Math.pow(density, 0.8) * rate;
-        final double decayAtFull = structure.baseDecay * decayBoost * Math.pow(structure.residueCapacity, 0.08);
+        final double residuePerTick = 0.05 * ExactMath.pow(density, 0.8) * rate;
+        final double decayAtFull = structure.baseDecay * decayBoost * ExactMath.pow(structure.residueCapacity, 0.08);
         final double netAtFull = residuePerTick - decayAtFull;
 
         final List<Flow> inputs = new ArrayList<>();

@@ -22,6 +22,7 @@ import java.util.function.ToDoubleFunction;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.layout.GridPoint;
 import com.gtnhplanner.core.layout.JsMath;
 import com.gtnhplanner.core.layout.RouterTuning;
@@ -838,8 +839,8 @@ public final class FreeArrange {
             for (int k = 0; k < order.size(); k++) {
                 final int i = order.get(k);
                 final double angle = (2 * Math.PI * k) / n;
-                x[i] = radius * StrictMath.cos(angle);
-                y[i] = radius * StrictMath.sin(angle);
+                x[i] = radius * ExactMath.cos(angle);
+                y[i] = radius * ExactMath.sin(angle);
             }
         }
         final List<int[]> pairs = new ArrayList<>();
@@ -862,9 +863,9 @@ public final class FreeArrange {
         }
         final double etaMax = 1 / wMin;
         final double etaMin = 0.1 / wMax;
-        final double lambda = StrictMath.log(etaMax / etaMin) / Math.max(1, STRESS_ITERATIONS - 1);
+        final double lambda = ExactMath.log(etaMax / etaMin) / Math.max(1, STRESS_ITERATIONS - 1);
         for (int t = 0; t < STRESS_ITERATIONS; t += 1) {
-            final double eta = etaMax * StrictMath.exp(-lambda * t);
+            final double eta = etaMax * ExactMath.exp(-lambda * t);
             // Fisher-Yates with the seeded generator: deterministic shuffles.
             for (int i = pairs.size() - 1; i > 0; i -= 1) {
                 final int j = (int) Math.floor(random.next() * (i + 1));
@@ -1835,15 +1836,15 @@ public final class FreeArrange {
             final double t0 = Math
                 .max(1, (!samples.isEmpty() ? samples.get((int) Math.floor(samples.size() / 2.0)) * 2 : 200) * heat);
             final double tEnd = t0 / 2000;
-            final double cool = StrictMath.log(tEnd / t0) / Math.max(1, trials);
+            final double cool = ExactMath.log(tEnd / t0) / Math.max(1, trials);
             for (int trial = 0; trial < trials; trial += 1) {
-                final double temperature = t0 * StrictMath.exp(cool * trial);
+                final double temperature = t0 * ExactMath.exp(cool * trial);
                 final Move proposed = propose();
                 if (proposed == null) continue;
                 final Move move = expand(proposed.moved(), proposed.to());
                 final Double delta = attempt(move.moved(), move.to());
                 if (delta == null) continue;
-                if (delta <= 0 || random.next() < StrictMath.exp(-delta / temperature)) {
+                if (delta <= 0 || random.next() < ExactMath.exp(-delta / temperature)) {
                     commit();
                     if (score < best - 1e-6) {
                         best = score;

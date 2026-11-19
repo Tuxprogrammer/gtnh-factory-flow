@@ -6,6 +6,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.machines.web.Tiers;
 import com.gtnhplanner.machines.web.Web;
 
@@ -52,7 +53,7 @@ public final class AlgaePond {
 
     /** MTEAlgaePond.compostForTier: Heavy Compost a run on a hatch of this tier. */
     public static int compostPerRun(final int hatchTier) {
-        return hatchTier > 1 ? (int) Math.min(64, Math.pow(2, hatchTier - 1)) : 1;
+        return hatchTier > 1 ? (int) Math.min(64, ExactMath.pow(2, hatchTier - 1)) : 1;
     }
 
     /** Compost is the default only where no hatch reaches the recipe's own tier (tier 15). */

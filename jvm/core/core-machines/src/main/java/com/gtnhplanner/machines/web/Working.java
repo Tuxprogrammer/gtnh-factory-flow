@@ -3,6 +3,7 @@ package com.gtnhplanner.machines.web;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.machines.FormulaLine;
 import com.gtnhplanner.machines.FormulaLine.Tone;
 
@@ -52,7 +53,7 @@ public final class Working {
             // GT's own overclock calculator gave these: normal steps, shown as such where they come out so.
             final int steps = s.overclockSteps();
             out.add(FormulaLine.of("overclocks", steps == 0 ? "none" : Integer.toString(steps)));
-            final double halved = Math.max(1, Math.floor(baseTicks / Math.pow(2, steps)));
+            final double halved = Math.max(1, Math.floor(baseTicks / ExactMath.pow(2, steps)));
             out.add(
                 halved == s.durationTicks() && steps > 0 ? FormulaLine.of(
                     "time",
@@ -60,7 +61,7 @@ public final class Working {
                     FormulaLine.number(baseTicks) + " / 2",
                     FormulaLine.sup(Integer.toString(steps))) : FormulaLine.of("time", ticks(s.durationTicks())));
             out.add(
-                base * Math.pow(4, steps) == Math.abs(s.eut()) && steps > 0
+                base * ExactMath.pow(4, steps) == Math.abs(s.eut()) && steps > 0
                     ? FormulaLine.of(
                         "draw",
                         FormulaLine.number(Math.abs(s.eut())) + " EU/t",
@@ -106,7 +107,7 @@ public final class Working {
             if (heatDiscount != 1) {
                 if (!terms.isEmpty()) terms.add(" · ");
                 terms.add("0.95");
-                terms.add(FormulaLine.sup(Long.toString(Math.round(Math.log(heatDiscount) / Math.log(0.95)))));
+                terms.add(FormulaLine.sup(Long.toString(ExactMath.round(ExactMath.log(heatDiscount) / ExactMath.log(0.95)))));
             }
             out.add(
                 FormulaLine.of(
@@ -193,6 +194,6 @@ public final class Working {
     private static String ticks(final double t) {
         if (t >= 1) return FormulaLine.number(t) + " t";
         final double per = 1 / t;
-        return Math.abs(per - Math.round(per)) < 1e-9 ? "1/" + Math.round(per) + " t" : FormulaLine.number(t) + " t";
+        return Math.abs(per - ExactMath.round(per)) < 1e-9 ? "1/" + ExactMath.round(per) + " t" : FormulaLine.number(t) + " t";
     }
 }

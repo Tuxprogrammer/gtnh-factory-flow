@@ -11,6 +11,8 @@ import org.ojalgo.optimisation.Variable;
 import org.ojalgo.optimisation.integer.IntegerStrategy;
 import org.ojalgo.type.context.NumberContext;
 
+import com.gtnhplanner.core.base.ExactMath;
+
 /**
  * The ONE place an LP model is assembled. A stage declares what it wants - which variable
  * families, which row families, which objective - as a fluent chain over the build-once
@@ -140,7 +142,7 @@ public final class ModelBuilder {
                 .integer();
             final double pinned = ctx.pinnedExtent[i];
             if (!Double.isNaN(pinned)) {
-                final double count = Math
+                final double count = ExactMath
                     .round(pinned * model.machines.get(i).durTicks / (double) Numerics.TICKS_PER_SECOND);
                 v.lower(count)
                     .upper(count);

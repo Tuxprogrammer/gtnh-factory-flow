@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.core.base.Roots;
 import com.gtnhplanner.machines.FormulaLine;
@@ -35,7 +36,7 @@ public final class Hile {
         for (int index = 0; index < 9; index++) {
             final String tier = Tiers.NAMES[5 + index];
             for (int ampIndex = 0; ampIndex < index + 1; ampIndex++) {
-                final long amps = 256 * (long) Math.pow(4, ampIndex);
+                final long amps = 256 * (long) ExactMath.pow(4, ampIndex);
                 sources.add(new Source(tier.toLowerCase(Locale.ROOT) + "-" + amps, tier, index + 5, amps));
             }
         }

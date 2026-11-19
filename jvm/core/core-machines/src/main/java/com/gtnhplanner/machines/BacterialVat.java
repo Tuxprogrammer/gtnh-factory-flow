@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.base.Float32;
 import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.machines.FormulaLine.Tone;
@@ -155,7 +156,7 @@ public final class BacterialVat {
     public static Fill fill(final Setup setup, final long fluidOut) {
         final long capacity = setup.hatch()
             .capacity();
-        final long stored = Math.round(capacity * setup.fill() / 100);
+        final long stored = ExactMath.round(capacity * setup.fill() / 100);
         final int multiplier = multiplierAt(stored, capacity);
         final long room = capacity > 0 ? capacity - stored : Long.MAX_VALUE;
         final boolean fits = (double) multiplier * fluidOut <= room;
@@ -171,15 +172,9 @@ public final class BacterialVat {
         return (long) Math.ceil(8000 * tanh(-sievert / 65.0) + 8000);
     }
 
-    /**
-     * {@code Math.tanh} written with {@code Math.exp}, which the web compile computes as the JVM does (its own tanh is
-     * NaN for a large argument), in fdlibm's form 1 - 2 / (e^2|x| + 1), which keeps the last place near 1; an infinite
-     * exponential gives 1, never NaN. {@code decayTicks} is held to the JVM's tanh for every sievert from -2000 to 100000
-     * by its test.
-     */
+    /** The game's {@code Math.tanh}, as fdlibm computes it on every target (core-base ExactMath). */
     static double tanh(final double x) {
-        final double t = 1 - 2 / (Math.exp(2 * Math.abs(x)) + 1);
-        return x < 0 ? -t : t;
+        return ExactMath.tanh(x);
     }
 
     /** Items of a material one radio hatch burns a second, running or not. */

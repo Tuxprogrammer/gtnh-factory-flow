@@ -9,6 +9,7 @@ import java.util.function.Predicate;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.power.PowerData;
 import com.gtnhplanner.power.PowerGroup;
@@ -102,7 +103,7 @@ public final class Endgame {
                 // MTELargeNaquadahReactor.onRunningTick draws liquid air, coolant and booster whenever the recipe's
                 // progress is a multiple of 20 ticks, so a recipe of d ticks draws ceil(d/20) times: Mk-II (70
                 // ticks) draws 4 times in 3.5 s.
-                final double recipeTicks = Math.round(fuel.secondsPerCell * 20);
+                final double recipeTicks = ExactMath.round(fuel.secondsPerCell * 20);
                 final double drawsPerSecond = Math.ceil(recipeTicks / 20) / (recipeTicks / 20);
 
                 final List<Flow> inputs = new ArrayList<>();
@@ -219,7 +220,7 @@ public final class Endgame {
                     List.of(),
                     List.of(
                         stat("Cycle", formatAmount(star.durationSeconds / 3600) + "h"),
-                        stat("Success", js(Math.round(star.baseSuccess * 100)) + "%"),
+                        stat("Success", js(ExactMath.round(star.baseSuccess * 100)) + "%"),
                         stat("EU in", formatAmount(star.euInput)),
                         stat("EU out", formatAmount(star.euOutput * 0.6)),
                         stat("Star matter", formatAmount(star.starMatter))),
@@ -242,22 +243,22 @@ public final class Endgame {
      * storage, V x 24 x amps each (MTEHatchDynamoTunnel.maxEUStore); this is 64 UIV hatches at 1,048,576 A. The hatch
      * tier is the player's build, not a game constant. A double, as in JavaScript (2^63 - 1 rounds to 2^63).
      */
-    private static final double AM_BURN_EU = Math.min(Math.pow(2, 63) - 1, 3.3554432e7 * 64 * 1048576 * 24);
+    private static final double AM_BURN_EU = Math.min(ExactMath.pow(2, 63) - 1, 3.3554432e7 * 64 * 1048576 * 24);
     /** AntimatterGenerator's exponent for Molten Superconductor Base UMV, the only wireless catalyst. */
     private static final double AM_PER_BURN_EXPONENT = 1.03;
     private static final String AM_CATALYST = "Molten Superconductor Base UMV";
 
     /** AntimatterForge's expected antimatter gain a 20-tick cycle, one cycle a second. */
     private static double antimatterGainPerSecond(final double amPerSsass) {
-        return Math.pow(amPerSsass, 0.5 + AM_K.containment()) * (0.2 + AM_K.activation());
+        return ExactMath.pow(amPerSsass, 0.5 + AM_K.containment()) * (0.2 + AM_K.activation());
     }
 
     private static double antimatterNetEuT(final double amPerSsass) {
         final double gainPerSecond = antimatterGainPerSecond(amPerSsass);
-        final double amountPerBurn = Math.pow(AM_BURN_EU / 1e12, 1 / AM_PER_BURN_EXPONENT);
+        final double amountPerBurn = ExactMath.pow(AM_BURN_EU / 1e12, 1 / AM_PER_BURN_EXPONENT);
         final double secondsPerBurn = amountPerBurn / gainPerSecond;
-        final double passiveCost = -(1e7 + Math.pow(amPerSsass * 1000, 1.5 - AM_K.magnetic()));
-        final double activeCost = -Math.pow(amPerSsass * 10_000, 1.5 - AM_K.gravity()) / 20;
+        final double passiveCost = -(1e7 + ExactMath.pow(amPerSsass * 1000, 1.5 - AM_K.magnetic()));
+        final double activeCost = -ExactMath.pow(amPerSsass * 10_000, 1.5 - AM_K.gravity()) / 20;
         return AM_BURN_EU / (secondsPerBurn * 20) + passiveCost + activeCost;
     }
 
@@ -273,7 +274,7 @@ public final class Endgame {
                 high = m2;
             }
         }
-        return Math.round((low + high) / 2);
+        return ExactMath.round((low + high) / 2);
     }
 
     /** The optimum, searched once on first use (the website's cachedOptimum). */
@@ -304,10 +305,10 @@ public final class Endgame {
                 return new PowerModel(
                     euPerTick,
                     List.of(
-                        liters("Molten Tengam", Math.pow(amount, 0.5)),
-                        liters("Molten SpaceTime", Math.pow(amount, 0.5)),
-                        liters("Molten Shirabon", Math.pow(amount, 2.0 / 7)),
-                        liters("Naquadah Based Liquid Fuel MkV (Depleted)", Math.pow(amount, 1.0 / 3)),
+                        liters("Molten Tengam", ExactMath.pow(amount, 0.5)),
+                        liters("Molten SpaceTime", ExactMath.pow(amount, 0.5)),
+                        liters("Molten Shirabon", ExactMath.pow(amount, 2.0 / 7)),
+                        liters("Naquadah Based Liquid Fuel MkV (Depleted)", ExactMath.pow(amount, 1.0 / 3)),
                         liters("Protomatter", gainPerSecond),
                         liters(AM_CATALYST, gainPerSecond)),
                     List.of(),

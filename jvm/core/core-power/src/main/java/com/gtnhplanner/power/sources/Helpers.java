@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.ToDoubleFunction;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.power.PowerData;
 import com.gtnhplanner.power.PowerModel;
@@ -143,7 +144,7 @@ public final class Helpers {
     public static String lifespanHours(final double seconds) {
         if (!Double.isFinite(seconds) || seconds <= 0) return "-";
         final double hours = seconds / 3600;
-        return hours >= 100 ? Math.round(hours) + "h" : number(hours) + "h";
+        return hours >= 100 ? ExactMath.round(hours) + "h" : number(hours) + "h";
     }
 
     private Helpers() {}

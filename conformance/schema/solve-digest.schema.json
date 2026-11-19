@@ -300,6 +300,18 @@
           "additionalProperties": {
             "type": "number"
           }
+        },
+        "spills": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/DigestExternal"
+            }
+          }
         }
       },
       "required": [

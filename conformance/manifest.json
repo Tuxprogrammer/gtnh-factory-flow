@@ -392,8 +392,8 @@
     },
     "schema/solve-digest.schema.json": {
       "area": "schema",
-      "bytes": 12848,
-      "sha256": "3e6fd462ce61bff14a543084c9484b95c5d565229272498069a1ab7cb4aa74f8"
+      "bytes": 13139,
+      "sha256": "49b0b2b39c475e81e270fb71cc77b818724921b4925b49ab416dab2b75aa6577"
     },
     "schema/solve-input.schema.json": {
       "area": "schema",
@@ -757,8 +757,8 @@
     },
     "solver/up-to/buffer-any-taker.json": {
       "area": "solver/up-to",
-      "bytes": 3739,
-      "sha256": "4388ad5b1bb8705636eded48050fb0c8cd9409f988587f2d24ed0961b2ad0604"
+      "bytes": 3990,
+      "sha256": "6a4fdf84d2653134da7de84cec92960280f3a860451e2b59d3aca536d82758fa"
     },
     "solver/up-to/buffer-drawers-every-count-up-to.json": {
       "area": "solver/up-to",
@@ -767,8 +767,8 @@
     },
     "solver/up-to/buffer-up-to-taker.json": {
       "area": "solver/up-to",
-      "bytes": 4153,
-      "sha256": "f43ec4d03c0498ec4ccc6f1555a3a2a0ef907e145e95a7f4970abd73c2c25824"
+      "bytes": 4404,
+      "sha256": "fcc52062ca7a3e343e636c1060a3b514dc50e7c6412f9a209d33f16e3e15ecdb"
     },
     "solver/up-to/buffer-with-a-rule.json": {
       "area": "solver/up-to",
@@ -927,13 +927,13 @@
     },
     "solver/up-to/idle-noise-beside-a-lone-card.json": {
       "area": "solver/up-to",
-      "bytes": 57167,
-      "sha256": "ff4fd74ea453e9ef0ccb0cbdbf6ab2f7a10098a06bdb015ba82f82e49c7c6c38"
+      "bytes": 60226,
+      "sha256": "295302fa40c3f23ddab8c0244bc4f0bec70bf7f7cfe83e618c6b9ac50555a590"
     },
     "solver/up-to/idle-noise.json": {
       "area": "solver/up-to",
-      "bytes": 55512,
-      "sha256": "9fa420b4d1193a5cf3d8780bb1e30fa351ec0003c1e56bc0d77409dd93792d82"
+      "bytes": 58571,
+      "sha256": "61cc8abb064f1dc2aa1f855dc7677b797bd1053a7e2ef63d43c7d15f4a07aaa9"
     },
     "solver/up-to/mega-iv-nitrobenzene-power-plant-every-count-up-to.json": {
       "area": "solver/up-to",
@@ -1092,8 +1092,8 @@
     },
     "solver/website/cases.json.gz": {
       "area": "solver/website",
-      "bytes": 116856,
-      "sha256": "29c20dd6ba231e2cb2905198dd0be4dff25519b3c56b16e3d8baf22ce1d8a902"
+      "bytes": 117522,
+      "sha256": "a19c46262b5a3d5ab64c78fdd150cda13f5a0f60bedbe0abca589f953fb7422e"
     },
     "tasks/order-key-vectors.json": {
       "area": "tasks",

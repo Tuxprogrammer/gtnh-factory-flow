@@ -254,3 +254,35 @@ it("strip chip tip: Set to, coil need, pinned note, gestures", () => {
   expect(tip.notes?.at(-1)?.text).toBe("Pinned to the card: unpin it in the settings.");
   expect(tip.actions?.map((a) => a.label)).toEqual(["Choose", "Step back", "Step"]);
 });
+
+it("parallel tip: what runs at once, and when the power supply is what caps it", () => {
+  const chip = (value: string, powerCap?: CleanChipView["powerCap"]): CleanChipView => ({
+    id: "parallel",
+    label: "Parallel",
+    value,
+    reading: true,
+    powerCap,
+    title: "",
+    x: 0,
+    y: 0,
+    width: 0,
+  });
+  const structure = stripTip("n", chip("×16"), undefined);
+  expect(structure.title).toBe("Parallel");
+  expect(structure.rows).toEqual([{ label: "Running", value: "×16" }]);
+  expect(structure.notes).toEqual([
+    { text: "Set by the machine and its configuration.", tone: "muted" },
+  ]);
+  expect(structure.actions).toEqual([]);
+  const capped = stripTip("n", chip("×21", { running: 21, structure: 136 }), undefined);
+  expect(capped.rows).toEqual([
+    { label: "Running", value: "×21" },
+    { label: "Structure allows", value: "×136" },
+  ]);
+  expect(capped.notes).toEqual([
+    {
+      text: "The power supply pays for 21 at once, not all 136. More amps or a higher tier runs more.",
+      tone: "warn",
+    },
+  ]);
+});

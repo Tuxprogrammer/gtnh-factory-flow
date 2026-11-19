@@ -32,6 +32,7 @@ import { getOverclockedRecipeStats } from "@/lib/solver/overclock";
 import {
   applyMachineOutputMultipliers,
   getMachineParallelMultiplier,
+  getMachineStructuralParallels,
 } from "@/lib/solver/machine-effects";
 import { getNodePowerReport, getNodeSteamReport, hasPowerReport } from "@/lib/solver/power-report";
 import { isMultiblockRecipe } from "@/lib/solver/power";
@@ -111,6 +112,8 @@ export interface CleanChipView {
   icon?: string;
   /** A reading is words only, no box. */
   reading?: boolean;
+  /** The Parallel reading when the power supply runs fewer than the structure allows: the structure's count. */
+  powerCap?: { running: number; structure: number };
   warn?: boolean;
   title: string;
   /** Computed layout, card-local px. */
@@ -947,6 +950,28 @@ export function reasonStripes(tone: FootTone): { body: string; stripe: string } 
   return { body: mixHex(hex, CC.surface, 0.07), stripe: mixHex(hex, CC.surface, 0.13) };
 }
 
+/**
+ * The Parallel reading on the strip: what runs at once, when that is more than one or fewer than the structure allows.
+ * Fewer running than the structure allows on a powered machine means the power supply pays for no more (the game's
+ * ParallelHelper caps parallels at what the supply covers); the chip then carries both numbers for its tip.
+ */
+export function parallelReading(
+  running: number,
+  structure: number,
+  powered: boolean,
+): Omit<CleanChipView, "x" | "y" | "width"> | undefined {
+  const powerCap = powered && running < structure ? { running, structure } : undefined;
+  if (!(running > 1) && !powerCap) return undefined;
+  return {
+    id: "parallel",
+    label: "Parallel",
+    value: `×${formatCompact(running)}`,
+    reading: true,
+    powerCap,
+    title: "Operations at once. Set by the machine and its configuration.",
+  };
+}
+
 /** A card's name by id, for the bar's tip (the full cards upstream of a starved one). */
 export function cardNameIn(
   project: { nodes: readonly FactoryNode[]; recipes: readonly Recipe[] },
@@ -1020,6 +1045,7 @@ export function useCleanCardModel(
       controls,
       overclockedRecipe,
       parallel: getMachineParallelMultiplier(effectiveRecipe, projectNode),
+      structuralParallel: getMachineStructuralParallels(effectiveRecipe, projectNode),
       circuit: getRecipeProgrammedCircuit(effectiveRecipe) as RecipeProgrammedCircuit | undefined,
     };
   }, [recipe, projectNode]);
@@ -1129,16 +1155,12 @@ export function useCleanCardModel(
       title: `${control.label}: ${control.value}`,
     });
   }
-  const parallels = powerReport?.parallels ?? steamReport?.parallels ?? derived.parallel;
-  if (parallels > 1) {
-    rawChips.push({
-      id: "parallel",
-      label: "Parallel",
-      value: `×${formatCompact(parallels)}`,
-      reading: true,
-      title: "Operations at once. Set by the machine and its configuration.",
-    });
-  }
+  const parallelChip = parallelReading(
+    powerReport?.parallels ?? steamReport?.parallels ?? derived.parallel,
+    derived.structuralParallel,
+    powerReport?.state === "ok",
+  );
+  if (parallelChip) rawChips.push(parallelChip);
   const strip = layoutStrip(rawChips);
 
   // The rows an Up to card's reason names are lit in its colour (only while the card is Up to: `upTo` is its own).

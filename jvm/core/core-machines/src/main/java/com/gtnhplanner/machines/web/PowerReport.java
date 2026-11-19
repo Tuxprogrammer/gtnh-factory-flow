@@ -25,9 +25,16 @@ public final class PowerReport {
         }
     }
 
-    /** hasPowerReport: a recipe with a draw and a duration (crops and bees are the website's alone). */
-    public static boolean has(final Web.Recipe recipe) {
-        return Math.abs(recipe.eut) > 0 && recipe.durationTicks > 0;
+    /**
+     * hasPowerReport: a recipe with a draw and a duration (crops and bees are the website's alone). A recipe whose EU
+     * lives on the node's machine rather than the recipe (smelting: 0 EU on the map, 4 EU/t on GT's furnaces) asks the
+     * machine.
+     */
+    public static boolean has(final Web.Recipe recipe, @Nullable final Web.Node node) {
+        final double eut = !(Math.abs(recipe.eut) > 0) && node != null && recipe.machineType != null
+            ? RecipeRules.applyHandler(recipe, node).eut
+            : recipe.eut;
+        return Math.abs(eut) > 0 && recipe.durationTicks > 0;
     }
 
     /** getNodePowerReport. */

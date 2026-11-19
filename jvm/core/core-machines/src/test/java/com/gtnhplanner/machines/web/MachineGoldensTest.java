@@ -179,7 +179,7 @@ class MachineGoldensTest {
             same(diffs, expected, "voltageOrdinal", ordinal);
             near(diffs, expected, "heatDiscount", Heat.discount(effective, node, runTier, ordinal));
 
-            if (PowerReport.has(recipe)) {
+            if (PowerReport.has(recipe, node)) {
                 final PowerReport.Report p = PowerReport.report(recipe, node);
                 same(diffs, expected, "powerState", p.state());
                 same(diffs, expected, "recipeGateReason", p.recipeGateReason());

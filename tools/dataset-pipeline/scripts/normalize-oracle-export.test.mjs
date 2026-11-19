@@ -91,6 +91,30 @@ describe("a crafting recipe with an ingredient that names nothing", () => {
   });
 });
 
+describe("a crafting recipe whose class builds its ingredients at craft time", () => {
+  // Such a class keeps what it takes inside matches(): the export reads no inputs
+  // and a card would make the output from nothing.
+  const crafting = (className, inputs = []) => normalize({ domains: [
+    { id: "gregtech", recipeMaps: [{ id: "gt.recipe.macerator", name: "Macerator", recipes: [{
+      id: "anchor", durationTicks: 20, eut: 2,
+      itemInputs: [item("a:in", 1, "In")], itemOutputs: [item("a:out", 1, "Out")] }] }] },
+    { id: "crafting", recipes: [{ id: "c", className, type: className, output: item("a:roll", 1, "Roll"), inputs }] },
+  ] }).recipes.filter(recipe => recipe.category === "crafting");
+
+  it("drops a recipe of a class named as unreadable", () => {
+    expect(crafting("pcl.openprinter.items.PrinterPaperRollRecipe")).toHaveLength(0);
+  });
+
+  it("drops the class's recipes that did read an input too", () => {
+    const wool = { kind: "item", id: "minecraft:wool", amount: 1, displayName: "Wool", slotIndex: 4 };
+    expect(crafting("com.rwtema.extrautils.multipart.microblock.RecipeMicroBlocks", [wool])).toHaveLength(0);
+  });
+
+  it("keeps a recipe of any other class, inputs or not", () => {
+    expect(crafting("some.mod.UnlistedRecipe")).toHaveLength(1);
+  });
+});
+
 it("retains real furnace tiers and separates the Ore Washing Plant controller across maps", () => {
   const dataset = normalize({ domains: [
     { id: "gregtech", recipeMaps: singleblockCatalysts

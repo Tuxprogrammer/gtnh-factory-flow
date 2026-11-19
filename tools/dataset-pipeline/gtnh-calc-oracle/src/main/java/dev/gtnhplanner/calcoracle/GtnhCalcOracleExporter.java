@@ -314,10 +314,11 @@ public final class GtnhCalcOracleExporter {
                 Map<String, Object> exported = map();
                 exported.put("id", sha1("crafting:" + index + ":" + raw.getClass().getName() + ":" + stackKey(output)).substring(0, 16));
                 exported.put("className", raw.getClass().getName());
-                exported.put("type", craftingType(raw));
-                exported.put("width", readIntField(raw, "recipeWidth"));
-                exported.put("height", readIntField(raw, "recipeHeight"));
-                exported.put("inputs", craftingInputs(raw));
+                CraftingIngredients.Read read = CraftingIngredients.read(raw);
+                exported.put("type", read != null ? read.type : craftingType(raw));
+                exported.put("width", read != null ? read.width : readIntField(raw, "recipeWidth"));
+                exported.put("height", read != null ? read.height : readIntField(raw, "recipeHeight"));
+                exported.put("inputs", read != null ? readCraftingInputs(read) : craftingInputs(raw));
                 exported.put("output", itemStack(output));
                 recipes.add(exported);
                 index++;
@@ -3062,6 +3063,14 @@ public final class GtnhCalcOracleExporter {
             fluid.put("icon", icon);
         }
         return fluid;
+    }
+
+    private List<Map<String, Object>> readCraftingInputs(CraftingIngredients.Read read) {
+        List<Map<String, Object>> inputs = new ArrayList<Map<String, Object>>();
+        for (int index = 0; index < read.slots.size(); index++) {
+            addUnknownInput(inputs, read.slots.get(index), index);
+        }
+        return inputs;
     }
 
     private List<Map<String, Object>> craftingInputs(Object recipe) {

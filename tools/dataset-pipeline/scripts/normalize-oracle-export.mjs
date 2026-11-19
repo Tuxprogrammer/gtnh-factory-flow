@@ -6,6 +6,7 @@ import { PNG } from "pngjs";
 import { writeDatasetJson } from "./dataset-json-writer.mjs";
 import { getDominantOpaqueColor } from "./icon-utils.mjs";
 import { spargeRolledOutputs } from "./sparge-byproducts.mjs";
+import { UNREADABLE_CRAFTING_CLASSES } from "./unreadable-crafting.mjs";
 import {
   EEC_MACHINE_TYPE,
   eecDropChance,
@@ -372,6 +373,9 @@ function normalizeCrafting(domain) {
     // one, so the game's recipe asks for something that does not exist and can
     // never be crafted.
     if ((rawRecipe.inputs ?? []).some((entry) => entry?.kind === "missing")) {
+      continue;
+    }
+    if (UNREADABLE_CRAFTING_CLASSES.has(rawRecipe.className)) {
       continue;
     }
     const machineType = rawRecipe.type === "shapeless" ? "Shapeless Crafting" : "Shaped Crafting";

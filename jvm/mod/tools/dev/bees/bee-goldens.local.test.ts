@@ -2,7 +2,7 @@
  * Golden cases for the mod's bee model (machines/Bees.java): a bee card on the website's own functions over a spread
  * of settings, in the three housings the mod models (the plain Apiary, as the mod posts it with a handler of its own;
  * the Magic Apiary, the website's default; the Industrial Apiary). Run with the website's vitest through
- * vitest.bees.config.mjs beside it (its header says how); writes the mod's src/test/resources/bee-goldens.jsonl.gz,
+ * vitest.bees.config.mjs beside it (its header says how); writes conformance/machines/bee-goldens.jsonl.gz,
  * which BeesGoldensTest reads.
  *
  * FORMAT: gzip, UTF-8, one JSON object per line:

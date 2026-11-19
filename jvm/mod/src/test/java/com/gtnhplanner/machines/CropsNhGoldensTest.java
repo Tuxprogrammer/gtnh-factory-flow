@@ -1,7 +1,6 @@
 package com.gtnhplanner.machines;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.BufferedReader;
@@ -20,6 +19,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.gtnhplanner.conformance.Conformance;
 
 /**
  * CropsNh against the website's own crop functions: every crop in its 2.9 dataset (179) on a spread of settings under
@@ -28,12 +28,11 @@ import com.google.gson.JsonParser;
  */
 class CropsNhGoldensTest {
 
-    private static final String FILE = "/crop-goldens.jsonl.gz";
+    private static final String FILE = "machines/crop-goldens.jsonl.gz";
 
     @Test
     void matchesTheWebsite() throws Exception {
-        final InputStream raw = CropsNhGoldensTest.class.getResourceAsStream(FILE);
-        assertNotNull(raw, FILE);
+        final InputStream raw = Conformance.open(FILE);
         int cases = 0;
         final List<String> mismatches = new ArrayList<>();
         try (BufferedReader in = new BufferedReader(

@@ -21,7 +21,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.gtnhplanner.GtnhPlanner;
+import com.gtnhplanner.core.base.Log;
 import com.gtnhplanner.data.MachineConfig;
 import com.gtnhplanner.data.MachineProfile;
 import com.gtnhplanner.data.MachineProfileRegistry;
@@ -209,7 +209,7 @@ public final class Serializer {
                         obj.get("data")
                             .getAsString());
                 } catch (final RuntimeException e) {
-                    GtnhPlanner.LOG
+                    Log.get()
                         .error("Slot '{}' could not be read; its data is kept and read again later", name, e);
                     graph = new Graph(name);
                     graph.setUnreadable(

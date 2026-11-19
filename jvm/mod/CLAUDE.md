@@ -197,7 +197,7 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   overview) and a normal plan never does. Four columns, Blocked, To do, Doing, Done, of task cards (title, faces, things done of all "3/5", comments,
   its first screenshot across the top), carried by the board's rules, ordered by fractional keys
   (`data/flowchart/OrderKeys`, the website's base-62 midpoint scheme, never throwing on a key it did not write; both
-  sides run `order-key-vectors.json`; every edit is in `TaskEdits`, pure and tested). A click opens `TaskPanel`, laid
+  sides run `conformance/tasks/order-key-vectors.json`; every edit is in `TaskEdits`, pure and tested). A click opens `TaskPanel`, laid
   out as Jira's issue view (the owner, 2026-10-15): a main column (the title big and written in place, a `TextArea` at
   a scale of whole screen pixels; notes; the things; the comment thread; the comment box at the foot, growing to four
   lines) and a side column on a panel of its own, about a third of the box (150 to 184 px), in three groups split by
@@ -264,7 +264,7 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   rollout signed-in players keep their world plans. The layers: `cloud/net` (`LiveSocket` on Minecraft's netty, ws
   and wss; `LiveClient`, the protocol; `CloudApi`, the REST routes), `cloud/store` (`CloudCache`, this device's copy
   and pending batches; `Migration`, a world's plans uploaded once, local save kept), `cloud/sync` (`LiveOps`,
-  `LiveState`: the op engine both sides share, checked on the website's `live-vectors.json`), `cloud/map`
+  `LiveState`: the op engine both sides share, checked on `conformance/live/live-vectors.json`), `cloud/map`
   (`CloudPlans`: the board to and from the website's plan, each thing carrying the game's own data under
   `gtnhplanner`, read back exactly while the website left it alone; groups are its pockets, each thing placed from its
   pocket's frame; every drawing an annotation; a buffer its storage with wires both ways; port rates, setting pins
@@ -446,7 +446,7 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
 - Every other GregTech card runs on the website's machine maths (`docs/design/machine-table-port.md`): `machines/web/` is
   a pure port named after its files (machine table with its 96 entries, overclocks, hatches and power, heat, parallels,
   power report, fusion, the special machines, runtime variants), checked by `MachineGoldensTest` against goldens the
-  website writes with its own functions (`src/test/resources/machine-goldens.jsonl.gz`, 0 mismatches over 42,250
+  website writes with its own functions (`conformance/machines/machine-goldens.jsonl.gz`, 0 mismatches over 42,250
   cases). Its data comes from the website, never hand-edited: `assets/gtnhplanner/machines/handlers.json` (each recipe
   map's machines and settings, with their item ids) and `fusion-startups.json`; regenerate both files with the
   website's `node tools/audits/export-mod-machine-data.mjs`. The game side is `machines/game/`: `WebCards` (a card as
@@ -491,7 +491,7 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   jar takes the tag's version.
 - The solver (`docs/design/solver-plan.md`: what it promises, what was wrong, the phases) is checked against
   goldens: `./gradlew test --tests '*SolverGoldenTest*' -Pbench=check` compares every corpus plan's whole answer
-  (`src/test/resources/solver-corpus/`, plans exported with `call 'solvedump?dir=...'`) to the recorded one, with
+  (`conformance/solver/corpus/`, plans exported with `call 'solvedump?dir=...'`) to the recorded one, with
   `-PwriteGoldens` records them afresh. `SolverPathTest` (answers the same however the simplex gets there) and
   `SolverIslandTest` (a plan's islands answer as if alone) run in the normal suite. `*SolverBench*` and
   `*SolverCensus*` time it and count its models; compare before and after in one sitting.

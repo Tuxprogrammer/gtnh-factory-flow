@@ -1,0 +1,187 @@
+# What core source (jvm/core/*/src/main) may not use. Read by PurityCheck.java; every :core-* module's `check` runs it.
+#
+#   rule <id> <reason>              one per rule: why the core may not use it (printed with every finding)
+#   <id> classpath <glob>           a dependency on the module's compile or runtime classpath ("group:name:version" or
+#                                   "project :name"); * matches anything
+#   <id> class <internal name>      any reference to the class (and its nested classes) in compiled code: calls, fields,
+#                                   types, casts, signatures; a name ending in / is a package and its sub-packages
+#   <id> member <glob>              a call or field use, matched as owner.name(descriptor)type, e.g.
+#                                   java/lang/Double.toString(D)Ljava/lang/String;  (* matches anything)
+#   <id> concat <descriptor>        a string concatenation (javac's invokedynamic) with an operand of this type
+#   <id> source <regex>             a match in the source text, comments and string literals removed
+#
+# An exception is a line in allow.txt beside this file: the file, the rule, and why, argued in the open.
+
+rule game The core is plain Java for both hosts: no game, Forge, FML, NEI, GregTech, ModularUI, LWJGL or mixin class, not even a same-name stand-in. The host reaches the game; the core gets a seam.
+game classpath net.minecraft*
+game classpath net.minecraftforge*
+game classpath cpw.mods*
+game classpath com.github.GTNewHorizons:*
+game classpath com.gtnewhorizons*
+game classpath codechicken*
+game classpath org.lwjgl*
+game classpath org.spongepowered*
+game classpath com.cleanroommc*
+game classpath project :mod
+game class net/minecraft/
+game class net/minecraftforge/
+game class cpw/mods/
+game class codechicken/
+game class gregtech/
+game class com/gtnewhorizons/
+game class com/cleanroommc/
+game class org/lwjgl/
+game class org/spongepowered/
+game class com/gtnhplanner/GtnhPlanner
+game class com/gtnhplanner/Config
+game class com/gtnhplanner/Tags
+
+rule reflection The web compile keeps no reflection metadata unless told to, obfuscates member names, and cannot load classes by name; Gson's reflective binding needs all three. Read and write JSON through the tree API.
+reflection class java/lang/reflect/
+reflection class java/util/ServiceLoader
+reflection member java/lang/Class.forName*
+reflection member java/lang/Class.getDeclared*
+reflection member java/lang/Class.getField*
+reflection member java/lang/Class.getMethod*
+reflection member java/lang/Class.getConstructor*
+reflection member java/lang/Class.newInstance*
+reflection member java/lang/Class.isRecord*
+reflection member java/lang/Class.getRecordComponents*
+reflection member java/lang/invoke/MethodHandles.lookup*
+reflection member java/lang/invoke/MethodHandles.privateLookupIn*
+reflection member com/google/gson/Gson.fromJson(*Ljava/lang/Class;*
+reflection member com/google/gson/Gson.fromJson(*Ljava/lang/reflect/Type;*
+reflection member com/google/gson/Gson.toJson(Ljava/lang/Object;*
+reflection member com/google/gson/Gson.toJsonTree(Ljava/lang/Object;*
+reflection class com/google/gson/reflect/
+
+rule threads The web runs the core on one thread: TeaVM cannot link executors, fork-join pools or blocking queues, and an answer must not depend on scheduling. A host that wants parallel work offers it through a seam with an in-order default.
+threads class java/lang/Thread
+threads class java/lang/ThreadGroup
+threads member java/lang/Runtime.availableProcessors*
+threads class java/util/Timer
+threads class java/util/concurrent/Executor
+threads class java/util/concurrent/ExecutorService
+threads class java/util/concurrent/Executors
+threads class java/util/concurrent/ScheduledExecutorService
+threads class java/util/concurrent/ThreadPoolExecutor
+threads class java/util/concurrent/ScheduledThreadPoolExecutor
+threads class java/util/concurrent/ThreadFactory
+threads class java/util/concurrent/ForkJoinPool
+threads class java/util/concurrent/ForkJoinTask
+threads class java/util/concurrent/RecursiveTask
+threads class java/util/concurrent/RecursiveAction
+threads class java/util/concurrent/Future
+threads class java/util/concurrent/FutureTask
+threads class java/util/concurrent/CompletableFuture
+threads class java/util/concurrent/CompletionService
+threads class java/util/concurrent/CountDownLatch
+threads class java/util/concurrent/CyclicBarrier
+threads class java/util/concurrent/Semaphore
+threads class java/util/concurrent/Phaser
+threads class java/util/concurrent/Exchanger
+threads class java/util/concurrent/BlockingQueue
+threads class java/util/concurrent/LinkedBlockingQueue
+threads class java/util/concurrent/LinkedBlockingDeque
+threads class java/util/concurrent/ArrayBlockingQueue
+threads class java/util/concurrent/PriorityBlockingQueue
+threads class java/util/concurrent/SynchronousQueue
+threads class java/util/concurrent/LinkedTransferQueue
+threads class java/util/concurrent/DelayQueue
+threads class java/util/concurrent/locks/
+threads class java/util/concurrent/atomic/LongAdder
+threads class java/util/concurrent/atomic/DoubleAdder
+threads class java/util/concurrent/atomic/AtomicIntegerArray
+threads member java/util/concurrent/ConcurrentHashMap.newKeySet*
+threads member *.parallelStream(*
+threads member java/util/stream/*.parallel(*
+
+rule net No sockets, URLs or HTTP in the core: transport is a host seam (the mod's HTTP and websocket, the website's fetch). URL encoding is text work the core does itself, the same on both sides.
+net class java/net/
+net class io/netty/
+
+rule filesystem No files in the core: the web has no file system, and where a host keeps plans is the host's business. The core reads and writes strings and bytes it is handed.
+filesystem class java/nio/file/
+filesystem class java/nio/channels/
+filesystem class java/io/File
+filesystem class java/io/FileInputStream
+filesystem class java/io/FileOutputStream
+filesystem class java/io/FileReader
+filesystem class java/io/FileWriter
+filesystem class java/io/RandomAccessFile
+
+rule awt No AWT, ImageIO or Swing: the web compile has none, and drawing is the host's.
+awt class java/awt/
+awt class javax/imageio/
+awt class javax/swing/
+
+rule zip No java.util.zip or jar: the web compile has no Deflater or Inflater, and their bytes are not specified to match another implementation's. Compression goes through a host seam or a core implementation of its own.
+zip class java/util/zip/
+zip class java/util/jar/
+
+rule security No java.security or javax.crypto: the web compile has no MessageDigest or SecureRandom. A digest the core needs is written in the core (as Uuid's MD5); randomness comes from the host.
+security class java/security/
+security class javax/crypto/
+
+rule string-format No String.format, printf or Formatter: the web compile's formatter is partial, and its numbers are spelled by the host's locale and float printer. Use NumberText for numbers and concatenation for the rest; words for players go through Text.
+string-format member java/lang/String.format(*
+string-format member java/lang/String.formatted(*
+string-format class java/util/Formatter
+string-format member java/io/PrintStream.printf(*
+string-format member java/io/PrintStream.format(*
+string-format member java/io/PrintWriter.printf(*
+string-format member java/io/PrintWriter.format(*
+
+rule java-text No java.text formats (DecimalFormat, NumberFormat, MessageFormat, SimpleDateFormat): they read the host's locale data, which the web compile mostly lacks, so the same number prints differently.
+java-text class java/text/
+
+rule float-text No double or float turned into text by the JDK (Double.toString, String.valueOf, StringBuilder.append, string concatenation, BigDecimal.valueOf): the JDK spells 1e10 as 1.0E10 where the website writes 10000000000, Java 8's spelling is not always the shortest, and the web compile spells numbers its own way. Use NumberText.of, json or fixed.
+float-text member java/lang/Double.toString(*
+float-text member java/lang/Float.toString(*
+float-text member java/lang/String.valueOf(D)*
+float-text member java/lang/String.valueOf(F)*
+float-text member java/lang/StringBuilder.append(D)*
+float-text member java/lang/StringBuilder.append(F)*
+float-text member java/lang/StringBuilder.insert(ID)*
+float-text member java/lang/StringBuilder.insert(IF)*
+float-text member java/lang/StringBuffer.append(D)*
+float-text member java/lang/StringBuffer.append(F)*
+float-text member java/math/BigDecimal.valueOf(D)*
+float-text concat D
+float-text concat F
+float-text concat Ljava/lang/Double;
+float-text concat Ljava/lang/Float;
+
+rule float-parse No text turned into a double or float by the JDK (Double.parseDouble, Double.valueOf, Float.parseFloat): the web compile's decimal reader is not shown to round every input correctly. Use NumberText.parse, which reads as JavaScript's Number does.
+float-parse member java/lang/Double.parseDouble(*
+float-parse member java/lang/Double.valueOf(Ljava/lang/String;)*
+float-parse member java/lang/Double.<init>(Ljava/lang/String;)*
+float-parse member java/lang/Float.parseFloat(*
+float-parse member java/lang/Float.valueOf(Ljava/lang/String;)*
+float-parse member java/lang/Float.<init>(Ljava/lang/String;)*
+
+rule uuid No java.util.UUID: the web compile replaces it with a string that hashes, compares and parses differently, which moves map order, sorts and ids. Use core-base's Uuid, the same as the JDK's on every target.
+uuid class java/util/UUID
+
+rule host-env No system properties or environment variables: the web has neither, and a setting the core reads comes through CoreSettings, where both hosts set it.
+host-env member java/lang/System.getProperty(*
+host-env member java/lang/System.getProperties(*
+host-env member java/lang/System.setProperty(*
+host-env member java/lang/System.getenv(*
+host-env member java/lang/Integer.getInteger(*
+host-env member java/lang/Long.getLong(*
+host-env member java/lang/Boolean.getBoolean(*
+
+rule default-locale No case change or format by the host's default locale (toLowerCase() and toUpperCase() without a Locale, Locale.getDefault): a Turkish locale lower-cases I to a dotless i, and the web compile's default is its own. Pass Locale.ROOT.
+default-locale member java/lang/String.toLowerCase()*
+default-locale member java/lang/String.toUpperCase()*
+default-locale member java/util/Locale.getDefault(*
+
+rule lombok No Lombok: it writes code the compiler sees and readers and a source-to-source web compile do not. Write the accessors, builders and constructors out.
+lombok classpath org.projectlombok:*
+lombok source \blombok\b
+
+rule log4j No log4j or other logging library: log through core-base's Log, which the host installs.
+log4j classpath org.apache.logging.log4j:*
+log4j class org/apache/logging/
+log4j class org/slf4j/

@@ -11,6 +11,7 @@ import java.util.UUID;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.gtnhplanner.conformance.Conformance;
 import com.gtnhplanner.data.flowchart.BoardGroup;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Edge;
@@ -35,7 +36,7 @@ import com.gtnhplanner.importer.FfImport;
  */
 public final class Boards {
 
-    /** The plans written from the game, under {@code /solver-corpus/}. */
+    /** The plans written from the game, in {@code conformance/solver/corpus/inputs/}. */
     static final String[] CORPUS = { "alumina-line-shared-reactor", "benzene", "buffer-drawers", "full-platline",
         "glass", "hv-diesel", "mega-iv-nitrobenzene-power-plant", "mv", "oxygen-silicon-loop", "pa-cell-loop",
         "platline", "single-card-v2", "sulfuric-acid", "titanium-line-chembath", "titanium-line-tour" };
@@ -57,6 +58,15 @@ public final class Boards {
         }
     }
 
+    static JsonObject corpusJson(final String name) {
+        try (InputStream in = Conformance.open("solver/corpus/inputs/" + name + ".json")) {
+            return new JsonParser().parse(new InputStreamReader(in, StandardCharsets.UTF_8))
+                .getAsJsonObject();
+        } catch (final IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     static JsonObject website(final String name) {
         return json("/factory-flow/" + name + ".json");
     }
@@ -70,7 +80,7 @@ public final class Boards {
     /** A corpus plan as a board: its cards, wires, drawers, shared machines and spare shares, laid out in rows. */
     public static Graph corpus(final String name) {
         final Graph g = new Graph(name);
-        corpusInto(g, name, json("/solver-corpus/" + name + ".json"), 0);
+        corpusInto(g, name, corpusJson(name), 0);
         return g;
     }
 
@@ -79,7 +89,7 @@ public final class Boards {
      * cards, for timing.
      */
     public static Graph corpusCopies(final String name, final int copies) {
-        final String text = json("/solver-corpus/" + name + ".json").toString();
+        final String text = corpusJson(name).toString();
         final java.util.regex.Pattern uuid = java.util.regex.Pattern
             .compile("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
         final Graph g = new Graph(name);

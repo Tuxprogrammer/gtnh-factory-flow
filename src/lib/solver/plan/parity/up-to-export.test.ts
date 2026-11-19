@@ -2,10 +2,10 @@
  * The Up to parity export (docs/up-to.md): every hand-built Up to plan of `upto.test.ts` and every corpus plan with
  * each exact count turned Up to, written with this engine's answer for the mod's `UpToParityTest`, which solves each
  * input with the Java engine and compares the two answers by the golden rules (`compare.ts`, the mod's
- * `SolverCorpus.differences`). Skipped unless `UPTO_EXPORT_DIR` names where to write (the mod's
- * `src/test/resources/solver-corpus-upto/`):
+ * `SolverCorpus.differences`). Skipped unless `UPTO_EXPORT_DIR` names where to write (`conformance/solver/up-to/`,
+ * which both suites read; run `node tools/conformance/manifest.mjs --write` after it so the manifest holds the new hashes):
  *
- *     UPTO_EXPORT_DIR=C:/path/to/gtnh-planner-mod/src/test/resources/solver-corpus-upto npx vitest run up-to-export
+ *     UPTO_EXPORT_DIR=$PWD/conformance/solver/up-to npx vitest run up-to-export
  *
  * Inputs are in the mod's dump format (`SolveInputJson`, what `__fixtures__/load.ts` reads); a hand-built plan's ids
  * become UUIDs first (`upto:<id>` hashed as Java's `UUID.nameUUIDFromBytes`), so both engines solve the very same input.

@@ -15,8 +15,8 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLParameters;
 
-import com.gtnhplanner.GtnhPlanner;
 import com.gtnhplanner.Tags;
+import com.gtnhplanner.core.base.Log;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -482,7 +482,8 @@ public final class LiveSocket {
             final java.util.regex.Matcher m = BAD_CLOSE.matcher(String.valueOf(cause.getMessage()));
             if (cause instanceof io.netty.handler.codec.CorruptedFrameException && m.find())
                 closeCode = Integer.parseInt(m.group(1));
-            else GtnhPlanner.LOG.debug("Live connection error", cause);
+            else Log.get()
+                .debug("Live connection error", cause);
             ctx.close();
         }
     }

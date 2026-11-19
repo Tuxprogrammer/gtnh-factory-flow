@@ -1,0 +1,802 @@
+{
+  "version": 1,
+  "areas": {
+    "board": {
+      "specifies": "S1 board parity: scenarios.json lists board states built on both sides; mod-answers.json is what the mod's own code made of each (its SolveInput, answer and board readouts), which the website must reproduce.",
+      "readers": [
+        "website: src/lib/solver/plan/parity/scenarios.test.ts"
+      ],
+      "generator": "mod-answers.json: tools/parity/s1/README.md (S1ParityTest, a throwaway JUnit run in a mod checkout)"
+    },
+    "live": {
+      "specifies": "The live-plan op engine: every rule of put, patch, del, meta, apply, diff and invert as a vector (plan, ops, expected result), run by both engines.",
+      "readers": [
+        "website: src/lib/live/ops.test.ts",
+        "mod: cloud/sync/LiveVectorsTest"
+      ],
+      "generator": "hand-written"
+    },
+    "machines": {
+      "specifies": "Machine maths as the website computes it: machine-goldens (recipes through the machine table, overclocks, parallels, power), bee-goldens (the bee card's multipliers and handler stats), crop-goldens (CropsNh), and reference-coefficients (the machine table against ShadowTheAge's reference calculator). Gzip files are one JSON object per line.",
+      "readers": [
+        "mod: machines/web/MachineGoldensTest, machines/BeesGoldensTest, machines/CropsNhGoldensTest, machines/web/MachineTableTest",
+        "website: src/lib/machines/machine-table.test.ts (reference-coefficients.json)"
+      ],
+      "generator": "bee-goldens: jvm/mod/tools/dev/bees/vitest.bees.config.mjs; reference-coefficients: see src/lib/machines/CLAUDE.md; machine-goldens and crop-goldens have no generator in this repository"
+    },
+    "pending": {
+      "specifies": "Files that disagree with a copy in the tree and wait for a decision. No suite reads them. Each subdirectory says in its README.md what it is and which file it would replace.",
+      "readers": []
+    },
+    "solver/corpus": {
+      "specifies": "The solver's whole answer on a plan. inputs/<case>.json is a SolveInput as the mod's SolveInputJson writes it; goldens/<case>.json is the digest of the answer both solvers must give, equal to 1e-6 relative. platline-x4 and platline-x10 have a golden only: their input is platline tiled 4 and 10 times. The 16 gtnh-flow-* inputs are dumps of yaml charts the mod loads itself.",
+      "readers": [
+        "website: src/lib/solver/plan/__fixtures__/{harness,golden}.test.ts, src/lib/solver/plan/adapter/parity.test.ts",
+        "mod: solver/SolverGoldenTest, solver/SolverCorpus (every solver test), solver/BufferDrawerTest, cloud/map/Boards, data/flowchart/balancer/AnswerAudit"
+      ],
+      "generator": "goldens and buffer-drawers.json: ./gradlew :mod:test --tests '*SolverGoldenTest*' --tests '*BufferDrawerTest*' -PwriteGoldens (from jvm/); other inputs: the mod's /solvedump command"
+    },
+    "solver/up-to": {
+      "specifies": "Up to parity: each file is {name, input, answer}, a plan the website's engine solved, for the mod's engine to solve again and match by the golden rules. Hand-built Up to plans plus every corpus plan with each exact count turned Up to.",
+      "readers": [
+        "mod: solver/UpToParityTest, solver/SolverCorpus.upToCases"
+      ],
+      "generator": "UPTO_EXPORT_DIR=$PWD/conformance/solver/up-to npx vitest run up-to-export (website), then node tools/conformance/manifest.mjs --write"
+    },
+    "tasks": {
+      "specifies": "Task order keys: orderBetween answers for pairs of keys, so both sides sort a task list the same way.",
+      "readers": [
+        "website: src/lib/tasks/order-key.test.ts",
+        "core-base: data/flowchart/OrderKeysTest"
+      ],
+      "generator": "website: src/lib/tasks/order-key.ts"
+    }
+  },
+  "files": {
+    "board/mod-answers.json": {
+      "area": "board",
+      "bytes": 158871,
+      "sha256": "5dd5d064b920d1ae45850719092fcc5a2fa980b602c19d7dcc82c00dbfd604a5"
+    },
+    "board/scenarios.json": {
+      "area": "board",
+      "bytes": 29350,
+      "sha256": "0fa167c57c6b686b695d8d6125f20fc04ee6a7ac8740e5fab34f9ae1550e1512"
+    },
+    "live/live-vectors.json": {
+      "area": "live",
+      "bytes": 45531,
+      "sha256": "d365c87418848d3970361d30bf733217cbba753496a7e6363de40d1faeb0320e"
+    },
+    "machines/bee-goldens.jsonl.gz": {
+      "area": "machines",
+      "bytes": 174641,
+      "sha256": "0daeb64ea972cef22b201cf64eca168b926794fa52b94aca230a27306266133a"
+    },
+    "machines/crop-goldens.jsonl.gz": {
+      "area": "machines",
+      "bytes": 248927,
+      "sha256": "f39b5dc0c9762a59a0b5dbaa55868f7715631fcf356d74e6ccd594063642d334"
+    },
+    "machines/machine-goldens.jsonl.gz": {
+      "area": "machines",
+      "bytes": 2557259,
+      "sha256": "2ef0d2aa870ebb512ccf0be448a57d77befcec1ac4587b4f9ab0243629898446"
+    },
+    "machines/reference-coefficients.json": {
+      "area": "machines",
+      "bytes": 643054,
+      "sha256": "d32b2163d3f0c9cc69100c6e7a273dfe5cba8249cbea21e3e3bc062a0fe98ec6"
+    },
+    "pending/machines/bee-goldens.web-regenerated.jsonl.gz": {
+      "area": "pending",
+      "bytes": 187840,
+      "sha256": "5773e2097c2849d223b41864cc853a81dd7743954db40ed9f404333519b6d544"
+    },
+    "pending/solver-up-to-web-newer/idle-noise-beside-a-lone-card.json": {
+      "area": "pending",
+      "bytes": 57167,
+      "sha256": "ff4fd74ea453e9ef0ccb0cbdbf6ab2f7a10098a06bdb015ba82f82e49c7c6c38"
+    },
+    "pending/solver-up-to-web-newer/idle-noise.json": {
+      "area": "pending",
+      "bytes": 55512,
+      "sha256": "9fa420b4d1193a5cf3d8780bb1e30fa351ec0003c1e56bc0d77409dd93792d82"
+    },
+    "solver/corpus/goldens/alumina-line-shared-reactor.json": {
+      "area": "solver/corpus",
+      "bytes": 30130,
+      "sha256": "f4aa80f927521473c4a4ee62417f0dc45fa2422f1738b53eddbf3ae5920fc8af"
+    },
+    "solver/corpus/goldens/benzene.json": {
+      "area": "solver/corpus",
+      "bytes": 1495,
+      "sha256": "ee01eeb5ee95e9c49c39ffd46af5f97e55ea8da7da3fa4b20d4692af9f70115e"
+    },
+    "solver/corpus/goldens/buffer-drawers.json": {
+      "area": "solver/corpus",
+      "bytes": 8004,
+      "sha256": "d7a3dd712d010bf98e2f0b9a039ad38703f544af750fbb81fd06a38b2d447a88"
+    },
+    "solver/corpus/goldens/full-platline.json": {
+      "area": "solver/corpus",
+      "bytes": 405667,
+      "sha256": "155ddd931644cf4ce9ecdc1e61fbd2c384797355afafccc3a44c58d2d67c484a"
+    },
+    "solver/corpus/goldens/glass.json": {
+      "area": "solver/corpus",
+      "bytes": 32686,
+      "sha256": "9cd3b794ccefeb4ab14dd687d49d3582c6d2299290e7d956606b5fb23da27bf4"
+    },
+    "solver/corpus/goldens/gtnh-flow-230_platline.json": {
+      "area": "solver/corpus",
+      "bytes": 23558,
+      "sha256": "c5604b52f6309bef30296c44affcfc0f00172a6f8d57901adedacc144921e1dc"
+    },
+    "solver/corpus/goldens/gtnh-flow-cetane.json": {
+      "area": "solver/corpus",
+      "bytes": 10529,
+      "sha256": "59b2c95b1e07cc771158cdc481ef14e33629bfcdc09278719568d6852fadfa73"
+    },
+    "solver/corpus/goldens/gtnh-flow-excess_choice.json": {
+      "area": "solver/corpus",
+      "bytes": 5203,
+      "sha256": "2370bbcdbe2c4982bfdf29d796876e4762253803e2c1614e4dadafbe7c9ef65f"
+    },
+    "solver/corpus/goldens/gtnh-flow-jet_fuel.json": {
+      "area": "solver/corpus",
+      "bytes": 16403,
+      "sha256": "c2ed81481b867f7b3f3678e92f6e384fddc41c81d670b1df0c75b9ad0caf1737"
+    },
+    "solver/corpus/goldens/gtnh-flow-light_fuel.json": {
+      "area": "solver/corpus",
+      "bytes": 2110,
+      "sha256": "24c609b7776b4352f81d0a72ed84478cc821cc8da4f9fb4fea7c11f1f2f506c9"
+    },
+    "solver/corpus/goldens/gtnh-flow-light_fuel_hydrogen_loop.json": {
+      "area": "solver/corpus",
+      "bytes": 1778,
+      "sha256": "fb2e5c43cd19f356acb0d2de97e43eac7343a270e37bcdc6bf7ce4ff6c79f1ad"
+    },
+    "solver/corpus/goldens/gtnh-flow-loopGraph.json": {
+      "area": "solver/corpus",
+      "bytes": 4858,
+      "sha256": "9f2b03317ee82f318c49c7a42369b23acf894d0f4798584235ffef0eedfd94e2"
+    },
+    "solver/corpus/goldens/gtnh-flow-microsheep.json": {
+      "area": "solver/corpus",
+      "bytes": 1269,
+      "sha256": "f1fbb7b37ba2ef3b0f323f2f0a6c5696ada078dfce887873b648c1fc97884050"
+    },
+    "solver/corpus/goldens/gtnh-flow-mk1.json": {
+      "area": "solver/corpus",
+      "bytes": 4701,
+      "sha256": "86af7a227260f748089c316c415aa45a8d143b2e665f705a6563ccac3a62aa50"
+    },
+    "solver/corpus/goldens/gtnh-flow-mk1_tiberium.json": {
+      "area": "solver/corpus",
+      "bytes": 2556,
+      "sha256": "8bc43b9d91897f2651d94e9a7f775bacc8486d49a24341ab5d1a684a947aaf97"
+    },
+    "solver/corpus/goldens/gtnh-flow-nanocircuits.json": {
+      "area": "solver/corpus",
+      "bytes": 143225,
+      "sha256": "2066f93a67fd8c74813e2abc65619faac75e9451ac8f96f2b03e199d425335b2"
+    },
+    "solver/corpus/goldens/gtnh-flow-palladium.json": {
+      "area": "solver/corpus",
+      "bytes": 2114,
+      "sha256": "74a9f55fab49665ad89c60dbfcedd265bbd9f485731a40b416f1eebf84b9e155"
+    },
+    "solver/corpus/goldens/gtnh-flow-palladium_line.json": {
+      "area": "solver/corpus",
+      "bytes": 59750,
+      "sha256": "c73d4c5d96af4748d378d67625e036b55a82d07a64b587f7edba187b52944ae0"
+    },
+    "solver/corpus/goldens/gtnh-flow-symmetric_choice.json": {
+      "area": "solver/corpus",
+      "bytes": 6212,
+      "sha256": "bf2f8a0a86ba47177313c3c513983b1f6f342aa6fea606c8ef0197fd8dffbe4c"
+    },
+    "solver/corpus/goldens/gtnh-flow-two_decisions.json": {
+      "area": "solver/corpus",
+      "bytes": 11763,
+      "sha256": "e7af1af4e1e554b253b8302d5f3a7073746002df16f55bbcff6e897ece6de0fa"
+    },
+    "solver/corpus/goldens/gtnh-flow-twoslack.json": {
+      "area": "solver/corpus",
+      "bytes": 4858,
+      "sha256": "c7dd7e282bb62cf30adfc3e33737311cf74eb0f03e667371528e927e9dbe01b8"
+    },
+    "solver/corpus/goldens/hv-diesel.json": {
+      "area": "solver/corpus",
+      "bytes": 13539,
+      "sha256": "5107be21a2ac012f864dea8a6be6144184ff9f91aeb1f3aa4d60adba93fc0b23"
+    },
+    "solver/corpus/goldens/mega-iv-nitrobenzene-power-plant.json": {
+      "area": "solver/corpus",
+      "bytes": 96256,
+      "sha256": "c70ab442b9551fbf34c48dd267854e5f3ee3f02aa3c4a668b3f1d0e72b22193e"
+    },
+    "solver/corpus/goldens/mv.json": {
+      "area": "solver/corpus",
+      "bytes": 211219,
+      "sha256": "bb8fb7203ffa84651db65fc4180ea684a49f1007d0ce83c29b785aef0cab1e0c"
+    },
+    "solver/corpus/goldens/oxygen-silicon-loop.json": {
+      "area": "solver/corpus",
+      "bytes": 6074,
+      "sha256": "81f8b24a0f5d14a8d4c23317d50e40c77eb32eb61e0f97e29ee5952310589833"
+    },
+    "solver/corpus/goldens/pa-cell-loop.json": {
+      "area": "solver/corpus",
+      "bytes": 27265,
+      "sha256": "ed50e45cc5090e2184b63f95118a767354502ec64605fed228bd4c2bf9135d2c"
+    },
+    "solver/corpus/goldens/platline-x10.json": {
+      "area": "solver/corpus",
+      "bytes": 5149268,
+      "sha256": "67520a1de60ab83970c3c665cd9b7419d0faabfa2109f017c9074e718389ba07"
+    },
+    "solver/corpus/goldens/platline-x4.json": {
+      "area": "solver/corpus",
+      "bytes": 2060505,
+      "sha256": "453bc07b2161fc78973f83c292ddd2c68b2a9cab4ff3f088edabc8684c3483f5"
+    },
+    "solver/corpus/goldens/platline.json": {
+      "area": "solver/corpus",
+      "bytes": 507478,
+      "sha256": "7253f76d57ab49ba0942498a5a7e3541b0f3d091d5065692a3c18bec72e2e445"
+    },
+    "solver/corpus/goldens/single-card-v2.json": {
+      "area": "solver/corpus",
+      "bytes": 1115,
+      "sha256": "ff8e41abba14acbdabe2a97336615432f64e95b4c74cfa235e739b348f876bd3"
+    },
+    "solver/corpus/goldens/sulfuric-acid.json": {
+      "area": "solver/corpus",
+      "bytes": 34891,
+      "sha256": "274f6925d5a305aba28af97b3bf11af2bdf9621dad9c32c1d2c67dc8b519c4e6"
+    },
+    "solver/corpus/goldens/titanium-line-chembath.json": {
+      "area": "solver/corpus",
+      "bytes": 50969,
+      "sha256": "cc4e59afd6340d950c5c94f58bdd7f6db050d63c8371a0a5fbe0ae406fb46657"
+    },
+    "solver/corpus/goldens/titanium-line-tour.json": {
+      "area": "solver/corpus",
+      "bytes": 27711,
+      "sha256": "dab6d80acba83d10083438a5db108608476de22452b0632bf5562e8c0ae39012"
+    },
+    "solver/corpus/inputs/alumina-line-shared-reactor.json": {
+      "area": "solver/corpus",
+      "bytes": 25341,
+      "sha256": "03935135be539b333022d54b234159f774d8cc0f99765485bae12bb7b9ac02b0"
+    },
+    "solver/corpus/inputs/benzene.json": {
+      "area": "solver/corpus",
+      "bytes": 1896,
+      "sha256": "cf7dfd096188322a8473ab20359625654f06229215c83a111db2f7b4f29ff767"
+    },
+    "solver/corpus/inputs/buffer-drawers.json": {
+      "area": "solver/corpus",
+      "bytes": 7635,
+      "sha256": "42609bf4fcf8a1a94a0a1e121051ac9ce34974ab960d0ab2a25dcecfd24b85a2"
+    },
+    "solver/corpus/inputs/full-platline.json": {
+      "area": "solver/corpus",
+      "bytes": 78646,
+      "sha256": "9c9e6a3cdc6881e466628cf9b41b4784dc5296337e0a1a6bac60095ebdf8ced6"
+    },
+    "solver/corpus/inputs/glass.json": {
+      "area": "solver/corpus",
+      "bytes": 10891,
+      "sha256": "a16a105b088725d36ad2beab5db1c2e3c2c5754fbac6c966e76eb89d76e3bded"
+    },
+    "solver/corpus/inputs/gtnh-flow-230_platline.json": {
+      "area": "solver/corpus",
+      "bytes": 37789,
+      "sha256": "3b9f1749b52404cc0c088034a468edff4478dd64e79259298b2de65d60470964"
+    },
+    "solver/corpus/inputs/gtnh-flow-cetane.json": {
+      "area": "solver/corpus",
+      "bytes": 11349,
+      "sha256": "8feee2c9657789e246a82791d82bd1e584efa98dca967358f8f247a7aa38b1dd"
+    },
+    "solver/corpus/inputs/gtnh-flow-excess_choice.json": {
+      "area": "solver/corpus",
+      "bytes": 3243,
+      "sha256": "ccbfe8c2fb83618ba54eee1c930eb6a5253ca569e6c4cfaaff513d8ad6c86c90"
+    },
+    "solver/corpus/inputs/gtnh-flow-jet_fuel.json": {
+      "area": "solver/corpus",
+      "bytes": 14254,
+      "sha256": "9cfe8d8ae2ba050da957f7ed19eef50748b3706875ac766e81e84b01d60ad68a"
+    },
+    "solver/corpus/inputs/gtnh-flow-light_fuel.json": {
+      "area": "solver/corpus",
+      "bytes": 3273,
+      "sha256": "a5a3e7ae24466f4f1456f4c7b566eaee1341be4f24b1f792093130742f8149a1"
+    },
+    "solver/corpus/inputs/gtnh-flow-light_fuel_hydrogen_loop.json": {
+      "area": "solver/corpus",
+      "bytes": 3512,
+      "sha256": "42bd2256d8cf4e34d2fcaaa771d8b2812bd7d3101b3c2172fb7c41363610b724"
+    },
+    "solver/corpus/inputs/gtnh-flow-loopGraph.json": {
+      "area": "solver/corpus",
+      "bytes": 2593,
+      "sha256": "3c5c1a21e076ba751710ee7bfcb1f9531aaf4c2841d014a7e1d9b10abfc0a2d0"
+    },
+    "solver/corpus/inputs/gtnh-flow-microsheep.json": {
+      "area": "solver/corpus",
+      "bytes": 1777,
+      "sha256": "aca9fa3ff365f0f54d98b3a0fd3ce1ac3ececa5a0f2e96b2822a97d8a0425d69"
+    },
+    "solver/corpus/inputs/gtnh-flow-mk1.json": {
+      "area": "solver/corpus",
+      "bytes": 2988,
+      "sha256": "3fbee8964b199e572544bf9618749eeaddaa70b1873ea9aee3aaee4a6c1dac8d"
+    },
+    "solver/corpus/inputs/gtnh-flow-mk1_tiberium.json": {
+      "area": "solver/corpus",
+      "bytes": 4088,
+      "sha256": "2551866192c1274bbd3c43877a183bdb2c382b3fdd349f8026c1ab353408e382"
+    },
+    "solver/corpus/inputs/gtnh-flow-nanocircuits.json": {
+      "area": "solver/corpus",
+      "bytes": 518601,
+      "sha256": "8edbbf8144db37668d7f44d3dea5673198a69178b0a5dd831c39dcd93984251b"
+    },
+    "solver/corpus/inputs/gtnh-flow-palladium.json": {
+      "area": "solver/corpus",
+      "bytes": 6035,
+      "sha256": "b9dc92f81f27a148b9e9c56efdafbf1aeb6bfa7469b40189221d3dfd654a27e8"
+    },
+    "solver/corpus/inputs/gtnh-flow-palladium_line.json": {
+      "area": "solver/corpus",
+      "bytes": 82744,
+      "sha256": "4eb08c6c794c506ac431b28d189b8738943607c9ba71d4e1bce67e92a5b70dde"
+    },
+    "solver/corpus/inputs/gtnh-flow-symmetric_choice.json": {
+      "area": "solver/corpus",
+      "bytes": 4576,
+      "sha256": "7f31e28697fce04f1e85f4b5314e027bc4d4b4261f994ea7f1549d15dc54b1eb"
+    },
+    "solver/corpus/inputs/gtnh-flow-two_decisions.json": {
+      "area": "solver/corpus",
+      "bytes": 9033,
+      "sha256": "4f94c01338d6a680e6abe4ee89d3de7687afe5c1239aa626edab13eba90c06a5"
+    },
+    "solver/corpus/inputs/gtnh-flow-twoslack.json": {
+      "area": "solver/corpus",
+      "bytes": 2593,
+      "sha256": "7cd4cef62981f343323915edc5fb11431ebecfcefe6dec4791255175a59c0d79"
+    },
+    "solver/corpus/inputs/hv-diesel.json": {
+      "area": "solver/corpus",
+      "bytes": 10429,
+      "sha256": "07d953bbbab6aa181056d9389ed90dcb00e915ac9f92150e68f3aaaf44cde7a3"
+    },
+    "solver/corpus/inputs/mega-iv-nitrobenzene-power-plant.json": {
+      "area": "solver/corpus",
+      "bytes": 34716,
+      "sha256": "f3d8d82cd9e6bf7472011c043946fe0e5cfe8070efccec031911ef8462472367"
+    },
+    "solver/corpus/inputs/mv.json": {
+      "area": "solver/corpus",
+      "bytes": 52738,
+      "sha256": "1fe3e0fb57bb5cf33209ea4e4d5f16536016aed3d1efa284a91db80aed618632"
+    },
+    "solver/corpus/inputs/oxygen-silicon-loop.json": {
+      "area": "solver/corpus",
+      "bytes": 4135,
+      "sha256": "a0029d65ec035a8d9b17fde538fe5eb2cac2689d0c54dab2799bbb6bff47f071"
+    },
+    "solver/corpus/inputs/pa-cell-loop.json": {
+      "area": "solver/corpus",
+      "bytes": 9347,
+      "sha256": "ea87d9c843284bbe9199209e88b9457e1ed8a802d5045bcc0cd45e72d79fcf8f"
+    },
+    "solver/corpus/inputs/platline.json": {
+      "area": "solver/corpus",
+      "bytes": 81690,
+      "sha256": "076dab3b3095a938a8cff60c3192e444a5e5f290fe91c433fd05a38f1e3040bd"
+    },
+    "solver/corpus/inputs/single-card-v2.json": {
+      "area": "solver/corpus",
+      "bytes": 823,
+      "sha256": "e8ce70d426fc65484aa7d15283e1ddcf398cc6d5a83d49fe4acbc813e4ba4750"
+    },
+    "solver/corpus/inputs/sulfuric-acid.json": {
+      "area": "solver/corpus",
+      "bytes": 14624,
+      "sha256": "6968b2586bc18ed085ebde8a40418764fcdc3d511d4a539071fed76a3945803c"
+    },
+    "solver/corpus/inputs/titanium-line-chembath.json": {
+      "area": "solver/corpus",
+      "bytes": 18742,
+      "sha256": "72409b0447fea8aab4321136094f1b8ca21038d4a5c1247dac067ecd897bda7a"
+    },
+    "solver/corpus/inputs/titanium-line-tour.json": {
+      "area": "solver/corpus",
+      "bytes": 9752,
+      "sha256": "7ffec210637a35bd04d1798aca7680a1e32fc2f9c921dcbcd4ad72a5a2a5ffcb"
+    },
+    "solver/up-to/alternatives-chosen.json": {
+      "area": "solver/up-to",
+      "bytes": 7181,
+      "sha256": "fb57650278ab3855a4ba72fcc9ac6a1bfa56894072cc86f8b888b84ad3a7379d"
+    },
+    "solver/up-to/alternatives.json": {
+      "area": "solver/up-to",
+      "bytes": 7999,
+      "sha256": "5d1d4b852b312944b71363d225f26ee04c4899c280e17fd5a52c9552666eb849"
+    },
+    "solver/up-to/alumina-line-shared-reactor-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 41356,
+      "sha256": "43656034ac8a69ccac334349b7612efdb465a5174b87c51790f862ee1556afca"
+    },
+    "solver/up-to/banked-any-taker.json": {
+      "area": "solver/up-to",
+      "bytes": 3423,
+      "sha256": "5a2782f8eda65b3041560794c913744d0871a9d627a75acfc4a9d393dbfd4e30"
+    },
+    "solver/up-to/banked-up-to-taker.json": {
+      "area": "solver/up-to",
+      "bytes": 5475,
+      "sha256": "214a5708011b89718d206d8026e8d6171296e0b1fd56c7df82c8f8fcc2e327f1"
+    },
+    "solver/up-to/benzene-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 3519,
+      "sha256": "f33a517c97ac8f16bce13a03e670c279ed7ff159b245c2b7e38445bf7f3de5a9"
+    },
+    "solver/up-to/benzene.json": {
+      "area": "solver/up-to",
+      "bytes": 3801,
+      "sha256": "3c6f5c7bc2af6207943285728c1ea6a0d171c0b2bf297c58ea3c7a1e8c05e079"
+    },
+    "solver/up-to/buffer-any-taker.json": {
+      "area": "solver/up-to",
+      "bytes": 3739,
+      "sha256": "4388ad5b1bb8705636eded48050fb0c8cd9409f988587f2d24ed0961b2ad0604"
+    },
+    "solver/up-to/buffer-drawers-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 13720,
+      "sha256": "1ca54ebb32a2bf17f7518fd0b1c21271f1cb588b27c830bca47bd036f147812d"
+    },
+    "solver/up-to/buffer-up-to-taker.json": {
+      "area": "solver/up-to",
+      "bytes": 4153,
+      "sha256": "f43ec4d03c0498ec4ccc6f1555a3a2a0ef907e145e95a7f4970abd73c2c25824"
+    },
+    "solver/up-to/buffer-with-a-rule.json": {
+      "area": "solver/up-to",
+      "bytes": 4323,
+      "sha256": "24be23c1b6df66e7dbba2a7f6b0d0a04c2e3e888906dc8960a87c25ec0a8e3e2"
+    },
+    "solver/up-to/capped-drawers.json": {
+      "area": "solver/up-to",
+      "bytes": 4400,
+      "sha256": "e69f31cadfaf35bd85bbeb0e04e401718b8135dcb07a744e7a514316d64d68aa"
+    },
+    "solver/up-to/chain-first-slower.json": {
+      "area": "solver/up-to",
+      "bytes": 3699,
+      "sha256": "cd6ac8b5881ea07f2eb72deb4bbceb216e406a79edbed7d6fb1c0ae2716111ab"
+    },
+    "solver/up-to/chain-of-three.json": {
+      "area": "solver/up-to",
+      "bytes": 5088,
+      "sha256": "749b377ffaebb89c223b27951dd95e590cdb0d41bd4d132958e3a9cad5d381df"
+    },
+    "solver/up-to/chain-second-slower.json": {
+      "area": "solver/up-to",
+      "bytes": 3647,
+      "sha256": "6c91c6f4ded393bd0f39da953237867cf3c21ccd7c32e2163b2e97cbc14801d8"
+    },
+    "solver/up-to/clog-ring.json": {
+      "area": "solver/up-to",
+      "bytes": 4250,
+      "sha256": "078343019376cd838201e7fabcca294ec07477ebf6ac948cfb29ddc1c7152606"
+    },
+    "solver/up-to/dead-ring-of-one.json": {
+      "area": "solver/up-to",
+      "bytes": 2512,
+      "sha256": "49fe98ec0ee1771793dd7bdc2c4a754dcebbba1f50a5fb8ea45aec5c3632c9e7"
+    },
+    "solver/up-to/dead-ring-of-three.json": {
+      "area": "solver/up-to",
+      "bytes": 5740,
+      "sha256": "bb57ca534b68e7a5eda46d0759e8390c1238c423442e48aa358ad7954faafc2e"
+    },
+    "solver/up-to/dead-ring-of-two.json": {
+      "area": "solver/up-to",
+      "bytes": 4125,
+      "sha256": "9d01e131e0416980cafd75d8d59bdc34690127fa6ca298c4ad660c2d01e30ba6"
+    },
+    "solver/up-to/exact-consumer.json": {
+      "area": "solver/up-to",
+      "bytes": 4753,
+      "sha256": "2cf2c6abc684a133c54b5fe596acd945d41a0342e0319937bb2237f9b58ad9d1"
+    },
+    "solver/up-to/exact-producer.json": {
+      "area": "solver/up-to",
+      "bytes": 4760,
+      "sha256": "dec46acaaab2fb7047c48dd1f0b1a35701316579a87186813bee59b3041d5105"
+    },
+    "solver/up-to/fed-ring.json": {
+      "area": "solver/up-to",
+      "bytes": 4494,
+      "sha256": "289feaece5ca21055d87bea698f4bf515ac38bca79e173221d6b05297d73c411"
+    },
+    "solver/up-to/full-platline-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 103493,
+      "sha256": "0deec4688ea4bb73cda0bf5ab1a44b784f104838fcabb2199296a40ee3f142e7"
+    },
+    "solver/up-to/glass-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 18490,
+      "sha256": "e57153a0d578a5d3c41eb818a4b6e794e9942f5e726503059f8d8bd952e5b203"
+    },
+    "solver/up-to/gtnh-flow-230-platline-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 53430,
+      "sha256": "490999420a7a547f7d0531694e2cea7eba66478746f8a0e5621cdb910fa5497c"
+    },
+    "solver/up-to/gtnh-flow-cetane-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 18814,
+      "sha256": "27d49b5b8091f7898509a42ad230f7313b760cf182025f4c305463272edf86fa"
+    },
+    "solver/up-to/gtnh-flow-excess-choice-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 5698,
+      "sha256": "e81472c9f37377b416545abee4090e3f3155eaccc11da12458555b7dbefeabd9"
+    },
+    "solver/up-to/gtnh-flow-jet-fuel-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 26532,
+      "sha256": "ac1653ebea7aa5889d8f67dbf71649e8e6df2839cf734fe7ebc5fc892d173643"
+    },
+    "solver/up-to/gtnh-flow-light-fuel-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 5267,
+      "sha256": "3920273193cfdbe159170c23c9be6ec4ce2a8524f6af09084538c585551a6aff"
+    },
+    "solver/up-to/gtnh-flow-light-fuel-hydrogen-loop-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 5214,
+      "sha256": "0998423cdd9ddd4506c48fe13b3aa7741de272fcdbf64cea1b6cd144387b68e8"
+    },
+    "solver/up-to/gtnh-flow-loopgraph-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 3787,
+      "sha256": "ccf774668034909ffb6c63650b4e566d738680ea44d6b5d193d998f8b785bab2"
+    },
+    "solver/up-to/gtnh-flow-microsheep-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 2778,
+      "sha256": "e7fe31d2753870a1a57ecac00644cd9df5b33134a0c6a592ee49d78393fc45ff"
+    },
+    "solver/up-to/gtnh-flow-mk1-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 6742,
+      "sha256": "c2abfa4fd1ecddc5c60aded3349c533d8b9dd921c28f9f271c4b4195a99f7388"
+    },
+    "solver/up-to/gtnh-flow-mk1-tiberium-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 6330,
+      "sha256": "bdfebaccce2f13cb2aab205535bd4ab4fade3e52cf683e6bac9b7b0b170ccd2b"
+    },
+    "solver/up-to/gtnh-flow-nanocircuits-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 581965,
+      "sha256": "24cb24c8dbf050bac5e4a13146db5bb106941f29e5bec0e5ccc5146bedcd800a"
+    },
+    "solver/up-to/gtnh-flow-palladium-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 7398,
+      "sha256": "f18d7fcdbeb9617b4c8b283d8737d1691ca5791b03756cb81122ae076c67226b"
+    },
+    "solver/up-to/gtnh-flow-palladium-line-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 123526,
+      "sha256": "4a7a6bd05aa156248c3c6451bdefd711db7baf95575fdcd7b21a29020d3f5638"
+    },
+    "solver/up-to/gtnh-flow-symmetric-choice-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 7335,
+      "sha256": "4d215d4ea8d78fc63bda19a92bc36eb8c4ff487b609d34a4ac73a575792b56ee"
+    },
+    "solver/up-to/gtnh-flow-two-decisions-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 13847,
+      "sha256": "97fb82e4d6f3042da19f8433c5b8d6962267e023099bd5c8c44e510de6fda1e8"
+    },
+    "solver/up-to/gtnh-flow-twoslack-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 3786,
+      "sha256": "3fe8569f55ee4049b8590efdf136f3884ae8452a53e93fab299383d98ba1e74a"
+    },
+    "solver/up-to/hv-diesel-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 17889,
+      "sha256": "9fe827654c562f57814cdaa58b5fd1d17a0d89ecbe3bb37ac464d6ccbd6b296e"
+    },
+    "solver/up-to/idle-noise-beside-a-lone-card.json": {
+      "area": "solver/up-to",
+      "bytes": 56745,
+      "sha256": "9426d4ee7df772bbc1f8cb5f809fe63da214365c8a6f71ccac31754caeeb32f5"
+    },
+    "solver/up-to/idle-noise.json": {
+      "area": "solver/up-to",
+      "bytes": 55090,
+      "sha256": "c19e87551704bfcf306a672534624ce4af5dc7a5dd167b1b10994bb903f32dc0"
+    },
+    "solver/up-to/mega-iv-nitrobenzene-power-plant-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 49934,
+      "sha256": "fcedb6711af1d57ddac005d9f1888646543fd9763fb30234482ea10d152fa079"
+    },
+    "solver/up-to/mv-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 73990,
+      "sha256": "273f603ef990a1f4aabe05a0cad9fe44a353e23dc626aec2735868aeb2a019d0"
+    },
+    "solver/up-to/no-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 4559,
+      "sha256": "5a1d8bd2cc2f2c1733edab07bed6cd3597c2f5af3ae361645a9f173c02c72869"
+    },
+    "solver/up-to/nothing-takes.json": {
+      "area": "solver/up-to",
+      "bytes": 3853,
+      "sha256": "fec353f8bc6d95dd04db7b6250d55ded1813c24923f3ca46f0f8c88c44ff568b"
+    },
+    "solver/up-to/only-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 3119,
+      "sha256": "672018ac007f13d438a09e3f13bf1d20dc5f42fd37640088d2674896f1abaa4b"
+    },
+    "solver/up-to/oxygen-silicon-loop-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 6751,
+      "sha256": "9689ad13540926a6879f0f94ff86b990195b3f80eb58401ee121044ac539a262"
+    },
+    "solver/up-to/pa-cell-loop-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 16008,
+      "sha256": "47e926b56c9b4f5751760b2fb7ea5a6ca5f92e8d769385bcdcb735c22b2c7222"
+    },
+    "solver/up-to/pin-diagnosis.json": {
+      "area": "solver/up-to",
+      "bytes": 6903,
+      "sha256": "21ae5e892955243f8abcd9a9d0b8338d1c74b72043fc7d416f553711a5039f77"
+    },
+    "solver/up-to/platline-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 108973,
+      "sha256": "66767343100bd2b71ec7774263726f3cfdcffe567b77699e152496f1f5d106c3"
+    },
+    "solver/up-to/platline-x4-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 433387,
+      "sha256": "67ca783edc035831f193e9d9313def17758787507cd5d24a140864cb13291ed9"
+    },
+    "solver/up-to/read-out-budget.json": {
+      "area": "solver/up-to",
+      "bytes": 76145,
+      "sha256": "ab54312e1bdec1676bc858f2cd9a76ae8712e36832c78071e321d59758962699"
+    },
+    "solver/up-to/shared-pool.json": {
+      "area": "solver/up-to",
+      "bytes": 3367,
+      "sha256": "ec406ace0b6b056f16b0a948db038419e337f00c882c9096c9ad86eb79f695f3"
+    },
+    "solver/up-to/shared-producer.json": {
+      "area": "solver/up-to",
+      "bytes": 4552,
+      "sha256": "8c2dc53fac3a028b9f6a8e12979514ce5c416a4c95a09585d22841c374fff69a"
+    },
+    "solver/up-to/single-card-v2-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 2233,
+      "sha256": "b5c16f13255618a0ef348798b91aa8563e80e3a4821a5768c942f90ae679aded"
+    },
+    "solver/up-to/stage-a.json": {
+      "area": "solver/up-to",
+      "bytes": 4260,
+      "sha256": "d00aab5fdc191110b2286d9dfb6927d7e1f6eeb0bbb9724acbc3c4fbf4afa194"
+    },
+    "solver/up-to/starved-chain.json": {
+      "area": "solver/up-to",
+      "bytes": 4369,
+      "sha256": "b432b82fc2b5f639a706e4ecbd2c2760094013748c7b1aefbedd0fd5fa450f6e"
+    },
+    "solver/up-to/sulfuric-acid-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 19462,
+      "sha256": "147dec1db7abc97f96dbba8b22e9bc543f3b1a590dfbc242d3d2e4dcf66d72ba"
+    },
+    "solver/up-to/titanium-line-chembath-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 25132,
+      "sha256": "99b9e6b9364ede316fd813c1b71df60630e17417ca2b01675bdf38906378653e"
+    },
+    "solver/up-to/titanium-line-tour-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 14847,
+      "sha256": "5a470106d652c2c132c95519addccf995b514913a60fc15f677eb80269c62ec9"
+    },
+    "solver/up-to/topped-loop-capped.json": {
+      "area": "solver/up-to",
+      "bytes": 5922,
+      "sha256": "e7bda8861f0473d41cea114ebd0ac5833570be147a7c95d3010e3ce88b83844a"
+    },
+    "solver/up-to/topped-loop-trading.json": {
+      "area": "solver/up-to",
+      "bytes": 10030,
+      "sha256": "c9c766cf0b5796a64a6931c74e5de09aec8df08854f6fb8ac2c6f60f52ccf2c6"
+    },
+    "solver/up-to/topped-loop.json": {
+      "area": "solver/up-to",
+      "bytes": 5841,
+      "sha256": "7d2bde2ad3d88186b01e6c04823357f255692f24263ea90e368d5909b7e8f8ec"
+    },
+    "solver/up-to/two-full-outputs.json": {
+      "area": "solver/up-to",
+      "bytes": 3978,
+      "sha256": "46cb0fc2fc765473959249273d9f53542dd2e43beda2c319a6911814b344e6ac"
+    },
+    "solver/up-to/two-islands.json": {
+      "area": "solver/up-to",
+      "bytes": 6542,
+      "sha256": "b19beae3a47946760a9f8ebca5d66ce1c06b1d4b75d7ecfbdc2bd7ac3b98540a"
+    },
+    "solver/up-to/two-producers.json": {
+      "area": "solver/up-to",
+      "bytes": 5347,
+      "sha256": "9d7354e207c04b8257f879d6580e95abd4985cb74e3472b47d52dcbb0a34c815"
+    },
+    "solver/up-to/two-rings.json": {
+      "area": "solver/up-to",
+      "bytes": 9043,
+      "sha256": "b22390d4849050626bcafa003546006608397bc7ea1e5b65adfff3b06606da9b"
+    },
+    "solver/up-to/two-short-inputs.json": {
+      "area": "solver/up-to",
+      "bytes": 3975,
+      "sha256": "9f3e94981877f296583e711280c4fd6d9cb0f576bb8b278aef5e434e559736a3"
+    },
+    "solver/up-to/two-sided-output-tighter.json": {
+      "area": "solver/up-to",
+      "bytes": 4061,
+      "sha256": "16a5dfd960f200996ecadfd9c13a998a443956fac78684a7763706f73f154d7f"
+    },
+    "solver/up-to/two-sided-tied.json": {
+      "area": "solver/up-to",
+      "bytes": 3994,
+      "sha256": "83df7ffa0086daa40d7ebb88320d6d85ab639288398419e9f78de01040b91b82"
+    },
+    "solver/up-to/unreachable-drawer.json": {
+      "area": "solver/up-to",
+      "bytes": 4166,
+      "sha256": "c6afbce7a27603ca226e99326914689fa83db842a61d95fc9c47e9aa7dbcbc60"
+    },
+    "solver/up-to/unwired.json": {
+      "area": "solver/up-to",
+      "bytes": 2185,
+      "sha256": "4e03697552999baecc21eb8820be0c1bc0c9d376d8a91716d3059d46ab42b8bf"
+    },
+    "tasks/order-key-vectors.json": {
+      "area": "tasks",
+      "bytes": 6601,
+      "sha256": "dad06cb14862c075382f2b43fdffb9edfed3b8534cc221add8dbf7e3bf6a8664"
+    }
+  }
+}

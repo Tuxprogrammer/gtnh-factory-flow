@@ -16,6 +16,11 @@ public class GtnhPlanner {
     public static final String MODID = "gtnhplanner";
     public static final Logger LOG = LogManager.getLogger(MODID);
 
+    static {
+        // The core's seams (log, settings, text, new ids) are the mod's from the moment the mod class loads.
+        CoreHost.install();
+    }
+
     @SidedProxy(clientSide = "com.gtnhplanner.ClientProxy", serverSide = "com.gtnhplanner.CommonProxy")
     public static CommonProxy proxy;
 

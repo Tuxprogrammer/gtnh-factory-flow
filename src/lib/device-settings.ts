@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { VIEW_SETTINGS } from "./view-settings.generated";
 import {
   clampItemsWidth,
   clampOverviewWidth,
@@ -41,23 +42,24 @@ export interface DeviceSettings {
 }
 
 /** Where the glance view starts unless the player moves it: well before a card's names get hard to read. */
-export const DEFAULT_ZOOMED_OUT_AT = 0.65;
+export const DEFAULT_ZOOMED_OUT_AT: number =
+  VIEW_SETTINGS.zoomedOutAt.default / VIEW_SETTINGS.zoomedOutAt.divisor;
 /** Lower, the full card's lettering is unreadable before the glance face arrives. */
-export const ZOOMED_OUT_AT_MIN = 0.35;
-export const ZOOMED_OUT_AT_MAX = 1;
+export const ZOOMED_OUT_AT_MIN: number = VIEW_SETTINGS.zoomedOutAt.min / VIEW_SETTINGS.zoomedOutAt.divisor;
+export const ZOOMED_OUT_AT_MAX: number = VIEW_SETTINGS.zoomedOutAt.max / VIEW_SETTINGS.zoomedOutAt.divisor;
 
 export const DEFAULT_DEVICE_SETTINGS: DeviceSettings = {
-  zoomedOutNames: true,
+  zoomedOutNames: VIEW_SETTINGS.zoomedOutNames.default,
   zoomedOutAt: DEFAULT_ZOOMED_OUT_AT,
-  problemOutlines: true,
-  scrollChangesValues: true,
-  itemsLeft: false,
+  problemOutlines: VIEW_SETTINGS.problemOutlines.default,
+  scrollChangesValues: VIEW_SETTINGS.scrollChangesValues.default,
+  itemsLeft: VIEW_SETTINGS.itemsLeft.default,
   overviewWidth: OVERVIEW_DEFAULT_WIDTH,
   itemsWidth: ITEMS_DEFAULT_WIDTH,
-  settingsSection: "Board",
+  settingsSection: VIEW_SETTINGS.settingsSection.default,
 };
 
-const STORAGE_KEY = "gtnh-factory-flow.device-settings.v1";
+const STORAGE_KEY: string = VIEW_SETTINGS.zoomedOutAt.key;
 
 let state: DeviceSettings = DEFAULT_DEVICE_SETTINGS;
 let loaded = false;
@@ -74,10 +76,9 @@ export function parseDeviceSettings(raw: string | null): DeviceSettings {
           ? parsed.zoomedOutNames
           : DEFAULT_DEVICE_SETTINGS.zoomedOutNames,
       zoomedOutAt:
-        typeof parsed.zoomedOutAt === "number" &&
-        parsed.zoomedOutAt >= ZOOMED_OUT_AT_MIN &&
-        parsed.zoomedOutAt <= ZOOMED_OUT_AT_MAX
-          ? parsed.zoomedOutAt
+        // A number outside the range is held to it, as the mod holds its percent; anything else is the default.
+        typeof parsed.zoomedOutAt === "number" && Number.isFinite(parsed.zoomedOutAt)
+          ? Math.min(ZOOMED_OUT_AT_MAX, Math.max(ZOOMED_OUT_AT_MIN, parsed.zoomedOutAt))
           : DEFAULT_DEVICE_SETTINGS.zoomedOutAt,
       problemOutlines:
         typeof parsed.problemOutlines === "boolean"

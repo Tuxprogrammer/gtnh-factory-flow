@@ -2,6 +2,9 @@
 // that follow them. Tokens.java is generated from tokens/tokens.json at build time and is not committed.
 extra["tokensPackage"] = "com.gtnhplanner.core.view"
 apply(from = rootProject.file("gradle/tokens.gradle.kts"))
+// The settings schema and the sound rule table (settings/*.json) are generated into the same package.
+extra["settingsPackage"] = "com.gtnhplanner.core.view"
+apply(from = rootProject.file("gradle/settings.gradle.kts"))
 
 dependencies {
     // The card logic reads power sources and models (core-power), the machine maths' result (core-machines) and the

@@ -74,18 +74,28 @@ try {
     join(out, "boards.json.gz"),
     gzipSync(Buffer.from(`${JSON.stringify(file)}\n`), { level: 9 }),
   );
-  const arrangeTests = read("board-arrange").arranges;
+  const unitArrange = read("board-arrange");
+  const boardArrange = read("arrange.capture.ts");
+  const arrangeTests = unitArrange.arranges;
   const arranged = JSON.parse(readFileSync(arrangeOut, "utf8"));
+  // The optimiser, the free placement and the proxy score as called, for testing each on its own.
+  const parts = {
+    optimizes: [...unitArrange.optimizes, ...boardArrange.optimizes],
+    frees: [...unitArrange.frees, ...boardArrange.frees],
+    proxies: [...unitArrange.proxies, ...boardArrange.proxies],
+  };
   writeFileSync(
     join(out, "arrange.json.gz"),
     gzipSync(
       Buffer.from(
-        `${JSON.stringify({ generator: "node tools/conformance/layout/generate.mjs", tests: arrangeTests, boards: arranged })}\n`,
+        `${JSON.stringify({ generator: "node tools/conformance/layout/generate.mjs", tests: arrangeTests, boards: arranged, ...parts })}\n`,
       ),
       { level: 9 },
     ),
   );
-  console.log(`arrange.json.gz: ${arrangeTests.length} arrange calls, ${arranged.length} boards`);
+  console.log(
+    `arrange.json.gz: ${arrangeTests.length} arrange calls, ${arranged.length} boards, ${parts.optimizes.length} searches, ${parts.frees.length} free placements, ${parts.proxies.length} proxy scores`,
+  );
   console.log(
     `router-tests.json: ${tests.solves.length} solves, ${tests.sequences.length} sequences, ${tests.rimDocks.length} rim docks; boards.json.gz: ${answered.length} boards`,
   );

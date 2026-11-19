@@ -68,6 +68,17 @@ public final class Arrange {
         @Nullable RouterTuning tuning, @Nullable ProgressSink onProgress, @Nullable GridEdgeRouter.Clock clock,
         @Nullable Worker worker) {}
 
+    /**
+     * The arrange was called off: a host's {@link ProgressSink} (or {@link Steps}) throws it to stop an arrange under
+     * way, and it leaves the arrange as it is thrown.
+     */
+    public static final class Cancelled extends RuntimeException {
+
+        public Cancelled() {
+            super("arrange cancelled", null, false, false);
+        }
+    }
+
     /** {@code ArrangeCandidates}. */
     public record Candidates(ArrangeResult plain, ArrangeResult challenger, ArrangeResult free) {}
 

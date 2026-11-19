@@ -86,6 +86,43 @@ public record RouterTuning(double costEmpty, double costShared, double costOverf
             arrangeDrawerGap);
     }
 
+    /** These dials with another crossing price: the arrange prices a crossing at {@code arrangeCrossing}. */
+    public RouterTuning withCrossing(final double price) {
+        return new RouterTuning(
+            costEmpty,
+            costShared,
+            costOverflow,
+            costInsideExempt,
+            costOutsideHome,
+            turn45,
+            turn90,
+            reverse,
+            earlyTurn,
+            cleanCells,
+            price,
+            diagonals,
+            diagonalDistanceCells,
+            dockTravelCells,
+            diagonalLength,
+            diagonalLaneCapacity,
+            dockPlanBias,
+            dockPlanWindow,
+            dockShare,
+            negotiationRounds,
+            negotiationBudget,
+            longestFirst,
+            windowPad,
+            wideRungCells,
+            islandAir,
+            arrangeCrossing,
+            searchTrials,
+            finalists,
+            polishBudget,
+            arrangeRowGap,
+            arrangeColumnGap,
+            arrangeDrawerGap);
+    }
+
     /** The judge's quick dials (route-judge.ts): a short negotiation and a narrower wide rung. */
     public RouterTuning quickJudge() {
         return new RouterTuning(

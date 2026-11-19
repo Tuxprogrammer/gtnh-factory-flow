@@ -22,6 +22,91 @@ const solves: Json[] = [];
 const sequences = new Map<number, { name: string; steps: Json[] }>();
 const rimDocks: Json[] = [];
 const arranges: Json[] = [];
+const optimizes: Json[] = [];
+const frees: Json[] = [];
+const proxies: Json[] = [];
+const freeSeen = new Set<string>();
+/** What each air term was made from, so a recorded call can name the term it was handed. */
+const airInputs = new WeakMap<object, Json>();
+
+vi.mock("@/lib/board-arrange-air", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@/lib/board-arrange-air")>();
+  return {
+    ...original,
+    makeAirTerm: (...args: Parameters<typeof original.makeAirTerm>) => {
+      const term = original.makeAirTerm(...args);
+      const [cards, wires, perPixel] = args;
+      airInputs.set(term, {
+        cards: cards.map((c) => ({ id: c.id, width: c.width, height: c.height, role: c.role })),
+        wires: wires.map((w) => ({ source: w.source, target: w.target })),
+        perPixel,
+      });
+      return term;
+    },
+  };
+});
+
+// The optimiser's search and the free placement as the column pass and the arrange call them: inputs and answers,
+// for testing their translation on its own. Only calls whose judge is the optimiser's own stand-in are kept (a host
+// judge's answers are not data); the free placement takes no judge; scoreLayoutProxy's air is kept as the value it
+// gave at those positions.
+vi.mock("@/lib/board-arrange-optimize", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@/lib/board-arrange-optimize")>();
+  return {
+    ...original,
+    optimizeIslandLayout: (...args: Parameters<typeof original.optimizeIslandLayout>) => {
+      const [cards, wires, options = {}] = args;
+      const { judge, air, onProgress, ...rest } = options;
+      void onProgress;
+      const before = { cards: clone(cards), wires: clone(wires), options: clone(rest) };
+      const result = original.optimizeIslandLayout(...args);
+      if (recording() && judge === undefined)
+        optimizes.push({
+          name: testName(),
+          ...before,
+          air: air ? (airInputs.get(air) ?? "unknown") : null,
+          result: clone(result),
+        });
+      return result;
+    },
+    scoreLayoutProxy: (...args: Parameters<typeof original.scoreLayoutProxy>) => {
+      const [cards, wires, positions, prices, air] = args;
+      const input = {
+        cards: cards.map((c) => ({ id: c.id, width: c.width, height: c.height })),
+        wires: clone(wires),
+        positions: clone([...positions]),
+        prices: clone(prices),
+      };
+      const score = original.scoreLayoutProxy(...args);
+      if (recording()) proxies.push({ name: testName(), ...input, airValue: air ? air(positions) : null, score });
+      return score;
+    },
+  };
+});
+
+vi.mock("@/lib/board-arrange-free", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@/lib/board-arrange-free")>();
+  return {
+    ...original,
+    arrangeFree: (...args: Parameters<typeof original.arrangeFree>) => {
+      const [cards, wires, options] = args;
+      const { onProgress, ...rest } = options;
+      void onProgress;
+      const input = { cards: clone(cards), wires: clone(wires), options: clone(rest) };
+      const result = original.arrangeFree(...args);
+      const key = JSON.stringify(input);
+      if (!freeSeen.has(key)) {
+        freeSeen.add(key);
+        frees.push({
+          name: testName(),
+          ...input,
+          result: { positions: clone([...result.positions]), islands: clone(result.islands) },
+        });
+      }
+      return result;
+    },
+  };
+});
 let routerCount = 0;
 
 vi.mock("@/lib/board-arrange", async (importOriginal) => {
@@ -153,6 +238,6 @@ afterAll(() => {
   const file = basename(expect.getState().testPath ?? "unknown").replace(/\.test\.ts$/, "");
   writeFileSync(
     join(out, `${file}.json`),
-    JSON.stringify({ solves, sequences: [...sequences.values()], rimDocks, arranges }),
+    JSON.stringify({ solves, sequences: [...sequences.values()], rimDocks, arranges, optimizes, frees, proxies }),
   );
 });

@@ -7,7 +7,7 @@ This module compiles the `core-*` modules with TeaVM 0.16 into two targets from 
 | WebAssembly GC | `wasm-gc/core.wasm`, `wasm-gc/core.wasm-runtime.js` | the default in browsers and Node 24 |
 | JavaScript | `js/core.js` (ES2015 module) | fallback, and a second opinion in the conformance run |
 
-It compiles `:core-base`, `:core-power` and `:core-layout` (the `coreModules` list in `build.gradle.kts`). The TeaVM plugin adds no repository; the module's own
+It compiles `:core-base`, `:core-power`, `:core-layout` and `:core-solver` (the `coreModules` list in `build.gradle.kts`). The TeaVM plugin adds no repository; the module's own
 `repositories { mavenCentral() }` is for the TeaVM libraries. `:web:build` does not run TeaVM (the mod's
 `build :mod:compatCheck` stays as it was); `:web:webCore` does.
 
@@ -16,9 +16,20 @@ It compiles `:core-base`, `:core-power` and `:core-layout` (the `coreModules` li
 ```bash
 cd jvm
 ./gradlew --no-daemon :web:check :web:webCore :web:webRandomCases   # build both targets, override check, JVM tests, random cases
-node ../tools/web-core/run.mjs --build web/build/generated/teavm --random web/build/random/cases.jsonl
+node ../tools/web-core/run.mjs --build web/build/generated/teavm --random web/build/random/cases.jsonl [--full]
 tools/ci/web-core.sh                                                # all of the above, plus sizes and times (the CI job)
 ```
+
+`run.mjs` runs every case on the WebAssembly target and a sample on the JavaScript target (`tools/web-core/sample.mjs`: a
+group of at most 32 cases is kept whole, a bigger one keeps its first case and every 8th): of the machine, bee and crop
+goldens, every other reference board, and of the solver corpus every golden but the two that take over 3 s there, every
+hand-written Up to plan and every 4th of the Up to plans made from the goldens. The job stays near three minutes. `--full` runs everything on both targets; the
+pipeline passes it when `jvm/web` or the TeaVM version changes. Also `--solver-jvm DIR` (the digests of the JVM's
+`DigestDump`, to count answers bit-identical to the JVM), `--solver-report FILE` (per-case times and bit-identity as JSON),
+`--solver-runs N` (least time of N solves), `--solver-only NAME,...` (just the solver cases whose name contains one of the texts) and `--bench` (adds the 10-times-tiled platline).
+
+Run Gradle by hand with `-Dorg.gradle.jvmargs=-Xmx3g`: the two TeaVM builds run side by side and run out of Gradle's default
+512 MiB heap (`tools/copy-core.mjs` and the CI scripts pass it).
 
 Needs Gradle's daemon JVM 25 and a Java 25 toolchain (`--release 21`), Node 24, and access to Maven Central and the
 Gradle plugin portal. `-PrandomSeed=N` and `-PrandomScale=N` change the random cases (default seed 20261119, scale 1,
@@ -60,12 +71,60 @@ disk and nothing asked for, `copy-core` prints one line and the site starts with
 5. Size to budget: about 1.49 MB raw (345 KB gzip) for the wasm, 1.53 MB raw (332 KB gzip) for the JavaScript fallback;
    a browser downloads one of them, not both.
 
+#### Exactly what the deploy workflow needs
+
+The site's image (`tools/dataset-pipeline/docker/Dockerfile`) already holds JDK 25 at `/opt/java/jdk-25` (beside the JDK 21
+that is `java` by default) and Node 22, and the build runs `npm install && npm run build` in it with 6 GB and 4 CPUs.
+Nothing in the image or in `src/app/api/community/images/route.ts` has to change. The command that runs inside the
+container does:
+
+```bash
+export JAVA_HOME=/opt/java/jdk-25 PATH=/opt/java/jdk-25/bin:$PATH
+export GTNH_CORE_BUILD=1 GTNH_CORE_REQUIRED=1     # build the core in prebuild, and fail the build if it is missing
+npm install && npm run build
+```
+
+`prebuild` then runs `tools/copy-core.mjs`, which runs Gradle (`:web:buildWasmGC :web:generateJavaScript`, no daemon) and
+copies the result to `public/core/` before `next build` indexes `public/`. It needs network to Maven Central, the Gradle
+plugin portal and the Gradle distribution host. With `HOME=/tmp` Gradle's home is discarded with the container, so every
+deploy fetches the dependencies again; mounting a writable directory and setting `GRADLE_USER_HOME` to it keeps them.
+Gradle's heap is 512 MB by default; `GTNH_GRADLE_ARGS='["-Dorg.gradle.jvmargs=-Xmx3g"]'` raises it (it runs before
+`next build`, so the two do not overlap in the 6 GB). A warm build takes about 40 seconds on four cores.
+
+The other way builds the core elsewhere (the pipeline's output or any machine with JDK 25) and passes the directory that
+holds `wasm-gc/` and `js/`: mount it into the container and set `GTNH_CORE_DIR=<that directory>` instead of the two
+variables above; no JDK is used in the container then. Leaving all of this out is valid: the site builds and runs without
+the core until a feature that needs it ships.
+
+### Developing without a JDK
+
+A machine with only Node needs `public/core/` from somewhere. In order of cost:
+
+| Way | Cost | State |
+|---|---|---|
+| Build on the build host and copy it back (`box.sh <stream> core-pull`, the restructure's wrapper, outside this repo) | needs the host; builds only when `jvm/` changed; about a minute cold | done |
+| A pipeline artifact and a fetch script | the web-core job uploads `public/core` (8 MB), a script downloads it; needs a GitHub token that can read Actions artifacts; expires in 14 to 60 days; exists only for pushed commits | not built: needs a credential |
+| Commit the built core | 8 MB of binary per core change in a public repo, conflicts on every merge, a stale core that tests pass against | ruled out |
+
+`tools/copy-core.mjs` leaves a complete `public/core/` alone when it has no build and no `GTNH_CORE_DIR`, so a copied
+core survives `npm run dev`.
+
 ### Browsers without WebAssembly GC
 
 WebAssembly GC ships in Chrome and Edge 119, Firefox 120 and Safari 18.2. On an older engine, or any engine where the
 wasm fails to compile or start (it also needs exception handling), the loader falls back to `js/core.js`, which gives
 the same answers (the conformance run proves it) and costs more to download and start. `coreInfo().target` says which
 one runs and `coreInfo().fellBack` why. `loadCore({ target })` pins a target and never falls back, for tests.
+
+## The solver
+
+`:core-solver` compiles with three stand-ins for what ojAlgo 57 asks of the JVM (`overrides.txt`, and the `T*` classlib
+stubs in `src/main/java/org/teavm/classlib`): `DaemonPoolExecutor` runs a task on the calling thread when it is submitted,
+`MultiviewSet` swaps a concurrent set for a plain one, and the stubs add the thread, executor, adder and management classes
+that TeaVM's classlib lacks. The core solves on one thread (`Parallel` uses `Worker.INLINE` by default), as the browser has
+none. `SolverExports.solverSolve(json)` takes the solve input in the JSON `SolveInputJson` writes and returns the answer in
+the corpus's golden format; `SolverCodec` reads and writes both with `JsonTree` (no reflection, no Gson). The run solves the
+whole corpus in `conformance/solver/` on both targets and compares it as `SolverGoldenTest` and `UpToParityTest` do.
 
 ## Adding a core module
 

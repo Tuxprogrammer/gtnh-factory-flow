@@ -2,9 +2,10 @@ package com.gtnhplanner.core.base;
 
 /**
  * Single-precision rounding that gives the same number on the JVM, TeaVM's WebAssembly GC target and TeaVM's JavaScript
- * target. The JavaScript target keeps a {@code float} as a double (a cast to float changes nothing, and float
- * arithmetic and literals stay double), so code that must see single precision rounds through the bit pattern, which
- * every target narrows exactly. The website does the same with {@code Math.fround}.
+ * target. The JavaScript target keeps a {@code float} as a double: a cast to float changes nothing, and float
+ * arithmetic and int-to-float conversions stay double. (Float literals, float array stores and
+ * {@code floatToIntBits}/{@code intBitsToFloat} do narrow.) Code that must see single precision therefore rounds
+ * through the bit pattern, which every target narrows exactly. The website does the same with {@code Math.fround}.
  */
 public final class Float32 {
 

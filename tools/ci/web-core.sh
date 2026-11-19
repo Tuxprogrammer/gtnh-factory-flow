@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Job `web-core`: the TeaVM build of the core (WebAssembly GC and JavaScript), its JVM-side tests and override check, and
 # the conformance run in Node: the committed vectors and a few hundred thousand random cases the JVM made, against each
-# target. Any difference fails the job. Prints the size (raw and gzip) of each file the website would ship and the times.
+# target (the JavaScript one a sample unless the diff needs the full run). Any difference fails the job. Prints the size (raw and gzip) of each file the website would ship and the times.
 # Needs JDK 25 as JAVA_HOME (it runs Gradle and TeaVM), Node 24 on PATH, and no Gradle daemon.
 set -euo pipefail
 . "$(dirname "$0")/lib.sh"
@@ -49,7 +49,12 @@ for f in wasm-gc/core.wasm wasm-gc/core.wasm-runtime.js js/core.js; do
   say "  $(printf '%-28s %9d %9d' "$f" "$(wc -c < "$teavm/$f")" "$(gzip -9 -c "$teavm/$f" | wc -c)")"
 done
 
-node tools/web-core/run.mjs --build "$teavm" --random "$build/random/cases.jsonl" || fail "the compiled core differs from the vectors or from the JVM (above)"
+# Every case on the JavaScript target too when the diff touches the web build or the TeaVM version (changes.sh says so),
+# or WEB_CORE_FULL=1 asks; otherwise a sample of the machine, bee and crop goldens and of the solver corpus (sample.mjs).
+full=()
+if [ "${CI_WEB_CORE_FULL:-}" = true ] || [ "${WEB_CORE_FULL:-}" = 1 ]; then full=(--full); fi
+say "conformance: ${full[*]:-sampled on the JavaScript target}"
+node tools/web-core/run.mjs --build "$teavm" --random "$build/random/cases.jsonl" "${full[@]}" || fail "the compiled core differs from the vectors or from the JVM (above)"
 done=$(date +%s)
 say "build $((built - started))s, conformance $((done - built))s"
 say "PASS"

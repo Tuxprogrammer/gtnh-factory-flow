@@ -10,7 +10,8 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { Tally } from "./compare.mjs";
-import { TARGETS, loadTarget } from "./load.mjs";
+import { TARGETS, loadTarget, loadedModules } from "./load.mjs";
+import { readSources } from "./gen-types.mjs";
 import { runFormat } from "./format.mjs";
 import { runMachines } from "./machines.mjs";
 import { SAMPLE_EVERY } from "./sample.mjs";
@@ -66,6 +67,7 @@ for (const target of opts.targets) {
     continue;
   }
   const every = opts.full || target === "wasm" ? 1 : SAMPLE_EVERY;
+  runModuleProbes(target, tally);
   if (!opts.solverOnly) {
     runBuildProbes(api, tally);
     runVectors(api, vectors, tally);
@@ -87,6 +89,16 @@ for (const target of opts.targets) {
     if (tally.groups.has(g)) tally.groups.get(g).ms = Math.round(rows.reduce((n, r) => n + r.ms, 0));
   }
   report(`${target} (${label})`, tally);
+}
+
+/** The split is real: each module exports its own namespaces and top-level functions, and nothing of another module's. */
+function runModuleProbes(target, tally) {
+  const sources = readSources();
+  for (const m of sources.modules) {
+    const exported = loadedModules.get(target)?.get(m.name) ?? [];
+    const wanted = [...m.namespaces, ...m.top.map((f) => f.name)].sort();
+    tally.check(`build/module-${m.name}`, JSON.stringify(exported) === JSON.stringify(wanted), () => `module ${m.name} exports ${exported.join(",")}, the sources declare ${wanted.join(",")}`);
+  }
 }
 
 function report(title, tally) {

@@ -49,39 +49,108 @@ tasks.withType<Test>().configureEach {
     testLogging { events("failed") }
 }
 
-// Every class in the exports package is exported: its public static @JSExport methods become the module's functions.
+// The modules (modules.txt): each is its own TeaVM compilation per target, from the same sources, with its own main class and
+// exports classes, so a page loads only what it uses. TeaVM 0.16 has no code splitting, so two modules share no state and
+// each carries its own copy of the code it reaches in core-base (README.md, "Modules"). Every class in the exports package
+// is exported by the module that names it; the module that says * takes the rest.
+class WebModule(val name: String, val main: String, val exports: List<String>)
 val exportsDir = file("src/main/java/com/gtnhplanner/web/exports")
-val exportClasses = exportsDir.listFiles { f -> f.name.endsWith(".java") }!!
-    .map { "com.gtnhplanner.web.exports." + it.name.removeSuffix(".java") }
-    .sorted()
-val entry = "com.gtnhplanner.web.WebCore"
+val allExportClasses = exportsDir.listFiles { f -> f.name.endsWith(".java") }!!
+    .map { it.name.removeSuffix(".java") }.sorted()
+val webModules: List<WebModule> = run {
+    val rows = file("modules.txt").readLines().map { it.trim() }.filter { it.isNotEmpty() && !it.startsWith("#") }
+        .map { it.split(Regex("\\s+")) }
+    val named = rows.flatMap { it.drop(2) }.filter { it != "*" }.toSet()
+    rows.map { r ->
+        WebModule(r[0], "com.gtnhplanner.web." + r[1], r.drop(2).flatMap { if (it == "*") allExportClasses.filter { c -> c !in named } else listOf(it) }
+            .map { "com.gtnhplanner.web.exports.$it" }.sorted())
+    }
+}
 val plain = providers.gradleProperty("plain").isPresent // readable names, for debugging
+val firstModule = webModules.first()
 
 teavm {
     js {
-        mainClass.set(entry)
-        preservedClasses.addAll(exportClasses)
+        mainClass.set(firstModule.main)
+        preservedClasses.addAll(firstModule.exports)
         moduleType.set(JSModuleType.ES2015)
         obfuscated.set(!plain)
         sourceMap.set(true)
         optimization.set(OptimizationLevel.AGGRESSIVE)
-        targetFileName.set("core.js")
+        targetFileName.set("${firstModule.name}.js")
     }
     wasmGC {
-        mainClass.set(entry)
-        preservedClasses.addAll(exportClasses)
+        mainClass.set(firstModule.main)
+        preservedClasses.addAll(firstModule.exports)
         obfuscated.set(!plain)
         optimization.set(OptimizationLevel.AGGRESSIVE)
-        targetFileName.set("core.wasm")
+        targetFileName.set("${firstModule.name}.wasm")
     }
 }
 
 // TeaVM takes the first class of a name on its classpath, and the plugin puts the project's own classes last, so a
 // class here that replaces one in a jar (a classlib class, an ojAlgo class) would be ignored. Put them first.
+// The plugin registers one task per target, for the first module. The other modules get a task of the same type per target,
+// configured from the first one's (same classpath, optimisation, obfuscation, output directory) with their own main class,
+// exports and file name. They write beside the first module's files: TeaVM writes only its own.
+val extraGenerateTasks = mutableListOf<String>()
 afterEvaluate {
     tasks.withType<org.teavm.gradle.tasks.TeaVMTask>().configureEach {
         val original = classpath.from.toTypedArray()
         classpath.setFrom(sourceSets["main"].output.classesDirs, *original)
+    }
+    for (module in webModules.drop(1)) {
+        val wasm = tasks.named<org.teavm.gradle.tasks.GenerateWasmGCTask>("generateWasmGC").get()
+        val name = "generate${module.name.replaceFirstChar { it.uppercase() }}WasmGC"
+        tasks.register<org.teavm.gradle.tasks.GenerateWasmGCTask>(name) {
+            group = "build"
+            dependsOn("classes", "checkOverridesWasmGC")
+            classpath.setFrom(wasm.classpath)
+            mainClass.set(module.main)
+            preservedClasses.set(module.exports)
+            targetFileName.set("${module.name}.wasm")
+            outputDir.set(wasm.outputDir)
+            debugInformation.set(wasm.debugInformation)
+            fastGlobalAnalysis.set(wasm.fastGlobalAnalysis)
+            optimization.set(wasm.optimization)
+            properties.set(wasm.properties)
+            outOfProcess.set(wasm.outOfProcess)
+            processMemory.set(wasm.processMemory)
+            strict.set(wasm.strict)
+            obfuscated.set(wasm.obfuscated)
+            debugInfoLevel.set(wasm.debugInfoLevel)
+            debugInfoLocation.set(wasm.debugInfoLocation)
+            sourceMap.set(wasm.sourceMap)
+            sourceFilePolicy.set(wasm.sourceFilePolicy)
+            minDirectBuffersSize.set(wasm.minDirectBuffersSize)
+            sharedBuffer.set(wasm.sharedBuffer)
+        }
+        extraGenerateTasks += name
+        val js = tasks.named<org.teavm.gradle.tasks.GenerateJavaScriptTask>("generateJavaScript").get()
+        val jsName = "generate${module.name.replaceFirstChar { it.uppercase() }}JavaScript"
+        tasks.register<org.teavm.gradle.tasks.GenerateJavaScriptTask>(jsName) {
+            group = "build"
+            dependsOn("classes", "checkOverridesJavaScript")
+            classpath.setFrom(js.classpath)
+            mainClass.set(module.main)
+            preservedClasses.set(module.exports)
+            targetFileName.set("${module.name}.js")
+            outputDir.set(js.outputDir)
+            debugInformation.set(js.debugInformation)
+            fastGlobalAnalysis.set(js.fastGlobalAnalysis)
+            optimization.set(js.optimization)
+            properties.set(js.properties)
+            outOfProcess.set(js.outOfProcess)
+            processMemory.set(js.processMemory)
+            strict.set(js.strict)
+            obfuscated.set(js.obfuscated)
+            moduleType.set(js.moduleType)
+            sourceMap.set(js.sourceMap)
+            entryPointName.set(js.entryPointName)
+            sourceFilePolicy.set(js.sourceFilePolicy)
+            maxTopLevelNames.set(js.maxTopLevelNames)
+        }
+        extraGenerateTasks += jsName
     }
 }
 
@@ -142,4 +211,6 @@ tasks.register("webCore") {
     description = "Builds the core for the browser: WebAssembly GC and JavaScript, checked for overrides"
     group = "build"
     dependsOn("buildWasmGC", "generateJavaScript")
+    // The other modules' tasks exist after evaluation (see above).
+    dependsOn(provider { extraGenerateTasks.toList() })
 }

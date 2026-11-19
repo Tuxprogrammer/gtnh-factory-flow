@@ -7,23 +7,34 @@
 //   await loadCore();
 //   core().BaseExports.numberTextOf(0.1);       // "0.1"
 //
+// The core is split into modules (jvm/web/modules.txt), each its own file that is fetched when first used:
+//   core     the card side: base, machines, power, layout (what a page needs to draw and compute cards)
+//   solver   the LP solver with ojAlgo (what the solve Worker needs; no page loads it on the main thread)
+// `loadCore()` loads "core"; `loadCore({ modules: ["solver"] })` loads the solver, in the Worker that runs it. Every
+// loaded module's namespaces sit on the one object `core()` returns, so a caller never knows where a function lives;
+// a namespace of a module that is not loaded throws CoreNotLoadedError naming the module, so a missed load fails loudly.
+//
 // Which build runs: WebAssembly GC where the engine has it (Chrome and Edge 119, Firefox 120, Safari 18.2), otherwise
 // the JavaScript build of the same sources. The wasm file is tried first and any failure to compile or start it
 // (an engine without GC or without the exception handling the build uses) falls back to the JavaScript build; a
 // target asked for with `options.target` is never swapped. Both give the same answers (the conformance run in
 // tools/web-core proves it on every change).
 //
-// Where the files come from: tools/copy-core.mjs puts them in public/core/ (manifest.json, wasm-gc/, js/). A browser
-// fetches them from `<baseUrl>/core/`; Node reads the same directory. Without them the core is "unavailable":
-// loadCore() rejects with CoreUnavailableError and the site keeps working for everything that does not need it.
-import type { CoreExports } from "./exports.generated";
+// Where the files come from: tools/copy-core.mjs puts them in public/core/ (manifest.json, wasm-gc/, js/), every file
+// under a name that carries its content hash. A browser fetches them from `<baseUrl>/core/`; Node reads the same
+// directory. Without them the core is "unavailable": loadCore() rejects with CoreUnavailableError and the site keeps
+// working for everything that does not need it.
+import { CORE_MODULES, type CoreExports, type CoreModuleName } from "./exports.generated";
 
+export type { CoreModuleName };
 export type CoreTarget = "wasm-gc" | "js";
 export type CoreState = "idle" | "loading" | "ready" | "unavailable";
 
 export interface LoadOptions {
   /** Force a target. Without it WebAssembly GC is used where supported and the JavaScript build is the fallback. */
   target?: CoreTarget;
+  /** The modules to load (default: just "core", the card side). Ones already loaded are not loaded again. */
+  modules?: readonly CoreModuleName[];
   /** Browser: where the core files are served, a path or URL ending in "/" (default "/core/"). */
   baseUrl?: string;
   /** Node: the directory holding manifest.json (default `<cwd>/public/core`, or GTNH_CORE_PUBLIC_DIR). */
@@ -31,13 +42,16 @@ export interface LoadOptions {
 }
 
 export interface CoreInfo {
+  /** The target of the first module that loaded. */
   target: CoreTarget;
   /** The build's content hash (manifest.json). */
   version: string;
-  /** Milliseconds from the call of loadCore to the exports being usable. */
+  /** Milliseconds from the call of loadCore to the exports being usable (the first module's). */
   loadMs: number;
   /** Why the WebAssembly build was not used, when the JavaScript build runs although Wasm was wanted. */
   fellBack?: string;
+  /** Each loaded module's own target and load time. */
+  modules: Partial<Record<CoreModuleName, { target: CoreTarget; loadMs: number }>>;
 }
 
 export class CoreUnavailableError extends Error {
@@ -48,45 +62,82 @@ export class CoreUnavailableError extends Error {
 }
 
 export class CoreNotLoadedError extends Error {
-  constructor() {
-    super("The core is not loaded: await loadCore() first");
+  constructor(module?: string) {
+    super(
+      module
+        ? `The ${module} module of the core is not loaded: await loadCore({ modules: ["${module}"] }) first`
+        : "The core is not loaded: await loadCore() first",
+    );
     this.name = "CoreNotLoadedError";
   }
 }
 
-/** The export convention's version this loader speaks; WebCore.webCoreExportVersion() must answer it. */
+/** The export convention's version this loader speaks; every module's webCoreExportVersion() must answer it. */
 export const EXPECTED_EXPORT_VERSION = 1;
+
+/** The module a plain `loadCore()` loads: the card side, which every page that uses the core needs. */
+export const DEFAULT_MODULES: readonly CoreModuleName[] = ["core"];
 
 interface Manifest {
   format: number;
   version: string;
+  /** The wasm runtime script every module shares. */
+  runtime: string;
+  modules: Record<string, { wasm: string; js: string }>;
   files: { path: string; bytes: number }[];
 }
 
-interface Shared {
+const MANIFEST_FORMAT = 2;
+
+interface ModuleState {
   state: CoreState;
-  promise: Promise<CoreExports> | null;
+  promise: Promise<void> | null;
+}
+
+interface Shared {
+  /** One object holds every loaded module's exports; a namespace of a module not loaded yet throws on access. */
   exports: CoreExports | null;
   info: CoreInfo | null;
+  modules: Record<string, ModuleState>;
+  /** The manifest and where its files are read from, kept so every module of one session comes from one build. */
+  source: Promise<Source> | null;
 }
 
 // On globalThis, not in the module: a dev server that re-evaluates this module, or a bundle that holds two copies of
-// it, must not load a second instance of a 1.5 MB module.
+// it, must not load a second instance of a multi-megabyte module.
 const SHARED_KEY = Symbol.for("gtnh.core.loader");
 function shared(): Shared {
   const g = globalThis as unknown as Record<symbol, Shared | undefined>;
-  return (g[SHARED_KEY] ??= { state: "idle", promise: null, exports: null, info: null });
+  return (g[SHARED_KEY] ??= { exports: null, info: null, modules: {}, source: null });
 }
 
+function moduleEntry(name: string): ModuleState {
+  const s = shared();
+  return (s.modules[name] ??= { state: "idle", promise: null });
+}
+
+/** The state of one module: "idle" until something asks for it. */
+export function moduleState(name: CoreModuleName): CoreState {
+  return shared().modules[name]?.state ?? "idle";
+}
+
+/**
+ * The state of the core as a whole: "loading" while any module loads, else "ready" when any module is loaded, else
+ * "unavailable" when a load failed, else "idle".
+ */
 export function coreState(): CoreState {
-  return shared().state;
+  const states = Object.values(shared().modules).map((m) => m.state);
+  if (states.includes("loading")) return "loading";
+  if (states.includes("ready")) return "ready";
+  if (states.includes("unavailable")) return "unavailable";
+  return "idle";
 }
 
 export function coreInfo(): CoreInfo | null {
   return shared().info;
 }
 
-/** The loaded core, or null before loadCore has finished. */
+/** The loaded core (every module loaded so far), or null before the first module has finished. */
 export function coreIfLoaded(): CoreExports | null {
   return shared().exports;
 }
@@ -101,10 +152,10 @@ export function core(): CoreExports {
 /** For tests: forget the loaded core so the next loadCore loads again. */
 export function resetCoreForTests(): void {
   const s = shared();
-  s.state = "idle";
-  s.promise = null;
   s.exports = null;
   s.info = null;
+  s.modules = {};
+  s.source = null;
 }
 
 /** An empty struct type: validates only on an engine with the WebAssembly GC proposal. */
@@ -150,10 +201,18 @@ interface Source {
   /** The runtime script of the wasm build, loaded (it defines globalThis.TeaVM). */
   runtime(): Promise<void>;
   /** What TeaVM.wasmGC.load takes: bytes in Node, a URL in a browser (compiled while it streams). */
-  wasm(): Promise<string | Uint8Array>;
+  wasm(module: string): Promise<string | Uint8Array>;
   wasmOptions: Record<string, unknown>;
   /** The JavaScript build's exports. */
-  js(): Promise<Record<string, unknown>>;
+  js(module: string): Promise<Record<string, unknown>>;
+}
+
+function checkManifest(manifest: Manifest, where: string): Manifest {
+  if (manifest.format !== MANIFEST_FORMAT || !manifest.modules || !manifest.runtime)
+    throw new CoreUnavailableError(
+      `the core manifest at ${where} is format ${String(manifest.format)}, this site reads format ${MANIFEST_FORMAT}: rebuild it (tools/copy-core.mjs)`,
+    );
+  return manifest;
 }
 
 async function nodeSource(options: LoadOptions): Promise<Source> {
@@ -176,18 +235,27 @@ async function nodeSource(options: LoadOptions): Promise<Source> {
       { cause },
     );
   }
+  checkManifest(manifest, dir);
   const file = (name: string) => path.join(dir, name);
+  const filesOf = (name: string) => moduleFiles(manifest, name);
   return {
     manifest,
     runtime: async () => {
-      await nativeImport(
-        `${url.pathToFileURL(file("wasm-gc/core.wasm-runtime.js")).href}?v=${manifest.version}`,
-      );
+      await nativeImport(url.pathToFileURL(file(manifest.runtime)).href);
     },
-    wasm: async () => new Uint8Array(await fs.readFile(file("wasm-gc/core.wasm"))),
+    wasm: async (name) => new Uint8Array(await fs.readFile(file(filesOf(name).wasm))),
     wasmOptions: { nodejs: true },
-    js: () => nativeImport(`${url.pathToFileURL(file("js/core.js")).href}?v=${manifest.version}`),
+    js: (name) => nativeImport(url.pathToFileURL(file(filesOf(name).js)).href),
   };
+}
+
+function moduleFiles(manifest: Manifest, name: string): { wasm: string; js: string } {
+  const files = manifest.modules[name];
+  if (!files)
+    throw new CoreUnavailableError(
+      `the core build has no ${name} module (it has ${Object.keys(manifest.modules).join(", ")}): rebuild it (tools/copy-core.mjs)`,
+    );
+  return files;
 }
 
 async function browserSource(options: LoadOptions): Promise<Source> {
@@ -202,67 +270,120 @@ async function browserSource(options: LoadOptions): Promise<Source> {
   } catch (cause) {
     throw new CoreUnavailableError(`the core is not deployed at ${base.href}`, { cause });
   }
-  const at = (name: string) => `${new URL(name, base).href}?v=${manifest.version}`;
+  checkManifest(manifest, base.href);
+  // Every file's name carries its content hash, so no version query is needed and the file is cached for good.
+  const at = (name: string) => new URL(name, base).href;
   return {
     manifest,
     // A module import runs the runtime script the same way on the main thread and in a classic or module worker, with
     // no <script> tag, no importScripts and no eval; the script only sets globalThis.TeaVM.
     runtime: async () => {
-      await nativeImport(at("wasm-gc/core.wasm-runtime.js"));
+      await nativeImport(at(manifest.runtime));
     },
-    wasm: async () => at("wasm-gc/core.wasm"),
+    wasm: async (name) => at(moduleFiles(manifest, name).wasm),
     wasmOptions: {},
-    js: () => nativeImport(at("js/core.js")),
+    js: (name) => nativeImport(at(moduleFiles(manifest, name).js)),
   };
 }
 
-async function startWasm(source: Source): Promise<CoreExports> {
+async function startWasm(source: Source, name: string): Promise<Record<string, unknown>> {
   await source.runtime();
   const teavm = (globalThis as unknown as { TeaVM?: TeaVMGlobal }).TeaVM;
   if (!teavm?.wasmGC) throw new Error("the wasm runtime did not define TeaVM.wasmGC");
-  const loaded = await teavm.wasmGC.load(await source.wasm(), source.wasmOptions);
-  return loaded.exports as CoreExports;
+  const loaded = await teavm.wasmGC.load(await source.wasm(name), source.wasmOptions);
+  return loaded.exports as Record<string, unknown>;
 }
 
-function checkVersion(exports: CoreExports, target: CoreTarget): CoreExports {
-  const version = (
-    exports as unknown as { webCoreExportVersion?: () => number }
-  ).webCoreExportVersion?.();
+function checkVersion(
+  exports: Record<string, unknown>,
+  name: string,
+  target: CoreTarget,
+): Record<string, unknown> {
+  const version = (exports as { webCoreExportVersion?: () => number }).webCoreExportVersion?.();
   if (version !== EXPECTED_EXPORT_VERSION) {
     throw new CoreUnavailableError(
-      `the ${target} core answers export version ${String(version)}, this site expects ${EXPECTED_EXPORT_VERSION}: rebuild it (tools/copy-core.mjs)`,
+      `the ${name} module of the ${target} core answers export version ${String(version)}, this site expects ${EXPECTED_EXPORT_VERSION}: rebuild it (tools/copy-core.mjs)`,
     );
   }
   return exports;
 }
 
-async function load(options: LoadOptions): Promise<CoreExports> {
+/** The names a module exports. A Wasm exports object may hide them from Object.keys, so read them every way. */
+function exportNames(exports: object): string[] {
+  const names = new Set(Object.getOwnPropertyNames(exports));
+  for (const k in exports) names.add(k);
+  names.delete("main");
+  return [...names];
+}
+
+/** The one object `core()` returns. A name of a module that is not loaded yet answers with a clear error, not undefined. */
+function mergedExports(): CoreExports {
+  const s = shared();
+  if (s.exports) return s.exports;
+  const target: Record<string, unknown> = {};
+  for (const [name, spec] of Object.entries(CORE_MODULES as Record<string, { namespaces: readonly string[]; top: readonly string[] }>)) {
+    for (const key of [...spec.namespaces, ...spec.top])
+      Object.defineProperty(target, key, {
+        configurable: true,
+        enumerable: false,
+        get() {
+          throw new CoreNotLoadedError(name);
+        },
+      });
+  }
+  s.exports = target as unknown as CoreExports;
+  return s.exports;
+}
+
+function addExports(exports: Record<string, unknown>): void {
+  const target = mergedExports() as unknown as Record<string, unknown>;
+  for (const key of exportNames(exports)) {
+    const present = Object.getOwnPropertyDescriptor(target, key);
+    // Every module answers webCoreExportVersion: the first one's stays.
+    if (present && "value" in present) continue;
+    Object.defineProperty(target, key, {
+      configurable: true,
+      enumerable: true,
+      writable: false,
+      value: exports[key],
+    });
+  }
+}
+
+async function loadModule(name: string, options: LoadOptions): Promise<void> {
   const started = performance.now();
-  const source = await (options.dir !== undefined || inNode()
-    ? nodeSource(options)
-    : browserSource(options));
-  const finish = (exports: CoreExports, target: CoreTarget, fellBack?: string) => {
-    const s = shared();
-    s.exports = exports;
-    s.info = {
+  const s = shared();
+  s.source ??= (
+    options.dir !== undefined || inNode() ? nodeSource(options) : browserSource(options)
+  ).catch((e: unknown) => {
+    s.source = null;
+    throw e;
+  });
+  const source = await s.source;
+  const finish = (exports: Record<string, unknown>, target: CoreTarget, fellBack?: string) => {
+    addExports(exports);
+    const loadMs = performance.now() - started;
+    const info = (s.info ??= {
       target,
       version: source.manifest.version,
-      loadMs: performance.now() - started,
+      loadMs,
+      modules: {},
       ...(fellBack ? { fellBack } : {}),
-    };
-    s.state = "ready";
-    return exports;
+    });
+    info.modules[name as CoreModuleName] = { target, loadMs };
   };
   let fellBack: string | undefined;
   if (options.target !== "js") {
     if (wasmGcSupported()) {
       try {
-        return finish(checkVersion(await startWasm(source), "wasm-gc"), "wasm-gc");
+        finish(checkVersion(await startWasm(source, name), name, "wasm-gc"), "wasm-gc");
+        return;
       } catch (e) {
         if (options.target === "wasm-gc")
-          throw new CoreUnavailableError(`the WebAssembly GC core did not start: ${String(e)}`, {
-            cause: e,
-          });
+          throw new CoreUnavailableError(
+            `the WebAssembly GC ${name} module did not start: ${String(e)}`,
+            { cause: e },
+          );
         if (e instanceof CoreUnavailableError) throw e;
         fellBack = `the WebAssembly GC build did not start: ${e instanceof Error ? e.message : String(e)}`;
       }
@@ -273,31 +394,41 @@ async function load(options: LoadOptions): Promise<CoreExports> {
     }
   }
   try {
-    const mod = { ...(await source.js()) };
-    return finish(checkVersion(mod as unknown as CoreExports, "js"), "js", fellBack);
+    const mod = { ...(await source.js(name)) };
+    finish(checkVersion(mod, name, "js"), "js", fellBack);
   } catch (e) {
     if (e instanceof CoreUnavailableError) throw e;
     throw new CoreUnavailableError(
-      `the JavaScript core did not start: ${e instanceof Error ? e.message : String(e)}`,
+      `the JavaScript ${name} module did not start: ${e instanceof Error ? e.message : String(e)}`,
       { cause: e },
     );
   }
 }
 
 /**
- * Loads the core once (a second call, or a call while loading, shares the first). Resolves with the exports, which
- * `core()` returns from then on. Rejects with CoreUnavailableError when there is no core to load; a later call tries again.
+ * Loads the modules once (a second call, or a call while loading, shares the first; a module already loaded is not
+ * loaded again). Resolves with the exports, which `core()` returns from then on. Rejects with CoreUnavailableError when
+ * there is nothing to load; a later call tries again.
  */
 export function loadCore(options: LoadOptions = {}): Promise<CoreExports> {
-  const s = shared();
-  if (s.exports) return Promise.resolve(s.exports);
-  if (s.promise) return s.promise;
-  s.state = "loading";
-  const promise = load(options).catch((e: unknown) => {
-    s.state = "unavailable";
-    s.promise = null;
-    throw e;
+  const wanted = options.modules ?? DEFAULT_MODULES;
+  const pending = wanted.map((name) => {
+    const entry = moduleEntry(name);
+    if (entry.state === "ready") return Promise.resolve();
+    if (entry.promise) return entry.promise;
+    entry.state = "loading";
+    const promise = loadModule(name, options)
+      .then(() => {
+        entry.state = "ready";
+        entry.promise = null;
+      })
+      .catch((e: unknown) => {
+        entry.state = "unavailable";
+        entry.promise = null;
+        throw e;
+      });
+    entry.promise = promise;
+    return promise;
   });
-  s.promise = promise;
-  return promise;
+  return Promise.all(pending).then(() => core());
 }

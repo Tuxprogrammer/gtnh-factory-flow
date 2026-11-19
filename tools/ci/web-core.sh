@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Job `web-core`: the TeaVM build of the core (WebAssembly GC and JavaScript), its JVM-side tests and override check, and
+# Job `web-core`: the TeaVM build of the core's modules (WebAssembly GC and JavaScript), its JVM-side tests and override check, and
 # the conformance run in Node: the committed vectors and a few hundred thousand random cases the JVM made, against each
 # target (the JavaScript one a sample unless the diff needs the full run). Any difference fails the job. Prints the size (raw and gzip) of each file the website would ship and the times.
 # Needs JDK 25 as JAVA_HOME (it runs Gradle and TeaVM), Node 24 on PATH, and no Gradle daemon.
@@ -41,11 +41,16 @@ PY
 say "web module JVM tests: $ran ran"
 
 teavm="$build/generated/teavm"
-for f in wasm-gc/core.wasm wasm-gc/core.wasm-runtime.js js/core.js; do
+# The modules (jvm/web/modules.txt): each has a wasm and a JavaScript file; the first one supplies the shared runtime script.
+mapfile -t modules < <(awk '!/^#/ && NF { print $1 }' jvm/web/modules.txt)
+[ "${#modules[@]}" -ge 1 ] || fail "jvm/web/modules.txt names no module"
+files=("wasm-gc/${modules[0]}.wasm-runtime.js")
+for m in "${modules[@]}"; do files+=("wasm-gc/$m.wasm" "js/$m.js"); done
+for f in "${files[@]}"; do
   [ -s "$teavm/$f" ] || fail "$teavm/$f was not built"
 done
 say "sizes (raw / gzip -9, bytes):"
-for f in wasm-gc/core.wasm wasm-gc/core.wasm-runtime.js js/core.js; do
+for f in "${files[@]}"; do
   say "  $(printf '%-28s %9d %9d' "$f" "$(wc -c < "$teavm/$f")" "$(gzip -9 -c "$teavm/$f" | wc -c)")"
 done
 

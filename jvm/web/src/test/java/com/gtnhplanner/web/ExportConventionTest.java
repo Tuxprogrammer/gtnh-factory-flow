@@ -31,6 +31,7 @@ class ExportConventionTest {
         assertTrue(files != null && files.length > 0, "no exports classes found under " + EXPORTS.getAbsolutePath());
         for (final String f : files) out.add(Class.forName("com.gtnhplanner.web.exports." + f.replace(".java", "")));
         out.add(WebCore.class);
+        out.add(WebSolver.class);
         return out;
     }
 
@@ -49,7 +50,7 @@ class ExportConventionTest {
     void exportNamesAreUniqueInTheirNamespace() throws Exception {
         int count = 0;
         for (final Class<?> c : exportClasses()) {
-            final boolean main = c == WebCore.class;
+            final boolean main = c == WebCore.class || c == WebSolver.class;
             if (!main) assertExportsClassName(c);
             final Map<String, Method> seen = new HashMap<>();
             for (final Method m : c.getDeclaredMethods()) {
@@ -87,7 +88,7 @@ class ExportConventionTest {
     @Test
     void anExportsClassHasNoOtherPublicStaticFunctions() throws Exception {
         for (final Class<?> c : exportClasses()) {
-            if (c == WebCore.class) continue;
+            if (c == WebCore.class || c == WebSolver.class) continue;
             for (final Method m : c.getDeclaredMethods()) {
                 if (!Modifier.isPublic(m.getModifiers()) || !Modifier.isStatic(m.getModifiers())) continue;
                 assertTrue(m.isAnnotationPresent(JSExport.class), c.getSimpleName() + "." + m.getName()
@@ -95,5 +96,29 @@ class ExportConventionTest {
             }
             assertFalse(Modifier.isAbstract(c.getModifiers()), c.getSimpleName());
         }
+    }
+
+    /** modules.txt names a main class and the exports classes of each module; every exports class is in exactly one. */
+    @Test
+    void everyExportsClassBelongsToOneModule() throws Exception {
+        final List<String> all = new ArrayList<>();
+        for (final String f : EXPORTS.list((d, n) -> n.endsWith(".java"))) all.add(f.replace(".java", ""));
+        final List<String> named = new ArrayList<>();
+        int wildcards = 0;
+        for (final String line : java.nio.file.Files.readAllLines(new File("modules.txt").toPath())) {
+            if (line.isBlank() || line.startsWith("#")) continue;
+            final String[] parts = line.trim().split("\\s+");
+            assertTrue(parts.length >= 3, "modules.txt: " + line);
+            Class.forName("com.gtnhplanner.web." + parts[1]);
+            for (int i = 2; i < parts.length; i++) {
+                if (parts[i].equals("*")) wildcards++;
+                else {
+                    assertTrue(all.contains(parts[i]), "modules.txt names " + parts[i] + ", which is not an exports class");
+                    assertFalse(named.contains(parts[i]), parts[i] + " is in two modules");
+                    named.add(parts[i]);
+                }
+            }
+        }
+        assertEquals(1, wildcards, "exactly one module takes the rest (*)");
     }
 }

@@ -5,14 +5,15 @@
 //   const c = coreFor("machines");          // the core when it is loaded and the area is on, else null
 //   const out = c ? c.MachinesExports.machinesReadout(json) : tsReadout(input);
 //
-// A caller never waits for the core: until loadCore() has finished, or when it failed, coreFor() is null and the
-// TypeScript path runs. The first coreFor() of an area that is on starts the load in the background (nothing awaits it,
-// a failure is dropped: the caller keeps the TypeScript), so no page entry has to call loadCore() for an area to work.
+// A caller never waits for the core: until the area's module has loaded, or when it failed, coreFor() is null and the
+// TypeScript path runs. The first coreFor() of an area that is on starts the load of that area's module in the background
+// (nothing awaits it, a failure is dropped: the caller keeps the TypeScript), so no page entry has to call loadCore() for
+// an area to work, and a page pays only for the modules of the areas it uses.
 //
-// Adding an area: one line in ADOPT, `<area>: false`. Turning an area on is changing its line to `true` in the commit
-// that switches that area; nothing else lists areas.
-import type { CoreExports } from "./exports.generated";
-import { coreIfLoaded, coreState, loadCore } from "./loader";
+// Adding an area: one line in ADOPT, `<area>: false`, and one in AREA_MODULE saying which module holds its exports.
+// Turning an area on is changing its line to `true` in the commit that switches that area; nothing else lists areas.
+import type { CoreExports, CoreModuleName } from "./exports.generated";
+import { coreIfLoaded, loadCore, moduleState } from "./loader";
 
 export const ADOPT = {
   // machines: per-card machine, bee and crop readouts (MachinesExports).
@@ -26,6 +27,16 @@ export const ADOPT = {
 } as const satisfies Record<string, boolean>;
 
 export type AdoptArea = keyof typeof ADOPT;
+
+// The module each area's exports live in (jvm/web/modules.txt). The solver is its own module because it carries ojAlgo:
+// it loads inside the solve Worker (`loadCore({ modules: ["solver"] })` there), never on the main thread, so the solve
+// facade asks for it with coreFor("solve") from the Worker's side only.
+const AREA_MODULE: Record<AdoptArea, CoreModuleName> = {
+  machines: "core",
+  power: "core",
+  layout: "core",
+  solve: "solver",
+};
 
 // A dev override: for tests and for trying an area in a running dev server (`__gtnhAdopt.set("machines", true)` in the
 // console of a dev build; a production build has no such object). Held in memory only, never written to storage: nothing in the UI shows it, and a setting with
@@ -50,8 +61,10 @@ export function isAdopted(area: AdoptArea): boolean {
  */
 export function coreFor(area: AdoptArea): CoreExports | null {
   if (!isAdopted(area)) return null;
-  if (coreState() === "idle") loadCore().catch(() => undefined);
-  return coreIfLoaded();
+  const module = AREA_MODULE[area];
+  const state = moduleState(module);
+  if (state === "idle") loadCore({ modules: [module] }).catch(() => undefined);
+  return state === "ready" ? coreIfLoaded() : null;
 }
 
 /** Forces an area on or off (true, false), or back to its committed flag (undefined). Memory only. */

@@ -1,0 +1,7 @@
+# The modules the web build compiles, one TeaVM compilation per module and target. A page loads only the modules it uses.
+# <module> <main class in com.gtnhplanner.web> <exports classes in com.gtnhplanner.web.exports, or * for every one not
+# named by another module>. The module's files are <module>.wasm and <module>.js; the first module also supplies the
+# WebAssembly runtime script (core.wasm-runtime.js), which every module shares. Read by build.gradle.kts and by
+# tools/web-core/modules.mjs (the loader's declarations and copy script).
+core WebCore *
+solver WebSolver SolverExports

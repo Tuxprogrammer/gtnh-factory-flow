@@ -2506,6 +2506,9 @@ export function FactoryFlow() {
   }, []);
 
   useEffect(() => {
+    // Quiet mid-drag, the drag's start included. A press on a node is a drag from its first pixel (nodeDragThreshold
+    // 0), so what a press writes to the store (a sticky note's text size or delete key) lands when the drag ends:
+    // isNodeDragging going false reruns this.
     if (draggingNodeRef.current) {
       return;
     }
@@ -2555,7 +2558,7 @@ export function FactoryFlow() {
       });
       return withTouchDragRule(changed ? next : current, isCompact);
     });
-  }, [isCompact, nodesFromProject, setPendingBoardSelection]);
+  }, [isCompact, isNodeDragging, nodesFromProject, setPendingBoardSelection]);
 
   useEffect(() => {
     pruneNodeDataCaches(

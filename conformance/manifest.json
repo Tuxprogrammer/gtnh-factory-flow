@@ -8,6 +8,14 @@
       ],
       "generator": "mod-answers.json: tools/parity/s1/README.md (S1ParityTest, a throwaway JUnit run in a mod checkout)"
     },
+    "core-base": {
+      "specifies": "The kernel's value semantics: number-text/number-text-vectors.json is JavaScript's own answer (String(n), JSON.stringify, toFixed, Number(s), Math.round) for doubles given as 64-bit hex, which NumberText and JsMath must spell and read the same; uuid/uuid-vectors.json is java.util.UUID's answers (toString, hashCode, compareTo order, name-based ids, parsed spellings), which Uuid must reproduce.",
+      "readers": [
+        "mod: core-base NumberTextTest, UuidTest (jvm/core/core-base)",
+        "web: the Node runner that checks the compiled core against them"
+      ],
+      "generator": "number-text: node tools/conformance/core-base/gen-vectors.mjs; uuid: ./gradlew :core-base:test --tests '*UuidTest.writeVectors' -PwriteVectors (from jvm/); then node tools/conformance/manifest.mjs --write"
+    },
     "layout": {
       "specifies": "The wire router: every router call the website's router tests make (router-tests.json: solves with boards in and routes out, IncrementalRouter step sequences, cardRimDocks vectors) and the reference boards (boards.json.gz: the layout benchmark's plans as boxes and wires, each routed fresh, its busiest box dragged three beats and dropped), all answered by the website's TypeScript router; the Java router (core-layout) must give the same routes and search work to the bit.",
       "readers": [
@@ -35,6 +43,14 @@
       "specifies": "Files that disagree with a copy in the tree and wait for a decision. No suite reads them. Each subdirectory says in its README.md what it is and which file it would replace.",
       "readers": []
     },
+    "plans": {
+      "specifies": "Plan files (the project JSON) for the schema in schema/plan.schema.json: valid/ and invalid/ are small hand-made plans the schema must accept and refuse (the Zod schemas agree on every one); website/ is what the website's own writer makes of some of its plans; mod/ is what the mod's two writers make of some of its boards, cloud-* from the shared-plan mapper and export-* from the website export. Every plan is read by both sides.",
+      "readers": [
+        "website: src/test-support/plan-fixtures.test.ts (Zod and the real importer)",
+        "mod: cloud/map/PlanSchemaTest (JSON Schema validation, and mod/ is regenerated and compared)"
+      ],
+      "generator": "website/: GTNH_WRITE_PLANS=1 npx vitest run plan-fixtures; mod/: ./gradlew :mod:test --tests '*PlanSchemaTest*' -PwritePlans (from jvm/); valid/ and invalid/ are hand-written; then node tools/conformance/manifest.mjs --write"
+    },
     "power": {
       "specifies": "The power sources as the website computes them: every source with its settings and option labels, its model (EU/t, flows with their alternatives, stats, warnings, the Amps tier) at its defaults and with each setting moved alone, the turbine flow check at several flow shares, and the voltage-tier boundaries. One JSON object per line, gzip.",
       "readers": [
@@ -42,6 +58,14 @@
         "core-power: power/PowerGoldensTest"
       ],
       "generator": "npx tsx tools/audits/export-mod-power-goldens.ts --out conformance/power/power-goldens.jsonl.gz (records in src/lib/power/golden-records.ts), then node tools/conformance/manifest.mjs --write"
+    },
+    "schema": {
+      "specifies": "JSON Schema (draft 2020-12) for the data that crosses between the website and the mod: plan.schema.json (the plan file), board-selection.schema.json (a blueprint payload), dataset.schema.json and dataset-manifest.schema.json (the recipe dataset), solve-input.schema.json (the solver's input, as the corpus holds it) and solve-digest.schema.json (the solver's answer as both engines digest it, as the goldens and Up to plans hold it). Generated from the website's Zod schemas, which stay the source of truth; overlays add the limits Zod can only state as code. README.md in the directory says what the schema cannot express.",
+      "readers": [
+        "website: src/test-support/schema-drift.test.ts (the files are what tools/conformance/schema/build.ts generates today); solver-contract.test.ts (corpus, goldens, Up to plans and board scenarios through the Zod schemas)",
+        "mod: cloud/map/PlanSchemaTest (the mod's exported plans and every fixture plan validate against plan.schema.json); cloud/map/SolverSchemaTest (corpus inputs, goldens, Up to plans and board scenarios validate against the solver schemas)"
+      ],
+      "generator": "npx tsx tools/conformance/schema/write.ts (check with --check), which also rewrites this manifest"
     },
     "solver/corpus": {
       "specifies": "The solver's whole answer on a plan. inputs/<case>.json is a SolveInput as the mod's SolveInputJson writes it; goldens/<case>.json is the digest of the answer both solvers must give, equal to 1e-6 relative. platline-x4 and platline-x10 have a golden only: their input is platline tiled 4 and 10 times. The 16 gtnh-flow-* inputs are dumps of yaml charts the mod loads itself.",
@@ -78,6 +102,16 @@
       "bytes": 29350,
       "sha256": "0fa167c57c6b686b695d8d6125f20fc04ee6a7ac8740e5fab34f9ae1550e1512"
     },
+    "core-base/number-text/number-text-vectors.json": {
+      "area": "core-base",
+      "bytes": 515066,
+      "sha256": "bac64d56498eae52a4284cd1ca1732870ef74404a51b1ef7843d5c31f08569d6"
+    },
+    "core-base/uuid/uuid-vectors.json": {
+      "area": "core-base",
+      "bytes": 39121,
+      "sha256": "23347b689fcef8d736c3e56f37bad34af5fe7efbde19cee759cd43cf827f39da"
+    },
     "layout/boards.json.gz": {
       "area": "layout",
       "bytes": 355403,
@@ -113,20 +147,210 @@
       "bytes": 643054,
       "sha256": "d32b2163d3f0c9cc69100c6e7a273dfe5cba8249cbea21e3e3bc062a0fe98ec6"
     },
-    "pending/solver-up-to-web-newer/idle-noise-beside-a-lone-card.json": {
-      "area": "pending",
-      "bytes": 57167,
-      "sha256": "ff4fd74ea453e9ef0ccb0cbdbf6ab2f7a10098a06bdb015ba82f82e49c7c6c38"
+    "plans/invalid/fuel-profile-empty-id.json": {
+      "area": "plans",
+      "bytes": 234,
+      "sha256": "7a531cb9483412b51a901de30e8c62b63e3f43475a18d30d9776382a3d7eb67d"
     },
-    "pending/solver-up-to-web-newer/idle-noise.json": {
-      "area": "pending",
-      "bytes": 55512,
-      "sha256": "9fa420b4d1193a5cf3d8780bb1e30fa351ec0003c1e56bc0d77409dd93792d82"
+    "plans/invalid/fuel-profile-rate-zero.json": {
+      "area": "plans",
+      "bytes": 236,
+      "sha256": "27fcdcb2e1815da35282bbd684617ba871947c175327767bce5e905c7768c70c"
+    },
+    "plans/invalid/fuel-profile-without-a-rate.json": {
+      "area": "plans",
+      "bytes": 213,
+      "sha256": "14d5ae6435c0ee820a15ecd7755aed9f297abe68beb385595a7261f446be8cf4"
+    },
+    "plans/invalid/no-name.json": {
+      "area": "plans",
+      "bytes": 112,
+      "sha256": "9aee54797c6016ce00d8b7561c878052f5c82f51a0e6c2193c663d16c612561f"
+    },
+    "plans/invalid/node-without-position.json": {
+      "area": "plans",
+      "bytes": 285,
+      "sha256": "79e550a1508842f5f9ac6842b994e027db0cbe090c50228daf9fa1a843d56240"
+    },
+    "plans/invalid/nodes-not-a-list.json": {
+      "area": "plans",
+      "bytes": 131,
+      "sha256": "37dfa276d4e2409a8f312a9ef12ac333ccd114a1d8011b88e4d24918e862988a"
+    },
+    "plans/invalid/port-rates-257.json": {
+      "area": "plans",
+      "bytes": 6946,
+      "sha256": "c372833ce3f90076696a7eac778944dca8b4a73959c1215dffca09315b70ba37"
+    },
+    "plans/invalid/primary-view-unknown.json": {
+      "area": "plans",
+      "bytes": 160,
+      "sha256": "0c10016dc2079aee56c176b594643206402cc81659673bfe0a75148c08a52d00"
+    },
+    "plans/invalid/resource-kind-unknown.json": {
+      "area": "plans",
+      "bytes": 226,
+      "sha256": "50ce14a74e10d912dd3bb8c2cac2e55c373944a21476d7749a7f8f1e504a925f"
+    },
+    "plans/invalid/schema-version-2.json": {
+      "area": "plans",
+      "bytes": 131,
+      "sha256": "01e58da3e18e0d1738d1cb2b7287bb04a90248ce9cd70665852b374fa6f13d5b"
+    },
+    "plans/invalid/spare-share-above-one.json": {
+      "area": "plans",
+      "bytes": 197,
+      "sha256": "3928085b1b7567102b3cd8a4b83ee0ab7b44a343ef6732b5d215d6bf903253f7"
+    },
+    "plans/invalid/target-rate-zero.json": {
+      "area": "plans",
+      "bytes": 227,
+      "sha256": "1a2ac128c7a0216cca9c6865cce2abb954ce173fa65b9d25a818151021a763c0"
+    },
+    "plans/mod/cloud-corpus-benzene.json": {
+      "area": "plans",
+      "bytes": 14747,
+      "sha256": "41f52c39a5e03c30a0dac4a48527f5e7b8f45abd16cadf0782b6c11af60e165c"
+    },
+    "plans/mod/cloud-corpus-glass.json": {
+      "area": "plans",
+      "bytes": 34555,
+      "sha256": "ffe82ae808a7936c415ed50589c51d9ee5344ebd814c41c609d914e957365fa3"
+    },
+    "plans/mod/cloud-corpus-hv-diesel.json": {
+      "area": "plans",
+      "bytes": 34218,
+      "sha256": "acf6d143ddf016a27b249abd6f167413d11dc01d747bbca8fa8b4f61152999c2"
+    },
+    "plans/mod/cloud-corpus-mv.json": {
+      "area": "plans",
+      "bytes": 131882,
+      "sha256": "245fe9280c51a3f03f67d1cb2d8063740e5f9a984fea4531883a19ab54c4881a"
+    },
+    "plans/mod/cloud-corpus-single-card-v2.json": {
+      "area": "plans",
+      "bytes": 11212,
+      "sha256": "14f3d5ca253ae59e3c8824e7f82f7ab8c57cfae2d4eb551abeae4a20d77ae649"
+    },
+    "plans/mod/export-corpus-benzene.json": {
+      "area": "plans",
+      "bytes": 6382,
+      "sha256": "65b68d86fcc4cea090ccb64c4e6fc9f8827ce59108a539d93079ab9bcf3badea"
+    },
+    "plans/mod/export-corpus-glass.json": {
+      "area": "plans",
+      "bytes": 18980,
+      "sha256": "6dca8bd5a624d2a009d95d17dd3cd8da5f11997c27ef430aa7140667a0b882ba"
+    },
+    "plans/mod/export-corpus-hv-diesel.json": {
+      "area": "plans",
+      "bytes": 18134,
+      "sha256": "a0b6526bc3bdf91cb45aebe7920a3ba110ea3be9797dab50c880f04176a6b4ce"
+    },
+    "plans/mod/export-corpus-mv.json": {
+      "area": "plans",
+      "bytes": 79306,
+      "sha256": "e789819562d85cffbf3552068f90064bdcabb4a24ae4967576487f828db6172e"
+    },
+    "plans/mod/export-corpus-single-card-v2.json": {
+      "area": "plans",
+      "bytes": 4307,
+      "sha256": "1cad8a815e1aa6b1f70be9082665e2999e4ddb39dfb443c2a3f325995657b047"
+    },
+    "plans/valid/empty.json": {
+      "area": "plans",
+      "bytes": 131,
+      "sha256": "0cfbdb40762d641dda3291ad3f0a6e682d8713ecbd1efc4057c3d100cc7bdf51"
+    },
+    "plans/valid/fuel-profile-per-bucket.json": {
+      "area": "plans",
+      "bytes": 489,
+      "sha256": "c3af8a5f93aea33105e5f7c84b94e1a9238b3eb5fc8f525e1636610c8c27dde0"
+    },
+    "plans/valid/port-rates-256.json": {
+      "area": "plans",
+      "bytes": 6920,
+      "sha256": "2ccb86f720a7c19cd0336dd81c16ce02964f94a58e934eebf8a6c4984f9654be"
+    },
+    "plans/valid/settings-and-pins.json": {
+      "area": "plans",
+      "bytes": 739,
+      "sha256": "c4d5de0b5b987495be558fd5b2f1d8d2c37f02c555e5cdd2cb37ecc5f565d698"
+    },
+    "plans/valid/unknown-keys.json": {
+      "area": "plans",
+      "bytes": 344,
+      "sha256": "017692cce3c70824e5d395cb717bea73555129029544c6bba4eddc0798267bd4"
+    },
+    "plans/website/biodiesel-demo.json": {
+      "area": "plans",
+      "bytes": 10030,
+      "sha256": "4c3f4aedd85026cad17aff8004180cbce6da5d3010e4b6200766cb47f334eec2"
+    },
+    "plans/website/high-amperage-reactor.json": {
+      "area": "plans",
+      "bytes": 15020,
+      "sha256": "b9255f4a1f0b3343808194847180aeb2bf9d5e1ff569fda2d91cec9537479bb7"
+    },
+    "plans/website/old-build.json": {
+      "area": "plans",
+      "bytes": 10010,
+      "sha256": "081f592f4ad40a1e90814abdbdad7def34cf03a1d7e88e2789329b69712b7e80"
+    },
+    "plans/website/old-pool.json": {
+      "area": "plans",
+      "bytes": 8158,
+      "sha256": "4d921b6dea8db92dd474f3b3036597890dbef9b46a9d4b3fbfa55027fdeb01f4"
+    },
+    "plans/website/old-solve.json": {
+      "area": "plans",
+      "bytes": 10020,
+      "sha256": "14143ea870ef64f81bfce569859e9b0fe00282e22c589f5ff0f2e31474599b04"
+    },
+    "plans/website/titanium-line-chembath-slim.json": {
+      "area": "plans",
+      "bytes": 200588,
+      "sha256": "9b490c2841d3c8d063bd1aeab6dc45ad6c1fbe5a6068e25b06cf58dc370e924c"
+    },
+    "plans/website/wooden-axe-categories.json": {
+      "area": "plans",
+      "bytes": 19895,
+      "sha256": "c72b45a8d789e732d174891ba4d0ebc41236ffb9b056452bda4437268467ac0c"
     },
     "power/power-goldens.jsonl.gz": {
       "area": "power",
       "bytes": 268201,
       "sha256": "14dbdf7318bd43c48c9e61dd514a68fec7dfbb695b00d268934b612941d4ebab"
+    },
+    "schema/board-selection.schema.json": {
+      "area": "schema",
+      "bytes": 46493,
+      "sha256": "bcf0792d662a345ed4ff8cbaccb2d4a7946fda8bb42e5203365045b16491bc04"
+    },
+    "schema/dataset-manifest.schema.json": {
+      "area": "schema",
+      "bytes": 2726,
+      "sha256": "b192dcb482f93a4df317a2c2b9b78f2be1eb50f0118e9e3e7aa544dfe7b45dcf"
+    },
+    "schema/dataset.schema.json": {
+      "area": "schema",
+      "bytes": 40955,
+      "sha256": "164877833efb30ae5235f0cc4ddd2974b383b6afebe17d9aa6ef27e496a916a4"
+    },
+    "schema/plan.schema.json": {
+      "area": "schema",
+      "bytes": 60300,
+      "sha256": "5c3fac9a8598e4ddf1300e1f40f593d76825885d106c1e6ea10fa3e50aafa2bb"
+    },
+    "schema/solve-digest.schema.json": {
+      "area": "schema",
+      "bytes": 12848,
+      "sha256": "3e6fd462ce61bff14a543084c9484b95c5d565229272498069a1ab7cb4aa74f8"
+    },
+    "schema/solve-input.schema.json": {
+      "area": "schema",
+      "bytes": 6531,
+      "sha256": "2fecabecbdfc7c3e47418f3df7e974c177efec2a08314ddd1c26447be6b4be16"
     },
     "solver/corpus/goldens/alumina-line-shared-reactor.json": {
       "area": "solver/corpus",
@@ -655,13 +879,13 @@
     },
     "solver/up-to/idle-noise-beside-a-lone-card.json": {
       "area": "solver/up-to",
-      "bytes": 56745,
-      "sha256": "9426d4ee7df772bbc1f8cb5f809fe63da214365c8a6f71ccac31754caeeb32f5"
+      "bytes": 57167,
+      "sha256": "ff4fd74ea453e9ef0ccb0cbdbf6ab2f7a10098a06bdb015ba82f82e49c7c6c38"
     },
     "solver/up-to/idle-noise.json": {
       "area": "solver/up-to",
-      "bytes": 55090,
-      "sha256": "c19e87551704bfcf306a672534624ce4af5dc7a5dd167b1b10994bb903f32dc0"
+      "bytes": 55512,
+      "sha256": "9fa420b4d1193a5cf3d8780bb1e30fa351ec0003c1e56bc0d77409dd93792d82"
     },
     "solver/up-to/mega-iv-nitrobenzene-power-plant-every-count-up-to.json": {
       "area": "solver/up-to",

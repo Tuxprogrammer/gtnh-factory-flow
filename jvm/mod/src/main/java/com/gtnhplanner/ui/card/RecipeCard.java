@@ -184,7 +184,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
         model = next.get(0);
         foot = buildFoot(session.rateUnit());
         footUnit = session.rateUnit();
-        final CardLayout nextLayout = new CardLayout(next, session.graph(), foot != null);
+        final CardLayout nextLayout = CardLayouts.of(next, session.graph(), foot != null);
         if (layout == null || layout.height != nextLayout.height || !nextLayout.sameRows(layout)) {
             layout = nextLayout;
             size(CardLayout.W, layout.height);
@@ -531,7 +531,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
 
     /** Whether a coil too cold stops any of the card's recipes. */
     private boolean coilTooCold() {
-        for (final CardModel m : models) if (SettingControls.coilTooCold(m)) return true;
+        for (final CardModel m : models) if (CardSettings.coilTooCold(m)) return true;
         return false;
     }
 
@@ -1667,7 +1667,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
                 r[2],
                 c.label(),
                 c.value(),
-                c.icon(),
+                IconKeys.stack(c.icon()),
                 c.warn(),
                 reading,
                 !reading && c.enabled() && hot == i,
@@ -1705,7 +1705,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
                 sy);
             return;
         }
-        final SettingDef<?> def = SettingControls.def(model, c.key());
+        final SettingDef<?> def = CardSettings.def(model, c.key());
         if (def == null) return;
         final Node node = model.node;
         final MachineConfig cfg = node.machineConfig;
@@ -1768,7 +1768,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
                 step);
             return;
         }
-        final SettingDef<?> def = SettingControls.def(model, c.key());
+        final SettingDef<?> def = CardSettings.def(model, c.key());
         if (def == null) return;
         final Node node = model.node;
         final MachineConfig cfg = node.machineConfig;
@@ -1995,10 +1995,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
 
     /** "Kanthal Coil Block" reads as "Kanthal" in the well, as on the website. */
     public static String shortCoilName(final String name) {
-        for (final String tail : new String[] { " Coil Block", " Coil" }) {
-            if (name.endsWith(tail)) return name.substring(0, name.length() - tail.length());
-        }
-        return name;
+        return SettingControls.shortCoilName(name);
     }
 
     /** The power panel's figures, worked out once for the model they were taken from. */

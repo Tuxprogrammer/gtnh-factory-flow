@@ -8,7 +8,6 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,6 +23,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.gtnhplanner.conformance.Conformance;
 
 /**
  * Uuid against java.util.UUID on this JVM, over many ids: the same hash, order, equality, spelling, parse and
@@ -201,7 +201,7 @@ class UuidTest {
     @Test
     void committedVectorsAgreeWithTheJdkAndUuid() throws Exception {
         final JsonObject v;
-        try (Reader r = new InputStreamReader(UuidTest.class.getResourceAsStream("/uuid/uuid-vectors.json"),
+        try (Reader r = new InputStreamReader(Conformance.open("core-base/uuid/uuid-vectors.json"),
             StandardCharsets.UTF_8)) {
             v = new JsonParser().parse(r)
                 .getAsJsonObject();
@@ -222,12 +222,11 @@ class UuidTest {
         }
     }
 
-    /** Rewrites uuid-vectors.json under src/test/resources: run with -Dgtnh.writeVectors=<that directory>. */
+    /** Rewrites conformance/core-base/uuid/uuid-vectors.json: run with -PwriteVectors (core-base's build.gradle.kts). */
     @Test
     void writeVectors() throws Exception {
-        final String dir = System.getProperty("gtnh.writeVectors");
-        if (dir == null) return;
-        Files.writeString(Path.of(dir, "uuid", "uuid-vectors.json"), vectors() + "\n");
+        if (System.getProperty("gtnh.writeVectors") == null) return;
+        Files.writeString(Conformance.path("core-base/uuid/uuid-vectors.json"), vectors() + "\n");
     }
 
     /**

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "plan-1",
+  "name": "Unknown keys",
+  "recipes": [],
+  "nodes": [],
+  "edges": [],
+  "fuelProfiles": [
+    {
+      "id": "f1",
+      "name": "Diesel",
+      "fuelFluidId": "x",
+      "euPerLiter": 1,
+      "futureField": true
+    }
+  ],
+  "somethingNew": {
+    "a": [
+      1,
+      2.5,
+      1e+21
+    ]
+  }
+}

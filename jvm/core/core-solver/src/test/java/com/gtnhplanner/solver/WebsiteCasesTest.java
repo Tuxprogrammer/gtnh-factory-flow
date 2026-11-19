@@ -44,8 +44,6 @@ class WebsiteCasesTest {
 
     private static final String REPORT = System.getProperty("gtnhplanner.solver.casesReport", "");
 
-    private static final String FRACTIONAL_PIN = "a pinned count of half a machine: the kernel reads a count as whole"
-        + " machines, the website as any number (parity 09: pins may be fractional)";
     private static final String DUST = "the website judges solver dust per wire network, the kernel over the whole point"
         + " (website 95b196cf): billions of EU a second zero a real 0.03/s wire and the answer fails its own check";
     private static final String RELAXATION = "the website checks the drawer relaxation's point as every other model's;"
@@ -59,10 +57,6 @@ class WebsiteCasesTest {
      * its reason.
      */
     private static final Map<String, String> DIFFERS = Map.ofEntries(
-        Map.entry(
-            "src/lib/solver/plan/adapter/adapter.test.ts > with the real solver core > the forced-flows mock comes out as"
-                + " the mock has it #1",
-            FRACTIONAL_PIN),
         Map.entry(
             "src/lib/solver/plan/loosened-holds.test.ts > held levels read off a slightly inexact point never fail the"
                 + " plan > Up to 0.31 solves at the 0.3 machines it needs (forward columns) #3",

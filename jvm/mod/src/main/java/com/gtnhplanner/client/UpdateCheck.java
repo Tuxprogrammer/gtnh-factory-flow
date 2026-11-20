@@ -27,7 +27,9 @@ import com.gtnhplanner.library.SiteConfig;
 public final class UpdateCheck {
 
     private static final int TIMEOUT_MS = 8000;
-    private static final Pattern VERSION = Pattern.compile("^v?(\\d+)\\.(\\d+)\\.(\\d+)(?:-(alpha|beta|rc)\\.(\\d+))?");
+    // A release is tagged mod-<version> in this repo, and a fork release is its base version and -tux.N.
+    private static final Pattern VERSION = Pattern
+        .compile("^(?:mod-)?v?(\\d+)\\.(\\d+)\\.(\\d+)(?:-(alpha|beta|rc)\\.(\\d+))?(?:-tux\\.(\\d+))?");
     /** The pre-release stages, earliest first; a release with none comes after them all. */
     private static final List<String> STAGES = List.of("alpha", "beta", "rc");
 
@@ -113,9 +115,11 @@ public final class UpdateCheck {
                     .getAsString(),
                 false)
                 .isEmpty()) continue;
+            // The offer names the version, not the repo's tag for it.
             final Release r = new Release(
                 o.get("tag_name")
-                    .getAsString(),
+                    .getAsString()
+                    .replaceFirst("^mod-", ""),
                 o.get("html_url")
                     .getAsString());
             if (parse(r.tag()) != null && (best == null || newer(r.tag(), best.tag()))) best = r;
@@ -125,8 +129,9 @@ public final class UpdateCheck {
 
     /**
      * Whether version {@code a} is newer than {@code b}: major, minor and patch, then the stage (alpha, beta, rc, then
-     * the release itself, above every pre-release of it) and its number. Anything that is not a version is never
-     * newer. Jars before 0.2.0-beta.1 read only alphas, so to them a beta or rc is its release.
+     * the release itself, above every pre-release of it) and its number, then the fork's -tux number (none is 0, so
+     * every fork release of a base is newer than the base and older than the next base). Anything that is not a
+     * version is never newer. Jars before 0.2.0-beta.1 read only alphas, so to them a beta or rc is its release.
      */
     public static boolean newer(final String a, final String b) {
         final long[] x = parse(a), y = parse(b);
@@ -141,7 +146,7 @@ public final class UpdateCheck {
         if (!m.find()) return null;
         return new long[] { Long.parseLong(m.group(1)), Long.parseLong(m.group(2)), Long.parseLong(m.group(3)),
             m.group(4) == null ? STAGES.size() : STAGES.indexOf(m.group(4)),
-            m.group(5) == null ? 0 : Long.parseLong(m.group(5)) };
+            m.group(5) == null ? 0 : Long.parseLong(m.group(5)), m.group(6) == null ? 0 : Long.parseLong(m.group(6)) };
     }
 
     private static byte[] readAll(final InputStream in) throws java.io.IOException {

@@ -12,6 +12,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 import com.gtnhplanner.core.base.Uuid;
+import com.gtnhplanner.core.codec.SiteCarry;
 import com.gtnhplanner.data.flowchart.BoardGroup;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Edge;
@@ -64,7 +65,16 @@ public final class FfConverter {
     /** Where a hatch's source drawer sits, left of its card, in GTNH Planner pixels. */
     static final int HATCH_DRAWER_DX = 180;
 
-    public record Result(Graph graph, ImportReport report) {}
+    /**
+     * A plan converted: the board, what did not come over as it was, and which of the plan's things became which of the
+     * board's (and which wires it could not hold), for keeping the rest ({@code SiteCarry}).
+     */
+    public record Result(Graph graph, ImportReport report, SiteCarry.Placed placed) {
+
+        public Result(final Graph graph, final ImportReport report) {
+            this(graph, report, new SiteCarry.Placed(Map.of(), Map.of(), Set.of(), Set.of()));
+        }
+    }
 
     private FfConverter() {}
 
@@ -155,6 +165,10 @@ public final class FfConverter {
         final FfCards.Context ctx;
         final double minX, minY;
         int lostWires;
+        /** The plan's wires the board could not hold: kept as they came ({@code SiteCarry}). */
+        final Set<String> droppedEdges = new LinkedHashSet<>();
+        /** A wire made by joining a buffer's two wires: those two and the buffer, by the new wire's id. */
+        final Map<String, String[]> joined = new HashMap<>();
         /** Buffers joined into wires (wired to another drawer or by a cell wire): no drawer of their own. */
         final Set<String> joinedBuffers = new HashSet<>();
 
@@ -227,7 +241,51 @@ public final class FfConverter {
                     + " rule. Unpin a card, or set a drawer's rate, to let the plan size itself.");
             for (final String note : plan.notes()) report.add(Kind.NOTE, "Plan", note);
             report.setCounts(graph.nodes.size(), graph.edges.size(), graph.drawers.size(), graph.notes.size());
-            return new Result(graph, report);
+            return new Result(graph, report, placed());
+        }
+
+        /** Which of the plan's cards and drawers became which board card (a shared machine's: its first) and drawer. */
+        SiteCarry.Placed placed() {
+            final Map<String, String> cards = new LinkedHashMap<>(), drawers = new LinkedHashMap<>();
+            for (final Map.Entry<String, Map<Integer, Placed>> e : placed.entrySet()) {
+                final Placed host = e.getValue()
+                    .get(
+                        java.util.Collections.min(
+                            e.getValue()
+                                .keySet()));
+                cards.put(e.getKey(), host.node().id.toString());
+            }
+            for (final Map.Entry<Uuid, String> e : origin.entrySet()) {
+                if (graph.nodes.containsKey(e.getKey())) cards.putIfAbsent(
+                    e.getValue(),
+                    e.getKey()
+                        .toString());
+                else if (graph.drawers.containsKey(e.getKey())
+                    && (storages.containsKey(e.getValue()) || customRates.containsKey(e.getValue())))
+                    drawers.putIfAbsent(
+                        e.getValue(),
+                        e.getKey()
+                            .toString());
+            }
+            // A buffer joined into wires is those wires now: neither it nor its wires go back out as they came. One
+            // whose joined wire the board could not hold goes back out as it came, with its wires.
+            final Set<String> dropped = new LinkedHashSet<>(), kept = new LinkedHashSet<>();
+            for (final String id : droppedEdges) unjoin(id, dropped, kept);
+            final Set<String> converted = new LinkedHashSet<>(joinedBuffers);
+            converted.removeAll(kept);
+            return new SiteCarry.Placed(cards, drawers, dropped, converted);
+        }
+
+        /** A dropped wire as the plan's own wires: a joined one as the two it joined, its buffer kept. */
+        private void unjoin(final String id, final Set<String> dropped, final Set<String> kept) {
+            final String[] parts = joined.get(id);
+            if (parts == null) {
+                dropped.add(id);
+                return;
+            }
+            kept.add(parts[2]);
+            unjoin(parts[0], dropped, kept);
+            unjoin(parts[1], dropped, kept);
         }
 
         // region Cards
@@ -420,6 +478,9 @@ public final class FfConverter {
                         .equals(b)
                         || e.target()
                             .equals(b));
+                for (final FfEdge in : ins) for (final FfEdge out : outs) {
+                    joined.put(in.id() + ">" + out.id(), new String[] { in.id(), out.id(), b });
+                }
                 for (final FfEdge in : ins) for (final FfEdge out : outs) all.add(
                     new FfEdge(
                         in.id() + ">" + out.id(),
@@ -466,6 +527,7 @@ public final class FfConverter {
         void wire(final FfEdge e) {
             final End from = end(e.source(), e.sourceHandle()), to = end(e.target(), e.targetHandle());
             if (from == null || to == null) {
+                droppedEdges.add(e.id());
                 if (from == null && !known(e.source()) || to == null && !known(e.target()))
                     report.add(Kind.WIRE, e.resourceId(), "a wire to something not on the plan dropped");
                 else lostWires++;
@@ -473,6 +535,7 @@ public final class FfConverter {
             }
             if (e.crossForm()) {
                 if (from.card() != null && to.card() != null && tankBetween(e, from.card(), to.card())) return;
+                droppedEdges.add(e.id());
                 report.add(
                     Kind.WIRE,
                     e.resourceId(),
@@ -483,6 +546,7 @@ public final class FfConverter {
                 final int out = port(from.card(), true, e.sourceHandle(), e, null);
                 final int in = port(to.card(), false, e.targetHandle(), e, null);
                 if (out < 0 || in < 0) {
+                    droppedEdges.add(e.id());
                     report.add(
                         Kind.WIRE,
                         e.resourceId(),
@@ -510,6 +574,7 @@ public final class FfConverter {
                 return;
             }
             if (from.drawer() != null && to.drawer() != null) {
+                droppedEdges.add(e.id());
                 report.add(Kind.WIRE, e.resourceId(), "a wire between two drawers dropped");
                 return;
             }
@@ -519,6 +584,7 @@ public final class FfConverter {
             final PendingDrawer d = pendingFor(drawerId);
             final boolean buffer = d != null && d.kind == Drawer.Kind.BUFFER;
             if (d == null || !buffer && d.kind.linksInputs() != drawerFeeds) {
+                droppedEdges.add(e.id());
                 report.add(Kind.WIRE, e.resourceId(), "a drawer wired the wrong way round dropped");
                 return;
             }
@@ -529,6 +595,7 @@ public final class FfConverter {
                 e,
                 resourceOf(drawerId));
             if (port < 0) {
+                droppedEdges.add(e.id());
                 report.add(Kind.WIRE, d.subject, "no port for it on " + card.name());
                 return;
             }

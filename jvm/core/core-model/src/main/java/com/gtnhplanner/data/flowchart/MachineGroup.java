@@ -22,25 +22,25 @@ public class MachineGroup extends Group {
      * group's summed machine time in the solve, so the chart is balanced to fit the hardware that
      * exists instead of being measured after the fact.
      */
-    private int machineCapacity;
+    int machineCapacity;
 
     /**
      * The set count when it is not whole (a website pin of 2.5), {@link #machineCapacity} then holding it rounded up.
      * Null, never written, for a whole count, so a save reads and writes as it did before fractions.
      */
-    private Double machineFraction;
+    Double machineFraction;
 
     /**
      * Whether {@link #machineCapacity} is the count the player set rather than a plain cap: Up to that many, or
      * Exactly with {@link #isExact()} ({@link PinRule#of(MachineGroup)}).
      */
-    private boolean pinned;
+    boolean pinned;
 
     /**
      * Whether the set count is Exactly: its recipes' machine time adds up to it. Null, not false, when it is not, so a
      * save without it reads the same as one written before it (Up to).
      */
-    private Boolean exact;
+    Boolean exact;
 
     /** Whether the set count is Exactly: only on a pinned group. */
     public boolean isExact() {
@@ -62,7 +62,7 @@ public class MachineGroup extends Group {
      * alongside the group's node ids, which have no order. Empty in a group from an older save, which is not drawn as
      * a shared card.
      */
-    private final java.util.List<Uuid> sections = new java.util.ArrayList<>();
+    java.util.List<Uuid> sections = new java.util.ArrayList<>();
 
     /** A shared machine: a group drawn as one card, its recipes as sections. */
     public boolean isShared() {

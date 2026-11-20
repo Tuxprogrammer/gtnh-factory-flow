@@ -28,12 +28,12 @@ public class Note extends GraphData {
 
     /** The text, one entry per line. */
     @Nonnull
-    private List<String> text = new ArrayList<>();
-    private int width = DEFAULT_W;
-    private int height = DEFAULT_H;
+    List<String> text = new ArrayList<>();
+    int width = DEFAULT_W;
+    int height = DEFAULT_H;
     /** Factory Flow's colour tag: white, orange, magenta, light_blue, yellow, lime, pink, gray, ... */
-    private String color = DEFAULT_COLOR;
-    private int fontSize = DEFAULT_FONT;
+    String color = DEFAULT_COLOR;
+    int fontSize = DEFAULT_FONT;
 
     /** The website's annotation kinds that are drawings rather than writing; a note saved before them has none. */
     public static final String BOX = "box", ZONE = "zone", ARROW = "arrow", IMAGE = "image", TEXT = "text";
@@ -42,36 +42,36 @@ public class Note extends GraphData {
 
     /** {@code box}, {@code zone}, {@code arrow}, {@code image}; null or {@code text} for a sticky note. */
     @Nullable
-    private String kind;
+    String kind;
     /** Arrow: {@code down-right} (default), {@code down-left}, {@code up-right} or {@code up-left}, tail to head. */
     @Nullable
-    private String arrowDirection;
+    String arrowDirection;
     /** Zone: the outline's corners {x, y}, relative to the note, in the board's own px. */
     @Nullable
-    private List<int[]> points;
+    List<int[]> points;
     /** Arrow: {@code end} (default, a head at the end only) or {@code both}. */
     @Nullable
-    private String arrowHeads;
+    String arrowHeads;
     /** Arrow: the line's thickness in board px (1 thin, 2 normal and default, 4 thick); 0 is the default. */
-    private int arrowWidth;
+    int arrowWidth;
     /** Image: where the picture lives. The text is its caption. Pictures are kept in the data but never shown. */
     @Nullable
-    private String imageUrl;
+    String imageUrl;
     /** Box, zone, image: {@code solid} (default), {@code dashed} or {@code none}. */
     @Nullable
-    private String border;
+    String border;
     /** Colour tags for the border and the fill; null is the note's own colour. */
     @Nullable
-    private String borderColor, fillColor;
+    String borderColor, fillColor;
     /** Box, zone: the surface, {@code tint} (default), {@code solid} or {@code none}. */
     @Nullable
-    private String fill;
+    String fill;
     /** Box, zone: {@code none} (default), {@code dots}, {@code grid}, {@code graph}, {@code ruled} or {@code hatch}. */
     @Nullable
-    private String marks;
+    String marks;
     /** The board group it is in ({@link BoardGroup}), or null. */
     @Nullable
-    private Uuid group;
+    Uuid group;
 
     public Note() {
         super(Uuid.randomUUID());

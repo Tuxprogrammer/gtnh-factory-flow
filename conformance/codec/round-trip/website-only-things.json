@@ -1,0 +1,280 @@
+{
+  "schemaVersion": 1,
+  "id": "round-trip-website-only-things",
+  "name": "Things the mod's board cannot hold",
+  "solveMode": true,
+  "planMode": true,
+  "view": {
+    "rateUnit": "minute",
+    "canvasTheme": "blueprint",
+    "canvasPattern": "dots",
+    "leftPanelOpen": false,
+    "hiddenResourceKeys": [
+      "item:bolt"
+    ]
+  },
+  "notes": "Plan notes the mod has no place for.",
+  "checklist": {
+    "cards": [
+      "n-a"
+    ],
+    "edges": []
+  },
+  "settingPins": {
+    "machine-the-mod-lacks": [
+      "coil"
+    ]
+  },
+  "spareShares": {
+    "item:plate": {
+      "n-a:o:0": 1
+    }
+  },
+  "futureField": {
+    "kept": [
+      1,
+      2.5,
+      "x"
+    ]
+  },
+  "recipes": [
+    {
+      "id": "r-a",
+      "name": "Maker of plates",
+      "machineType": "Mixer",
+      "minimumTier": "LV",
+      "durationTicks": 20,
+      "eut": 8,
+      "inputs": [],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "plate",
+          "amount": 1,
+          "displayName": "Plate"
+        }
+      ]
+    },
+    {
+      "id": "r-b",
+      "name": "Gear press",
+      "machineType": "Mixer",
+      "minimumTier": "LV",
+      "durationTicks": 20,
+      "eut": 8,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "plate",
+          "amount": 1,
+          "displayName": "Plate"
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "gear",
+          "amount": 1,
+          "displayName": "Gear"
+        }
+      ]
+    },
+    {
+      "id": "r-off",
+      "name": "Bolt lathe",
+      "machineType": "Mixer",
+      "minimumTier": "LV",
+      "durationTicks": 20,
+      "eut": 8,
+      "inputs": [],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "bolt",
+          "amount": 1,
+          "displayName": "Bolt"
+        }
+      ]
+    },
+    {
+      "id": "r-gone",
+      "name": "Rod lathe",
+      "machineType": "Mixer",
+      "minimumTier": "LV",
+      "durationTicks": 20,
+      "eut": 8,
+      "inputs": [],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "rod",
+          "amount": 1,
+          "displayName": "Rod"
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "n-a",
+      "recipeId": "r-a",
+      "machineCount": 1,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "colorTag": "lime",
+      "settingsCollapsed": true
+    },
+    {
+      "id": "n-b",
+      "recipeId": "r-b",
+      "machineCount": 1,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "position": {
+        "x": 400,
+        "y": 0
+      },
+      "solvePin": 2.5
+    },
+    {
+      "id": "n-off",
+      "recipeId": "r-off",
+      "machineCount": 1,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": false,
+      "position": {
+        "x": 0,
+        "y": 200
+      }
+    },
+    {
+      "id": "n-gone",
+      "recipeId": "r-gone",
+      "machineCount": 1,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "position": {
+        "x": 0,
+        "y": 400
+      }
+    },
+    {
+      "id": "n-norecipe",
+      "recipeId": "r-absent",
+      "machineCount": 1,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "position": {
+        "x": 0,
+        "y": 600
+      }
+    }
+  ],
+  "storages": [
+    {
+      "id": "s-gear",
+      "kind": "item",
+      "resourceId": "gear",
+      "displayName": "Gear",
+      "drainMode": "byproduct",
+      "colorTag": "orange",
+      "position": {
+        "x": 800,
+        "y": 0
+      }
+    },
+    {
+      "id": "s-lone",
+      "kind": "item",
+      "resourceId": "rod",
+      "displayName": "Rod",
+      "position": {
+        "x": 400,
+        "y": 400
+      }
+    },
+    {
+      "id": "s-x",
+      "kind": "item",
+      "resourceId": "bolt",
+      "position": {
+        "x": 800,
+        "y": 200
+      }
+    },
+    {
+      "id": "s-y",
+      "kind": "item",
+      "resourceId": "bolt",
+      "position": {
+        "x": 1000,
+        "y": 200
+      }
+    }
+  ],
+  "annotations": [],
+  "pockets": [],
+  "edges": [
+    {
+      "id": "e-plate",
+      "source": "n-a",
+      "target": "n-b",
+      "resourceKind": "item",
+      "resourceId": "plate",
+      "sourceHandle": "output:item:plate",
+      "targetHandle": "input:item:plate"
+    },
+    {
+      "id": "e-gear",
+      "source": "n-b",
+      "target": "s-gear",
+      "resourceKind": "item",
+      "resourceId": "gear",
+      "sourceHandle": "output:item:gear"
+    },
+    {
+      "id": "e-rod",
+      "source": "n-gone",
+      "target": "s-lone",
+      "resourceKind": "item",
+      "resourceId": "rod",
+      "sourceHandle": "output:item:rod"
+    },
+    {
+      "id": "e-off",
+      "source": "n-off",
+      "target": "s-x",
+      "resourceKind": "item",
+      "resourceId": "bolt",
+      "sourceHandle": "output:item:bolt"
+    },
+    {
+      "id": "e-drawers",
+      "source": "s-x",
+      "target": "s-y",
+      "resourceKind": "item",
+      "resourceId": "bolt",
+      "label": "drawer to drawer"
+    },
+    {
+      "id": "e-cell",
+      "source": "n-a",
+      "target": "n-b",
+      "resourceKind": "item",
+      "resourceId": "plate",
+      "sourceHandle": "output:item:plate",
+      "targetHandle": "input:fluid:plate",
+      "crossForm": true
+    }
+  ],
+  "fuelProfiles": []
+}

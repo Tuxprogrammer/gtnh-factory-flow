@@ -53,7 +53,7 @@ public class Drawer extends GraphData implements DrawerTypes {
             this(nodeId, portIndex, null);
         }
 
-        private Link(final Uuid nodeId, final int portIndex,
+        Link(final Uuid nodeId, final int portIndex,
             @javax.annotation.Nullable final List<int[]> waypoints) {
             this.nodeId = Objects.requireNonNull(nodeId, "nodeId");
             this.portIndex = portIndex;
@@ -71,6 +71,12 @@ public class Drawer extends GraphData implements DrawerTypes {
         /** The dots steering its wire, in order; empty for none. */
         public List<int[]> waypoints() {
             return waypoints == null ? List.of() : Collections.unmodifiableList(waypoints);
+        }
+
+        /** The dots as kept: null for none (the save leaves the key out). */
+        @javax.annotation.Nullable
+        List<int[]> rawWaypoints() {
+            return waypoints;
         }
 
         /** The same link steered through {@code points} instead. */
@@ -102,20 +108,20 @@ public class Drawer extends GraphData implements DrawerTypes {
         }
     }
 
-    private Kind kind = Kind.PRODUCT;
-    private Rule rule = Rule.ANY;
+    Kind kind = Kind.PRODUCT;
+    Rule rule = Rule.ANY;
     /** Units per second (items/s, or L/s for fluids). Meaningless under {@link Rule#ANY}. */
-    private double rate;
-    private List<Link> links = new ArrayList<>();
+    double rate;
+    List<Link> links = new ArrayList<>();
     /** A buffer's users: the input ports it feeds. Empty for every other kind. */
-    private List<Link> takers = new ArrayList<>();
+    List<Link> takers = new ArrayList<>();
     /** Opaque resource identity the client writes and resolves; never parsed by the engine. */
-    private String resourceKey = "";
+    String resourceKey = "";
     /** The resource's display name as last resolved by the client, for when it cannot resolve. */
-    private String label = "";
+    String label = "";
     /** The board group it is in ({@link BoardGroup}), or null. */
     @javax.annotation.Nullable
-    private Uuid group;
+    Uuid group;
 
     /** A product drawer with no resource, no links and no rule; also Gson's constructor. */
     public Drawer() {

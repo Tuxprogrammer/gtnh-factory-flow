@@ -398,7 +398,7 @@ public final class Boards {
 
     /**
      * Everything a board saves that a shared plan carries: its save, the camera and the pin list (each player's own)
-     * left out, and its description and icon.
+     * and what it keeps of a website plan left out, and its description and icon.
      */
     public static JsonObject persisted(final Graph g) {
         final JsonObject o = Serializer.toJson(g);
@@ -406,6 +406,8 @@ public final class Boards {
         o.remove("panX");
         o.remove("panY");
         o.remove("pinList");
+        // What a website plan held that the board has no place for: in a shared plan it stays in the plan itself.
+        o.remove("site");
         o.addProperty("description", g.getDescription());
         if (g.getIcon() != null) o.addProperty("icon", g.getIcon());
         return o;

@@ -181,7 +181,7 @@ public final class Summary extends GraphData {
      * Section} ordinal - {@link Section#ALL} the panel's own master collapse included. A single
      * integer, kept and written as-is by the plan serializer.
      */
-    private int collapsedSummaryFolds = 0;
+    int collapsedSummaryFolds = 0;
 
     @Getter
     @Nullable
@@ -198,13 +198,13 @@ public final class Summary extends GraphData {
 
     @Getter
     @Setter
-    private ChoiceKey excessChoice;
+    ChoiceKey excessChoice;
 
     @Getter
-    private Mode mode = Mode.CYCLES;
+    Mode mode = Mode.CYCLES;
     @Getter
-    private RateUnit rateUnit = RateUnit.SECONDS;
-    private int[] sectionOrder = defaultSectionOrder();
+    RateUnit rateUnit = RateUnit.SECONDS;
+    int[] sectionOrder = defaultSectionOrder();
 
     /**
      * Bumped by every settings change; part of the derived-cache key so a toggle

@@ -20,7 +20,6 @@ import com.gtnhplanner.data.flowchart.BoardGroup;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.Graph;
-import com.gtnhplanner.data.flowchart.GraphData;
 import com.gtnhplanner.data.flowchart.Group;
 import com.gtnhplanner.data.flowchart.Groups;
 import com.gtnhplanner.data.flowchart.MachineGroup;
@@ -365,7 +364,7 @@ final class PlanRead {
         for (final JsonElement e : saved.getAsJsonArray()) {
             final Group group;
             try {
-                group = (Group) Serializer.GSON.fromJson(e, GraphData.class);
+                group = Serializer.readGroup(e);
             } catch (final RuntimeException x) {
                 continue;
             }
@@ -873,7 +872,7 @@ final class PlanRead {
             saved.addProperty("x", x);
             saved.addProperty("y", y);
             try {
-                note = Serializer.GSON.fromJson(saved, Note.class);
+                note = Serializer.readNote(saved);
             } catch (final RuntimeException ignored) {}
         }
         if (note == null) {

@@ -17,12 +17,12 @@ public class Group extends GraphData {
 
     private static Random colorRandom = new Random(12345);
 
-    private int width = GROUP_MIN_W;
-    private int height = GROUP_MIN_H;
-    private int color = getRandomColor();
-    private boolean collapsed;
-    private boolean clampNodes;
-    private boolean coverChildren;
+    int width = GROUP_MIN_W;
+    int height = GROUP_MIN_H;
+    int color = getRandomColor();
+    boolean collapsed;
+    boolean clampNodes;
+    boolean coverChildren;
     /**
      * Sorted for the same reason the graph's own maps are, and for one more: Gson builds a
      * SortedMap field as a TreeMap but a Map keyed on anything but String as an insertion-ordered
@@ -30,9 +30,9 @@ public class Group extends GraphData {
      * built one.
      */
     @Nonnull
-    private final SortedMap<Uuid, GraphData> children = new TreeMap<>();
+    SortedMap<Uuid, GraphData> children = new TreeMap<>();
     @Nonnull
-    private final Set<Uuid> nodeIds = new java.util.HashSet<>();
+    Set<Uuid> nodeIds = new java.util.HashSet<>();
 
     public Group() {
         super(Uuid.randomUUID());

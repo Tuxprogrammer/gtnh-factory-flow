@@ -1,0 +1,130 @@
+{
+  "about": "PlanJson (core-codec) and JSON.stringify(JSON.parse(text)): each case's text written compact, and the SHA-256 of every committed plan written compact. Written by src/test-support/codec-conformance.test.ts with GTNH_WRITE_GOLDEN=1; read by core-codec CodecTest.",
+  "cases": [
+    {
+      "name": "mod spelling",
+      "text": "{\"schemaVersion\":1,\"machineCount\":1.0,\"solvePin\":2.50,\"x\":-0,\"y\":1E3}",
+      "written": "{\"schemaVersion\":1,\"machineCount\":1,\"solvePin\":2.5,\"x\":0,\"y\":1000}"
+    },
+    {
+      "name": "numbers",
+      "text": "[0.1,1e-7,1e21,123456789012345678,1e-6,0.000001,999999999999999999999,5e-324,1.7976931348623157e308,-2.5e-10,100]",
+      "written": "[0.1,1e-7,1e+21,123456789012345680,0.000001,0.000001,1e+21,5e-324,1.7976931348623157e+308,-2.5e-10,100]"
+    },
+    {
+      "name": "strings",
+      "text": "[\"a\\\"b\\\\c\",\"\\t\\b\\n\\r\\f\",\"\\u0001\\u001f\",\"\\u2028\\u2029\",\"<>&='\",\"\\/\",\"\\u00e9\\u6f22\\ud83d\\ude00\"]",
+      "written": "[\"a\\\"b\\\\c\",\"\\t\\b\\n\\r\\f\",\"\\u0001\\u001f\",\"  \",\"<>&='\",\"/\",\"é漢😀\"]"
+    },
+    {
+      "name": "key order kept",
+      "text": "{\"b\":1,\"a\":2,\"10\":3,\"2\":4,\"futureField\":{\"z\":null,\"y\":[true,false]}}",
+      "written": "{\"2\":4,\"10\":3,\"b\":1,\"a\":2,\"futureField\":{\"z\":null,\"y\":[true,false]}}"
+    },
+    {
+      "name": "whitespace",
+      "text": " {\n  \"a\" : [ 1 , 2 ] ,\r\n\t\"b\" : { } \n} ",
+      "written": "{\"a\":[1,2],\"b\":{}}"
+    },
+    {
+      "name": "empty plan",
+      "text": "{\"schemaVersion\":1,\"name\":\"\",\"recipes\":[],\"nodes\":[],\"storages\":[],\"annotations\":[],\"pockets\":[],\"edges\":[],\"fuelProfiles\":[]}",
+      "written": "{\"schemaVersion\":1,\"name\":\"\",\"recipes\":[],\"nodes\":[],\"storages\":[],\"annotations\":[],\"pockets\":[],\"edges\":[],\"fuelProfiles\":[]}"
+    },
+    {
+      "name": "lone surrogate",
+      "text": "[\"\\ud800x\",\"x\\udc00\"]",
+      "written": "[\"\\ud800x\",\"x\\udc00\"]"
+    }
+  ],
+  "plans": [
+    {
+      "path": "plans/valid/empty.json",
+      "sha256": "6ebbcc1676958fc6571498488cef9a8927b1309941b7d7426d59a17b936ca098"
+    },
+    {
+      "path": "plans/valid/fuel-profile-per-bucket.json",
+      "sha256": "4b6259ee03e73c30b254e020d40a521f0dc93dd53e8454fb0c51d9815c08e47a"
+    },
+    {
+      "path": "plans/valid/port-rates-256.json",
+      "sha256": "f7b1af04bd0c217fd7a78c42e29b49c13daa38ed1523a2a08418d3f1209b4a19"
+    },
+    {
+      "path": "plans/valid/settings-and-pins.json",
+      "sha256": "b282726f58f849c8026813ede35c6318cdc7ecaa87bcd009ed9f000054034f02"
+    },
+    {
+      "path": "plans/valid/unknown-keys.json",
+      "sha256": "32d73db0d548e0142fc05c3775afcb823cb9237de27761794fb402a036604cc5"
+    },
+    {
+      "path": "plans/website/biodiesel-demo.json",
+      "sha256": "d5a655494b568892eed5e4d486ebd10b6cc600c4c7b64ee501371158462b9cb6"
+    },
+    {
+      "path": "plans/website/high-amperage-reactor.json",
+      "sha256": "ebad14b55a72fbcb1bccc50f2cdf74f86b4825c4ce58590ff93d1df213ce5e65"
+    },
+    {
+      "path": "plans/website/old-build.json",
+      "sha256": "7c48029bf1de9a0ef6c4cc0cd4da24ac60d750f7c68137c359458c61d72910f8"
+    },
+    {
+      "path": "plans/website/old-pool.json",
+      "sha256": "3aadcff4e7dbc40c1e3e3e7ccb73486e2bb8c4ca00fa0d8217d0853b182c4210"
+    },
+    {
+      "path": "plans/website/old-solve.json",
+      "sha256": "67d117fcb6adb398c16bf33586685f8606d0f20d6dec3ffdfb85a576133977f9"
+    },
+    {
+      "path": "plans/website/titanium-line-chembath-slim.json",
+      "sha256": "8c6f32304905cdc7551dc50d11b1a0560e0deb5ca413486bfe7951f6474759c7"
+    },
+    {
+      "path": "plans/website/wooden-axe-categories.json",
+      "sha256": "71c0daa59cb8e0a455331ffb3cdc619dc61f48c9ab6d6863ceb73c9570768ab6"
+    },
+    {
+      "path": "plans/mod/cloud-corpus-benzene.json",
+      "sha256": "9f8d669c500d3293f94981d96e1ef0996e7db8231469bbda15c65f113bbe2e4d"
+    },
+    {
+      "path": "plans/mod/cloud-corpus-glass.json",
+      "sha256": "87e1180ad9c6e78649a3f65f1fab51447efb51f65b388d2928298abc17cb69e3"
+    },
+    {
+      "path": "plans/mod/cloud-corpus-hv-diesel.json",
+      "sha256": "9623d66eb1a34b7f84c42d82593c53e6ccc27bc89edab7b55524d3509069d49c"
+    },
+    {
+      "path": "plans/mod/cloud-corpus-mv.json",
+      "sha256": "15bef1ba3a64fc0eed6c608701ad8b96ff38e24d22f85f467fdbbb8c2a370f33"
+    },
+    {
+      "path": "plans/mod/cloud-corpus-single-card-v2.json",
+      "sha256": "5ae98ed8aa5228f110568e20c85fccb925bd895d6805d339486c23b42e7d7516"
+    },
+    {
+      "path": "plans/mod/export-corpus-benzene.json",
+      "sha256": "1a256d5414fb6d29114bc677984768f57e84e9ae6ff785643319bb301cc210c8"
+    },
+    {
+      "path": "plans/mod/export-corpus-glass.json",
+      "sha256": "5a8f7eef908aef90e08ad02b81b16684cead0ffecd5bbced7e989475befdda57"
+    },
+    {
+      "path": "plans/mod/export-corpus-hv-diesel.json",
+      "sha256": "66fdca80b0f67cdae095369ae7067fcf885419b5eb1090bfafd3a65f1df99495"
+    },
+    {
+      "path": "plans/mod/export-corpus-mv.json",
+      "sha256": "237a0ac7b1fec3898384dc72c8b93b5d0ec61b7964b5370b362b18bcac414d85"
+    },
+    {
+      "path": "plans/mod/export-corpus-single-card-v2.json",
+      "sha256": "9b9a9a750da0dd26b29d07d5e35aee5fe53ec79fc7343d8c5dc69f91da3540f4"
+    }
+  ]
+}

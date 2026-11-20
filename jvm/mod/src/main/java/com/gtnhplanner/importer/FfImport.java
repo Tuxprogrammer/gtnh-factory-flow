@@ -30,6 +30,19 @@ public final class FfImport {
         // The rate unit it was shared in: the board opens it in that (the website's applyPlanView).
         result.graph()
             .viewWhenShown(PlanView.rateUnit(root));
+        // Its description, which the board shows on its face.
+        if (root.has("description") && root.get("description")
+            .isJsonPrimitive())
+            result.graph()
+                .setDescription(
+                    root.get("description")
+                        .getAsString());
+        // Its task board, as the plan spells it.
+        com.gtnhplanner.data.flowchart.Tasks.read(root, result.graph());
+        // What the board has no place for, kept to go back out with the plan (core-codec SiteCarry).
+        result.graph().site.putAll(
+            com.gtnhplanner.core.codec.SiteCarry
+                .carry(com.gtnhplanner.data.flowchart.GsonTrees.map(root), result.placed()));
         return result;
     }
 }

@@ -91,6 +91,14 @@ public class Graph {
     public final List<Tasks.Item> taskItems = new ArrayList<>();
     public final List<Tasks.Comment> taskComments = new ArrayList<>();
 
+    /**
+     * What a plan from the website held that this board has no place for, kept as the plan spelled it so the plan goes
+     * back out with it (core-codec's {@code SiteCarry}): the plan's other fields and view, cards, drawers, wires and
+     * recipes the board could not hold, and each card's and drawer's fields it does not model. Empty for a plan made
+     * here. Saved under the graph's {@code site} key; a JSON tree (maps, lists, strings, numbers, booleans).
+     */
+    public final java.util.Map<String, Object> site = new java.util.LinkedHashMap<>();
+
     /** Which view the plan opens on: {@link Tasks#PLAN}, {@link Tasks#TASKS} (a task board), or null for the board. */
     @Nullable
     private String primaryView;

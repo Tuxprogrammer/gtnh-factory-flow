@@ -294,7 +294,7 @@ final class Fresh {
         final JsonArray groups = new JsonArray();
         for (final Group group : g.getGroups()) {
             if (names.isCarried("group:" + group.getId())) continue;
-            groups.add(Serializer.GSON.toJsonTree(group));
+            groups.add(Serializer.groupToJson(group));
         }
         if (groups.size() > 0) data.add("groups", groups);
         if (g.getIcon() != null) data.addProperty("icon", g.getIcon());
@@ -386,7 +386,7 @@ final class Fresh {
      * both.
      */
     static JsonObject drawerGame(final Drawer d) {
-        final JsonObject o = graphData(Serializer.GSON.toJsonTree(d, Drawer.class));
+        final JsonObject o = graphData(Serializer.drawerToJson(d));
         o.remove("links");
         o.remove("takers");
         o.remove("group");
@@ -395,7 +395,7 @@ final class Fresh {
 
     /** A note's or drawing's save, without its id, place and group (the plan's pocketId). */
     static JsonObject noteGame(final Note n) {
-        final JsonObject o = graphData(Serializer.GSON.toJsonTree(n));
+        final JsonObject o = graphData(Serializer.noteToJson(n));
         o.remove("group");
         return o;
     }

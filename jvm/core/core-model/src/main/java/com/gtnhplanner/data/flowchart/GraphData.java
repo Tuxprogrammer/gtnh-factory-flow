@@ -8,7 +8,7 @@ import com.gtnhplanner.core.base.Uuid;
  */
 public abstract class GraphData {
 
-    protected final Uuid id;
+    protected Uuid id;
     protected int x;
     protected int y;
     protected String header;

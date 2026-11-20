@@ -22,12 +22,12 @@ public class Plan {
     private static Plan INSTANCE;
 
     private transient final List<Graph> graphs = new ArrayList<>();
-    private int activeIndex = 0;
-    private boolean snapToGrid;
+    int activeIndex = 0;
+    boolean snapToGrid;
 
     @Getter
     @Setter
-    private Summary summary = new Summary();
+    Summary summary = new Summary();
 
     /** The slots' undo histories; transient, so a loaded plan starts with none. */
     private final transient UndoHistories histories = new UndoHistories();
@@ -39,7 +39,7 @@ public class Plan {
     @Nullable
     private transient String cloudAccount;
 
-    private Plan() {}
+    Plan() {}
 
     /** A signed-in account's cloud plans, none yet: the account's session fills them. */
     public static Plan cloud(final String accountId) {

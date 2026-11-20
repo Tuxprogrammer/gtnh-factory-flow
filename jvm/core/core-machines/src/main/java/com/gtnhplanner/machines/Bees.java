@@ -5,7 +5,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -55,8 +54,8 @@ public final class Bees {
 
     public static final int FRAME_SLOTS = 3;
 
-    /** Every bee setting, as plans carry them. */
-    public static final Set<String> SETTING_KEYS = Set.of(
+    /** Every bee setting, as plans carry them, in the order the profile lists them. */
+    public static final List<String> SETTING_KEYS = List.of(
         SPEED,
         CLIMATE,
         FRAME + 1,

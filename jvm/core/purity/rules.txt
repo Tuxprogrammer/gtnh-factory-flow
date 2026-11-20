@@ -233,3 +233,19 @@ math-drift member java/lang/Math.scalb(*
 math-drift member java/lang/Math.round(F)*
 math-drift member java/lang/Math.ulp(F)*
 math-drift member java/lang/Math.fma(*
+
+rule hash-order A hash collection whose iteration order can reach an output (a list, a sum of doubles, a first match, a tie-break, an id) gives the web another answer than the JVM: the web compile's HashMap and HashSet iterate in another order than the JDK's, IdentityHashMap goes by object identity, and Set.of, Map.of and the copyOf and Collectors forms iterate in an order the JDK salts at each start. Use core-base's JavaHashMap and JavaHashSet (the JDK's order on every target), a LinkedHashMap or LinkedHashSet where insertion order is what the code means, or a TreeMap. A use that only looks keys up or asks membership, or an empty or one-entry Map.of and Set.of, is fine: it goes in allow.txt with the number of uses and why order cannot reach an output.
+hash-order class java/util/HashMap
+hash-order class java/util/HashSet
+hash-order class java/util/IdentityHashMap
+hash-order class java/util/Hashtable
+hash-order member java/util/Map.of(*
+hash-order member java/util/Map.ofEntries(*
+hash-order member java/util/Map.copyOf(*
+hash-order member java/util/Set.of(*
+hash-order member java/util/Set.copyOf(*
+hash-order member java/util/stream/Collectors.toSet(*
+hash-order member java/util/stream/Collectors.toMap(*
+hash-order member java/util/stream/Collectors.groupingBy(*
+hash-order member java/util/stream/Collectors.toUnmodifiableSet(*
+hash-order member java/util/stream/Collectors.toUnmodifiableMap(*

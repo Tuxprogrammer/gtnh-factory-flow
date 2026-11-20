@@ -1,7 +1,6 @@
 package com.gtnhplanner.data.flowchart;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +8,7 @@ import java.util.TreeMap;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.JavaHashMap;
 import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.core.model.RecipeRef;
 import com.gtnhplanner.core.model.RecipeSource;
@@ -56,7 +56,7 @@ public class Node implements PinRule.Card {
     public transient Object hostRecipe;
 
     public final MachineConfig machineConfig;
-    public final Map<RecipeProperty<?>, Object> properties = new HashMap<>();
+    public final Map<RecipeProperty<?>, Object> properties = new JavaHashMap<>();
 
     private boolean machineCountFixed;
 

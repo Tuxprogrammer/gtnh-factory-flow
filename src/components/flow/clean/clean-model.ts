@@ -1222,6 +1222,16 @@ export function cleanCardView(facts: CleanCardFacts): CleanCardView {
   };
 }
 
+let cardFactsListener: ((facts: CleanCardFacts) => void) | undefined;
+
+/**
+ * Hears every card's facts as `useCleanCardModel` hands them to `cleanCardView`: the recorder of the card shadow's
+ * inputs (tools/audits/card-test-inputs) only; the app never sets it.
+ */
+export function setCardFactsListener(listener: ((facts: CleanCardFacts) => void) | undefined): void {
+  cardFactsListener = listener;
+}
+
 /** Everything the clean card draws and does, from the same inputs as the classic card. */
 export function useCleanCardModel(
   data: RecipeNodeData,
@@ -1331,7 +1341,7 @@ export function useCleanCardModel(
     pinRuleOf(projectNode, recipe) === "exact" ? projectNode.solvePin : undefined,
   ).check;
 
-  const view = cleanCardView({
+  const facts: CleanCardFacts = {
     projectNode,
     recipe,
     result,
@@ -1353,7 +1363,9 @@ export function useCleanCardModel(
     averageDraw,
     selected,
     cardName: (id) => cardNameIn(liveProject, id),
-  });
+  };
+  const view = cleanCardView(facts);
+  cardFactsListener?.(facts);
   const { count, inputs, outputs } = view;
 
   const actions: CleanCardActions = {

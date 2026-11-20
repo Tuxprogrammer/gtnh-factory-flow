@@ -64,3 +64,9 @@ holder, a crop card. Bees, the Extreme Entity Crusher and every other machine ar
   `MinimapBuilder` (the mod's map in the world draws from it): `minimap-conformance.test.ts` holds the website to
   `conformance/view/minimap/cases.json`. A change to those rules changes the website, the core and the file together.
   A tile's label, picture and rate text are the host's own and are not in the cases.
+- The recipe card is one rule with the core's `CardViews` (docs/view-card.md). `card-conformance.test.ts` holds
+  `cleanCardView` to `conformance/view/card/cases.json`; `card-shadow.test.ts` runs the compiled core
+  (`ViewExports`) beside it on those cases and on every card the website's tests and the plan fixtures draw
+  (`conformance/view-inputs/`, recorded by `tools/audits/card-test-inputs/record.mjs`: re-record after a change to
+  what a card's facts hold). `card-input.ts` writes the core's input from a card's facts. No production path calls
+  the core yet. A change to a card rule changes `clean-model.ts`, `CardViews` and the cases together.

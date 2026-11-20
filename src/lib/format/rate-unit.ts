@@ -115,6 +115,10 @@ export function setActivePowerDisplayUnit(unit: PowerDisplayUnit): void {
   powerState.unit = unit;
 }
 
+export function getActivePowerDisplayUnit(): PowerDisplayUnit {
+  return powerState.unit;
+}
+
 /**
  * "amps" is the mod's Amps key: each card quotes its own power in amps of its own machine's tier ("12 A HV"), the way
  * the mod's power row does; everything with no machine of its own (the overview, drawers, wires) stays in EU/t. A tier

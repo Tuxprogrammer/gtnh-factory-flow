@@ -9,7 +9,7 @@ This module compiles the `core-*` modules with TeaVM 0.16 into two targets from 
 
 Each target is built once per load module (see "Load modules").
 
-It compiles `:core-base`, `:core-power`, `:core-layout` and `:core-solver` (the `coreModules` list in `build.gradle.kts`). The TeaVM plugin adds no repository; the module's own
+It compiles `:core-base`, `:core-machines`, `:core-power`, `:core-layout`, `:core-solver`, `:core-model` and `:core-view` (the `coreModules` list in `build.gradle.kts`). The TeaVM plugin adds no repository; the module's own
 `repositories { mavenCentral() }` is for the TeaVM libraries. `:web:build` does not run TeaVM (the mod's
 `build :mod:compatCheck` stays as it was); `:web:webCore` does.
 
@@ -141,7 +141,7 @@ read by `build.gradle.kts` and by `tools/web-core/modules.mjs`:
 
 | Module | Main class | Exports | Holds |
 |---|---|---|---|
-| `core` | `WebCore` | every `<Module>Exports` class not named below | base, formats, machines, power, layout |
+| `core` | `WebCore` | every `<Module>Exports` class not named below | base, formats, machines, power, layout, the recipe card (view) |
 | `solver` | `WebSolver` | `SolverExports`, `SolverJavaExports` | the solver and ojAlgo (`SolverJavaExports`: the conformance run's arithmetic probes) |
 
 Exactly one module takes `*`, so a new `<Module>Exports` class joins the card side without an edit here. All modules share
@@ -154,26 +154,22 @@ its area needs. The solver module is meant to load inside the solve Worker. `Exp
 run (`build/module-<name>` checks) hold each module to the exports `modules.txt` assigns it; `webCoreExportVersion` is
 checked per module.
 
-### core-model and core-view are not in the build
+### core-model and core-view in the build
 
-Neither module is on the web build's classpath: no export reaches them, and TeaVM drops what no export reaches, so
-listing them would change no byte. They compile for the web: a probe export that called the card (`CardViews.card`), rail,
-drawer, group, minimap and note-look builders compiled on both targets with the override checks passing. What a first
-view export would add (raw, gzip -9):
+`:core-model` and `:core-view` are in `coreModules`, inside the `core` module: `ViewExports` reaches the recipe card's
+rules (`CardViews`, `CardGeometry`, the reflection-free reader `CardInputJson`) and what they read of the plan model
+(`PinRule`, the Up to records). TeaVM keeps only what an export reaches, so the rail, drawer, group, minimap and note
+builders add nothing until an export calls them. The card added (raw, gzip -9) `core.wasm` 1,825,174 / 477,302 to
+1,891,920 / 502,657 (+67 KB, +25 KB gz) and `core.js` 1,806,182 / 432,108 to 1,861,898 / 451,215 (+56 KB, +19 KB gz);
+the solver module is unchanged. The card side draws the board with layout and power, so it stays in `core`; the plan
+codec also runs where there is no board (the live service, the server's plan routes), so it likely wants a module of
+its own: measure it then.
 
-| Where it goes | Added | Both targets |
-|---|---|---|
-| inside `core` (the one `coreModules` line and a `ViewExports` class) | `core.wasm` +74 KB (+26 KB gz), `core.js` +93 KB (+30 KB gz) | one fetch, nothing duplicated |
-| its own module (`modules.txt`: `view WebView ViewExports`) | `view.wasm` 126 KB (50 KB gz), `view.js` 142 KB (52 KB gz) | one more fetch, loaded on first use; carries its own copy of what it reaches in base, machines and power |
-
-The base for both: `core.wasm` 1.83 MB (477 KB gz), `core.js` 1.81 MB (432 KB gz), `solver.wasm` 1.58 MB (565 KB gz),
-`solver.js` 1.03 MB (343 KB gz). Load time in Node (median of nine, a shared box) is within the run-to-run noise either
-way (core 11 to 17 ms, a 126 KB `view.wasm` 2.4 ms); browser numbers belong with the first export that has a caller.
-The streams that could have wanted them were asked: `machines` calls only `MachinesExports` in `core`, and `model`'s
-codec has no caller on the website yet (later it is string-in, string-out plan JSON and `Canon.sum`). The first stream
-with a caller adds the line, an exports class and its row in `boundaries.md`. The card, rail and drawer builders draw
-the board with layout and power, so they go inside `core`. The plan codec also runs where there is no board (the live
-service, the server's plan routes), so it likely wants a module of its own: measure it then.
+`ViewExports`: `viewCardWords(json)` installs the host's words as core-base `Text` (a key-to-pattern object, `%s`,
+`%n$s`, `%%`); `viewCard(caseJson)` and `viewCardsSix(dialsJson, cardsJson)` measure text six px a character (the shared
+cases); `viewCardMeasured(caseJson, measure)` and `viewCards(dialsJson, cardsJson, measure)` call
+`measure.width(style, text)` back for each width (`TextStyle` names). Each card answers `{"view", "geometry"}`.
+`tools/web-core/view.mjs` runs the shared card cases on both targets in the conformance run.
 
 ## Compiler options
 

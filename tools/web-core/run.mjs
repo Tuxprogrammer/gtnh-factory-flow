@@ -20,6 +20,7 @@ import { runMachines } from "./machines.mjs";
 import { SAMPLE_EVERY } from "./sample.mjs";
 import { jsSample, runSolver } from "./solver.mjs";
 import { runLayout, runPower } from "./goldens.mjs";
+import { runView } from "./view.mjs";
 import { checkJvmAgainstNode, readCases, runRandom } from "./random.mjs";
 import { loadVectors, runBuildProbes, runVectors, vectorFile } from "./vectors.mjs";
 
@@ -81,6 +82,7 @@ for (const target of opts.targets) {
     runMachines(api, tally, { every });
     runPower(api, tally);
     runLayout(api, tally, { every });
+    runView(api, tally);
   }
   const select = opts.solverOnly ? (all) => all.filter((c) => opts.solverOnly.some((n) => c.name.includes(n))) : opts.full || target === "wasm" ? undefined : jsSample;
   solverRows[target] = runSolver(api, tally, { bench: opts.bench, jvmDir: opts.solverJvm, runs: opts.solverRuns, select });

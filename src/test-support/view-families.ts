@@ -9,6 +9,7 @@ import { viewFiles as groupFiles } from "@/components/flow/clean/group/group-con
 import { viewFiles as minimapFiles } from "@/components/flow/clean/minimap/minimap-conformance";
 import { viewFiles as noteFiles } from "@/components/flow/clean/note/note-conformance";
 import { viewFiles as railFiles } from "@/components/flow/clean/rail/rail-conformance";
+import { viewFiles as railsFiles } from "@/components/flow/clean/rails/rails-conformance";
 
 export const VIEW_FAMILIES: Array<() => Record<string, string>> = [
   railFiles,
@@ -17,6 +18,7 @@ export const VIEW_FAMILIES: Array<() => Record<string, string>> = [
   noteFiles,
   minimapFiles,
   cardFiles,
+  railsFiles,
 ];
 
 /** Every file the families make now, by path; a path made twice is an error. */

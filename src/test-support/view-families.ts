@@ -9,6 +9,7 @@ import { viewFiles as groupFiles } from "@/components/flow/clean/group/group-con
 import { viewFiles as minimapFiles } from "@/components/flow/clean/minimap/minimap-conformance";
 import { viewFiles as noteFiles } from "@/components/flow/clean/note/note-conformance";
 import { viewFiles as railFiles } from "@/components/flow/clean/rail/rail-conformance";
+import { viewFiles as railsFiles } from "@/components/flow/clean/rails/rails-conformance";
 import { viewFiles as specialFiles } from "@/components/flow/clean/special/special-conformance";
 
 export const VIEW_FAMILIES: Array<() => Record<string, string>> = [
@@ -18,6 +19,7 @@ export const VIEW_FAMILIES: Array<() => Record<string, string>> = [
   noteFiles,
   minimapFiles,
   cardFiles,
+  railsFiles,
   specialFiles,
 ];
 

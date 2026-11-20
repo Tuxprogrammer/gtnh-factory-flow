@@ -1255,10 +1255,15 @@
       "bytes": 50150,
       "sha256": "22971d9861d228fb888024f62a76afe3653573900fe503ae9cbeedd3ef15ee25"
     },
+    "view/rails/cases.json": {
+      "area": "view",
+      "bytes": 48397,
+      "sha256": "b764514290ce4640684b8f94d2850e4d50d01274715e44e1cdcdcf94cc9ba489"
+    },
     "view/records.json": {
       "area": "view",
-      "bytes": 23724,
-      "sha256": "1ec24a80231a236b6703f2b17e80bfbe3ab02545a477c60e4f111221f100d7e5"
+      "bytes": 26116,
+      "sha256": "8139257065943c9abde0a64609d0baf51d76ca5fbc62ee7cb2e49d00f959dadf"
     },
     "view/special/cases.json": {
       "area": "view",

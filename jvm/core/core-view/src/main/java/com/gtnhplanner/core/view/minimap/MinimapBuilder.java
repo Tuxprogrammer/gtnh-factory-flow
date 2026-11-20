@@ -3,6 +3,7 @@ package com.gtnhplanner.core.view.minimap;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.view.Json;
 import com.gtnhplanner.core.view.note.NoteLookBuilder;
 
@@ -87,7 +88,7 @@ public final class MinimapBuilder {
     /** The count as the map writes it: none or below nothing is 0; whole above 99, else to two places. */
     static double shown(final double v) {
         if (Double.isNaN(v) || Double.isInfinite(v) || v <= 0) return 0;
-        return v >= 100 ? Math.round(v) : Math.round(v * 100) / 100.0;
+        return v >= 100 ? ExactMath.round(v) : ExactMath.round(v * 100) / 100.0;
     }
 
     private static boolean isHex(final String s) {
@@ -113,7 +114,7 @@ public final class MinimapBuilder {
     }
 
     private static int lift(final int c) {
-        return (int) Math.round(c + (255 - c) * 0.2);
+        return (int) ExactMath.round(c + (255 - c) * 0.2);
     }
 
     public static String toJson(final MinimapView v) {

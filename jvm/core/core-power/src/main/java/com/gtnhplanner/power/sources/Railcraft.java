@@ -118,10 +118,10 @@ public final class Railcraft {
     private static final List<Pressure> BOILER_PRESSURES = List
         .of(new Pressure("low", "Low pressure", 16, 500), new Pressure("high", "High pressure", 8, 1000));
 
-    private record Solid(String name, String label, double burnTicks, List<Alternative> alternatives) {}
+    record Solid(String name, String label, double burnTicks, List<Alternative> alternatives) {}
 
     /** Every vanilla wood's item ({@code @32767} is any damage): a firebox burns any log, planks or sapling alike. */
-    private static List<Alternative> anyWood(final String displayName, final String... ids) {
+    static List<Alternative> anyWood(final String displayName, final String... ids) {
         final List<Alternative> out = new ArrayList<>();
         for (final String id : ids) out.add(new Alternative("item", id + "@32767", displayName));
         return out;
@@ -144,6 +144,14 @@ public final class Railcraft {
                 entry.name,
                 "Blaze Rod".equals(entry.name) ? 1000 : entry.euPerItem != null ? entry.euPerItem : 0,
                 List.of()));
+        out.addAll(furnaceFuelExtras());
+        out.sort(Comparator.comparingDouble(Solid::burnTicks));
+        return out;
+    }
+
+    /** The furnace fuels the workbook's GT boiler table lacks, shared with the GT++ Advanced Boiler. */
+    static List<Solid> furnaceFuelExtras() {
+        final List<Solid> out = new ArrayList<>();
         out.add(new Solid("Oak Log", "Log (any wood)", 300, anyWood("Log", "minecraft:log", "minecraft:log2")));
         out.add(new Solid("Oak Planks", "Planks (any wood)", 300, anyWood("Planks", "minecraft:planks")));
         out.add(new Solid("Stick", "Stick", 100, List.of()));
@@ -152,7 +160,6 @@ public final class Railcraft {
         out.add(new Solid("Coal Dust", "Coal Dust", 1600, List.of()));
         out.add(new Solid("Charcoal Dust", "Charcoal Dust", 1600, List.of()));
         out.add(new Solid("Lignite Coal Dust", "Lignite Coal Dust", 1200, List.of()));
-        out.sort(Comparator.comparingDouble(Solid::burnTicks));
         return out;
     }
 

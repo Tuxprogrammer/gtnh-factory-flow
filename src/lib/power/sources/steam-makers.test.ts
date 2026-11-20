@@ -227,6 +227,44 @@ describe("singleblock boilers (MTEBoiler)", () => {
     }
   });
 
+  it("burns wood and coal dusts in the Advanced Boiler at their furnace values", () => {
+    // MTEAdvancedBoilerBase.getBurnTime is GameRegistry.getFuelValue, else TileEntityFurnace.getItemBurnTime: a wooden
+    // block 300, a stick, sapling or wood pulp 100, coal dust 1600. Seconds per item (floor(bt/10)/2 + floor(bt/500))
+    // x 41/20; a blaze rod keeps vanilla's 2400 here.
+    const seconds: Array<[string, number]> = [
+      ["Oak Log", 30.75],
+      ["Oak Planks", 30.75],
+      ["Stick", 10.25],
+      ["Oak Sapling", 10.25],
+      ["Wood Pulp", 10.25],
+      ["Coal Dust", 170.15],
+      ["Lignite Coal Dust", 127.1],
+      ["Blaze Rod", 254.2],
+    ];
+    for (const [name, expected] of seconds) {
+      const model = compute("advanced-boiler", { solidFuel: name });
+      expect(model.inputs[0].name).toBe(name);
+      expect(model.inputs[0].perSecond).toBeCloseTo(1 / expected, 12);
+    }
+    expect(compute("advanced-boiler", { solidFuel: "Oak Log" }).inputs[0].alternatives).toEqual([
+      { kind: "item", id: "minecraft:log@32767", displayName: "Log" },
+      { kind: "item", id: "minecraft:log2@32767", displayName: "Log" },
+    ]);
+    expect(
+      compute("advanced-boiler", { solidFuel: "Coal" }).inputs[0].alternatives,
+    ).toBeUndefined();
+    expect(optionKeys("advanced-boiler", "solidFuel")).toEqual(
+      expect.arrayContaining([
+        "Oak Log",
+        "Oak Planks",
+        "Stick",
+        "Oak Sapling",
+        "Wood Pulp",
+        "Coal Dust",
+      ]),
+    );
+  });
+
   it("leaves one obsidian per 1000 L of lava", () => {
     const model = compute("lava-boiler");
     expect(flow(model, "Obsidian")).toBeCloseTo(flow(model, "Lava")! / 1000, 12);

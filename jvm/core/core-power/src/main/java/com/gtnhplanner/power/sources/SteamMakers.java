@@ -3,6 +3,7 @@ package com.gtnhplanner.power.sources;
 import static com.gtnhplanner.power.sources.Helpers.*;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -235,8 +236,23 @@ public final class SteamMakers {
         new AdvancedBoilerTier("MV", "Advanced Boiler [MV] (1,500 L/s)", 2),
         new AdvancedBoilerTier("HV", "Advanced Boiler [HV] (2,250 L/s)", 3));
 
+    /**
+     * Every item with a furnace burn time: the workbook's table at its own values (a blaze rod is 2400 here,
+     * Railcraft's 1000 applies only to its firebox) and the wood and dust fuels it lacks.
+     */
+    private static List<Railcraft.Solid> advancedBoilerFuels() {
+        final List<Railcraft.Solid> out = new ArrayList<>();
+        for (final Fuel entry : PowerData.get().boilerFuels.get("bronzeSolid")) out.add(
+            new Railcraft.Solid(entry.name, entry.name, entry.euPerItem != null ? entry.euPerItem : 0, List.of()));
+        out.addAll(Railcraft.furnaceFuelExtras());
+        out.sort(Comparator.comparingDouble(Railcraft.Solid::burnTicks));
+        return out;
+    }
+
     private static PowerSource advancedBoiler() {
-        final List<Fuel> bronzeSolid = PowerData.get().boilerFuels.get("bronzeSolid");
+        final List<Railcraft.Solid> fuels = advancedBoilerFuels();
+        final List<Option> fuelOptions = new ArrayList<>();
+        for (final Railcraft.Solid row : fuels) fuelOptions.add(new Option(row.name(), row.label()));
         final List<Option> tiers = new ArrayList<>();
         for (final AdvancedBoilerTier row : ADVANCED_BOILER_TIERS) tiers.add(new Option(row.key(), row.label()));
         return new PowerSource(
@@ -247,7 +263,7 @@ public final class SteamMakers {
             "GT++ boilers: up to 2,250 L/s, safe and automatable.",
             List.of(
                 new PowerSetting.Select("tier", "Boiler", tiers, "LV"),
-                new PowerSetting.Select("solidFuel", "Fuel", nameOptions(bronzeSolid), "Coal"),
+                new PowerSetting.Select("solidFuel", "Fuel", fuelOptions, "Coal"),
                 new PowerSetting.Select("waterKind", "Water supply", WATER_KINDS, "Water")),
             read -> {
                 AdvancedBoilerTier entry = ADVANCED_BOILER_TIERS.get(0);
@@ -259,12 +275,15 @@ public final class SteamMakers {
                     }
                 }
                 final double steamPerSecond = 750 * entry.tier();
-                final Fuel fuel = PowerData.findFuel(bronzeSolid, read.select("solidFuel"));
-                final double secondsPerItem = advancedBoilerSecondsPerItem(fuel.euPerItem != null ? fuel.euPerItem : 0);
+                Railcraft.Solid fuel = fuels.get(0);
+                for (final Railcraft.Solid row : fuels) if (row.name()
+                    .equals(read.select("solidFuel"))) fuel = row;
+                final double secondsPerItem = advancedBoilerSecondsPerItem(fuel.burnTicks());
                 return new PowerModel(
                     0,
                     List.of(
-                        items(fuel.name, secondsPerItem > 0 ? 1 / secondsPerItem : 0),
+                        items(fuel.name(), secondsPerItem > 0 ? 1 / secondsPerItem : 0)
+                            .withAlternatives(fuel.alternatives()),
                         liters(read.select("waterKind"), steamPerSecond / 160)),
                     List.of(liters("Steam", steamPerSecond)),
                     List.of(

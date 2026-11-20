@@ -8,7 +8,7 @@
 import { findFuel, powerPlannerData, type PowerFuelEntry } from "../planner-data";
 import type { PowerModel, PowerSourceDefinition, PowerSetting } from "../types";
 import { formatAmount, items, liters, stat } from "./helpers";
-import { railcraftSteamSources } from "./railcraft";
+import { FURNACE_FUEL_EXTRAS, railcraftSteamSources, type FurnaceFuel } from "./railcraft";
 
 interface BoilerSpec {
   id: string;
@@ -254,6 +254,18 @@ const ADVANCED_BOILER_TIERS = [
   { key: "HV", label: "Advanced Boiler [HV] (2,250 L/s)", tier: 3 },
 ];
 
+/**
+ * Every item with a furnace burn time: the workbook's table at its own values (a blaze rod is 2400 here, Railcraft's
+ * 1000 applies only to its firebox) and the wood and dust fuels it lacks.
+ */
+const ADVANCED_BOILER_FUELS: FurnaceFuel[] = [
+  ...powerPlannerData.boilerFuels.bronzeSolid.map((entry: PowerFuelEntry) => ({
+    name: entry.name,
+    burnTicks: entry.euPerItem ?? 0,
+  })),
+  ...FURNACE_FUEL_EXTRAS,
+].sort((a, b) => a.burnTicks - b.burnTicks);
+
 const advancedBoiler: PowerSourceDefinition = {
   id: "advanced-boiler",
   name: "Advanced Boiler",
@@ -272,9 +284,9 @@ const advancedBoiler: PowerSourceDefinition = {
       type: "select",
       id: "solidFuel",
       label: "Fuel",
-      options: powerPlannerData.boilerFuels.bronzeSolid.map((entry) => ({
-        key: entry.name,
-        label: entry.name,
+      options: ADVANCED_BOILER_FUELS.map(({ name, label }) => ({
+        key: name,
+        label: label ?? name,
       })),
       defaultKey: "Coal",
     },
@@ -290,12 +302,17 @@ const advancedBoiler: PowerSourceDefinition = {
     const entry =
       ADVANCED_BOILER_TIERS.find((row) => row.key === read.select("tier")) ?? ADVANCED_BOILER_TIERS[0];
     const steamPerSecond = 750 * entry.tier;
-    const fuel = findFuel(powerPlannerData.boilerFuels.bronzeSolid, read.select("solidFuel"));
-    const secondsPerItem = advancedBoilerSecondsPerItem(fuel.euPerItem ?? 0);
+    const fuel =
+      ADVANCED_BOILER_FUELS.find((row) => row.name === read.select("solidFuel")) ??
+      ADVANCED_BOILER_FUELS[0];
+    const secondsPerItem = advancedBoilerSecondsPerItem(fuel.burnTicks);
     return {
       euPerTick: 0,
       inputs: [
-        items(fuel.name, secondsPerItem > 0 ? 1 / secondsPerItem : 0),
+        {
+          ...items(fuel.name, secondsPerItem > 0 ? 1 / secondsPerItem : 0),
+          ...(fuel.alternatives ? { alternatives: fuel.alternatives } : {}),
+        },
         liters(read.select("waterKind"), steamPerSecond / 160),
       ],
       outputs: [liters("Steam", steamPerSecond)],

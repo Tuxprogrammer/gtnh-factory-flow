@@ -224,10 +224,8 @@ class PowerSheetSteamTurbinesTest {
         assertEquals(PowerModel.Unit.ITEM, input(model, 0).unit());
         assertEquals(1.0 / 368, input(model, 0).perSecond(), 0.5e-12);
         assertEquals(liters("Water", 120.0 / 160), input(model, 1));
-        assertTrue(
-            model.warnings()
-                .stream()
-                .anyMatch(line -> line.contains("by hand")));
+        // MTEBoiler.allowPutStack takes fuel from hoppers and pipes even with automation off.
+        assertEquals(List.of(), model.warnings());
     }
 
     @Test

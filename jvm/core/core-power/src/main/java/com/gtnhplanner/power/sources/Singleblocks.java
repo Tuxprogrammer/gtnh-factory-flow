@@ -64,6 +64,8 @@ public final class Singleblocks {
         /** The table's EU per L over the machine's own fuel map value. */
         @Nullable
         Double fuelValueDivisor;
+        /** EU it stores above its 512 floor, in amps of V (maxEUStore); 80 unless the class overrides it. */
+        double bufferAmps = 80;
         /** Items getEmptyContainer hands back per item burned. */
         Map<String, Byproduct> byproducts = Map.of();
         /**
@@ -103,6 +105,11 @@ public final class Singleblocks {
 
         Spec capacity(final DoubleUnaryOperator litersAtGtTier) {
             this.capacity = litersAtGtTier;
+            return this;
+        }
+
+        Spec bufferAmps(final double amps) {
+            this.bufferAmps = amps;
             return this;
         }
 
@@ -181,6 +188,8 @@ public final class Singleblocks {
                 .fuels(data.rocketFuels)
                 // MTERocketFuelGeneratorBase.getCapacity()
                 .capacity(gtTier -> 32_000)
+                // MTERocketFuelGeneratorBase.maxEUStore: V x 500.
+                .bufferAmps(500)
                 // The table carries the Large Rocket Engine's figures, which triple the fuel map value
                 // (MTELargeRocketEngine); MTERocketFuelGenerator burns the map value itself
                 // (RecipeLoaderRocketFuels: 512 for RP-1).
@@ -289,6 +298,11 @@ public final class Singleblocks {
      */
     private static PowerModel fluidModel(final String fuelName, final double voltage, final double ampLoss,
         final double euPerLiter, final double tankLiters, final List<Stat> stats) {
+        return fluidModel(fuelName, voltage, ampLoss, euPerLiter, tankLiters, stats, Double.POSITIVE_INFINITY);
+    }
+
+    private static PowerModel fluidModel(final String fuelName, final double voltage, final double ampLoss,
+        final double euPerLiter, final double tankLiters, final List<Stat> stats, final double bufferEu) {
         if (!(euPerLiter > 0)) {
             return new PowerModel(
                 0,
@@ -300,11 +314,20 @@ public final class Singleblocks {
         final double packet = voltage + ampLoss;
         final double litersPerBurn = (packet * 10) / euPerLiter;
         if (litersPerBurn <= tankLiters) {
+            // MTEBasicGenerator.onPostTick burns whole litres only into free buffer room, which never reaches one
+            // litre's worth; filled cells skip that check.
             return new PowerModel(
                 voltage,
                 List.of(liters(fuelName, litersPerBurn * BURNS_PER_SECOND)),
                 List.of(),
-                stats);
+                stats,
+                euPerLiter > bufferEu
+                    ? List.of(
+                        "Piped fuel never burns: 1 L makes " + eu(euPerLiter)
+                            + " EU, more than the "
+                            + eu(bufferEu)
+                            + " EU it can store. It runs on cells.")
+                    : List.of());
         }
         final double euPerTick = ((tankLiters * euPerLiter) / 10) * (voltage / packet);
         return new PowerModel(
@@ -456,7 +479,8 @@ public final class Singleblocks {
             ampLoss,
             euPerLiter,
             tankLiters,
-            List.of(efficiencyStat, stat("EU per L", formatAmount(euPerLiter))));
+            List.of(efficiencyStat, stat("EU per L", formatAmount(euPerLiter))),
+            voltage * spec.bufferAmps);
     }
 
     /** One RTG pellet, with its run worked out once. */

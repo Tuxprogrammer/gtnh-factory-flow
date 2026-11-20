@@ -129,9 +129,13 @@ public final class Endgame {
         final List<PowerData.FusionRecipe> recipes = PowerData.get().fusionRecipes;
         final List<String> marks = compact ? List.of("MK-I", "MK-II", "MK-III", "MK-IV", "MK-V")
             : List.of("Mk-I", "Mk-II", "Mk-III", "Mk-IV", "Mk-V");
+        final List<PowerData.FusionRecipe> offered = fusionPlasmas(recipes);
         final List<Option> plasmas = new ArrayList<>();
-        for (final PowerData.FusionRecipe entry : recipes) {
-            if (entry.euPerLiter > 0) plasmas.add(new Option(entry.name, entry.name));
+        for (int index = 0; index < offered.size(); index++) {
+            final PowerData.FusionRecipe entry = offered.get(index);
+            int sameProduct = 0;
+            for (final PowerData.FusionRecipe other : offered) if (other.name.equals(entry.name)) sameProduct++;
+            plasmas.add(new Option(fusionKey(offered, index), sameProduct > 1 ? fusionInputs(entry) : entry.name));
         }
         final List<Option> markOptions = new ArrayList<>();
         for (int index = 0; index < marks.size(); index++) {
@@ -148,7 +152,11 @@ public final class Endgame {
                 new PowerSetting.Select("mark", "Mark", markOptions, "1")),
             read -> {
                 final String recipeName = read.select("recipe");
-                final PowerData.FusionRecipe found = find(recipes, entry -> entry.name.equals(recipeName));
+                PowerData.FusionRecipe found = null;
+                for (int index = 0; index < offered.size() && found == null; index++) {
+                    if (fusionKey(offered, index).equals(recipeName)) found = offered.get(index);
+                }
+                if (found == null) found = find(recipes, entry -> entry.name.equals(recipeName));
                 final PowerData.FusionRecipe recipe = found != null ? found : recipes.get(0);
                 final double markIndex = toNumber(read.select("mark")) - 1;
                 final double output = at(compact ? recipe.compactOutputLpsByMark : recipe.outputLpsByMark, markIndex);
@@ -173,6 +181,27 @@ public final class Endgame {
                         stat("Startup", formatAmount(recipe.startupEu) + " EU")),
                     belowMark ? List.of(recipe.name + " needs at least mark " + js(recipe.minMark) + ".") : List.of());
             });
+    }
+
+    /** The fusion recipes the card offers: those whose product is a plasma with a fuel value. */
+    private static List<PowerData.FusionRecipe> fusionPlasmas(final List<PowerData.FusionRecipe> recipes) {
+        final List<PowerData.FusionRecipe> offered = new ArrayList<>();
+        for (final PowerData.FusionRecipe entry : recipes) if (entry.euPerLiter > 0) offered.add(entry);
+        return offered;
+    }
+
+    private static String fusionInputs(final PowerData.FusionRecipe entry) {
+        return entry.name + " (" + entry.input1 + " + " + entry.input2 + ")";
+    }
+
+    /**
+     * A recipe's option key is its product, as shipped plans store it; a later recipe for the same product (Helium
+     * Plasma from Deuterium and Tritium) adds its inputs, or it could never be picked.
+     */
+    private static String fusionKey(final List<PowerData.FusionRecipe> offered, final int index) {
+        final PowerData.FusionRecipe entry = offered.get(index);
+        for (int at = 0; at < index; at++) if (offered.get(at).name.equals(entry.name)) return fusionInputs(entry);
+        return entry.name;
     }
 
     /** {@code ladder[index] ?? 0}: an index off the ladder, or a gap in it, reads as 0. */

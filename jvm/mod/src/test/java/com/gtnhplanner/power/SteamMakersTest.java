@@ -8,6 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -66,17 +68,25 @@ class SteamMakersTest {
 
     @Test
     void thermalBoilerTurnsLavaIntoPlainSteamAndPahoehoe() {
-        // turns 1000 L/s of lava into 16,000 L/s of plain Steam and pahoehoe lava
+        // turns 1000 L/s of lava into 16,000 L/s of plain Steam, pahoehoe lava and obsidian (the 10% chance per
+        // 1000 L that MTEThermalBoiler keeps without a Lava Filter)
         final PowerModel model = compute("thermal-boiler", Map.of("fluid", "Lava", "intake", "1000"));
-        assertEquals(List.of(liters("Steam", 16_000), liters("Pahoehoe Lava", 1000)), model.outputs());
+        assertEquals(
+            List.of(
+                liters("Steam", 16_000),
+                liters("Pahoehoe Lava", 1000),
+                new Flow("Obsidian", 0.1, PowerModel.Unit.ITEM)),
+            model.outputs());
         assertEquals(100, flow(model, "Water"), 0);
     }
 
     @Test
     void thermalBoilerTurnsPahoehoeIntoPlainSteam() {
-        // turns pahoehoe lava into plain Steam at the same 16 per L
+        // turns pahoehoe lava into plain Steam at the same 16 per L, and obsidian at 37%
         final PowerModel model = compute("thermal-boiler", Map.of("fluid", "Pahoehoe Lava", "intake", "1000"));
-        assertEquals(List.of(liters("Steam", 16_000)), model.outputs());
+        assertEquals(
+            List.of(liters("Steam", 16_000), new Flow("Obsidian", 0.37, PowerModel.Unit.ITEM)),
+            model.outputs());
     }
 
     @Test
@@ -135,6 +145,16 @@ class SteamMakersTest {
     }
 
     @Test
+    void lheThresholdIsWholeLitres() {
+        // MTEHeatExchanger's int field: lava on circuit 2 is 1000 - 37.5 = 962.5, kept as 962, so the cap is 1924.
+        final PowerModel model = compute(
+            "large-heat-exchanger",
+            Map.of("fluid", "Lava", "intake", "2000", "tier", "2"));
+        assertEquals(1924, flow(model, "Lava"), 0);
+        assertEquals("962 L/s", model.stat("Threshold"));
+    }
+
+    @Test
     void lheThresholdLowersToCircuitTwentyFive() {
         // lowers the LHE threshold down to circuit 25
         // Hot coolant: 800 - 24 x 30 = 80 L/s, so 100 L/s is over it.
@@ -170,6 +190,22 @@ class SteamMakersTest {
     }
 
     @Test
+    void eheSteamIsWholeLotsOfOneHundredSixty() {
+        // Hot coolant at circuit 2: (int) (1,280,000 x 0.985 x 8,000 / 128,000) = 78,800 a tick, so 492 lots of
+        // 160 L: 78,720 L/t of SC steam, 1,574,400 L/s, not 1,576,000.
+        final PowerModel model = compute(
+            "extreme-heat-exchanger",
+            Map.of("fluid", "Hot Coolant", "intake", "8000", "tier", "2"));
+        assertEquals(
+            "SC Steam",
+            model.outputs()
+                .get(0)
+                .name());
+        assertEquals(1_574_400, flow(model, "SC Steam"), 0);
+        assertEquals(9840, flow(model, "Distilled Water"), 0);
+    }
+
+    @Test
     void whakawhitiCapsAtTwiceLoweredThreshold() {
         // caps the Whakawhiti Wera XL at twice its lowered threshold
         // Lava at circuit 10: threshold 32,000 - 9 x 1,200 = 21,200, so at most 42,400 L/s.
@@ -197,11 +233,11 @@ class SteamMakersTest {
     @Test
     void steamStatAtDecimalTieMatchesWebsite() {
         // Not in steam-makers.test.ts: a value the website shows, where the steam sits on a decimal tie
-        // and Intl rounds it up.
+        // and Intl rounds it up (821.7 x 200 x 0.985 / 20 = 8093.745).
         final PowerModel model = compute(
-            "extreme-heat-exchanger",
-            Map.of("fluid", "Hot Coolant", "intake", "321.7", "tier", "2"));
-        assertEquals("3,168.75 L/t SH Steam", model.stat("Steam"));
+            "large-heat-exchanger",
+            Map.of("fluid", "Hot Coolant", "intake", "821.7", "tier", "2"));
+        assertEquals("8,093.75 L/t SH Steam", model.stat("Steam"));
     }
 
     // ---- large boilers (MTELargeBoilerBase, LargeBoilerFuelBackend)
@@ -227,9 +263,18 @@ class SteamMakersTest {
         }
     }
 
+    /** LargeBoilerFuelBackend.getBurntimeRatioTicks(ticks, 20), as the game writes it. */
+    private static double ratioTicks(final double ticks) {
+        final double seconds = ticks / 20;
+        return new BigDecimal(seconds * Math.max(1, 1 + Math.log(seconds / 10) * 0.025))
+            .setScale(2, RoundingMode.HALF_UP)
+            .multiply(new BigDecimal(20))
+            .intValue();
+    }
+
     @Test
     void solidBurnsFuelValueOverEightyTimesRuntimeBoost() {
-        // burns a solid for fuel value / 80 ticks times the tier's runtimeBoost
+        // burns a solid for fuel value / 80 ticks, log bonus, times the tier's runtimeBoost
         final Map<String, DoubleUnaryOperator> boost = new LinkedHashMap<>();
         boost.put("bronzeSolid", ticks -> ticks * 2);
         boost.put("steelSolid", ticks -> ticks);
@@ -242,7 +287,7 @@ class SteamMakersTest {
                 final double euPerItem = row.euPerItem != null ? row.euPerItem : 0;
                 assertEquals(
                     entry.getValue()
-                        .applyAsDouble(trunc(euPerItem / 80)) / 20,
+                        .applyAsDouble(ratioTicks(trunc(euPerItem / 80))) / 20,
                     row.burnTime,
                     0.5e-9,
                     row.name);
@@ -252,19 +297,19 @@ class SteamMakersTest {
 
     @Test
     void solidSuperFuelBurnTimes() {
-        // burns Solid Super Fuel for 125s in bronze and 18.75s in titanium
+        // burns Solid Super Fuel for 130.7s in bronze and 19.6s in titanium
         final PowerModel bronze = compute(
             "large-bronze-boiler",
             Map.of("liquidFuel", "None", "solidFuel", "Solid Super Fuel"));
-        assertEquals(1.0 / 125, flow(bronze, "Solid Super Fuel"), 0.5e-12);
+        assertEquals(1 / 130.7, flow(bronze, "Solid Super Fuel"), 0.5e-12);
         final PowerModel titanium = compute(
             "large-titanium-boiler",
             Map.of("liquidFuel", "None", "solidFuel", "Solid Super Fuel"));
-        assertEquals(1 / 18.75, flow(titanium, "Solid Super Fuel"), 0.5e-12);
+        assertEquals(1 / 19.6, flow(titanium, "Solid Super Fuel"), 0.5e-12);
         final PowerModel steel = compute(
             "large-steel-boiler",
             Map.of("liquidFuel", "None", "solidFuel", "Block of Diamond"));
-        assertEquals(1.0 / 640, flow(steel, "Block of Diamond"), 0.5e-12);
+        assertEquals(1 / 706.5, flow(steel, "Block of Diamond"), 0.5e-12);
     }
 
     // ---- singleblock boilers (MTEBoiler)

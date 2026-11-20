@@ -158,14 +158,14 @@ public final class SteamMakers {
      *
      * @param energyPerSecond energyConsumption x 20 / (cooldownInterval + 1), from the machine's class.
      */
-    private record SmallBoilerSpec(String id, String name, String unlock, double steamPerSecond, double energyPerSecond,
-        boolean automatable) {}
+    private record SmallBoilerSpec(String id, String name, String unlock, double steamPerSecond,
+        double energyPerSecond) {}
 
     private static final List<SmallBoilerSpec> SMALL_BOILER_SPECS = List.of(
         // MTEBoilerBronze: 120 L/s, consumption 1, cooldown interval 45.
-        new SmallBoilerSpec("small-coal-boiler", "Small Coal Boiler", "ULV", 120, 20.0 / 46, false),
+        new SmallBoilerSpec("small-coal-boiler", "Small Coal Boiler", "ULV", 120, 20.0 / 46),
         // MTEBoilerSteel, in-game name "Large Coal Boiler": 300 L/s, consumption 2, interval 40.
-        new SmallBoilerSpec("large-coal-boiler", "Large Coal Boiler", "LV", 300, 40.0 / 41, false));
+        new SmallBoilerSpec("large-coal-boiler", "Large Coal Boiler", "LV", 300, 40.0 / 41));
 
     private static final Pattern ASH_FUELS = Pattern
         .compile("coal|lignite|charcoal|coke|diamond", Pattern.CASE_INSENSITIVE);
@@ -204,10 +204,8 @@ public final class SteamMakers {
                 // euPerItem in the solid table IS the furnace burn time in ticks.
                 final double energyPerItem = (fuel.euPerItem != null ? fuel.euPerItem : 0) / 10;
                 final double secondsPerItem = energyPerItem / spec.energyPerSecond();
-                final List<String> warnings = new ArrayList<>();
-                if (!spec.automatable()) {
-                    warnings.add("GTNH turns small boiler automation off. Fuel goes in by hand.");
-                }
+                // GTNH's allowSmallBoilerAutomation=false locks only the bucket and cell slots: MTEBoiler.allowPutStack
+                // lets hoppers and pipes fill the fuel slot either way.
                 return new PowerModel(
                     0,
                     List.of(
@@ -216,8 +214,7 @@ public final class SteamMakers {
                     List.of(liters("Steam", spec.steamPerSecond())),
                     List.of(
                         stat("Steam", formatAmount(spec.steamPerSecond() / 20) + " L/t"),
-                        stat("One item burns", formatAmount(secondsPerItem) + "s")),
-                    warnings);
+                        stat("One item burns", formatAmount(secondsPerItem) + "s")));
             });
     }
 
@@ -390,6 +387,12 @@ public final class SteamMakers {
     /** RecipesGregTech.thermalBoilerRecipes: lava makes plain Steam, the rest superheated. */
     private static final Set<String> THERMAL_BOILER_PLAIN_STEAM = Set.of("Lava", "Pahoehoe Lava");
 
+    /**
+     * Obsidian per 1000 L in RecipesGregTech.thermalBoilerRecipes (outputChances 1000 and 3700 of 10,000).
+     * MTEThermalBoiler keeps it without a Lava Filter and voids the recipes' other items.
+     */
+    private static final Map<String, Double> THERMAL_BOILER_OBSIDIAN = Map.of("Lava", 0.1, "Pahoehoe Lava", 0.37);
+
     /** Names as the resource map keys them (the workbook's own spellings). */
     private static final Map<String, String> COLD_RETURN = Map
         .of("Lava", "Pahoehoe Lava", "Hot Coolant", "Coolant", "Hot Solar Salt", "Cold Solar Salt");
@@ -448,13 +451,19 @@ public final class SteamMakers {
                 final double tier = isThermalBoiler ? 1 : read.number("tier");
                 final double intake = read.number("intake");
                 final double lowered = rule.threshold + (tier - 1) * rule.throttle;
-                final double threshold = isExtreme ? Math.max(1, lowered) : lowered;
+                // MTEHeatExchanger keeps the threshold in an int field (superheated_threshold *= the coolant's
+                // multiplier truncates), so lava on an even circuit loses its half litre. It is never negative here.
+                final double threshold = isExtreme ? Math.max(1, lowered) : Math.floor(lowered);
                 final double cap = capAtMax ? rule.max : threshold * 2;
                 final double used = Math.min(intake, cap);
                 final boolean overThreshold = used >= threshold;
                 final double ratio = overThreshold ? rule.overRatio : rule.underRatio;
                 final double efficiency = isThermalBoiler ? 1 : 1 - 0.015 * (tier - 1);
-                final double steamPerSecond = used * ratio * efficiency;
+                // MTEExtremeHeatExchanger: mEUt = (int) (recipe EU/t x efficiency x used / max), and each tick turns
+                // whole 160 L lots of water into steam, so the steam is rounded down to 160 L a tick.
+                final double steamPerSecond = isExtreme
+                    ? Math.floor(Math.floor(((rule.max * ratio) / 20) * efficiency * (used / rule.max)) / 160) * 160 * 20
+                    : used * ratio * efficiency;
                 final String grade = isThermalBoiler
                     ? THERMAL_BOILER_PLAIN_STEAM.contains(fluidName) ? "Steam" : "SH Steam"
                     : isExtreme ? overThreshold ? "SC Steam" : "SH Steam" : overThreshold ? "SH Steam" : "Steam";
@@ -464,6 +473,10 @@ public final class SteamMakers {
                 final String coldReturn = COLD_RETURN.get(fluidName);
                 if (coldReturn != null) {
                     outputs.add(liters(coldReturn, used));
+                }
+                final Double obsidian = isThermalBoiler ? THERMAL_BOILER_OBSIDIAN.get(fluidName) : null;
+                if (obsidian != null) {
+                    outputs.add(items("Obsidian", (used / 1000) * obsidian));
                 }
                 final String waterName = isThermalBoiler ? read.select("waterKind") : "Distilled Water";
                 return new PowerModel(

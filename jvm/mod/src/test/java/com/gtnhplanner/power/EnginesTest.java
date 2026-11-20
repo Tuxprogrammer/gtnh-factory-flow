@@ -93,6 +93,16 @@ class EnginesTest {
     // ---- large rocket engine
 
     @Test
+    void makesNothingBelowTwoThousandEuProduction() {
+        // RP-1 at 20 L/s: 20 x 1536 x 1.05 / 20 = 1,612.8 euProduction, so a gain of 0 a tick.
+        final PowerModel low = compute("large-rocket-engine", settings("fuel", "RP-1 (red)", "throttle", "20"));
+        assertEquals(0, low.euPerTick(), 0);
+        assertEquals(List.of("Too little fuel: the engine never warms up and makes no EU."), low.warnings());
+        final PowerModel enough = compute("large-rocket-engine", settings("fuel", "RP-1 (red)", "throttle", "25"));
+        assertEquals(1.6384 * 2016, enough.euPerTick(), 0.5e-6);
+    }
+
+    @Test
     void burnsOncePer21TicksButSpreadsTheEnergyOver20() {
         // Below the knee: 300 L/s burns 315 L per 21 ticks, P = 1536 x 315 / 20.
         final PowerModel low = compute("large-rocket-engine", settings("fuel", "RP-1 (red)", "throttle", "300"));

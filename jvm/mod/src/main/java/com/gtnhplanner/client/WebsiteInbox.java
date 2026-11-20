@@ -16,6 +16,7 @@ import com.gtnhplanner.importer.FfConverter;
 import com.gtnhplanner.importer.ImportReport;
 import com.gtnhplanner.importer.game.FactoryFlowImport;
 import com.gtnhplanner.library.CommunityApi;
+import com.gtnhplanner.library.SiteConfig;
 import com.gtnhplanner.ui.BoardScreen;
 import com.gtnhplanner.ui.Planner;
 
@@ -43,6 +44,11 @@ public final class WebsiteInbox {
 
     /** Starts listening, on the first free port of the range; logs where, or that every port is taken. */
     public static void start() {
+        // With no website configured there is nothing to receive plans from: no port is opened.
+        if (!SiteConfig.websiteOpens()) {
+            GtnhPlanner.LOG.info("Open in the mod: no website is configured, so it is off");
+            return;
+        }
         final WebsiteListener l = WebsiteListener.start(
             WebsiteListener.FIRST_PORT,
             WebsiteListener.LAST_PORT,

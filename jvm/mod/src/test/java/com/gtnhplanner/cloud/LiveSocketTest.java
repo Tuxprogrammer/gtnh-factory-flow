@@ -63,7 +63,11 @@ class LiveSocketTest {
         final long end = System.nanoTime() + 8_000_000_000L;
         while (System.nanoTime() < end) {
             s.poll(log);
-            if (done.getAsBoolean()) return;
+            if (done.getAsBoolean()) {
+                // Events the socket queued while the condition was read are in the log by the time the caller looks.
+                s.poll(log);
+                return;
+            }
             Thread.sleep(10);
         }
         s.poll(log);
@@ -87,18 +91,26 @@ class LiveSocketTest {
 
         assertTrue(socket.send("{\"t\":\"hello\",\"v\":1}"));
         assertTrue(socket.send("{\"t\":\"leave\",\"doc\":\"d\"}"));
-        await(log, socket, () -> log.frames.size() == 1);
+        // The welcome answers the hello, but the server may not have read the leave behind it yet: wait for both.
+        await(
+            log,
+            socket,
+            () -> log.frames.size() == 1 && server.received.stream()
+                .filter(s -> !s.contains("ping"))
+                .count() == 2);
         assertTrue(
             log.frames.get(0)
                 .contains("welcome"));
-        assertEquals(
-            2,
-            server.received.stream()
-                .filter(s -> !s.contains("ping"))
-                .count());
+        // Pings go on their own timer: the two frames sent are the non-ping ones, in order.
+        final List<String> sent = server.received.stream()
+            .filter(s -> !s.contains("ping"))
+            .toList();
         assertTrue(
-            server.received.get(0)
+            sent.get(0)
                 .contains("hello"));
+        assertTrue(
+            sent.get(1)
+                .contains("leave"));
 
         socket.stop();
         await(log, socket, () -> socket.state() == LiveSocket.State.CLOSED);

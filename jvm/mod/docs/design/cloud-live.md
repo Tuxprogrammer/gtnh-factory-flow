@@ -1,5 +1,7 @@
 # Cloud plans, live co-editing and task boards
 
+> Since this was written the game is `jvm/mod` of the website's repository, and the live service's address and the site's come from the mod's `network` config (empty by default), not from a built-in site; the repository names, staging host and rollout steps below are the original project's history and not this repo's process.
+
 The owner's call (2026-10-14): plans live in the player's account, saved on every edit and the same on every
 device; a plan can be shared with other accounts and edited together live, with everyone's cursor on the board; a
 task board (Jira, kept simple) is just a plan shown as a board. The game and gtnhplanner.com edit the same plans the

@@ -19,22 +19,29 @@ import com.gtnhplanner.core.base.Log;
 import com.gtnhplanner.core.base.Uuid;
 
 /**
- * The player's gtnhplanner.com account in this game: who is signed in and the session the site gave them, kept in
- * the config folder so it lasts as long as the website's own sign-in does (180 days). The password is never kept.
+ * The player's account on the configured site in this game: who is signed in and the session the site gave them, kept
+ * in the config folder so it lasts as long as the website's own sign-in does (180 days). The password is never kept.
+ * A session belongs to the site that gave it: with another site configured, or none, it is not used and not sent.
  * Also this game's device id, which the site asks for with every post.
  */
 public final class Account {
 
-    private static final String SESSION = "session", USERNAME = "username", DEVICE = "device";
+    private static final String SESSION = "session", USERNAME = "username", DEVICE = "device", SITE = "site";
 
     private static Properties props;
 
     private Account() {}
 
-    /** The session the site gave ({@code gtnh_session}), sent with every signed-in call; null when signed out. */
+    /**
+     * The session the site gave ({@code gtnh_session}), sent with every signed-in call; null when signed out, or when
+     * the session came from a site other than the configured one.
+     */
     @Nullable
     public static String token() {
-        return load().getProperty(SESSION);
+        final String t = load().getProperty(SESSION);
+        return t != null && CommunityApi.configured()
+            && CommunityApi.site()
+                .equals(load().getProperty(SITE)) ? t : null;
     }
 
     /**
@@ -78,6 +85,7 @@ public final class Account {
     static void signedIn(final CommunityApi.SignedIn s) {
         load().setProperty(SESSION, s.token());
         load().setProperty(USERNAME, s.username());
+        load().setProperty(SITE, CommunityApi.site());
         save();
         if (changed != null) changed.run();
     }

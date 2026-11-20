@@ -20,6 +20,7 @@ import com.gtnhplanner.client.CrashReports;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.library.CommunityApi;
 import com.gtnhplanner.library.Reports;
+import com.gtnhplanner.library.SiteConfig;
 import com.gtnhplanner.ui.BoardSession;
 import com.gtnhplanner.ui.PlannerScale;
 import com.gtnhplanner.ui.canvas.BoardCanvas;
@@ -31,15 +32,16 @@ import com.gtnhplanner.ui.theme.Icons;
 
 /**
  * The top bar's Feedback, small and friendly: three big faces (how it's going, if you like), what it is (a bug, an
- * idea, or a call for help, which points to the Discord first), one box to write in, and a line saying what goes with
+ * idea, or a call for help, which points to the configured help page first), one box to write in, and a line saying
+ * what goes with
  * it: the open plan and its picture, the end of the game log, and the crash report when there is one. Send makes it an
  * issue on the planner's GitHub repo (the site opens it; no account needed) and gives its link. The issue's title is
  * the first line written.
  */
 public final class FeedbackPanel extends ParentWidget<FeedbackPanel> implements Interactable {
 
-    /** GTNH Planner's thread on the GT New Horizons Discord. */
-    public static final String DISCORD_URL = "https://discord.com/channels/181078474394566657/1531402304530682036";
+    /** The label of the link to the configured help page ({@link SiteConfig#support()}); no page, no link. */
+    private static final String HELP_LINK = "Open help page";
 
     private static final int W = 320, TITLE = 22, PAD = 10;
     private static final int FACE = 14, FACE_SCALE = 2, CHIP_H = 18, KEY_H = 18;
@@ -146,9 +148,13 @@ public final class FeedbackPanel extends ParentWidget<FeedbackPanel> implements 
         return new int[] { x, KINDS_Y, chipW(KINDS[i]), CHIP_H };
     }
 
+    private static boolean hasHelpPage() {
+        return !SiteConfig.support()
+            .isEmpty();
+    }
+
     private int[] discordRect() {
-        final String s = "Open Discord";
-        return new int[] { W - PAD - Hyb.width(s), PROMPT_Y, Hyb.width(s), 9 };
+        return new int[] { W - PAD - Hyb.width(HELP_LINK), PROMPT_Y, Hyb.width(HELP_LINK), 9 };
     }
 
     private int[] sendRect() {
@@ -206,17 +212,17 @@ public final class FeedbackPanel extends ParentWidget<FeedbackPanel> implements 
             kindIcon(i, r[0] + 7, r[1] + 4, picked || hot ? colour : Hyb.mix(colour, CONTROL, 0.75f));
             Hyb.text(KINDS[i], r[0] + 7 + 10 + 5, r[1] + 5, picked || hot ? Hyb.INK : Hyb.MUTED);
         }
-        // What to write, and for help, the Discord first.
+        // What to write, and for help, the help page first when the config names one.
         final String prompt = switch (kind) {
             case BUG -> crash != null ? "What were you doing when it crashed?"
                 : "What happened, and what did you expect?";
             case IDEA -> "What would make the planner better?";
-            case HELP -> "Quick questions do well on the Discord.";
+            case HELP -> hasHelpPage() ? "Quick questions do well on the help page." : "What do you need help with?";
         };
         Hyb.text(prompt, PAD, PROMPT_Y, Hyb.MUTED);
-        if (kind == Reports.Kind.HELP) {
+        if (kind == Reports.Kind.HELP && hasHelpPage()) {
             final int[] d = discordRect();
-            Hyb.text("Open Discord", d[0], d[1], in(d, mx, my) ? 0xFFFFFFFF : DISCORD);
+            Hyb.text(HELP_LINK, d[0], d[1], in(d, mx, my) ? 0xFFFFFFFF : DISCORD);
         }
         Hyb.rect(PAD, AREA_Y, W - 2 * PAD, AREA_H, CardPaint.EDGE);
         Hyb.rect(PAD + 1, AREA_Y + 1, W - 2 * PAD - 2, AREA_H - 2, WELL);
@@ -225,7 +231,11 @@ public final class FeedbackPanel extends ParentWidget<FeedbackPanel> implements 
         for (int i = 0; i < Math.min(2, lines.size()); i++) Hyb.text(lines.get(i), PAD, SENDS_Y + i * 10, 0xFFB8BAC2);
         // Where it goes, and the key.
         Hyb.text(
-            Hyb.fit(error != null ? error : "It becomes a public issue on GitHub.", W - 2 * PAD - 72),
+            Hyb.fit(
+                error != null ? error
+                    : CommunityApi.configured() ? "It becomes a public issue on GitHub."
+                        : "Sending reports is not set up on this install.",
+                W - 2 * PAD - 72),
             PAD,
             KEY_Y + 5,
             error != null ? Hyb.AMBER_INK : 0xFF6A6C74);
@@ -407,9 +417,9 @@ public final class FeedbackPanel extends ParentWidget<FeedbackPanel> implements 
             send();
             return Result.SUCCESS;
         }
-        if (kind == Reports.Kind.HELP && in(discordRect(), mx, my)) {
+        if (kind == Reports.Kind.HELP && hasHelpPage() && in(discordRect(), mx, my)) {
             Hyb.click();
-            browse(DISCORD_URL);
+            browse(SiteConfig.support());
             return Result.SUCCESS;
         }
         for (int i = 0; i < 3; i++) if (in(faceRect(i), mx, my)) {

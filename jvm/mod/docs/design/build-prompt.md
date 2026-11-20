@@ -1,5 +1,7 @@
 # Build prompt: the GTNH Planner rebuild, start to finish
 
+> Written when the mod had its own repository: the commands (now `./gradlew :mod:test` from `jvm/`), the website checkout path and the site address it names are out of date, and the mod now names no remote host (its addresses come from the `network` config, empty by default).
+
 This is a complete brief for an engineer (human, Claude, or any other LLM agent) to build the new GTNH Planner planner
 from this repository. Read all of it before writing code. It is written to be pasted as a prompt.
 

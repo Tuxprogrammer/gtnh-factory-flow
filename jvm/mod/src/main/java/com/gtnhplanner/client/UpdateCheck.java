@@ -16,15 +16,16 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.gtnhplanner.Tags;
 import com.gtnhplanner.core.base.Log;
+import com.gtnhplanner.library.SiteConfig;
 
 /**
- * Whether a newer GTNH Planner is out: the mod's releases on GitHub, asked once a game in the background, the newest
- * kept with its release page. The planner offers it when it opens ({@link com.gtnhplanner.ui.popup.UpdateOffer}).
- * Nothing is said when the check cannot reach GitHub.
+ * Whether a newer GTNH Planner is out: a list of releases in GitHub's releases format, from the address the config
+ * names ({@link SiteConfig#update()}), asked once a game in the background, the newest kept with its release page.
+ * The planner offers it when it opens ({@link com.gtnhplanner.ui.popup.UpdateOffer}). With no address nothing is asked;
+ * nothing is said when the address cannot be reached.
  */
 public final class UpdateCheck {
 
-    private static final String RELEASES = "https://api.github.com/repos/jackwrichards/gtnh-planner-mod/releases?per_page=20";
     private static final int TIMEOUT_MS = 8000;
     private static final Pattern VERSION = Pattern.compile("^v?(\\d+)\\.(\\d+)\\.(\\d+)(?:-(alpha|beta|rc)\\.(\\d+))?");
     /** The pre-release stages, earliest first; a release with none comes after them all. */
@@ -39,9 +40,10 @@ public final class UpdateCheck {
 
     private UpdateCheck() {}
 
-    /** Asks GitHub for the releases, once, off the game's thread. */
+    /** Asks the configured address for the releases, once, off the game's thread; does nothing with none. */
     public static synchronized void start() {
-        if (started) return;
+        if (started || SiteConfig.update()
+            .isEmpty()) return;
         started = true;
         final Thread t = new Thread(UpdateCheck::check, "GTNH Planner update check");
         t.setDaemon(true);
@@ -68,7 +70,7 @@ public final class UpdateCheck {
 
     private static void check() {
         try {
-            final HttpURLConnection c = (HttpURLConnection) new URL(RELEASES).openConnection();
+            final HttpURLConnection c = (HttpURLConnection) new URL(SiteConfig.update()).openConnection();
             c.setConnectTimeout(TIMEOUT_MS);
             c.setReadTimeout(TIMEOUT_MS);
             c.setRequestProperty("Accept", "application/vnd.github+json");
@@ -91,7 +93,10 @@ public final class UpdateCheck {
         }
     }
 
-    /** The newest release in GitHub's list of them (drafts left out); null for none. */
+    /**
+     * The newest release in the list of them (drafts left out, and any whose page is not a web address); null for
+     * none.
+     */
     @Nullable
     static Release newest(final String json) {
         final JsonElement root = new JsonParser().parse(json);
@@ -103,6 +108,11 @@ public final class UpdateCheck {
             final JsonObject o = e.getAsJsonObject();
             if (o.has("draft") && o.get("draft")
                 .getAsBoolean() || !o.has("tag_name") || !o.has("html_url")) continue;
+            if (SiteConfig.address(
+                o.get("html_url")
+                    .getAsString(),
+                false)
+                .isEmpty()) continue;
             final Release r = new Release(
                 o.get("tag_name")
                     .getAsString(),

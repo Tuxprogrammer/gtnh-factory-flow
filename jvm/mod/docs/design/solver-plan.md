@@ -1,5 +1,7 @@
 # The solver: what it is for, what is wrong with it, and the plan
 
+> Since this was written the solver moved to core-solver and core-plan-solve in `jvm/core` (the `data/flowchart/balancer` package name is kept), its tests and goldens run as `./gradlew :core-solver:test` from `jvm/`, and the corpus is `conformance/solver/corpus/` at the repo root.
+
 Written 2026-10-12. The solver is `data/flowchart/balancer/`: an ojAlgo LP/MILP chain run on `SolveService`'s
 thread. This file is the master plan for making it fast without changing what it answers, and for the few places
 where what it answers is wrong. It grew out of the scale tests (`performance-at-scale.md`).

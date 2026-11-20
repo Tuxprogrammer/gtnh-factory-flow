@@ -118,6 +118,8 @@ public final class Config {
                 + " default. Lower gives up sooner on big charts; higher makes them balance better"
                 + " and the GUI pause longer, because the solve runs while the screen draws.");
 
+        com.gtnhplanner.library.SiteConfig.read(configuration);
+
         if (configuration.hasChanged()) {
             configuration.save();
         }

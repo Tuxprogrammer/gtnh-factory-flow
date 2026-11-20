@@ -1,5 +1,7 @@
 # Wire routing and Arrange
 
+> Since this was written the router and Arrange were rewritten as the website's in core-layout (`jvm/core/core-layout`: `GridEdgeRouter`, `BoxRouter`, `IncrementalRouter`, `arrange/`), `WireRouter` and `RouterTrace` are gone, and the benchmark commands below run as `./gradlew :mod:test` (`LayoutBenchmark`, `DragBench`, `RouterProfile`) or `./gradlew :core-layout:test -Pbench --tests '*RouterBench*'` from `jvm/`.
+
 The overhaul of how the board draws its wires and lays itself out. The aim, in the owner's words: edges and Arrange
 "excellent", wires that read cleanly (no wiggles, hooks or splayed ends, no needless length; diagonals are fine),
 moving one thing re-routes instantly, and arranging a whole plan may take seconds behind a spinner.

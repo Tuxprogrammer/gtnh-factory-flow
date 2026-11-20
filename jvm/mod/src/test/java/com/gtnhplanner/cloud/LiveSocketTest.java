@@ -197,6 +197,51 @@ class LiveSocketTest {
         assertEquals(1, log.count(LiveSocket.State.CONNECTING));
     }
 
+    /**
+     * The service's error frame and its close can reach the game in the same read as the upgrade answer (a busy
+     * machine, a slow poll): they must be heard all the same, or the game would retry a session the service refuses.
+     */
+    @Test
+    void aCloseSentWithTheUpgradeAnswerIsStillHeard() throws Exception {
+        try (java.net.ServerSocket raw = new java.net.ServerSocket(0, 1, java.net.InetAddress.getLoopbackAddress())) {
+            final Thread serving = new Thread(() -> {
+                try (java.net.Socket c = raw.accept()) {
+                    final java.io.InputStream in = c.getInputStream();
+                    final StringBuilder head = new StringBuilder();
+                    while (!head.toString().endsWith("\r\n\r\n")) head.append((char) in.read());
+                    final java.util.regex.Matcher key = java.util.regex.Pattern
+                        .compile("Sec-WebSocket-Key: (\\S+)", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(head);
+                    if (!key.find()) return;
+                    final String accept = java.util.Base64.getEncoder().encodeToString(
+                        java.security.MessageDigest.getInstance("SHA-1").digest(
+                            (key.group(1) + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
+                                .getBytes(java.nio.charset.StandardCharsets.US_ASCII)));
+                    final byte[] text = "{\"t\":\"error\",\"code\":\"auth\",\"msg\":\"Sign in.\"}"
+                        .getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                    final java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+                    out.write(("HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"
+                        + "Sec-WebSocket-Accept: " + accept + "\r\n\r\n").getBytes(java.nio.charset.StandardCharsets.US_ASCII));
+                    out.write(0x81);
+                    out.write(text.length);
+                    out.write(text);
+                    out.write(new byte[] { (byte) 0x88, 2, 0x0F, (byte) 0xA1 });
+                    c.getOutputStream().write(out.toByteArray());
+                    c.getOutputStream().flush();
+                    Thread.sleep(300);
+                } catch (final Exception ignored) {}
+            });
+            serving.setDaemon(true);
+            serving.start();
+            socket = new LiveSocket(
+                URI.create("ws://127.0.0.1:" + raw.getLocalPort() + "/live"), () -> "tok", null, FAST);
+            final Log log = new Log();
+            socket.start();
+            await(log, socket, () -> socket.state() == LiveSocket.State.CLOSED && !log.reasons.isEmpty());
+            assertEquals(LiveSocket.AUTH, log.reasons.get(log.reasons.size() - 1));
+            serving.join(2_000);
+        }
+    }
+
     @Test
     void aRefusedSessionStopsTheTrying() throws Exception {
         server = new LiveTestServer(null);

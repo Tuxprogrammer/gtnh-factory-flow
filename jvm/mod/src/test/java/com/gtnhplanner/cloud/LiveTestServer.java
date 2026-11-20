@@ -310,9 +310,16 @@ final class LiveTestServer implements AutoCloseable {
                 if (!frames.isEmpty() || closeWith != 0) opened.addListener(done -> {
                     for (final String text : frames) ctx.channel()
                         .writeAndFlush(new TextWebSocketFrame(text));
-                    if (closeWith != 0) ctx.channel()
-                        .writeAndFlush(new io.netty.handler.codec.http.websocketx.CloseWebSocketFrame(closeWith, ""))
-                        .addListener(ChannelFutureListener.CLOSE);
+                    // The socket is closed a moment later, not at once: a socket closed with the client's hello still
+                    // unread answers with a reset, which throws away the error and close frames the client has yet to
+                    // read. The real service waits for the client's close the same way.
+                    if (closeWith != 0) {
+                        ctx.channel()
+                            .writeAndFlush(new io.netty.handler.codec.http.websocketx.CloseWebSocketFrame(closeWith, ""));
+                        ctx.channel()
+                            .eventLoop()
+                            .schedule(() -> ctx.channel().close(), 500, java.util.concurrent.TimeUnit.MILLISECONDS);
+                    }
                 });
             } else if (msg instanceof TextWebSocketFrame) {
                 final String text = ((TextWebSocketFrame) msg).text();

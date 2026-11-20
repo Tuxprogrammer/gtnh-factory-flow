@@ -88,8 +88,8 @@ for (const target of opts.targets) {
   solverRows[target] = runSolver(api, tally, { bench: opts.bench, jvmDir: opts.solverJvm, runs: opts.solverRuns, select });
   if (opts.solverJvm) {
     const n = (b) => solverRows[target].filter((r) => r.bits === b).length;
-    const drift = Math.max(0, ...solverRows[target].filter((r) => r.bits === "near").map((r) => r.drift ?? 0));
-    say(`${target}: solver answers against the JVM: ${n("identical")} bit-identical, ${n("near")} within 1e-11 (largest ${drift}), ${n("differs")} differ`);
+    const drift = Math.max(0, ...solverRows[target].filter((r) => r.bits === "differs").map((r) => r.drift ?? 0));
+    say(`${target}: solver answers against the JVM: ${n("identical")} bit-identical, ${n("differs")} differ (largest relative drift ${drift})`);
   }
   for (const [g, kind] of [["solver goldens", "golden"], ["solver up to", "up to"], ["solver website", "website"]]) {
     const rows = solverRows[target].filter((r) => r.kind === kind);

@@ -7,6 +7,8 @@
   "UpToReason": {"class":"com.gtnhplanner.data.flowchart.balancer.UpToReason","values":["FULL","BOTTLENECK","STARVED","CLOGGED","UNUSED","LIMITED"]}
  },
  "records": {
+  "CardGeometry": {"class":"com.gtnhplanner.core.view.card.CardGeometry","components":[["width","number"],["height","number"],["railsTop","number"],["railsHeight","number"],["anchors","CardGeometryAnchor[]"],["stripTop","number"],["stripHeight","number"],["footTop","number"]]},
+  "CardGeometryAnchor": {"class":"com.gtnhplanner.core.view.card.CardGeometry$Anchor","components":[["handleId","string"],["output","boolean"],["y","number"]]},
   "CardInput": {"class":"com.gtnhplanner.core.view.card.CardInput","components":[["nodeId","string"],["name","string"],["hasPicker","boolean"],["tier","string?"],["tierFixed","boolean"],["hatchControl","boolean"],["power","CardInputPowerReport?"],["steam","CardInputSteamReport?"],["parallel","number"],["structuralParallel","number"],["pinned","CardInputSetting[]"],["art","string?"],["glanceArt","string?"],["product","CardInputProduct?"],["circuit","CardInputCircuit?"],["inputs","CardInputPort[]"],["outputs","CardInputPort[]"],["count","CardInputCount"],["powerTier","string?"],["upTo","CardInputUpTo?"],["forced","CardInputForced[]"],["loop","UpToLoopKind?"],["leftovers","CardInputLeftover[]"],["turbine","CardInputTurbine?"],["cardNames","Record<string, string>"],["selected","boolean"],["menu","CardInputMenu"]]},
   "CardInputBearer": {"class":"com.gtnhplanner.core.view.card.CardInput$Bearer","components":[["nodeId","string?"],["side","string?"],["share","number"],["resourceKey","string?"]]},
   "CardInputCase": {"class":"com.gtnhplanner.core.view.card.CardInput$Case","components":[["dials","CardInputDials"],["card","CardInput"]]},

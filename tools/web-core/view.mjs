@@ -72,7 +72,10 @@ export function firstDifference(want, got, where = "view") {
   return `${where}: ${JSON.stringify(got)} for ${JSON.stringify(want)}`;
 }
 
-/** Run every shared card case; groups "view/card" (the view) and "view/card-geometry" (the record is whole). */
+/**
+ * Run every shared card case; groups "view/card" (the view, from the JSON export), "view/card-js" (the website's path,
+ * objects in and out, text for text the JSON export's answer) and "view/card-geometry" (the record is whole).
+ */
 export function runView(api, tally) {
   const v = api.ViewExports;
   if (!v) {
@@ -106,6 +109,23 @@ export function runView(api, tally) {
       "view/card",
       JSON.stringify(out.view) === JSON.stringify(c.view),
       () => `${c.name}: ${firstDifference(c.view, out.view)}`,
+    );
+    // The website's path, records as JavaScript objects (viewCardJs): the same objects, text for text.
+    let js;
+    try {
+      js = v.viewCardJsSix(c.input);
+    } catch (e) {
+      tally.check(
+        "view/card-js",
+        false,
+        () => `${c.name}: the core threw ${String(e).slice(0, 200)}`,
+      );
+      continue;
+    }
+    tally.check(
+      "view/card-js",
+      JSON.stringify(js) === JSON.stringify(out),
+      () => `${c.name}: ${firstDifference(out, js, "card")}`,
     );
     const g = out.geometry;
     const rows = c.view.inputs.length + c.view.outputs.length;

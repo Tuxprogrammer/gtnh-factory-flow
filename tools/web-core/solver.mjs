@@ -9,8 +9,9 @@
 //                                               differing and 1 as equal within the LP's tolerance, each with its reason
 // The rule, from SolverCorpus.differences: the same keys, the same array lengths and order, and numbers equal when
 // p == q or |p - q| <= 1e-6 * max(1, |p|, |q|). Three Up to plans are held to the part of the answer the JVM test holds
-// them to (UpToParityTest.WITHIN_TOLERANCE). With `jvmDir` (digests the JVM's DigestDump wrote) each answer is also
-// compared with the JVM's own, to 1e-11, and counted as bit-identical when every number is equal.
+// them to (UpToParityTest.WITHIN_TOLERANCE). With `jvmDir` (digests the JVM's DigestDump wrote) each answer must also
+// be the JVM's own, every number equal: the kernel gives the same bits on the JVM and both web targets (core-base
+// ExactMath and JavaHashMap, the build plugin), so any drift at all is a regression. `drift` is reported to say how far.
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
@@ -238,7 +239,7 @@ const jvmFile = (dir, name) => path.join(dir, `${name.replace(/[: ]/g, "_")}.jso
 /**
  * Runs the cases of one target. `select(cases)` may thin them out (the JS sample); `jvmDir` holds the JVM's digests.
  * Fills the tally's groups "solver goldens", "solver up to" and, with jvmDir, "solver against the JVM"; returns one row per
- * case: {name, kind, ms, bits: "identical" | "near" | "differs" | null, drift}.
+ * case: {name, kind, ms, bits: "identical" | "differs" | null, drift}.
  */
 export function runSolver(api, tally, { bench = false, jvmDir = null, runs = 1, select = (c) => c } = {}) {
   const rows = [];
@@ -306,8 +307,12 @@ export function runSolver(api, tally, { bench = false, jvmDir = null, runs = 1, 
         const jvm = JSON.parse(readFileSync(file, "utf8"));
         const d = drift(jvm, actual);
         row.drift = d.max;
-        row.bits = d.shape === 0 && d.unequal === 0 ? "identical" : d.shape === 0 && d.max <= 1e-11 ? "near" : "differs";
-        tally.check("solver against the JVM", d.shape === 0 && d.max <= 1e-11, () => `${c.name}: ${d.shape} shape differences, drift ${d.max}`);
+        row.bits = d.shape === 0 && d.unequal === 0 ? "identical" : "differs";
+        tally.check(
+          "solver against the JVM",
+          row.bits === "identical",
+          () => `${c.name}: ${d.shape} shape differences, ${d.unequal} numbers differ (largest relative ${d.max})`,
+        );
       }
     }
     rows.push(row);

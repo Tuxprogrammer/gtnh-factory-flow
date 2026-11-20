@@ -9,21 +9,15 @@
     "canvasTheme": "blueprint",
     "canvasPattern": "dots",
     "leftPanelOpen": false,
-    "hiddenResourceKeys": [
-      "item:bolt"
-    ]
+    "hiddenResourceKeys": ["item:bolt"]
   },
   "notes": "Plan notes the mod has no place for.",
   "checklist": {
-    "cards": [
-      "n-a"
-    ],
+    "cards": ["n-a"],
     "edges": []
   },
   "settingPins": {
-    "machine-the-mod-lacks": [
-      "coil"
-    ]
+    "machine-the-mod-lacks": ["coil"]
   },
   "spareShares": {
     "item:plate": {
@@ -31,11 +25,7 @@
     }
   },
   "futureField": {
-    "kept": [
-      1,
-      2.5,
-      "x"
-    ]
+    "kept": [1, 2.5, "x"]
   },
   "recipes": [
     {
@@ -273,7 +263,9 @@
       "resourceId": "plate",
       "sourceHandle": "output:item:plate",
       "targetHandle": "input:fluid:plate",
-      "crossForm": true
+      "crossForm": {
+        "litresPerCell": 1000
+      }
     }
   ],
   "fuelProfiles": []

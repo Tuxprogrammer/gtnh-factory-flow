@@ -158,8 +158,8 @@
     },
     "codec/round-trip/website-only-things.json": {
       "area": "codec",
-      "bytes": 5366,
-      "sha256": "ce04652eb4525964ce28d4702c3a49a342bd4ef848e8bac9afc495897b255319"
+      "bytes": 5341,
+      "sha256": "af62622e96b5eb662c9d9ff41e5f495234d768e001d7f112cfed5d3bcd4ff351"
     },
     "core-base/exact-math/exact-math-vectors.json": {
       "area": "core-base",

@@ -3,7 +3,12 @@ import { writeFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { parseFactoryProjectJson } from "@/lib/import-export/factory-json";
 import { factoryProjectSchema } from "@/lib/model/schemas";
-import { conformancePath, listConformance, readConformanceJson, readConformanceText } from "./conformance";
+import {
+  conformancePath,
+  listConformance,
+  readConformanceJson,
+  readConformanceText,
+} from "./conformance";
 
 /**
  * The website's side of the shared plan codec (core-codec's PlanJson, CodecTest on the JVM): a plan's text read and
@@ -33,7 +38,10 @@ function golden(previous: PlanText): string {
     about: previous.about,
     cases: previous.cases.map((c) => ({ name: c.name, text: c.text, written: compact(c.text) })),
     plans: PLAN_DIRS.flatMap((dir) =>
-      listConformance(dir).map((f) => ({ path: `${dir}/${f}`, sha256: sha256(compact(readConformanceText(dir, f))) })),
+      listConformance(dir).map((f) => ({
+        path: `${dir}/${f}`,
+        sha256: sha256(compact(readConformanceText(dir, f))),
+      })),
     ),
   };
   return `${JSON.stringify(out, null, 2)}\n`;
@@ -44,7 +52,8 @@ describe("plan text, as both sides write it", () => {
 
   it("is what plan-text.json says", () => {
     const text = golden(file);
-    if (process.env.GTNH_WRITE_GOLDEN) writeFileSync(conformancePath("codec", "plan-text.json"), text);
+    if (process.env.GTNH_WRITE_GOLDEN)
+      writeFileSync(conformancePath("codec", "plan-text.json"), text);
     expect(text).toBe(readConformanceText("codec", "plan-text.json"));
   });
 
@@ -65,7 +74,13 @@ type PlanNode = {
 type Plan = {
   recipes: Recipe[];
   nodes: PlanNode[];
-  edges: { id: string; source: string; target: string; sourceHandle?: string; targetHandle?: string }[];
+  edges: {
+    id: string;
+    source: string;
+    target: string;
+    sourceHandle?: string;
+    targetHandle?: string;
+  }[];
 };
 
 /** The ids a recipe section's side names: each slot's own and its alternatives (and the card's input picks). */
@@ -75,7 +90,8 @@ function sideIds(recipe: Recipe | undefined, node: PlanNode, output: boolean): S
     if (slot.id) ids.add(slot.id);
     for (const a of slot.alternatives ?? []) if (a.id) ids.add(a.id);
   }
-  if (!output) for (const o of Object.values(node.recipeInputOverrides ?? {})) if (o.id) ids.add(o.id);
+  if (!output)
+    for (const o of Object.values(node.recipeInputOverrides ?? {})) if (o.id) ids.add(o.id);
   return ids;
 }
 
@@ -105,7 +121,8 @@ describe("plans the mod writes to files, links and posts", () => {
           const node = nodes.get(end);
           if (!node) continue;
           const h = parseHandle(handle);
-          const recipeId = h && h.section > 0 ? node.extraRecipes?.[h.section - 1]?.recipeId : node.recipeId;
+          const recipeId =
+            h && h.section > 0 ? node.extraRecipes?.[h.section - 1]?.recipeId : node.recipeId;
           if (!h || !sideIds(recipeId ? recipes.get(recipeId) : undefined, node, output).has(h.id))
             unresolved.push(`${e.id} ${handle}`);
         }

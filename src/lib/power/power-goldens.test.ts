@@ -32,5 +32,7 @@ describe("power goldens", () => {
     expect(text).toContain('"minecraft:log2@32767"');
     expect(text).toContain('"kind":"turbineFlow"');
     expect(text).toContain('"kind":"cardTier"');
+    // The plasma turbines' fuel list is the game's plasma fuel map: a heavy plasma it lacked is in.
+    expect(text).toContain('"Uranium 232 Plasma"');
   });
 });

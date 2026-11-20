@@ -298,6 +298,11 @@
    "eheMaxLps": 500
   },
   {
+   "name": "Selenium Plasma",
+   "euPerLiter": 80896,
+   "eheMaxLps": 500
+  },
+  {
    "name": "Helium Plasma",
    "euPerLiter": 81920,
    "eheMaxLps": 500
@@ -333,11 +338,6 @@
    "eheMaxLps": 2500
   },
   {
-   "name": "Creon Plasma",
-   "euPerLiter": 100352,
-   "eheMaxLps": 2500
-  },
-  {
    "name": "Awakened Draconium Plasma",
    "euPerLiter": 100352,
    "eheMaxLps": 2500
@@ -359,6 +359,11 @@
   },
   {
    "name": "Naquadria Plasma",
+   "euPerLiter": 100352,
+   "eheMaxLps": 2500
+  },
+  {
+   "name": "Technetium Plasma",
    "euPerLiter": 100352,
    "eheMaxLps": 2500
   },
@@ -478,11 +483,6 @@
    "eheMaxLps": 2500
   },
   {
-   "name": "Chrome Plasma",
-   "euPerLiter": 202342,
-   "eheMaxLps": 2500
-  },
-  {
    "name": "Manganese Plasma",
    "euPerLiter": 202752,
    "eheMaxLps": 2500
@@ -513,6 +513,11 @@
    "eheMaxLps": 2500
   },
   {
+   "name": "Polonium Plasma",
+   "euPerLiter": 214016,
+   "eheMaxLps": 2500
+  },
+  {
    "name": "Cobalt Plasma",
    "euPerLiter": 217497,
    "eheMaxLps": 2500
@@ -528,6 +533,11 @@
    "eheMaxLps": 2500
   },
   {
+   "name": "Francium Plasma",
+   "euPerLiter": 226304,
+   "eheMaxLps": 2500
+  },
+  {
    "name": "Gallium Plasma",
    "euPerLiter": 229376,
    "eheMaxLps": 2500
@@ -538,12 +548,37 @@
    "eheMaxLps": 2500
   },
   {
+   "name": "Radium Plasma",
+   "euPerLiter": 231424,
+   "eheMaxLps": 2500
+  },
+  {
+   "name": "Protactinium Plasma",
+   "euPerLiter": 236544,
+   "eheMaxLps": 2500
+  },
+  {
+   "name": "Uranium 232 Plasma",
+   "euPerLiter": 237568,
+   "eheMaxLps": 2500
+  },
+  {
+   "name": "Uranium 233 Plasma",
+   "euPerLiter": 238592,
+   "eheMaxLps": 2500
+  },
+  {
    "name": "Neptunium Plasma",
    "euPerLiter": 242688,
    "eheMaxLps": 2500
   },
   {
    "name": "Rubidium Plasma",
+   "euPerLiter": 243712,
+   "eheMaxLps": 2500
+  },
+  {
+   "name": "Plutonium-238 Plasma",
    "euPerLiter": 243712,
    "eheMaxLps": 2500
   },
@@ -625,11 +660,6 @@
   {
    "name": "Rhugnor Plasma",
    "euPerLiter": 333824,
-   "eheMaxLps": 10000
-  },
-  {
-   "name": "Naquadah Plasma",
-   "euPerLiter": 337920,
    "eheMaxLps": 10000
   },
   {
@@ -723,21 +753,6 @@
    "eheMaxLps": 10000
   },
   {
-   "name": "Osmium Plasma",
-   "euPerLiter": 393659,
-   "eheMaxLps": 10000
-  },
-  {
-   "name": "Iridium Plasma",
-   "euPerLiter": 397148,
-   "eheMaxLps": 10000
-  },
-  {
-   "name": "Platinum Plasma",
-   "euPerLiter": 399360,
-   "eheMaxLps": 10000
-  },
-  {
    "name": "Gold Plasma",
    "euPerLiter": 401408,
    "eheMaxLps": 10000
@@ -790,11 +805,6 @@
   {
    "name": "Hypogen Plasma",
    "euPerLiter": 502784,
-   "eheMaxLps": 25000
-  },
-  {
-   "name": "Plutonium-239 Plasma",
-   "euPerLiter": 503808,
    "eheMaxLps": 25000
   },
   {

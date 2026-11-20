@@ -487,6 +487,44 @@ function correctEngineFuels() {
   data.lneBases = data.lneBases.map((row) => ({ ...row, boostTicks: boostTicks[row.name] }));
 }
 
+function correctPlasmas() {
+  // RecipeMaps.plasmaFuels holds what ProcessingCell registers for each cellPlasma
+  // (FUEL_TYPE 4): GT's own cells exist only for materials built with addPlasma(),
+  // and GT++ RecipeGenPlasma adds its own. MTELargeTurbinePlasma.fluidIntoPower
+  // finds no fuel for any other plasma and makes 0 EU, so those rows go.
+  data.plasmas = withoutNames(data.plasmas, [
+    "Creon Plasma",
+    "Chrome Plasma",
+    "Naquadah Plasma",
+    "Osmium Plasma",
+    "Iridium Plasma",
+    "Platinum Plasma",
+    "Plutonium-239 Plasma",
+  ]);
+  // addPlasma() materials the sheet lacks. ProcessingCell's default value is
+  // max(1024, 1024 x mass) EU/L with mass = protons + neutrons of the element
+  // (Materials.getMass); the heavy ones below are not in its hand-written switch.
+  // The sheet's EHE column steps by value: 500 under 100352, 2500 under 309760.
+  const added = [
+    ["Selenium Plasma", 80896],
+    ["Technetium Plasma", 100352],
+    ["Francium Plasma", 226304],
+    ["Polonium Plasma", 214016],
+    ["Radium Plasma", 231424],
+    ["Protactinium Plasma", 236544],
+    ["Uranium 232 Plasma", 237568],
+    ["Uranium 233 Plasma", 238592],
+    ["Plutonium-238 Plasma", 243712],
+  ];
+  for (const [name, euPerLiter] of added) {
+    data.plasmas = withFuel(data.plasmas, {
+      name,
+      euPerLiter,
+      eheMaxLps: euPerLiter < 100352 ? 500 : 2500,
+    });
+  }
+}
+
 // Rotor columns are what TurbineStatCalculator returns for a rotor made by
 // MetaGeneratedTool.getToolWithStats. The game computes them in Java float, and
 // the sheet in double: at the ties (base efficiency 1.3, 2.1) Math.round(base * 85)
@@ -867,6 +905,7 @@ function correctFusion() {
 }
 
 correctEngineFuels();
+correctPlasmas();
 if (!reapply) {
   correctRotors();
 }

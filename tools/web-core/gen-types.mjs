@@ -21,6 +21,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { moduleOfNamespace, readModules } from "./modules.mjs";
 import { run as generateRecords } from "./gen-records.mjs";
+import { run as generateCardWords } from "./gen-card-words.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const webDir = path.join(root, "jvm", "web", "src", "main", "java", "com", "gtnhplanner", "web");
@@ -191,6 +192,7 @@ export function generate() {
 /** Writes the file when it differs; returns whether it changed. */
 export function run() {
   generateRecords(); // the view records' declarations ride on every run of this one
+  generateCardWords(); // and the card's words for the core (card-view.ts)
   const text = generate();
   const current = fs.existsSync(OUTPUT) ? fs.readFileSync(OUTPUT, "utf8") : null;
   if (current === text) return false;

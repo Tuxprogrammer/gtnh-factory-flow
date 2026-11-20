@@ -47,6 +47,7 @@ import { UP_TO_COLOR } from "./up-to-reason";
 import { cardLoop, LOOP_WORD, type LoopTone } from "./loops";
 import { glanceBar, glanceProduct, type GlanceBar, type GlanceProduct } from "./glance";
 import { idleTradeOf, type IdleTrade } from "./idle-trade";
+import { cardViewOf } from "./card-view";
 import { isPinned, pinMachineKey, settingControls } from "./menus/settings-model";
 import { mcTextWidth, measureClean, measureRowFigure, measureRowName, useFontEpoch } from "./text-measure";
 
@@ -1364,7 +1365,7 @@ export function useCleanCardModel(
     selected,
     cardName: (id) => cardNameIn(liveProject, id),
   };
-  const view = cleanCardView(facts);
+  const view = cardViewOf(facts);
   cardFactsListener?.(facts);
   const { count, inputs, outputs } = view;
 

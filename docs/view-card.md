@@ -182,8 +182,9 @@ drawer on both). The special cards' geometry comes with their rules.
 
 ## The shadow: the website's card against the compiled core
 
-The core's card rules are in the web build (`ViewExports` in the `core` module, `jvm/web/README.md`), and no production
-path calls them yet. `src/components/flow/clean/card-shadow.test.ts` holds the two equal on both targets:
+The core's card rules are in the web build (`ViewExports` in the `core` module, `jvm/web/README.md`); the board calls
+them through the switch (next section). `src/components/flow/clean/card-shadow.test.ts` holds the two equal on both
+targets:
 
 - the 99 shared cases: the core over each stored input gives the stored view, text for text; and the input the website
   writes from its own facts for each case (`cardInputOf`, `card-input.ts`) is the stored input;
@@ -223,23 +224,78 @@ the codec is most of a call. The records now cross as JavaScript objects with no
 across the boundary", has the candidates measured and the table in Node and in Chromium). Batching per board saves nothing (a crossing costs 0.2 us; the long JSON text costs more
 than it saves), and the widths' call backs cost about 0.7 us each.
 
-## Switching the website to the compiled core (not in this item)
+## The switch: the board's cards through the core
 
-The website keeps its TypeScript builders, bound by the shared cases and the shadow. To switch (`src/lib/core/adopt.ts`,
-a `card` area), it will need:
+`ADOPT.card` (`src/lib/core/adopt.ts`) is on, for WebAssembly GC only (`CARD_TARGETS` in
+`src/components/flow/clean/card-view.ts`). `useCleanCardModel` makes its view with `cardViewOf(facts)`: the plain card,
+the special cards' base card and the Overview rail's machine chips all go through it. With the area on and the core
+loaded on WebAssembly GC:
 
-1. A per-card call (`cardThroughCore` in `src/lib/core/card-wire.ts`, `viewCardJs`: records as objects, no JSON)
-   behind a per-card cache keyed by the input: per board saves nothing. Uncached, the core is about two times the
-   TypeScript on Wasm GC in Node and 2.4 to 3.1 times in Chromium, 3.5 times on JavaScript (it was five and eleven with
-   JSON), so a card that did not change should still not cross. What is left is the rules on WebAssembly and the width
-   call backs, not the crossing. Measure on `next start` with a real board before switching (adoption rule 2).
-2. `TextMeasure` from JavaScript: done as a call back (`WEB_CARD_MEASURE`, 0.7 us a width); a two-pass design is not
-   needed.
-3. `Text` on the website: `viewCardWords` with the `gtnhplanner.card.*` words. The shadow reads them from the mod's
-   `en_US.lang` in Node; the site needs them as data it can ship (generated from the language file at build time, as
-   the tokens are).
-4. The facts the website builds before the builders (`CleanCardFacts`: machine maths, pictures, RailPorts) stay
-   TypeScript in front of the core; `cardInputOf` writes them as the core's input. The special cards (`use-special.ts`)
-   are not translated yet.
-5. A before/after profile of plan open and a setting change on the stress and issue-156 boards (`next start` after
-   prewarm, WebAssembly and JavaScript), as the adoption rules require; the TypeScript path stays the fallback.
+- the card's facts are written as the core's input (`cardInputOf`), and the core's `CardView` comes back through
+  `viewCardJsKept` (records as JavaScript objects, the website's widths called back and kept in the core per font
+  epoch) and is read back as the website's `CleanCardView` (`cleanViewOf`: tone and rule names, the rail's own port
+  objects, the programmed circuit; nothing is re-derived);
+- a card's last two views are kept by (input, dials, font epoch), compared key for key (`sameData`): a remount, a render
+  that changed nothing of the card, a drag frame and a solve that left its numbers alone make no call;
+- a card the core has never drawn is drawn by the builders (the same view) and the core makes its view in idle time
+  (`fillWaitingCardViews`, idle slices): opening a plan stays at the builders' cost; every later view of the card is
+  the core's;
+- a core that throws on a card leaves that card to the builders, and says so once in the console.
+
+On the JavaScript build, with the area off, or before the core has loaded, the builders draw every card
+(`cleanCardView`). `card-view.test.ts` holds the two equal on both targets: the 99 stored records read back equal the
+builders' views, and the 722 recorded cards through the switch equal `cleanCardView` field for field.
+
+Words: `src/lib/core/card-words.generated.ts` (gitignored) is written from the mod's `en_US.lang` (`gtnhplanner.card.*`)
+by `tools/web-core/gen-card-words.mjs`, which `gen-types.mjs` runs on every run; the switch hands it to each loaded core
+once (`viewCardWords`). Fonts that load late: text-measure.ts bumps its font epoch when the app's face lands
+(`resetMeasuredFont`, also on a face picked in the settings, and in the tests' `setFixedTextMeasure`); the epoch is
+part of every kept view's key and is the core's width state, so every card is measured again in the new face.
+
+### What it costs (box, `next start` after prewarm, headless Chromium, cores shared with the server)
+
+Time in the card view code (`useCleanCardModel`'s view, summed over the cards React rendered), ms, two runs each.
+"base" is restructure 9c9e59a9 (the builders); the board is zoomed in until full cards mount (38 on the 89-card plan,
+24 on the 1000-card stress plan). Views: how many card views React asked for in the step.
+
+| Interaction | Plan | Views | base | WebAssembly | JavaScript (not switched) |
+|---|---|---|---|---|---|
+| open (until every card is drawn) | 89 cards | 89 | 23.3, 24.3 | 26.5, 33.5 (+15 idle fill) | 21.7, 33.0 (+26 idle fill) |
+| open | stress | 1079-1103 | 91.3, 91.2 | 93.4, 122.5 (+107-126 idle fill, 22 slices) | 102, 98.6 (+174-183 idle fill) |
+| zoom in (cards mount) | 89 | 39 | 3.6, 3.8 | 23.2, 10.3 | 14.3, 13.4 |
+| zoom in | stress | 24 | 1.6, 1.4 | 2.8, 1.4 (kept) | 7.4, 5.5 (kept) |
+| rate unit | 89 | 38 | 5.1, 1.8 | 3.8, 2.0 (kept) | 3.5, 2.9 (kept) |
+| rate unit | stress | 24 | 2.0, 0.7 | 3.7, 4.8 | 9.8, 7.5 |
+| power display | 89 | 38 | 3.4, 3.2 | 11.0, 11.2 | 17.6, 17.4 |
+| power display | stress | 24 | 1.7, 0.7 | 2.7, 2.5 | 9.2, 8.3 |
+| one card's tier | 89 | 40 | 2.4, 1.5 | 1.8, 3.1 (1 call) | 2.9, 2.0 (1 call) |
+| one card's tier | stress | 25 | 1.2, 0.7 | 0.9, 1.3 (kept) | 1.8, 1.7 (kept) |
+| a solve that moves every card | 89 | 76 | 3.4, 4.0 | 13.3, 14.2 | 39.8, 38.9 |
+| a solve that moves every card | stress | 50 | 2.2, 2.0 | 6.5, 5.6 | 10.2, 13.0 |
+| hover over three cards | both | 0 | 0 | 0 | 0 |
+| drag a card 30 frames | both | 2 | 0.1-0.3 | 0.3-0.5 (1 call, 1 kept) | 0.5-0.7 |
+| pan 30 frames | 89 / stress | 0 / 4 | 0 / 0.4-0.5 | 0 / 0.6 | 0 / 0.9-1.2 |
+| zoom out and in | 89 | 59-67 | 3.8, 5.8 | 5.8, 7.6 (13 calls) | 12.1, 10.4 |
+| zoom out and in | stress | 30-35 | 2.2, 1.8 | 2.7, 6.7 (6 calls) | 2.8, 4.7 |
+
+The JavaScript column is the switch forced on for the measurement; the committed switch leaves that build on the
+builders. A card is never rendered on hover, on a pan frame or on a drag frame of another card, so nothing here runs
+per frame. The whole step's main-thread time (CDP, ms, base / WebAssembly) moves more than the card code does, both
+ways, on steps with no card view at all (hover on the 89-card plan: 73-77 / 167-171): the solve on the 89-card plan
+148-153 / 200-216, the power display 149-174 / 124-130, the stress plan's solve 1465-1468 / 1198-1284. Hot, in the page,
+microseconds a card over the cards drawn: builders 14-35, input 4.5-7.5 (12-16 before this item trimmed it), core on
+WebAssembly 23-30 with the widths kept in the core (30-71 calling every width back), on JavaScript 54-71 (56-121).
+
+What would let the JavaScript build switch too: its rules cost two to four times the builders' on every changed card
+(a solve on the 89-card plan: +36 ms, two frames). The cost is inside the compiled rules, not the crossing (six px,
+no call backs, is the same): profile `CardViews` on the JavaScript target (`-Pplain` build for names) for the
+allocation and string building it does per row, or let the rules run once per board change for the cards in view in
+idle time as the open does.
+
+### Text: the switch draws what the builders drew
+
+Every card's DOM (`outerHTML` of each board node with every card held mounted, `data-cv-hold`, so both the full face and
+the glance layer are in it) and the page's text, under four dial sets (minute and Amps, second and EU/t, tick and EU/t,
+second and Amps), base against the switch on WebAssembly and on JavaScript (forced), with every view counted as the
+core's or a kept core view: identical on the 89-card plan (2.31 MB of card DOM a set) and the 1000-card stress plan
+(14.2 MB a set).

@@ -1,8 +1,8 @@
 /**
  * The core's card input (`CardInput`, jvm/core/core-view) from the website's own card facts: what `cleanCardView`
  * makes a card's view from, written as the record the compiled core's `ViewExports` reads. The core's `CardViews.card`
- * over this input is held to `cleanCardView` over the same facts by card-shadow.test.ts (restructure adoption step one:
- * no production path calls the core yet). Pure: no store, no DOM.
+ * over this input is held to `cleanCardView` over the same facts by card-shadow.test.ts and card-view.test.ts; the
+ * board's switch (card-view.ts) writes it for every card it draws through the core. Pure: no store, no DOM.
  */
 import type {
   CardInput,
@@ -76,9 +76,11 @@ function optional<T>(value: T | undefined | null): T | undefined {
   return value === null ? undefined : value;
 }
 
-/** Drops undefined keys: the wire has no nulls, a missing optional is a missing key. */
+/** Drops undefined keys: the wire has no nulls, a missing optional is a missing key. Runs per card per render. */
 function clean<T extends object>(value: T): T {
-  return Object.fromEntries(Object.entries(value).filter(([, v]) => v !== undefined)) as T;
+  const out: Record<string, unknown> = {};
+  for (const k in value) if (value[k] !== undefined) out[k] = value[k];
+  return out as T;
 }
 
 function port(p: RailPort, node: Pick<FactoryNode, "portRates">): CardInputPort {
@@ -111,11 +113,15 @@ export function cardInputOf(facts: CleanCardFacts, menu: CardInputMenu = OPEN_ME
   const { projectNode: node, recipe, result, plan, rails, powerReport, steamReport } = facts;
   const id = node.id;
   const upTo = plan?.upTo?.[id];
-  const leftovers = (plan?.leftovers ?? []).map((l) => ({
-    bearers: l.bearers.map((b) =>
-      clean({ nodeId: b.nodeId, side: b.side, share: b.share, resourceKey: b.resourceKey }),
-    ),
-  }));
+  // Only the leftovers with a place on this card: the idle trade looks at no other (idle-trade.ts), and a card's input
+  // must not grow with the plan.
+  const leftovers = (plan?.leftovers ?? [])
+    .filter((l) => l.bearers.some((b) => cardOf(b.nodeId) === id))
+    .map((l) => ({
+      bearers: l.bearers.map((b) =>
+        clean({ nodeId: b.nodeId, side: b.side, share: b.share, resourceKey: b.resourceKey }),
+      ),
+    }));
   // Names of the cards the read-outs mention: the full cards upstream and the makers a leftover's places sit on.
   const names: Record<string, string> = {};
   const name = (cardId: string | undefined) => {

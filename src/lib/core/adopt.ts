@@ -26,6 +26,9 @@ export const ADOPT = {
   // solve: the plan solve (SolverExports), in the solve Worker and the server's plan routes, on WebAssembly GC only
   // (src/lib/core/solve-adopt.ts).
   solve: true,
+  // card: the recipe card's view (ViewExports.viewCardJsKept) for a card whose input changed since its last view, on
+  // WebAssembly GC only (src/components/flow/clean/card-view.ts, CARD_TARGETS).
+  card: true,
 } as const satisfies Record<string, boolean>;
 
 export type AdoptArea = keyof typeof ADOPT;
@@ -38,6 +41,7 @@ const AREA_MODULE: Record<AdoptArea, CoreModuleName> = {
   power: "core",
   layout: "core",
   solve: "solver",
+  card: "core",
 };
 
 // A dev override: for tests and for trying an area in a running dev server (`__gtnhAdopt.set("machines", true)` in the

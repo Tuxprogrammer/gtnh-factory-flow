@@ -12,7 +12,7 @@
  */
 import type { CoreExports } from "@/lib/core/exports.generated";
 import { coreFor, isAdopted } from "@/lib/core/adopt";
-import { coreInfo, loadCore } from "@/lib/core/loader";
+import { loadCore } from "@/lib/core/loader";
 import type { ArrangeJob, ArrangeJobResult, ArrangeProgress } from "@/lib/arrange-job";
 import type {
   GridEndpoint,
@@ -30,18 +30,6 @@ type Layout = CoreExports["LayoutExports"];
 /** The core's layout exports when the area is on and the core is loaded on this thread, else null. */
 export function layoutCore(): Layout | null {
   return coreFor("layout")?.LayoutExports ?? null;
-}
-
-/**
- * The core for Arrange: as `layoutCore()`, but on the WebAssembly build only. TeaVM's JavaScript output runs
- * `sum += a + b + c` as `((sum + a) + b) + c` (it drops the brackets of a right operand of the same rank), so the
- * Arrange optimiser's scores drift by an ulp, a tie in its annealing breaks the other way and the column challenger
- * lands elsewhere (three of the arrange conformance boards: "factory-flow/Untitled design", "Early auto Baux-Ti-W",
- * "Passive Chemicals Early"). The kernel's TeaVM plugin (ExactMathPlugin, keepOrder) keeps Java's order; until it is
- * in the build an engine without WebAssembly GC keeps the TypeScript Arrange. Its router answers are exact.
- */
-export function arrangeCore(): Layout | null {
-  return coreInfo()?.target === "wasm-gc" ? layoutCore() : null;
 }
 
 /**

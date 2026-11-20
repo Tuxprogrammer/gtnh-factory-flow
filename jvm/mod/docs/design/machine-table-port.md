@@ -1,5 +1,7 @@
 # Every GregTech card as the website computes it
 
+> Since this was written the port moved to core-machines (`jvm/core/core-machines`, with its data in that module's `src/main/resources/assets/gtnhplanner/machines/`), and `tools/audits/export-mod-machine-data.mjs` is not in this repository, so `handlers.json` has no generator here.
+
 The mod's GregTech cards run on generic engine knobs (speed, parallels, perfect overclocks, overclock limits, heat
 overrides...) fed to GT's `OverclockCalculator`. The website knows each machine instead: its curated machine table
 (`src/lib/machines/machine-table.ts`, 96 machines checked against a reference calculator and the game's code), the

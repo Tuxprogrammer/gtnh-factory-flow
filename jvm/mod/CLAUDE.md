@@ -2,8 +2,8 @@
 
 @AGENTS.md
 
-GTNH Planner, the in-game side of gtnhplanner.com (mod id `gtnhplanner`, package `com.gtnhplanner`). It started as
-a fork of sbancuz/PlanNH and was renamed on 2026-10-07 so the two never collide; saves (`plannh/plannh.dat` in a
+GTNH Planner, the in-game side of the GTNH Factory Flow website that shares this repo (mod id `gtnhplanner`, package
+`com.gtnhplanner`). It started as a fork of sbancuz/PlanNH and was renamed on 2026-10-07 so the two never collide; saves (`plannh/plannh.dat` in a
 world's NEI folder) and config files from before the rename are still read, then written under the new names.
 
 In-game, NEI-driven flowchart production planner for GT New Horizons: Minecraft 1.7.10, Forge 10.13.4.1614,
@@ -11,10 +11,21 @@ client-side only. The planner UI is ModularUI2 in `ui/` (the Solve-mode board), 
 solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layout and wire routing are in
 `layout/`, recipe sources per mod are in `data/provider/`, and the NEI glue is in `nei/`.
 
-## Remotes and branches
+## Where things live
 
-- `origin` is this fork and `upstream` is the repo it was forked from: see Upstream and Working rules in `AGENTS.md`.
-  The branches the fork carries besides `main` are untouched copies of upstream's; leave them alone.
+- The mod is the Gradle project `:mod` in `jvm/mod/`; every path in this file and in `docs/` is relative to it unless
+  it starts with `jvm/`, `conformance/`, `tools/ci/` or `docs/` at the repo root (the website, shared test data and CI
+  live there). `origin` is the fork; `upstream` is the website's original repo and its push URL is disabled: see
+  Upstream and Working rules in `AGENTS.md`.
+- The plain-Java core is in `jvm/core/core-*` and the mod shades it into its jar. In the core: the solver
+  (`com.gtnhplanner.data.flowchart.balancer`, core-solver and core-plan-solve), layout, routing and arrange (core-layout,
+  `core.layout`), the machine maths (core-machines, `machines.web`), the power sources (core-power, `power.sources`),
+  the plan model (core-model) and the view records and minimap (core-view, `ui.card`). They keep their package names, so
+  a class found under `com.gtnhplanner` in this file may be in a core module: search `jvm/` for it. A test lives with
+  the code it tests.
+- The mod's own part is what needs the game: `ui/`, `nei/`, `data/provider/`, `cloud/`, `library/`, `client/`, `machines/game/`,
+  `power/game/` and the dev harness. Core code has no Minecraft, Forge or ModularUI imports; the purity gate
+  (`jvm/core/purity`) fails the build on one.
 - Dev tooling lives in `src/main/java/com/gtnhplanner/dev/`, `tools/dev/` and `docs/`; it is wired in through
   `DevHarness.initIfDev()` in `ClientProxy#init`.
 
@@ -85,7 +96,7 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   for the importer, the posting export and shared plans alike; a card still sized a little differently is pulled
   apart once the board has solved (`layout/Unstack`). Port rates go both ways as plan mode's `portRates` (by the
   website's row handle), a source drawer's rule as a negative `targetPerSecond`, trash as `drainMode: "trash"`, and
-  posts say `planMode` with `solveMode`. Real plans to try it on: `POST /api/community/plans/<id>/download` gives a post's plan.
+  posts say `planMode` with `solveMode`. Real plans to try it on: a post's plan comes from `POST /api/community/plans/<id>/download` on the configured site (or the mock's).
   A plan carries the rate unit it was read in as the website's `view.rateUnit` (`importer/PlanView`: tick, second,
   minute, hour, eu): every export writes the player's (`PlanExport.World.rateUnit`), every import hands it to the board
   once (`Graph.viewWhenShown`, taken by `BoardSession.takeView`). The + tab's Open plan file (`ui/popup/PlanFileMenu`,
@@ -93,7 +104,7 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
 - Shared machines (one card, several recipes time-sharing one machine; `docs/design/ff-shared-machine-spec.md`) are
   `MachineGroup`s with ordered `sections`: each recipe stays a node with its own ports and wires, the group draws as
   one card, its machine settings are copied to every recipe, and a pinned count is an exact solver pool.
-- Buffer drawers (`docs/buffer-drawers.md`): `Drawer.Kind.BUFFER`, its `links` the outputs feeding it and its
+- Buffer drawers (`docs/buffer-drawers.md` at the repo root, the website's doc): `Drawer.Kind.BUFFER`, its `links` the outputs feeding it and its
   `takers` the inputs it feeds (`Drawer.held()` gives both with their side). An input dropped on a product, or an output
   on a source, makes one. The solver draws an edge from each maker to each user (`ModelData.buildBuffers`) and holds
   its rule on their flows; the same in the website's port, checked by the `buffer-drawers` corpus case. Features that
@@ -101,8 +112,10 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
 - Saves are backed up to `backups/` beside the save (`gtnhplanner/plans.dat`), once per session and before any save
   that drops a plan.
 - Non-recipe machines (the top bar's Non-recipe key, `ui/power/PowerPicker`) are the website's power sources, ported
-  to `power/` from its `src/lib/power` (59 sources; the workbook tables, resource map and machine icons are copied
-  JSON in `assets/gtnhplanner/power/`, never hand-edited; parity with the website is tested per source). A power card
+  to `power/` from its `src/lib/power` (59 sources, in core-power `power.sources`; the workbook tables, resource map and
+  machine icons are JSON in `jvm/core/core-power/src/main/resources/assets/gtnhplanner/power/`, never hand-edited, and
+  `tools/sync-core-tables.mjs --write` at the repo root copies them to the website's `src/lib/power/data`; parity with
+  the website is tested per source). A power card
   is a `Node` with `powerSource` and `powerSettings` instead of an NEI recipe: `power/game/PowerPorts` rebuilds its
   ports from the model at exact per-second rates (`Port.exactAmount`, a craft a second), EU first. EU is a resource
   (`Energy`, key `power:eu`) that only drawers take, shown in EU/t; the overview shows power used, made and net.
@@ -260,8 +273,9 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
 - Cloud plans and live co-editing (the owner, 2026-10-14; `docs/design/cloud-live.md` is the contract with the
   website): signed in, the planner's
   plans are the account's (own and shared), saved as every edit is made, the same on every device; signed out,
-  nothing changes. Cloud mode starts only once the site's live service answers (`/live/health`), so before the
-  rollout signed-in players keep their world plans. The layers: `cloud/net` (`LiveSocket` on Minecraft's netty, ws
+  nothing changes. With no site configured (the default, see Network below) there are no accounts and so no cloud
+  mode. Cloud mode starts only once the site's live service answers (`/live/health`), so before a rollout
+  signed-in players keep their world plans. The layers: `cloud/net` (`LiveSocket` on Minecraft's netty, ws
   and wss; `LiveClient`, the protocol; `CloudApi`, the REST routes), `cloud/store` (`CloudCache`, this device's copy
   and pending batches; `Migration`, a world's plans uploaded once, local save kept), `cloud/sync` (`LiveOps`,
   `LiveState`: the op engine both sides share, checked on `conformance/live/live-vectors.json`), `cloud/map`
@@ -276,9 +290,9 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   second; `Peers` draws others' cursors and selection rings, and their faces in the tab strip). Share with people is
   the Share menu's dialog (the people in this game first, from `/live/nearby` with the tab list's names, then an
   account search); "Publish to library" is the old Share to library. `call cloud` reports the state (`fake=N` adds
-  stand-in people); `PLANNH_LIBRARY_URL=http://localhost:3000 tools/dev/mc.sh start` keeps a dev game off the real
-  site. End to end: the website's `npm run dev:local` (site :3000, live ws://localhost:3001/live, local Postgres),
-  `tools/dev/mock-live.mjs` without the website.
+  stand-in people); `PLANNH_LIBRARY_URL=http://localhost:3000 tools/dev/mc.sh start` points a dev game at a local site
+  (a dev game with no address set contacts nothing). End to end: `npm run dev:local` at the repo root (site :3000,
+  live ws://localhost:3001/live, local Postgres), `node tools/dev/mock-library.mjs`, which loads `tools/dev/mock-live.mjs`, without the website.
 - On the board a left press on anything (a card's keys and chips too, a drawer's, a note's) is a click when let go
   within 6 GUI pixels (`BoardCanvas.DRAG_SLOP`; tabs and task cards too) and acts then; moved further, it carries the thing. Carried things
   glide (about 120 ms) between 10 px grid spots and never land on another card or drawer: each frame they go to the
@@ -336,10 +350,11 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   them back. After a script change,
   walk every step and check the log for `[tutorial]` warnings.
 - The Library (top bar; the + tab menu; right-click on an overview row: setups that make it) has two shelves: My
-  plans, and Factory Flow's public setups from gtnhplanner.com (`library/CommunityApi`, `LibraryFeed`;
-  `ui/library/LibraryView`), opened through the importer as a new plan. Signing in uses the website's own username
+  plans, and Factory Flow's public setups from the configured website (`library/CommunityApi`, `LibraryFeed`;
+  `ui/library/LibraryView`), opened through the importer as a new plan. With no site configured the second shelf says
+  "No community site is set up on this install." and nothing is fetched. Signing in uses the website's own username
   and password accounts; the session (never the password) is kept in `config/gtnhplanner-account.properties`
-  (`library/Account`). The top bar's Share key (`BoardScreen.openShare`, labels only) offers the open plan to the
+  (`library/Account`; a session belongs to the site that issued it, and is ignored when the address changes). The top bar's Share key (`BoardScreen.openShare`, labels only) offers the open plan to the
   library, its plan code to the clipboard, Share in chat (`client/ChatShare`: the whole plan on NEI's chat item link,
   which NEI's server side relays from anyone to everyone, no website; NEI from beta-3 carries it in the link's payload
   beside a paper named after the plan, under 30 KB; older NEI writes the item twice into the chat line, so plans over
@@ -358,15 +373,16 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   uploaded file, and nothing follows the plan by itself), after the cloud's Share with people: Publish to library, or
   Update in library and Publish as new post for a plan posted (`AccountForms.shareRows`, also in a tab's and a plan
   tile's menu),
-  Copy plan link (the website's `#p=` link, `FfPlanCode.encode`, from the plan as `Posting.write` sends it), Copy
-  plan code (our own), Export plan file (that JSON in `gtnhplanner/exports/`), Open in website (`client/Browser`:
+  Copy plan link (the website's `#p=` link, `FfPlanCode.encode`, from the plan as `Posting.write` sends it; shown only
+  with a site configured), Copy plan code (our own), Export plan file (that JSON in `gtnhplanner/exports/`), Open on
+  website (shown only with a site configured; `client/Browser`:
   the system browser at `<site>/#p=<code>`, the code in the fragment so it never reaches a server; links over 2,000
   characters go through a small redirect page in the temp folder, as Windows cuts long command lines; over a
   million it says to export instead), Share in chat and Screenshot.... The other way, the website's "Open in the
   mod" POSTs a plan code to `client/WebsiteListener` on 127.0.0.1, the first free port of 25640-25649, started by
   the client proxy only (never on a server) and gone with the game: it answers CORS and Private Network Access
-  preflights for the website's origins only (gtnhplanner.com, www., `CommunityApi.site()`, http://localhost or
-  127.0.0.1 on any port), refuses any other Origin or a Host not naming the loopback, JSON only, 4 MB at most, a code
+  preflights for the website's origins only (`CommunityApi.site()`, the config's `websiteOrigins`, http://localhost or
+  127.0.0.1 on any port; with no site and no listed origin the listener is not started and no port is opened), refuses any other Origin or a Host not naming the loopback, JSON only, 4 MB at most, a code
   that decodes to a JSON object; `GET /ping` gives the mod's version. Nothing opens unasked: `WebsiteInbox` keeps the
   newest plan and asks, over the board (`ui/popup/IncomingOffer`) or in chat with Open and Not now
   (`/gtnhplanner_website`, keyed to that plan), and again when the planner opens; Open imports it as a new plan.
@@ -379,29 +395,40 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   PUT: votes, downloads and comments stay); a post gone from the site (404, or 403) is forgotten and shared anew. The
   player's own posts (the site's `isMine`) have Edit (title, description, icon) and Delete in the Library's pane and a
   tile's right-click menu; opening one links the new plan to it. Test it all against
-  `node tools/dev/mock-library.mjs` (a local stand-in; `call 'library?url=http://127.0.0.1:8789'`), never the real site.
-- Players never see the website (the owner, 2026-10-09): no links or keys to it, and no text naming gtnhplanner.com or
-  Factory Flow in the UI, its messages, the config files it writes or `mcmod.info`. The library is "the library";
+  `node tools/dev/mock-library.mjs` (a local stand-in; `call 'library?url=http://127.0.0.1:8789'`), never a real site.
+- Network (`library/SiteConfig`, `network` category of `config/gtnhplanner.cfg`): the jar names no host. `siteUrl`
+  (the website: library, accounts, posting, bug reports, cloud plans and plan links), `liveUrl` (`ws://` or `wss://`
+  ending in `/live`; empty derives it from the site), `updateUrl` (a release list in GitHub's releases JSON format),
+  `supportUrl` (a help page the Feedback box links to) and `websiteOrigins` (further origins that may use Open in the
+  mod) are all empty by default, and the system properties `-Dgtnhplanner.library.url`, `.live.url`, `.update.url` and
+  `.support.url` win over the file. Empty switches a feature off: a call that needs the site throws `SiteOff` before it
+  connects, so nothing is sent, and the player is told "No community site is set up on this install." (the share and
+  link rows that need a site are left out; the Feedback box says sending is not set up). A value that is not a web
+  address of the right kind is ignored with a warning. `NoRemoteHostTest` scans the mod and core sources for a remote
+  host literal and fails on one; `SiteOffTest` pins the off state. An install's operator decides what goes in the file.
+- Players never see the website (the owner, 2026-10-09): no links or keys to it, and no text naming the website's
+  address or Factory Flow in the UI, its messages, the config files it writes or `mcmod.info`. The library is "the library";
   pasted plans are "a plan link or code". Code comments and docs may still name the website as the design's source.
   The exceptions (the owner, 2026-10-14): the Share menu's Open in website, the prompt about a plan the website sent,
   and the library.
 - Feedback (the top bar's red bug key, `ui/popup/FeedbackPanel`): three mood faces, Bug / Idea / Help chips, one text
   box (`ui/popup/TextArea`, our own: MUI2's multi-line editor crashed the game), a line naming what goes with it (the
   open plan by name, the game log, a crash report if there is one) and Send. `library/Reports` sends it, with a Simple
-  picture of the plan and the log's tail with names, the home folder, addresses and tokens taken out, to the website's
+  picture of the plan and the log's tail with names, the home folder, addresses and tokens taken out, to the configured site's
   `POST /api/feedback`, which opens it as a public issue on a repo (labels "from game" and bug, enhancement or
   question) with the site's own token, so players need no GitHub account; the box then links the issue. Which repo
-  that is belongs to the site it is sent to, not to this code: the public site files on upstream's tracker (see
-  Upstream in `AGENTS.md`). The endpoint answers 503 while the site has no `GITHUB_FEEDBACK_TOKEN`. The site guards it
+  that is belongs to the site it is sent to, not to this code. With no site the box says sending reports is not set
+  up and Send fails with the off message; a configured `supportUrl` adds a link to a help page. The endpoint answers 503 while the site has no `GITHUB_FEEDBACK_TOKEN`. The site guards it
   against spam (its `src/lib/server/feedback-guard.ts`, after a
   flood on 2026-10-12): a report must carry the mod's `deviceId` and `versions` shapes (change them there first), and
   there are limits per address and device, on the same words, and on issues site-wide. `client/CrashReports` puts the planner's state in every crash report and, on the
   next open, offers to send the newest report the planner was part of (`ui/popup/CrashOffer`: a planner frame in the
   error's stack, or a ModularUI frame with the planner open); asked once per crash. The mock answers
   `/api/feedback` too, writing each report to `build/dev-client/mock-feedback/`.
-- Updates: `client/UpdateCheck` asks upstream's GitHub releases once a game, in the background (pre-releases too;
-  tags compared as `0.2.0-alpha.N` < `-beta.N` < `-rc.N` < `0.2.0`, a dev build counting as its tag; jars before
-  beta.1 read only alphas, so to them a beta is the release). When a newer one is out the board says so once
+- Updates: `client/UpdateCheck` asks the configured `updateUrl` once a game, in the background, and does nothing when it
+  is empty (the default). It reads pre-releases too;
+  tags are compared as `0.2.0-alpha.N` < `-beta.N` < `-rc.N` < `0.2.0`, a dev build counting as its tag; jars before
+  beta.1 read only alphas, so to them a beta is the release. When a newer one is out the board says so once
   per version as it opens (`ui/popup/UpdateOffer`, after any crash offer), with a key to that release's page; either
   answer is remembered (`update.offered` in the settings). `call 'update?latest=<tag>'` fakes one; `clear=1&reset=1`
   puts it back.
@@ -449,16 +476,18 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   a pure port named after its files (machine table with its 96 entries, overclocks, hatches and power, heat, parallels,
   power report, fusion, the special machines, runtime variants), checked by `MachineGoldensTest` against goldens the
   website writes with its own functions (`conformance/machines/machine-goldens.jsonl.gz`, 0 mismatches over 42,250
-  cases). Its data comes from the website, never hand-edited: `assets/gtnhplanner/machines/handlers.json` (each recipe
-  map's machines and settings, with their item ids) and `fusion-startups.json`; regenerate both files with the
-  website's `node tools/audits/export-mod-machine-data.mjs`. The game side is `machines/game/`: `WebCards` (a card as
+  cases). Its data comes from the website, never hand-edited, in
+  `jvm/core/core-machines/src/main/resources/assets/gtnhplanner/machines/`: `handlers.json` (each recipe map's
+  machines and settings, with their item ids) and `fusion-startups.json`. `fusion-startups.json` is written by
+  `tools/audits/extract-fusion-startups.mjs` and copied to the website by `tools/sync-core-tables.mjs`; no script in this
+  repo regenerates `handlers.json`, so a change to it is the owner's call. The game side is `machines/game/`: `WebCards` (a card as
   the website's recipe and node: GT++ maps are gtpp.recipe.* in its data, gt.recipe.* here; a machine matched by item
   id, then name), `RuntimeVariants` (GT's OverclockCalculator per tier, as the website's oracle runs it), `WebEffect`
   (through `MachineConfig.nodeEffect`: exact duration and EU/t, parallels, per-output multipliers, the stall) and
   `WebSettings`. A card's settings are the website's: `voltage`, `amp` (to 16,777,216), `coil`,
   `energy_hatch_type` and `machine:<id>` for each machine option; the engine's old knobs are gone and an old
   `machine_heat` becomes a coil on load. Every GT card's gear sheet is its settings beside its working
-  (`machines/web/Working`). `tools/dev/webcheck.sh <dir> [regex]` compiles and tests the port with javac alone;
+  (`machines/web/Working`). `tools/dev/webcheck.sh <dir> [regex]` compiles and tests the port (now core-machines) with javac alone (it is written for a Windows checkout: `cygpath` and a Windows JDK in the Gradle home);
   `call machinemath` lists every card's maths (`maps=1`: the game's recipe maps the data lacks).
 - Multiblock pictures in `assets/gtnhplanner/textures/structures/` are Factory Flow's renders (`public/power-art`: the
   owner's processing multiblocks and the Power Planner workbook's power plants), scaled to 320 px palette PNGs with
@@ -466,45 +495,55 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
 
 ## Build and test
 
+- The commands below run from `jvm/`; `tools/dev/` paths are relative to `jvm/mod/`. `tools/ci/run.sh` at the repo root
+  runs CI's whole pipeline and ends in `CI-LOCAL: PASS` or `CI-LOCAL: FAIL`.
 - Gradle provisions the JDKs (25 for the build, JetBrains Runtime 25 for `runClient25`). On Windows keep the
   checkout at a short path: deep paths break the clone and the Minecraft dev setup (MAX_PATH). The Gradle daemon
   needs more than its default heap for the downgrade step: set `org.gradle.jvmargs` (4 GB is enough) in the Gradle
   user home's `gradle.properties`.
-- `./gradlew test`: 1,218 headless JUnit tests (the machine maths and power sources against the website, drawers, solve service, routing, layout, serialization),
-  many over gtnh-flow YAML charts in `src/test/resources/gtnh-flow/`. About 40s, no Minecraft. `addon.gradle`
-  opts `test` out of the configuration cache; without that a clean build reports `:test NO-SOURCE` and silently
-  runs nothing, so if you ever see NO-SOURCE, check the count in `build/test-results/test/*.xml`.
+- Gradle runs from `jvm/` (the root of the Gradle build, wrapper included): `./gradlew :mod:test` is the mod's
+  headless JUnit suite, no Minecraft, many over gtnh-flow YAML charts in `src/test/resources/gtnh-flow/`;
+  `./gradlew build` builds every project and runs every suite, the core modules' too (`:core-solver:test` and the
+  like: the solver, the machine maths and goldens against the website, drawers, routing, layout and the view records
+  run there, over the shared data in `conformance/` at the repo root). `addon.gradle` points `test` at the downgraded
+  classes by name; without that a clean build reported `:test NO-SOURCE` and silently ran nothing, so if you ever see
+  NO-SOURCE, check the count in `mod/build/test-results/test/*.xml`. CI keeps a floor of tests per module in
+  `tools/ci/jvm-test-floors.txt` (`tools/ci/check-jvm-tests.py`): when tests move between modules, edit it in the same
+  commit.
 - `./gradlew spotlessApply` before committing; CI checks formatting.
 - One jar runs on every GTNH 2.9 build, beta-1 to the newest (2.8 is not supported). It compiles against the newest;
   where an older build's mods lack something, the code catches the LinkageError or reaches it by reflection.
-  `./gradlew compatCheck` checks it: every class, method, field and mixin target our classes use, against each pack's
+  `./gradlew :mod:compatCheck` checks it: every class, method, field and mixin target our classes use, against each pack's
   mod versions (`tools/dev/compat/manifests/`, GTNH's release lists from DreamAssemblerXXL; add the next build's there),
   and fails on any gap not in `tools/dev/compat/guarded.txt` (each with why it is safe). Run it after moving the pins
   and before a release. It cannot see an API that still exists but behaves differently: test in an older pack for that.
-- Release notes: `.changelogs/unreleased.md` and the `.changelogs/<tag>.md` files are upstream's and arrive with its
-  merges. This fork's notes, versions, tags and handoffs are in `AGENTS.md` (Versions and release notes, Handoffs).
-  How notes read is upstream's rule and holds here: Discord-casual and in a player's words, short and not daunting,
+- Release notes: `.changelogs/unreleased.md` and the `.changelogs/<tag>.md` files before the fork are the original
+  mod's and stay as they are. This fork's notes, versions, tags and handoffs are in `AGENTS.md` (Versions and release
+  notes, Handoffs). How notes read is the original's rule and holds here: Discord-casual and in a player's words, short and not daunting,
   written as the engineers who made it, never as marketing: short sentences with almost no commas, no slogans. One
   line a change, grouped New / Better / Fixed; the thing in bold only for a headline feature; no class names,
   settings keys, paths or numbers a player would not know; never the website (pasted plans are "plan links and
   codes"). Fold small changes together rather than letting the list grow; a change undone before a handoff comes off
   the list.
-- Before a handoff: run `./gradlew compatCheck`, then build at the tag with a clean tree (`./gradlew build`), so the
-  jar takes the tag's version.
+- Before a handoff: run `./gradlew :mod:compatCheck`, then build the jar at the tag with a clean `jvm/`
+  (`tools/ci/mod.sh --release mod-<version>` from the repo root), so the jar takes the tag's version.
 - The solver (`docs/design/solver-plan.md`: what it promises, what was wrong, the phases) is checked against
-  goldens: `./gradlew test --tests '*SolverGoldenTest*' -Pbench=check` compares every corpus plan's whole answer
+  goldens in core-solver: `./gradlew :core-solver:test --tests '*SolverGoldenTest*'` compares every corpus plan's whole answer
   (`conformance/solver/corpus/`, plans exported with `call 'solvedump?dir=...'`) to the recorded one, with
-  `-PwriteGoldens` records them afresh. `SolverPathTest` (answers the same however the simplex gets there) and
+  `-PwriteGoldens` records them afresh (`-Pbench=<label>` is for the timing tests below). `SolverPathTest` (answers the same however the simplex gets there) and
   `SolverIslandTest` (a plan's islands answer as if alone) run in the normal suite. `*SolverBench*` and
-  `*SolverCensus*` time it and count its models; compare before and after in one sitting.
-- The layout benchmark (`./gradlew test -Pbench=<label> --tests '*LayoutBenchmark*'`, tagged `bench`, left out of the
-  normal run) routes and arranges every plan in the corpus, measures it (`layout/RouteMetrics`) and draws it to
-  `build/bench/<label>/`; `DragBench`, `RouterTrace` and `RouterProfile` look at dragging, single searches and
-  profiles. Usage and the numbers so far: `docs/design/routing-and-arrange.md`.
+  `*SolverCensus*` (`./gradlew :core-solver:test -Pbench=<label> --tests '*SolverBench*'`) time it and count its
+  models; compare before and after in one sitting.
+- The layout benchmark (`./gradlew :mod:test -Pbench=<label> --tests '*LayoutBenchmark*'`, tagged `bench`, left out of
+  the normal run) routes and arranges every plan in the corpus, measures it (`layout/RouteMetrics`) and draws it to
+  `mod/build/bench/<label>/`; `DragBench` and `RouterProfile` (also in the mod's tests) look at dragging and profiles,
+  and core-layout's `RouterBench` (`./gradlew :core-layout:test -Pbench --tests '*RouterBench*'`, with `-Pruns=N`,
+  `-Pboard=<name>`, `-Pjfr`) at single searches. Usage and the numbers so far: `docs/design/routing-and-arrange.md`.
 
 ## Running and seeing the game
 
-Use the dev harness; full reference in `docs/dev-harness.md`.
+Use the dev harness; full reference in `docs/dev-harness.md`. Run these from `jvm/mod/` (`mc.sh` calls the Gradle
+wrapper in `jvm/`).
 
 ```bash
 tools/dev/mc.sh start      # build, launch, auto-load the creative test world; blocks until ready
@@ -517,6 +556,11 @@ tools/dev/mc.sh smoke      # automated launch/open/screenshot/log-scan check
 tools/dev/board-check.sh  # GT runs: end-to-end board check (recipe, port drag, solve, add, undo) in a throwaway plan
 ```
 
+- A dev game has no site: with no address set, the Library, accounts, sharing, Feedback and the update check are off and
+  nothing is contacted (the harness's `library` endpoint and `PLANNH_LIBRARY_URL` set one for the run, and
+  `-Dgtnhplanner.update.url` and `.support.url` the others). To work on them, start the stand-ins and point the
+  game at them: `node tools/dev/mock-library.mjs`, then `PLANNH_LIBRARY_URL=http://127.0.0.1:8789 tools/dev/mc.sh start`
+  (the same process serves cloud plans and the live service from `tools/dev/mock-live.mjs`). Never point a dev game at a real site or sign in to one.
 - `PLANNH_GTNH=1 tools/dev/mc.sh start` loads GregTech and the pack's recipes through the GTNH core mod (72 mods,
   about 30s once the jars are cached) in its own test world, `plannh-dev-gtnh`. Use it whenever real GT recipes,
   machines or items are needed; the plain start (29 mods, no GT) is enough for anything else.
@@ -566,7 +610,7 @@ tools/dev/board-check.sh  # GT runs: end-to-end board check (recipe, port drag, 
 - Performance: `call 'perf?start=1'`, do something (drag, pan, open a plan), then `call perf` for FPS, frame-time
   percentiles and per-part timings (cards, drawers, wires, overview, routing, solve; over the world `ar.*`: ghosts,
   wires, labels, cards, tags). Wires route on the router's
-  thread (`layout/WireRouter`), incrementally: a drag, a new wire or a new card re-routes only what it touched, and
+  thread (`ui/canvas/WireLayer`, over core-layout's `IncrementalRouter`), incrementally: a drag, a new wire or a new card re-routes only what it touched, and
   the frame waits for a route expected back within 10 ms. They are drawn from a display list; keep per-frame drawing batched (`Hyb.beginBatch`). Dev runs keep
   each plan opened from the Library in `run/client/library-downloads/` for `call 'importff?file=...'`.
 - UI feedback loop: change code, `swap --reopen`, check with a cropped `shot`, then tell the user it's live in

@@ -26,7 +26,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
 /**
- * Editing and deleting the player's own posts, and their icons, against a stand-in for gtnhplanner.com on this
+ * Editing and deleting the player's own posts, and their icons, against a stand-in for the website on this
  * machine: the calls go as the website's own (method, path, session cookie, fields) and its answers come back right.
  */
 class CommunityApiTest {
@@ -180,13 +180,13 @@ class CommunityApiTest {
     void aReportGoesWithoutAnAccountAndComesBackAsAnIssue() throws IOException {
         answers.put(
             "/api/feedback",
-            new String[] { "201", "{\"number\":12,\"url\":\"https://github.com/o/r/issues/12\"}" });
+            new String[] { "201", "{\"number\":12,\"url\":\"https://tracker.test/o/r/issues/12\"}" });
         final JsonObject body = new JsonObject();
         body.addProperty("kind", "bug");
         body.addProperty("title", "Wires vanish");
         final CommunityApi.Sent sent = CommunityApi.report(body);
         assertEquals(12, sent.number());
-        assertEquals("https://github.com/o/r/issues/12", sent.url());
+        assertEquals("https://tracker.test/o/r/issues/12", sent.url());
         assertEquals("POST", last().method());
         assertEquals(null, last().cookie(), "no sign-in needed");
         assertEquals(

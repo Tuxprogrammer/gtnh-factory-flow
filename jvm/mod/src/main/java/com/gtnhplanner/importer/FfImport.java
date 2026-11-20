@@ -11,7 +11,7 @@ public final class FfImport {
 
     /**
      * The plan in pasted text: Factory Flow's JSON download, a plan code ({@code gtnh1....}) or a plan link
-     * ({@code https://gtnhplanner.com/#p=gtnh1....}).
+     * ({@code https://<site>/#p=gtnh1....}).
      *
      * @throws FfImportException when the text is none of these; the message is for the player
      */

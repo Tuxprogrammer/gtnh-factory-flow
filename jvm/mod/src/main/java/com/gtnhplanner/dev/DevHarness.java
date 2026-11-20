@@ -770,10 +770,12 @@ public final class DevHarness {
                 });
             case "/library":
                 // The site the library reads and posts to: url=<base> (tools/dev/mock-library.mjs for a local
-                // stand-in).
+                // stand-in); url= (empty) turns it off, as an install with no site configured.
                 if (q.containsKey("url")) com.gtnhplanner.library.CommunityApi.useSite(q.get("url"));
                 // live=<ws url> points the live service elsewhere; live= (empty) goes back to the site's.
                 if (q.containsKey("live")) com.gtnhplanner.cloud.net.CloudApi.useLive(q.get("live"));
+                // support=<url> sets the Feedback box's help page; support= (empty) removes it.
+                if (q.containsKey("support")) com.gtnhplanner.library.SiteConfig.useSupport(q.get("support"));
                 return onClient(() -> {
                     final Map<String, Object> r = new LinkedHashMap<>();
                     r.put("site", com.gtnhplanner.library.CommunityApi.site());
@@ -887,9 +889,7 @@ public final class DevHarness {
                     if (q.containsKey("latest")) com.gtnhplanner.client.UpdateCheck.fake(
                         new com.gtnhplanner.client.UpdateCheck.Release(
                             q.get("latest"),
-                            q.getOrDefault(
-                                "url",
-                                "https://github.com/jackwrichards/gtnh-planner-mod/releases/tag/" + q.get("latest"))));
+                            q.getOrDefault("url", "http://127.0.0.1/releases/tag/" + q.get("latest"))));
                     if ("1".equals(q.get("clear"))) com.gtnhplanner.client.UpdateCheck.fake(null);
                     if ("1".equals(q.get("reset"))) com.gtnhplanner.ui.PlannerSettings.setUpdateOffered("");
                     if (!"1".equals(q.get("clear"))) com.gtnhplanner.ui.popup.UpdateOffer.again();

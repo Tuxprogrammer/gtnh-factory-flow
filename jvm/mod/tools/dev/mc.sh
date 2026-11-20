@@ -140,8 +140,8 @@ start() {
     fi
     # The harness listens where this script calls it (another game, the full pack's, may hold the default port).
     [ "$PORT" != 25599 ] && run_args+=("--mcJvmArgs=-Dgtnhplanner.dev.port=$PORT")
-    # A local site from the first moment (the website's dev:local, or the mock): a signed-in game restarted with no
-    # URL would ask the real site before `call library?url=` could point it elsewhere.
+    # A local site from the first moment (the website's dev:local, or the mock). With none, the jar names no site and
+    # contacts nothing until `call library?url=` or the config sets one.
     [ -n "${PLANNH_LIBRARY_URL:-}" ] && run_args+=("--mcJvmArgs=-Dgtnhplanner.library.url=$PLANNH_LIBRARY_URL")
     # JetBrains Runtime + HotswapAgent + a JDWP port so `mc.sh swap` can push recompiled classes into the game.
     [ "$HOTSWAP" = 1 ] && run_args+=(--hotswap

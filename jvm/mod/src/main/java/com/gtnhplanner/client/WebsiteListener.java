@@ -24,6 +24,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.gtnhplanner.importer.FfPlanCode;
+import com.gtnhplanner.library.SiteConfig;
 
 /**
  * The website's "Open in the mod": a page on the website hands the running game a plan code over a tiny HTTP server on
@@ -102,11 +103,14 @@ public final class WebsiteListener implements Closeable {
         return null;
     }
 
-    /** The website's own pages: the site, and a copy of it served on this computer for development. */
+    /**
+     * The website's own pages: the configured site, the origins the config lists ({@link SiteConfig#listedOrigin}),
+     * and a copy of the site served on this computer for development.
+     */
     public static boolean websiteOrigin(final String origin, final String site) {
         if (origin == null) return false;
-        if (origin.equals("https://gtnhplanner.com") || origin.equals("https://www.gtnhplanner.com")) return true;
-        if (origin.equals(originOf(site))) return true;
+        if (!site.isEmpty() && origin.equals(originOf(site))) return true;
+        if (SiteConfig.listedOrigin(origin)) return true;
         return origin.matches("http://(localhost|127\\.0\\.0\\.1)(:\\d{1,5})?");
     }
 

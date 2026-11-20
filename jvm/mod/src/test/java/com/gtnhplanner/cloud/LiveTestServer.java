@@ -292,9 +292,11 @@ final class LiveTestServer implements AutoCloseable {
                     null,
                     false,
                     1 << 25).newHandshaker(req);
-                handshaker.handshake(ctx.channel(), req);
+                // Counted and listed before the answer goes out: the client sees the connection open as soon as that
+                // answer arrives, and a test that then sends to every client or drops them must find this one.
                 connections.incrementAndGet();
                 clients.add(ctx.channel());
+                handshaker.handshake(ctx.channel(), req);
             } else if (msg instanceof TextWebSocketFrame) {
                 final String text = ((TextWebSocketFrame) msg).text();
                 received.add(text);

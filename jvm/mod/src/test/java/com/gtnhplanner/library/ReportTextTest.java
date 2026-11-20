@@ -226,7 +226,7 @@ class ReportTextTest {
                 "",
                 "_The plans are in the first comment._",
                 "",
-                "![The open plan](https://gtnhplanner.com/api/feedback/files/2c3dc897-cea1-4503-8ef9-7b231449e967/picture.png)",
+                "![The open plan](https://planner.test/api/feedback/files/2c3dc897-cea1-4503-8ef9-7b231449e967/picture.png)",
                 "",
                 details("The end of the game log", log),
                 "",

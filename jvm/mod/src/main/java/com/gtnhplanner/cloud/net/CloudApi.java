@@ -20,6 +20,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.gtnhplanner.Tags;
 import com.gtnhplanner.library.CommunityApi;
+import com.gtnhplanner.library.SiteConfig;
+import com.gtnhplanner.library.SiteOff;
 
 /**
  * The REST side of cloud plans (docs/design/cloud-live.md): the account's plans and the ones shared with it, a plan's
@@ -35,17 +37,27 @@ public final class CloudApi {
 
     // region Where the live service is
 
-    private static volatile String liveOverride = clean(System.getProperty("gtnhplanner.live.url"));
+    private static volatile String liveOverride;
 
-    /** The live service's WebSocket address: the override if there is one, else derived from the site. */
+    /**
+     * The live service's WebSocket address: the override if there is one, else the config's ({@link SiteConfig}), else
+     * derived from the site; empty when there is no site to derive it from.
+     */
     public static String live() {
         final String o = liveOverride;
-        return o != null ? o : liveFor(CommunityApi.site());
+        if (o != null) return o;
+        if (!SiteConfig.live()
+            .isEmpty()) return SiteConfig.live();
+        return CommunityApi.configured() ? liveFor(CommunityApi.site()) : "";
+    }
+
+    /** Whether the live service has an address; without one cloud plans are off and nothing is contacted. */
+    public static boolean liveConfigured() {
+        return !live().isEmpty();
     }
 
     /**
-     * Points the game at another live service ({@code -Dgtnhplanner.live.url} does too); null or empty goes back to the
-     * site's.
+     * Points the game at another live service (dev and tests); null or empty goes back to the config's or the site's.
      */
     public static void useLive(@Nullable final String url) {
         liveOverride = clean(url);
@@ -74,8 +86,9 @@ public final class CloudApi {
     }
 
     /** The live service's HTTP address for a route under {@code /live}: ws is http, wss is https. */
-    static String liveHttp(final String route) {
+    static String liveHttp(final String route) throws SiteOff {
         final String ws = live();
+        if (ws.isEmpty()) throw new SiteOff();
         return (ws.startsWith("wss:") ? "https:" + ws.substring(4) : "http:" + ws.substring(3)) + route;
     }
 
@@ -505,6 +518,7 @@ public final class CloudApi {
 
     private static Reply send(final String method, final String url, @Nullable final String json, final String token,
         final int... allowed) throws IOException {
+        if (!url.startsWith("http://") && !url.startsWith("https://")) throw new SiteOff();
         final HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
         c.setRequestMethod(method);
         c.setConnectTimeout(CONNECT_MS);

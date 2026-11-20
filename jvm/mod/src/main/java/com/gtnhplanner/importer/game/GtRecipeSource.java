@@ -9,9 +9,10 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.fluids.FluidStack;
 
+import com.gtnhplanner.core.model.read.GtRecipeRecord;
 import com.gtnhplanner.data.RecipeHandlerAccess;
+import com.gtnhplanner.data.provider.GTProvider;
 import com.gtnhplanner.importer.FfIds;
 import com.gtnhplanner.importer.FfPlan.FfRecipe;
 import com.gtnhplanner.importer.RecipeIndex.GameRecipe;
@@ -24,8 +25,6 @@ import codechicken.nei.recipe.GuiCraftingRecipe;
 import codechicken.nei.recipe.ICraftingHandler;
 import codechicken.nei.recipe.TemplateRecipeHandler;
 import gregtech.api.util.GTRecipe;
-import gregtech.api.util.GTRecipeConstants;
-import gregtech.common.items.ItemFluidDisplay;
 import gregtech.nei.GTNEIDefaultHandler;
 import gregtech.nei.GTNEIDefaultHandler.CachedDefaultRecipe;
 
@@ -39,8 +38,6 @@ import gregtech.nei.GTNEIDefaultHandler.CachedDefaultRecipe;
  * own "all recipes" view does. A node built from such a handler and index is the node NEI's + would have made.
  */
 final class GtRecipeSource {
-
-    private static final double GT_CHANCE_SCALE = 10_000.0;
 
     private GtRecipeSource() {}
 
@@ -110,45 +107,30 @@ final class GtRecipeSource {
         return out;
     }
 
-    /** A GregTech recipe as plain data, read the way GTProvider reads it for a node's ports. */
+    /**
+     * A GregTech recipe as plain data, from the shared reader's record (the export run's, so the time is the one the
+     * machine runs and the website's dataset has): every slot with its ids (the item, then its ore names), a kept slot
+     * (a circuit, a mold, the Rock Breaker's lava placeholder) as a stack of 1 not used up.
+     */
     private static GameRecipe of(final GTNEIDefaultHandler handler, final int index, final GTRecipe r) {
+        final GtRecipeRecord read = GTProvider.reader()
+            .read(handler.getRecipeMap(), r);
         final List<GameStack> inputs = new ArrayList<>(), outputs = new ArrayList<>();
-        if (r.mInputs != null) for (final ItemStack s : r.mInputs) {
-            if (s == null || s.getItem() == null || s.getItem() instanceof ItemFluidDisplay) continue;
-            // GregTech keeps what a recipe does not use up (a circuit, a mold) as a stack of 0.
-            // So is the Rock Breaker's lava placeholder (FreeInputs), though GT gives it a stack of 1.
-            final boolean consumed = s.stackSize > 0
-                && !(s.getItem() != null && com.gtnhplanner.data.provider.FreeInputs.isFreeId(GameIds.itemId(s)));
-            inputs.add(new GameStack("item", GameIds.itemIds(s), consumed ? s.stackSize : 1, 1, consumed));
+        for (final GtRecipeRecord.Stack s : read.itemInputs) {
+            if (!(s.host instanceof final ItemStack stack)) continue;
+            final boolean consumed = !Boolean.FALSE.equals(s.consumed)
+                && !com.gtnhplanner.data.provider.FreeInputs.isFreeId(s.id);
+            inputs.add(new GameStack("item", GameIds.itemIds(stack), consumed ? s.amount : 1, 1, consumed));
         }
-        if (r.mFluidInputs != null) for (final FluidStack f : r.mFluidInputs) {
-            if (f == null || f.getFluid() == null || f.amount <= 0) continue;
-            inputs.add(new GameStack("fluid", List.of(GameIds.fluidId(f)), f.amount, 1, true));
-        }
-        if (r.mOutputs != null) for (int i = 0; i < r.mOutputs.length; i++) {
-            final ItemStack s = r.mOutputs[i];
-            if (s == null || s.getItem() == null || s.getItem() instanceof ItemFluidDisplay) continue;
-            outputs.add(
-                new GameStack("item", GameIds.itemIds(s), s.stackSize, r.getOutputChance(i) / GT_CHANCE_SCALE, true));
-        }
-        if (r.mFluidOutputs != null) for (int i = 0; i < r.mFluidOutputs.length; i++) {
-            final FluidStack f = r.mFluidOutputs[i];
-            if (f == null || f.getFluid() == null || f.amount <= 0) continue;
-            outputs.add(
-                new GameStack(
-                    "fluid",
-                    List.of(GameIds.fluidId(f)),
-                    f.amount,
-                    r.getFluidOutputChance(i) / GT_CHANCE_SCALE,
-                    true));
-        }
+        for (final GtRecipeRecord.Stack s : read.fluidInputs)
+            inputs.add(new GameStack("fluid", List.of(s.id), s.amount, 1, true));
+        for (final GtRecipeRecord.Stack s : read.itemOutputs) if (s.host instanceof final ItemStack stack)
+            outputs.add(new GameStack("item", GameIds.itemIds(stack), s.amount, chance(s), true));
+        for (final GtRecipeRecord.Stack s : read.fluidOutputs)
+            outputs.add(new GameStack("fluid", List.of(s.id), s.amount, chance(s), true));
         // Newer GregTech keeps a coil recipe's heat in metadata, older in the special value; FF's dataset has it as
         // the special value either way.
-        int special = r.mSpecialValue;
-        if (special == 0) {
-            final Integer heat = r.getMetadataOrDefault(GTRecipeConstants.COIL_HEAT, 0);
-            if (heat != null) special = heat;
-        }
+        final int special = read.specialValue != 0 ? read.specialValue : read.coilHeat;
         return new GameRecipe(
             handler,
             index,
@@ -156,8 +138,12 @@ final class GtRecipeSource {
                 .trim(),
             inputs,
             outputs,
-            r.mDuration,
-            (long) Math.max(0, r.mEUt),
+            read.durationTicks,
+            Math.max(0L, read.eut),
             special);
+    }
+
+    private static double chance(final GtRecipeRecord.Stack s) {
+        return s.chance != null ? s.chance : 1;
     }
 }

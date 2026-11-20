@@ -70,6 +70,31 @@ describe("a recipe map that runs on several amps", () => {
   });
 });
 
+describe("a GregTech recipe's tier names and fluid chances", () => {
+  const recipeOf = (recipe) => normalize({ domains: [{ id: "gregtech", recipeMaps: [{
+    id: "gt.recipe.mixer", name: "Mixer", amperage: 1,
+    recipes: [{ id: "r", durationTicks: 20, itemInputs: [], itemOutputs: [], fluidOutputs: [fluid("out", 1, "Out")],
+      fluidInputs: [fluid("in", 1000, "In")], ...recipe }],
+  }] }] }).recipes[0];
+
+  it("names the tiers past UIV as GregTech does: UMV, then UXV", () => {
+    expect(recipeOf({ eut: 100_000_000 }).minimumTier).toBe("UMV");
+    expect(recipeOf({ eut: 500_000_000 }).minimumTier).toBe("UXV");
+    expect(recipeOf({ eut: 600_000_000 }).minimumTier).toBe("MAX");
+  });
+
+  it("uses up a fluid only as often as its chance, as an item", () => {
+    const recipe = recipeOf({ eut: 30, fluidInputs: [{ ...fluid("in", 1000, "In"), inputChance: 2500 }] });
+    expect(recipe.inputs[0]).toMatchObject({ id: "in", amount: 250, consumeChance: 0.25 });
+  });
+
+  it("keeps a fluid output's chance, and a chance of 0 as never made", () => {
+    const recipe = recipeOf({ eut: 30, fluidOutputs: [{ ...fluid("a", 1, "A"), chance: 0.5 },
+      { ...fluid("b", 1, "B"), chance: 0 }] });
+    expect(recipe.outputs.map((o) => o.chance)).toEqual([0.5, 0]);
+  });
+});
+
 describe("a crafting recipe with an ingredient that names nothing", () => {
   // GregTech registers "hammer + gemFlawlessFluix -> 2 Fluix Crystal" although no
   // such gem exists; the exporter marks the empty slot and the recipe cannot be made.

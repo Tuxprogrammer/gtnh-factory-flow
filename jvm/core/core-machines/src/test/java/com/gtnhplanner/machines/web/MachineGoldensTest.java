@@ -24,7 +24,7 @@ import com.gtnhplanner.machines.GoldenCompare;
  * The website's own functions run over real dataset recipes and a spread of nodes (machine-goldens.jsonl.gz, written
  * by its {@code tools/audits/export-mod-machine-goldens.ts}; the command and dataset are in conformance/manifest.json),
  * at the pack's rate-mod factors each case carries: the port must give every number the same, the runtime
- * variants the recipes carry included (the game computes its own in play, machines/game/RuntimeVariants). The numbers
+ * variants the recipes carry included (the game computes its own in play, read/gt/GtRecipeReader). The numbers
  * come from {@link MachineReadout}, the text readout the compiled core answers in the browser, and are judged by
  * {@link GoldenCompare}, the rules tools/web-core/machines.mjs applies to both browser targets. The Tree Growth
  * Simulator and Bacterial Vat are checked against nothing here: the mod's own models in machines/ are matched to the

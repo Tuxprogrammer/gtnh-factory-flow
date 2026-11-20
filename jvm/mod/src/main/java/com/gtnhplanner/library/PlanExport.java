@@ -651,7 +651,8 @@ public final class PlanExport {
         final Web.RuntimeCalculation calc = site.runtimeCalculation;
         if (calc == null || calc.variants == null || calc.variants.isEmpty()) return;
         final JsonObject runtime = new JsonObject();
-        // The oracle's kind for GT's OverclockCalculator run per tier (machines/game/RuntimeVariants).
+        // The oracle's kind for GT's OverclockCalculator run per tier (read/gt/GtRecipeReader, the export run's
+        // reader).
         runtime.addProperty("sourceKind", "gregtech-overclock-calculator");
         runtime.addProperty("status", calc.status != null ? calc.status : "computed");
         runtime.addProperty("oracleEligible", Boolean.TRUE.equals(calc.oracleEligible));

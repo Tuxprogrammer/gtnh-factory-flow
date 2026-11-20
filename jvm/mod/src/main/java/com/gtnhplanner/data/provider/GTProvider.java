@@ -3,7 +3,6 @@ package com.gtnhplanner.data.provider;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -13,6 +12,7 @@ import net.minecraftforge.fluids.FluidStack;
 
 import com.gtnhplanner.Compat;
 import com.gtnhplanner.api.RecipePropertyAPI;
+import com.gtnhplanner.core.model.read.GtRecipeRecord;
 import com.gtnhplanner.data.MachineProfile;
 import com.gtnhplanner.data.MachineProfileRegistry;
 import com.gtnhplanner.data.RecipeHandlerAccess;
@@ -24,6 +24,7 @@ import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Port;
 import com.gtnhplanner.data.properties.PropertyProvider;
 import com.gtnhplanner.data.properties.RecipeProperty;
+import com.gtnhplanner.read.gt.GtRecipeReader;
 
 import codechicken.nei.PositionedStack;
 import codechicken.nei.recipe.FurnaceRecipeHandler;
@@ -31,13 +32,9 @@ import codechicken.nei.recipe.IRecipeHandler;
 import codechicken.nei.recipe.TemplateRecipeHandler;
 import gregtech.api.recipe.RecipeMap;
 import gregtech.api.recipe.RecipeMaps;
-import gregtech.api.recipe.RecipeMetadataKey;
 import gregtech.api.recipe.maps.FuelBackend;
 import gregtech.api.recipe.maps.LargeBoilerFuelBackend;
 import gregtech.api.util.GTRecipe;
-import gregtech.api.util.GTRecipeConstants;
-import gregtech.api.util.recipe.Sievert;
-import gregtech.common.items.ItemFluidDisplay;
 import gregtech.nei.GTNEIDefaultHandler;
 import gregtech.nei.GTNEIDefaultHandler.CachedDefaultRecipe;
 import gregtech.nei.formatter.HeatingCoilSpecialValueFormatter;
@@ -68,6 +65,11 @@ public class GTProvider implements PropertyProvider {
 
     public static final RecipeProperty<Integer> COIL_HEAT = GTKeys.COIL_HEAT;
     public static final RecipeProperty<Long> FUSION_THRESHOLD = RecipeProperty.<Long>builder("gt.fusion_threshold", 0L)
+        .build();
+
+    /** The recipe as the shared reader read it (read/gt): WebCards builds the card's dataset record from it. */
+    public static final RecipeProperty<GtRecipeRecord> RECORD = RecipeProperty
+        .<GtRecipeRecord>builder("gt.record", null)
         .build();
 
     public static final RecipeProperty<RecipeMap<?>> RECIPE_MAP = RecipeProperty
@@ -136,14 +138,6 @@ public class GTProvider implements PropertyProvider {
         return null;
     }
 
-    private static <T> void extractMD(final Map<RecipeProperty<?>, Object> props, final GTRecipe r,
-        final RecipeProperty<T> prop, final RecipeMetadataKey<T> key, final T defaultVal) {
-        final T val = r.getMetadataOrDefault(key, defaultVal);
-        if (!Objects.equals(val, defaultVal)) {
-            props.put(prop, val);
-        }
-    }
-
     @Override
     @Nonnull
     public Map<RecipeProperty<?>, Object> extract(final Node node, final IRecipeHandler handler,
@@ -156,6 +150,7 @@ public class GTProvider implements PropertyProvider {
         final Map<RecipeProperty<?>, Object> props = new HashMap<>();
         GTRecipe r;
         RecipeMap<?> gthMap = null;
+        RecipeMap<?> readMap;
 
         if (handler instanceof final FurnaceRecipeHandler fh) {
             final List<TemplateRecipeHandler.CachedRecipe> fRecipes = RecipeHandlerAccess.getArecipes(fh);
@@ -189,6 +184,7 @@ public class GTProvider implements PropertyProvider {
             if (r == null) {
                 return props;
             }
+            readMap = recipeMap;
 
         } else if (handler instanceof final GTNEIDefaultHandler gth) {
             final List<TemplateRecipeHandler.CachedRecipe> recipes = RecipeHandlerAccess.getArecipes(gth);
@@ -199,14 +195,19 @@ public class GTProvider implements PropertyProvider {
             if (r == null) return props;
 
             gthMap = gth.getRecipeMap();
+            readMap = gthMap;
+            if (readMap == null) return props;
 
         } else {
             return props;
         }
 
-        props.put(RecipePropertyAPI.DURATION_TICKS, r.mDuration);
-        props.put(EU_PER_TICK, (long) r.mEUt);
-        props.put(TOTAL_EU, (long) r.mEUt * r.mDuration);
+        // One read of the recipe, the export run's (read/gt): the time the machine runs, its numbers and its slots.
+        final GtRecipeRecord record = reader().read(readMap, r);
+        props.put(RECORD, record);
+        props.put(RecipePropertyAPI.DURATION_TICKS, record.durationTicks);
+        props.put(EU_PER_TICK, record.eut);
+        props.put(TOTAL_EU, record.eut * record.durationTicks);
 
         if (gthMap != null && (gthMap.getBackend() instanceof FuelBackend
             || gthMap.getBackend() instanceof LargeBoilerFuelBackend)) {
@@ -214,77 +215,37 @@ public class GTProvider implements PropertyProvider {
             props.put(TOTAL_EU, 0L);
         }
 
-        extractMD(props, r, GLASS_TIER, GTRecipeConstants.GLASS, 3);
-        extractMD(props, r, COIL_HEAT, GTRecipeConstants.COIL_HEAT, 0);
+        if (record.glassTier != 3) props.put(GLASS_TIER, record.glassTier);
+        if (record.coilHeat != 0) props.put(COIL_HEAT, record.coilHeat);
 
         if (gthMap != null && !props.containsKey(COIL_HEAT)
             && gthMap.getFrontend().getNEIProperties().neiSpecialInfoFormatter instanceof HeatingCoilSpecialValueFormatter
-            && r.mSpecialValue > 0) {
-            props.put(COIL_HEAT, r.mSpecialValue);
+            && record.specialValue > 0) {
+            props.put(COIL_HEAT, record.specialValue);
         }
 
         if (gthMap != null) {
             props.put(RECIPE_MAP, gthMap);
         }
 
-        extractMD(props, r, FUSION_THRESHOLD, GTRecipeConstants.FUSION_THRESHOLD, 0L);
+        if (record.fusionStartupEu != null && record.fusionStartupEu != 0L)
+            props.put(FUSION_THRESHOLD, record.fusionStartupEu);
 
-        final Sievert sievert = r.getMetadataOrDefault(GTRecipeConstants.SIEVERT, new Sievert(0, false));
-        if (sievert.sievert > 0 || sievert.isExact) {
-            props.put(SIEVERT, sievert.sievert);
-            if (sievert.isExact) props.put(SIEVERT_EXACT, true);
+        if (record.sievert > 0 || record.sievertExact) {
+            props.put(SIEVERT, record.sievert);
+            if (record.sievertExact) props.put(SIEVERT_EXACT, true);
         }
 
-        extractMD(props, r, MASS, GTRecipeConstants.MASS, 0);
+        if (record.mass != 0) props.put(MASS, record.mass);
 
-        if (r.mSpecialValue != 0) {
-            props.put(SPECIAL_VALUE, r.mSpecialValue);
+        if (record.specialValue != 0) {
+            props.put(SPECIAL_VALUE, record.specialValue);
         }
 
         // Reset everything to not ignore burnables
         node.inputs.clear();
         node.outputs.clear();
-
-        // Copies, never GT's own stacks: Node.deduplicate merges ports by writing the summed amount
-        // into the first one, which on an aliased stack rewrites the recipe itself (and grows it
-        // again on every refresh).
-        for (int i = 0; i < r.mInputs.length; i++) {
-            if (r.mInputs[i].stackSize <= 0) continue;
-            final ItemStack in = copyOf(r.mInputs[i]);
-            // The Rock Breaker's lava placeholder (FreeInputs): kept on the card, an amount of 0 so nothing asks for it.
-            if (in.getItem() != null && FreeInputs.isFreeId(com.gtnhplanner.importer.game.GameIds.itemId(in)))
-                in.stackSize = 0;
-            node.inputs.add(
-                new Port<>(
-                    RecipePropertyAPI.ITEM,
-                    in,
-                    r.mInputChances != null ? r.mInputChances[i] / GT_CHANCE_SCALE : 1.f));
-        }
-        for (int i = 0; i < r.mOutputs.length; i++) {
-            node.outputs.add(
-                new Port<>(
-                    RecipePropertyAPI.ITEM,
-                    copyOf(r.mOutputs[i]),
-                    r.mOutputChances != null ? r.mOutputChances[i] / GT_CHANCE_SCALE : 1.f));
-        }
-        for (int i = 0; i < r.mFluidInputs.length; i++) {
-            if (r.mFluidInputs[i].amount <= 0) continue;
-            node.inputs.add(
-                new Port<>(
-                    RecipePropertyAPI.FLUID,
-                    copyOf(r.mFluidInputs[i]),
-                    r.mFluidInputChances != null ? r.mFluidInputChances[i] / GT_CHANCE_SCALE : 1.f));
-        }
-        for (int i = 0; i < r.mFluidOutputs.length; i++) {
-            node.outputs.add(
-                new Port<>(
-                    RecipePropertyAPI.FLUID,
-                    copyOf(r.mFluidOutputs[i]),
-                    r.mFluidOutputChances != null ? r.mFluidOutputChances[i] / GT_CHANCE_SCALE : 1.f));
-        }
-
-        node.inputs.removeIf(p -> p.getValue() instanceof ItemStack stack && stack.getItem() instanceof ItemFluidDisplay);
-        node.outputs.removeIf(p -> p.getValue() instanceof ItemStack stack && stack.getItem() instanceof ItemFluidDisplay);
+        ports(node, record);
 
         // The Tree Growth Simulator: NEI's outputs by mode (a mode the tree lacks is null) and the sapling's genes.
         if (com.gtnhplanner.machines.game.MachineModels.isTgs(props))
@@ -293,14 +254,44 @@ public class GTProvider implements PropertyProvider {
         return props;
     }
 
-    @Nullable
-    private static ItemStack copyOf(@Nullable final ItemStack stack) {
-        return stack == null ? null : stack.copy();
+    /** The shared reader, made on first use (after the game has loaded the Rock Breaker's and Scanner's lists). */
+    private static GtRecipeReader reader;
+
+    public static synchronized GtRecipeReader reader() {
+        if (reader == null) reader = new GtRecipeReader();
+        return reader;
     }
 
-    @Nullable
-    private static FluidStack copyOf(@Nullable final FluidStack stack) {
-        return stack == null ? null : stack.copy();
+    /**
+     * The card's ports from the record, items before fluids: every slot the recipe uses up (a kept one, a programmed
+     * circuit or a mold, is no port), with its chance. Copies, never GT's own stacks: Node.deduplicate merges ports by
+     * writing the summed amount into the first one, which on an aliased stack rewrites the recipe itself (and grows it
+     * again on every refresh). The Sparge Tower's byproducts, registered at 0 L, stay on the card at 0.
+     */
+    private static void ports(final Node node, final GtRecipeRecord record) {
+        for (final GtRecipeRecord.Stack s : record.itemInputs) {
+            if (Boolean.FALSE.equals(s.consumed) || !(s.host instanceof final ItemStack stack)) continue;
+            final ItemStack in = stack.copy();
+            // The Rock Breaker's lava placeholder (FreeInputs): kept on the card, an amount of 0 so nothing asks for it.
+            if (FreeInputs.isFreeId(s.id)) in.stackSize = 0;
+            node.inputs.add(new Port<>(RecipePropertyAPI.ITEM, in, chance(s)));
+        }
+        for (final GtRecipeRecord.Stack s : record.itemOutputs)
+            if (s.host instanceof final ItemStack stack)
+                node.outputs.add(new Port<>(RecipePropertyAPI.ITEM, stack.copy(), chance(s)));
+        for (final GtRecipeRecord.Stack s : record.fluidInputs)
+            if (!Boolean.FALSE.equals(s.consumed) && s.host instanceof final FluidStack fluid)
+                node.inputs.add(new Port<>(RecipePropertyAPI.FLUID, fluid.copy(), chance(s)));
+        for (final GtRecipeRecord.Stack s : record.fluidOutputs) if (s.host instanceof final FluidStack fluid)
+            node.outputs.add(new Port<>(RecipePropertyAPI.FLUID, fluid.copy(), chance(s)));
+        if (record.spargeFluidOutputs != null) for (final GtRecipeRecord.Stack s : record.spargeFluidOutputs)
+            if (s.amount <= 0 && s.host instanceof final FluidStack fluid)
+                node.outputs.add(new Port<>(RecipePropertyAPI.FLUID, fluid.copy(), 1.f));
     }
 
+    /** A port's chance: an input's use-up chance, an output's make chance (GT's ten-thousandths), else 1. */
+    private static float chance(final GtRecipeRecord.Stack s) {
+        if (s.inputChance != null) return s.inputChance / GT_CHANCE_SCALE;
+        return s.chance != null ? s.chance.floatValue() : 1.f;
+    }
 }

@@ -91,8 +91,8 @@ public record CardModel(Uuid id, String machineName, @Nullable String machineIco
      * @param wired         a wire or drawer is on it, or it needs none (nothing is used up)
      * @param extra         the part of {@code perSecond} the solve sends out of the plan (an output) or brings into it
      *                      (an input) here with no drawer: a row of its own under the port
-     * @param free          free in the game (the Rock Breaker's lava): drawn, never wired, no rate. The mod draws
-     *                      these from its own free-input list beside the ports and leaves this false for now
+     * @param free          free in the game (the Rock Breaker's lava): drawn, never wired, no rate. The mod sets it
+     *                      from {@code FreeInputs.isFree} (core-model), the rule the rails' rows read
      * @param choice        more than one resource fills the slot (the dataset's alternatives); the mod's recipes have
      *                      one, so false there
      * @param setRate       the rate the player set on the port, per second; null for none

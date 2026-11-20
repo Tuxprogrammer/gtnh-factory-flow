@@ -88,7 +88,8 @@ public final class CardModels {
                     p.perSecond(),
                     p.wired(),
                     p.extra(),
-                    false,
+                    // What the game gives for nothing (the Rock Breaker's lava): the shared rule.
+                    !p.output() && com.gtnhplanner.data.provider.FreeInputs.isFree(port),
                     false,
                     rate(rates.get(p.index()))));
         }

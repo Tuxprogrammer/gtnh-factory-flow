@@ -289,6 +289,86 @@ public final class ViewJs {
             c7);
     }
 
+    /** A {@code NodeRailsInput} from the website's object (records.generated.ts {@code NodeRailsInput}). */
+    public static com.gtnhplanner.core.view.rails.NodeRailsInput readNodeRailsInput(final JSObject o) {
+        final JSObject o7 = nodeRailsInputInputs(o);
+        final JSObject o8 = nodeRailsInputOutputs(o);
+        return new com.gtnhplanner.core.view.rails.NodeRailsInput(nodeRailsInputEnabled(o),
+            nodeRailsInputHasResult(o),
+            nodeRailsInputMissingRecipe(o),
+            nodeRailsInputSolveMode(o),
+            nodeRailsInputHasSlots(o),
+            nodeRailsInputUtilization(o),
+            nodeRailsInputEuT(o),
+            readNodeRailsInputSide(o7),
+            readNodeRailsInputSide(o8));
+    }
+
+    /** A {@code NodeRailsInputFlow} from the website's object (records.generated.ts {@code NodeRailsInputFlow}). */
+    public static com.gtnhplanner.core.view.rails.NodeRailsInput.Flow readNodeRailsInputFlow(final JSObject o) {
+        return new com.gtnhplanner.core.view.rails.NodeRailsInput.Flow(nodeRailsInputFlowKey(o),
+            nodeRailsInputFlowKind(o),
+            nodeRailsInputFlowResourceId(o),
+            nodeRailsInputFlowName(o),
+            nodeRailsInputFlowOreLabel(o),
+            nodeRailsInputFlowHandleId(o),
+            nodeRailsInputFlowAmountPerSecond(o));
+    }
+
+    /** A {@code NodeRailsInputSide} from the website's object (records.generated.ts {@code NodeRailsInputSide}). */
+    public static com.gtnhplanner.core.view.rails.NodeRailsInput.Side readNodeRailsInputSide(final JSObject o) {
+        final JSObject a0 = nodeRailsInputSideSlots(o);
+        final java.util.List<com.gtnhplanner.core.view.rails.NodeRailsInput.Slot> c0;
+        if (a0 == null) c0 = new java.util.ArrayList<>();
+        else {
+            final int n0 = length(a0);
+            final java.util.List<com.gtnhplanner.core.view.rails.NodeRailsInput.Slot> l0 = new java.util.ArrayList<>(n0);
+            for (int i = 0; i < n0; i++) l0.add(readNodeRailsInputSlot(atObject(a0, i)));
+            c0 = l0;
+        }
+        final JSObject a1 = nodeRailsInputSideFlows(o);
+        final java.util.List<com.gtnhplanner.core.view.rails.NodeRailsInput.Flow> c1;
+        if (a1 == null) c1 = new java.util.ArrayList<>();
+        else {
+            final int n1 = length(a1);
+            final java.util.List<com.gtnhplanner.core.view.rails.NodeRailsInput.Flow> l1 = new java.util.ArrayList<>(n1);
+            for (int i = 0; i < n1; i++) l1.add(readNodeRailsInputFlow(atObject(a1, i)));
+            c1 = l1;
+        }
+        final JSObject a2 = nodeRailsInputSideWires(o);
+        final java.util.List<com.gtnhplanner.core.view.rails.NodeRailsInput.Wire> c2;
+        if (a2 == null) c2 = new java.util.ArrayList<>();
+        else {
+            final int n2 = length(a2);
+            final java.util.List<com.gtnhplanner.core.view.rails.NodeRailsInput.Wire> l2 = new java.util.ArrayList<>(n2);
+            for (int i = 0; i < n2; i++) l2.add(readNodeRailsInputWire(atObject(a2, i)));
+            c2 = l2;
+        }
+        return new com.gtnhplanner.core.view.rails.NodeRailsInput.Side(c0,
+            c1,
+            c2);
+    }
+
+    /** A {@code NodeRailsInputSlot} from the website's object (records.generated.ts {@code NodeRailsInputSlot}). */
+    public static com.gtnhplanner.core.view.rails.NodeRailsInput.Slot readNodeRailsInputSlot(final JSObject o) {
+        return new com.gtnhplanner.core.view.rails.NodeRailsInput.Slot(nodeRailsInputSlotKey(o),
+            nodeRailsInputSlotKind(o),
+            nodeRailsInputSlotResourceId(o),
+            nodeRailsInputSlotName(o),
+            nodeRailsInputSlotOreLabel(o),
+            nodeRailsInputSlotHandleId(o),
+            nodeRailsInputSlotConsumed(o),
+            nodeRailsInputSlotChancePresent(o) ? Double.valueOf(nodeRailsInputSlotChance(o)) : null,
+            nodeRailsInputSlotConsumeChancePresent(o) ? Double.valueOf(nodeRailsInputSlotConsumeChance(o)) : null,
+            (int) nodeRailsInputSlotAlternatives(o));
+    }
+
+    /** A {@code NodeRailsInputWire} from the website's object (records.generated.ts {@code NodeRailsInputWire}). */
+    public static com.gtnhplanner.core.view.rails.NodeRailsInput.Wire readNodeRailsInputWire(final JSObject o) {
+        return new com.gtnhplanner.core.view.rails.NodeRailsInput.Wire(nodeRailsInputWireKey(o),
+            nodeRailsInputWireTransferredPerSecond(o));
+    }
+
     /** A {@code CardGeometry} as the website's object (records.generated.ts {@code CardGeometry}). */
     public static JSObject js(final com.gtnhplanner.core.view.card.CardGeometry v) {
         final JSObject a4;
@@ -422,6 +502,46 @@ public final class ViewJs {
     /** A {@code CardViewTierChip} as the website's object (records.generated.ts {@code CardViewTierChip}). */
     public static JSObject js(final com.gtnhplanner.core.view.card.CardView.TierChip v) {
         return newCardViewTierChip(v.label(), v.fixed(), v.title());
+    }
+
+    /** A {@code NodeRailsView} as the website's object (records.generated.ts {@code NodeRailsView}). */
+    public static JSObject js(final com.gtnhplanner.core.view.rails.NodeRailsView v) {
+        final JSObject a3;
+        {
+            a3 = newArray();
+            for (final com.gtnhplanner.core.view.rails.NodeRailsView.Row x : v.inputs()) pushObject(a3, js(x));
+        }
+        final JSObject a4;
+        {
+            a4 = newArray();
+            for (final com.gtnhplanner.core.view.rails.NodeRailsView.Row x : v.outputs()) pushObject(a4, js(x));
+        }
+        return newNodeRailsView(v.verdict(), v.pct(), v.bare() == null ? null : js(v.bare()), a3, a4);
+    }
+
+    /** A {@code NodeRailsViewBare} as the website's object (records.generated.ts {@code NodeRailsViewBare}). */
+    public static JSObject js(final com.gtnhplanner.core.view.rails.NodeRailsView.Bare v) {
+        final JSObject a0;
+        {
+            a0 = newArray();
+            for (final com.gtnhplanner.core.view.rails.NodeRailsView.BareSlot x : v.inputs()) pushObject(a0, js(x));
+        }
+        final JSObject a1;
+        {
+            a1 = newArray();
+            for (final com.gtnhplanner.core.view.rails.NodeRailsView.BareSlot x : v.outputs()) pushObject(a1, js(x));
+        }
+        return newNodeRailsViewBare(a0, a1);
+    }
+
+    /** A {@code NodeRailsViewBareSlot} as the website's object (records.generated.ts {@code NodeRailsViewBareSlot}). */
+    public static JSObject js(final com.gtnhplanner.core.view.rails.NodeRailsView.BareSlot v) {
+        return newNodeRailsViewBareSlot(v.resourceKey(), v.kind(), v.displayName());
+    }
+
+    /** A {@code NodeRailsViewRow} as the website's object (records.generated.ts {@code NodeRailsViewRow}). */
+    public static JSObject js(final com.gtnhplanner.core.view.rails.NodeRailsView.Row v) {
+        return newNodeRailsViewRow(v.key(), v.handleId(), v.kind(), v.resourceId(), v.name(), v.slot() != null, v.slot() == null ? 0 : v.slot(), v.connected(), v.unsupplied(), v.boundaryFree(), v.currentPerSecond(), v.nameplatePerSecond(), v.tone(), v.shortBadge() != null, v.shortBadge() == null ? 0 : v.shortBadge(), v.showNameplate(), v.energyPerUnit() != null, v.energyPerUnit() == null ? 0 : v.energyPerUnit(), v.free(), v.chance() != null, v.chance() == null ? 0 : v.chance(), v.consumeChance() != null, v.consumeChance() == null ? 0 : v.consumeChance(), v.alternatives());
     }
 
     // region JavaScript
@@ -777,6 +897,105 @@ public final class ViewJs {
     @JSBody(params = "o", script = "return o.upstream == null ? null : o.upstream;")
     private static native JSObject cardInputUpToUpstream(JSObject o);
 
+    @JSBody(params = "o", script = "return o.enabled === true;")
+    private static native boolean nodeRailsInputEnabled(JSObject o);
+
+    @JSBody(params = "o", script = "return o.hasResult === true;")
+    private static native boolean nodeRailsInputHasResult(JSObject o);
+
+    @JSBody(params = "o", script = "return o.missingRecipe === true;")
+    private static native boolean nodeRailsInputMissingRecipe(JSObject o);
+
+    @JSBody(params = "o", script = "return o.solveMode === true;")
+    private static native boolean nodeRailsInputSolveMode(JSObject o);
+
+    @JSBody(params = "o", script = "return o.hasSlots === true;")
+    private static native boolean nodeRailsInputHasSlots(JSObject o);
+
+    @JSBody(params = "o", script = "return o.utilization == null ? 0 : o.utilization;")
+    private static native double nodeRailsInputUtilization(JSObject o);
+
+    @JSBody(params = "o", script = "return o.euT == null ? 0 : o.euT;")
+    private static native double nodeRailsInputEuT(JSObject o);
+
+    @JSBody(params = "o", script = "return o.inputs == null ? {} : o.inputs;")
+    private static native JSObject nodeRailsInputInputs(JSObject o);
+
+    @JSBody(params = "o", script = "return o.outputs == null ? {} : o.outputs;")
+    private static native JSObject nodeRailsInputOutputs(JSObject o);
+
+    @JSBody(params = "o", script = "return o.key == null ? \"\" : o.key;")
+    private static native String nodeRailsInputFlowKey(JSObject o);
+
+    @JSBody(params = "o", script = "return o.kind == null ? \"\" : o.kind;")
+    private static native String nodeRailsInputFlowKind(JSObject o);
+
+    @JSBody(params = "o", script = "return o.resourceId == null ? \"\" : o.resourceId;")
+    private static native String nodeRailsInputFlowResourceId(JSObject o);
+
+    @JSBody(params = "o", script = "return o.name == null ? null : o.name;")
+    private static native String nodeRailsInputFlowName(JSObject o);
+
+    @JSBody(params = "o", script = "return o.oreLabel == null ? null : o.oreLabel;")
+    private static native String nodeRailsInputFlowOreLabel(JSObject o);
+
+    @JSBody(params = "o", script = "return o.handleId == null ? \"\" : o.handleId;")
+    private static native String nodeRailsInputFlowHandleId(JSObject o);
+
+    @JSBody(params = "o", script = "return o.amountPerSecond == null ? 0 : o.amountPerSecond;")
+    private static native double nodeRailsInputFlowAmountPerSecond(JSObject o);
+
+    @JSBody(params = "o", script = "return o.slots == null ? null : o.slots;")
+    private static native JSObject nodeRailsInputSideSlots(JSObject o);
+
+    @JSBody(params = "o", script = "return o.flows == null ? null : o.flows;")
+    private static native JSObject nodeRailsInputSideFlows(JSObject o);
+
+    @JSBody(params = "o", script = "return o.wires == null ? null : o.wires;")
+    private static native JSObject nodeRailsInputSideWires(JSObject o);
+
+    @JSBody(params = "o", script = "return o.key == null ? \"\" : o.key;")
+    private static native String nodeRailsInputSlotKey(JSObject o);
+
+    @JSBody(params = "o", script = "return o.kind == null ? \"\" : o.kind;")
+    private static native String nodeRailsInputSlotKind(JSObject o);
+
+    @JSBody(params = "o", script = "return o.resourceId == null ? \"\" : o.resourceId;")
+    private static native String nodeRailsInputSlotResourceId(JSObject o);
+
+    @JSBody(params = "o", script = "return o.name == null ? null : o.name;")
+    private static native String nodeRailsInputSlotName(JSObject o);
+
+    @JSBody(params = "o", script = "return o.oreLabel == null ? null : o.oreLabel;")
+    private static native String nodeRailsInputSlotOreLabel(JSObject o);
+
+    @JSBody(params = "o", script = "return o.handleId == null ? \"\" : o.handleId;")
+    private static native String nodeRailsInputSlotHandleId(JSObject o);
+
+    @JSBody(params = "o", script = "return o.consumed === true;")
+    private static native boolean nodeRailsInputSlotConsumed(JSObject o);
+
+    @JSBody(params = "o", script = "return o.chance == null ? 0 : o.chance;")
+    private static native double nodeRailsInputSlotChance(JSObject o);
+
+    @JSBody(params = "o", script = "return o.chance != null;")
+    private static native boolean nodeRailsInputSlotChancePresent(JSObject o);
+
+    @JSBody(params = "o", script = "return o.consumeChance == null ? 0 : o.consumeChance;")
+    private static native double nodeRailsInputSlotConsumeChance(JSObject o);
+
+    @JSBody(params = "o", script = "return o.consumeChance != null;")
+    private static native boolean nodeRailsInputSlotConsumeChancePresent(JSObject o);
+
+    @JSBody(params = "o", script = "return o.alternatives == null ? 0 : o.alternatives;")
+    private static native double nodeRailsInputSlotAlternatives(JSObject o);
+
+    @JSBody(params = "o", script = "return o.key == null ? \"\" : o.key;")
+    private static native String nodeRailsInputWireKey(JSObject o);
+
+    @JSBody(params = "o", script = "return o.transferredPerSecond == null ? 0 : o.transferredPerSecond;")
+    private static native double nodeRailsInputWireTransferredPerSecond(JSObject o);
+
     @JSBody(params = { "a", "x" }, script = "a.push(x);")
     private static native void pushObject(JSObject a, JSObject x);
 
@@ -839,6 +1058,18 @@ public final class ViewJs {
 
     @JSBody(params = { "_label", "_fixed", "_title" }, script = "var __w = {}; __w.label = _label; __w.fixed = _fixed; __w.title = _title; return __w;")
     private static native JSObject newCardViewTierChip(String _label, boolean _fixed, String _title);
+
+    @JSBody(params = { "_verdict", "_pct", "_bare", "_inputs", "_outputs" }, script = "var __w = {}; __w.verdict = _verdict; __w.pct = _pct; if (_bare !== null) __w.bare = _bare; __w.inputs = _inputs; __w.outputs = _outputs; return __w;")
+    private static native JSObject newNodeRailsView(String _verdict, double _pct, JSObject _bare, JSObject _inputs, JSObject _outputs);
+
+    @JSBody(params = { "_inputs", "_outputs" }, script = "var __w = {}; __w.inputs = _inputs; __w.outputs = _outputs; return __w;")
+    private static native JSObject newNodeRailsViewBare(JSObject _inputs, JSObject _outputs);
+
+    @JSBody(params = { "_resourceKey", "_kind", "_displayName" }, script = "var __w = {}; __w.resourceKey = _resourceKey; __w.kind = _kind; __w.displayName = _displayName; return __w;")
+    private static native JSObject newNodeRailsViewBareSlot(String _resourceKey, String _kind, String _displayName);
+
+    @JSBody(params = { "_key", "_handleId", "_kind", "_resourceId", "_name", "_slotPresent", "_slot", "_connected", "_unsupplied", "_boundaryFree", "_currentPerSecond", "_nameplatePerSecond", "_tone", "_shortBadgePresent", "_shortBadge", "_showNameplate", "_energyPerUnitPresent", "_energyPerUnit", "_free", "_chancePresent", "_chance", "_consumeChancePresent", "_consumeChance", "_alternatives" }, script = "var __w = {}; __w.key = _key; __w.handleId = _handleId; __w.kind = _kind; __w.resourceId = _resourceId; __w.name = _name; if (_slotPresent) __w.slot = _slot; __w.connected = _connected; __w.unsupplied = _unsupplied; __w.boundaryFree = _boundaryFree; __w.currentPerSecond = _currentPerSecond; __w.nameplatePerSecond = _nameplatePerSecond; __w.tone = _tone; if (_shortBadgePresent) __w.shortBadge = _shortBadge; __w.showNameplate = _showNameplate; if (_energyPerUnitPresent) __w.energyPerUnit = _energyPerUnit; __w.free = _free; if (_chancePresent) __w.chance = _chance; if (_consumeChancePresent) __w.consumeChance = _consumeChance; __w.alternatives = _alternatives; return __w;")
+    private static native JSObject newNodeRailsViewRow(String _key, String _handleId, String _kind, String _resourceId, String _name, boolean _slotPresent, double _slot, boolean _connected, boolean _unsupplied, boolean _boundaryFree, double _currentPerSecond, double _nameplatePerSecond, String _tone, boolean _shortBadgePresent, double _shortBadge, boolean _showNameplate, boolean _energyPerUnitPresent, double _energyPerUnit, boolean _free, boolean _chancePresent, double _chance, boolean _consumeChancePresent, double _consumeChance, double _alternatives);
 
     // endregion
 }

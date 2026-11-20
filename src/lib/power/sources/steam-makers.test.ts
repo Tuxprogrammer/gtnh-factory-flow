@@ -175,6 +175,23 @@ describe("large boilers (MTELargeBoilerBase, LargeBoilerFuelBackend)", () => {
     }
   });
 
+  it("burns a liquid for the recipe duration LargeBoilerFuelBackend.addRecipe sets, times the tier's runtimeBoost", () => {
+    // Whole ticks all the way: base seconds stretched to 0.01 s, then 20 ticks a second, then the boiler's boost.
+    const burn = (liquid: string, boiler: string) =>
+      flow(compute(boiler, { liquidFuel: liquid, solidFuel: "None" }), liquid);
+    expect(burn("Propane", "large-bronze-boiler")).toBeCloseTo(1000 / 23.2, 9);
+    expect(burn("Propane", "large-steel-boiler")).toBeCloseTo(1000 / 11.6, 9);
+    expect(burn("Butane", "large-steel-boiler")).toBeCloseTo(1000 / 14.95, 9);
+    expect(burn("Ethanol Gasoline", "large-titanium-boiler")).toBeCloseTo(1000 / 17.15, 9);
+    expect(burn("Ethanol Gasoline", "large-tungstensteel-boiler")).toBeCloseTo(1000 / 8.55, 9);
+    // The bronze boiler's boost is exactly twice the steel's.
+    const tables = powerPlannerData.boilerFuels as Record<string, Array<{ name: string; burnTime?: number }>>;
+    for (const steel of tables.steelLiquid) {
+      const bronze = tables.bronzeLiquid.find((row) => row.name === steel.name);
+      expect(bronze?.burnTime).toBeCloseTo((steel.burnTime ?? 0) * 2, 9);
+    }
+  });
+
   it("burns Solid Super Fuel for 130.7s in bronze and 19.6s in titanium", () => {
     const bronze = compute("large-bronze-boiler", {
       liquidFuel: "None",
@@ -210,9 +227,55 @@ describe("singleblock boilers (MTEBoiler)", () => {
     }
   });
 
+  it("burns wood and coal dusts in the Advanced Boiler at their furnace values", () => {
+    // MTEAdvancedBoilerBase.getBurnTime is GameRegistry.getFuelValue, else TileEntityFurnace.getItemBurnTime: a wooden
+    // block 300, a stick, sapling or wood pulp 100, coal dust 1600. Seconds per item (floor(bt/10)/2 + floor(bt/500))
+    // x 41/20; a blaze rod keeps vanilla's 2400 here.
+    const seconds: Array<[string, number]> = [
+      ["Oak Log", 30.75],
+      ["Oak Planks", 30.75],
+      ["Stick", 10.25],
+      ["Oak Sapling", 10.25],
+      ["Wood Pulp", 10.25],
+      ["Coal Dust", 170.15],
+      ["Lignite Coal Dust", 127.1],
+      ["Blaze Rod", 254.2],
+    ];
+    for (const [name, expected] of seconds) {
+      const model = compute("advanced-boiler", { solidFuel: name });
+      expect(model.inputs[0].name).toBe(name);
+      expect(model.inputs[0].perSecond).toBeCloseTo(1 / expected, 12);
+    }
+    expect(compute("advanced-boiler", { solidFuel: "Oak Log" }).inputs[0].alternatives).toEqual([
+      { kind: "item", id: "minecraft:log@32767", displayName: "Log" },
+      { kind: "item", id: "minecraft:log2@32767", displayName: "Log" },
+    ]);
+    expect(
+      compute("advanced-boiler", { solidFuel: "Coal" }).inputs[0].alternatives,
+    ).toBeUndefined();
+    expect(optionKeys("advanced-boiler", "solidFuel")).toEqual(
+      expect.arrayContaining([
+        "Oak Log",
+        "Oak Planks",
+        "Stick",
+        "Oak Sapling",
+        "Wood Pulp",
+        "Coal Dust",
+      ]),
+    );
+  });
+
   it("leaves one obsidian per 1000 L of lava", () => {
     const model = compute("lava-boiler");
     expect(flow(model, "Obsidian")).toBeCloseTo(flow(model, "Lava")! / 1000, 12);
+  });
+
+  it("scales the solar boiler's steam and water by its duty", () => {
+    const full = compute("solar-boiler", { model: "steel" });
+    expect(flow(full, "Steam")).toBe(360);
+    const half = compute("solar-boiler", { model: "steel", duty: "50" });
+    expect(flow(half, "Steam")).toBe(180);
+    expect(flow(half, "Distilled Water")).toBeCloseTo(180 / 160, 12);
   });
 
   it("states when the solar boiler calcifies on regular water", () => {

@@ -17,6 +17,26 @@ function compute(sourceId: string, settings: Record<string, string> = {}): Power
 
 const flow = (lines: PowerModel["inputs"], name: string) => lines.find((line) => line.name === name)?.perSecond;
 
+describe("IC2 fluid reactor", () => {
+  it("heats at most 10,000 L of coolant a second", () => {
+    // TileEntityNuclearReactorElectric: one conversion every 20 ticks into a 10,000 L output tank.
+    const rate = (customRate: string) =>
+      flow(compute("ic2-fluid-reactor", { design: "custom", customRate }).outputs, "Hot Coolant");
+    expect(rate("10000")).toBe(10_000);
+    expect(rate("100000")).toBe(10_000);
+  });
+});
+
+describe("Solar Tower duty", () => {
+  it("scales the hot salt by the share of the time the heliostats are lit", () => {
+    // MTESolarTower gains heat only in daytime; 5 rings at 100% stay the sheet's 883 L/s.
+    const salt = (settings: Record<string, string>) =>
+      flow(compute("solar-tower", { rings: "5", ...settings }).outputs, "Hot Solar Salt");
+    expect(salt({})).toBe(883);
+    expect(salt({ duty: "50" })).toBe(441.5);
+  });
+});
+
 describe("Eye of Harmony", () => {
   it("spreads a craft's net EU over its duration in seconds", () => {
     // EyeOfHarmonyRecipeStorage.timeCalculator: T0 runs 18,000 s. The

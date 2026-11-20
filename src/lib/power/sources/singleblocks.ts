@@ -54,6 +54,12 @@ interface SingleblockSpec {
   sheetModel?: boolean;
 }
 
+/** What the game's Magic Energy Absorber really runs on, which the sheet's item list is not. */
+const MAGIC_ABSORBER_WARNING =
+  "The game's Magic Energy Absorber takes none of these items. " +
+  "It runs on a dragon egg above it, ender crystals, enchanted gear and books, and essentia. " +
+  "This card keeps the community sheet's numbers.";
+
 /** MTEBasicGenerator.getCapacity(). */
 const BASE_TANK_LITERS = 16_000;
 /** One burn every 10 ticks (MTEBasicGenerator.onPostTick). */
@@ -427,6 +433,8 @@ function buildSingleblock(spec: SingleblockSpec): PowerSourceDefinition {
             stat("Fuel per hour", formatAmount(perHour)),
             stat("EU per item", formatAmount(euPerItem * efficiency)),
           ],
+          // MTEMagicalEnergyAbsorber.allowPutStack takes only enchanted gear and books, and its fuel map is null.
+          warnings: [MAGIC_ABSORBER_WARNING],
         };
       }
 

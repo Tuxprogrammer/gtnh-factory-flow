@@ -1352,6 +1352,13 @@
    "iconPath": "/datasets/gtnh/local-2.9.0-beta-2/textures/rendered/francium_hydroxide_dust-fb3cd7a47e4e.png",
    "dominantColor": "#823621"
   },
+  "Francium Plasma": {
+   "kind": "fluid",
+   "id": "plasma.francium_gt5u",
+   "displayName": "Francium Plasma",
+   "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/francium_plasma-01a8d270a370.png",
+   "dominantColor": "#ed3800"
+  },
   "Fuel Rod (Depleted Excited Plutonium)": {
    "kind": "item",
    "id": "gregtech:gt.depletedrodexcitedplutonium",
@@ -2647,6 +2654,13 @@
    "iconPath": "/datasets/gtnh/local-2.9.0-beta-2/textures/rendered/molten_platinum-444f60408d3d.png",
    "dominantColor": "#eaeab7"
   },
+  "Molten Plutonium-238": {
+   "kind": "fluid",
+   "id": "molten.plutonium238",
+   "displayName": "Molten Plutonium-238",
+   "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/molten_plutonium-238-25a516fcdeec.png",
+   "dominantColor": "#e03f3f"
+  },
   "Molten Plutonium-239": {
    "kind": "fluid",
    "id": "molten.plutonium",
@@ -2660,6 +2674,13 @@
    "displayName": "Molten Plutonium 241",
    "iconPath": "/datasets/gtnh/local-2.9.0-beta-2/textures/rendered/molten_plutonium_241-cbddd13a45c6.png",
    "dominantColor": "#e94141"
+  },
+  "Molten Polonium": {
+   "kind": "fluid",
+   "id": "molten.polonium",
+   "displayName": "Molten Polonium",
+   "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/molten_polonium-cfc47854423f.png",
+   "dominantColor": "#a197a1"
   },
   "Molten Potassium": {
    "kind": "fluid",
@@ -2682,12 +2703,26 @@
    "iconPath": "/datasets/gtnh/local-2.9.0-beta-2/textures/rendered/molten_promethium-fbcbbf46eb90.png",
    "dominantColor": "#22a831"
   },
+  "Molten Protactinium": {
+   "kind": "fluid",
+   "id": "molten.protactinium",
+   "displayName": "Molten Protactinium",
+   "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/molten_protactinium-e76ec1a1bc4c.png",
+   "dominantColor": "#a98698"
+  },
   "Molten Quantum": {
    "kind": "fluid",
    "id": "molten.quantum",
    "displayName": "Molten Quantum",
    "iconPath": "/datasets/gtnh/local-2.9.0-beta-2/textures/rendered/molten_quantum-1b29304e0c5d.png",
    "dominantColor": "#777b7e"
+  },
+  "Molten Radium": {
+   "kind": "fluid",
+   "id": "molten.radium",
+   "displayName": "Molten Radium",
+   "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/molten_radium-63ffe82549c1.png",
+   "dominantColor": "#939393"
   },
   "Molten Raw Silicon": {
    "kind": "fluid",
@@ -2742,8 +2777,8 @@
    "kind": "fluid",
    "id": "molten.selenium",
    "displayName": "Molten Selenium",
-   "iconPath": "/datasets/gtnh/local-2.9.0-beta-2/textures/rendered/molten_selenium-8e10d9b0484d.png",
-   "dominantColor": "#959595"
+   "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/molten_selenium-34fee773ce51.png",
+   "dominantColor": "#a9a9a9"
   },
   "Molten Shirabon": {
    "kind": "fluid",
@@ -2800,6 +2835,13 @@
    "displayName": "Molten Tartarite",
    "iconPath": "/datasets/gtnh/local-2.9.0-beta-2/textures/rendered/molten_tartarite-bdb86a566af9.png",
    "dominantColor": "#e76a36"
+  },
+  "Molten Technetium": {
+   "kind": "fluid",
+   "id": "molten.technetium",
+   "displayName": "Molten Technetium",
+   "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/molten_technetium-de7e16272ec4.png",
+   "dominantColor": "#c4c4c4"
   },
   "Molten Tellurium": {
    "kind": "fluid",
@@ -2877,6 +2919,20 @@
    "displayName": "Molten Tungsten",
    "iconPath": "/datasets/gtnh/local-2.9.0-beta-2/textures/rendered/molten_tungsten-e24b6f243dc8.png",
    "dominantColor": "#2d2d2d"
+  },
+  "Molten Uranium 232": {
+   "kind": "fluid",
+   "id": "molten.uranium232",
+   "displayName": "Molten Uranium 232",
+   "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/molten_uranium_232-26b4de8f2309.png",
+   "dominantColor": "#4ec55c"
+  },
+  "Molten Uranium 233": {
+   "kind": "fluid",
+   "id": "molten.uranium233",
+   "displayName": "Molten Uranium 233",
+   "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/molten_uranium_233-2e838090402f.png",
+   "dominantColor": "#41c44a"
   },
   "Molten Uranium-235": {
    "kind": "fluid",
@@ -3389,6 +3445,13 @@
    "iconPath": "/datasets/gtnh/local-2.9.0-beta-2/textures/rendered/plutonium_based_liquid_fuel_excited_state-a1bc5948d8f3.png",
    "dominantColor": "#bd1111"
   },
+  "Plutonium-238 Plasma": {
+   "kind": "fluid",
+   "id": "plasma.plutonium238",
+   "displayName": "Plutonium-238 Plasma",
+   "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/plutonium-238_plasma-51d6af33d18a.png",
+   "dominantColor": "#e84444"
+  },
   "Plutonium-239 Plasma": {
    "kind": "fluid",
    "id": "plasma.plutonium",
@@ -3409,6 +3472,13 @@
    "displayName": "Po Pellet",
    "iconPath": "/datasets/gtnh/local-2.9.0-beta-2/textures/rendered/po_pellet-6e669ef1a6bc.png",
    "dominantColor": "#003a3a"
+  },
+  "Polonium Plasma": {
+   "kind": "fluid",
+   "id": "plasma.polonium",
+   "displayName": "Polonium Plasma",
+   "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/polonium_plasma-888c7d72d1d6.png",
+   "dominantColor": "#a8a6b0"
   },
   "Potassium Hydroxide Dust": {
    "kind": "item",
@@ -3465,6 +3535,13 @@
    "displayName": "Propionic Acid",
    "iconPath": "/datasets/gtnh/local-2.9.0-beta-2/textures/rendered/propionic_acid-d624bede58f4.png",
    "dominantColor": "#9ca575"
+  },
+  "Protactinium Plasma": {
+   "kind": "fluid",
+   "id": "plasma.protactinium",
+   "displayName": "Protactinium Plasma",
+   "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/protactinium_plasma-756924e59cbc.png",
+   "dominantColor": "#b192a6"
   },
   "Protomatter": {
    "kind": "fluid",
@@ -3634,6 +3711,13 @@
    "iconPath": "/datasets/gtnh/local-2.9.0-beta-2/textures/rendered/quicksilver-cb98393c2528.png",
    "dominantColor": "#9494b2"
   },
+  "Radium Plasma": {
+   "kind": "fluid",
+   "id": "plasma.radium",
+   "displayName": "Radium Plasma",
+   "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/radium_plasma-b094025ed8c4.png",
+   "dominantColor": "#9aa2a2"
+  },
   "Radon": {
    "kind": "fluid",
    "id": "radon",
@@ -3731,6 +3815,13 @@
    "displayName": "Seed Oil",
    "iconPath": "/datasets/gtnh/local-2.9.0-beta-2/textures/rendered/seed_oil-0982363585e7.png",
    "dominantColor": "#b4b477"
+  },
+  "Selenium Plasma": {
+   "kind": "fluid",
+   "id": "plasma.selenium",
+   "displayName": "Selenium Plasma",
+   "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/selenium_plasma-f99549fcdd62.png",
+   "dominantColor": "#b1baba"
   },
   "SH Steam": {
    "kind": "fluid",
@@ -3977,6 +4068,13 @@
    "iconPath": "/datasets/gtnh/local-2.9.0-beta-2/textures/rendered/thorium-beryllium_depleted_molten_salt_tb_salt-ed89e5c0f0db.png",
    "dominantColor": "#748c7a"
   },
+  "Technetium Plasma": {
+   "kind": "fluid",
+   "id": "plasma.technetium",
+   "displayName": "Technetium Plasma",
+   "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/technetium_plasma-50f0bc197e09.png",
+   "dominantColor": "#ccd7d7"
+  },
   "Tellurium Plasma": {
    "kind": "fluid",
    "id": "plasma.tellurium",
@@ -4207,6 +4305,20 @@
    "displayName": "Uranium Hexafluoride",
    "iconPath": "/datasets/gtnh/local-2.9.0-beta-2/textures/rendered/uranium_hexafluoride-908394020bd8.png",
    "dominantColor": "#81bb84"
+  },
+  "Uranium 232 Plasma": {
+   "kind": "fluid",
+   "id": "plasma.uranium232",
+   "displayName": "Uranium 232 Plasma",
+   "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/uranium_232_plasma-41f792b07af7.png",
+   "dominantColor": "#52d765"
+  },
+  "Uranium 233 Plasma": {
+   "kind": "fluid",
+   "id": "plasma.uranium233",
+   "displayName": "Uranium 233 Plasma",
+   "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/uranium_233_plasma-00bcab07ba69.png",
+   "dominantColor": "#44d851"
   },
   "Uranium Based Liquid Fuel (Depleted)": {
    "kind": "fluid",

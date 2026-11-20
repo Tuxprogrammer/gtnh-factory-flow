@@ -51,8 +51,19 @@ final class LiveTestServer implements AutoCloseable {
     final List<String> cookies = new CopyOnWriteArrayList<>();
     final List<Channel> clients = new CopyOnWriteArrayList<>();
     final AtomicInteger connections = new AtomicInteger(), pings = new AtomicInteger();
-    /** Upgrades are refused with 401 while this is set. */
+    /**
+     * A session the service does not know, as the real service answers it: the upgrade is accepted, an error frame with
+     * code auth follows, then the close 4001. A missing cookie is the same.
+     */
     volatile boolean refuseAuth;
+    /** Frames sent right after an accepted upgrade, then the close code (0 for none) the service ends with. */
+    volatile List<String> greet = List.of();
+    volatile int greetClose;
+    /**
+     * A scripted conversation: the frames to answer each frame the client sends with (pings keep their stock answer).
+     * Null for the stock answers.
+     */
+    volatile java.util.function.Function<JsonObject, List<String>> script;
     /** Pings are answered with a pong frame (the real service does); off to look like a dead peer. */
     volatile boolean answerPings = true;
     /** The doc's plan in the snapshot a join gets. */
@@ -281,12 +292,7 @@ final class LiveTestServer implements AutoCloseable {
                         .addListener(ChannelFutureListener.CLOSE);
                     return;
                 }
-                if (refuseAuth || cookie == null || !cookie.startsWith("gtnh_session=")) {
-                    ctx.writeAndFlush(
-                        new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.UNAUTHORIZED))
-                        .addListener(ChannelFutureListener.CLOSE);
-                    return;
-                }
+                final boolean unknown = refuseAuth || cookie == null || !cookie.startsWith("gtnh_session=");
                 handshaker = new WebSocketServerHandshakerFactory(
                     "ws://127.0.0.1:" + port() + "/live",
                     null,
@@ -296,7 +302,18 @@ final class LiveTestServer implements AutoCloseable {
                 // answer arrives, and a test that then sends to every client or drops them must find this one.
                 connections.incrementAndGet();
                 clients.add(ctx.channel());
-                handshaker.handshake(ctx.channel(), req);
+                final io.netty.channel.ChannelFuture opened = handshaker.handshake(ctx.channel(), req);
+                final List<String> frames = unknown
+                    ? List.of("{\"t\":\"error\",\"code\":\"auth\",\"msg\":\"Sign in to use live plans.\"}")
+                    : greet;
+                final int closeWith = unknown ? 4001 : greetClose;
+                if (!frames.isEmpty() || closeWith != 0) opened.addListener(done -> {
+                    for (final String text : frames) ctx.channel()
+                        .writeAndFlush(new TextWebSocketFrame(text));
+                    if (closeWith != 0) ctx.channel()
+                        .writeAndFlush(new io.netty.handler.codec.http.websocketx.CloseWebSocketFrame(closeWith, ""))
+                        .addListener(ChannelFutureListener.CLOSE);
+                });
             } else if (msg instanceof TextWebSocketFrame) {
                 final String text = ((TextWebSocketFrame) msg).text();
                 received.add(text);
@@ -312,6 +329,11 @@ final class LiveTestServer implements AutoCloseable {
         private void respond(final ChannelHandlerContext ctx, final JsonObject f) {
             final String t = f.get("t")
                 .getAsString();
+            final java.util.function.Function<JsonObject, List<String>> play = script;
+            if (play != null && !t.equals("ping")) {
+                for (final String text : play.apply(f)) reply(ctx, text);
+                return;
+            }
             if (rooms && (t.equals("join") || t.equals("leave") || t.equals("ops"))) {
                 room(ctx, f, t);
                 return;

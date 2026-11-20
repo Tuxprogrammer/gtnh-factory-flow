@@ -183,9 +183,24 @@ class LiveSocketTest {
     }
 
     @Test
-    void aRefusedSessionStopsTheTrying() throws Exception {
+    void aSessionTheServiceClosesWith4001StopsTheTrying() throws Exception {
         server = new LiveTestServer(null);
         server.refuseAuth = true;
+        socket = open("ws", null);
+        final Log log = new Log();
+        socket.start();
+        await(log, socket, () -> socket.state() == LiveSocket.State.CLOSED && !log.reasons.isEmpty());
+        assertEquals(LiveSocket.AUTH, log.reasons.get(log.reasons.size() - 1));
+        Thread.sleep(500);
+        socket.poll(log);
+        assertEquals(1, server.connections.get());
+        assertEquals(1, log.count(LiveSocket.State.CONNECTING));
+    }
+
+    @Test
+    void aRefusedSessionStopsTheTrying() throws Exception {
+        server = new LiveTestServer(null);
+        server.upgradeStatus = 401;
         socket = open("ws", null);
         final Log log = new Log();
         socket.start();

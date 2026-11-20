@@ -127,19 +127,20 @@ class CloudApiTest {
 
     @Test
     void whoAmI() throws IOException {
-        on("GET /api/community/auth/me", 200, "{\"user\":{\"id\":\"u1\",\"username\":\"ada\"}}");
-        final CloudApi.Account me = CloudApi.me("tok");
+        // The site names the user, never an id: the id is the session's first part.
+        on("GET /api/community/auth/me", 200, "{\"user\":{\"username\":\"ada\",\"isAdmin\":false}}");
+        final CloudApi.Account me = CloudApi.me("u1.4102444800000.sig");
         assertEquals("u1", me.id());
         assertEquals("ada", me.username());
-        assertEquals("gtnh_session=tok", last().cookie());
+        assertEquals("gtnh_session=u1.4102444800000.sig", last().cookie());
         on("GET /api/community/auth/me", 200, "{\"user\":null}");
-        assertNull(CloudApi.me("tok"));
+        assertNull(CloudApi.me("u1.4102444800000.sig"));
     }
 
     @Test
-    void anExpiredSessionIsNullAndAnAccountWithoutAnIdIsAnError() throws IOException {
+    void anExpiredSessionIsNullAndASessionWithoutAnIdIsAnError() throws IOException {
         on("GET /api/community/auth/me", 401, "{\"error\":\"no\"}");
-        assertNull(CloudApi.me("tok"));
+        assertNull(CloudApi.me("u1.4102444800000.sig"));
         on("GET /api/community/auth/me", 200, "{\"user\":{\"username\":\"ada\"}}");
         assertThrows(IOException.class, () -> CloudApi.me("tok"));
         assertThrows(IOException.class, () -> CloudApi.library("tok", ""));
@@ -360,9 +361,9 @@ class CloudApiTest {
         on(
             "GET /live/nearby?names=Dee_Mines%2CAda",
             200,
-            "{\"accounts\":[{\"id\":\"u5\",\"username\":\"dee\",\"mcName\":\"Dee_Mines\"}]}");
+            "{\"accounts\":[{\"id\":\"u5\",\"username\":\"dee\"}]}");
         final List<CloudApi.Player> near = CloudApi.nearby("tok", List.of("Dee_Mines", " ", "Ada"));
-        assertEquals(new CloudApi.Player("u5", "dee", "Dee_Mines"), near.get(0));
+        assertEquals(new CloudApi.Player("u5", "dee", ""), near.get(0));
         assertEquals("gtnh_session=tok", last().cookie());
         // At most a hundred names go.
         final List<String> many = new ArrayList<>();

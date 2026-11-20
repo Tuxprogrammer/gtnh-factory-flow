@@ -1,0 +1,452 @@
+{
+  "$language": "A shape is a string, an array or an object. Strings: a primitive (string, number, integer, boolean, null, object, array, any) or primitives joined by | (string|null), or $Name for a shape of this file. [S] is an array whose every element has shape S. An object is a set of keys that must be present with their shapes (a key ending in ? may be absent); keys it does not name are allowed. {\"=\": v} is the value v exactly; {\"in\": [..]} is one of those values. The runners are src/test-support/wire-shape.ts and jvm/mod/src/test/java/com/gtnhplanner/cloud/wire/WireShape.java; both must agree on every shape in this file (the exchanges' examples are checked against them on both sides).",
+  "Error": {
+    "error": "string"
+  },
+  "Ok": {
+    "ok": {
+      "=": true
+    }
+  },
+  "Account": {
+    "id": "string",
+    "username": "string"
+  },
+  "AccountsReply": {
+    "accounts": [
+      "$Account"
+    ]
+  },
+  "SessionUser": {
+    "username": "string",
+    "isAdmin": "boolean"
+  },
+  "SignedInReply": {
+    "username": "string",
+    "isAdmin": "boolean"
+  },
+  "MeReply": {
+    "user": "$SessionUser|null"
+  },
+  "Icon": {
+    "kind": "string",
+    "resourceId": "string",
+    "displayName?": "string",
+    "iconPath?": "string",
+    "iconAtlas?": "any",
+    "dominantColor?": "string"
+  },
+  "DesignMeta": {
+    "id": "string",
+    "name": "string",
+    "icon": "object|null",
+    "folderId": "string|null",
+    "closed": "boolean",
+    "favorite": "boolean",
+    "order": "integer|null",
+    "communityPlanId": "string|null",
+    "createdAt": "string",
+    "updatedAt": "string",
+    "planUpdatedAt": "string",
+    "deletedAt": "string|null"
+  },
+  "OwnDesign": {
+    "id": "string",
+    "name": "string",
+    "icon": "object|null",
+    "folderId": "string|null",
+    "closed": "boolean",
+    "favorite": "boolean",
+    "order": "integer|null",
+    "communityPlanId": "string|null",
+    "createdAt": "string",
+    "updatedAt": "string",
+    "planUpdatedAt": "string",
+    "deletedAt": "string|null",
+    "members": [
+      "$Account"
+    ]
+  },
+  "SharedDesign": {
+    "ownerId": "string",
+    "ownerName": "string",
+    "id": "string",
+    "name": "string",
+    "icon": "object|null",
+    "updatedAt": "string",
+    "planUpdatedAt": "string",
+    "members": [
+      "$Account"
+    ]
+  },
+  "Folder": {
+    "id": "string",
+    "name": "string",
+    "createdAt": "string",
+    "updatedAt": "string",
+    "deletedAt": "string|null"
+  },
+  "LibraryReply": {
+    "designs": [
+      "$OwnDesign"
+    ],
+    "folders": [
+      "$Folder"
+    ],
+    "shared": [
+      "$SharedDesign"
+    ]
+  },
+  "DesignReply": {
+    "design": "$DesignMeta",
+    "plan": "object",
+    "ownerId": "string",
+    "role": {
+      "in": [
+        "owner",
+        "editor"
+      ]
+    },
+    "seq": "integer",
+    "live": "boolean"
+  },
+  "PutReply": {
+    "design": "$DesignMeta",
+    "behind": "boolean"
+  },
+  "LiveRefusal": {
+    "error": "string",
+    "live": {
+      "=": true
+    }
+  },
+  "DeleteReply": {
+    "ok": {
+      "=": true
+    },
+    "deletedAt": "string"
+  },
+  "MembersReply": {
+    "ownerId": "string",
+    "ownerName": "string",
+    "role": {
+      "in": [
+        "owner",
+        "editor"
+      ]
+    },
+    "members": [
+      "$Account"
+    ]
+  },
+  "MembersChangedReply": {
+    "members": [
+      "$Account"
+    ]
+  },
+  "Resource": {
+    "kind": "string",
+    "resourceId": "string",
+    "ratePerSecond": "number",
+    "displayName?": "string"
+  },
+  "CommunityPlanSummary": {
+    "id": "string",
+    "name": "string",
+    "description": "string",
+    "authorName?": "string",
+    "gameVersion": "string",
+    "datasetVersionId": "string",
+    "tags": [
+      "string"
+    ],
+    "isPublic": "boolean",
+    "icon?": "object",
+    "needs": [
+      "$Resource"
+    ],
+    "outputs": [
+      "$Resource"
+    ],
+    "totalEuT": "number",
+    "machineCount": "integer",
+    "nodeCount": "integer",
+    "storageCount": "integer",
+    "edgeCount": "integer",
+    "highestTier?": "string",
+    "highestTierIndex": "integer",
+    "upvotes": "integer",
+    "downvotes": "integer",
+    "score": "integer",
+    "downloads": "integer",
+    "views": "integer",
+    "createdAt": "string",
+    "updatedAt?": "string",
+    "commentCount": "integer",
+    "lastCommentAt?": "string",
+    "lastActivityAt?": "string",
+    "isMine": "boolean"
+  },
+  "CommunityListReply": {
+    "plans": [
+      "$CommunityPlanSummary"
+    ],
+    "total": "integer",
+    "page": "integer",
+    "pageSize": "integer",
+    "gameVersions": [
+      "string"
+    ]
+  },
+  "CommunityPostedReply": {
+    "id": "string"
+  },
+  "CommunityDownloadReply": {
+    "name": "string",
+    "plan": "object"
+  },
+  "FeedbackReply": {
+    "number": "integer",
+    "url": "string"
+  },
+  "DatasetManifest": {
+    "versions": [
+      {
+        "id": "string",
+        "gtnhVersion": "string"
+      }
+    ]
+  },
+  "DatasetResources": {
+    "resources": [
+      {
+        "id": "string",
+        "iconPath?": "string",
+        "iconAtlas?": "any",
+        "dominantColor?": "string"
+      }
+    ]
+  },
+  "LiveHealth": {
+    "ok": "boolean",
+    "rooms": "integer",
+    "connections": "integer",
+    "flushBacklog": "integer"
+  },
+  "NearbyReply": {
+    "accounts": [
+      "$Account"
+    ]
+  },
+  "LiveMember": {
+    "id": "string",
+    "username": "string"
+  },
+  "LivePerson": {
+    "id": "string",
+    "username": "string",
+    "color": "string",
+    "client": {
+      "in": [
+        "game",
+        "web"
+      ]
+    },
+    "conn": "string"
+  },
+  "LiveCursor": {
+    "x": "number",
+    "y": "number"
+  },
+  "LiveView": {
+    "x": "number",
+    "y": "number",
+    "zoom": "number"
+  },
+  "LiveErrorCode": {
+    "in": [
+      "auth",
+      "forbidden",
+      "not_found",
+      "too_big",
+      "rate",
+      "bad_op",
+      "version"
+    ]
+  },
+  "ClientHello": {
+    "t": {
+      "=": "hello"
+    },
+    "v": {
+      "=": 1
+    },
+    "client": {
+      "in": [
+        "game",
+        "web"
+      ]
+    },
+    "clientVersion?": "string",
+    "game?": {
+      "server": "string",
+      "mcName?": "string"
+    }
+  },
+  "ClientJoin": {
+    "t": {
+      "=": "join"
+    },
+    "doc": "string"
+  },
+  "ClientLeave": {
+    "t": {
+      "=": "leave"
+    },
+    "doc": "string"
+  },
+  "ClientOps": {
+    "t": {
+      "=": "ops"
+    },
+    "doc": "string",
+    "base": "integer",
+    "cid": "string",
+    "ops": [
+      "object"
+    ]
+  },
+  "ClientPresence": {
+    "t": {
+      "=": "presence"
+    },
+    "doc": "string",
+    "cursor": "$LiveCursor|null",
+    "sel": [
+      "string"
+    ],
+    "view?": "$LiveView"
+  },
+  "ClientPing": {
+    "t": {
+      "=": "ping"
+    }
+  },
+  "ServerWelcome": {
+    "t": {
+      "=": "welcome"
+    },
+    "v": {
+      "=": 1
+    },
+    "you": {
+      "id": "string",
+      "username": "string",
+      "color": "string"
+    }
+  },
+  "ServerSnapshot": {
+    "t": {
+      "=": "snapshot"
+    },
+    "doc": "string",
+    "seq": "integer",
+    "plan": "object",
+    "role": {
+      "in": [
+        "owner",
+        "editor"
+      ]
+    },
+    "members": [
+      "$LiveMember"
+    ],
+    "present": [
+      "$LivePerson"
+    ],
+    "owner": "$LiveMember"
+  },
+  "ServerOps": {
+    "t": {
+      "=": "ops"
+    },
+    "doc": "string",
+    "seq": "integer",
+    "by": "string",
+    "cid": "string",
+    "ops": [
+      "object"
+    ]
+  },
+  "ServerPresence": {
+    "t": {
+      "=": "presence"
+    },
+    "doc": "string",
+    "who": "string",
+    "conn": "string",
+    "cursor": "$LiveCursor|null",
+    "sel": [
+      "string"
+    ],
+    "view?": "$LiveView"
+  },
+  "ServerPresent": {
+    "t": {
+      "=": "present"
+    },
+    "doc": "string",
+    "present": [
+      "$LivePerson"
+    ]
+  },
+  "ServerMembers": {
+    "t": {
+      "=": "members"
+    },
+    "doc": "string",
+    "members": [
+      "$LiveMember"
+    ]
+  },
+  "ServerKicked": {
+    "t": {
+      "=": "kicked"
+    },
+    "doc": "string",
+    "reason": {
+      "in": [
+        "unshared",
+        "deleted"
+      ]
+    }
+  },
+  "ServerShared": {
+    "t": {
+      "=": "shared"
+    },
+    "doc": "string",
+    "owner": "$LiveMember",
+    "name": "string"
+  },
+  "ServerUnshared": {
+    "t": {
+      "=": "unshared"
+    },
+    "doc": "string"
+  },
+  "ServerError": {
+    "t": {
+      "=": "error"
+    },
+    "doc?": "string",
+    "code": "$LiveErrorCode",
+    "msg": "string",
+    "cid?": "string"
+  },
+  "ServerPong": {
+    "t": {
+      "=": "pong"
+    }
+  }
+}

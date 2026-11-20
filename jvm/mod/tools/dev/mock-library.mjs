@@ -16,10 +16,12 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { mockLive } from "./mock-live.mjs";
 
-const port = Number(process.argv[2] ?? 8789);
+// Port 0 takes a free one, and MOCK_STATE_DIR moves everything the mock keeps (a test runs it that way, in a temp directory).
+let port = Number(process.argv[2] ?? 8789);
 const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const postsDir = join(root, "build", "dev-client", "mock-posts");
-const feedbackDir = join(root, "build", "dev-client", "mock-feedback");
+const stateDir = process.env.MOCK_STATE_DIR ?? join(root, "build", "dev-client");
+const postsDir = join(stateDir, "mock-posts");
+const feedbackDir = join(stateDir, "mock-feedback");
 mkdirSync(postsDir, { recursive: true });
 mkdirSync(feedbackDir, { recursive: true });
 
@@ -44,7 +46,7 @@ const userOf = (req) => {
 };
 const ids = new Map(); // name -> account id
 // Accounts and sign-ins outlast a restart of the mock (build/dev-client/mock-accounts.json), so a signed-in game stays so.
-const accountsFile = join(root, "build", "dev-client", "mock-accounts.json");
+const accountsFile = join(stateDir, "mock-accounts.json");
 if (existsSync(accountsFile)) {
   const saved = JSON.parse(readFileSync(accountsFile, "utf8"));
   for (const [k, v] of saved.users ?? []) users.set(k, v);
@@ -53,13 +55,13 @@ if (existsSync(accountsFile)) {
 }
 const saveAccounts = () =>
   writeFileSync(accountsFile, JSON.stringify({ users: [...users], sessions: [...sessions], ids: [...ids] }));
-const signIn = (res, name) => {
+const signIn = (res, name, status = 200) => {
   if (!ids.has(name)) ids.set(name, randomUUID());
   // Spelled as the website's session is, <userId>.<expiresMs>.<hmac>, so the game reads the account's id from it.
   const token = `${ids.get(name)}.${Date.now() + 15552000000}.${randomUUID().replaceAll("-", "")}`;
   sessions.set(token, name);
   saveAccounts();
-  json(res, 200, { username: name, isAdmin: false }, {
+  json(res, status, { username: name, isAdmin: false }, {
     "Set-Cookie": `gtnh_session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=15552000`,
   });
 };
@@ -89,7 +91,7 @@ const server = createServer(async (req, res) => {
     if (password.length < 6) return json(res, 400, { error: "Password must be at least 6 characters." });
     if (users.has(username.trim())) return json(res, 409, { error: "That username is taken." });
     users.set(username.trim(), password);
-    return signIn(res, username.trim());
+    return signIn(res, username.trim(), 201);
   }
   if (req.method === "POST" && path === "/api/community/auth/login") {
     const { username = "", password = "" } = await body(req);
@@ -99,7 +101,8 @@ const server = createServer(async (req, res) => {
   }
   if (req.method === "GET" && path === "/api/community/auth/me") {
     const name = userOf(req);
-    return json(res, 200, { user: name ? { id: ids.get(name), username: name, isAdmin: false } : null });
+    // As the site: the name and the admin flag, never an id (the game reads the id from the session itself).
+    return json(res, 200, { user: name ? { username: name, isAdmin: false } : null });
   }
   if (req.method === "POST" && path === "/api/community/plans") {
     const b = await body(req);
@@ -168,6 +171,9 @@ const server = createServer(async (req, res) => {
     const b = await body(req);
     if (!b.title?.trim()) return json(res, 400, { error: "Give it a title." });
     if (!["bug", "idea", "help"].includes(b.kind)) return json(res, 400, { error: "That report could not be read." });
+    // As the site's guard: a report the game sends carries the device id its account makes, prefix and UUID.
+    if (!/^(?:gtnhplanner|plannh)-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(b.deviceId ?? ""))
+      return json(res, 400, { error: "That report could not be read." });
     const number = ++reports;
     const { picture, ...rest } = b;
     writeFileSync(join(feedbackDir, `${number}.json`), JSON.stringify(rest, null, 2));
@@ -178,18 +184,28 @@ const server = createServer(async (req, res) => {
   if (req.method === "GET" && path === "/api/community/plans") {
     const mine = url.searchParams.get("mine") === "1";
     const who = userOf(req);
-    const shown = (mine ? posts.filter((p) => p.authorName === who) : posts).map((p) => ({
-      ...p,
-      isMine: Boolean(who && p.authorName === who),
-    }));
-    return json(res, 200, { plans: shown, total: shown.length, page: 1, pageSize: 48, gameVersions: ["2.8.4"] });
+    // As the site's list: the search words are matched in the name, the game version exactly, and the page is a slice.
+    const search = (url.searchParams.get("search") ?? "").trim().toLowerCase();
+    const version = url.searchParams.get("gameVersion") ?? "";
+    const page = Math.max(1, Number.parseInt(url.searchParams.get("page") ?? "1", 10) || 1);
+    const pageSize = Math.min(48, Math.max(1, Number.parseInt(url.searchParams.get("pageSize") ?? "24", 10) || 24));
+    const all = posts
+      .filter((p) => (!mine || p.authorName === who) && (!search || p.name.toLowerCase().includes(search)) && (!version || p.gameVersion === version))
+      .map((p) => ({ ...p, isMine: Boolean(who && p.authorName === who) }));
+    return json(res, 200, {
+      plans: all.slice((page - 1) * pageSize, page * pageSize), total: all.length, page, pageSize,
+      gameVersions: [...new Set(posts.map((p) => p.gameVersion).filter(Boolean))],
+    });
   }
   json(res, 404, { error: "not found" });
 });
 const live = mockLive(server, {
   who: (req) => (userOf(req) ? { id: ids.get(userOf(req)), name: userOf(req) } : undefined),
   ids,
-  stateFile: join(root, "build", "dev-client", "mock-designs.json"),
+  stateFile: join(stateDir, "mock-designs.json"),
   users,
 });
-server.listen(port, "127.0.0.1", () => console.log(`mock community site on http://127.0.0.1:${port}, its live service at ws://127.0.0.1:${port}/live`));
+server.listen(port, "127.0.0.1", () => {
+  port = server.address().port;
+  console.log(`mock community site on http://127.0.0.1:${port}, its live service at ws://127.0.0.1:${port}/live`);
+});

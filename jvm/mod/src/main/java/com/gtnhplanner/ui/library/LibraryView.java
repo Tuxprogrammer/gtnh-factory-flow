@@ -29,6 +29,7 @@ import com.gtnhplanner.importer.ImportReport;
 import com.gtnhplanner.importer.game.FactoryFlowImport;
 import com.gtnhplanner.library.CommunityApi;
 import com.gtnhplanner.library.LibraryFeed;
+import com.gtnhplanner.library.SiteOff;
 import com.gtnhplanner.ui.BoardSession;
 import com.gtnhplanner.ui.popup.PickList;
 import com.gtnhplanner.ui.popup.Popup;
@@ -445,11 +446,13 @@ public final class LibraryView extends ParentWidget<LibraryView> implements Inte
         final int cols = columns(), tw = tileW();
         int y = top + PAD - scroll;
         if (setups.isEmpty()) {
-            final String msg = feed.error() != null ? "Couldn't reach Community: " + feed.error()
-                : feed.loading() || !feed.started() ? "Loading shared plans..." : "No setups match.";
+            final boolean off = !CommunityApi.configured();
+            final String msg = off ? SiteOff.MESSAGE
+                : feed.error() != null ? "Couldn't reach Community: " + feed.error()
+                    : feed.loading() || !feed.started() ? "Loading shared plans..." : "No setups match.";
             final float cx = (PAD + gridRight()) / 2f, cy = top + (h - top) / 2f - 10;
-            Hyb.textCentered(msg, cx, cy, feed.error() != null ? Hyb.AMBER_INK : Hyb.MUTED);
-            if (feed.error() != null) retryKey(cx, cy + 14, hover);
+            Hyb.textCentered(msg, cx, cy, off || feed.error() != null ? Hyb.AMBER_INK : Hyb.MUTED);
+            if (!off && feed.error() != null) retryKey(cx, cy + 14, hover);
             contentH = 0;
             return;
         }

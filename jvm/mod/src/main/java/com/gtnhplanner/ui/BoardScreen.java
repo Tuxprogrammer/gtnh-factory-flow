@@ -514,14 +514,17 @@ public final class BoardScreen extends ModularScreen {
                 () -> session
                     .flash(com.gtnhplanner.data.flowchart.balancer.Severity.INFO, "Sign in to invite people")));
         rows.add(com.gtnhplanner.ui.popup.PickList.Entry.rule());
-        rows.add(com.gtnhplanner.ui.popup.PickList.Entry.of("Copy plan link", session::copyPlanLink));
+        // A plan link names the website: with none configured there is no link to copy or open.
+        if (com.gtnhplanner.library.CommunityApi.configured())
+            rows.add(com.gtnhplanner.ui.popup.PickList.Entry.of("Copy plan link", session::copyPlanLink));
         rows.add(com.gtnhplanner.ui.popup.PickList.Entry.of("Copy plan code", () -> session.copyPlan(slot)));
         rows.add(com.gtnhplanner.ui.popup.PickList.Entry.of("Share in game chat", () -> session.shareInChat(slot)));
         rows.add(com.gtnhplanner.ui.popup.PickList.Entry.of("Export plan file", session::exportPlanFile));
         rows.add(
             com.gtnhplanner.ui.popup.PickList.Entry
                 .of("Screenshot...", () -> com.gtnhplanner.ui.popup.ScreenshotPanel.open(panel, session, canvas)));
-        rows.add(com.gtnhplanner.ui.popup.PickList.Entry.of("Open on website", session::openInWebsite));
+        if (com.gtnhplanner.library.CommunityApi.configured())
+            rows.add(com.gtnhplanner.ui.popup.PickList.Entry.of("Open on website", session::openInWebsite));
         for (final com.gtnhplanner.ui.popup.PickList.Entry post : com.gtnhplanner.ui.library.AccountForms
             .shareRows(panel, session, session.graph()))
             rows.add(com.gtnhplanner.ui.popup.PickList.Entry.of(post.label(), post.action()));

@@ -19,23 +19,30 @@ import com.google.gson.JsonParser;
 import com.gtnhplanner.Tags;
 
 /**
- * Factory Flow's public setups (gtnhplanner.com's community hub), as the website uses them: the list and a setup's
- * whole plan, which need no account; signing in, and posting, changing and deleting the player's own posts, which do.
- * Blocking calls: run them off the client thread.
- * {@code -Dgtnhplanner.library.url} points it at another copy of the site, a local one for testing.
+ * Factory Flow's shared setups (the community hub of the configured website), as the website uses them: the list and a
+ * setup's whole plan, which need no account; signing in, and posting, changing and deleting the player's own posts,
+ * which do. Blocking calls: run them off the client thread.
+ * <p>
+ * The site comes from the config file ({@link SiteConfig}) or {@code -Dgtnhplanner.library.url}, and is empty until one
+ * names it: every call then throws {@link SiteOff} before any connection is made.
  */
 public final class CommunityApi {
 
-    private static volatile String site = System.getProperty("gtnhplanner.library.url", "https://gtnhplanner.com");
+    private static volatile String site = SiteConfig.address(System.getProperty(SiteConfig.SITE_PROPERTY), false);
 
-    /** The site the library reads and posts to: gtnhplanner.com, or a test copy. */
+    /** The site the library reads and posts to; empty when none is configured. */
     public static String site() {
         return site;
     }
 
-    /** Points the library at another copy of the site (the dev harness's local stand-in). */
+    /** Whether a site is configured: without one nothing here is sent and the community features are off. */
+    public static boolean configured() {
+        return !site.isEmpty();
+    }
+
+    /** Points the library at a site (the config file's, or the dev harness's local stand-in); empty turns it off. */
     public static void useSite(final String url) {
-        site = url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
+        site = SiteConfig.address(url, false);
     }
 
     private static final int CONNECT_MS = 8_000, READ_MS = 25_000;
@@ -434,6 +441,8 @@ public final class CommunityApi {
 
     private static Response send(final String method, final String url, @Nullable final String json,
         @Nullable final String token) throws IOException {
+        // With no site every address here starts at its path: say so rather than fail in the URL parser.
+        if (!url.startsWith("http://") && !url.startsWith("https://")) throw new SiteOff();
         final HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
         c.setRequestMethod(method);
         c.setConnectTimeout(CONNECT_MS);

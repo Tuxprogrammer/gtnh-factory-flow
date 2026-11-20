@@ -43,7 +43,7 @@ class FfPlanCodeTest {
 
     @Test
     void readsALinkEvenBrokenOverLinesByAChatWindow() {
-        final String link = "https://gtnhplanner.com/#p=" + encode(FakeGame.fixture("high-amperage-reactor.json"));
+        final String link = "https://planner.test/#p=" + encode(FakeGame.fixture("high-amperage-reactor.json"));
         final String wrapped = "  " + link
             .substring(0, 40) + "\n" + link.substring(40, 90) + "\r\n" + link.substring(90) + "  ";
         assertEquals(
@@ -56,7 +56,7 @@ class FfPlanCodeTest {
     void readsALinkFactoryFlowItselfMade() {
         // Packed by Node's zlib (deflateRawSync), the same deflate-raw as the browser's CompressionStream.
         final String link = FakeGame.fixture("high-amperage-reactor.link.txt");
-        assertTrue(link.startsWith("https://gtnhplanner.com/#p=gtnh1."));
+        assertTrue(link.startsWith("https://planner.test/#p=gtnh1."));
         final FfPlan plan = FfImport.read(link);
         assertEquals("Benzene", plan.name());
         assertEquals(
@@ -88,7 +88,7 @@ class FfPlanCodeTest {
         assertThrows(FfImportException.class, () -> FfPlanCode.decode("gtnh1.A"));
         final FfImportException post = assertThrows(
             FfImportException.class,
-            () -> FfPlanCode.decode("https://gtnhplanner.com/?plan=abc123"));
+            () -> FfPlanCode.decode("https://planner.test/?plan=abc123"));
         assertTrue(
             post.getMessage()
                 .contains("shared post"));

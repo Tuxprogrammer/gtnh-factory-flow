@@ -11,7 +11,7 @@ import javax.annotation.Nullable;
 
 /**
  * Factory Flow's plan codes (FF's plan-code.ts): {@code gtnh1.} then the plan JSON, deflated raw and in URL-safe
- * base64 without padding. Shared as a link, {@code https://gtnhplanner.com/#p=<code>}, often broken over lines by a
+ * base64 without padding. Shared as a link, {@code https://<site>/#p=<code>}, often broken over lines by a
  * chat window.
  */
 public final class FfPlanCode {

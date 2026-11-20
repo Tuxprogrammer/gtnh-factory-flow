@@ -1,5 +1,7 @@
 # The board in Solve mode: what goes on it
 
+> The solver, wire routing and Arrange, machine maths and card geometry described here have since moved to the plain-Java core modules in `jvm/core/core-*`, which the mod shades into its jar, under the same package names.
+
 Design spec for the rebuilt planner. It covers everything a player can place and touch on the board, using
 GTNH Factory Flow (FF) as the reference and the game's limits from the mockup canvas
 (https://claude.ai/artifact/8eNKRqEGRwWywtK4mvaxkL, row 4 "Hybrid"). Sizes are GUI px (1 GUI px = 2 screen px

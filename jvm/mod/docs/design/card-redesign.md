@@ -1,5 +1,7 @@
 # The card redesign
 
+> Since this was written the card's geometry and view-model (`CardLayout`, `CardFace`, the settings controls) moved to core-view in `jvm/core/core-view`, shared with the website; painting and the board's card stay in the mod.
+
 The clean card, on the board, the minimap, the plan over the world and the zoomed-out view (2026-10-08): geometry in
 `ui/card/CardLayout`, the pieces both kinds draw in `ui/card/CardPaint`, the settings strip's chips in
 `ui/card/CardChips`; the board's interactive card is `ui/card/RecipeCard`, the snapshot's (world, minimap)

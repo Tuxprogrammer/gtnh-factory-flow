@@ -19,6 +19,8 @@ import java.util.Map;
 import javax.imageio.ImageIO;
 
 import dev.gtnhplanner.calcoracle.GtnhCalcOracleMod;
+import dev.gtnhplanner.calcoracle.StableNames;
+import com.gtnhplanner.read.gt.GtRecipeReader;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -814,7 +816,8 @@ public final class ClientItemStackIconRenderer {
     }
 
     private static String stackKey(ItemStack stack) {
-        String nbt = stack.hasTagCompound() ? stack.getTagCompound().toString() : "";
+        // The NBT's text in one key order: the game's own order differs between two stacks holding the same tag.
+        String nbt = stack.hasTagCompound() ? GtRecipeReader.nbtText(stack.getTagCompound()) : "";
         return String.valueOf(Item.itemRegistry.getNameForObject(stack.getItem()))
             + "@" + stack.getItemDamage()
             + "#" + nbt;
@@ -823,7 +826,7 @@ public final class ClientItemStackIconRenderer {
     private static String safeName(ItemStack stack) {
         String raw;
         try {
-            raw = String.valueOf(stack.getDisplayName());
+            raw = String.valueOf(StableNames.of(stack, stack.getDisplayName()));
         } catch (Throwable t) {
             raw = String.valueOf(Item.itemRegistry.getNameForObject(stack.getItem()));
         }

@@ -2,14 +2,14 @@ plugins {
     id 'com.gtnewhorizons.gtnhconvention'
 }
 
-// The GregTech recipe reader is the planner mod's own (jvm/mod, package com.gtnhplanner.read.gt) and its record is
-// the shared core's (jvm/core/core-model, com/gtnhplanner/core/model/read/GtRecipeRecord.java): the export run and
-// the mod read a recipe with one class. Copied in at build time, never edited here; both are written for Java 8's
-// library, which this build compiles against.
+// The recipe readers are the planner mod's own (jvm/mod, packages com.gtnhplanner.read.*: GregTech maps, the furnace,
+// the crafting grid) and their records are the shared core's (jvm/core/core-model, com/gtnhplanner/core/model/read/
+// *Record.java): the export run and the mod read a recipe with one class. Copied in at build time, never edited here;
+// all are written for Java 8's library, which this build compiles against.
 def jvmRoot = file('../../../jvm')
 def sharedReader = tasks.register('sharedReaderSources', Sync) {
-    from(new File(jvmRoot, 'mod/src/main/java')) { include 'com/gtnhplanner/read/gt/**' }
-    from(new File(jvmRoot, 'core/core-model/src/main/java')) { include 'com/gtnhplanner/core/model/read/GtRecipeRecord.java' }
+    from(new File(jvmRoot, 'mod/src/main/java')) { include 'com/gtnhplanner/read/**' }
+    from(new File(jvmRoot, 'core/core-model/src/main/java')) { include 'com/gtnhplanner/core/model/read/*Record.java' }
     into(layout.buildDirectory.dir('shared-reader'))
 }
 sourceSets.main.java.srcDir(sharedReader)

@@ -5,12 +5,16 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.StatCollector;
 import net.minecraftforge.fluids.FluidStack;
 
@@ -96,6 +100,12 @@ public final class GtRecipeReader {
         attachUnifiedItemAlternatives(r.itemInputs, itemSlots, recipe.mInputs);
         readItemOutputs(r.itemOutputs, recipe);
         readFluids(r.fluidOutputs, recipe.mFluidOutputs, recipe.mFluidOutputChances, false, null);
+        // Outputs GregTech lists from a hash map, in a new order every run, sorted so a read is the same every run:
+        // the Eye of Harmony's plasmas (EyeOfHarmonyRecipe builds them from a HashMap), and the products of GregTech's
+        // copies of Forestry's centrifuge recipes (GTForestryCompat.transferCentrifugeRecipes walks Forestry's
+        // product map), most likely first.
+        if (EYE_OF_HARMONY_MAP.equals(r.mapId)) Collections.sort(r.fluidOutputs, BY_ID);
+        if (isForestryCentrifugeCopy(r.mapId, recipe)) Collections.sort(r.itemOutputs, BY_CHANCE_THEN_ID);
         for (final Object value : iterable(recipe.mSpecialItems)) {
             if (!(value instanceof ItemStack)) continue;
             final Stack item = itemStack((ItemStack) value);
@@ -194,9 +204,39 @@ public final class GtRecipeReader {
         item.displayName = displayName(stack, registryId);
         final int separator = registryId.indexOf(':');
         if (separator > 0) item.modId = registryId.substring(0, separator);
-        if (stack.stackTagCompound != null) item.nbt = stack.stackTagCompound.toString();
+        if (stack.stackTagCompound != null) item.nbt = nbtText(stack.stackTagCompound);
         item.host = stack;
         return item;
+    }
+
+    /**
+     * An item's NBT as the game prints it, with each compound's keys in one fixed order. The game prints a compound in
+     * its HashMap's order, and two keys sharing a bucket come out in the order they were set, which differs from one
+     * recipe (and one run) to the next for the same tag: {mDataName:..,mDataTitle:..} and {mDataTitle:..,mDataName:..}.
+     * A copy that sets its keys sorted prints the same text for the same tag every time.
+     */
+    public static String nbtText(final NBTTagCompound tag) {
+        return canonical(tag).toString();
+    }
+
+    private static NBTTagCompound canonical(final NBTTagCompound tag) {
+        final List<String> keys = new ArrayList<String>();
+        for (final Object key : tag.func_150296_c()) keys.add(String.valueOf(key));
+        Collections.sort(keys);
+        final NBTTagCompound out = new NBTTagCompound();
+        for (final String key : keys) out.setTag(key, canonicalValue(tag.getTag(key)));
+        return out;
+    }
+
+    private static NBTBase canonicalValue(final NBTBase value) {
+        if (value instanceof NBTTagCompound) return canonical((NBTTagCompound) value);
+        if (value instanceof NBTTagList && ((NBTTagList) value).func_150303_d() == 10) {
+            final NBTTagList list = (NBTTagList) value;
+            final NBTTagList out = new NBTTagList();
+            for (int i = 0; i < list.tagCount(); i++) out.appendTag(canonical(list.getCompoundTagAt(i)));
+            return out;
+        }
+        return value.copy();
     }
 
     /** A fluid stack as a slot; null when it is empty. */
@@ -237,7 +277,9 @@ public final class GtRecipeReader {
     /**
      * What else a slot accepts, from the recipe's own per-slot lists: {@code mOreDictAlt} (items, on the GTRecipe
      * subclass some recipes use) and {@code mAltFluidInputs} (the Circuit Assembler's soldering alloy, tin or lead).
-     * Each list includes the slot's own stack, so one entry is no choice and is left out.
+     * Each list includes the slot's own stack, so one entry is no choice and is left out. GregTech fills an item list
+     * from ore dictionary and unification sets whose order is new every run, so the slot's own item comes first and the
+     * rest are sorted by id; a fluid list is the recipe's own, written in code, and keeps its order.
      */
     private static void attachSlotAlternatives(final List<Stack> exported, final List<Integer> slots, final Object raw,
         final boolean fluids) {
@@ -259,14 +301,29 @@ public final class GtRecipeReader {
                     : (entry instanceof ItemStack ? itemStack((ItemStack) entry) : null);
                 if (resource != null && !containsId(alternatives, resource.id)) alternatives.add(resource);
             }
-            if (alternatives.size() > 1) exported.get(position).alternatives = alternatives;
+            if (alternatives.size() > 1) exported.get(position).alternatives = fluids ? alternatives
+                : ownFirst(alternatives, exported.get(position));
         }
+    }
+
+    /** The slot's own item first (when the list holds it), then the others by id. */
+    private static List<Stack> ownFirst(final List<Stack> alternatives, final Stack own) {
+        final List<Stack> out = new ArrayList<Stack>();
+        final List<Stack> rest = new ArrayList<Stack>();
+        for (final Stack s : alternatives) {
+            if (out.isEmpty() && s.id.equals(own.id)) out.add(s);
+            else rest.add(s);
+        }
+        Collections.sort(rest, BY_ID);
+        out.addAll(rest);
+        return out;
     }
 
     /**
      * The items GregTech treats as the slot's own item (two resistors take two SMD resistors), asked the way NEI asks
      * for its cycling slots: {@code GTOreDictUnificator.getNonUnifiedStacks}. Its rule, not the ore dictionary's: a
-     * vacuum tube shares a group with the NAND chip and the machine takes neither for the other.
+     * vacuum tube shares a group with the NAND chip and the machine takes neither for the other. The game builds that
+     * list from a hash map whose order is new every run, so the added items are sorted by id.
      */
     private void attachUnifiedItemAlternatives(final List<Stack> exported, final List<Integer> slots,
         final ItemStack[] inputs) {
@@ -286,14 +343,77 @@ public final class GtRecipeReader {
             final Stack target = exported.get(position);
             final List<Stack> alternatives = target.alternatives != null ? target.alternatives
                 : new ArrayList<Stack>(Collections.singletonList(selfCopy(target)));
+            final List<Stack> added = new ArrayList<Stack>();
             for (final Object entry : variants) {
                 if (!(entry instanceof ItemStack)) continue;
                 final Stack resource = itemStack((ItemStack) entry);
-                if (resource != null && !containsId(alternatives, resource.id)) alternatives.add(resource);
+                if (resource != null && !containsId(alternatives, resource.id) && !containsId(added, resource.id))
+                    added.add(resource);
             }
+            Collections.sort(added, BY_ID);
+            alternatives.addAll(added);
             if (alternatives.size() > 1) target.alternatives = alternatives;
         }
     }
+
+    /** The Eye of Harmony's map. */
+    public static final String EYE_OF_HARMONY_MAP = "gt.recipe.eyeofharmony";
+    /** GregTech's centrifuge map and GT++'s multiblock centrifuge map, which holds the same recipes. */
+    private static final String CENTRIFUGE_MAP = "gt.recipe.centrifuge",
+        MULTI_CENTRIFUGE_MAP = "gt.recipe.multicentrifuge";
+
+    /** The items Forestry's centrifuge takes, as registry name and damage; read once, null until then. */
+    private java.util.Set<String> forestryCentrifugeInputs;
+
+    /** Whether {@code recipe} is GregTech's copy of a Forestry centrifuge recipe: one item in, that Forestry takes. */
+    private boolean isForestryCentrifugeCopy(final String mapId, final GTRecipe recipe) {
+        if (!CENTRIFUGE_MAP.equals(mapId) && !MULTI_CENTRIFUGE_MAP.equals(mapId)) return false;
+        if (recipe.mInputs == null || recipe.mInputs.length != 1 || recipe.mInputs[0] == null) return false;
+        if (forestryCentrifugeInputs == null) {
+            forestryCentrifugeInputs = new java.util.HashSet<String>();
+            try {
+                final Object manager = Class.forName("forestry.api.recipes.RecipeManagers")
+                    .getField("centrifugeManager")
+                    .get(null);
+                for (final Object entry : iterable(
+                    manager.getClass()
+                        .getMethod("recipes")
+                        .invoke(manager))) {
+                    final Object input = entry.getClass()
+                        .getMethod("getInput")
+                        .invoke(entry);
+                    if (input instanceof ItemStack) forestryCentrifugeInputs.add(itemKey((ItemStack) input));
+                }
+            } catch (final Throwable ignored) {
+                // No Forestry: no copies to find.
+            }
+        }
+        return forestryCentrifugeInputs.contains(itemKey(recipe.mInputs[0]));
+    }
+
+    private static String itemKey(final ItemStack stack) {
+        return stack.getItem() == null ? ""
+            : Item.itemRegistry.getNameForObject(stack.getItem()) + "@" + stack.getItemDamage();
+    }
+
+    private static final Comparator<Stack> BY_CHANCE_THEN_ID = new Comparator<Stack>() {
+
+        @Override
+        public int compare(final Stack left, final Stack right) {
+            final double l = left.chance == null ? 1.0D : left.chance.doubleValue();
+            final double r = right.chance == null ? 1.0D : right.chance.doubleValue();
+            final int byChance = Double.compare(r, l);
+            return byChance != 0 ? byChance : left.id.compareTo(right.id);
+        }
+    };
+
+    private static final Comparator<Stack> BY_ID = new Comparator<Stack>() {
+
+        @Override
+        public int compare(final Stack left, final Stack right) {
+            return left.id.compareTo(right.id);
+        }
+    };
 
     private Method unifiedStacksMethod() {
         if (!unifiedResolved) {

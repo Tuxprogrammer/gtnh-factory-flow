@@ -1,0 +1,792 @@
+{
+ "cases": [
+  {
+   "tags": [
+    "smelting",
+    "wildcard"
+   ],
+   "raw": {
+    "input": {
+     "kind": "item",
+     "id": "biomesoplenty:colorizedsaplings@32767",
+     "registryId": "BiomesOPlenty:colorizedSaplings",
+     "meta": 32767,
+     "amount": 1,
+     "displayName": "Sacred Oak Sapling",
+     "modId": "BiomesOPlenty"
+    },
+    "output": {
+     "kind": "item",
+     "id": "witchery:ingredient@18",
+     "registryId": "witchery:ingredient",
+     "meta": 18,
+     "amount": 1,
+     "displayName": "Wood Ash",
+     "modId": "witchery"
+    }
+   },
+   "dataset": {
+    "name": "Furnace: Wood Ash",
+    "kind": "gregtech_machine",
+    "category": "furnace",
+    "machineType": "Furnace",
+    "minimumTier": "NONE",
+    "durationTicks": 200,
+    "eut": 0,
+    "inputs": [
+     {
+      "kind": "item",
+      "id": "biomesoplenty:colorizedsaplings@32767",
+      "amount": 1,
+      "displayName": "Sacred Oak Sapling",
+      "modId": "BiomesOPlenty"
+     }
+    ],
+    "outputs": [
+     {
+      "kind": "item",
+      "id": "witchery:ingredient@18",
+      "amount": 1,
+      "displayName": "Wood Ash",
+      "modId": "witchery"
+     }
+    ],
+    "source": {
+     "recipeMap": "Furnace"
+    }
+   }
+  },
+  {
+   "tags": [
+    "smelting"
+   ],
+   "raw": {
+    "input": {
+     "kind": "item",
+     "id": "biomesoplenty:drieddirt",
+     "registryId": "BiomesOPlenty:driedDirt",
+     "meta": 0,
+     "amount": 1,
+     "displayName": "Dried Dirt",
+     "modId": "BiomesOPlenty"
+    },
+    "output": {
+     "kind": "item",
+     "id": "minecraft:dirt",
+     "registryId": "minecraft:dirt",
+     "meta": 0,
+     "amount": 1,
+     "displayName": "Dirt",
+     "modId": "minecraft"
+    }
+   },
+   "dataset": {
+    "name": "Furnace: Dirt",
+    "kind": "gregtech_machine",
+    "category": "furnace",
+    "machineType": "Furnace",
+    "minimumTier": "NONE",
+    "durationTicks": 200,
+    "eut": 0,
+    "inputs": [
+     {
+      "kind": "item",
+      "id": "biomesoplenty:drieddirt",
+      "amount": 1,
+      "displayName": "Dried Dirt",
+      "modId": "BiomesOPlenty"
+     }
+    ],
+    "outputs": [
+     {
+      "kind": "item",
+      "id": "minecraft:dirt",
+      "amount": 1,
+      "displayName": "Dirt",
+      "modId": "minecraft"
+     }
+    ],
+    "source": {
+     "recipeMap": "Furnace"
+    }
+   }
+  },
+  {
+   "tags": [
+    "smelting"
+   ],
+   "raw": {
+    "input": {
+     "kind": "item",
+     "id": "biomesoplenty:gemore@10",
+     "registryId": "BiomesOPlenty:gemOre",
+     "meta": 10,
+     "amount": 1,
+     "displayName": "Malachite Ore",
+     "modId": "BiomesOPlenty"
+    },
+    "output": {
+     "kind": "item",
+     "id": "gregtech:gt.metaitem.01@11035",
+     "registryId": "gregtech:gt.metaitem.01",
+     "meta": 11035,
+     "amount": 1,
+     "displayName": "Copper Ingot",
+     "modId": "gregtech"
+    }
+   },
+   "dataset": {
+    "name": "Furnace: Copper Ingot",
+    "kind": "gregtech_machine",
+    "category": "furnace",
+    "machineType": "Furnace",
+    "minimumTier": "NONE",
+    "durationTicks": 200,
+    "eut": 0,
+    "inputs": [
+     {
+      "kind": "item",
+      "id": "biomesoplenty:gemore@10",
+      "amount": 1,
+      "displayName": "Malachite Ore",
+      "modId": "BiomesOPlenty"
+     }
+    ],
+    "outputs": [
+     {
+      "kind": "item",
+      "id": "gregtech:gt.metaitem.01@11035",
+      "amount": 1,
+      "displayName": "Copper Ingot",
+      "modId": "gregtech"
+     }
+    ],
+    "source": {
+     "recipeMap": "Furnace"
+    }
+   }
+  },
+  {
+   "tags": [
+    "smelting",
+    "wildcard"
+   ],
+   "raw": {
+    "input": {
+     "kind": "item",
+     "id": "biomesoplenty:mudball@32767",
+     "registryId": "BiomesOPlenty:mudball",
+     "meta": 32767,
+     "amount": 1,
+     "displayName": "Mud Ball",
+     "modId": "BiomesOPlenty"
+    },
+    "output": {
+     "kind": "item",
+     "id": "biomesoplenty:misc",
+     "registryId": "BiomesOPlenty:misc",
+     "meta": 0,
+     "amount": 1,
+     "displayName": "Mud Brick",
+     "modId": "BiomesOPlenty"
+    }
+   },
+   "dataset": {
+    "name": "Furnace: Mud Brick",
+    "kind": "gregtech_machine",
+    "category": "furnace",
+    "machineType": "Furnace",
+    "minimumTier": "NONE",
+    "durationTicks": 200,
+    "eut": 0,
+    "inputs": [
+     {
+      "kind": "item",
+      "id": "biomesoplenty:mudball@32767",
+      "amount": 1,
+      "displayName": "Mud Ball",
+      "modId": "BiomesOPlenty"
+     }
+    ],
+    "outputs": [
+     {
+      "kind": "item",
+      "id": "biomesoplenty:misc",
+      "amount": 1,
+      "displayName": "Mud Brick",
+      "modId": "BiomesOPlenty"
+     }
+    ],
+    "source": {
+     "recipeMap": "Furnace"
+    }
+   }
+  },
+  {
+   "tags": [
+    "smelting",
+    "wildcard"
+   ],
+   "raw": {
+    "input": {
+     "kind": "item",
+     "id": "biomesoplenty:saplings@32767",
+     "registryId": "BiomesOPlenty:saplings",
+     "meta": 32767,
+     "amount": 1,
+     "displayName": "Apple Sapling",
+     "modId": "BiomesOPlenty"
+    },
+    "output": {
+     "kind": "item",
+     "id": "witchery:ingredient@18",
+     "registryId": "witchery:ingredient",
+     "meta": 18,
+     "amount": 1,
+     "displayName": "Wood Ash",
+     "modId": "witchery"
+    }
+   },
+   "dataset": {
+    "name": "Furnace: Wood Ash",
+    "kind": "gregtech_machine",
+    "category": "furnace",
+    "machineType": "Furnace",
+    "minimumTier": "NONE",
+    "durationTicks": 200,
+    "eut": 0,
+    "inputs": [
+     {
+      "kind": "item",
+      "id": "biomesoplenty:saplings@32767",
+      "amount": 1,
+      "displayName": "Apple Sapling",
+      "modId": "BiomesOPlenty"
+     }
+    ],
+    "outputs": [
+     {
+      "kind": "item",
+      "id": "witchery:ingredient@18",
+      "amount": 1,
+      "displayName": "Wood Ash",
+      "modId": "witchery"
+     }
+    ],
+    "source": {
+     "recipeMap": "Furnace"
+    }
+   }
+  },
+  {
+   "tags": [
+    "smelting",
+    "stacked-output"
+   ],
+   "raw": {
+    "input": {
+     "kind": "item",
+     "id": "botania:storage",
+     "registryId": "Botania:storage",
+     "meta": 0,
+     "amount": 1,
+     "displayName": "Block of Manasteel",
+     "modId": "Botania"
+    },
+    "output": {
+     "kind": "item",
+     "id": "botania:manaresource",
+     "registryId": "Botania:manaResource",
+     "meta": 0,
+     "amount": 9,
+     "displayName": "Manasteel Ingot",
+     "modId": "Botania"
+    }
+   },
+   "dataset": {
+    "name": "Furnace: Manasteel Ingot",
+    "kind": "gregtech_machine",
+    "category": "furnace",
+    "machineType": "Furnace",
+    "minimumTier": "NONE",
+    "durationTicks": 200,
+    "eut": 0,
+    "inputs": [
+     {
+      "kind": "item",
+      "id": "botania:storage",
+      "amount": 1,
+      "displayName": "Block of Manasteel",
+      "modId": "Botania"
+     }
+    ],
+    "outputs": [
+     {
+      "kind": "item",
+      "id": "botania:manaresource",
+      "amount": 9,
+      "displayName": "Manasteel Ingot",
+      "modId": "Botania"
+     }
+    ],
+    "source": {
+     "recipeMap": "Furnace"
+    }
+   }
+  },
+  {
+   "tags": [
+    "smelting",
+    "stacked-output"
+   ],
+   "raw": {
+    "input": {
+     "kind": "item",
+     "id": "botania:storage@1",
+     "registryId": "Botania:storage",
+     "meta": 1,
+     "amount": 1,
+     "displayName": "Block of Terrasteel",
+     "modId": "Botania"
+    },
+    "output": {
+     "kind": "item",
+     "id": "botania:manaresource@4",
+     "registryId": "Botania:manaResource",
+     "meta": 4,
+     "amount": 9,
+     "displayName": "Terrasteel Ingot",
+     "modId": "Botania"
+    }
+   },
+   "dataset": {
+    "name": "Furnace: Terrasteel Ingot",
+    "kind": "gregtech_machine",
+    "category": "furnace",
+    "machineType": "Furnace",
+    "minimumTier": "NONE",
+    "durationTicks": 200,
+    "eut": 0,
+    "inputs": [
+     {
+      "kind": "item",
+      "id": "botania:storage@1",
+      "amount": 1,
+      "displayName": "Block of Terrasteel",
+      "modId": "Botania"
+     }
+    ],
+    "outputs": [
+     {
+      "kind": "item",
+      "id": "botania:manaresource@4",
+      "amount": 9,
+      "displayName": "Terrasteel Ingot",
+      "modId": "Botania"
+     }
+    ],
+    "source": {
+     "recipeMap": "Furnace"
+    }
+   }
+  },
+  {
+   "tags": [
+    "smelting",
+    "stacked-output"
+   ],
+   "raw": {
+    "input": {
+     "kind": "item",
+     "id": "botania:storage@2",
+     "registryId": "Botania:storage",
+     "meta": 2,
+     "amount": 1,
+     "displayName": "Block of Elementium",
+     "modId": "Botania"
+    },
+    "output": {
+     "kind": "item",
+     "id": "botania:manaresource@7",
+     "registryId": "Botania:manaResource",
+     "meta": 7,
+     "amount": 9,
+     "displayName": "Elementium Ingot",
+     "modId": "Botania"
+    }
+   },
+   "dataset": {
+    "name": "Furnace: Elementium Ingot",
+    "kind": "gregtech_machine",
+    "category": "furnace",
+    "machineType": "Furnace",
+    "minimumTier": "NONE",
+    "durationTicks": 200,
+    "eut": 0,
+    "inputs": [
+     {
+      "kind": "item",
+      "id": "botania:storage@2",
+      "amount": 1,
+      "displayName": "Block of Elementium",
+      "modId": "Botania"
+     }
+    ],
+    "outputs": [
+     {
+      "kind": "item",
+      "id": "botania:manaresource@7",
+      "amount": 9,
+      "displayName": "Elementium Ingot",
+      "modId": "Botania"
+     }
+    ],
+    "source": {
+     "recipeMap": "Furnace"
+    }
+   }
+  },
+  {
+   "tags": [
+    "smelting",
+    "stacked-output",
+    "gregtech-input"
+   ],
+   "raw": {
+    "input": {
+     "kind": "item",
+     "id": "gregtech:bw.frames@10022",
+     "registryId": "gregtech:bw.frames",
+     "meta": 10022,
+     "amount": 1,
+     "displayName": "Atomic Separation Catalyst Frame Box",
+     "modId": "gregtech"
+    },
+    "output": {
+     "kind": "item",
+     "id": "bartworks:gt.bwmetageneratedingot@10022",
+     "registryId": "bartworks:gt.bwMetaGeneratedingot",
+     "meta": 10022,
+     "amount": 2,
+     "displayName": "Atomic Separation Catalyst Ingot",
+     "modId": "bartworks"
+    }
+   },
+   "dataset": {
+    "name": "Furnace: Atomic Separation Catalyst Ingot",
+    "kind": "gregtech_machine",
+    "category": "furnace",
+    "machineType": "Furnace",
+    "minimumTier": "NONE",
+    "durationTicks": 200,
+    "eut": 0,
+    "inputs": [
+     {
+      "kind": "item",
+      "id": "gregtech:bw.frames@10022",
+      "amount": 1,
+      "displayName": "Atomic Separation Catalyst Frame Box",
+      "modId": "gregtech"
+     }
+    ],
+    "outputs": [
+     {
+      "kind": "item",
+      "id": "bartworks:gt.bwmetageneratedingot@10022",
+      "amount": 2,
+      "displayName": "Atomic Separation Catalyst Ingot",
+      "modId": "bartworks"
+     }
+    ],
+    "source": {
+     "recipeMap": "Furnace"
+    }
+   }
+  },
+  {
+   "tags": [
+    "smelting",
+    "stacked-output",
+    "gregtech-input"
+   ],
+   "raw": {
+    "input": {
+     "kind": "item",
+     "id": "gregtech:bw.frames@10082",
+     "registryId": "gregtech:bw.frames",
+     "meta": 10082,
+     "amount": 1,
+     "displayName": "Zircaloy-4 Frame Box",
+     "modId": "gregtech"
+    },
+    "output": {
+     "kind": "item",
+     "id": "bartworks:gt.bwmetageneratedingot@10082",
+     "registryId": "bartworks:gt.bwMetaGeneratedingot",
+     "meta": 10082,
+     "amount": 2,
+     "displayName": "Zircaloy-4 Ingot",
+     "modId": "bartworks"
+    }
+   },
+   "dataset": {
+    "name": "Furnace: Zircaloy-4 Ingot",
+    "kind": "gregtech_machine",
+    "category": "furnace",
+    "machineType": "Furnace",
+    "minimumTier": "NONE",
+    "durationTicks": 200,
+    "eut": 0,
+    "inputs": [
+     {
+      "kind": "item",
+      "id": "gregtech:bw.frames@10082",
+      "amount": 1,
+      "displayName": "Zircaloy-4 Frame Box",
+      "modId": "gregtech"
+     }
+    ],
+    "outputs": [
+     {
+      "kind": "item",
+      "id": "bartworks:gt.bwmetageneratedingot@10082",
+      "amount": 2,
+      "displayName": "Zircaloy-4 Ingot",
+      "modId": "bartworks"
+     }
+    ],
+    "source": {
+     "recipeMap": "Furnace"
+    }
+   }
+  },
+  {
+   "tags": [
+    "smelting",
+    "stacked-output",
+    "gregtech-input"
+   ],
+   "raw": {
+    "input": {
+     "kind": "item",
+     "id": "gregtech:bw.frames@10083",
+     "registryId": "gregtech:bw.frames",
+     "meta": 10083,
+     "amount": 1,
+     "displayName": "Zircaloy-2 Frame Box",
+     "modId": "gregtech"
+    },
+    "output": {
+     "kind": "item",
+     "id": "bartworks:gt.bwmetageneratedingot@10083",
+     "registryId": "bartworks:gt.bwMetaGeneratedingot",
+     "meta": 10083,
+     "amount": 2,
+     "displayName": "Zircaloy-2 Ingot",
+     "modId": "bartworks"
+    }
+   },
+   "dataset": {
+    "name": "Furnace: Zircaloy-2 Ingot",
+    "kind": "gregtech_machine",
+    "category": "furnace",
+    "machineType": "Furnace",
+    "minimumTier": "NONE",
+    "durationTicks": 200,
+    "eut": 0,
+    "inputs": [
+     {
+      "kind": "item",
+      "id": "gregtech:bw.frames@10083",
+      "amount": 1,
+      "displayName": "Zircaloy-2 Frame Box",
+      "modId": "gregtech"
+     }
+    ],
+    "outputs": [
+     {
+      "kind": "item",
+      "id": "bartworks:gt.bwmetageneratedingot@10083",
+      "amount": 2,
+      "displayName": "Zircaloy-2 Ingot",
+      "modId": "bartworks"
+     }
+    ],
+    "source": {
+     "recipeMap": "Furnace"
+    }
+   }
+  },
+  {
+   "tags": [
+    "smelting",
+    "wildcard",
+    "vanilla-input"
+   ],
+   "raw": {
+    "input": {
+     "kind": "item",
+     "id": "minecraft:beef@32767",
+     "registryId": "minecraft:beef",
+     "meta": 32767,
+     "amount": 1,
+     "displayName": "Raw Beef",
+     "modId": "minecraft"
+    },
+    "output": {
+     "kind": "item",
+     "id": "minecraft:cooked_beef",
+     "registryId": "minecraft:cooked_beef",
+     "meta": 0,
+     "amount": 1,
+     "displayName": "Steak",
+     "modId": "minecraft"
+    }
+   },
+   "dataset": {
+    "name": "Furnace: Steak",
+    "kind": "gregtech_machine",
+    "category": "furnace",
+    "machineType": "Furnace",
+    "minimumTier": "NONE",
+    "durationTicks": 200,
+    "eut": 0,
+    "inputs": [
+     {
+      "kind": "item",
+      "id": "minecraft:beef@32767",
+      "amount": 1,
+      "displayName": "Raw Beef",
+      "modId": "minecraft"
+     }
+    ],
+    "outputs": [
+     {
+      "kind": "item",
+      "id": "minecraft:cooked_beef",
+      "amount": 1,
+      "displayName": "Steak",
+      "modId": "minecraft"
+     }
+    ],
+    "source": {
+     "recipeMap": "Furnace"
+    }
+   }
+  },
+  {
+   "tags": [
+    "smelting",
+    "wildcard",
+    "vanilla-input"
+   ],
+   "raw": {
+    "input": {
+     "kind": "item",
+     "id": "minecraft:book@32767",
+     "registryId": "minecraft:book",
+     "meta": 32767,
+     "amount": 1,
+     "displayName": "Book",
+     "modId": "minecraft"
+    },
+    "output": {
+     "kind": "item",
+     "id": "cookingforblockheads:recipebook",
+     "registryId": "cookingforblockheads:recipebook",
+     "meta": 0,
+     "amount": 1,
+     "displayName": "Cooking for Blockheads I",
+     "modId": "cookingforblockheads"
+    }
+   },
+   "dataset": {
+    "name": "Furnace: Cooking for Blockheads I",
+    "kind": "gregtech_machine",
+    "category": "furnace",
+    "machineType": "Furnace",
+    "minimumTier": "NONE",
+    "durationTicks": 200,
+    "eut": 0,
+    "inputs": [
+     {
+      "kind": "item",
+      "id": "minecraft:book@32767",
+      "amount": 1,
+      "displayName": "Book",
+      "modId": "minecraft"
+     }
+    ],
+    "outputs": [
+     {
+      "kind": "item",
+      "id": "cookingforblockheads:recipebook",
+      "amount": 1,
+      "displayName": "Cooking for Blockheads I",
+      "modId": "cookingforblockheads"
+     }
+    ],
+    "source": {
+     "recipeMap": "Furnace"
+    }
+   }
+  },
+  {
+   "tags": [
+    "smelting",
+    "wildcard",
+    "vanilla-input"
+   ],
+   "raw": {
+    "input": {
+     "kind": "item",
+     "id": "minecraft:bread@32767",
+     "registryId": "minecraft:bread",
+     "meta": 32767,
+     "amount": 1,
+     "displayName": "Bread",
+     "modId": "minecraft"
+    },
+    "output": {
+     "kind": "item",
+     "id": "harvestcraft:toastitem",
+     "registryId": "harvestcraft:toastItem",
+     "meta": 0,
+     "amount": 1,
+     "displayName": "Toast",
+     "modId": "harvestcraft"
+    }
+   },
+   "dataset": {
+    "name": "Furnace: Toast",
+    "kind": "gregtech_machine",
+    "category": "furnace",
+    "machineType": "Furnace",
+    "minimumTier": "NONE",
+    "durationTicks": 200,
+    "eut": 0,
+    "inputs": [
+     {
+      "kind": "item",
+      "id": "minecraft:bread@32767",
+      "amount": 1,
+      "displayName": "Bread",
+      "modId": "minecraft"
+     }
+    ],
+    "outputs": [
+     {
+      "kind": "item",
+      "id": "harvestcraft:toastitem",
+      "amount": 1,
+      "displayName": "Toast",
+      "modId": "harvestcraft"
+     }
+    ],
+    "source": {
+     "recipeMap": "Furnace"
+    }
+   }
+  }
+ ]
+}

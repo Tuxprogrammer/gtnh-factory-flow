@@ -177,6 +177,18 @@ describe("RTG pellets (MTERTGenerator)", () => {
   });
 });
 
+describe("Magic Energy Absorber", () => {
+  it("warns that the game takes none of the listed items and keeps the sheet's numbers", () => {
+    // MTEMagicalEnergyAbsorber: getRecipeMap is null and allowPutStack takes only enchanted gear and books.
+    const model = compute("magic-energy-absorber");
+    expect(model.warnings).toEqual([
+      "The game's Magic Energy Absorber takes none of these items. It runs on a dragon egg above it, ender crystals, enchanted gear and books, and essentia. This card keeps the community sheet's numbers.",
+    ]);
+    expect(model.euPerTick).toBeGreaterThan(0);
+    expect(compute("magic-energy-converter").warnings).toBeUndefined();
+  });
+});
+
 describe("unlock chips (the controller's own recipe)", () => {
   it("puts the RTG at IV and the plasma generator at LuV", () => {
     expect(getPowerSource("rtg")?.unlock).toBe("IV");

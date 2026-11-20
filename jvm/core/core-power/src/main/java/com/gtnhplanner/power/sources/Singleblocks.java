@@ -135,6 +135,11 @@ public final class Singleblocks {
     /** One burn every 10 ticks (MTEBasicGenerator.onPostTick). */
     private static final double BURNS_PER_SECOND = 2;
 
+    /** What the game's Magic Energy Absorber really runs on, which the sheet's item list is not. */
+    private static final String MAGIC_ABSORBER_WARNING = "The game's Magic Energy Absorber takes none of these items. "
+        + "It runs on a dragon egg above it, ender crystals, enchanted gear and books, and essentia. "
+        + "This card keeps the community sheet's numbers.";
+
     /**
      * The magic fuel map's recipe outputs, which the converter hands back per item (FuelLoader's Blood Magic slates,
      * FuelRecipes' enchanted golden apple, GTItemIterator's liveroots).
@@ -463,7 +468,9 @@ public final class Singleblocks {
                 List.of(
                     stat("Efficiency", percent(efficiency)),
                     stat("Fuel per hour", formatAmount(perHour)),
-                    stat("EU per item", formatAmount(euPerItem * efficiency))));
+                    stat("EU per item", formatAmount(euPerItem * efficiency))),
+                // MTEMagicalEnergyAbsorber.allowPutStack takes only enchanted gear and books, and its fuel map is null.
+                List.of(MAGIC_ABSORBER_WARNING));
         }
 
         if (solidFuel) {

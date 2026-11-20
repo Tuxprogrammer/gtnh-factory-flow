@@ -154,6 +154,27 @@ its area needs. The solver module is meant to load inside the solve Worker. `Exp
 run (`build/module-<name>` checks) hold each module to the exports `modules.txt` assigns it; `webCoreExportVersion` is
 checked per module.
 
+### core-model and core-view are not in the build
+
+Neither module is on the web build's classpath: no export reaches them, and TeaVM drops what no export reaches, so
+listing them would change no byte. They compile for the web: a probe export that called the card (`CardViews.card`), rail,
+drawer, group, minimap and note-look builders compiled on both targets with the override checks passing. What a first
+view export would add (raw, gzip -9):
+
+| Where it goes | Added | Both targets |
+|---|---|---|
+| inside `core` (the one `coreModules` line and a `ViewExports` class) | `core.wasm` +74 KB (+26 KB gz), `core.js` +93 KB (+30 KB gz) | one fetch, nothing duplicated |
+| its own module (`modules.txt`: `view WebView ViewExports`) | `view.wasm` 126 KB (50 KB gz), `view.js` 142 KB (52 KB gz) | one more fetch, loaded on first use; carries its own copy of what it reaches in base, machines and power |
+
+The base for both: `core.wasm` 1.83 MB (477 KB gz), `core.js` 1.81 MB (432 KB gz), `solver.wasm` 1.58 MB (565 KB gz),
+`solver.js` 1.03 MB (343 KB gz). Load time in Node (median of nine, a shared box) is within the run-to-run noise either
+way (core 11 to 17 ms, a 126 KB `view.wasm` 2.4 ms); browser numbers belong with the first export that has a caller.
+The streams that could have wanted them were asked: `machines` calls only `MachinesExports` in `core`, and `model`'s
+codec has no caller on the website yet (later it is string-in, string-out plan JSON and `Canon.sum`). The first stream
+with a caller adds the line, an exports class and its row in `boundaries.md`. The card, rail and drawer builders draw
+the board with layout and power, so they go inside `core`. The plan codec also runs where there is no board (the live
+service, the server's plan routes), so it likely wants a module of its own: measure it then.
+
 ## Compiler options
 
 Raw / gzip -9 bytes of each file, per TeaVM option (one build each; speed is the conformance run's time for the same

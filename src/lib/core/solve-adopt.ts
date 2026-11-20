@@ -13,7 +13,8 @@
  * Which engine solves (`solveEngine`): the core when the solve area is adopted (`adopt.ts`), the solver module has
  * loaded, and it loaded on a target in `SOLVE_TARGETS` (WebAssembly GC). An engine without WebAssembly GC (the loader
  * would fall back to the JavaScript build, which is slower than the website's engine there) fetches no solver and keeps
- * the website's engine. Until the load finishes, and when it fails, the website's engine answers too.
+ * the website's engine. When the load fails the website's engine answers too; the solve Worker waits for the load
+ * (`src/store/solve-engines.ts`), and a main thread with no Worker uses the website's engine until it is done.
  */
 import {
   setSolveCoreBridge,
@@ -76,7 +77,7 @@ function solvesHere(): boolean {
 /**
  * Starts loading the solver module when the solve area is adopted and this engine can run it on a solving target.
  * Resolves true when the core will solve, false when it will not (off, missing, failed, or a target not chosen); never
- * rejects. Nothing waits for it to solve: until it is ready the website's engine answers.
+ * rejects. The solve Worker waits for it (bounded); elsewhere the website's engine answers until it is ready.
  */
 export async function warmSolveCore(): Promise<boolean> {
   if (!isAdopted("solve") || !solvesHere()) return false;

@@ -703,6 +703,35 @@ function correctSteamMakers() {
       burnTime: boost(ratioTicks(Math.trunc(row.euPerItem / 80))) / 20,
     }));
   }
+  // MTELargeBoilerBase.checkProcessing burns 1000 L for the recipe's duration, which
+  // LargeBoilerFuelBackend.addRecipe sets to the same stretched time of the fuel's
+  // base seconds: its special value (EU/L) / 20 for a diesel or gas fuel, / 10 for a
+  // dense (semifluid) one. The sheet's EU/L for Heavy Oil and Heavy Fuel is the
+  // semifluid generator's value, 1.5 times the special value, so those take / 15.
+  // The sheet rounds the times its own way and sits 0.05 s off on some rows; each
+  // row's base is the divisor that lands nearest the sheet's steel time.
+  const steelBefore = new Map(data.boilerFuels.steelLiquid.map((row) => [row.name, row.burnTime]));
+  const liquidBase = (row) => {
+    const steel = steelBefore.get(row.name);
+    if (steel === undefined) throw new Error(`No steel boiler burn time for ${row.name}.`);
+    const near = (base) => Math.abs(ratioTicks(base * 20) / 20 - steel);
+    const base = [20, 10, 15]
+      .map((divisor) => row.euPerLiter / divisor)
+      .reduce((best, next) => (near(next) < near(best) ? next : best));
+    if (near(base) > 0.1) throw new Error(`No large boiler burn time for ${row.name}.`);
+    return base;
+  };
+  for (const [table, boost] of Object.entries({
+    bronzeLiquid: runtimeBoost.bronzeSolid,
+    steelLiquid: runtimeBoost.steelSolid,
+    titaniumLiquid: runtimeBoost.titaniumSolid,
+    tungstensteelLiquid: runtimeBoost.tungstensteelSolid,
+  })) {
+    data.boilerFuels[table] = data.boilerFuels[table].map((row) => ({
+      ...row,
+      burnTime: boost(ratioTicks(liquidBase(row) * 20)) / 20,
+    }));
+  }
 }
 
 function correctTiers() {

@@ -175,6 +175,23 @@ describe("large boilers (MTELargeBoilerBase, LargeBoilerFuelBackend)", () => {
     }
   });
 
+  it("burns a liquid for the recipe duration LargeBoilerFuelBackend.addRecipe sets, times the tier's runtimeBoost", () => {
+    // Whole ticks all the way: base seconds stretched to 0.01 s, then 20 ticks a second, then the boiler's boost.
+    const burn = (liquid: string, boiler: string) =>
+      flow(compute(boiler, { liquidFuel: liquid, solidFuel: "None" }), liquid);
+    expect(burn("Propane", "large-bronze-boiler")).toBeCloseTo(1000 / 23.2, 9);
+    expect(burn("Propane", "large-steel-boiler")).toBeCloseTo(1000 / 11.6, 9);
+    expect(burn("Butane", "large-steel-boiler")).toBeCloseTo(1000 / 14.95, 9);
+    expect(burn("Ethanol Gasoline", "large-titanium-boiler")).toBeCloseTo(1000 / 17.15, 9);
+    expect(burn("Ethanol Gasoline", "large-tungstensteel-boiler")).toBeCloseTo(1000 / 8.55, 9);
+    // The bronze boiler's boost is exactly twice the steel's.
+    const tables = powerPlannerData.boilerFuels as Record<string, Array<{ name: string; burnTime?: number }>>;
+    for (const steel of tables.steelLiquid) {
+      const bronze = tables.bronzeLiquid.find((row) => row.name === steel.name);
+      expect(bronze?.burnTime).toBeCloseTo((steel.burnTime ?? 0) * 2, 9);
+    }
+  });
+
   it("burns Solid Super Fuel for 130.7s in bronze and 19.6s in titanium", () => {
     const bronze = compute("large-bronze-boiler", {
       liquidFuel: "None",

@@ -2263,7 +2263,7 @@
    {
     "name": "Propane",
     "euPerLiter": 232,
-    "burnTime": 23.25
+    "burnTime": 23.2
    },
    {
     "name": "EIO Rocket Fuel",
@@ -2273,7 +2273,7 @@
    {
     "name": "Butene",
     "euPerLiter": 256,
-    "burnTime": 25.75
+    "burnTime": 25.7
    },
    {
     "name": "Phenol",
@@ -2283,7 +2283,7 @@
    {
     "name": "Butane",
     "euPerLiter": 296,
-    "burnTime": 29.85
+    "burnTime": 29.9
    },
    {
     "name": "Light Fuel",
@@ -2293,12 +2293,12 @@
    {
     "name": "LPG",
     "euPerLiter": 320,
-    "burnTime": 32.35
+    "burnTime": 32.3
    },
    {
     "name": "Bio Diesel",
     "euPerLiter": 320,
-    "burnTime": 32.35
+    "burnTime": 32.3
    },
    {
     "name": "Glycerol",
@@ -2318,7 +2318,7 @@
    {
     "name": "Butanol",
     "euPerLiter": 400,
-    "burnTime": 40.65
+    "burnTime": 40.7
    },
    {
     "name": "Heavy Fuel",
@@ -2353,17 +2353,17 @@
    {
     "name": "Naquadah Gas",
     "euPerLiter": 1024,
-    "burnTime": 106.55
+    "burnTime": 106.5
    },
    {
     "name": "Ethanol Gasoline",
     "euPerLiter": 1100,
-    "burnTime": 114.65
+    "burnTime": 114.6
    },
    {
     "name": "Nefarious Gas",
     "euPerLiter": 1200,
-    "burnTime": 125.35
+    "burnTime": 125.3
    },
    {
     "name": "Nitrobenzene",
@@ -2373,17 +2373,17 @@
    {
     "name": "Jet Fuel No.3",
     "euPerLiter": 1824,
-    "burnTime": 192.45
+    "burnTime": 192.4
    },
    {
     "name": "Jet Fuel A",
     "euPerLiter": 2248,
-    "burnTime": 238.35
+    "burnTime": 238.4
    },
    {
     "name": "High Octane Gasoline",
     "euPerLiter": 2500,
-    "burnTime": 265.75
+    "burnTime": 265.7
    }
   ],
   "bronzeSolid": [
@@ -2677,7 +2677,7 @@
    {
     "name": "Butane",
     "euPerLiter": 296,
-    "burnTime": 14.9
+    "burnTime": 14.95
    },
    {
     "name": "Light Fuel",
@@ -2712,7 +2712,7 @@
    {
     "name": "Butanol",
     "euPerLiter": 400,
-    "burnTime": 20.3
+    "burnTime": 20.35
    },
    {
     "name": "Heavy Fuel",
@@ -2772,7 +2772,7 @@
    {
     "name": "Jet Fuel A",
     "euPerLiter": 2248,
-    "burnTime": 119.15
+    "burnTime": 119.2
    },
    {
     "name": "High Octane Gasoline",
@@ -2896,7 +2896,7 @@
    {
     "name": "Ethanol Gasoline",
     "euPerLiter": 1100,
-    "burnTime": 17.2
+    "burnTime": 17.15
    },
    {
     "name": "Jet Fuel No.3",
@@ -2945,7 +2945,7 @@
    {
     "name": "Ethanol Gasoline",
     "euPerLiter": 1100,
-    "burnTime": 8.6
+    "burnTime": 8.55
    },
    {
     "name": "Jet Fuel No.3",

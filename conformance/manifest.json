@@ -410,8 +410,8 @@
     },
     "power/power-goldens.jsonl.gz": {
       "area": "power",
-      "bytes": 269405,
-      "sha256": "281302d659cf36283c23cfb6d3317679a854773743450683912a3342198eb4fb"
+      "bytes": 269399,
+      "sha256": "3741f7b5c88650a285af9365d6a13f299ec52b6fe44158cf80dae462f5bd1663"
     },
     "power/rocket-exact.json": {
       "area": "power",
@@ -420,8 +420,8 @@
     },
     "power/website-test-inputs.jsonl.gz": {
       "area": "power",
-      "bytes": 60786,
-      "sha256": "d84e30d8cc927aaf5c275d856850c8a5778f17eb747485d075e1d0cee7f388b1"
+      "bytes": 60804,
+      "sha256": "bbe95caca3ffe4c1c8f9d765e3c513512abc6badba8b34e981597e42cd86f533"
     },
     "schema/board-selection.schema.json": {
       "area": "schema",

@@ -599,11 +599,14 @@ export function buildCountView(
     zero: state.upTo ? state.upTo.reached <= 0.0000005 : !pinned && needed <= 0.0000005,
     title:
       opts.title ??
-      (rule === "upTo"
-        ? "Runs as many as the plan lets it. Never more than you set."
-        : rule === "exact"
-          ? "Runs exactly this many. A gap shows as a forced flow."
-          : "How many of this machine the plan needs."),
+      // A custom rate card always runs at its dial (its rule is Exactly and cannot change).
+      (opts.ruleFixed
+        ? "Runs at its dial."
+        : rule === "upTo"
+          ? "Runs as many as the plan lets it. Never more than you set."
+          : rule === "exact"
+            ? "Runs exactly this many. A gap shows as a forced flow."
+            : "How many of this machine the plan needs."),
   };
 }
 

@@ -313,7 +313,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
                 "",
                 c.prompt(),
                 c.zero(),
-                c.ruleFixed() ? "Runs at its dial." : c.title());
+                c.title());
         } else face = CardFace.count(rule, set, machinesTotal(), readout, unset, crop(), ruleFixed());
         faceFor = model;
         facePending = pendingUnpin ? -1 : pendingCount;

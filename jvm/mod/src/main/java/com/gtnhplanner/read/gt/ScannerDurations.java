@@ -1,4 +1,13 @@
-package dev.gtnhplanner.calcoracle;
+package com.gtnhplanner.read.gt;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.Locale;
+
+import net.minecraft.init.Items;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraftforge.fluids.FluidStack;
 
 import cpw.mods.fml.common.registry.GameRegistry;
 import gregtech.api.enums.ItemList;
@@ -7,14 +16,6 @@ import gregtech.api.enums.OrePrefixes;
 import gregtech.api.objects.ItemData;
 import gregtech.api.util.GTOreDictUnificator;
 import gregtech.api.util.GTRecipe;
-import net.minecraft.init.Items;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraftforge.fluids.FluidStack;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.Locale;
 
 /**
  * The time a Scanner really runs a scan.
@@ -37,6 +38,7 @@ import java.util.Locale;
  * the loaded mods, so a pack with no rate mod gets the values the display copy already had.
  */
 final class ScannerDurations {
+
     static final String MAP_ID = "gt.recipe.scanner";
 
     private static final int RESEARCH_SPECIAL_VALUE = -201;
@@ -81,8 +83,7 @@ final class ScannerDurations {
                 return constant("DATA_ORB_COPY_DURATION");
             }
             if (ItemList.Tool_DataStick.isStackEqual(input, false, true)) {
-                return hasSpecial(display)
-                    ? constant("DATA_STICK_COPY_DURATION")
+                return hasSpecial(display) ? constant("DATA_STICK_COPY_DURATION")
                     : constant("SCAN_PROSPECTING_DATA_DURATION");
             }
             if (isSchematic(input)) {
@@ -120,7 +121,9 @@ final class ScannerDurations {
         if (result == null) {
             return -1;
         }
-        return ((Number) result.getClass().getField("duration").get(result)).intValue();
+        return ((Number) result.getClass()
+            .getField("duration")
+            .get(result)).intValue();
     }
 
     private static ItemStack firstInput(GTRecipe display) {
@@ -152,10 +155,7 @@ final class ScannerDurations {
 
     private static boolean isHoney(FluidStack fluid) {
         FluidStack honey = Materials.Honey.getFluid(1L);
-        return fluid != null
-            && fluid.getFluid() != null
-            && honey != null
-            && fluid.getFluid() == honey.getFluid();
+        return fluid != null && fluid.getFluid() != null && honey != null && fluid.getFluid() == honey.getFluid();
     }
 
     private static boolean isCropSeed(ItemStack input) {

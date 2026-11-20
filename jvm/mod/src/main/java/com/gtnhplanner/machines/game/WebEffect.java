@@ -50,10 +50,15 @@ public final class WebEffect {
             out = new EffectResult(1, 0, (int) Math.min(Integer.MAX_VALUE, Math.round(parallels / duration)))
                 .exact(1, draw);
         } else out = new EffectResult(1, 0, (int) parallels).exact(duration, draw);
-        final double[] outputs = new double[r.outputMultipliers()
-            .size()];
-        for (int i = 0; i < outputs.length; i++) outputs[i] = r.outputMultipliers()
-            .get(i);
+        // Per port: the recipe's outputs are the dataset's slots, the card's ports fold a resource made twice.
+        final Web.Recipe recipe = recipe(node);
+        final double[] outputs = new double[node.outputs.size()];
+        for (int i = 0; i < outputs.length; i++) {
+            final int at = recipe == null ? i : WebCards.recipeOutput(recipe, node.outputs, i);
+            outputs[i] = at >= 0 && at < r.outputMultipliers()
+                .size() ? r.outputMultipliers()
+                    .get(at) : 1;
+        }
         return out.multipliers(null, outputs)
             .stall(r.stall())
             .detail(r);

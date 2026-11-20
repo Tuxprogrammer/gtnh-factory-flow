@@ -404,12 +404,16 @@ const solarBoiler: PowerSourceDefinition = {
       defaultOn: false,
       enabledWhen: { settingId: "waterKind", equals: "Water" },
     },
+    // MTEBoilerSolar.updateFuel heats eight times faster by day than at night and not at all in a thunderstorm or
+    // under cover: the share of the time it runs at full output is the player's to set, as on the Solar Panel.
+    { type: "number", id: "duty", label: "Duty", min: 1, max: 100, step: 1, defaultValue: 100, unit: "%" },
   ],
   compute(read): PowerModel {
     const model =
       SOLAR_BOILER_MODELS.find((row) => row.key === read.select("model")) ?? SOLAR_BOILER_MODELS[0];
     const onWater = read.select("waterKind") === "Water";
-    const steamPerSecond = onWater && read.on("calcified") ? model.min : model.max;
+    const steamPerSecond =
+      (onWater && read.on("calcified") ? model.min : model.max) * (read.number("duty") / 100);
     const warnings: string[] = [];
     if (onWater) {
       const fallTicks = ((model.max - model.min) * SOLAR_CALCIFICATION_TICKS) / model.max;

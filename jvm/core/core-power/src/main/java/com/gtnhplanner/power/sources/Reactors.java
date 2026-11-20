@@ -590,19 +590,22 @@ public final class Reactors {
             PowerGroup.PASSIVE,
             "EV",
             "Heliostats heat solar salt. No fuel.",
-            List.of(new PowerSetting.Select("rings", "Heliostat rings", options, "5")),
+            List.of(
+                new PowerSetting.Select("rings", "Heliostat rings", options, "5"),
+                // MTESolarTower gains heat only while w.isDaytime() (halved in rain): the share of the time the
+                // heliostats are lit is the player's to set, as on the Solar Panel.
+                new PowerSetting.Number("duty", "Duty", 1, 100, 1, 100, "%", null)),
             read -> {
                 final double rings = toNumber(read.select("rings"));
                 final SolarTowerRing found = find(SOLAR_TOWER_RINGS, row -> row.rings() == rings);
                 final SolarTowerRing entry = found != null ? found : SOLAR_TOWER_RINGS.get(4);
                 final double heliostats = (28 + 8 * rings) * rings;
+                final double hotSalt = entry.hotSalt() * (read.number("duty") / 100);
                 return new PowerModel(
                     0,
-                    List.of(liters("Cold Solar Salt", entry.hotSalt())),
-                    List.of(liters("Hot Solar Salt", entry.hotSalt())),
-                    List.of(
-                        stat("Heliostats", js(heliostats)),
-                        stat("Hot salt", formatAmount(entry.hotSalt()) + " L/s")));
+                    List.of(liters("Cold Solar Salt", hotSalt)),
+                    List.of(liters("Hot Solar Salt", hotSalt)),
+                    List.of(stat("Heliostats", js(heliostats)), stat("Hot salt", formatAmount(hotSalt) + " L/s")));
             });
     }
 

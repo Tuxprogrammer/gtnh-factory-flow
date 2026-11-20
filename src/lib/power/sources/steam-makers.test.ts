@@ -270,6 +270,14 @@ describe("singleblock boilers (MTEBoiler)", () => {
     expect(flow(model, "Obsidian")).toBeCloseTo(flow(model, "Lava")! / 1000, 12);
   });
 
+  it("scales the solar boiler's steam and water by its duty", () => {
+    const full = compute("solar-boiler", { model: "steel" });
+    expect(flow(full, "Steam")).toBe(360);
+    const half = compute("solar-boiler", { model: "steel", duty: "50" });
+    expect(flow(half, "Steam")).toBe(180);
+    expect(flow(half, "Distilled Water")).toBeCloseTo(180 / 160, 12);
+  });
+
   it("states when the solar boiler calcifies on regular water", () => {
     const model = compute("solar-boiler", { model: "bronze", waterKind: "Water" });
     expect(model.warnings).toEqual([

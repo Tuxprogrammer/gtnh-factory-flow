@@ -560,18 +560,22 @@ const solarTower: PowerSourceDefinition = {
       })),
       defaultKey: "5",
     },
+    // MTESolarTower gains heat only while w.isDaytime() (halved in rain): the share of the time the heliostats are lit
+    // is the player's to set, as on the Solar Panel.
+    { type: "number", id: "duty", label: "Duty", min: 1, max: 100, step: 1, defaultValue: 100, unit: "%" },
   ],
   compute(read): PowerModel {
     const rings = Number(read.select("rings"));
     const entry = SOLAR_TOWER_RINGS.find((row) => row.rings === rings) ?? SOLAR_TOWER_RINGS[4];
     const heliostats = (28 + 8 * rings) * rings;
+    const hotSalt = entry.hotSalt * (read.number("duty") / 100);
     return {
       euPerTick: 0,
-      inputs: [liters("Cold Solar Salt", entry.hotSalt)],
-      outputs: [liters("Hot Solar Salt", entry.hotSalt)],
+      inputs: [liters("Cold Solar Salt", hotSalt)],
+      outputs: [liters("Hot Solar Salt", hotSalt)],
       stats: [
         stat("Heliostats", String(heliostats)),
-        stat("Hot salt", `${formatAmount(entry.hotSalt)} L/s`),
+        stat("Hot salt", `${formatAmount(hotSalt)} L/s`),
       ],
     };
   },

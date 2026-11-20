@@ -344,7 +344,11 @@ public final class SteamMakers {
             List.of(
                 new PowerSetting.Select("model", "Boiler", models, "bronze"),
                 new PowerSetting.Select("waterKind", "Water supply", WATER_KINDS, "Distilled Water"),
-                new PowerSetting.Toggle("calcified", "Fully calcified", false, new Condition("waterKind", "Water"))),
+                new PowerSetting.Toggle("calcified", "Fully calcified", false, new Condition("waterKind", "Water")),
+                // MTEBoilerSolar.updateFuel heats eight times faster by day than at night and not at all in a
+                // thunderstorm or under cover: the share of the time it runs at full output is the player's to set,
+                // as on the Solar Panel.
+                new PowerSetting.Number("duty", "Duty", 1, 100, 1, 100, "%", null)),
             read -> {
                 SolarBoilerModel model = SOLAR_BOILER_MODELS.get(0);
                 for (final SolarBoilerModel row : SOLAR_BOILER_MODELS) {
@@ -355,7 +359,8 @@ public final class SteamMakers {
                     }
                 }
                 final boolean onWater = "Water".equals(read.select("waterKind"));
-                final double steamPerSecond = onWater && read.on("calcified") ? model.min() : model.max();
+                final double steamPerSecond = (onWater && read.on("calcified") ? model.min() : model.max())
+                    * (read.number("duty") / 100);
                 final List<String> warnings = new ArrayList<>();
                 if (onWater) {
                     final double fallTicks = ((model.max() - model.min()) * SOLAR_CALCIFICATION_TICKS) / model.max();

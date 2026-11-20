@@ -27,6 +27,16 @@ describe("IC2 fluid reactor", () => {
   });
 });
 
+describe("Solar Tower duty", () => {
+  it("scales the hot salt by the share of the time the heliostats are lit", () => {
+    // MTESolarTower gains heat only in daytime; 5 rings at 100% stay the sheet's 883 L/s.
+    const salt = (settings: Record<string, string>) =>
+      flow(compute("solar-tower", { rings: "5", ...settings }).outputs, "Hot Solar Salt");
+    expect(salt({})).toBe(883);
+    expect(salt({ duty: "50" })).toBe(441.5);
+  });
+});
+
 describe("Eye of Harmony", () => {
   it("spreads a craft's net EU over its duration in seconds", () => {
     // EyeOfHarmonyRecipeStorage.timeCalculator: T0 runs 18,000 s. The

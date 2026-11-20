@@ -1254,7 +1254,13 @@ export function setCardFactsListener(listener: ((facts: CleanCardFacts) => void)
 export function useCleanCardModel(
   data: RecipeNodeData,
   selected: boolean,
-): { view: CleanCardView; actions: CleanCardActions; context: CleanCardContext } {
+): {
+  view: CleanCardView;
+  actions: CleanCardActions;
+  context: CleanCardContext;
+  /** What the view was made from: a special card's own parts start from it (special/special-view.ts). */
+  facts: CleanCardFacts;
+} {
   const { projectNode, recipe, result } = data;
   useFontEpoch();
   const updateNode = useFactoryStore((state) => state.updateNode);
@@ -1480,7 +1486,7 @@ export function useCleanCardModel(
     ],
   };
 
-  return { view, actions, context };
+  return { view, actions, context, facts };
 }
 
 export type { RailPort };

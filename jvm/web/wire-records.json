@@ -1,5 +1,5 @@
 {
  "about": "Records that cross between the website and the compiled core in the packed form (tools/web-core/gen-wire.mjs; jvm/web/README.md, Records across the boundary). in: the website writes, the core reads. out: the core writes, the website reads. Each must be a root of jvm/core/core-view/view-records.json.",
- "in": ["CardInputCase"],
- "out": ["CardView", "CardGeometry"]
+ "in": ["CardInputCase", "SpecialInputCase"],
+ "out": ["CardView", "CardGeometry", "SpecialView"]
 }

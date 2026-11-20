@@ -1,5 +1,5 @@
 {
- "roots": ["CardGeometry", "CardInputCase", "CardView", "DrawerInput", "DrawerView", "GroupInput", "GroupView", "MinimapInput", "MinimapView", "NoteLookInput", "NoteLookView", "NoticesInput", "NoticesNotice", "RailInput", "RailView"],
+ "roots": ["CardGeometry", "CardInputCase", "CardView", "DrawerInput", "DrawerView", "GroupInput", "GroupView", "MinimapInput", "MinimapView", "NoteLookInput", "NoteLookView", "NoticesInput", "NoticesNotice", "RailInput", "RailView", "SpecialInputCase", "SpecialView"],
  "enums": [
   "jvm/core/core-base/src/main/java/com/gtnhplanner/core/base/RateUnit.java",
   "jvm/core/core-model/src/main/java/com/gtnhplanner/data/flowchart/PinRule.java",
@@ -13,6 +13,7 @@
   "minimap/cases": { "input": "MinimapInput", "view": "MinimapView" },
   "note/look": { "input": "NoteLookInput", "view": "NoteLookView" },
   "notices/cases": { "input": "NoticesInput", "view": "NoticesNotice[]" },
-  "rail/cases": { "input": "RailInput", "view": "RailView" }
+  "rail/cases": { "input": "RailInput", "view": "RailView" },
+  "special/cases": { "input": "SpecialInputCase", "view": "SpecialView" }
  }
 }

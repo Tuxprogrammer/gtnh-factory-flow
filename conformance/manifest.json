@@ -1197,8 +1197,13 @@
     },
     "view-inputs/card-website-test-inputs.jsonl.gz": {
       "area": "view-inputs",
-      "bytes": 210344,
-      "sha256": "f17937216f3b901971f16c51285d734dc825a6e50f140b41d08a75f5149eee30"
+      "bytes": 210825,
+      "sha256": "c827e0dd4a29926d40be5d244b5d65378c3ec08b7edb0d54b0f8c6c74e675fd3"
+    },
+    "view-inputs/special-website-test-inputs.jsonl.gz": {
+      "area": "view-inputs",
+      "bytes": 2500,
+      "sha256": "00411469fcfdb20ccf51f585f16abff65c3198d59a63a7bcccb68c378ee9885e"
     },
     "view/card/cases.json": {
       "area": "view",
@@ -1252,8 +1257,13 @@
     },
     "view/records.json": {
       "area": "view",
-      "bytes": 21167,
-      "sha256": "0a819cbb2a629f2640fffef9b56f6e8b4b31b9b3c0f07d5ef849ee980f7f3654"
+      "bytes": 23724,
+      "sha256": "1ec24a80231a236b6703f2b17e80bfbe3ab02545a477c60e4f111221f100d7e5"
+    },
+    "view/special/cases.json": {
+      "area": "view",
+      "bytes": 61100,
+      "sha256": "482fab41731b10b0d2f6897933781db4357bc4ecc21e09b796ec8c69b0573348"
     }
   }
 }

@@ -4,12 +4,7 @@ import { useMemo } from "react";
 import type { FactoryNode, Recipe } from "@/lib/model/types";
 import { applyMachineHandlerToRecipe, applyRecipeInputOverrides, isSteamMachineHandler } from "@/lib/model";
 import { formatCompact, formatPowerValue } from "@/lib/format/numbers";
-import {
-  powerDisplayFromEuT,
-  powerDisplaySuffix,
-  rateMultiplierForKind,
-  rateSuffixForKind,
-} from "@/lib/format/rate-unit";
+import { powerDisplayFromEuT, powerDisplaySuffix } from "@/lib/format/rate-unit";
 import { getRecipeProgrammedCircuit } from "@/lib/model/programmed-circuit";
 import {
   getCustomRateDial,
@@ -90,6 +85,8 @@ import {
   type SpecialView,
 } from "./special-model";
 import type { SheetRow } from "./SpecialSheets";
+import { specialViewFrom, type SpecialFacts } from "./special-parts";
+import { specialPartsOf } from "./special-view";
 import { CROP_MACHINES_ID, pinMachineKey, type NumberSetting } from "../menus/settings-model";
 
 /** What a special card does beyond the plain card's actions. */
@@ -762,88 +759,32 @@ export function useHolderCardModel(
 
   const slot = kind === "custom-rate" ? getCustomRateSlot(recipe) : getFluidTankSlot(recipe);
   const empty = !slot;
-  const plan = useFactoryStore.getState().lastResult?.plan;
-  const needed = data.result?.theoreticalMachinesRequired ?? 0;
-  // A fluid tank has no count rule at all; a custom rate card's is always Exactly (its dial).
-  const counted = kind === "tank" ? undefined : countView(projectNode, needed, plan, { recipe });
-  const count = counted?.count;
-
-  const name = kind === "tank" ? FLUID_TANK_NAME : "Custom Rate";
-  const sockets: SpecialView["sockets"] = empty
-    ? {
-        take: kind === "tank" ? "TAKE CELL/FLUID" : "DRAIN ANY",
-        give: kind === "tank" ? "GIVE CELL/FLUID" : "SUPPLY ANY",
-        takeHandle: makeResourceHandleId("input", {
-          kind: "item",
-          id: CUSTOM_RATE_ANY_RESOURCE_ID,
-        }),
-        giveHandle: makeResourceHandleId("output", {
-          kind: "item",
-          id: CUSTOM_RATE_ANY_RESOURCE_ID,
-        }),
-      }
-    : undefined;
-
-  // The custom rate's dial: mode and rate, on chips like every other setting.
-  const chips: SpecialChip[] = [];
-  let stripHeight = 0;
-  if (kind === "custom-rate") {
-    const dial = getCustomRateDial(projectNode, recipe);
-    const factKind = (getCustomRateSlot(recipe)?.resource.kind ?? "item") as string;
-    const multiplier = rateMultiplierForKind(factKind);
-    const step = 1000 / Math.min(multiplier, 1);
-    const shown = String(Math.round(dial.perSecond * multiplier * step) / step);
-    const laid = layoutStrip([
-      {
-        id: "mode",
-        label: "Mode",
-        value: dial.mode === "supply" ? "Supply" : "Request",
-        title: "Which way the card faces.",
-      },
-      {
-        id: "rate",
-        label: `Rate (${rateSuffixForKind(factKind).trim() || "/s"})`,
-        value: shown,
-        title: "The rate it holds.",
-      },
-    ]);
-    stripHeight = laid.height;
-    for (const chip of laid.chips) {
-      chips.push(
-        chip.id === "rate"
-          ? {
-              ...chip,
-              edit: {
-                text: shown,
-                commit: (text) => {
-                  if (isLocked()) return;
-                  const parsed = Number.parseFloat(text.replace(/,/g, "").trim());
-                  if (Number.isFinite(parsed) && parsed >= 0)
-                    setCustomRateConfig(projectNode.id, { perSecond: parsed / multiplier });
-                },
-              },
-            }
-          : chip,
-      );
-    }
-  }
+  // The custom rate's dial: mode and rate (both on its strip), of the kind it holds (an item while it holds none).
+  const dialNow = kind === "custom-rate" ? getCustomRateDial(projectNode, recipe) : undefined;
+  const facts: SpecialFacts = {
+    kind,
+    holder: {
+      empty,
+      ...(dialNow
+        ? {
+            dial: {
+              mode: dialNow.mode,
+              perSecond: dialNow.perSecond,
+              kind: (getCustomRateSlot(recipe)?.resource.kind ?? "item") as string,
+              showMode: true,
+              showRate: true,
+            },
+          }
+        : {}),
+    },
+  };
+  const parts = specialPartsOf(base.facts, facts, base.view);
 
   const iconKey = kind === "tank" ? "Tank" : undefined;
   const mapIcon = iconKey ? (mapIcons.get(iconKey) as MachineHandlerIcon | undefined) : undefined;
-  const sections: SpecialSection[] = empty
-    ? [{ section: 0, inputs: [], outputs: [] }]
-    : [section0(base)];
-
-  const view: SpecialView = {
-    kind,
-    nodeId: projectNode.id,
-    name,
-    nameSize: cardNameSize(name, { tier: false, amps: false, picker: false }),
-    nameTone: "holder",
-    hasPicker: false,
-    sections,
-    sockets,
-    glyph: kind === "custom-rate" ? "gauge" : undefined,
+  const takeHandle = makeResourceHandleId("input", { kind: "item", id: CUSTOM_RATE_ANY_RESOURCE_ID });
+  const giveHandle = makeResourceHandleId("output", { kind: "item", id: CUSTOM_RATE_ANY_RESOURCE_ID });
+  const view: SpecialView = specialViewFrom(parts, base.view, {
     icon: mapIcon
       ? {
           id: mapIcon.id,
@@ -853,19 +794,13 @@ export function useHolderCardModel(
         }
       : undefined,
     glanceArt: mapIcon?.iconPath,
-    count,
-    // An Exactly custom rate card fed by a forced input says so, as any Exactly card does.
-    foot: count && !empty ? base.view.foot : undefined,
-    loop: base.view.loop,
-    glance: base.view.glance,
-    chips,
-    stripHeight,
-    warnings: [],
-    selected,
-    cannotRun: false,
-    unset: counted?.unset ?? false,
-    handleIds: empty ? [sockets!.takeHandle, sockets!.giveHandle] : base.context.handleIds,
-  };
+    socketHandles: { take: takeHandle, give: giveHandle },
+    handleIds: empty ? [takeHandle, giveHandle] : base.context.handleIds,
+    commit: (chipId, perSecond) => {
+      if (chipId === "rate" && !isLocked()) setCustomRateConfig(projectNode.id, { perSecond });
+    },
+  });
+  const chips = view.chips;
 
   const actions: SpecialActions = {
     ...base.actions,

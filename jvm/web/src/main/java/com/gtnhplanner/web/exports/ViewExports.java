@@ -21,6 +21,8 @@ import com.gtnhplanner.core.view.card.CardInput;
 import com.gtnhplanner.core.view.card.CardInputJson;
 import com.gtnhplanner.core.view.card.CardView;
 import com.gtnhplanner.core.view.card.CardViews;
+import com.gtnhplanner.core.view.special.SpecialInput;
+import com.gtnhplanner.core.view.special.SpecialViews;
 import com.gtnhplanner.web.wire.ViewJs;
 
 /**
@@ -162,6 +164,30 @@ public final class ViewExports {
         final CardInput.Case c = ViewJs.readCardInputCase(cardCase);
         final CardView view = CardViews.card(c.card(), c.dials(), measure, CardViews.Host.WEB);
         return viewAndGeometry(ViewJs.js(view), ViewJs.js(CardGeometry.web(view)));
+    }
+
+    /**
+     * A special card's own parts, the website's path: its {@code SpecialInputCase} object in ({@code {dials, card,
+     * special}}), its {@code SpecialView} object out, measured by the host and the widths kept as
+     * {@link #viewCardJsKept} keeps them. The card's own view is made on the way (the special parts start from it) and
+     * not handed back: the host has it from {@link #viewCardJsKept}.
+     */
+    @JSExport
+    public static JSObject viewSpecialJsKept(final JSObject specialCase, final CardMeasure measure,
+        final int fontState) {
+        return specialJs(specialCase, keptMeasure(measure, fontState));
+    }
+
+    /** {@link #viewSpecialJsKept} measured six px a character (the shared cases). */
+    @JSExport
+    public static JSObject viewSpecialJsSix(final JSObject specialCase) {
+        return specialJs(specialCase, SIX);
+    }
+
+    private static JSObject specialJs(final JSObject specialCase, final TextMeasure measure) {
+        final SpecialInput.Case c = ViewJs.readSpecialInputCase(specialCase);
+        final CardView base = CardViews.card(c.card(), c.dials(), measure, CardViews.Host.WEB);
+        return ViewJs.js(SpecialViews.special(c.special(), c.card(), base, c.dials(), measure, CardViews.Host.WEB));
     }
 
     @JSBody(params = { "view", "geometry" }, script = "return { view: view, geometry: geometry };")

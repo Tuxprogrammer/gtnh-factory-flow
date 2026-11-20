@@ -272,6 +272,12 @@ public final class Reactors {
         new Ic2Design("design-2", "Design 2 (1,380 L/s)", 1380),
         new Ic2Design("design-3", "Design 3 (1,340 L/s)", 1340));
 
+    /**
+     * TileEntityNuclearReactorElectric.updateEntityServer runs once every getTickRate() = 20 ticks and moves at most
+     * the room in its 10,000 L output tank into hot coolant; any heat above that stays in the reactor.
+     */
+    private static final double IC2_MAX_COOLANT_PER_SECOND = 10_000;
+
     private static PowerSource ic2FluidReactor() {
         final List<Option> designs = new ArrayList<>();
         for (final Ic2Design design : IC2_DESIGNS) designs.add(new Option(design.key(), design.label()));
@@ -288,7 +294,7 @@ public final class Reactors {
                     "customRate",
                     "Hot coolant rate",
                     1,
-                    100_000,
+                    IC2_MAX_COOLANT_PER_SECOND,
                     10,
                     1380,
                     "L/s",

@@ -216,6 +216,12 @@ const IC2_DESIGNS = [
   { key: "design-3", label: "Design 3 (1,340 L/s)", rate: 1340 },
 ];
 
+/**
+ * TileEntityNuclearReactorElectric.updateEntityServer runs once every getTickRate() = 20 ticks and moves at most
+ * the room in its 10,000 L output tank into hot coolant; any heat above that stays in the reactor.
+ */
+const IC2_MAX_COOLANT_PER_SECOND = 10_000;
+
 const ic2FluidReactor: PowerSourceDefinition = {
   id: "ic2-fluid-reactor",
   name: "Nuclear Reactor (fluid mode)",
@@ -235,7 +241,7 @@ const ic2FluidReactor: PowerSourceDefinition = {
       id: "customRate",
       label: "Hot coolant rate",
       min: 1,
-      max: 100_000,
+      max: IC2_MAX_COOLANT_PER_SECOND,
       step: 10,
       defaultValue: 1380,
       unit: "L/s",

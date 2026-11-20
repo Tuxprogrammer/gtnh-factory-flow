@@ -235,12 +235,11 @@ for (const target of targets) {
       expect(wrong.slice(0, 10)).toEqual([]);
     }, 60_000);
 
-    // The Large Rocket Engine's output falls off by cube roots (Engines.java rocketFalloff). The JVM's Math.cbrt is
-    // fdlibm; TeaVM's gives another last bit on both web targets, which the 1e-9 comparisons above cannot see. The file
-    // holds the JVM's answers to the bit (core-power RocketExactTest keeps it honest). Until core-base has a cube root
-    // that is the same on every target and the engine calls it, about a quarter of the rows differ, so this test is
-    // expected to fail; when the root is fixed it passes and `.fails` must come off.
-    it.fails(
+    // The Large Rocket Engine's output falls off by cube roots (Engines.java rocketFalloff), which the 1e-9
+    // comparisons above cannot see to the last bit. The file holds the JVM's answers to the bit (core-power
+    // RocketExactTest keeps it honest); the engine's cube root is core-base ExactMath.cbrt (fdlibm), the same bits on
+    // the JVM and on both web targets.
+    it(
       "gives the Large Rocket Engine's cube-root falloff to the last bit, as the JVM does",
       () => {
         const rows = JSON.parse(readConformanceBytes("power", "rocket-exact.json").toString("utf8"))

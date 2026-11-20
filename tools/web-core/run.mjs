@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 // The conformance run of the compiled core, in Node: vector files and the random cases, for each target.
 //   node tools/web-core/run.mjs --build jvm/web/build/generated/teavm [--random FILE] [--targets wasm,js]
-//        [--solver-jvm DIR] [--solver-report FILE] [--solver-runs N] [--solver-only NAME,...] [--bench] [--full]
+//        [--no-jvm-node] [--solver-jvm DIR] [--solver-report FILE] [--solver-runs N] [--solver-only NAME,...] [--bench] [--full]
+// `--no-jvm-node` leaves out the check of the JVM's random cases against Node's own arithmetic (it does not depend on the
+// target: one of two parallel runs, one per target, does it).
 // `--solver-only` runs just the solver cases whose name contains one of the given texts (all of them, not the sample).
 // The WebAssembly target always runs every case; the JavaScript target runs a sample of the machine, bee and crop goldens,
 // the layout boards and the solver corpus (sample.mjs, solver.mjs) unless --full. The pipeline passes --full when jvm/web or the TeaVM version changes.
@@ -10,7 +12,9 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { Tally } from "./compare.mjs";
-import { TARGETS, loadTarget } from "./load.mjs";
+import { TARGETS, loadTarget, loadedModules } from "./load.mjs";
+import { runExactMath } from "./exact-math.mjs";
+import { readSources } from "./gen-types.mjs";
 import { runFormat } from "./format.mjs";
 import { runMachines } from "./machines.mjs";
 import { SAMPLE_EVERY } from "./sample.mjs";
@@ -20,7 +24,7 @@ import { checkJvmAgainstNode, readCases, runRandom } from "./random.mjs";
 import { loadVectors, runBuildProbes, runVectors, vectorFile } from "./vectors.mjs";
 
 function args() {
-  const out = { build: "jvm/web/build/generated/teavm", random: null, targets: ["wasm", "js"], solverJvm: null, solverReport: null, solverRuns: 1, solverOnly: null, bench: false, full: false };
+  const out = { build: "jvm/web/build/generated/teavm", random: null, targets: ["wasm", "js"], solverJvm: null, solverReport: null, solverRuns: 1, solverOnly: null, bench: false, full: false, jvmNode: true };
   const a = process.argv.slice(2);
   for (let i = 0; i < a.length; i++) {
     if (a[i] === "--build") out.build = a[++i];
@@ -32,6 +36,7 @@ function args() {
     else if (a[i] === "--solver-only") out.solverOnly = a[++i].split(",");
     else if (a[i] === "--bench") out.bench = true;
     else if (a[i] === "--full") out.full = true;
+    else if (a[i] === "--no-jvm-node") out.jvmNode = false;
     else throw new Error(`unknown argument ${a[i]}`);
   }
   return out;
@@ -47,7 +52,7 @@ const known = JSON.parse(readFileSync(new URL("./known-differences.json", import
 const vectors = loadVectors();
 say(`vectors: ${path.relative(process.cwd(), vectorFile("numberText"))}, ${path.relative(process.cwd(), vectorFile("uuid"))}`);
 const cases = opts.random ? readCases(opts.random) : [];
-if (opts.random) {
+if (opts.random && opts.jvmNode) {
   say(`random cases: ${cases.length} from ${opts.random}`);
   const jvm = new Tally("jvm");
   checkJvmAgainstNode(cases, jvm);
@@ -66,10 +71,12 @@ for (const target of opts.targets) {
     continue;
   }
   const every = opts.full || target === "wasm" ? 1 : SAMPLE_EVERY;
+  runModuleProbes(target, tally);
   if (!opts.solverOnly) {
     runBuildProbes(api, tally);
     runVectors(api, vectors, tally);
     runFormat(api, tally);
+    runExactMath(api, tally, cases, { every });
     if (opts.random) runRandom(api, cases, tally);
     runMachines(api, tally, { every });
     runPower(api, tally);
@@ -82,11 +89,21 @@ for (const target of opts.targets) {
     const drift = Math.max(0, ...solverRows[target].filter((r) => r.bits === "near").map((r) => r.drift ?? 0));
     say(`${target}: solver answers against the JVM: ${n("identical")} bit-identical, ${n("near")} within 1e-11 (largest ${drift}), ${n("differs")} differ`);
   }
-  for (const g of ["solver goldens", "solver up to"]) {
-    const rows = solverRows[target].filter((r) => (r.kind === "golden") === (g === "solver goldens"));
+  for (const [g, kind] of [["solver goldens", "golden"], ["solver up to", "up to"], ["solver website", "website"]]) {
+    const rows = solverRows[target].filter((r) => r.kind === kind);
     if (tally.groups.has(g)) tally.groups.get(g).ms = Math.round(rows.reduce((n, r) => n + r.ms, 0));
   }
   report(`${target} (${label})`, tally);
+}
+
+/** The split is real: each module exports its own namespaces and top-level functions, and nothing of another module's. */
+function runModuleProbes(target, tally) {
+  const sources = readSources();
+  for (const m of sources.modules) {
+    const exported = loadedModules.get(target)?.get(m.name) ?? [];
+    const wanted = [...m.namespaces, ...m.top.map((f) => f.name)].sort();
+    tally.check(`build/module-${m.name}`, JSON.stringify(exported) === JSON.stringify(wanted), () => `module ${m.name} exports ${exported.join(",")}, the sources declare ${wanted.join(",")}`);
+  }
 }
 
 function report(title, tally) {

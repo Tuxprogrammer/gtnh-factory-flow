@@ -3,6 +3,7 @@
 // Node's is a difference in the core itself, reported on its own line ("jvm!=node"), not charged to the target.
 import { readFileSync } from "node:fs";
 import { attempt, bitsOf, fromBits, sameDouble } from "./compare.mjs";
+import { EXACT_MATH_KINDS } from "./exact-math.mjs";
 
 export function readCases(file) {
   return readFileSync(file, "utf8").split("\n").filter((l) => l.length > 0).map((l) => JSON.parse(l));
@@ -99,7 +100,7 @@ export function runRandom(api, cases, tally) {
         break;
       }
       default:
-        tally.check("random/unknown-kind", false, () => `case kind ${c[0]}`);
+        if (!EXACT_MATH_KINDS.has(c[0])) tally.check("random/unknown-kind", false, () => `case kind ${c[0]}`);
     }
   }
 }

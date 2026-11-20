@@ -6,6 +6,8 @@ import java.util.function.IntToDoubleFunction;
 import com.gtnhplanner.core.solver.lp.LinearProgram;
 import com.gtnhplanner.core.solver.lp.LpEngine;
 
+import com.gtnhplanner.core.base.ExactMath;
+
 /**
  * The ONE place an LP model is assembled. A stage declares what it wants - which variable
  * families, which row families, which objective - as a fluent chain over the build-once
@@ -115,7 +117,7 @@ public final class ModelBuilder {
             m.integer(v);
             final double pinned = ctx.pinnedExtent[i];
             if (!Double.isNaN(pinned)) {
-                final double count = Math
+                final double count = ExactMath
                     .round(pinned * model.machines.get(i).durTicks / (double) Numerics.TICKS_PER_SECOND);
                 m.columnLower(v, count);
                 m.columnUpper(v, count);

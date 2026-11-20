@@ -20,7 +20,7 @@ public final class PlantedClean {
         out.add(Long.toString(l) + Integer.toString(n));
         out.sort(String::compareTo);
         out.forEach(x -> CACHE.merge(x, 1, Integer::sum));
-        return String.join(",", out) + new Point(n, n) + (int) Math.log(n + 1);
+        return String.join(",", out) + new Point(n, n) + (int) Math.floor(n + 1.5);
     }
 
     static synchronized long parse(final String s) {

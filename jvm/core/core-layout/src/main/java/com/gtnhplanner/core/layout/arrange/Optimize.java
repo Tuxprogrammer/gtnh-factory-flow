@@ -20,6 +20,7 @@ import java.util.function.ToDoubleFunction;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.layout.JsSort;
 import com.gtnhplanner.core.layout.GridEdgeRouter;
 import com.gtnhplanner.core.layout.GridEndpoint;
@@ -728,7 +729,7 @@ public final class Optimize {
                         .at(trial, trials);
                 }
                 final double temperature = startTemperature
-                    * StrictMath.pow(endTemperature / startTemperature, trial / trials);
+                    * ExactMath.pow(endTemperature / startTemperature, trial / trials);
                 final State saved = snapshot();
                 final double kind = random.next();
                 boolean legal = true;
@@ -828,7 +829,7 @@ public final class Optimize {
                 }
                 final double next = score();
                 final double delta = next - current;
-                if (delta <= 0 || random.next() < StrictMath.exp(-delta / temperature)) {
+                if (delta <= 0 || random.next() < ExactMath.exp(-delta / temperature)) {
                     current = next;
                     if (current < best - 1e-9) {
                         best = current;

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
+import com.gtnhplanner.conformance.MathCases;
 import com.gtnhplanner.core.base.Float32;
 import com.gtnhplanner.core.base.JsMath;
 import com.gtnhplanner.core.base.NumberText;
@@ -26,7 +27,10 @@ import com.gtnhplanner.core.base.Uuid;
  *
  * Lines (hex is a 64-bit pattern, 16 digits): ["of", hex, text, json], ["fixed", hex, digits, text or null when it must
  * throw], ["parse", text, hex], ["round", hex, hex], ["f32", hex, hex], ["id", msb, lsb, text, hash, version, variant], ["cmp", msb, lsb,
- * msb, lsb, signum], ["order", "msb:lsb,...", "i,j,..."], ["name", text, id], ["uparse", text, id or exception name].
+ * msb, lsb, signum], ["order", "msb:lsb,...", "i,j,..."], ["name", text, id], ["uparse", text, id or exception name],
+ * ["math", fn, x, y, answer] (StrictMath's bits; round's long), ["d2i", x, int], ["d2l", x, long hex], ["neg", x, -x],
+ * ["assoc", form, a, b, c, answer] (BaseExports.javaOrder), ["jstr", x, Double.toString, BigDecimal.valueOf] (JDK 19+),
+ * ["dec", op, a, b, digits, mode, answer] (BaseExports.javaBigDecimalOp).
  */
 public final class RandomCases {
 
@@ -202,6 +206,44 @@ public final class RandomCases {
         }
     }
 
+    /** A BigDecimal's text: a double's (both ways ojAlgo makes one), or up to 30 random digits at a random scale. */
+    private static String decimal(final Random r) {
+        switch (r.nextInt(3)) {
+            case 0: {
+                final double x = number(r);
+                return java.math.BigDecimal.valueOf(Double.isFinite(x) ? x : r.nextDouble()).toString();
+            }
+            case 1:
+                return new java.math.BigDecimal(r.nextDouble() * 100 * (r.nextBoolean() ? 1 : -1)).toString();
+            default: {
+                final StringBuilder d = new StringBuilder(r.nextBoolean() ? "-" : "");
+                final int n = 1 + r.nextInt(30);
+                for (int i = 0; i < n; i++) d.append((char) ('0' + r.nextInt(10)));
+                return new java.math.BigDecimal(new java.math.BigInteger(d.toString()), r.nextInt(40) - 10).toString();
+            }
+        }
+    }
+
+    /** What BaseExports.javaBigDecimalOp answers, on the JVM. */
+    private static String decimalOp(final int op, final String a, final String b, final int digits, final int mode) {
+        try {
+            final java.math.RoundingMode rounding = java.math.RoundingMode.values()[mode];
+            final java.math.MathContext mc = new java.math.MathContext(Math.max(0, digits), rounding);
+            final java.math.BigDecimal x = new java.math.BigDecimal(a), y = new java.math.BigDecimal(b);
+            return switch (op) {
+                case 0 -> x.multiply(y).toString();
+                case 1 -> x.add(y).toString();
+                case 2 -> x.divide(y, mc).toString();
+                case 3 -> x.round(mc).toString();
+                case 4 -> x.setScale(digits, rounding).toString();
+                case 5 -> x.multiply(y, mc).toString();
+                default -> new java.math.BigDecimal(a, mc).toString();
+            };
+        } catch (final ArithmeticException e) {
+            return "ArithmeticException";
+        }
+    }
+
     public static void main(final String[] args) throws IOException {
         final Path out = Path.of(args[0]);
         final long seed = args.length > 1 ? Long.parseLong(args[1]) : 20261119L;
@@ -293,6 +335,53 @@ public final class RandomCases {
                 final String t = text(r);
                 w.write("[\"name\"," + q(t) + "," + q(UUID.nameUUIDFromBytes(t.getBytes(StandardCharsets.UTF_8))
                     .toString()) + "]\n");
+            }
+            // ExactMath against the JVM's StrictMath (MathCases: special values, then drawn arguments), and the
+            // build plugin's conversions and negation against Java's.
+            for (final String fn : MathCases.functions()) {
+                for (final double[] a : MathCases.inputs(fn, seed, 8_000 * scale)) {
+                    final double y = a.length > 1 ? a[1] : 0;
+                    w.write("[\"math\"," + q(fn) + ",\"" + hex(a[0]) + "\",\"" + hex(y) + "\",\""
+                        + hex(MathCases.reference(fn, a[0], y)) + "\"]\n");
+                }
+            }
+            final double[] edges = { Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, 0.0, -0.0, 1e300,
+                -1e300, 2147483647.0, 2147483647.5, 2147483648.0, -2147483648.0, -2147483648.5, -2147483649.0,
+                9.223372036854775807E18, -9.223372036854775808E18, 1.8446744073709552E19, 4294967296.0, -0.5 };
+            for (int i = 0; i < 20_000 * scale; i++) {
+                final double x = i < edges.length ? edges[i] : r.nextInt(4) == 0
+                    ? Math.scalb(r.nextDouble(), 20 + r.nextInt(50)) * (r.nextBoolean() ? 1 : -1) : number(r);
+                w.write("[\"d2i\",\"" + hex(x) + "\"," + (int) x + "]\n");
+                w.write("[\"d2l\",\"" + hex(x) + "\",\"" + hex((long) x) + "\"]\n");
+                w.write("[\"neg\",\"" + hex(x) + "\",\"" + hex(-x) + "\"]\n");
+            }
+            for (int i = 0; i < 40_000 * scale; i++) {
+                double x = i % 2 == 0 ? number(r) : Double.longBitsToDouble(r.nextLong());
+                if (Double.isNaN(x) || Double.isInfinite(x)) x = r.nextDouble();
+                w.write("[\"jstr\",\"" + hex(x) + "\"," + q(Double.toString(x)) + "," + q(java.math.BigDecimal.valueOf(x)
+                    .toString()) + "]\n");
+            }
+            for (int i = 0; i < 60_000 * scale; i++) {
+                final int op = i % 7;
+                final String a = decimal(r), b = op == 2 && r.nextInt(50) == 0 ? "0" : decimal(r);
+                final int digits = op == 4 ? r.nextInt(30) - 5 : 1 + r.nextInt(40);
+                final int mode = r.nextInt(7); // every RoundingMode but UNNECESSARY
+                w.write("[\"dec\"," + op + "," + q(a) + "," + q(b) + "," + digits + "," + mode + "," + q(decimalOp(op, a, b,
+                    digits, mode)) + "]\n");
+            }
+            for (int i = 0; i < 20_000 * scale; i++) {
+                final int form = i % 6;
+                final double a = number(r), b = number(r), c = r.nextBoolean() ? number(r) : r.nextDouble() * 3;
+                final double v = switch (form) {
+                    case 0 -> a + (b + c);
+                    case 1 -> a + (b - c);
+                    case 2 -> a * (b * c);
+                    case 3 -> a * (b / c);
+                    case 4 -> (a - b) + (b * c + a);
+                    default -> a + (b + c + a);
+                };
+                w.write("[\"assoc\"," + form + ",\"" + hex(a) + "\",\"" + hex(b) + "\",\"" + hex(c) + "\",\"" + hex(v)
+                    + "\"]\n");
             }
             final String alphabet = "0123456789abcdefABCDEFg-+ ";
             for (int i = 0; i < 40_000 * scale; i++) {

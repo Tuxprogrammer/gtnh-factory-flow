@@ -9,12 +9,12 @@
       "generator": "mod-answers.json: tools/parity/s1/README.md (S1ParityTest, a throwaway JUnit run in a mod checkout)"
     },
     "core-base": {
-      "specifies": "The kernel's value semantics: number-text/number-text-vectors.json is JavaScript's own answer (String(n), JSON.stringify, toFixed, Number(s), Math.round) for doubles given as 64-bit hex, which NumberText and JsMath must spell and read the same; uuid/uuid-vectors.json is java.util.UUID's answers (toString, hashCode, compareTo order, name-based ids, parsed spellings), which Uuid must reproduce.",
+      "specifies": "The kernel's value semantics: number-text/number-text-vectors.json is JavaScript's own answer (String(n), JSON.stringify, toFixed, Number(s), Math.round) for doubles given as 64-bit hex, which NumberText and JsMath must spell and read the same; uuid/uuid-vectors.json is java.util.UUID's answers (toString, hashCode, compareTo order, name-based ids, parsed spellings), which Uuid must reproduce. exact-math/exact-math-vectors.json is the JVM's StrictMath (fdlibm; Math for round, rint and ulp) on special and drawn arguments, as 64-bit patterns, which core-base's ExactMath must give bit for bit on the JVM and on both web targets.",
       "readers": [
-        "mod: core-base NumberTextTest, UuidTest (jvm/core/core-base)",
-        "web: the Node runner that checks the compiled core against them"
+        "mod: core-base NumberTextTest, UuidTest, ExactMathTest (jvm/core/core-base)",
+        "web: the Node runner that checks the compiled core against them (tools/web-core; exact-math.mjs for ExactMath)"
       ],
-      "generator": "number-text: node tools/conformance/core-base/gen-vectors.mjs; uuid: ./gradlew :core-base:test --tests '*UuidTest.writeVectors' -PwriteVectors (from jvm/); then node tools/conformance/manifest.mjs --write"
+      "generator": "number-text: node tools/conformance/core-base/gen-vectors.mjs; uuid: ./gradlew :core-base:test --tests '*UuidTest.writeVectors' -PwriteVectors (from jvm/); then node tools/conformance/manifest.mjs --write; exact-math: ./gradlew :core-base:test --tests '*ExactMathTest.writeVectors' -PwriteVectors (from jvm/; inputs from jvm/conformance-support MathCases)"
     },
     "format": {
       "specifies": "How the two sides spell numbers: values.json is the shared input list; website-out.json, mod-out.json and mod-recipe-overlay-out.json are what each side's formatters return for it (the website's compact, brief, power, rate, machine-count, percent and multiplier formatters; the mod's Fmt and the recipe overlay's GuiHelper formatters); COMPARISON.md is the generated table of where they differ. The sides are not required to agree: the table is the work order for the view item.",
@@ -137,6 +137,11 @@
       "area": "board",
       "bytes": 29350,
       "sha256": "0fa167c57c6b686b695d8d6125f20fc04ee6a7ac8740e5fab34f9ae1550e1512"
+    },
+    "core-base/exact-math/exact-math-vectors.json": {
+      "area": "core-base",
+      "bytes": 715690,
+      "sha256": "92039c947a7d44548ea276c5a319869b0d1e39db99717c8f9e00be481d94db89"
     },
     "core-base/number-text/number-text-vectors.json": {
       "area": "core-base",
@@ -411,7 +416,7 @@
     "power/rocket-exact.json": {
       "area": "power",
       "bytes": 17050,
-      "sha256": "ec6f28fec05a4a8edad540b3740c0d0d2d5e9f61feb9a63131790926e06b91b6"
+      "sha256": "315f5133614560d27496cac0727e6f965893a3d2ac99b637b2f90c19cf88bfdf"
     },
     "power/website-test-inputs.jsonl.gz": {
       "area": "power",

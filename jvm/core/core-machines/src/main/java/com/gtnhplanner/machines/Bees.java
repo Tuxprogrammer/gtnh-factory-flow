@@ -9,6 +9,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.base.Float32Ops;
 import com.gtnhplanner.core.machines.GameRates;
 
@@ -427,8 +428,8 @@ public final class Bees {
         chance = Float32Ops.mul(chance, 100.0F);
         return Float32Ops.div(
             single(
-                2.8D * Math.pow(chance, 0.52D) * Math.pow(total, 0.52D)
-                    * Math.pow(beeSpeed, 0.37D)),
+                2.8D * ExactMath.pow(chance, 0.52D) * ExactMath.pow(total, 0.52D)
+                    * ExactMath.pow(beeSpeed, 0.37D)),
             100.0F);
     }
 
@@ -525,15 +526,15 @@ public final class Bees {
     /** The Mega Apiary's output multiplier on a base chance (the website's), for a product or a specialty alike. */
     public static double megaMultiplier(final Setup s) {
         final int k = megaVoltageOffset(s.voltageTier());
-        return Math.pow(
+        return ExactMath.pow(
             s.speed()
                 .value(),
             0.37)
             * s.jelly()
                 .production()
-            * Math.pow((MEGA_TERM + k) / 0.1, 0.52)
+            * ExactMath.pow((MEGA_TERM + k) / 0.1, 0.52)
             * MEGA_BATCH_CYCLES
-            * Math.pow(4, k);
+            * ExactMath.pow(4, k);
     }
 
     /** Whether the bee makes its specialties: working, jubilant, and not a species only a Mega Apiary pleases. */
@@ -656,7 +657,7 @@ public final class Bees {
             FormulaLine.of(
                 "speed",
                 "x" + FormulaLine.number(
-                    Math.pow(
+                    ExactMath.pow(
                         s.speed()
                             .value(),
                         0.37)),
@@ -760,7 +761,7 @@ public final class Bees {
         lines.add(
             FormulaLine.of(
                 "batch",
-                FormulaLine.number(MEGA_BATCH_CYCLES * Math.pow(4, k)) + " cycles",
+                FormulaLine.number(MEGA_BATCH_CYCLES * ExactMath.pow(4, k)) + " cycles",
                 "6400 / 550 · 4",
                 FormulaLine.sup(String.valueOf(k))));
         lines.add(

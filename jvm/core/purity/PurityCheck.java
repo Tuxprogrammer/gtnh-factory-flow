@@ -64,20 +64,15 @@ import javax.tools.ToolProvider;
  * so a consumer (a comparison, a store, a call) is only wrong when a producer fed it: the producer is in some core
  * module's main code and is flagged there. A float from outside the core (a host call, a host-built record) is not
  * seen, nor is one made by a library jar.
- * <li>A double converted to int or long (D2I, D2L, Math.round) whose value can leave the range of the type, or is NaN:
- * the JVM and the WebAssembly target saturate, the JavaScript target wraps (and Math.round(NaN) throws there). About a
- * hundred sites convert values that stay in range by construction, so the gate does not flag the instruction; clamp
- * first wherever a value can be unbounded.
- * <li>The sign of a zero from unary minus: the WebAssembly target compiles {@code -x} as {@code 0.0 - x}, so -(+0.0) is
- * +0.0 there and -0.0 on the JVM. It only shows through division, atan2, copySign, Double.compare, a boxed Double used
- * as a key, or text; about forty-five negations exist, nearly all on values that are never zero or are only compared
- * with &lt;. Where a zero can reach one of those, write {@code x * -1.0}.
- * <li>The last place of Math.pow, exp, log, sin, tan, atan, atan2, asin, acos, sqrt, floor, ceil, abs, signum, max and
- * min: they agreed with the JVM on every case probed (27 inputs each), but a probe is not a proof. StrictMath.pow and
- * StrictMath.exp each differed by one place on one input, Math.cos by one place on three inputs where StrictMath.cos
- * agrees: the web targets give fdlibm's answers, as V8 does, so where a result must equal the website's, use
- * StrictMath's trigonometry as the layout code does, and treat every compare of a computed double as needing a
- * tolerance.
+ * <li>A double converted to int or long (D2I, D2L) whose value can leave the range of the type, or is NaN, and the sign
+ * of a zero from unary minus: not rules, because the web build corrects TeaVM's code for both in every class it
+ * compiles (jvm/web ExactMathPlugin: a negation becomes a multiplication by -1, which keeps the sign of a zero on the
+ * WebAssembly target; on the JavaScript target a conversion saturates as Java's does instead of wrapping or throwing),
+ * and the conformance run proves it on both targets (tools/web-core exact-math.mjs, groups java/neg, java/d2i,
+ * java/d2l). A different web compiler would need its own way to the same rules.
+ * <li>The JVM's Math itself: the math-exact rule sends every function whose bits can differ between the JVM, its
+ * processor and the web targets to core-base's ExactMath (fdlibm, StrictMath's bits everywhere). The functions left on
+ * Math (sqrt, floor, ceil, abs, signum, copySign, max, min) are exact by IEEE 754 on every target.
  * <li>Anything a rule's member pattern does not name: a new java.lang function, or a call through a method handle or
  * reflection (the reflection rule forbids that for other reasons).
  * </ul>

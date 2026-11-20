@@ -254,7 +254,7 @@ describe.skipIf(targets.length === 0)("Arrange through the core in the arrange w
    * build agree with it), so the worker keeps the TypeScript Arrange on that build (`arrangeCore`). A fix makes the
    * entry fail here: delete it then.
    */
-  const KNOWN_JS_ARRANGE = new Set(["factory-flow/Untitled design"]);
+  const KNOWN_JS_ARRANGE = new Set<string>();
 
   const small = arrangeData.boards.filter((b) => b.cards.length <= 12);
   it.each(small.map((b) => [b.name, b] as const))("arranges %s the same, whole and in stages", async (name, board) => {

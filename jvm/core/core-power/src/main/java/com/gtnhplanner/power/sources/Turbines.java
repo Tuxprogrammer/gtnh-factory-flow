@@ -9,6 +9,7 @@ import java.util.function.DoubleUnaryOperator;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.base.Float32Ops;
 import com.gtnhplanner.power.PowerData;
 import com.gtnhplanner.power.PowerData.FusionRecipe;
@@ -201,7 +202,7 @@ public final class Turbines {
         final double perRoll) {
         final double eu = xl ? Math.floor(euPerTick / 5) : euPerTick;
         final double linear = xl ? eu / 5 : Math.floor(eu / 5);
-        final double damage = Math.floor(Math.min(linear, StrictMath.pow(eu, f32(0.6)))) * perRoll;
+        final double damage = Math.floor(Math.min(linear, ExactMath.pow(eu, f32(0.6)))) * perRoll;
         return damage > 0 ? ((durability / damage) * 2 * 1002) / 20 : Double.POSITIVE_INFINITY;
     }
 

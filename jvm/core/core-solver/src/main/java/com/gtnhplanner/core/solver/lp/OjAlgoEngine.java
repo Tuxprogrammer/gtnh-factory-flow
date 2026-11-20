@@ -16,6 +16,8 @@ import org.ojalgo.optimisation.integer.IntegerStrategy;
 import org.ojalgo.optimisation.linear.LinearSolver;
 import org.ojalgo.type.context.NumberContext;
 
+import com.gtnhplanner.core.base.NumberText;
+
 /**
  * The solver's LP engine: ojAlgo's {@link ExpressionsBasedModel}, one per program, every call passed straight through
  * (so a program built here is the model the kernel built on ojAlgo directly, value for value).
@@ -45,11 +47,11 @@ public final class OjAlgoEngine implements LpEngine {
     private OjAlgoEngine() {}
 
     /**
-     * {@code BigDecimal.valueOf(value)}, null when not finite: exactly what ojAlgo makes of a double it is given
-     * ({@code ModelEntity.toBigDecimal(double)}), handed to it through its BigDecimal overloads, which take one as it
-     * is. A solve passes the same few hundred values to model after model, and the web build turns each into text
-     * and back to make one, so they are kept: once seen by a program, then for every program (bounded, never by
-     * identity, so no answer depends on what was kept).
+     * {@code NumberText.javaDecimal(value)}, null when not finite: exactly what ojAlgo makes of a double it is given
+     * ({@code ModelEntity.toBigDecimal(double)}, whose valueOf core-ojalgo's rewritten jar sends here), handed to it
+     * through its BigDecimal overloads, which take one as it is. A solve passes the same few hundred values to model
+     * after model, and the web build turns each into text and back to make one, so they are kept: once seen by a
+     * program, then for every program (bounded, never by identity, so no answer depends on what was kept).
      */
     private static final class Decimals {
 
@@ -75,7 +77,7 @@ public final class OjAlgoEngine implements LpEngine {
                 BigDecimal decimal = SHARED.get(key);
                 if (decimal == null) {
                     if (SHARED.size() >= LIMIT) SHARED.clear();
-                    decimal = BigDecimal.valueOf(value);
+                    decimal = NumberText.javaDecimal(value);
                     SHARED.put(key, decimal);
                 }
                 return decimal;

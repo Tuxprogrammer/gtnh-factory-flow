@@ -10,6 +10,7 @@ import java.util.function.DoubleUnaryOperator;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.power.PowerData;
 import com.gtnhplanner.power.PowerData.Fuel;
@@ -265,22 +266,22 @@ public final class Singleblocks {
         if (value > 0 && Double.isFinite(value) && (bits & 0xfffffffffffffL) == 0 && exponent > -1023) {
             return exponent;
         }
-        return Math.log(value) / Math.log(2);
+        return ExactMath.log(value) / ExactMath.log(2);
     }
 
     /** GT tier index (LV = 1) of a tier voltage. */
     private static double gtTierOf(final double voltage) {
-        return Math.round(log2(voltage / 8) / 2);
+        return ExactMath.round(log2(voltage / 8) / 2);
     }
 
     /** GTUtility.getTier then BaseMetaTileEntity's loss: 2^(tier - 1) EU per packet, at least 1. */
     private static double packetLoss(final double voltage) {
         final double tier = voltage <= 8 ? 0 : Math.floor((Math.ceil(log2(voltage)) - 2) / 2);
-        return Math.pow(2, Math.max(0, tier - 1));
+        return ExactMath.pow(2, Math.max(0, tier - 1));
     }
 
     private static String eu(final double value) {
-        return formatAmount(Math.round(value));
+        return formatAmount(ExactMath.round(value));
     }
 
     /** A raw number in a JavaScript template string: String(value). */
@@ -427,7 +428,7 @@ public final class Singleblocks {
         }
 
         // getEfficiency() is a whole percent.
-        final double efficiencyPercent = Math.round(tiers.efficiencyFor(tier) * 100);
+        final double efficiencyPercent = ExactMath.round(tiers.efficiencyFor(tier) * 100);
         final Stat efficiencyStat = stat("Efficiency", percent(efficiencyPercent / 100));
 
         if (spec.kind == FuelKind.NAQUADAH) {

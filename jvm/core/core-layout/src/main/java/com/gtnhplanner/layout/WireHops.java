@@ -3,6 +3,7 @@ package com.gtnhplanner.layout;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.layout.JsMath;
 
 /**
@@ -61,7 +62,7 @@ public final class WireHops {
             final List<double[]> out = new ArrayList<>(steps + 1);
             for (int k = 0; k <= steps; k++) {
                 final double t = Math.PI * k / steps;
-                final double along = -Math.cos(t) * half, up = Math.sin(t) * rise;
+                final double along = -ExactMath.cos(t) * half, up = ExactMath.sin(t) * rise;
                 out.add(new double[] { mx + ux * along + nx * up, my + uy * along + ny * up });
             }
             return out;

@@ -8,10 +8,12 @@ import org.teavm.jso.JSBody;
 import org.teavm.jso.JSExport;
 import org.teavm.jso.JSObject;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.base.Float32;
 import com.gtnhplanner.core.base.JsMath;
 import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.core.base.Uuid;
+import com.gtnhplanner.web.teavm.JavaProbe;
 
 /**
  * core-base for JavaScript: number spelling and ids. The conformance run checks these against Node's own numbers and
@@ -124,6 +126,111 @@ public final class BaseExports {
         } catch (final IllegalArgumentException e) {
             return "IllegalArgumentException";
         }
+    }
+
+    /**
+     * core-base's ExactMath by name ({@code y} is read by pow, atan2 and hypot only); round's long answer comes from
+     * {@link #exactMathRoundHex}. The conformance run holds both to the JVM's StrictMath.
+     */
+    @JSExport
+    public static double exactMath(final String fn, final double x, final double y) {
+        switch (fn) {
+            case "sin": return ExactMath.sin(x);
+            case "cos": return ExactMath.cos(x);
+            case "tan": return ExactMath.tan(x);
+            case "asin": return ExactMath.asin(x);
+            case "acos": return ExactMath.acos(x);
+            case "atan": return ExactMath.atan(x);
+            case "exp": return ExactMath.exp(x);
+            case "log": return ExactMath.log(x);
+            case "log10": return ExactMath.log10(x);
+            case "cbrt": return ExactMath.cbrt(x);
+            case "sinh": return ExactMath.sinh(x);
+            case "cosh": return ExactMath.cosh(x);
+            case "tanh": return ExactMath.tanh(x);
+            case "expm1": return ExactMath.expm1(x);
+            case "log1p": return ExactMath.log1p(x);
+            case "rint": return ExactMath.rint(x);
+            case "toRadians": return ExactMath.toRadians(x);
+            case "toDegrees": return ExactMath.toDegrees(x);
+            case "ulp": return ExactMath.ulp(x);
+            case "pow": return ExactMath.pow(x, y);
+            case "atan2": return ExactMath.atan2(x, y);
+            case "hypot": return ExactMath.hypot(x, y);
+            default: throw new IllegalArgumentException("no ExactMath." + fn);
+        }
+    }
+
+    @JSExport
+    public static String exactMathRoundHex(final double x) {
+        return Long.toHexString(ExactMath.round(x));
+    }
+
+    /**
+     * The same functions called on java.lang.Math ({@code strict} false) or java.lang.StrictMath: what ojAlgo and the
+     * class library get. The build's ExactMathPlugin sends both to ExactMath, so these answer as the JVM's StrictMath.
+     */
+    @JSExport
+    public static double javaMath(final boolean strict, final String fn, final double x, final double y) {
+        return JavaProbe.math(strict, fn, x, y);
+    }
+
+    @JSExport
+    public static String javaMathRoundHex(final boolean strict, final double x) {
+        return JavaProbe.roundHex(strict, x);
+    }
+
+    /** Java's {@code -x} (the build's plugin keeps the sign of a zero on the WebAssembly target). */
+    @JSExport
+    public static double javaNegate(final double x) {
+        return JavaProbe.negate(x);
+    }
+
+    /** Java's {@code (int) x}: NaN is 0, out of range is the nearest end (the plugin, on the JavaScript target). */
+    @JSExport
+    public static int javaToInt(final double x) {
+        return JavaProbe.toInt(x);
+    }
+
+    /** Java's {@code (long) x} as hex, same rule. */
+    @JSExport
+    public static String javaToLongHex(final double x) {
+        return JavaProbe.toLongHex(x);
+    }
+
+    /**
+     * Java's order of double operations, where TeaVM's JavaScript printer dropped the brackets (the build plugin puts
+     * them back): form 0 {@code a + (b + c)}, 1 {@code a + (b - c)}, 2 {@code a * (b * c)}, 3 {@code a * (b / c)},
+     * 4 {@code (a - b) + (b * c + a)}, 5 {@code a += b + c + a} (the shape of a running total, as core-layout's
+     * Optimize.total has it).
+     */
+    @JSExport
+    public static double javaOrder(final int form, final double a, final double b, final double c) {
+        return JavaProbe.order(form, a, b, c);
+    }
+
+    /** {@code Double.toString(x)} as JDK 19+ spells it, from core-base (the same text on every target). */
+    @JSExport
+    public static String numberTextJavaString(final double x) {
+        return NumberText.javaString(x);
+    }
+
+    /** {@code BigDecimal.valueOf(x).toString()}: what ojAlgo makes of a coefficient (the build plugin's redirect). */
+    @JSExport
+    public static String javaBigDecimalOf(final double x) {
+        return JavaProbe.bigDecimalOf(x);
+    }
+
+    /**
+     * java.math.BigDecimal arithmetic as ojAlgo's model uses it, for the conformance run (the web build replaces
+     * TeaVM's BigDecimal, whose digit counts were estimates): op 0 multiply, 1 add, 2 divide to a MathContext, 3 round,
+     * 4 setScale(digits, mode), 5 multiply to a MathContext, 6 new BigDecimal(a, MathContext); a MathContext is
+     * (digits, RoundingMode.values()[mode]). The answer is toString(), or the exception's simple class name.
+     */
+    @JSExport
+    public static String javaBigDecimalOp(final int op, final String a, final String b, final int digits,
+        final int mode) {
+        return JavaProbe.bigDecimalOp(op, a, b, digits, mode);
     }
 
     /** A structured result: what the host gets for an id, as one plain JavaScript object. */

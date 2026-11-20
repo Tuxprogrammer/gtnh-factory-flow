@@ -1,7 +1,7 @@
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ADOPT, clearAdoptOverrides, coreFor, isAdopted, setAdoptOverride, withAdopt } from "./adopt";
-import { coreState, loadCore, resetCoreForTests } from "./loader";
+import { coreState, loadCore, moduleState, resetCoreForTests } from "./loader";
 import { existsSync } from "node:fs";
 
 const present = existsSync(path.join(process.cwd(), "public", "core", "manifest.json"));
@@ -76,6 +76,19 @@ describe("core adoption flags", () => {
     expect(coreState()).toBe("loading");
     await loadCore();
     expect(coreFor("machines")).not.toBeNull();
+  });
+
+  it.skipIf(!present)("an area loads its own module: solve loads the solver and leaves the card side alone", async () => {
+    setAdoptOverride("solve", true);
+    expect(coreFor("solve")).toBeNull();
+    expect(moduleState("solver")).toBe("loading");
+    expect(moduleState("core")).toBe("idle");
+    await loadCore({ modules: ["solver"] });
+    const c = coreFor("solve");
+    expect(typeof c?.SolverExports.solverSolve).toBe("function");
+    expect(moduleState("core")).toBe("idle");
+    // Another area's module is not loaded: its namespace names the module instead of answering undefined.
+    expect(() => c?.BaseExports).toThrow(/core module/);
   });
 
   it.skipIf(!present)("gives the loaded core only to an area that is on", async () => {

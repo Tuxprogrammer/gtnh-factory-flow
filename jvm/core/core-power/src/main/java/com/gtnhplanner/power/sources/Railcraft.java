@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.base.Float32Ops;
 import com.gtnhplanner.power.PowerData;
 import com.gtnhplanner.power.PowerData.Fuel;
@@ -27,8 +28,8 @@ public final class Railcraft {
     /** Seconds as "45 s", "12 min" or "2 h 15 min". */
     static String duration(final double seconds) {
         if (!Double.isFinite(seconds)) return "-";
-        if (seconds < 60) return Math.round(seconds) + " s";
-        final long minutes = Math.round(seconds / 60);
+        if (seconds < 60) return ExactMath.round(seconds) + " s";
+        final long minutes = ExactMath.round(seconds / 60);
         if (minutes < 60) return minutes + " min";
         final long rest = minutes % 60;
         return rest == 0 ? (minutes / 60) + " h" : (minutes / 60) + " h " + rest + " min";
@@ -178,7 +179,7 @@ public final class Railcraft {
     /** Ticks from 20 C to full heat while burning: dH/dt = 0.15 (4max/3 - H) / (N max). */
     public static double boilerWarmUpTicks(final int tanks, final double maxHeat) {
         final double ceiling = (maxHeat * 4) / 3;
-        return ((maxHeat * tanks) / 0.15) * Math.log((ceiling - 20) / (ceiling - maxHeat));
+        return ((maxHeat * tanks) / 0.15) * ExactMath.log((ceiling - 20) / (ceiling - maxHeat));
     }
 
     private static PowerSource boiler() {

@@ -136,7 +136,7 @@ class ReactorsTest {
         // A full glowstone reactor keeps both speedups: 202 ticks.
         assertEquals(
             202,
-            Reactors.htgrOperation(new Reactors.Pebble(2, 1.2, 1.1), 10_000)
+            Reactors.htgrOperation(new Reactors.Pebble(0.65, 1.2, 1.1), 10_000)
                 .cycleTicks(),
             0);
     }

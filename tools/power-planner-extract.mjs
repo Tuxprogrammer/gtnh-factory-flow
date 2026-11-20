@@ -5,7 +5,12 @@
  * for the power cards; the decoded model is docs/power-planner-math.md.
  *
  *   node tools/power-planner-extract.mjs "path/to/Copy of GTNH Power Planner 2.9.xlsx"
+ *   node tools/power-planner-extract.mjs --reapply
  *
+ * --reapply reads the committed JSON instead of the workbook and runs the Java
+ * corrections again (all but the rotor one, which reads the Rotor Data sheet).
+ * Every correction is idempotent, so a reapply with no change to this file
+ * writes the same bytes; use it to land a new correction without the workbook.
  * (the 2.9 copy whose EOH sheet is "13. EOH"; the later copies renumber it)
  *
  * Writes jvm/core/core-power/src/main/resources/assets/gtnhplanner/power/power-planner-data.json (the source; node tools/sync-core-tables.mjs --write copies it to src/lib/power/data/). Deterministic: same
@@ -19,9 +24,10 @@ import { fileURLToPath } from "node:url";
 
 const xlsxPath = process.argv[2];
 if (!xlsxPath) {
-  console.error("Usage: node tools/power-planner-extract.mjs <workbook.xlsx>");
+  console.error("Usage: node tools/power-planner-extract.mjs <workbook.xlsx> | --reapply");
   process.exit(1);
 }
+const reapply = xlsxPath === "--reapply";
 const repoRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outPath = path.join(
   repoRoot,
@@ -95,7 +101,7 @@ function readZipEntries(buffer) {
 
 // ------------------------------------------------------------- sheet parsing
 
-const zip = readZipEntries(fs.readFileSync(xlsxPath));
+const zip = reapply ? null : readZipEntries(fs.readFileSync(xlsxPath));
 
 function decodeXml(text) {
   return text
@@ -108,7 +114,7 @@ function decodeXml(text) {
 }
 
 const sharedStrings = [];
-{
+if (!reapply) {
   const xml = zip.read("xl/sharedStrings.xml");
   for (const m of xml.matchAll(/<si(?:\/>|>([\s\S]*?)<\/si>)/g)) {
     const body = m[1] ?? "";
@@ -118,7 +124,7 @@ const sharedStrings = [];
 }
 
 const sheetPathByName = new Map();
-{
+if (!reapply) {
   const workbook = zip.read("xl/workbook.xml");
   const rels = zip.read("xl/_rels/workbook.xml.rels");
   const relTargets = new Map();
@@ -214,12 +220,13 @@ function fuelTable(cells, range, fields) {
 
 // ------------------------------------------------------------------ extract
 
-const fuelData = loadSheet("Fuel Data");
-const rotorData = loadSheet("Rotor Data");
-const singleblocks = loadSheet("Singleblocks");
-const eoh = loadSheet("13. EOH") ?? null;
+const fuelData = reapply ? null : loadSheet("Fuel Data");
+const rotorData = reapply ? null : loadSheet("Rotor Data");
+const singleblocks = reapply ? null : loadSheet("Singleblocks");
+const eoh = reapply ? null : (loadSheet("13. EOH") ?? null);
 
-const data = {
+let data = reapply ? JSON.parse(fs.readFileSync(outPath, "utf8")) : undefined;
+data ??= {
   source: "GTNH Power Planner 2.9 (community spreadsheet by Fox)",
   extractedAt: new Date().toISOString().slice(0, 10),
 
@@ -430,13 +437,28 @@ function rotorClass(row, effTight, effLoose, optTight, optLoose) {
 
 // --------------------------------------------------------- Java corrections
 //
-// Where the workbook and the pack's Java (GT5U tag 5.09.54.20) disagree, the
-// Java wins. Each correction names the class or loader it follows, so the JSON
-// stays a pure function of workbook + this file. Never hand-edit the JSON.
+// Where the workbook and the pack's Java (GregTech 5.09.54.265 and the mods the
+// GTNH 2.9.0 pack ships) disagree, the Java wins. Each correction names the class
+// or loader it follows, so the JSON stays a pure function of workbook + this
+// file. Never hand-edit the JSON.
 
 const withoutNames = (rows, names) => rows.filter((row) => !names.includes(row.name));
 
+/** Adds a fuel row in EU/L order (the tables are sorted that way), once. */
+function withFuel(rows, fuel) {
+  if (rows.some((row) => row.name === fuel.name)) return rows;
+  const at = rows.findIndex((row) => row.euPerLiter > fuel.euPerLiter);
+  return at < 0 ? [...rows, fuel] : [...rows.slice(0, at), fuel, ...rows.slice(at)];
+}
+
 function correctEngineFuels() {
+  // FuelLoader registers EnderIO's Rocket Fuel (fluid rocket_fuel) as a gas turbine
+  // fuel at 250 EU/L; the gas turbines, the SOFCs and the UCFE (gas coefficient
+  // 0.04) burn it. The boiler tables already call it EIO Rocket Fuel.
+  const rocketFuel = { name: "EIO Rocket Fuel", euPerLiter: 250 };
+  data.gasFuels = withFuel(data.gasFuels, rocketFuel);
+  data.gasFuelsXl = withFuel(data.gasFuelsXl, rocketFuel);
+  data.ucfeFuels = withFuel(data.ucfeFuels, { ...rocketFuel, promoterCoefficient: 0.04 });
   // Not registered anywhere in the pack (no fuel recipe, no fluid in the 2.9 dataset).
   data.semifluidFuels = withoutNames(data.semifluidFuels, [
     "Raw Animal Waste",
@@ -450,6 +472,10 @@ function correctEngineFuels() {
   // MTELargeNeutralizationEngine reads ItemList.ROBOT_ARMS from index 0 (LV).
   if (!data.lneRobotArms.some((row) => row.tier === 0)) {
     data.lneRobotArms.unshift({ name: "Amount (LV)", tier: 0 });
+  }
+  // ...through index 13, the MAX arm (the sheet stops at UXV).
+  if (!data.lneRobotArms.some((row) => row.tier === 13)) {
+    data.lneRobotArms.push({ name: "Amount (MAX)", tier: 13 });
   }
   // useBooster: each hydroxide dust lasts this many ticks, then one more tick to reload.
   const boostTicks = {
@@ -615,8 +641,18 @@ function correctSteamMakers() {
     data.boilerFuels.tungstensteelLiquid,
     refusedBySuperheated,
   );
-  // MTELargeBoilerBase burns a solid for fuel value / 80 ticks, then the tier's
-  // runtimeBoost. The log bonus in LargeBoilerFuelBackend only feeds the NEI page.
+  // MTELargeBoilerBase.checkProcessing burns a solid for fuel value / 80 ticks,
+  // stretched by LargeBoilerFuelBackend.getBurntimeRatioTicks(ticks, 20) (s seconds
+  // become s x max(1, 1 + ln(s / 10) x 0.025), rounded half up to 0.01 s, as whole
+  // ticks), then the tier's runtimeBoost.
+  const ratioTicks = (ticks) => {
+    const seconds = ticks / 20;
+    const hundredths = seconds * Math.max(1, 1 + Math.log(seconds / 10) * 0.025) * 100;
+    if (Math.abs((hundredths % 1) - 0.5) < 1e-6) {
+      throw new Error(`Large boiler burn time ${seconds} s sits on a rounding tie.`);
+    }
+    return Math.trunc(Math.round(hundredths) / 5);
+  };
   const runtimeBoost = {
     bronzeSolid: (ticks) => ticks * 2,
     steelSolid: (ticks) => ticks,
@@ -626,9 +662,16 @@ function correctSteamMakers() {
   for (const [table, boost] of Object.entries(runtimeBoost)) {
     data.boilerFuels[table] = data.boilerFuels[table].map((row) => ({
       ...row,
-      burnTime: boost(Math.trunc(row.euPerItem / 80)) / 20,
+      burnTime: boost(ratioTicks(Math.trunc(row.euPerItem / 80))) / 20,
     }));
   }
+}
+
+function correctTiers() {
+  // GTValues.V: UMV is 134,217,728 EU/t (the sheet has 134,217,718).
+  data.singleblockTiers = data.singleblockTiers.map((row) =>
+    row.tier === "UMV" ? { ...row, voltage: 134_217_728 } : row,
+  );
 }
 
 function correctReactors() {
@@ -637,12 +680,200 @@ function correctReactors() {
   data.lftrFuels = data.lftrFuels.map((row) =>
     row.name === "LFTR Fuel 2" ? { ...row, tSalt: 0, tbSalt: 100 } : row,
   );
+  // HTGRLoader FUEL_MODIFICATOR, Triple.of(base, mult, exp) as the reactor reads it
+  // (getLeft/getMiddle/getRight): Uranium-235 pebbles are (1.1, 1.1, 1.1), Glowstone
+  // pebbles (0.65, 1.2, 1.1).
+  const pebbleBase = { "Uranium-235": 1.1, Glowstone: 0.65 };
+  data.htgrPebbles = data.htgrPebbles.map((row) =>
+    row.name in pebbleBase ? { ...row, base: pebbleBase[row.name] } : row,
+  );
+}
+
+// The fusion card's per-mark rates come from the exported fusion recipe map
+// (core-machines fusion-startups.json: inputs, output, duration, EU/t and
+// startup EU per recipe) run through the pack's own machine rules, not the
+// workbook's precomputed columns. Full-size: MTEFusionComputer Mk-I..III
+// (overclock x2 EU / x2 speed) and GT++ MTEAdvFusionMk4/5 (x4 / x4), one amp,
+// overclocks capped at the machine's fusion tier minus the recipe's
+// (FusionOverclockDescriber, FusionSpecialValueFormatter.getFusionTier) and by
+// voltage tiers. Compact: GoodGenerator MTELargeFusionComputer1..5, 64 x
+// extraPara(startup) parallels on 64 x extraPara(100) amps with amperage
+// overclocks. Both: a sub-tick duration turns into ceil()'d parallels
+// (OverclockCalculator.calculateMultiplierUnderOneTick) and a duration is
+// truncated to whole ticks.
+const FUSION_V = [8, 32, 128, 512, 2048, 8192, 32768, 131072, 524288, 2097152, 8388608];
+const FUSION_MARKS = [
+  { tier: 6, startup: 160_000_000, step: 2 },
+  { tier: 7, startup: 320_000_000, step: 2 },
+  { tier: 8, startup: 640_000_000, step: 2 },
+  { tier: 9, startup: 5_120_000_000, step: 4 },
+  { tier: 10, startup: 20_480_000_000, step: 4 },
+];
+// GTUtility.log4 and log4ceil on whole numbers.
+function log4(a) {
+  let n = 0;
+  for (let rest = a; rest >= 4; rest = Math.floor(rest / 4)) n++;
+  return n;
+}
+function log4ceil(a) {
+  let n = 0;
+  while (4 ** n < a) n++;
+  return n;
+}
+
+function fusionTier(startup, eut) {
+  const M = 1_000_000;
+  let tier =
+    startup <= 160 * M
+      ? 1
+      : startup <= 320 * M
+        ? 2
+        : startup <= 640 * M
+          ? 3
+          : startup <= 5120 * M
+            ? 4
+            : 5;
+  if (eut > FUSION_V[9]) tier = 5;
+  else if (eut > FUSION_V[8]) tier = Math.max(tier, 4);
+  else if (eut > FUSION_V[7]) tier = Math.max(tier, 3);
+  else if (eut > FUSION_V[6]) tier = Math.max(tier, 2);
+  return tier;
+}
+
+// OverclockCalculator.getTiersAbove: whole powers of 4 from base to power.
+function tiersAbove(power, base) {
+  if (power < base) return -1;
+  return log4(Math.floor(Math.round(power * 100) / Math.max(Math.round(base * 100), 3200)));
+}
+
+// MTELargeFusionComputer<mark>.extraPara.
+function compactExtraPara(mark, startup) {
+  const steps = [160_000_000, 320_000_000, 640_000_000, 5_120_000_000].filter(
+    (limit) => startup >= limit,
+  );
+  return Math.max(1, mark - steps.length);
+}
+
+/** Litres a second of output and EU/t drained by one machine of this mark, or null when it cannot run the recipe. */
+function fusionRun(recipe, mark, compact) {
+  const { tier, startup, step } = FUSION_MARKS[mark - 1];
+  const voltage = FUSION_V[tier];
+  if (recipe.startup > startup || recipe.eut > voltage) return null;
+  const maxOverclocks = tier - 5 - fusionTier(recipe.startup, recipe.eut);
+  const amps = compact ? 64 * compactExtraPara(mark, 100) : 1;
+  const maxParallel = compact ? 64 * compactExtraPara(mark, recipe.startup) : 1;
+  // calculateOverclock for a parallel count; without amperage overclocks (full-size)
+  // the machine counts min(amps, parallel) and the voltage tiers cap it too.
+  const overclocksAt = (parallel) => {
+    const machinePower = voltage * (compact ? amps : Math.min(amps, parallel));
+    let overclocks = Math.min(maxOverclocks, tiersAbove(machinePower, recipe.eut * parallel));
+    if (!compact) {
+      const voltageTiers = Math.max(log4ceil(Math.floor(voltage / 8)), 1);
+      overclocks = Math.min(
+        overclocks,
+        voltageTiers - Math.max(log4ceil(Math.floor(recipe.eut / 8)), 1),
+      );
+    }
+    return Math.max(overclocks, 0);
+  };
+  // calculateMultiplierUnderOneTick, on the most parallels the machine allows.
+  const first = overclocksAt(maxParallel);
+  const needed = Math.ceil(Math.log(recipe.duration) / Math.log(step));
+  const subTick = first >= needed ? Math.ceil(step ** first / recipe.duration) : 1;
+  const parallels = Math.min(maxParallel * subTick, Math.floor((voltage * amps) / recipe.eut));
+  // The calculator then runs on the parallels actually used, capped at the machine's own.
+  const counted = Math.min(maxParallel, parallels);
+  const overclocks = overclocksAt(counted);
+  const drain = Math.ceil(recipe.eut * counted * step ** overclocks);
+  const ticks = Math.trunc(Math.max(recipe.duration / step ** overclocks, 1));
+  return { litersPerSecond: (parallels * recipe.output * 20) / ticks, drain };
+}
+
+function correctFusion() {
+  const exported = JSON.parse(
+    fs.readFileSync(
+      path.join(
+        repoRoot,
+        "jvm/core/core-machines/src/main/resources/assets/gtnhplanner/machines/fusion-startups.json",
+      ),
+      "utf8",
+    ),
+  ).recipes;
+  const resources = JSON.parse(
+    fs.readFileSync(path.join(path.dirname(outPath), "resource-map.json"), "utf8"),
+  ).resources;
+  // Workbook names the resource map does not carry.
+  const extraIds = {
+    "Bromine Plasma": "plasma.bromine",
+    "Metastable Oganesson": "molten.metastable oganesson",
+    "Molten Sunnarium": "molten.sunnarium",
+    "Plutonium Fuel": "plutonium based liquid fuel",
+    "Technetium Plasma": "plasma.technetium",
+    "Uranium Fuel": "uranium based liquid fuel",
+  };
+  const fluidId = (name) => {
+    const id = extraIds[name] ?? resources[name]?.id;
+    if (!id) throw new Error(`Fusion: no fluid id for ${name}`);
+    return `fluid:${id}`;
+  };
+  const recipes = Object.entries(exported).map(([key, startup]) => {
+    const [inputs, output, duration, eut] = key.split("|");
+    const [outputId, outputAmount] = output.split("@");
+    return {
+      inputs: Object.fromEntries(
+        inputs
+          .split(";")
+          .map((part) => part.split("@"))
+          .map(([id, n]) => [id, Number(n)]),
+      ),
+      outputId,
+      output: Number(outputAmount),
+      duration: Number(duration),
+      eut: Number(eut),
+      startup,
+    };
+  });
+  data.fusionRecipes = data.fusionRecipes.map((row) => {
+    const in1 = fluidId(row.input1);
+    const in2 = fluidId(row.input2);
+    const matches = recipes.filter(
+      (recipe) =>
+        recipe.outputId === fluidId(row.name) &&
+        Object.keys(recipe.inputs).length === 2 &&
+        in1 in recipe.inputs &&
+        in2 in recipe.inputs,
+    );
+    if (matches.length !== 1) {
+      throw new Error(
+        `Fusion: ${matches.length} exported recipes for ${row.name} from ${row.input1} + ${row.input2}`,
+      );
+    }
+    const recipe = matches[0];
+    const marks = [1, 2, 3, 4, 5];
+    const full = marks.map((mark) => fusionRun(recipe, mark, false));
+    const compact = marks.map((mark) => fusionRun(recipe, mark, true));
+    return {
+      ...row,
+      minMark: marks.find((mark) => full[mark - 1]),
+      startupEu: recipe.startup,
+      ratio1: recipe.inputs[in1] / recipe.output,
+      ratio2: recipe.inputs[in2] / recipe.output,
+      outputLpsByMark: full.map((run) => run?.litersPerSecond ?? 0),
+      drainEutByMark: full.map((run) => run?.drain ?? 0),
+      compactOutputLpsByMark: compact.map((run) => run?.litersPerSecond ?? 0),
+      compactDrainEutByMark: compact.map((run) => run?.drain ?? 0),
+    };
+  });
 }
 
 correctEngineFuels();
-correctRotors();
+if (!reapply) {
+  correctRotors();
+}
 correctSteamMakers();
+correctTiers();
 correctReactors();
+correctFusion();
 
 fs.mkdirSync(path.dirname(outPath), { recursive: true });
 fs.writeFileSync(outPath, JSON.stringify(data, null, 1) + "\n");

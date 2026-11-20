@@ -20,7 +20,7 @@ export const ADOPT = {
   // power: the power planner's sources and models (PowerExports).
   power: true,
   // layout: the wire router and Arrange (LayoutExports).
-  layout: false,
+  layout: true,
   // solve: the plan solve (SolverExports), in the solve Worker and the server's plan routes, on WebAssembly GC only
   // (src/lib/core/solve-adopt.ts).
   solve: true,

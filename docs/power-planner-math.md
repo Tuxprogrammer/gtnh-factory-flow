@@ -225,9 +225,11 @@ Tungstensteel 16000 SH (per boiler). Rules:
   divisors). Water in = steam / 160.
 - Titanium/Tungstensteel chain SH turbines into steam turbines (cascade).
 - Java corrections (`correctSteamMakers`): a solid burns fuel value / 80
-  ticks times the tier's runtimeBoost (x2, x1, x3/10, x15/100,
-  `MTELargeBoilerBase`); the sheet's longer times for Solid Super Fuel, Magic
-  Solid Super Fuel, Diamond and Block of Diamond carry the NEI-only log bonus.
+  ticks, stretched by the log bonus the running boiler applies
+  (`LargeBoilerFuelBackend.getBurntimeRatioTicks`: s seconds become
+  s x max(1, 1 + ln(s/10) x 0.025), to 0.01 s, so only fuels past 16,000 burn
+  value gain), times the tier's runtimeBoost (x2, x1, x3/10, x15/100,
+  `MTELargeBoilerBase`).
   Titanium/Tungstensteel take only `LargeBoilerFuelBackend.ALLOWED_FUELS`, so
   Naquadah Gas, Nefarious Gas and Nitrobenzene are dropped.
 
@@ -343,6 +345,19 @@ machinery: Large Plasma Generator, XL Turbo Plasma Turbine, and plasma ->
 EHE -> dense/SC steam -> turbine banks. The sheet's own numbers show the EHE
 route beating direct turbining ~1.5-1.8x. Decay gas returns 1:1 for loop
 closure (D-T -> Helium).
+
+The planner keeps the sheet's rows (product, inputs, EU/L, EHE band) but not
+its per-mark columns: `correctFusion` in the extractor rebuilds startup, input
+ratios, output L/s and drain EU/t per mark from the exported fusion recipe map
+(core-machines `fusion-startups.json`) with the pack's machine rules. Mk-I to
+III overclock x2 EU / x2 speed, Mk-IV and V (GT++ MTEAdvFusionMk4/5) x4 / x4,
+each capped at the machine's fusion tier minus the recipe's
+(`FusionSpecialValueFormatter.getFusionTier`); the compact reactors
+(GoodGenerator MTELargeFusionComputer1-5) run 64 x extraPara(startup)
+parallels. A sub-tick duration becomes parallels rounded up and a duration is
+whole ticks, so long recipes at Mk-IV and V run faster than the sheet's
+smooth figures. The sheet had D+T at 4096 EU/t from 60M (the game: 3840 from
+40M) and D+He3 at 40M (60M).
 
 ## LNR (`11. LNR`)
 

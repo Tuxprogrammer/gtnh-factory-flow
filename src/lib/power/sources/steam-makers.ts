@@ -159,7 +159,6 @@ interface SmallBoilerSpec {
   steamPerSecond: number;
   /** energyConsumption x 20 / (cooldownInterval + 1), from the machine's class. */
   energyPerSecond: number;
-  automatable: boolean;
 }
 
 const SMALL_BOILER_SPECS: SmallBoilerSpec[] = [
@@ -170,7 +169,6 @@ const SMALL_BOILER_SPECS: SmallBoilerSpec[] = [
     unlock: "ULV",
     steamPerSecond: 120,
     energyPerSecond: 20 / 46,
-    automatable: false,
   },
   // MTEBoilerSteel, in-game name "Large Coal Boiler": 300 L/s, consumption 2, interval 40.
   {
@@ -179,7 +177,6 @@ const SMALL_BOILER_SPECS: SmallBoilerSpec[] = [
     unlock: "LV",
     steamPerSecond: 300,
     energyPerSecond: 40 / 41,
-    automatable: false,
   },
 ];
 
@@ -221,10 +218,8 @@ function buildSmallBoiler(spec: SmallBoilerSpec): PowerSourceDefinition {
       // euPerItem in the solid table IS the furnace burn time in ticks.
       const energyPerItem = (fuel.euPerItem ?? 0) / 10;
       const secondsPerItem = energyPerItem / spec.energyPerSecond;
-      const warnings: string[] = [];
-      if (!spec.automatable) {
-        warnings.push("GTNH turns small boiler automation off. Fuel goes in by hand.");
-      }
+      // GTNH's allowSmallBoilerAutomation=false locks only the bucket and cell slots:
+      // MTEBoiler.allowPutStack lets hoppers and pipes fill the fuel slot either way.
       return {
         euPerTick: 0,
         inputs: [
@@ -236,7 +231,6 @@ function buildSmallBoiler(spec: SmallBoilerSpec): PowerSourceDefinition {
           stat("Steam", `${formatAmount(spec.steamPerSecond / 20)} L/t`),
           stat("One item burns", `${formatAmount(secondsPerItem)}s`),
         ],
-        warnings,
       };
     },
   };
@@ -439,6 +433,12 @@ const EXCHANGER_UNLOCK: Record<string, string> = {
 /** RecipesGregTech.thermalBoilerRecipes: lava makes plain Steam, the rest superheated. */
 const THERMAL_BOILER_PLAIN_STEAM = new Set(["Lava", "Pahoehoe Lava"]);
 
+/**
+ * Obsidian per 1000 L in RecipesGregTech.thermalBoilerRecipes (outputChances 1000 and 3700 of 10,000).
+ * MTEThermalBoiler keeps it without a Lava Filter and voids the recipes' other items.
+ */
+const THERMAL_BOILER_OBSIDIAN: Record<string, number | undefined> = { Lava: 0.1, "Pahoehoe Lava": 0.37 };
+
 function buildExchanger(entry: (typeof powerPlannerData.heatExchangers)[number]): PowerSourceDefinition {
   const isThermalBoiler = entry.name === "Thermal Boiler";
   const isExtreme = entry.name === "Extreme Heat Exchanger";
@@ -516,13 +516,19 @@ function buildExchanger(entry: (typeof powerPlannerData.heatExchangers)[number])
       const tier = isThermalBoiler ? 1 : read.number("tier");
       const intake = read.number("intake");
       const lowered = rule.threshold + (tier - 1) * rule.throttle;
-      const threshold = isExtreme ? Math.max(1, lowered) : lowered;
+      // MTEHeatExchanger keeps the threshold in an int field (superheated_threshold *=
+      // the coolant's multiplier truncates), so lava on an even circuit loses its half litre.
+      const threshold = isExtreme ? Math.max(1, lowered) : Math.trunc(lowered);
       const cap = capAtMax ? rule.max : threshold * 2;
       const used = Math.min(intake, cap);
       const overThreshold = used >= threshold;
       const ratio = overThreshold ? rule.overRatio : rule.underRatio;
       const efficiency = isThermalBoiler ? 1 : 1 - 0.015 * (tier - 1);
-      const steamPerSecond = used * ratio * efficiency;
+      // MTEExtremeHeatExchanger: mEUt = (int) (recipe EU/t x efficiency x used / max), and each
+      // tick turns whole 160 L lots of water into steam, so the steam is rounded down to 160 L a tick.
+      const steamPerSecond = isExtreme
+        ? Math.floor(Math.trunc(((rule.max * ratio) / 20) * efficiency * (used / rule.max)) / 160) * 160 * 20
+        : used * ratio * efficiency;
       const grade = isThermalBoiler
         ? THERMAL_BOILER_PLAIN_STEAM.has(fluidName)
           ? "Steam"
@@ -539,6 +545,10 @@ function buildExchanger(entry: (typeof powerPlannerData.heatExchangers)[number])
       const coldReturn = COLD_RETURN[fluidName];
       if (coldReturn) {
         outputs.push(liters(coldReturn, used));
+      }
+      const obsidian = isThermalBoiler ? THERMAL_BOILER_OBSIDIAN[fluidName] : undefined;
+      if (obsidian) {
+        outputs.push(items("Obsidian", (used / 1000) * obsidian));
       }
       const waterName = isThermalBoiler ? read.select("waterKind") : "Distilled Water";
       return {

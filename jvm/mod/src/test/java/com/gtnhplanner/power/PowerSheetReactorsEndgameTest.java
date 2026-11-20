@@ -131,7 +131,7 @@ class PowerSheetReactorsEndgameTest {
     void htgrOperation() {
         // Glowstone at a full 10,000 balls: exponent 1.1 gives 16,528 ticks of progress, and full coolant + water
         // add 57 + 24 a tick, so 202 ticks.
-        final Reactors.Pebble pebble = new Reactors.Pebble(2, 1.2, 1.1);
+        final Reactors.Pebble pebble = new Reactors.Pebble(0.65, 1.2, 1.1);
         final Reactors.HtgrOperation run = Reactors.htgrOperation(pebble, 10_000);
         assertEquals(202, run.cycleTicks(), 0);
         assertCloseTo(14.159265, run.burned(), 5);
@@ -147,11 +147,11 @@ class PowerSheetReactorsEndgameTest {
         assertEquals("kubatech:htgr_item_triso_fuel@1", PowerResources.resolve("TRISO Fuel (Uranium 235)").id);
         // A half-full reactor keeps its fuel base: the ball count alone scales the draw.
         final Reactors.HtgrOperation half = Reactors.htgrOperation(pebble, 5_000);
-        assertCloseTo(2 * Math.pow(1.1, 1.05), half.energyMultiplier(), 9);
+        assertCloseTo(0.65 * Math.pow(1.1, 1.05), half.energyMultiplier(), 9);
     }
 
     @Test
-    @DisplayName("computes the HTGR glowstone multiplier (2.444)")
+    @DisplayName("computes the HTGR glowstone multiplier (0.794)")
     void htgrGlowstoneMultiplier() {
         // COOLANT_PER_BALL is a per-tick figure; hot coolant out = 0.5 x fill x multiplier L/t, and the steam line is
         // the water line x160.
@@ -159,7 +159,8 @@ class PowerSheetReactorsEndgameTest {
         final double multiplier = model.outputs()
             .get(0)
             .perSecond() / (0.5 * 10000 * 20);
-        assertCloseTo(2.444, multiplier, 2);
+        // HTGRLoader: Glowstone pebbles are (0.65, 1.2, 1.1), so 0.65 x 1.2^1.1.
+        assertCloseTo(0.794, multiplier, 2);
         final Flow water = find(model.inputs(), "Distilled Water");
         final Flow steam = find(model.outputs(), "Steam");
         assertCloseTo(water.perSecond() * 160, steam.perSecond(), 6);
@@ -337,18 +338,31 @@ class PowerSheetReactorsEndgameTest {
     }
 
     @Test
-    @DisplayName("runs helium fusion at Mk-I from the workbook table")
+    @DisplayName("runs helium fusion at Mk-I from the exported recipe")
     void heliumFusionMk1() {
+        // Deuterium + Helium-3: 125 L in 16 ticks at 1920 EU/t, 60M EU to start.
         final PowerModel model = compute("fusion-reactor", Map.of("recipe", "Helium Plasma", "mark", "1"));
         assertEquals(-1920, model.euPerTick(), 0);
         final Flow plasma = model.outputs()
             .get(0);
         assertEquals("Helium Plasma", plasma.name());
-        assertEquals(156, plasma.perSecond(), 0);
+        assertEquals(156.25, plasma.perSecond(), 0);
+        assertEquals("60M EU", model.stat("Startup"));
         assertEquals(
             2,
             model.inputs()
                 .size());
+    }
+
+    @Test
+    @DisplayName("offers a second recipe for the same plasma under its inputs")
+    void secondHeliumRecipe() {
+        // Deuterium + Tritium: 125 L in 16 ticks at 3840 EU/t, 40M EU to start.
+        final PowerModel model = compute(
+            "fusion-reactor",
+            Map.of("recipe", "Helium Plasma (Deuterium + Tritium)", "mark", "1"));
+        assertEquals(-3840, model.euPerTick(), 0);
+        assertEquals("40M EU", model.stat("Startup"));
     }
 
     @Test

@@ -118,8 +118,9 @@ function buildEngine(spec: EngineSpec): PowerSourceDefinition {
       }
       const effectiveEu = fuelPerTick > 0 ? output / fuelPerTick : 0;
 
-      // 1 L of lubricant per gate, 2 L while boosted, in every engine class.
-      const lubricantPerSecond = GATE_72_PER_SECOND * (boost ? 2 : 1);
+      // 1 L of lubricant per gate, 2 L while boosted, in every engine class. A fuel
+      // refused unboosted fails the recipe before the lubricant is taken.
+      const lubricantPerSecond = blocked ? 0 : GATE_72_PER_SECOND * (boost ? 2 : 1);
       const inputs = [liters(fuel.name, fuelPerTick * 20), liters("Lubricant", lubricantPerSecond)];
       if (boost) {
         inputs.push(liters(spec.booster, spec.boosterPerSecond));
@@ -184,7 +185,10 @@ const largeRocketEngine: PowerSourceDefinition = {
     // euProduction is what the game meters air and hydrogen against;
     // getMaxEfficiency returns it, so the output is 16384 x euProduction / 10000.
     const euProduction = boost ? 3 * rocketFalloff(power / 3) : rocketFalloff(power);
-    const euPerTick = Math.max(0, 1.6384 * euProduction);
+    // Efficiency climbs euProduction / 2000 (whole) a tick and output needs 2000 of it, and a
+    // burn below 5 L (90% of the hatch, 30% boosted) fails and resets it: either way no EU.
+    const stalls = euProduction < 2000 || Math.floor((throttle * 1.05) / kneeFactor) < 5;
+    const euPerTick = stalls ? 0 : Math.max(0, 1.6384 * euProduction);
 
     const inputs = [
       liters(fuel.name, throttle),
@@ -205,6 +209,7 @@ const largeRocketEngine: PowerSourceDefinition = {
         stat("EU per L", formatAmount(throttle > 0 ? euPerTick / (throttle / 20) : 0)),
         stat("Power knees", `${formatAmount(knee1)} / ${formatAmount(knee2)} L/s`),
       ],
+      warnings: stalls ? ["Too little fuel: the engine never warms up and makes no EU."] : undefined,
     };
   },
 };

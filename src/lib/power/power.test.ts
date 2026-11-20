@@ -315,7 +315,8 @@ describe("singleblock boilers (game source constants)", () => {
     expect(model.inputs[0]).toMatchObject({ name: "Coal", unit: "item" });
     expect(model.inputs[0].perSecond).toBeCloseTo(1 / 368, 12);
     expect(model.inputs[1]).toEqual({ name: "Water", perSecond: 120 / 160, unit: "L" });
-    expect(model.warnings?.some((line) => line.includes("by hand"))).toBe(true);
+    // MTEBoiler.allowPutStack takes fuel from hoppers and pipes even with automation off.
+    expect(model.warnings ?? []).toEqual([]);
   });
 
   it("burns the Large Coal Boiler at 2 energy per 41t: one coal is 164s of 300 L/s", () => {
@@ -400,7 +401,7 @@ describe("reactors and endgame", () => {
   it("runs an HTGR operation the way kubatech does: fuel, helium, burned fuel", () => {
     // Glowstone at a full 10,000 balls: exponent 1.1 gives 16,528 ticks of
     // progress, and full coolant + water add 57 + 24 a tick, so 202 ticks.
-    const pebble = { base: 2, mult: 1.2, exp: 1.1 };
+    const pebble = { base: 0.65, mult: 1.2, exp: 1.1 };
     const run = htgrOperation(pebble, 10_000);
     expect(run.cycleTicks).toBe(202);
     expect(run.burned).toBeCloseTo(14.159265, 5);
@@ -413,15 +414,16 @@ describe("reactors and endgame", () => {
     expect(resolvePowerResource("TRISO Fuel (Uranium 235)")?.id).toBe("kubatech:htgr_item_triso_fuel@1");
     // A half-full reactor keeps its fuel base: the ball count alone scales the draw.
     const half = htgrOperation(pebble, 5_000);
-    expect(half.energyMultiplier).toBeCloseTo(2 * Math.pow(1.1, 1.05), 9);
+    expect(half.energyMultiplier).toBeCloseTo(0.65 * Math.pow(1.1, 1.05), 9);
   });
 
-  it("computes the HTGR glowstone multiplier (2.444)", () => {
+  it("computes the HTGR glowstone multiplier (0.794)", () => {
     // COOLANT_PER_BALL is a per-tick figure; hot coolant out = 0.5 x fill x
     // multiplier L/t, and the steam line is the water line x160.
     const model = compute("htgr", { pebble: "Glowstone", fill: "10000" });
     const multiplier = model.outputs[0].perSecond / (0.5 * 10000 * 20);
-    expect(multiplier).toBeCloseTo(2.444, 2);
+    // HTGRLoader: Glowstone pebbles are (0.65, 1.2, 1.1), so 0.65 x 1.2^1.1.
+    expect(multiplier).toBeCloseTo(0.794, 2);
     const water = model.inputs.find((flow) => flow.name === "Distilled Water");
     const steam = model.outputs.find((flow) => flow.name === "Steam");
     expect(steam?.perSecond).toBeCloseTo((water?.perSecond ?? 0) * 160, 6);
@@ -580,11 +582,28 @@ describe("reactors and endgame", () => {
     );
   });
 
-  it("runs helium fusion at Mk-I from the workbook table", () => {
+  it("runs helium fusion at Mk-I from the exported recipe", () => {
+    // Deuterium + Helium-3: 125 L in 16 ticks at 1920 EU/t, 60M EU to start.
     const model = compute("fusion-reactor", { recipe: "Helium Plasma", mark: "1" });
     expect(model.euPerTick).toBe(-1920);
-    expect(model.outputs[0]).toMatchObject({ name: "Helium Plasma", perSecond: 156 });
+    expect(model.outputs[0]).toMatchObject({ name: "Helium Plasma", perSecond: 156.25 });
+    expect(model.stats.find((line) => line.label === "Startup")?.value).toBe("60M EU");
     expect(model.inputs).toHaveLength(2);
+  });
+
+  it("offers a second recipe for the same plasma under its inputs", () => {
+    // Deuterium + Tritium: 125 L in 16 ticks at 3840 EU/t, 40M EU to start.
+    const model = compute("fusion-reactor", {
+      recipe: "Helium Plasma (Deuterium + Tritium)",
+      mark: "1",
+    });
+    expect(model.euPerTick).toBe(-3840);
+    expect(model.inputs.map((flow) => flow.name)).toEqual(["Deuterium", "Tritium"]);
+    expect(model.stats.find((line) => line.label === "Startup")?.value).toBe("40M EU");
+    const settings = getPowerSource("fusion-reactor")?.settings ?? [];
+    const recipe = settings.find((setting) => setting.id === "recipe");
+    const keys = recipe?.type === "select" ? recipe.options.map((option) => option.key) : [];
+    expect(new Set(keys).size).toBe(keys.length);
   });
 
   it("finds an interior antimatter optimum with positive net power", () => {

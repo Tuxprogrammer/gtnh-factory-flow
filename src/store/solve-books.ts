@@ -107,6 +107,7 @@ export function solveBooks(project: FactoryProject): ThroughputResult {
     // Plan mode runs integer programs (HiGHS, which only the worker loads): the worker whenever there is one.
     project.planMode === true;
   if (!expectSlow || !workerAvailable()) {
+    if (!workerAvailable()) requestMainThreadCore();
     const started = performance.now();
     const result = calculateThroughput(project);
     lastSolveDurationMs = performance.now() - started;
@@ -151,6 +152,23 @@ function booksContentKey(project: FactoryProject): string {
 
 function workerAvailable(): boolean {
   return !workerBroken && typeof Worker !== "undefined";
+}
+
+let coreRequested = false;
+
+/**
+ * With no Worker every solve runs here, so the main thread asks for the compiled core the way the Worker does: the
+ * solve adoption (`@/lib/core/solve-adopt`) loads the solver module and installs the bridge the plan solve reads, and
+ * until it is ready the website's engine answers. Only in a browser (a server render and the test runner keep the
+ * website's engine), once, and only where a solve would otherwise run here: with a Worker the main thread never loads
+ * the solver, which the Worker owns.
+ */
+function requestMainThreadCore() {
+  if (coreRequested || typeof window === "undefined") return;
+  coreRequested = true;
+  import("@/lib/core/solve-adopt")
+    .then((m) => m.warmSolveCore())
+    .catch(() => {});
 }
 
 function scheduleSolve(request: SolveRequest) {

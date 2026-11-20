@@ -9,7 +9,7 @@ import { setPowerBridge } from "@/lib/power/power-core";
 import type { TurbineFlowCheck } from "@/lib/power/turbine-flow";
 import type { PowerFlowLine, PowerStatLine } from "@/lib/power/types";
 import { coreFor, isAdopted } from "./adopt";
-import { coreState, loadCore } from "./loader";
+import { loadCore, moduleState } from "./loader";
 
 type Wire = Record<string, unknown>;
 
@@ -126,6 +126,6 @@ setPowerBridge({ card, tier });
  * numbers, so a board built before the load finishes needs no rebuild after it.
  */
 export function warmPowerCore(): void {
-  if (!isAdopted("power") || coreState() !== "idle") return;
+  if (!isAdopted("power") || moduleState("core") !== "idle") return;
   loadCore().catch(() => {});
 }

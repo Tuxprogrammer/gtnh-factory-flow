@@ -1,13 +1,13 @@
 package com.gtnhplanner.core.view.rails;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
 
 import com.gtnhplanner.core.base.ExactMath;
+import com.gtnhplanner.core.base.JavaHashSet;
 import com.gtnhplanner.core.view.Json;
 import com.gtnhplanner.data.provider.FreeInputs;
 
@@ -100,7 +100,7 @@ public final class NodeRails {
         final double utilization = clamp01(in.utilization());
         final boolean demandSet = "demand-set".equals(verdict);
         final List<NodeRailsView.Row> rows = new ArrayList<>();
-        final Set<String> seen = new HashSet<>();
+        final Set<String> seen = new JavaHashSet<>();
 
         if (books) {
             for (final NodeRailsInput.Flow f : side.flows()) {

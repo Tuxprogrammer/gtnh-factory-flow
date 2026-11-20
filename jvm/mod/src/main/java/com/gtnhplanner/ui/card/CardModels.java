@@ -88,7 +88,7 @@ public final class CardModels {
                     p.perSecond(),
                     p.wired(),
                     p.extra(),
-                    // What the game gives for nothing (the Rock Breaker's lava): the shared rule, as the rails' rows read it.
+                    // What the game gives for nothing (the Rock Breaker's lava): the shared rule.
                     !p.output() && com.gtnhplanner.data.provider.FreeInputs.isFree(port),
                     false,
                     rate(rates.get(p.index()))));

@@ -61,8 +61,10 @@ const WITHIN_TOLERANCE: Record<string, string> = {
   [`${OIL_LINE}Up to 2 solves at the 0.3 machines it needs (forward columns) #4`]:
     "a 60-card oil line HiGHS solves to its own 1e-7 row tolerance",
   "oil-line Up to 2": "the same plan",
-  "up to: mv-every-count-up-to": "the website's point loses 1.3e-6 charcoal/s at a wired output; the core keeps it",
-  "up to: idle-noise": "the website's canonical point runs 1.6e-7 over the sink drawers' held total",
+  "up to: mv-every-count-up-to":
+    "the website's point loses 1.3e-6 charcoal/s at a wired output; the core keeps it",
+  "up to: idle-noise":
+    "the website's canonical point runs 1.6e-7 over the sink drawers' held total",
   "up to: idle-noise-beside-a-lone-card": "the same plan as idle-noise beside a lone Up to card",
 };
 
@@ -72,16 +74,24 @@ interface Recorded {
 }
 
 function recordedInputs(): Recorded[] {
-  const out: Recorded[] = loadWebsiteCases().map((c) => ({ name: c.name, input: parseSolveInput(c.input) }));
+  const out: Recorded[] = loadWebsiteCases().map((c) => ({
+    name: c.name,
+    input: parseSolveInput(c.input),
+  }));
   for (const name of caseNames()) out.push({ name: `corpus: ${name}`, input: loadInput(name) });
   const upTo = path.join(root, "conformance", "solver", "up-to");
-  for (const f of readdirSync(upTo).filter((f) => f.endsWith(".json")).sort()) {
+  for (const f of readdirSync(upTo)
+    .filter((f) => f.endsWith(".json"))
+    .sort()) {
     const plan = JSON.parse(readFileSync(path.join(upTo, f), "utf8")) as { input: unknown };
     out.push({ name: `up to: ${f.slice(0, -5)}`, input: parseSolveInput(plan.input) });
   }
   // The oil line as the website hands it over (its own ids, not renamed to UUIDs as the recorded cases are).
   const oil = JSON.parse(
-    readFileSync(path.join(root, "src/lib/solver/plan/__fixtures__/up-to/oil-line-up-to-one.json"), "utf8"),
+    readFileSync(
+      path.join(root, "src/lib/solver/plan/__fixtures__/up-to/oil-line-up-to-one.json"),
+      "utf8",
+    ),
   ) as SolveInput;
   const electrolyzer = "node-2964b946-4f03-45bc-b142-ee4b5da3a671";
   for (const capacity of [1, 0.5, 0.31, 2])
@@ -135,7 +145,11 @@ function withWebsiteIds(i: SolveInput): SolveInput {
 }
 
 /** The tiled plans are the corpus's timing cases: solved once, with UUIDs. */
-const ONCE = new Set(["corpus: platline-x4", "corpus: platline-x10", "corpus: gtnh-flow-palladium_line"]);
+const ONCE = new Set([
+  "corpus: platline-x4",
+  "corpus: platline-x10",
+  "corpus: gtnh-flow-palladium_line",
+]);
 
 /** Arrays that are sets in the answer, in a fixed order: the engines list them in different orders. */
 const SETS = new Set(["unneeded", "unmet", "limitingNodes", "limitingDrawers"]);
@@ -146,11 +160,17 @@ const SETS = new Set(["unneeded", "unmet", "limitingNodes", "limitingDrawers"]);
  * shown (the rail reads only the note's kind, `rail/notices.ts`).
  */
 function sortedSets(value: unknown, key = "", sets = true): unknown {
-  if (value !== null && typeof value === "object" && (value as { message?: unknown }).message === "SOLVER_UNSATISFIABLE")
+  if (
+    value !== null &&
+    typeof value === "object" &&
+    (value as { message?: unknown }).message === "SOLVER_UNSATISFIABLE"
+  )
     return { message: "SOLVER_UNSATISFIABLE", args: ["(the engine's status)"] };
   if (Array.isArray(value)) {
     const items = value.map((v) => sortedSets(v, "", sets));
-    return sets && SETS.has(key) ? [...items].sort((a, b) => (JSON.stringify(a) < JSON.stringify(b) ? -1 : 1)) : items;
+    return sets && SETS.has(key)
+      ? [...items].sort((a, b) => (JSON.stringify(a) < JSON.stringify(b) ? -1 : 1))
+      : items;
   }
   if (value !== null && typeof value === "object")
     return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, sortedSets(v, k, sets)]));
@@ -166,7 +186,8 @@ function withinTolerance(ts: Answer, viaCore: Answer): string[] {
   );
   for (const [id, count] of Object.entries(ts.solution.machineCounts)) {
     const other = viaCore.solution.machineCounts[id];
-    if (other === undefined || Math.abs(other - count) > 1e-5) out.push(`machineCounts.${id}: ${count} / ${other}`);
+    if (other === undefined || Math.abs(other - count) > 1e-5)
+      out.push(`machineCounts.${id}: ${count} / ${other}`);
   }
   return out;
 }
@@ -187,10 +208,16 @@ const PLAN_DIRS = [
  * The recorded cases hold no split of a leftover with several bearers (their capture renames ids within a key split on
  * ",", where the key joins its bearers with "|"), so these plans carry the stored splits through the core.
  */
-function shortChain(split?: (bearers: string[], pick: string) => Record<string, number>): FactoryProject {
+function shortChain(
+  split?: (bearers: string[], pick: string) => Record<string, number>,
+): FactoryProject {
   const build = (extra = {}) =>
     project({
-      recipes: [recipe("rq", [], [["W", 1]]), recipe("rp", [["W", 1]], [["X", 1]]), recipe("rc", [["X", 1]], [["Y", 1]])],
+      recipes: [
+        recipe("rq", [], [["W", 1]]),
+        recipe("rp", [["W", 1]], [["X", 1]]),
+        recipe("rc", [["X", 1]], [["Y", 1]]),
+      ],
       nodes: [
         node("q", "rq", { solvePin: 1, solvePinExact: true }),
         node("p", "rp"),
@@ -210,7 +237,11 @@ function shortChain(split?: (bearers: string[], pick: string) => Record<string, 
 function referencePlans(): { name: string; project: () => FactoryProject; split?: true }[] {
   const out: { name: string; project: () => FactoryProject; split?: true }[] = [
     { name: "a leftover with two places", project: () => shortChain() },
-    { name: "a stored split of it", project: () => shortChain(([a, b]) => ({ [a!]: 0.25, [b!]: 0.75 })), split: true },
+    {
+      name: "a stored split of it",
+      project: () => shortChain(([a, b]) => ({ [a!]: 0.25, [b!]: 0.75 })),
+      split: true,
+    },
     {
       name: "all of it at the other place",
       project: () => shortChain((bearers, pick) => ({ [bearers.find((b) => b !== pick)!]: 1 })),
@@ -218,9 +249,13 @@ function referencePlans(): { name: string; project: () => FactoryProject; split?
     },
   ];
   for (const dir of PLAN_DIRS)
-    for (const f of readdirSync(plansRoot(dir)).filter((f) => f.endsWith(".json")).sort()) {
+    for (const f of readdirSync(plansRoot(dir))
+      .filter((f) => f.endsWith(".json"))
+      .sort()) {
       try {
-        const project = projectForPlanBoard(parseFactoryProjectJson(readFileSync(path.join(plansRoot(dir), f), "utf8")));
+        const project = projectForPlanBoard(
+          parseFactoryProjectJson(readFileSync(path.join(plansRoot(dir), f), "utf8")),
+        );
         out.push({ name: `${dir}/${f}`, project: () => project });
       } catch {
         // Not a plan this build reads.
@@ -231,7 +266,8 @@ function referencePlans(): { name: string; project: () => FactoryProject; split?
 
 /** What the board reads, less the stamp of when it was made: every list in its order, as the board shows it. */
 function books(result: ThroughputResult): unknown {
-  const { generatedAt: _generatedAt, ...rest } = result;
+  const rest: Partial<ThroughputResult> = { ...result };
+  delete rest.generatedAt;
   return sortedSets(JSON.parse(JSON.stringify(rest)), "", false);
 }
 
@@ -254,7 +290,10 @@ describe("plan solve shadow: the website's engine and the compiled core agree", 
       await loadCore();
       // The solve Worker's own module, in this thread: its `self` is a stand-in that hands its replies back.
       let reply: ((r: WorkerReply) => void) | undefined;
-      const scope: { onmessage?: (e: MessageEvent) => Promise<void>; postMessage: (r: WorkerReply) => void } = {
+      const scope: {
+        onmessage?: (e: MessageEvent) => Promise<void>;
+        postMessage: (r: WorkerReply) => void;
+      } = {
         postMessage: (r) => reply?.(r),
       };
       g.self = scope;
@@ -281,9 +320,15 @@ describe("plan solve shadow: the website's engine and the compiled core agree", 
     ];
     it("has every recorded input", () => {
       expect(recorded.length).toBeGreaterThanOrEqual(223 + 33 + 74 + 4);
-      expect(recorded.some((c) => Object.keys(c.input.spares ?? {}).length > 0), "a stored split").toBe(true);
+      expect(
+        recorded.some((c) => Object.keys(c.input.spares ?? {}).length > 0),
+        "a stored split",
+      ).toBe(true);
       for (const name of [...Object.keys(DIFFERS), ...Object.keys(WITHIN_TOLERANCE)])
-        expect(inputs.map((i) => i.name), name).toContain(name);
+        expect(
+          inputs.map((i) => i.name),
+          name,
+        ).toContain(name);
     });
 
     it.each(inputs.map((c) => [c.name, c] as const))(
@@ -324,7 +369,8 @@ describe("plan solve shadow: the website's engine and the compiled core agree", 
         expect(after.error).toBeUndefined();
         const diffs = differences(books(before.result!), books(after.result!));
         expect(diffs, diffs.slice(0, 20).join("\n")).toEqual([]);
-        if (plan.split) expect(after.result!.plan!.leftovers[0]!.custom, "the stored split holds").toBe(true);
+        if (plan.split)
+          expect(after.result!.plan!.leftovers[0]!.custom, "the stored split holds").toBe(true);
       },
       120_000,
     );

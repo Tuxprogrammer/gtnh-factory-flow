@@ -11,12 +11,15 @@
  * back into the website's `Answer` here.
  *
  * Which engine solves (`solveEngine`): the core when the solve area is adopted (`adopt.ts`), the solver module has
- * loaded, and it loaded on a target in `SOLVE_TARGETS`. The JavaScript build of the core (an engine without
- * WebAssembly GC) solves heavy plans about 2.4 times slower than the website's engine, so it is not one of them: there
- * the website's engine keeps solving. Until the load finishes, when it fails, and on the fallback, the website's
- * engine answers.
+ * loaded, and it loaded on a target in `SOLVE_TARGETS` (WebAssembly GC). An engine without WebAssembly GC (the loader
+ * would fall back to the JavaScript build, which is slower than the website's engine there) fetches no solver and keeps
+ * the website's engine. Until the load finishes, and when it fails, the website's engine answers too.
  */
-import { setSolveCoreBridge, typescriptSolveCore, type SolveCore } from "@/lib/solver/plan/adapter/engine";
+import {
+  setSolveCoreBridge,
+  typescriptSolveCore,
+  type SolveCore,
+} from "@/lib/solver/plan/adapter/engine";
 import type {
   Alternative,
   Alternatives,
@@ -41,9 +44,10 @@ import type { CoreExports } from "./exports.generated";
 import { coreInfo, loadCore, wasmGcSupported, type CoreTarget, type LoadOptions } from "./loader";
 
 /**
- * The targets the core solves on. WebAssembly GC: no slower than the website's engine from edit to answer on the
- * reference plans (measured in a browser, `restructure` state note `rs-solve.md`). The JavaScript build is not: the
- * website's engine stays there.
+ * The targets the core solves on. WebAssembly GC: from an edit to the answer no slower than the website's engine on
+ * any reference plan in a browser (10 to 1,000 cards; about half the time on a 484-card board), and the first solve
+ * after a page load no later. The JavaScript build is slower than the website's engine on the first solve and on
+ * small and mid-sized plans (about twice on a 33-card plan): the website's engine stays there.
  */
 export const SOLVE_TARGETS: readonly CoreTarget[] = ["wasm-gc"];
 
@@ -52,7 +56,11 @@ const SOLVER_LOAD = { modules: ["solver"] } as unknown as LoadOptions;
 
 /** Which target the solver module runs on, once loaded. */
 export function solverTarget(): CoreTarget | null {
-  const info = coreInfo() as (ReturnType<typeof coreInfo> & { modules?: Record<string, { target: CoreTarget } | undefined> }) | null;
+  const info = coreInfo() as
+    | (ReturnType<typeof coreInfo> & {
+        modules?: Record<string, { target: CoreTarget } | undefined>;
+      })
+    | null;
   if (!info) return null;
   return info.modules?.solver?.target ?? info.target;
 }
@@ -201,7 +209,10 @@ function idsFor(input: SolveInput): Ids | null {
     if (CANONICAL.test(id)) continue;
     if (UUID_ANY.test(id)) {
       const h = id.replace(/-/g, "").toLowerCase();
-      to.set(id, `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`);
+      to.set(
+        id,
+        `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`,
+      );
     } else own.push(id);
   }
   own.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
@@ -226,7 +237,8 @@ function renameBack(value: unknown, back: Map<Id, Id>): unknown {
   if (Array.isArray(value)) return value.map((v) => renameBack(v, back));
   if (value !== null && typeof value === "object") {
     const out: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(value)) out[renameBack(k, back) as string] = renameBack(v, back);
+    for (const [k, v] of Object.entries(value))
+      out[renameBack(k, back) as string] = renameBack(v, back);
     return out;
   }
   return value;
@@ -256,7 +268,9 @@ function inputJson(i: SolveInput, id: (x: Id) => Id): string | null {
   const sparesKey = (key: string) => keyWith(key, id);
   const body = {
     mode: i.mode,
-    ...(i.choice ? { choice: i.choice.map((r) => ({ node: id(r.node), port: r.port, input: r.input })) } : {}),
+    ...(i.choice
+      ? { choice: i.choice.map((r) => ({ node: id(r.node), port: r.port, input: r.input })) }
+      : {}),
     machines: i.machines.map((m) => ({
       id: id(m.id),
       name: m.name,
@@ -316,7 +330,10 @@ const port = (p: W): PortRef => ({
   port: p.portIndex as number,
   input: p.input as boolean,
 });
-const external = (e: W): External => ({ port: port(e.port as W), ratePerSecond: e.ratePerSecond as number });
+const external = (e: W): External => ({
+  port: port(e.port as W),
+  ratePerSecond: e.ratePerSecond as number,
+});
 const externals = (list: unknown): External[] => (list as W[]).map(external);
 const key = (k: W): ChoiceKey => ({ gateAnchors: (k.gateAnchors as W[]).map(port) });
 
@@ -336,7 +353,9 @@ const notes = (list: unknown): Note[] => (list as W[]).map(note);
 
 function drawers(d: W): DrawerReadout {
   const portsOf = (m: unknown) =>
-    Object.fromEntries(Object.entries(m as Record<string, unknown>).map(([k, v]) => [k, externals(v)]));
+    Object.fromEntries(
+      Object.entries(m as Record<string, unknown>).map(([k, v]) => [k, externals(v)]),
+    );
   return {
     rates: d.rates as Record<Id, number>,
     unmet: d.unmet as Id[],
@@ -440,9 +459,18 @@ function alternatives(a: W): Alternatives {
 /** A digest as the website's `Answer`. */
 export function answerOf(d: Digest): Answer {
   if (d.failure !== undefined) {
-    return { kind: "failed", failure: note(d.failure as W), notes: notes(d.notes), drawers: drawers(d.drawers as W) };
+    return {
+      kind: "failed",
+      failure: note(d.failure as W),
+      notes: notes(d.notes),
+      drawers: drawers(d.drawers as W),
+    };
   }
-  return { kind: "solved", solution: solution(d.solution as W), alternatives: alternatives(d.alternatives as W) };
+  return {
+    kind: "solved",
+    solution: solution(d.solution as W),
+    alternatives: alternatives(d.alternatives as W),
+  };
 }
 
 setSolveCoreBridge(coreEngine);

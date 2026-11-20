@@ -6,7 +6,7 @@
  * do not resolve are listed at the end; power cards show those flows as
  * stats instead of wired ports until an alias is added below.
  *
- *   node tools/power-resource-map.mjs [--base https://gtnhplanner.com] [--version local-2.9.0-beta-2]
+ *   node tools/power-resource-map.mjs [--base http://localhost:3000] [--version local-2.9.0-beta-2]
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -31,7 +31,7 @@ const args = process.argv.slice(2);
 const base =
   args[args.indexOf("--base") + 1] && args.includes("--base")
     ? args[args.indexOf("--base") + 1]
-    : "https://gtnhplanner.com";
+    : "http://localhost:3000";
 const version = args.includes("--version")
   ? args[args.indexOf("--version") + 1]
   : "local-2.9.0-beta-2";

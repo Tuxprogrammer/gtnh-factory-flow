@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
+import { siteUrl } from "@/lib/site-url";
 
 export default function robots(): MetadataRoute.Robots {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://gtnhplanner.com";
+  const base = siteUrl();
   return {
     rules: [
       {
@@ -13,6 +14,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/api/", "/datasets/"],
       },
     ],
-    sitemap: `${base}/sitemap.xml`,
+    // A sitemap address must be absolute: without a configured site there is none to name.
+    ...(base ? { sitemap: `${base}/sitemap.xml` } : {}),
   };
 }

@@ -39,11 +39,19 @@ describe("copied plans (plan codes)", () => {
 
   it("opens from the link, and from a link a chat window broke over lines", async () => {
     const project = loadBiodieselDemoProject();
-    const link = planCodeLink(await encodePlanCode(project), "https://gtnhplanner.com");
-    expect(link.startsWith("https://gtnhplanner.com/#p=gtnh1.")).toBe(true);
+    const link = planCodeLink(await encodePlanCode(project), "https://planner.test");
+    expect(link.startsWith("https://planner.test/#p=gtnh1.")).toBe(true);
     expect((await decodePlanCode(link)).name).toBe(project.name);
     const wrapped = `  ${link.slice(0, 40)}\n${link.slice(40, 90)}\r\n${link.slice(90)}  `;
     expect((await decodePlanCode(wrapped)).nodes).toHaveLength(project.nodes.length);
+  });
+
+  it("opens a link made on any other site: only the fragment counts", async () => {
+    const project = loadBiodieselDemoProject();
+    const code = await encodePlanCode(project);
+    // A player pastes a link from a site this one is not (compatibility: the host is never checked).
+    const pasted = planCodeLink(code, "https://gtnhplanner.com");
+    expect((await decodePlanCode(pasted)).name).toBe(project.name);
   });
 
   it("leaves out GregTech overclock tables and the community post, nothing else", async () => {

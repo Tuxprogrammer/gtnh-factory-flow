@@ -5,7 +5,7 @@
  * below was picked by hand from resources API probes (the query is only used
  * to find the entry; the id is what must match).
  *
- *   node tools/power-machine-icons.mjs [--base https://gtnhplanner.com] [--version local-2.9.0-beta-2]
+ *   node tools/power-machine-icons.mjs [--base http://localhost:3000] [--version local-2.9.0-beta-2]
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -26,7 +26,7 @@ const outPath = path.join(
   "machine-icons.json",
 );
 const args = process.argv.slice(2);
-const base = args.includes("--base") ? args[args.indexOf("--base") + 1] : "https://gtnhplanner.com";
+const base = args.includes("--base") ? args[args.indexOf("--base") + 1] : "http://localhost:3000";
 const version = args.includes("--version")
   ? args[args.indexOf("--version") + 1]
   : "local-2.9.0-beta-2";

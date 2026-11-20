@@ -107,13 +107,13 @@ describe("feedback reports from the game", () => {
   it("writes the body: words that ping no one, plans, picture, folded log and versions", () => {
     const r = parsed({ description: "Ask @someone about #12", log: "line ~~~~ end", crash: "boom" });
     const { body, plansComment } = issueBody(r, {
-      plans: [{ name: "Steel line", cards: 3, link: "https://gtnhplanner.com/#p=gtnh1.abc", file: "https://x/plan-1.json" }],
+      plans: [{ name: "Steel line", cards: 3, link: "https://planner.test/#p=gtnh1.abc", file: "https://x/plan-1.json" }],
       picture: "https://x/picture.png",
     });
     expect(plansComment).toBeUndefined();
     expect(body).toContain("@​someone");
     expect(body).toContain("#​12");
-    expect(body).toContain("**Steel line** (3 cards) · [open in the planner](https://gtnhplanner.com/#p=gtnh1.abc)");
+    expect(body).toContain("**Steel line** (3 cards) · [open in the planner](https://planner.test/#p=gtnh1.abc)");
     expect(body).toContain("![The open plan](https://x/picture.png)");
     expect(body).toContain("<summary>The end of the game log</summary>");
     expect(body).not.toContain("line ~~~~ end");
@@ -137,7 +137,7 @@ describe("feedback reports from the game", () => {
   it("moves the plans to a comment when the body would be too long", () => {
     const r = parsed({ crash: "x".repeat(59_000) });
     const { body, plansComment } = issueBody(r, {
-      plans: [{ name: "Big", cards: 40, link: "https://gtnhplanner.com/#p=" + "y".repeat(7000) }],
+      plans: [{ name: "Big", cards: 40, link: "https://planner.test/#p=" + "y".repeat(7000) }],
     });
     expect(body.length).toBeLessThanOrEqual(60_000);
     expect(body).toContain("The plans are in the first comment.");

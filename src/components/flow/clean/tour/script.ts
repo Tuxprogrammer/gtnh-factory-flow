@@ -864,7 +864,7 @@ const feedback: Step = {
   id: "feedback",
   actions: [closeMenus, A.wait(200)],
   note: {
-    text: "That's everything! Found a bug, or have an idea? *Feedback* sends it from here. Questions about your own setup do well in GTNH Planner's thread on the *GT New Horizons Discord*.",
+    text: "That's everything! Found a bug, or have an idea? *Feedback* sends it from here.",
     at: feedbackKey,
   },
 };

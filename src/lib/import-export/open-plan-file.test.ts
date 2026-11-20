@@ -6,6 +6,6 @@ describe("open-plan-file", () => {
     expect(looksLikePlanJson('{"schemaVersion":1}')).toBe(true);
     expect(looksLikePlanJson('  \n {"name":"x"}')).toBe(true);
     expect(looksLikePlanJson("gtnh1.abc")).toBe(false);
-    expect(looksLikePlanJson("https://gtnhplanner.com/#p=gtnh1.abc")).toBe(false);
+    expect(looksLikePlanJson("https://planner.test/#p=gtnh1.abc")).toBe(false);
   });
 });

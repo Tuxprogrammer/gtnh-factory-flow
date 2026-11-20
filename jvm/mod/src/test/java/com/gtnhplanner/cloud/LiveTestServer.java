@@ -315,10 +315,15 @@ final class LiveTestServer implements AutoCloseable {
                     // read. The real service waits for the client's close the same way.
                     if (closeWith != 0) {
                         ctx.channel()
-                            .writeAndFlush(new io.netty.handler.codec.http.websocketx.CloseWebSocketFrame(closeWith, ""));
+                            .writeAndFlush(
+                                new io.netty.handler.codec.http.websocketx.CloseWebSocketFrame(closeWith, ""));
                         ctx.channel()
                             .eventLoop()
-                            .schedule(() -> ctx.channel().close(), 500, java.util.concurrent.TimeUnit.MILLISECONDS);
+                            .schedule(
+                                () -> ctx.channel()
+                                    .close(),
+                                500,
+                                java.util.concurrent.TimeUnit.MILLISECONDS);
                     }
                 });
             } else if (msg instanceof TextWebSocketFrame) {

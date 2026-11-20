@@ -358,10 +358,7 @@ class CloudApiTest {
         CloudApi.useLive(
             "ws://127.0.0.1:" + server.getAddress()
                 .getPort() + "/live");
-        on(
-            "GET /live/nearby?names=Dee_Mines%2CAda",
-            200,
-            "{\"accounts\":[{\"id\":\"u5\",\"username\":\"dee\"}]}");
+        on("GET /live/nearby?names=Dee_Mines%2CAda", 200, "{\"accounts\":[{\"id\":\"u5\",\"username\":\"dee\"}]}");
         final List<CloudApi.Player> near = CloudApi.nearby("tok", List.of("Dee_Mines", " ", "Ada"));
         assertEquals(new CloudApi.Player("u5", "dee", ""), near.get(0));
         assertEquals("gtnh_session=tok", last().cookie());

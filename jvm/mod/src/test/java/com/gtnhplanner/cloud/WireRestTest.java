@@ -340,11 +340,7 @@ class WireRestTest {
             }
             case "CommunityApi.download": {
                 final CommunityApi.Download d = CommunityApi.download(s(a, 0));
-                return obj(
-                    "name",
-                    d.name(),
-                    "plan",
-                    new JsonParser().parse(d.planJson()));
+                return obj("name", d.name(), "plan", new JsonParser().parse(d.planJson()));
             }
             case "CommunityApi.update":
                 CommunityApi.update(s(a, 0), s(a, 1), o(a, 2));
@@ -404,13 +400,13 @@ class WireRestTest {
         final Map<String, String> headers = new HashMap<>();
         if (step.has("headers")) for (final Map.Entry<String, JsonElement> h : step.getAsJsonObject("headers")
             .entrySet()) {
-            headers.put(
-                h.getKey(),
-                h.getValue()
-                    .getAsJsonObject()
-                    .get("example")
-                    .getAsString());
-        }
+                headers.put(
+                    h.getKey(),
+                    h.getValue()
+                        .getAsJsonObject()
+                        .get("example")
+                        .getAsString());
+            }
         final JsonElement example = step.has("example") ? Wire.fill(step.get("example"), vars) : null;
         return new Answer(
             step.get("status")
@@ -456,8 +452,10 @@ class WireRestTest {
             if (want.has("bodyExpect")) {
                 assertEquals(
                     List.of(),
-                    WireShape.expectProblems(body, Wire.fill(want.get("bodyExpect"), vars)
-                        .getAsJsonObject()),
+                    WireShape.expectProblems(
+                        body,
+                        Wire.fill(want.get("bodyExpect"), vars)
+                            .getAsJsonObject()),
                     id + " body expect");
             }
         } else {
@@ -517,8 +515,10 @@ class WireRestTest {
             assertEquals(null, failed, id + ": the call went through");
             assertEquals(
                 List.of(),
-                WireShape.expectProblems(view, Wire.fill(result.get("ok"), vars)
-                    .getAsJsonObject()),
+                WireShape.expectProblems(
+                    view,
+                    Wire.fill(result.get("ok"), vars)
+                        .getAsJsonObject()),
                 id + " result");
         } else if (result.has("null")) {
             assertEquals(null, failed, id + ": the call went through");
@@ -535,7 +535,9 @@ class WireRestTest {
             assertEquals(reason, failed.getMessage(), id + " refused reason");
         } else if (result.has("ioerror")) {
             assertNotNull(failed, id + ": the call fails");
-            assertFalse(failed instanceof CloudApi.Refused || failed instanceof CommunityApi.Refused, id + ": " + failed);
+            assertFalse(
+                failed instanceof CloudApi.Refused || failed instanceof CommunityApi.Refused,
+                id + ": " + failed);
         } else {
             throw new AssertionError(id + ": a result the test does not know: " + result);
         }
@@ -564,8 +566,10 @@ class WireRestTest {
             if (s.has("expect")) {
                 assertEquals(
                     List.of(),
-                    WireShape.expectProblems(example, Wire.fill(s.get("expect"), vars)
-                        .getAsJsonObject()),
+                    WireShape.expectProblems(
+                        example,
+                        Wire.fill(s.get("expect"), vars)
+                            .getAsJsonObject()),
                     id + " example holds what the step expects");
             }
             final JsonObject req = s.getAsJsonObject("request");

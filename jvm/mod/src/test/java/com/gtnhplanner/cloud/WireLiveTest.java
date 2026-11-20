@@ -147,15 +147,15 @@ class WireLiveTest {
                     if (status != 101) {
                         rig.server.upgradeStatus = status;
                         if (row.has("headers") && row.getAsJsonObject("headers")
-                            .has("Retry-After")) rig.server.retryAfter = row.getAsJsonObject("headers")
+                            .has("Retry-After"))
+                            rig.server.retryAfter = row.getAsJsonObject("headers")
                                 .get("Retry-After")
                                 .getAsString();
                     } else {
                         final List<String> frames = new ArrayList<>();
                         for (final JsonObject f : list(row, "frames")) {
                             assertEquals(List.of(), WireShape.problems(SHAPES, f.get("shape"), f.get("example")), id);
-                            frames.add(
-                                fill(f.get("example")).toString());
+                            frames.add(fill(f.get("example")).toString());
                         }
                         rig.server.greet = frames;
                         rig.server.greetClose = has(row, "close") ? row.get("close")
@@ -168,9 +168,10 @@ class WireLiveTest {
                         assertTrue(
                             rig.log.frames.stream()
                                 .anyMatch(
-                                    t -> WireShape.expectProblems(
-                                        new JsonParser().parse(t),
-                                        fill(f.get("expect")).getAsJsonObject())
+                                    t -> WireShape
+                                        .expectProblems(
+                                            new JsonParser().parse(t),
+                                            fill(f.get("expect")).getAsJsonObject())
                                         .isEmpty()),
                             id + ": the mod hears the error frame");
                     }
@@ -275,11 +276,12 @@ class WireLiveTest {
                     "role",
                     s.role(),
                     "owner",
-                    s.owner() == null ? null : person(
-                        s.owner()
-                            .id(),
-                        s.owner()
-                            .username()),
+                    s.owner() == null ? null
+                        : person(
+                            s.owner()
+                                .id(),
+                            s.owner()
+                                .username()),
                     "members",
                     members(s.members()),
                     "present",
@@ -410,17 +412,15 @@ class WireLiveTest {
         for (final Map.Entry<String, JsonElement> e : heard.getAsJsonObject("heard")
             .entrySet()) {
             final JsonElement got = WireShape.valueAt(rig.heard.last, e.getKey());
-            assertEquals(
-                fill(e.getValue()),
-                got,
-                where + ": the mod hears " + e.getKey() + " in " + rig.heard.last);
+            assertEquals(fill(e.getValue()), got, where + ": the mod hears " + e.getKey() + " in " + rig.heard.last);
         }
     }
 
     /** Does what the step's {@code via} says on the mod's side. */
     private static void act(final Rig rig, final JsonObject step) {
         final String via = has(step, "via") ? str(step, "via") : "";
-        final String doc = via.contains(":") ? fill(new JsonPrimitive(via.substring(via.indexOf(':') + 1))).getAsString()
+        final String doc = via.contains(":")
+            ? fill(new JsonPrimitive(via.substring(via.indexOf(':') + 1))).getAsString()
             : "";
         switch (via.contains(":") ? via.substring(0, via.indexOf(':')) : via) {
             case "open" -> rig.client.start();
@@ -490,7 +490,11 @@ class WireLiveTest {
         }
         try (Rig rig = new Rig()) {
             int sent = 0;
-            if (!"open".equals(str(turns.get(0).client(), "via"))) {
+            if (!"open".equals(
+                str(
+                    turns.get(0)
+                        .client(),
+                    "via"))) {
                 // The script starts with the client already in the room: hello and join, answered the stock way.
                 rig.client.start();
                 rig.client.join(fill(new JsonPrimitive("{doc}")).getAsString());
@@ -502,8 +506,7 @@ class WireLiveTest {
                 final int at = next[0]++;
                 final List<String> out = new ArrayList<>();
                 if (at < turns.size()) for (final JsonObject a : turns.get(at)
-                    .answers()) out.add(
-                        fill(a.get("example")).toString());
+                    .answers()) out.add(fill(a.get("example")).toString());
                 return out;
             };
             for (int i = 0; i < turns.size(); i++) {
@@ -512,16 +515,20 @@ class WireLiveTest {
                 final Map<String, Integer> before = new HashMap<>(rig.heard.count);
                 act(rig, t.client());
                 final int want = ++sent;
-                rig.until(where + " sent", () -> rig.sent()
-                    .size() >= want);
+                rig.until(
+                    where + " sent",
+                    () -> rig.sent()
+                        .size() >= want);
                 checkSent(
                     t.client(),
                     rig.sent()
                         .get(want - 1),
                     where);
                 for (final JsonObject a : t.answers()) {
-                    final String type = str(a.get("example")
-                        .getAsJsonObject(), "t");
+                    final String type = str(
+                        a.get("example")
+                            .getAsJsonObject(),
+                        "t");
                     if (type.equals("pong")) continue;
                     final int was = before.getOrDefault(type, 0);
                     rig.until(where + " heard " + type, () -> rig.heard.count(type) > was);
@@ -531,13 +538,15 @@ class WireLiveTest {
             if (pinged) {
                 rig.until("a ping", () -> rig.server.pings.get() >= 1);
                 final JsonObject step = list(script(id), "steps").stream()
-                    .filter(
-                        s -> has(s, "via") && str(s, "via").equals("ping"))
+                    .filter(s -> has(s, "via") && str(s, "via").equals("ping"))
                     .findFirst()
                     .get();
-                checkSent(step, rig.server.framesOf("ping")
-                    .get(0)
-                    .toString(), id + " ping");
+                checkSent(
+                    step,
+                    rig.server.framesOf("ping")
+                        .get(0)
+                        .toString(),
+                    id + " ping");
             }
             // Every frame the mod sent is one of the contract's client shapes.
             for (final String text : rig.server.received) {
@@ -569,8 +578,10 @@ class WireLiveTest {
             rig.until("the room", () -> rig.heard.count("snapshot") == 1);
             int i = 0;
             for (final JsonObject step : list(script("room-events"), "steps")) {
-                final String type = str(step.get("example")
-                    .getAsJsonObject(), "t");
+                final String type = str(
+                    step.get("example")
+                        .getAsJsonObject(),
+                    "t");
                 final int was = rig.heard.count(type);
                 rig.server.send(fill(step.get("example")).toString());
                 final String where = "room-events step " + i++ + " (" + type + ")";

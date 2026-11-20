@@ -3,6 +3,7 @@ package com.gtnhplanner.core.view.card;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.gtnhplanner.core.view.Json;
 import com.gtnhplanner.core.view.Tokens;
 import com.gtnhplanner.ui.card.CardLayout;
 
@@ -75,6 +76,28 @@ public record CardGeometry(int width, int height, int railsTop, int railsHeight,
             y += slot;
         }
         return y;
+    }
+
+    /** The record's one JSON spelling, components in order (the web build hands it to the website as text). */
+    public String toJson() {
+        return new Json().begin()
+            .num("width", width)
+            .num("height", height)
+            .num("railsTop", railsTop)
+            .num("railsHeight", railsHeight)
+            .list(
+                "anchors",
+                anchors,
+                (j, a) -> j.begin()
+                    .str("handleId", a.handleId())
+                    .bool("output", a.output())
+                    .num("y", a.y())
+                    .end())
+            .num("stripTop", stripTop)
+            .num("stripHeight", stripHeight)
+            .num("footTop", footTop)
+            .end()
+            .toString();
     }
 
     /** A board node's height on the website: the card's, rounded up to whole board cells (GridBlock). */

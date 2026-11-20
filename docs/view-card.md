@@ -180,25 +180,62 @@ rows tall and its wire docks between the two rows (anchor +20 from the port line
 row. Both are drawn as they route; which one is right is an interaction question (the forced row is dragged off as a
 drawer on both). The special cards' geometry comes with their rules.
 
+## The shadow: the website's card against the compiled core
+
+The core's card rules are in the web build (`ViewExports` in the `core` module, `jvm/web/README.md`), and no production
+path calls them yet. `src/components/flow/clean/card-shadow.test.ts` holds the two equal on both targets:
+
+- the 99 shared cases: the core over each stored input gives the stored view, text for text; and the input the website
+  writes from its own facts for each case (`cardInputOf`, `card-input.ts`) is the stored input;
+- 722 recorded cards (`conformance/view-inputs/card-website-test-inputs.jsonl.gz`): every card the website's component
+  tests draw, and every recipe card of the plan fixtures (conformance/plans, examples/) solved by the website's engine
+  under three sets of dials (per second, EU/t, average; per minute, Amps, peak; per tick, an HV tier, average) and once
+  more with every running card set to Up to its count. Each replays through `cleanCardView` and, as the core's input,
+  through `CardViews` with the website's own widths called back (`WEB_CARD_MEASURE`). Recorder:
+  `node tools/audits/card-test-inputs/record.mjs`.
+
+Result: no difference on either target (views equal key for key, numbers spelt the same; geometry has one anchor per
+row). A planted change (every width three times the website's) differs on all 722 cards, so the comparison is not empty.
+What the shadow does not reach: the special cards' own parts (`use-special.ts`: shared machine sections, generators'
+rows, holders, crop cards; only their base card is `cleanCardView`'s), the rails' choice of rows (`buildRailPorts` stays
+in front of the core), tips, and the geometry against the DOM (the probe above; the website has no TypeScript of its
+card's geometry to compare).
+
+What one card costs (Node 24 on the build box, the 722 recorded cards, warm, median of nine passes):
+
+| Path | Per card |
+|---|---|
+| website `cleanCardView` | 17 us |
+| website writes the core's input and its JSON (`cardInputOf`) | 16 to 21 us |
+| core, Wasm GC, one call per card, widths called back (14.7 widths a card) | 90 to 94 us |
+| core, Wasm GC, one call per card, six px (no call back) | 78 to 83 us (63 us of it inside the call; 8 us `JSON.parse` of the answer) |
+| core, Wasm GC, one call per board (5 boards of 75 to 220 cards) | 106 to 120 us |
+| core, JavaScript, one call per card, widths called back | 189 to 210 us |
+| core, JavaScript, one call per board | 206 to 238 us |
+| an empty call | 0.2 us (Wasm GC), 0.4 us (JavaScript) |
+
+On the JVM (warm, the shared cases) a card costs 6 us to read its JSON, 2.3 us of rules and 6.6 us to write its view:
+the codec is most of a call. Batching per board saves nothing (a crossing costs 0.2 us; the long JSON text costs more
+than it saves), and the widths' call backs cost about 0.7 us each.
+
 ## Switching the website to the compiled core (not in this item)
 
-The website keeps its TypeScript builders, bound by the shared cases. To switch (`src/lib/core/adopt.ts`, a `card`
-area), it will need:
+The website keeps its TypeScript builders, bound by the shared cases and the shadow. To switch (`src/lib/core/adopt.ts`,
+a `card` area), it will need:
 
-1. An export `cardViews(dialsJson, cardsJson)`: one call per board edit, every card's `CardInput` in, a JSON array of
-   `CardView`s out (the web stream's convention: JSON text in and out, ids as strings, no 64-bit numbers). A card's
-   view is on the render path: per-card crossings cost more than a cached TypeScript call (the machines stream measured
-   0.1 to 0.2 ms per card crossing warm against 10 to 20 us cached TypeScript), so the batch is the design, and the
-   website keeps a per-card cache keyed by the card's input text.
-2. `TextMeasure` from JavaScript: the core asks widths by style, the website answers from `text-measure.ts`
-   (`measureClean`, `drawnWidth` per `ROW_TYPE`, `mcTextWidth`). A batch call needs the widths without a callback per
-   string: either a JSO measure object the core calls synchronously (TeaVM allows it; cost per string to be measured)
-   or a two-pass design (the core returns the strings it must measure, the website measures them once, the core
-   finishes). Measure both before choosing.
-3. `Text` on the website: an installed `Text` that answers `gtnhplanner.card.*` from a word table (the website has no
-   language file; one generated from the mod's `en_US.lang` would do).
-4. The facts the website builds before the builders (`CleanCardFacts`: machine maths, pictures, RailPorts) become a
-   `CardInput` writer: the rails (`buildRailPorts`, node-verdict.ts) and the special cards (`use-special.ts`) are not
-   translated yet and stay TypeScript in front of the core.
+1. A per-card call (`viewCardMeasured`) behind a per-card cache keyed by the input's text: per board saves nothing.
+   Uncached, the core is about five times the TypeScript on Wasm GC and eleven times on JavaScript (a board of a
+   thousand cards rebuilt whole: about 90 ms against 17 ms, 200 ms on JavaScript), so a card that did not change must
+   not cross. Most of a call is JSON (on the JVM 12 of 15 us): a cheaper crossing (JSO records, or the view's numbers
+   written without the exact decimal printer where they are whole) is the first thing to try if the cache is not
+   enough. Measure on `next start` with a real board before switching (adoption rule 2).
+2. `TextMeasure` from JavaScript: done as a call back (`WEB_CARD_MEASURE`, 0.7 us a width); a two-pass design is not
+   needed.
+3. `Text` on the website: `viewCardWords` with the `gtnhplanner.card.*` words. The shadow reads them from the mod's
+   `en_US.lang` in Node; the site needs them as data it can ship (generated from the language file at build time, as
+   the tokens are).
+4. The facts the website builds before the builders (`CleanCardFacts`: machine maths, pictures, RailPorts) stay
+   TypeScript in front of the core; `cardInputOf` writes them as the core's input. The special cards (`use-special.ts`)
+   are not translated yet.
 5. A before/after profile of plan open and a setting change on the stress and issue-156 boards (`next start` after
    prewarm, WebAssembly and JavaScript), as the adoption rules require; the TypeScript path stays the fallback.

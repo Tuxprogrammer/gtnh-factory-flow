@@ -26,6 +26,7 @@ import {
   circuitNumber,
   cleanCardView,
   frameTone,
+  type CleanCardFacts,
   parseCountText,
   wheelCount,
   wheelDraft,
@@ -613,123 +614,133 @@ function railPort(p: CardPortIn): RailPort {
 
 /** The website's card for a case: its own builders, the six-px measure, the case's dials. */
 export function websiteCardView(input: CardCaseInput): CleanCardView {
-  const c = input.card;
+  return withCaseDials(input, () => cleanCardView(caseFacts(input)));
+}
+
+/** Runs `fn` under a case's dials and the six-px measure, and puts the defaults back after. */
+export function withCaseDials<T>(input: CardCaseInput, fn: () => T): T {
   setFixedTextMeasure(SIX_PX_MEASURE);
   setActiveRateUnit(RATE_IN[input.dials.rate]);
   setActivePowerDisplayUnit(input.dials.power as PowerDisplayUnit);
   try {
-    const portRates: Record<string, number> = {};
-    for (const p of [...c.inputs, ...c.outputs]) if (p.setRate !== undefined) portRates[p.handleId] = p.setRate;
-    const projectNode = {
-      id: c.nodeId,
-      ...(c.count.pin !== undefined ? { solvePin: c.count.pin } : {}),
-      ...(c.count.rule === "EXACT" ? { solvePinExact: true } : {}),
-      parallel: c.count.nodeParallel,
-      portRates,
-    } as FactoryNode;
-    const recipe = {
-      id: "r",
-      machineType: c.count.customRate ? CUSTOM_RATE_MACHINE_TYPE : c.name,
-      outputs: c.product
-        ? [{ kind: c.product.fluid ? "fluid" : "item", id: "p", amount: 1, iconPath: c.product.icon }]
-        : [],
-      ...(c.powerTier
-        ? { power: { euPerTick: getVoltageTierMaxEuT(c.powerTier as never) } }
-        : {}),
-    } as unknown as Recipe;
-    if (powerCardTier(recipe) !== c.powerTier) {
-      throw new Error(`case's power tier ${c.powerTier} is not the recipe's ${powerCardTier(recipe)}`);
-    }
-    const plan = {
-      forced: c.forced
-        .filter((f) => f.drawerId === undefined)
-        .map((f) => ({ nodeId: c.nodeId, portKey: f.portKey, side: "in", resourceKey: "", perSecond: f.perSecond })),
-      spills: c.forced
-        .filter((f) => f.drawerId !== undefined)
-        .map((f) => ({ nodeId: c.nodeId, portKey: f.portKey, resourceKey: "", perSecond: f.perSecond, drawerId: f.drawerId })),
-      leftovers: c.leftovers.map((l, i) => ({
-        key: `l${i}`,
-        importing: false,
-        custom: false,
-        bearers: l.bearers.map((b) => ({ portKey: "", maxPerSecond: 0, solverPick: false, flows: [], ...b })),
-      })),
-      unneeded: [],
-      unanchored: c.count.unset ? [c.nodeId] : [],
-      terminals: [],
-      notes: [],
-      openGates: 0,
-      ...(c.upTo
-        ? {
-            upTo: {
-              [c.nodeId]: {
-                capacity: c.upTo.capacity,
-                reached: c.upTo.reached,
-                reason: c.upTo.reason ?? null,
-                ...(c.upTo.portKey ? { portKey: c.upTo.portKey } : {}),
-                ...(c.upTo.resourceKey ? { resourceKey: c.upTo.resourceKey } : {}),
-                tied: c.upTo.tied,
-                ...(c.upTo.wants !== undefined ? { wants: c.upTo.wants } : {}),
-                upstream: c.upTo.upstream,
-              },
-            },
-          }
-        : {}),
-      loops: c.loop ? [{ kind: c.loop, cards: [c.nodeId], portKeys: [], resourceKeys: [] }] : [],
-    } as unknown as PlanSolveExtras;
-    return cleanCardView({
-      projectNode,
-      recipe,
-      result: {
-        theoreticalMachinesRequired: c.count.needed,
-        ...(c.count.utilization !== undefined ? { utilization: c.count.utilization } : {}),
-      } as never,
-      plan,
-      rails: { inputs: c.inputs.map(railPort), outputs: c.outputs.map(railPort) },
-      name: c.name,
-      hasPicker: c.hasPicker,
-      art: c.art,
-      glanceArt: c.glanceArt,
-      tierControl: c.tier !== undefined ? { current: c.tier, fixed: c.tierFixed } : undefined,
-      powerReport: c.power
-        ? {
-            state: c.power.ok ? "ok" : "stalled",
-            tier: c.power.tier,
-            amps: c.power.amps,
-            drawEuT: c.power.drawEuT,
-            parallels: c.power.parallels,
-            recipeGateReason: c.power.gateReason,
-            isMultiblock: c.power.multiblock,
-            hatchChip: c.power.hatchChip,
-          } as never
-        : undefined,
-      steamReport: c.steam,
-      showHatchControl: c.hatchControl,
-      parallel: c.parallel,
-      structuralParallel: c.structuralParallel,
-      circuit: c.circuit
-        ? ({
-            ...(c.circuit.number !== undefined ? { setting: c.circuit.number } : {}),
-            ...(c.circuit.icon !== undefined ? { resource: { id: "circuit", iconPath: c.circuit.icon } } : {}),
-          } as never)
-        : undefined,
-      pinnedChips: c.pinned.map((s) => ({
-        id: s.id,
-        label: s.label,
-        value: s.value,
-        icon: s.icon,
-        warn: s.warn || undefined,
-        title: `${s.label}: ${s.value}`,
-      })),
-      turbineCheck: c.turbine as never,
-      averageDraw: input.dials.averageDraw,
-      selected: c.selected,
-      cardName: (id) => c.cardNames[id],
-    });
+    return fn();
   } finally {
     setFixedTextMeasure(undefined);
     setActiveRateUnit("second");
     setActivePowerDisplayUnit("eu");
   }
+}
+
+/** The facts `cleanCardView` makes a case's card from: the website's own shapes of the case's input. */
+export function caseFacts(input: CardCaseInput): CleanCardFacts {
+  const c = input.card;
+  const portRates: Record<string, number> = {};
+  for (const p of [...c.inputs, ...c.outputs]) if (p.setRate !== undefined) portRates[p.handleId] = p.setRate;
+  const projectNode = {
+    id: c.nodeId,
+    ...(c.count.pin !== undefined ? { solvePin: c.count.pin } : {}),
+    ...(c.count.rule === "EXACT" ? { solvePinExact: true } : {}),
+    parallel: c.count.nodeParallel,
+    portRates,
+  } as FactoryNode;
+  const recipe = {
+    id: "r",
+    machineType: c.count.customRate ? CUSTOM_RATE_MACHINE_TYPE : c.name,
+    outputs: c.product
+      ? [{ kind: c.product.fluid ? "fluid" : "item", id: "p", amount: 1, iconPath: c.product.icon }]
+      : [],
+    ...(c.powerTier
+      ? { power: { euPerTick: getVoltageTierMaxEuT(c.powerTier as never) } }
+      : {}),
+  } as unknown as Recipe;
+  if (powerCardTier(recipe) !== c.powerTier) {
+    throw new Error(`case's power tier ${c.powerTier} is not the recipe's ${powerCardTier(recipe)}`);
+  }
+  const plan = {
+    forced: c.forced
+      .filter((f) => f.drawerId === undefined)
+      .map((f) => ({ nodeId: c.nodeId, portKey: f.portKey, side: "in", resourceKey: "", perSecond: f.perSecond })),
+    spills: c.forced
+      .filter((f) => f.drawerId !== undefined)
+      .map((f) => ({ nodeId: c.nodeId, portKey: f.portKey, resourceKey: "", perSecond: f.perSecond, drawerId: f.drawerId })),
+    leftovers: c.leftovers.map((l, i) => ({
+      key: `l${i}`,
+      importing: false,
+      custom: false,
+      bearers: l.bearers.map((b) => ({ portKey: "", maxPerSecond: 0, solverPick: false, flows: [], ...b })),
+    })),
+    unneeded: [],
+    unanchored: c.count.unset ? [c.nodeId] : [],
+    terminals: [],
+    notes: [],
+    openGates: 0,
+    ...(c.upTo
+      ? {
+          upTo: {
+            [c.nodeId]: {
+              capacity: c.upTo.capacity,
+              reached: c.upTo.reached,
+              reason: c.upTo.reason ?? null,
+              ...(c.upTo.portKey ? { portKey: c.upTo.portKey } : {}),
+              ...(c.upTo.resourceKey ? { resourceKey: c.upTo.resourceKey } : {}),
+              tied: c.upTo.tied,
+              ...(c.upTo.wants !== undefined ? { wants: c.upTo.wants } : {}),
+              upstream: c.upTo.upstream,
+            },
+          },
+        }
+      : {}),
+    loops: c.loop ? [{ kind: c.loop, cards: [c.nodeId], portKeys: [], resourceKeys: [] }] : [],
+  } as unknown as PlanSolveExtras;
+  return {
+    projectNode,
+    recipe,
+    result: {
+      theoreticalMachinesRequired: c.count.needed,
+      ...(c.count.utilization !== undefined ? { utilization: c.count.utilization } : {}),
+    } as never,
+    plan,
+    rails: { inputs: c.inputs.map(railPort), outputs: c.outputs.map(railPort) },
+    name: c.name,
+    hasPicker: c.hasPicker,
+    art: c.art,
+    glanceArt: c.glanceArt,
+    tierControl: c.tier !== undefined ? { current: c.tier, fixed: c.tierFixed } : undefined,
+    powerReport: c.power
+      ? {
+          state: c.power.ok ? "ok" : "stalled",
+          tier: c.power.tier,
+          amps: c.power.amps,
+          drawEuT: c.power.drawEuT,
+          parallels: c.power.parallels,
+          recipeGateReason: c.power.gateReason,
+          isMultiblock: c.power.multiblock,
+          hatchChip: c.power.hatchChip,
+        } as never
+      : undefined,
+    steamReport: c.steam,
+    showHatchControl: c.hatchControl,
+    parallel: c.parallel,
+    structuralParallel: c.structuralParallel,
+    circuit: c.circuit
+      ? ({
+          ...(c.circuit.number !== undefined ? { setting: c.circuit.number } : {}),
+          ...(c.circuit.icon !== undefined ? { resource: { id: "circuit", iconPath: c.circuit.icon } } : {}),
+        } as never)
+      : undefined,
+    pinnedChips: c.pinned.map((s) => ({
+      id: s.id,
+      label: s.label,
+      value: s.value,
+      icon: s.icon,
+      warn: s.warn || undefined,
+      title: `${s.label}: ${s.value}`,
+    })),
+    turbineCheck: c.turbine as never,
+    averageDraw: input.dials.averageDraw,
+    selected: c.selected,
+    cardName: (id) => c.cardNames[id],
+  };
 }
 
 // endregion
@@ -807,7 +818,7 @@ function footJson(f: CleanFootView) {
 }
 
 /** The card's menu rows as `CardRows` lists them (menus/CardActionsMenu.tsx) under `cardRecipeRows`' rules. */
-function menuJson(m: CardInputJson["menu"]) {
+export function menuJson(m: CardInputJson["menu"]) {
   const open = !m.calm && !m.locked;
   return [
     { id: "clone", label: "Clone node", danger: false },

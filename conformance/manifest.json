@@ -133,6 +133,13 @@
         "website: src/components/flow/clean/rail/rail-conformance.test.ts, src/test-support/view-corpus.test.ts"
       ],
       "generator": "npx tsx tools/conformance/view/generate.ts, then node tools/conformance/manifest.mjs --write"
+    },
+    "view-inputs": {
+      "specifies": "Inputs only, for the card shadow to replay through both paths: card-website-test-inputs.jsonl.gz is every recipe card's facts (the node, recipe, its solve and read-outs cut to the card, rails, machine reports, pictures, pins) that useCleanCardModel hands cleanCardView in the website's own component tests and on the plan fixtures (conformance/plans, examples/) under three sets of dials and with every running card set to Up to, with the board's dials, deduplicated, one JSON object per line, gzip. The website's builders and the compiled core's CardViews must make the same view of each.",
+      "readers": [
+        "website: src/components/flow/clean/card-shadow.test.ts"
+      ],
+      "generator": "node tools/audits/card-test-inputs/record.mjs (needs node tools/tokens/generate.mjs and node tools/web-core/gen-types.mjs first), then node tools/conformance/manifest.mjs --write"
     }
   },
   "files": {
@@ -1175,6 +1182,11 @@
       "area": "tasks",
       "bytes": 6601,
       "sha256": "dad06cb14862c075382f2b43fdffb9edfed3b8534cc221add8dbf7e3bf6a8664"
+    },
+    "view-inputs/card-website-test-inputs.jsonl.gz": {
+      "area": "view-inputs",
+      "bytes": 210344,
+      "sha256": "f17937216f3b901971f16c51285d734dc825a6e50f140b41d08a75f5149eee30"
     },
     "view/card/cases.json": {
       "area": "view",

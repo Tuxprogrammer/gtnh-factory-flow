@@ -13,10 +13,16 @@ import { basename, join } from "node:path";
 type Json = unknown;
 const clone = (value: Json): Json =>
   value === undefined ? undefined : JSON.parse(JSON.stringify(value));
-const testName = () => expect.getState().currentTestName ?? "(outside a test)";
-/** The reference boards write their own, smaller answers (boards.capture.ts, arrange.capture.ts). */
+// incremental-router.test.ts runs each scenario on the TypeScript and again beside the compiled core
+// (layout-shadow.test-support.ts): only the TypeScript run is recorded, under the scenario's plain name.
+const testName = () =>
+  (expect.getState().currentTestName ?? "(outside a test)").replace(/^IncrementalRouter \(TypeScript\) > /, "IncrementalRouter > ");
+/** The reference boards write their own, smaller answers (boards.capture.ts, arrange.capture.ts, frames.capture.ts). */
 const recording = () =>
-  !testName().startsWith("reference boards") && !testName().startsWith("arrange boards");
+  !testName().startsWith("IncrementalRouter (TypeScript and core") &&
+  !testName().startsWith("reference boards") &&
+  !testName().startsWith("arrange boards") &&
+  !testName().startsWith("frame boards");
 
 const solves: Json[] = [];
 const sequences = new Map<number, { name: string; steps: Json[] }>();
@@ -196,11 +202,11 @@ vi.mock("@/components/flow/incremental-router", async (importOriginal) => {
       return sequence.steps;
     }
     restore(snapshot: Parameters<InstanceType<typeof original.IncrementalRouter>["restore"]>[0]) {
-      this.steps().push({ restore: clone(snapshot) });
+      if (recording()) this.steps().push({ restore: clone(snapshot) });
       super.restore(snapshot);
     }
     reset() {
-      this.steps().push({ reset: true });
+      if (recording()) this.steps().push({ reset: true });
       super.reset();
     }
     solve(...args: Parameters<InstanceType<typeof original.IncrementalRouter>["solve"]>) {

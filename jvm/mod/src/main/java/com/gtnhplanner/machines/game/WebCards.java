@@ -14,6 +14,9 @@ import com.google.gson.JsonObject;
 import com.gtnhplanner.api.RecipePropertyAPI;
 import com.gtnhplanner.core.base.JsonTree;
 import com.gtnhplanner.core.machines.AlgaePond;
+import com.gtnhplanner.core.model.ResourceKey;
+import com.gtnhplanner.core.model.read.GtDatasetRecipe;
+import com.gtnhplanner.core.model.read.GtRecipeRecord;
 import com.gtnhplanner.data.MachineConfig;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Port;
@@ -59,7 +62,12 @@ public final class WebCards {
         return ref != null && ref.handler instanceof FurnaceRecipeHandler ? SMELTING : null;
     }
 
-    /** The card's recipe as the website's dataset carries it, or null when handlers.json has no such map. */
+    /**
+     * The card's recipe as the website's dataset carries it, or null when handlers.json has no such map. A GregTech
+     * map recipe is the dataset's own record of it (core-model GtDatasetRecipe over the record the shared reader
+     * read, GTProvider.RECORD): its numbers, slots and the game's overclock ladder exactly as the export run writes
+     * them. The furnace and the crusher's mobs are built from the card.
+     */
     @Nullable
     public static Web.Recipe recipe(final Node node) {
         if (AutoWorkbench.crafts(node)) return craftingRecipe(node);
@@ -67,29 +75,36 @@ public final class WebCards {
         final HandlerData.MapEntry entry = entry(mapId);
         if (entry == null) return null;
         final boolean smelting = SMELTING.equals(mapId);
-        final Web.Recipe r = new Web.Recipe();
-        r.id = mapId + ":" + com.gtnhplanner.nei.NeiRecipes.id(node);
-        r.name = node.machineName;
-        r.kind = "gregtech_machine";
-        r.category = "gregtech";
-        r.machineType = entry.name;
-        r.durationTicks = smelting ? 200 : number(node.properties.get(RecipePropertyAPI.DURATION_TICKS));
-        r.eut = smelting ? 0 : number(node.properties.get(GTKeys.EU_PER_TICK));
-        r.minimumTier = smelting ? "NONE" : HandlerData.recipeMinimumTier(r.eut);
-        final double special = number(node.properties.get(GTProvider.SPECIAL_VALUE));
-        r.specialValue = special;
-        r.nei = new Web.Nei();
-        r.nei.additionalInfo = List.of("Special value: " + (long) special);
-        r.source = new Web.Source();
-        r.source.recipeMap = entry.name;
-        r.metadata = new LinkedHashMap<>();
-        r.metadata.put("recipeMapId", entry.id);
-        r.metadata.put("specialValue", special);
-        if (node.properties.get(GTProvider.FUSION_THRESHOLD) instanceof final Number startup)
-            r.metadata.put("fusionStartupEu", startup.doubleValue());
-        r.inputs = resources(node.inputs);
-        r.outputs = resources(node.outputs);
         final JsonObject eec = EecCards.metadata(node);
+        final Web.Recipe r;
+        if (!smelting && eec == null && node.properties.get(GTProvider.RECORD) instanceof final GtRecipeRecord read) {
+            r = GtDatasetRecipe.of(read, entry.name);
+            // The maths key their tables by handlers.json's map id (GT++'s maps there are gtpp.recipe.*).
+            r.metadata.put("recipeMapId", entry.id);
+        } else {
+            r = new Web.Recipe();
+            r.name = node.machineName;
+            r.kind = "gregtech_machine";
+            r.category = "gregtech";
+            r.machineType = entry.name;
+            r.durationTicks = smelting ? 200 : number(node.properties.get(RecipePropertyAPI.DURATION_TICKS));
+            r.eut = smelting ? 0 : number(node.properties.get(GTKeys.EU_PER_TICK));
+            r.minimumTier = smelting ? "NONE" : HandlerData.recipeMinimumTier(r.eut);
+            final double special = number(node.properties.get(GTProvider.SPECIAL_VALUE));
+            r.specialValue = special;
+            r.nei = new Web.Nei();
+            r.nei.additionalInfo = List.of("Special value: " + (long) special);
+            r.source = new Web.Source();
+            r.source.recipeMap = entry.name;
+            r.metadata = new LinkedHashMap<>();
+            r.metadata.put("recipeMapId", entry.id);
+            r.metadata.put("specialValue", special);
+            if (node.properties.get(GTProvider.FUSION_THRESHOLD) instanceof final Number startup)
+                r.metadata.put("fusionStartupEu", startup.doubleValue());
+            r.inputs = resources(node.inputs);
+            r.outputs = resources(node.outputs);
+        }
+        r.id = mapId + ":" + com.gtnhplanner.nei.NeiRecipes.id(node);
         if (eec != null) {
             // The crusher's kills, replayed per mob (machines/web/ExtremeEntityCrusher); kubatech's overclock, not GT's.
             r.name = com.gtnhplanner.machines.MobDrops.MACHINE_TYPE + ": " + EecCards.mobName(node);
@@ -97,12 +112,33 @@ public final class WebCards {
             r.source.rawRecipeId = EecCards.mob(node);
             r.metadata.put("eec", JsonTree.parse(eec.toString()));
         }
-        // The game's own ladder, as the website's oracle runs it for every GregTech map recipe.
-        else if (!smelting) r.runtimeCalculation = RuntimeVariants.of(r.durationTicks, r.eut, r.outputs);
+        final double special = r.specialValue != null ? r.specialValue : 0;
         r.machineConfigControls = HandlerData.recipeControls(entry, special);
         r.machineHandlers = HandlerData.handlers(entry, r.minimumTier, r.durationTicks, r.eut, r.machineConfigControls);
         // The Algae Farm's recipes are registered at 0 EU/t: the recipe carries the draw of the hatch that grows it.
         return AlgaePond.isRecipe(r) ? AlgaePond.enrich(r) : r;
+    }
+
+    /**
+     * Which of the recipe's outputs each of the card's output ports is: the same place when the two lists line up,
+     * else the first output of the port's resource (the card folds a resource made twice into one port); -1 when none.
+     */
+    public static int recipeOutput(final Web.Recipe recipe, final List<Port<?>> ports, final int port) {
+        final List<Web.Resource> outputs = recipe.outputs;
+        if (outputs == null) return -1;
+        final ResourceKey key = ports.get(port)
+            .resource();
+        if (outputs.size() == ports.size() && sameResource(outputs.get(port), key)) return port;
+        for (int i = 0; i < outputs.size(); i++) if (sameResource(outputs.get(i), key)) return i;
+        return -1;
+    }
+
+    private static boolean sameResource(final Web.Resource resource, @Nullable final ResourceKey key) {
+        return key != null && key.kind()
+            .json()
+            .equals(resource.kind)
+            && key.id()
+                .equals(resource.id);
     }
 
     /**

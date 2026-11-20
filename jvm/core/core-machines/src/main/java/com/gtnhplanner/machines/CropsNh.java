@@ -3,7 +3,6 @@ package com.gtnhplanner.machines;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -39,8 +38,8 @@ public final class CropsNh {
 
     public static final String MANAGER = "crop-manager", FARM = "crop-industrial-farm";
 
-    /** Every crop setting, as plans carry them. */
-    public static final Set<String> SETTING_KEYS = Set.of(
+    /** Every crop setting, as plans carry them, in the order the profile lists them. */
+    public static final List<String> SETTING_KEYS = List.of(
         GROWTH,
         GAIN,
         WATER,

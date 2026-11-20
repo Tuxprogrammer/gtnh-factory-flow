@@ -1071,6 +1071,21 @@ export interface CleanCardFacts {
   cardName: (id: string) => string | undefined;
 }
 
+/**
+ * The card name's size beside the head's chips and keys: 10 px, else 9, else 8 (cut with an ellipsis past it). The plain
+ * card's ladder and every special card's (core-view `CardViews.nameStep`). The mod's name is x1.25 of its 8 px text (10);
+ * Monocraft runs wider than the mod's face, so it steps down to 8 before it clips.
+ */
+export function cardNameSize(
+  name: string,
+  opts: { tier: boolean; amps: boolean; picker: boolean },
+): number {
+  const G = CC_GEOMETRY;
+  const chipsLeft = G.cardWidth - 8 - (opts.tier ? G.chipWidth : 0) - (opts.amps ? 2 + G.chipWidth : 0);
+  const nameRoom = Math.max(40, chipsLeft - 8 - 8 - 2 * (G.keySize + 2) - 8 - (opts.picker ? 15 : 0));
+  return [10, 9].find((size) => measureClean(name, size) <= nameRoom) ?? 8;
+}
+
 /** A card's view from its facts: every string final, the strip laid out, the rows lit, the foot bar worked out. */
 export function cleanCardView(facts: CleanCardFacts): CleanCardView {
   const { projectNode, recipe, result, plan, rails, name, tierControl, powerReport, steamReport } = facts;
@@ -1091,12 +1106,11 @@ export function cleanCardView(facts: CleanCardFacts): CleanCardView {
       ? (powerReport.hatchChip ?? `${formatCompact(powerReport.amps)}A`)
       : undefined;
 
-  const G = CC_GEOMETRY;
-  const chipsLeft =
-    G.cardWidth - 8 - (tierLabel ? G.chipWidth : 0) - (ampsLabel ? 2 + G.chipWidth : 0);
-  const nameRoom = Math.max(40, chipsLeft - 8 - 8 - 2 * (G.keySize + 2) - 8 - (hasPicker ? 15 : 0));
-  // The mod's name is x1.25 of its 8 px text (10); Monocraft runs wider than the mod's face, so it steps down to 8 before it clips with an ellipsis.
-  const nameSize = [10, 9].find((size) => measureClean(name, size) <= nameRoom) ?? 8;
+  const nameSize = cardNameSize(name, {
+    tier: Boolean(tierLabel),
+    amps: Boolean(ampsLabel),
+    picker: hasPicker,
+  });
 
   // Count: what runs, big; what you set, small, under it (docs/up-to.md).
   const countState = cardCountState(result, projectNode, plan, recipe);

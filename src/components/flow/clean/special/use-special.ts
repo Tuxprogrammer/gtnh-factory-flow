@@ -61,6 +61,7 @@ import {
   buildFootView,
   buildPortView,
   cardCountState,
+  cardNameSize,
   cardNameIn,
   formatSolvedMachines,
   layoutStrip,
@@ -74,8 +75,6 @@ import {
 } from "../clean-model";
 import type { PlanUpTo } from "@/lib/solver/plan/types";
 import { glanceBar } from "../glance";
-import { CC_GEOMETRY } from "../tokens";
-import { measureText } from "../text-measure";
 import {
   isTierSelect,
   powerSettingRows,
@@ -116,14 +115,6 @@ export interface SpecialModel {
 function isLocked(): boolean {
   const s = useFactoryStore.getState();
   return s.isReadOnly || s.checklistMode;
-}
-
-/** The name's size: 14, 13, 12, then 9, to fit what the head leaves it. */
-export function fitNameSize(name: string, opts: { chips: number; picker: boolean }): number {
-  const G = CC_GEOMETRY;
-  const chipsLeft = G.cardWidth - 8 - opts.chips * G.chipWidth - Math.max(0, opts.chips - 1) * 2;
-  const room = Math.max(40, chipsLeft - 8 - 68 - (opts.picker ? 15 : 0));
-  return [14, 13, 12].find((size) => measureText(name, size, 500) <= room) ?? 9;
 }
 
 /**
@@ -337,8 +328,9 @@ export function useSharedCardModel(data: RecipeNodeData, selected: boolean): Spe
   );
   const hasPicker = handlers.length > 1;
   const name = base.view.name;
-  const nameSize = fitNameSize(name, {
-    chips: (base.view.tier ? 1 : 0) + (base.view.amps ? 1 : 0),
+  const nameSize = cardNameSize(name, {
+    tier: Boolean(base.view.tier),
+    amps: Boolean(base.view.amps),
     picker: hasPicker,
   });
 
@@ -459,7 +451,7 @@ export function usePowerCardModel(data: RecipeNodeData, selected: boolean): Spec
     kind: "power",
     nodeId: projectNode.id,
     name,
-    nameSize: fitNameSize(name, { chips: tier ? 1 : 0, picker: false }),
+    nameSize: cardNameSize(name, { tier: Boolean(tier), amps: false, picker: false }),
     nameTone: "power",
     hasPicker: false,
     tier: tier
@@ -709,7 +701,7 @@ export function useCropCardModel(data: RecipeNodeData, selected: boolean): Speci
     kind: "crop",
     nodeId: projectNode.id,
     name,
-    nameSize: fitNameSize(name, { chips: tierControl ? 1 : 0, picker: hasPicker }),
+    nameSize: cardNameSize(name, { tier: Boolean(tierControl), amps: false, picker: hasPicker }),
     nameTone: "ink",
     hasPicker,
     tier: tierControl
@@ -846,7 +838,7 @@ export function useHolderCardModel(
     kind,
     nodeId: projectNode.id,
     name,
-    nameSize: fitNameSize(name, { chips: 0, picker: false }),
+    nameSize: cardNameSize(name, { tier: false, amps: false, picker: false }),
     nameTone: "holder",
     hasPicker: false,
     sections,

@@ -1637,7 +1637,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
 
     /**
      * Whether a drawer would take the wire being dragged: same resource, on a side it takes. A port of the other side
-     * on a product or a source makes it a buffer ({@code docs/design/buffer-drawers.md}).
+     * on a product or a source makes it a buffer ({@code docs/buffer-drawers.md}).
      */
     public boolean drawerAcceptsDrag(final Drawer drawer) {
         if (drawerWire != null) return false;

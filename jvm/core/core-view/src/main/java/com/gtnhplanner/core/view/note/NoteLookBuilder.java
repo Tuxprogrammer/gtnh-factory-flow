@@ -59,6 +59,11 @@ public final class NoteLookBuilder {
             luminance(paper) < 0.34 ? "#F2F3F7" : "#1E1E22");
     }
 
+    /** Whether the app knows the tag. */
+    public static boolean knows(@Nullable final String tag) {
+        return tag != null && SWATCH.containsKey(tag);
+    }
+
     /** The tag's swatch as 0xRRGGBB; none, or an unknown tag, reads as yellow. */
     public static int swatch(@Nullable final String tag) {
         final Integer known = tag == null ? null : SWATCH.get(tag);

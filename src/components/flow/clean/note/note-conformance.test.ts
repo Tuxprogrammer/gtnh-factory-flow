@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { readViewCases } from "@/test-support/view-corpus";
+import { readViewCases, readViewVectors } from "@/test-support/view-corpus";
 import type { FactoryNodeColorTag } from "@/lib/model/types";
-import { notePalette } from "./note-model";
-import { noteLookCases, type NoteLookCase } from "./note-conformance";
+import { NOTE_COLOR_MENU, notePalette } from "./note-model";
+import { menuVectors, noteLookCases, type NoteLookCase } from "./note-conformance";
 
 /**
  * conformance/view/note holds the sticky note's colours per colour tag. The website's `notePalette` must give each
@@ -30,5 +30,25 @@ describe("the sticky note's colour cases", () => {
     expect(named("no-such-colour")).toEqual(named("yellow"));
     expect(file.cases.some((c) => c.view.ink === "#F2F3F7")).toBe(true);
     expect(file.cases.some((c) => c.view.ink === "#1E1E22")).toBe(true);
+  });
+});
+
+describe("the sticky note's colour menu", () => {
+  const file = readViewVectors<ReturnType<typeof menuVectors>>("note", "menu");
+
+  it("takes no measure", () => {
+    expect(file.measure).toBe("none");
+  });
+
+  it("lists eleven colours, each with the name the menu shows, in the stored order", () => {
+    expect(file.vectors.menu).toHaveLength(11);
+    expect(NOTE_COLOR_MENU.map(([tag, out], index) => ({ index, tag, out }))).toEqual(file.vectors.menu);
+  });
+
+  it("offers only colours the palette tells apart from the default", () => {
+    const yellow = notePalette("yellow");
+    for (const { tag } of file.vectors.menu) {
+      if (tag !== "yellow") expect(notePalette(tag as FactoryNodeColorTag), tag).not.toEqual(yellow);
+    }
   });
 });

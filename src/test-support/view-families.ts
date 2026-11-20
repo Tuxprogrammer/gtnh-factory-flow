@@ -6,6 +6,7 @@
 import { viewFiles as cardFiles } from "@/components/flow/clean/card-conformance";
 import { viewFiles as drawerFiles } from "@/components/flow/clean/drawer/drawer-conformance";
 import { viewFiles as groupFiles } from "@/components/flow/clean/group/group-conformance";
+import { viewFiles as minimapFiles } from "@/components/flow/clean/minimap/minimap-conformance";
 import { viewFiles as noteFiles } from "@/components/flow/clean/note/note-conformance";
 import { viewFiles as railFiles } from "@/components/flow/clean/rail/rail-conformance";
 
@@ -14,6 +15,7 @@ export const VIEW_FAMILIES: Array<() => Record<string, string>> = [
   drawerFiles,
   groupFiles,
   noteFiles,
+  minimapFiles,
   cardFiles,
 ];
 

@@ -4,12 +4,14 @@
 //
 // The recipe crosses once: the core keeps it under its id until a different recipe object comes with the same id. A
 // node crosses as JSON on every call, and the answer comes back as JSON in the website's own shapes, so nothing here
-// re-derives a number. Results are kept per (recipe, node) object, the same key the cards' memos use, so the card,
-// its glance face and its tips share one computation.
+// re-derives a number. The per-card readout every consumer asks (`cardMachineMath`) is plan code in
+// src/lib/machines/card-readout.ts; importing this file installs the core behind it (`setMachinesBridge`).
 import type { CoreExports } from "./exports.generated";
-import { coreIfLoaded } from "./loader";
+import { coreFor, isAdopted } from "./adopt";
+import { loadCore } from "./loader";
 import type { FactoryNode, Recipe } from "@/lib/model/types";
 import { applyMachineHandlerToRecipe } from "@/lib/model/recipe-rules";
+import { getGameRates, type ActiveGameRates } from "@/lib/model/game-rates";
 import {
   getCropsNhStats,
   isBeeProductionRecipe,
@@ -29,20 +31,18 @@ import {
   type NodePowerReport,
   type NodeSteamReport,
 } from "@/lib/solver/power-report";
+import { setMachinesBridge, type CardMachineMath } from "@/lib/machines/card-readout";
 
-export interface CardMachineMath {
-  /** getOverclockedRecipeStats(recipe, node). */
-  stats: OverclockedRecipeStats;
-  /** getNodePowerReport(recipe, node), when hasPowerReport(recipe, node). */
-  powerReport?: NodePowerReport;
-  /** getNodeSteamReport(recipe, node). */
-  steamReport?: NodeSteamReport;
-  /** getMachineParallelMultiplier and getMachineStructuralParallels on the machine's recipe. */
-  parallel: number;
-  structuralParallel: number;
-  /** getMachineOutputMultiplier for each output of the machine's recipe, at the overclocked tier. */
-  outputMultipliers: number[];
-}
+export type { CardMachineMath } from "@/lib/machines/card-readout";
+export {
+  CardReadout,
+  applyCardOutputMultipliers,
+  cardMachineMath,
+  cardMachineMathCounts,
+  clearCardMachineMath,
+  nodeContentKey,
+  resetCardMachineMathCounts,
+} from "@/lib/machines/card-readout";
 
 /** The TypeScript path: the same calls the cards make one by one. */
 export function cardMachineMathTs(recipe: Recipe, node: FactoryNode): CardMachineMath {
@@ -63,8 +63,9 @@ export function cardMachineMathTs(recipe: Recipe, node: FactoryNode): CardMachin
 }
 
 /**
- * Crops and bees: the card maths for them are the website's own (the core judges bees and crops through BeeReadout and
- * CropReadout, not the machine table), so the core is never asked.
+ * Crops and bees: the card maths for them are the passive-production models' (the core judges bees and crops through
+ * BeeReadout and CropReadout, not the machine table). The core's generic readout leaves the same cards out
+ * (NodeMath.covers, PassiveRecipes; the shadow test holds the two to it), so the facade does not send them at all.
  */
 export function websiteOnly(recipe: Recipe): boolean {
   return (
@@ -89,16 +90,50 @@ function revive(_key: string, value: unknown): unknown {
 interface Kept {
   /** The recipe object kept under each id in this core instance. */
   byId: Map<string, Recipe>;
+  /** Each control table's text sent to this core instance, and the name it is kept under there. */
+  controls: Map<string, string>;
 }
 const kept = new WeakMap<CoreExports, Kept>();
 
-/** Hands the recipe to the core unless this very object is already kept under its id. */
+/**
+ * Hands the recipe to the core unless this very object is already kept under its id. Its control tables (most of a
+ * recipe's text, and the same few on most of a plan's recipes) cross once each: a table the core already keeps goes
+ * as {"$ref": name}, which the core reads as that very text (MachineReadout.addRecipe).
+ */
 export function keepRecipe(c: CoreExports, recipe: Recipe): void {
   let k = kept.get(c);
-  if (!k) kept.set(c, (k = { byId: new Map() }));
+  if (!k) kept.set(c, (k = { byId: new Map(), controls: new Map() }));
   if (k.byId.get(recipe.id) === recipe) return;
-  c.MachinesExports.machinesAddRecipe(recipe.id, JSON.stringify(recipe));
+  const known = k;
+  const text = JSON.stringify(recipe, (key, value: unknown) =>
+    key === "machineConfigControls" && Array.isArray(value)
+      ? value.map((control: unknown) => {
+          const table = JSON.stringify(control);
+          let name = known.controls.get(table);
+          if (name === undefined) {
+            name = `c${known.controls.size}`;
+            c.MachinesExports.machinesAddControl(name, table);
+            known.controls.set(table, name);
+          }
+          return { $ref: name };
+        })
+      : value,
+  );
+  c.MachinesExports.machinesAddRecipe(recipe.id, text);
   k.byId.set(recipe.id, recipe);
+}
+
+/** The game-rates record last handed to each core instance: the core reads the pack's rates from its own copy. */
+const ratesSent = new WeakMap<CoreExports, ActiveGameRates>();
+function sendRates(c: CoreExports): void {
+  const rates = getGameRates();
+  if (ratesSent.get(c) === rates) return;
+  c.MachinesExports.machinesSetRates(
+    rates.beesYield,
+    rates.ic2CropsYield,
+    rates.recipeDurationDivisor,
+  );
+  ratesSent.set(c, rates);
 }
 
 /** The core path, or null where the core leaves the machine to the website (crops, bees, the TGS, the Vat). */
@@ -108,6 +143,7 @@ export function cardMachineMathCore(
   node: FactoryNode,
 ): CardMachineMath | null {
   if (websiteOnly(recipe)) return null;
+  sendRates(c);
   keepRecipe(c, recipe);
   const text = c.MachinesExports.machinesCard(recipe.id, JSON.stringify(node));
   if (text == null) return null;
@@ -130,36 +166,46 @@ export function cardMachineMathCore(
 }
 
 /**
- * Stand-in for adopt.ts's `coreFor("machines")` (the web stream's file, agreed, not on this base yet): the area is off,
- * so the TypeScript answers. When adopt.ts lands, `coreForMachines()` becomes `coreFor("machines")` and the flag lives there.
+ * The core for the machines area (adopt.ts: off by default): null while the area is off or the core is loading, and
+ * then the cards use the TypeScript. The load the area starts is followed by a warm-up in idle time.
  */
-const MACHINES_ADOPTED = false;
+let warmPending = false;
 function coreForMachines(): CoreExports | null {
-  return MACHINES_ADOPTED ? coreIfLoaded() : null;
+  const c = coreFor("machines");
+  if (c) warmSoon(c);
+  else if (!warmPending && isAdopted("machines")) {
+    warmPending = true;
+    // loadCore shares the load coreFor started: this only waits for it.
+    loadCore().then(warmSoon, () => undefined);
+  }
+  return c;
 }
-
-const cache = new WeakMap<Recipe, WeakMap<FactoryNode, CardMachineMath>>();
 
 /**
- * A card's machine maths for this recipe on this node: through the core when the area is on and the core has loaded,
- * else (or when the core does not cover the machine) the TypeScript. Kept per (recipe, node) object.
+ * The core's first cards pay for its tables and its cold code (in the browser on WebAssembly several times what the
+ * cards cost warm). Once it has loaded, it runs the maths over a recipe of every map in idle time, so a plan's cards
+ * do not. Exported for the probes, which load the core themselves.
  */
-export function cardMachineMath(recipe: Recipe, node: FactoryNode): CardMachineMath {
-  let byNode = cache.get(recipe);
-  const hit = byNode?.get(node);
-  if (hit) return hit;
-  const c = coreForMachines();
-  let fromCore: CardMachineMath | null = null;
-  if (c) {
+const warmed = new WeakSet<CoreExports>();
+export function warmSoon(c: CoreExports): void {
+  if (warmed.has(c)) return;
+  warmed.add(c);
+  const run = () => {
     try {
-      fromCore = cardMachineMathCore(c, recipe, node);
+      c.MachinesExports.machinesWarm(1000);
     } catch {
-      // A recipe the core cannot read is still a card: the TypeScript answers it (the shadow test reports such inputs).
-      fromCore = null;
+      // Warming is only a head start: a failure here leaves the first cards to pay, nothing else.
     }
-  }
-  const math = fromCore ?? cardMachineMathTs(recipe, node);
-  if (!byNode) cache.set(recipe, (byNode = new WeakMap()));
-  byNode.set(node, math);
-  return math;
+  };
+  const idle = (globalThis as { requestIdleCallback?: (cb: () => void) => void })
+    .requestIdleCallback;
+  if (idle) idle(run);
+  else setTimeout(run, 0);
 }
+
+setMachinesBridge({
+  figures(recipe, node) {
+    const c = coreForMachines();
+    return c ? cardMachineMathCore(c, recipe, node) : null;
+  },
+});

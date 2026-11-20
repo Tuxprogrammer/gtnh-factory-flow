@@ -29,7 +29,28 @@ public final class MachinesExports {
         GameRates.install(new GameRates(beesYield, ic2CropsYield, recipeDurationDivisor));
     }
 
-    /** Keeps a recipe (the website's JSON shape) under its id; a second recipe under the same id replaces it. */
+    /**
+     * Keeps a control table (one entry of a recipe's or handler's machineConfigControls, the website's JSON) under a name
+     * the host picks; a recipe sent later may write {"$ref": name} in its place.
+     */
+    @JSExport
+    public static void machinesAddControl(final String ref, final String controlJson) {
+        MACHINES.addControl(ref, controlJson);
+    }
+
+    /**
+     * Runs the card maths on a recipe of each of the first {@code maps} recipe maps, so the tables are read and the code
+     * is warm before a plan's cards ask (a host calls it in idle time after loading); answers the cards computed.
+     */
+    @JSExport
+    public static int machinesWarm(final int maps) {
+        return MachineReadout.warm(maps);
+    }
+
+    /**
+     * Keeps a recipe (the website's JSON shape) under its id; a second recipe under the same id replaces it. A control
+     * written {"$ref": name} is the table machinesAddControl kept under that name.
+     */
     @JSExport
     public static void machinesAddRecipe(final String recipeId, final String recipeJson) {
         MACHINES.addRecipe(recipeId, recipeJson);
@@ -48,7 +69,7 @@ public final class MachinesExports {
     /**
      * A board card's machine maths for a kept recipe on a node (JSON in the website's node shape), as JSON in the
      * website's own shapes: {"stats", "power"?, "steam"?, "parallel", "structuralParallel", "outputMultipliers"}; null for
-     * a machine the module leaves to the mod's own models (Tree Growth Simulator, Bacterial Vat).
+     * a machine the module leaves to the mod's own models (Tree Growth Simulator, Bacterial Vat) or a bee or crop card.
      */
     @JSExport
     @Nullable

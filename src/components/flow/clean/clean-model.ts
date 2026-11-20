@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import type { FactoryNode, MachineConfigTierOption, Recipe } from "@/lib/model/types";
-import { GT_OVERCLOCK_TIERS, applyMachineHandlerToRecipe, applyRecipeInputOverrides, getRecipeAvailableVoltageTiers, getRecipeCoilTierControl, getRecipeMachineConfigTierControls, getRecipeMachineHandlers, getRecipeMaximumVoltageTier, getRunVoltageTier, getSelectedMachineHandler, getVoltageTierIndex, isSteamMachineHandler, makeResourceKey, type MachineConfigTierControl } from "@/lib/model";
+import { GT_OVERCLOCK_TIERS, getRecipeAvailableVoltageTiers, getRecipeCoilTierControl, getRecipeMachineConfigTierControls, getRecipeMachineHandlers, getRecipeMaximumVoltageTier, getRunVoltageTier, getSelectedMachineHandler, getVoltageTierIndex, isSteamMachineHandler, makeResourceKey, type MachineConfigTierControl } from "@/lib/model";
 import { formatCompact, formatPowerValue } from "@/lib/format/numbers";
 import { powerDisplayFromEuT, powerDisplaySuffix, rateSuffixForKind } from "@/lib/format/rate-unit";
 import { isCustomRateRecipe } from "@/lib/model/custom-rate";
@@ -13,12 +13,7 @@ import {
 } from "@/lib/model/programmed-circuit";
 import { stripBeeFrameSlotInputs } from "@/lib/model/bee-display";
 import { getOverclockedRecipeStats } from "@/lib/solver/overclock";
-import {
-  applyMachineOutputMultipliers,
-  getMachineParallelMultiplier,
-  getMachineStructuralParallels,
-} from "@/lib/solver/machine-effects";
-import { getNodePowerReport, getNodeSteamReport, hasPowerReport } from "@/lib/solver/power-report";
+import { applyCardOutputMultipliers, cardMachineMath } from "@/lib/core/machines";
 import { isMultiblockRecipe } from "@/lib/solver/power";
 import { prefersCuratedMachineMath } from "@/lib/solver/runtime-calculation";
 import { getFusionMachine } from "@/lib/machines/fusion";
@@ -470,23 +465,24 @@ export function layoutStrip(chips: Array<Omit<CleanChipView, "x" | "y" | "width"
  * (the red ring). The first steps of the card's derived state, so the card and its shell cannot disagree.
  */
 export function deriveCardFace(recipe: Recipe, projectNode: FactoryNode) {
-  const selectedMachineHandler = getSelectedMachineHandler(recipe, projectNode);
-  const nodeRecipe = applyRecipeInputOverrides(recipe, projectNode);
-  const effectiveRecipe = applyMachineHandlerToRecipe(nodeRecipe, projectNode);
-  const machineDrawsEu = effectiveRecipe.eut > 0 && !isSteamMachineHandler(selectedMachineHandler);
-  const tierControl = machineDrawsEu ? getNodeTierControl(effectiveRecipe, projectNode) : undefined;
-  const powerReport =
-    machineDrawsEu && tierControl && hasPowerReport(nodeRecipe, projectNode)
-      ? getNodePowerReport(nodeRecipe, projectNode)
-      : undefined;
-  return {
-    selectedMachineHandler,
-    nodeRecipe,
-    effectiveRecipe,
-    machineDrawsEu,
-    tierControl,
-    powerReport,
-  };
+  // The machine figures come from the card's one readout (lib/core/machines.ts), and the face is kept beside them:
+  // a shell remounted by virtualization, and the card itself, read the same face.
+  return cardMachineMath(recipe, projectNode).keep(deriveCardFace, (machine) => {
+    const selectedMachineHandler = machine.handler;
+    const nodeRecipe = machine.nodeRecipe;
+    const effectiveRecipe = machine.effectiveRecipe;
+    const machineDrawsEu = effectiveRecipe.eut > 0 && !isSteamMachineHandler(selectedMachineHandler);
+    const tierControl = machineDrawsEu ? getNodeTierControl(effectiveRecipe, machine.node) : undefined;
+    const powerReport = machineDrawsEu && tierControl ? machine.powerReport : undefined;
+    return {
+      selectedMachineHandler,
+      nodeRecipe,
+      effectiveRecipe,
+      machineDrawsEu,
+      tierControl,
+      powerReport,
+    };
+  });
 }
 
 /**
@@ -1055,7 +1051,8 @@ export function useCleanCardModel(
   // re-renders on every solver tick, which is when any of it can change.
   const { project: liveProject, lastResult } = useFactoryStore.getState();
 
-  const derived = useMemo(() => {
+  // From the card's one readout, kept beside it (lib/core/machines.ts): a remount reads it back.
+  const derived = useMemo(() => cardMachineMath(recipe, projectNode).keep(useCleanCardModel, (machine) => {
     const machineHandlers = getRecipeMachineHandlers(recipe);
     const {
       selectedMachineHandler,
@@ -1064,22 +1061,18 @@ export function useCleanCardModel(
       machineDrawsEu,
       tierControl,
       powerReport,
-    } = deriveCardFace(recipe, projectNode);
-    const steamReport = !machineDrawsEu ? getNodeSteamReport(nodeRecipe, projectNode) : undefined;
+    } = deriveCardFace(recipe, machine.node);
+    const steamReport = !machineDrawsEu ? machine.steamReport : undefined;
     const showHatchControl = Boolean(
       powerReport?.isMultiblock &&
       prefersCuratedMachineMath(effectiveRecipe) &&
       !getFusionMachine(effectiveRecipe.machineType),
     );
-    const coilControl = getRecipeCoilTierControl(effectiveRecipe, projectNode);
-    const controls = getRecipeMachineConfigTierControls(effectiveRecipe, projectNode);
-    const overclockedStats = getOverclockedRecipeStats(nodeRecipe, projectNode);
+    const coilControl = getRecipeCoilTierControl(effectiveRecipe, machine.node);
+    const controls = getRecipeMachineConfigTierControls(effectiveRecipe, machine.node);
+    const overclockedStats = machine.stats;
     const displayRecipe = stripBeeFrameSlotInputs(effectiveRecipe);
-    const adjusted = applyMachineOutputMultipliers(
-      displayRecipe,
-      projectNode,
-      overclockedStats.tier,
-    );
+    const adjusted = applyCardOutputMultipliers(displayRecipe, machine);
     const overclockedRecipe = { ...displayRecipe, ...adjusted, ...overclockedStats };
     return {
       machineHandlers,
@@ -1092,11 +1085,11 @@ export function useCleanCardModel(
       coilControl,
       controls,
       overclockedRecipe,
-      parallel: getMachineParallelMultiplier(effectiveRecipe, projectNode),
-      structuralParallel: getMachineStructuralParallels(effectiveRecipe, projectNode),
+      parallel: machine.parallel,
+      structuralParallel: machine.structuralParallel,
       circuit: getRecipeProgrammedCircuit(effectiveRecipe) as RecipeProgrammedCircuit | undefined,
     };
-  }, [recipe, projectNode]);
+  }), [recipe, projectNode]);
 
   const pinControls = useMemo(() => settingControls(recipe, projectNode), [recipe, projectNode]);
   const verdict = deriveNodeVerdict(liveProject, lastResult, projectNode.id);

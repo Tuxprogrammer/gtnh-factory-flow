@@ -280,9 +280,13 @@ Time in the card view code (`useCleanCardModel`'s view, summed over the cards Re
 
 The JavaScript column is the switch forced on for the measurement; the committed switch leaves that build on the
 builders. A card is never rendered on hover, on a pan frame or on a drag frame of another card, so nothing here runs
-per frame. The whole step's main-thread time (CDP, ms, base / WebAssembly) moves more than the card code does, both
-ways, on steps with no card view at all (hover on the 89-card plan: 73-77 / 167-171): the solve on the 89-card plan
-148-153 / 200-216, the power display 149-174 / 124-130, the stress plan's solve 1465-1468 / 1198-1284. Hot, in the page,
+per frame. The whole step's main-thread time (CDP) is not a measure of the card code: it is mostly the browser's own
+work and garbage collection, and a major collection (30 to 90 ms) lands in a step's window or not at random. Re-run on
+the 89-card plan with every waiting card filled before hover, six runs each of base, the switch forced on, the same
+build with the area off and the build as committed (12 hover windows each, CPU profiles): hover medians 114 / 108 /
+117 / 117 ms with the same spread in each (61 to 181), no card view and 4 to 15 ms of script in every window; every
+high window holds a 30 to 90 ms collection, base included, and a step with no input at all shows the same (1 or 30 to
+74 ms). The solve that moves every card: 184-245 / 192-213 / 152-223 / 204-211 ms. Hot, in the page,
 microseconds a card over the cards drawn: builders 14-35, input 4.5-7.5 (12-16 before this item trimmed it), core on
 WebAssembly 23-30 with the widths kept in the core (30-71 calling every width back), on JavaScript 54-71 (56-121).
 

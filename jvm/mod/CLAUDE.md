@@ -93,7 +93,7 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
 - Shared machines (one card, several recipes time-sharing one machine; `docs/design/ff-shared-machine-spec.md`) are
   `MachineGroup`s with ordered `sections`: each recipe stays a node with its own ports and wires, the group draws as
   one card, its machine settings are copied to every recipe, and a pinned count is an exact solver pool.
-- Buffer drawers (`docs/design/buffer-drawers.md`): `Drawer.Kind.BUFFER`, its `links` the outputs feeding it and its
+- Buffer drawers (`docs/buffer-drawers.md`): `Drawer.Kind.BUFFER`, its `links` the outputs feeding it and its
   `takers` the inputs it feeds (`Drawer.held()` gives both with their side). An input dropped on a product, or an output
   on a source, makes one. The solver draws an edge from each maker to each user (`ModelData.buildBuffers`) and holds
   its rule on their flows; the same in the website's port, checked by the `buffer-drawers` corpus case. Features that
@@ -406,7 +406,9 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   answer is remembered (`update.offered` in the settings). `call 'update?latest=<tag>'` fakes one; `clear=1&reset=1`
   puts it back.
 - While playing (`ui/world/`, `docs/design/minimap-and-world-links.md`): the minimap of the plan last open
-  (`Minimap`, from the board's `PlanSnapshot`), and the plan over the world: a card's place key (or L on a block)
+  (`Minimap`, from the board's `PlanSnapshot`; its groups and wires are drawn from the core's scene,
+  `PlanSnapshot.scene()` = `core-view` `MinimapBuilder`, shared with the website's map and
+  `conformance/view/minimap`), and the plan over the world: a card's place key (or L on a block)
   places it on a spot, the imaginary block in front of the face looked at (`LinkPicker`, `LinkTarget`,
   `WorldLinks`, `Node.worldLinks`, a spot and a facing per machine; breaking blocks never removes one), and
   `PlanOverlay` (Y) draws each placed card just above its machine's ghost, never on it, as the board does

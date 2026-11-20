@@ -8,6 +8,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.fluids.FluidStack;
 
 import com.gtnhplanner.core.base.Uuid;
+import com.gtnhplanner.core.view.minimap.MinimapBuilder;
+import com.gtnhplanner.core.view.minimap.MinimapInput;
+import com.gtnhplanner.core.view.minimap.MinimapView;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.ui.card.StructureArt;
 
@@ -190,6 +193,93 @@ public record PlanSnapshot(Graph graph, String planName, long graphVersion, List
         }
         return wiresByNode.getOrDefault(nodeId, NO_WIRES);
     }
+
+    /**
+     * The minimap's scene of this snapshot, from the core's builder (the website's map is made by the same rules): the
+     * groups first, then the drawers and cards, and the wires with the colour the map draws them in; a wire's id is its
+     * place in {@link #wires}. Made once per snapshot.
+     */
+    public MinimapView scene() {
+        if (sceneIndexed != this) {
+            final List<MinimapInput.Node> nodes = new java.util.ArrayList<>();
+            for (final GroupBox g : groups) nodes.add(
+                new MinimapInput.Node(
+                    g.id()
+                        .toString(),
+                    g.collapsed() ? "group" : "board",
+                    g.x(),
+                    g.y(),
+                    g.w(),
+                    g.h(),
+                    false,
+                    false,
+                    null,
+                    hex(g.color()),
+                    0,
+                    false,
+                    null));
+            for (final Box b : drawers) nodes.add(
+                new MinimapInput.Node(
+                    b.id()
+                        .toString(),
+                    "drawer",
+                    b.x(),
+                    b.y(),
+                    b.w(),
+                    b.h(),
+                    false,
+                    false,
+                    null,
+                    null,
+                    0,
+                    false,
+                    b.kind()
+                        .name()
+                        .toLowerCase(java.util.Locale.ROOT)));
+            for (final Card c : cards) nodes.add(
+                new MinimapInput.Node(
+                    c.id()
+                        .toString(),
+                    "card",
+                    c.x(),
+                    c.y(),
+                    c.w(),
+                    c.h(),
+                    false,
+                    false,
+                    null,
+                    c.tint() < 0 ? null : hex(c.tint()),
+                    c.builds(),
+                    c.pinned(),
+                    null));
+            final List<MinimapInput.Route> routes = new java.util.ArrayList<>();
+            for (int i = 0; i < wires.size(); i++) {
+                final Line l = wires.get(i);
+                final List<MinimapInput.Point> points = new java.util.ArrayList<>(
+                    l.path()
+                        .size());
+                for (final int[] p : l.path()) points.add(new MinimapInput.Point(p[0], p[1]));
+                routes.add(
+                    new MinimapInput.Route(
+                        Integer.toString(i),
+                        points,
+                        (double) l.width(),
+                        hex(l.color()),
+                        l.flowing(),
+                        false));
+            }
+            made = MinimapBuilder.build(new MinimapInput(planName, nodes, routes));
+            sceneIndexed = this;
+        }
+        return made;
+    }
+
+    private static String hex(final int rgb) {
+        return String.format(java.util.Locale.ROOT, "#%06X", rgb & 0xFFFFFF);
+    }
+
+    private static PlanSnapshot sceneIndexed;
+    private static MinimapView made;
 
     private static final int[] NO_WIRES = {};
     private static PlanSnapshot wiresIndexed;

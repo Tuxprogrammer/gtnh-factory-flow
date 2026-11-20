@@ -20,14 +20,15 @@ import {
   type RouteSolveJob,
 } from "./grid-route-job";
 import { cardRimDocks, LANE_CAPACITY, type GridEndpoint, type GridObstacle, type GridRouteRequest } from "./grid-edge-router";
-import { arrangeCore, coreLiveDrag, layoutCore, runArrangeJobOnCore, setLayoutAdoptOverride } from "./layout-core";
+import { setAdoptOverride } from "@/lib/core/adopt";
+import { coreLiveDrag, layoutCore, runArrangeJobOnCore } from "./layout-core";
 import { drawn, layoutTargets } from "./layout-shadow.test-support";
 import { DEFAULT_ROUTER_TUNING, type RouterTuning } from "./router-tuning";
 
 const targets = (await layoutTargets()).map(([target]) => target);
 
 afterAll(async () => {
-  setLayoutAdoptOverride(undefined);
+  setAdoptOverride("layout", undefined);
   resetBoardRouters();
   resetCoreForTests();
   await loadCore().catch(() => undefined);
@@ -37,17 +38,17 @@ afterAll(async () => {
 async function on<T>(target: string | undefined, fn: () => T): Promise<T> {
   resetBoardRouters();
   if (target === undefined) {
-    setLayoutAdoptOverride(false);
+    setAdoptOverride("layout", false);
   } else {
     resetCoreForTests();
     await loadCore({ target: target as "wasm-gc" | "js" });
-    setLayoutAdoptOverride(true);
+    setAdoptOverride("layout", true);
     expect(layoutCore()).not.toBeNull();
   }
   try {
     return fn();
   } finally {
-    setLayoutAdoptOverride(undefined);
+    setAdoptOverride("layout", undefined);
   }
 }
 
@@ -249,15 +250,8 @@ describe.skipIf(targets.length === 0)("Arrange through the core in the arrange w
     }
   }, 120_000);
 
-  /**
-   * Boards the JavaScript build of the core arranges differently from the TypeScript (the JVM and the WebAssembly
-   * build agree with it), so the worker keeps the TypeScript Arrange on that build (`arrangeCore`). A fix makes the
-   * entry fail here: delete it then.
-   */
-  const KNOWN_JS_ARRANGE = new Set<string>();
-
   const small = arrangeData.boards.filter((b) => b.cards.length <= 12);
-  it.each(small.map((b) => [b.name, b] as const))("arranges %s the same, whole and in stages", async (name, board) => {
+  it.each(small.map((b) => [b.name, b] as const))("arranges %s the same, whole and in stages", async (_name, board) => {
     const job = judgedJob(board);
     type Arrange = (job: ArrangeJob, onProgress?: (p: ArrangeProgress) => void) => ArrangeJobResult;
     const run = (arrange: Arrange) => () => {
@@ -275,10 +269,7 @@ describe.skipIf(targets.length === 0)("Arrange through the core in the arrange w
     const want = await on(undefined, run(runArrangeJob));
     for (const target of targets) {
       const got = await on(target, run((j, cb) => runArrangeJobOnCore(layoutCore()!, j, cb)));
-      if (target === "js" && KNOWN_JS_ARRANGE.has(name)) expect(got, target).not.toEqual(want);
-      else expect(got, target).toEqual(want);
-      // The arrange worker's job takes the core's Arrange on the WebAssembly build only.
-      expect(await on(target, () => arrangeCore() !== null), target).toBe(target === "wasm-gc");
+      expect(got, target).toEqual(want);
     }
   }, 300_000);
 });

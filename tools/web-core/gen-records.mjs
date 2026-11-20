@@ -9,7 +9,8 @@
 // The record convention it reads (the one `Json` writes, `conformance/view/README.md`):
 //   int, double, Integer, Double, boolean, Boolean   number or boolean
 //   String, Uuid                                     string
-//   an enum                                          a union of its constant names
+//   an enum                                          a union of its constant names (one of another core module's
+//                                                    files when the registry lists that file under "enums")
 //   List<T>                                          T[]
 //   Map<String, T>                                   Record<string, T>
 //   a nested record                                  an interface, named by its outer classes (RailView.Dial: RailViewDial)
@@ -301,10 +302,25 @@ export function parseSource(src, file = "source") {
   return { records, enums };
 }
 
-/** Every record and enum under the view sources: { records: Map<flat, rec>, enums: Map<flat, enum> }. */
-export function readSources(dir = VIEW_SOURCES) {
+/**
+ * Every record and enum under the view sources: { records: Map<flat, rec>, enums: Map<flat, enum> }. The view sources'
+ * own read also takes the enums (only the enums) of the files the registry lists under "enums": enums of other core
+ * modules a record carries (PinRule, RateUnit), each in the package its file declares.
+ */
+export function readSources(dir = VIEW_SOURCES, external = dir === VIEW_SOURCES ? externalEnums() : []) {
   const records = new Map();
   const enums = new Map();
+  for (const file of external) {
+    const src = fs.readFileSync(path.join(root, file), "utf8");
+    const pkg = /^\s*package\s+([\w.]+)\s*;/m.exec(src);
+    if (!pkg) throw new Error(`${file}: no package`);
+    for (const item of parseSource(src, file).enums) {
+      const flat = [...item.outer, item.name].join("");
+      if (enums.has(flat)) throw new Error(`${file}: two view types are named ${flat}`);
+      const binary = `${pkg[1]}.${[...item.outer, item.name].join("$")}`;
+      enums.set(flat, { ...item, flat, class: binary, kind: "enum", file });
+    }
+  }
   const walk = (d) => {
     for (const entry of fs.readdirSync(d, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
       const full = path.join(d, entry.name);
@@ -373,6 +389,11 @@ function shapeOf(type, from, sources, where, used) {
   throw new Error(
     `${where}: ${type.name} is not a wire type (int, double, boolean, String, Uuid, an enum, a record, List, Map<String, T>)`,
   );
+}
+
+/** The registry's "enums": source files (from the repository root) outside core-view whose enums records carry. */
+function externalEnums(file = REGISTRY) {
+  return fs.existsSync(file) ? (readRegistry(file).enums ?? []) : [];
 }
 
 /** The roots of the registry. */

@@ -81,7 +81,7 @@ final class DevEec {
     static Object mob(final String mob, final Map<String, String> q) {
         final RecipeHandlerRef ref = MobDropsProvider.mob(mob::equals);
         if (ref == null) return Map.of("error", "no crusher mob " + mob);
-        final Node node = new Node(ref.handler, ref.recipeIndex, 0, 0);
+        final Node node = com.gtnhplanner.nei.NeiRecipes.node(ref.handler, ref.recipeIndex, 0, 0);
         if (q.containsKey("voltage")) node.machineConfig.settings.put("voltage", q.get("voltage"));
         if (q.containsKey("amp")) node.machineConfig.settings.put("amp", Integer.parseInt(q.get("amp")));
         node.machineConfig.settings.put("gt_multiblock", true);

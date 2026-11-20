@@ -42,7 +42,7 @@ public final class GameNodeMaker implements NodeMaker {
         if (!(recipe.handler() instanceof final IRecipeHandler handler)) return null;
         final Node node;
         try {
-            node = new Node(handler, recipe.index(), 0, 0);
+            node = com.gtnhplanner.nei.NeiRecipes.node(handler, recipe.index(), 0, 0);
         } catch (final RuntimeException e) {
             GtnhPlanner.LOG.warn("Factory Flow import: no node for {} #{}", recipe.handlerName(), recipe.index(), e);
             return null;

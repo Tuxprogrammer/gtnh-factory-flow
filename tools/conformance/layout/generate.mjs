@@ -1,6 +1,7 @@
 // Writes the wire router's conformance data (conformance/layout) from the website's TypeScript router:
 //   router-tests.json: every router call the website's router tests make (grid-edge-router.test.ts,
 //     incremental-router.test.ts), boards in and routes out, plus the cardRimDocks vectors they ask for;
+//     and boards with open groups (frames.capture.ts), routed with the default dials, as more sequences;
 //   boards.json.gz: the reference boards (boxes and wires, as the game's layout bench lays out its plans), each
 //     routed fresh, dragged and dropped;
 //   arrange.json.gz: every arrange call the website's arrange tests make (board-arrange.test.ts, no judge), and the
@@ -44,6 +45,7 @@ try {
   const boardsIn = join(work, "boards-in.json");
   const boardsOut = join(work, "boards-out.json");
   const arrangeOut = join(work, "arrange-out.json");
+  const framesOut = join(work, "frames-out.json");
   writeFileSync(boardsIn, JSON.stringify(boards));
   const run = spawnSync("npx", ["vitest", "run", "--config", join(here, "capture.config.ts")], {
     cwd: root,
@@ -54,6 +56,7 @@ try {
       LAYOUT_BOARDS_IN: boardsIn,
       LAYOUT_BOARDS_OUT: boardsOut,
       LAYOUT_ARRANGE_OUT: arrangeOut,
+      LAYOUT_FRAMES_OUT: framesOut,
     },
   });
   if (run.status !== 0) throw new Error(`the capture run failed (${run.status})`);
@@ -63,7 +66,7 @@ try {
   const tests = {
     generator: "node tools/conformance/layout/generate.mjs",
     solves: [...grid.solves, ...incremental.solves],
-    sequences: [...grid.sequences, ...incremental.sequences],
+    sequences: [...grid.sequences, ...incremental.sequences, ...JSON.parse(readFileSync(framesOut, "utf8"))],
     rimDocks: [...grid.rimDocks, ...incremental.rimDocks],
   };
   writeFileSync(join(out, "router-tests.json"), `${JSON.stringify(tests)}\n`);

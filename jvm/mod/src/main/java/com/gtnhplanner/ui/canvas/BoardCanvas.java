@@ -1098,7 +1098,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
         final Uuid next = com.gtnhplanner.ui.group.GroupEdits
             .groupUnder(graph(), start[0] + dx + box[2] / 2f, start[1] + dy + box[3] / 2f, carriedGroups);
         if (!java.util.Objects.equals(next, dropGroup) && next != null && !next.equals(aimFrom))
-            Sfx.WIRE_SNAP.play(0.6f, 1f);
+            Sfx.WIRE_SNAP.play(Sfx.GROUP_AIM_VOLUME, 1f);
         dropGroup = next;
         leavingGroup = aimFrom != null && !aimFrom.equals(next) ? aimFrom : null;
     }
@@ -1637,7 +1637,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
 
     /**
      * Whether a drawer would take the wire being dragged: same resource, on a side it takes. A port of the other side
-     * on a product or a source makes it a buffer ({@code docs/design/buffer-drawers.md}).
+     * on a product or a source makes it a buffer ({@code docs/buffer-drawers.md}).
      */
     public boolean drawerAcceptsDrag(final Drawer drawer) {
         if (drawerWire != null) return false;
@@ -1994,6 +1994,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
         // Lifted: a soft shadow under it, as a carried card has.
         Hyb.rect(rx + 4, rowY + 5, CardLayout.RAIL_W + 4, CardLayout.ROW - 4, 0x50000000);
         Hyb.rect(rx, rowY + 2, CardLayout.RAIL_W + 4, CardLayout.ROW - 4, 0xFF23252A);
+        CardPaint.figures(com.gtnhplanner.ui.card.CardInputs.dials(session), null);
         CardPaint.extraRow(held, session.rateUnit(), rowY, getContext().getCurrentDrawingZ());
         org.lwjgl.opengl.GL11.glPopMatrix();
         // What to do with it, as a tip beside it, at its size on screen whatever the zoom.

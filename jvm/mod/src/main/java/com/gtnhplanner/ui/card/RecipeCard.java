@@ -281,11 +281,13 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
     public CardFace.Count face() {
         final com.gtnhplanner.data.flowchart.balancer.UpToReadout readout = session.upTo(nodeId);
         final boolean unset = session.unset(nodeId);
-        // Asked every frame it is drawn: kept until the model, the wheel, the read-out or the prompt changes.
+        final com.gtnhplanner.core.view.card.CardInput.Dials dials = CardInputs.dials(session);
+        // Asked every frame it is drawn: kept until the model, the wheel, the read-out, the prompt or the dials change.
         if (face != null && faceFor == model
             && facePending == (pendingUnpin ? -1 : pendingCount)
             && faceReadout == readout
-            && faceUnset == unset) return face;
+            && faceUnset == unset
+            && dials.equals(faceDials)) return face;
         com.gtnhplanner.data.flowchart.PinRule rule = session.rule(model.node);
         double set = session.setCount(model.node);
         if (pendingUnpin) {
@@ -295,12 +297,73 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
             rule = CardFace.ruleForCount(rule, ruleFixed());
             set = pendingCount;
         }
-        face = CardFace.count(rule, set, machinesTotal(), readout, unset, crop(), ruleFixed());
+        view = sharedRules() ? view(rule, set, dials) : null;
+        final com.gtnhplanner.core.view.card.CardView v = view;
+        if (v != null) {
+            // The shared card's count: the rule word on every rule ("Any" too) and the set box ("Set" with none).
+            final com.gtnhplanner.core.view.card.CardView.CountView c = v.count();
+            face = new CardFace.Count(
+                c.text(),
+                Math.max(0, c.value()),
+                rule,
+                c.ruleWord(),
+                c.ruleFixed(),
+                c.set() == null ? 0 : c.set(),
+                c.box(),
+                "",
+                c.prompt(),
+                c.zero(),
+                c.ruleFixed() ? "Runs at its dial." : c.title());
+        } else face = CardFace.count(rule, set, machinesTotal(), readout, unset, crop(), ruleFixed());
         faceFor = model;
         facePending = pendingUnpin ? -1 : pendingCount;
         faceReadout = readout;
         faceUnset = unset;
+        faceDials = dials;
         return face;
+    }
+
+    /**
+     * Whether the card is one the shared card rules draw (core-view CardViews, the website's clean card): one recipe,
+     * not a crop card, a holder, a generator or a card with no count. Those keep the mod's own rules for now.
+     */
+    private boolean sharedRules() {
+        return model != null && !shared()
+            && !crop()
+            && !countless()
+            && !model.isPower()
+            && !com.gtnhplanner.power.Holders.is(model.node);
+    }
+
+    /** The card's view by the shared rules at {@code rule} and {@code set} (built when {@link #face()} is). */
+    private com.gtnhplanner.core.view.card.CardView view(final com.gtnhplanner.data.flowchart.PinRule rule,
+        final double set, final com.gtnhplanner.core.view.card.CardInput.Dials dials) {
+        final com.gtnhplanner.core.view.card.CardInput in = CardInputs.of(
+            session,
+            model,
+            rule,
+            set,
+            machinesTotal(),
+            anyTierTooLow(),
+            machineMenu().size() > 1,
+            tierFixed(),
+            ruleFixed(),
+            com.gtnhplanner.power.Holders.is(model.node));
+        return com.gtnhplanner.core.view.card.CardViews.card(
+            in,
+            dials,
+            com.gtnhplanner.ui.theme.HybMeasure.INSTANCE,
+            com.gtnhplanner.core.view.card.CardViews.Host.MOD);
+    }
+
+    /** The card's view as last built by the shared rules (null on a card they skip). */
+    private com.gtnhplanner.core.view.card.CardView view;
+
+    /** The view as the card shows it now (its count as set or being typed); null on a card the shared rules skip. */
+    @javax.annotation.Nullable
+    private com.gtnhplanner.core.view.card.CardView view() {
+        face();
+        return view;
     }
 
     /** The count as last worked out, and what it was worked out from. */
@@ -309,6 +372,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
     private long facePending;
     private com.gtnhplanner.data.flowchart.balancer.UpToReadout faceReadout;
     private boolean faceUnset;
+    private com.gtnhplanner.core.view.card.CardInput.Dials faceDials;
 
     /** The bar along the foot, in the board's rate unit; null when the card has nothing to say there. */
     public CardFace.Foot foot() {
@@ -764,6 +828,8 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
             return;
         }
         final Part hover = isHovering() ? partAt(localX(), localY()) : null;
+        // The rows' figures follow the board's dials, a generator's in its own tier (core-view CardViews).
+        CardPaint.figures(CardInputs.dials(session), CardInputs.powerTier(m));
         final int w = CardLayout.W, h = layout.height;
         if (canvas() != null && canvas().isCarried(nodeId)) {
             // Lifted while it is carried: a soft shadow under it.
@@ -1580,10 +1646,35 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
             final net.minecraftforge.fluids.FluidStack steam = net.minecraftforge.fluids.FluidRegistry
                 .getFluidStack("steam", 1000);
             if (steam != null) Hyb.fluid(steam, CardLayout.iconX(false), y + CardLayout.ICON_Y, CardLayout.ICON, 0);
-            CardPaint.words(Fmt.compact(steamTotal()), " L/s", "Steam", Hyb.INK, false, y);
+            final com.gtnhplanner.core.view.card.CardView v = view();
+            if (v != null && v.power() != null) CardPaint.words(
+                v.power()
+                    .number(),
+                " " + v.power()
+                    .unit(),
+                v.power()
+                    .name(),
+                Hyb.INK,
+                false,
+                y);
+            else CardPaint.words(Fmt.compact(steamTotal()), " L/s", "Steam", Hyb.INK, false, y);
             return;
         }
         euIcon(CardLayout.iconX(false), y + CardLayout.ICON_Y, CardLayout.ICON);
+        final com.gtnhplanner.core.view.card.CardView v = view();
+        if (v != null && v.power() != null) {
+            // The shared card's power row: the dial in the card's tier, TIER! when it cannot run.
+            final com.gtnhplanner.core.view.card.CardView.PowerView p = v.power();
+            CardPaint.words(
+                p.number(),
+                p.unit()
+                    .isEmpty() ? "" : " " + p.unit(),
+                p.name(),
+                p.stalled() ? Hyb.RED_INK : "0".equals(p.number()) ? 0xFFA8AFBB : Hyb.INK,
+                false,
+                y);
+            return;
+        }
         final double eu = powerTotal();
         final int tierIdx = CardDefaults.tierIndex(m.tier);
         final boolean amps = session.powerKey() == BoardSession.PowerKey.AMPS && m.gregtech && tierIdx >= 0;
@@ -1999,7 +2090,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
     }
 
     /** The power panel's figures, worked out once for the model they were taken from. */
-    private PowerPanel.Facts powerFacts;
+    private PowerInput.Facts powerFacts;
     private CardModel powerFactsFor;
 
     /** Whether the part under the mouse answers with the power panel: a multiblock's amps, tier or POWER tile. */
@@ -2855,29 +2946,50 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
     private void openActionsAt(final int sx, final int sy) {
         final Node node = model.node;
         final List<PickList.Entry> rows = new ArrayList<>();
-        rows.add(PickList.Entry.of("Clone node", () -> session.cloneNode(node)));
-        // What it runs on: a crusher's mob, a crop card's crop.
-        if (eec()) rows.add(PickList.Entry.of("Put in another mob", () -> RecipePicks.mobs(session, node, sx, sy)));
-        if (crop()) rows.add(PickList.Entry.of("Pick another crop", () -> RecipePicks.crops(session, node, sx, sy)));
-        // Into a task, with every card selected with it: a machine thing each.
+        // The card's rows by the shared rules (core-view CardViews.menu); this host adds its own: what a crusher or a
+        // crop card runs on after Clone node, its place in the world before Delete node. A row with no action here
+        // yet (Add another recipe, Replace the recipe: the search that would carry them is NEI's) is left out.
         final List<Uuid> taskCards = session.isSelected(nodeId) ? session.cardsIn(session.selection())
             : List.of(nodeId);
-        rows.add(
-            PickList.Entry.of(
-                "Add to a task",
-                () -> com.gtnhplanner.ui.task.TaskActions.addMenu(session, session.panel(), taskCards, sx, sy)));
-        // Its place in the world, once it has one.
-        if (placed()) {
-            rows.add(
-                PickList.Entry
-                    .of("Show in the world", () -> com.gtnhplanner.ui.world.WorldView.show(session.graph(), node.id)));
-            rows.add(
-                PickList.Entry.of(
-                    "Remove from the world",
-                    () -> com.gtnhplanner.ui.world.WorldLinks.clear(session.graph(), node)));
+        for (final com.gtnhplanner.core.view.card.CardView.MenuRow row : com.gtnhplanner.core.view.card.CardViews.menu(
+            new com.gtnhplanner.core.view.card.CardInput.Menu(
+                false,
+                false,
+                false,
+                shared(),
+                com.gtnhplanner.power.Holders.is(node),
+                emptyCropFarm(),
+                true))) {
+            switch (row.id()) {
+                case "clone" -> {
+                    rows.add(PickList.Entry.of(row.label(), () -> session.cloneNode(node)));
+                    if (eec()) rows
+                        .add(PickList.Entry.of("Put in another mob", () -> RecipePicks.mobs(session, node, sx, sy)));
+                    if (crop()) rows
+                        .add(PickList.Entry.of("Pick another crop", () -> RecipePicks.crops(session, node, sx, sy)));
+                }
+                case "addToTask" -> rows.add(
+                    PickList.Entry.of(
+                        row.label(),
+                        () -> com.gtnhplanner.ui.task.TaskActions
+                            .addMenu(session, session.panel(), taskCards, sx, sy)));
+                case "delete" -> {
+                    if (placed()) {
+                        rows.add(
+                            PickList.Entry.of(
+                                "Show in the world",
+                                () -> com.gtnhplanner.ui.world.WorldView.show(session.graph(), node.id)));
+                        rows.add(
+                            PickList.Entry.of(
+                                "Remove from the world",
+                                () -> com.gtnhplanner.ui.world.WorldLinks.clear(session.graph(), node)));
+                    }
+                    rows.add(PickList.Entry.rule());
+                    rows.add(new PickList.Entry(null, row.label(), "", Hyb.RED_INK, false, () -> session.delete(node)));
+                }
+                default -> {}
+            }
         }
-        rows.add(PickList.Entry.rule());
-        rows.add(new PickList.Entry(null, "Delete node", "", Hyb.RED_INK, false, () -> session.delete(node)));
         Popup.open(session.panel(), PickList.popup("gtnhplanner_actions", null, rows, false, 150), sx, sy);
     }
 

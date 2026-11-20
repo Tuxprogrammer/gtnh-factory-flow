@@ -28,7 +28,7 @@ import com.gtnhplanner.data.flowchart.Port;
 public final class FluidTank {
 
     /** Its source id, stored in plans: never rename. */
-    public static final String ID = "fluid-tank";
+    public static final String ID = Node.FLUID_TANK;
     public static final String MODE = "mode", CELL = "cell";
     public static final String EMPTY = "empty", FILL = "fill";
 

@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import type { FactoryNode, Recipe } from "@/lib/model/types";
-import { applyMachineHandlerToRecipe, applyRecipeInputOverrides, getSelectedMachineHandler, isSteamMachineHandler } from "@/lib/model";
+import { applyMachineHandlerToRecipe, applyRecipeInputOverrides, isSteamMachineHandler } from "@/lib/model";
 import { formatCompact, formatPowerValue } from "@/lib/format/numbers";
 import {
   powerDisplayFromEuT,
@@ -45,9 +45,7 @@ import {
   sectionNodeId,
   sectionHandleId,
 } from "@/lib/model/shared-machine";
-import { applyMachineOutputMultipliers } from "@/lib/solver/machine-effects";
-import { getOverclockedRecipeStats } from "@/lib/solver/overclock";
-import { getNodePowerReport, getNodeSteamReport, hasPowerReport } from "@/lib/solver/power-report";
+import { applyCardOutputMultipliers, cardMachineMath } from "@/lib/core/machines";
 import { parsePortKey } from "@/lib/solver/plan/port-key";
 import { getPowerSource } from "@/lib/power/registry";
 import { getPowerStructureArt } from "@/lib/power/structure-art";
@@ -195,10 +193,10 @@ export function useSharedCardModel(data: RecipeNodeData, selected: boolean): Spe
         .map(({ section, node }) => {
           const sectionRecipe = liveRecipes.find((entry) => entry.id === node.recipeId);
           if (!sectionRecipe) return undefined;
-          const nodeRecipe = applyRecipeInputOverrides(sectionRecipe, node);
-          const effective = applyMachineHandlerToRecipe(nodeRecipe, node);
-          const stats = getOverclockedRecipeStats(nodeRecipe, node);
-          const adjusted = applyMachineOutputMultipliers(effective, node, stats.tier);
+          const machine = cardMachineMath(sectionRecipe, node);
+          const effective = machine.effectiveRecipe;
+          const stats = machine.stats;
+          const adjusted = applyCardOutputMultipliers(effective, machine);
           return {
             section,
             node,
@@ -398,16 +396,11 @@ export function useSharedCardModel(data: RecipeNodeData, selected: boolean): Spe
 
 /** One recipe's power or steam report at its node's settings. */
 function sectionPower(recipe: Recipe, node: FactoryNode) {
-  const nodeRecipe = applyRecipeInputOverrides(recipe, node);
-  const effective = applyMachineHandlerToRecipe(nodeRecipe, node);
-  const drawsEu =
-    effective.eut > 0 && !isSteamMachineHandler(getSelectedMachineHandler(recipe, node));
+  const machine = cardMachineMath(recipe, node);
+  const drawsEu = machine.effectiveRecipe.eut > 0 && !isSteamMachineHandler(machine.handler);
   return {
-    powerReport:
-      drawsEu && hasPowerReport(nodeRecipe, node)
-        ? getNodePowerReport(nodeRecipe, node)
-        : undefined,
-    steamReport: !drawsEu ? getNodeSteamReport(nodeRecipe, node) : undefined,
+    powerReport: drawsEu ? machine.powerReport : undefined,
+    steamReport: !drawsEu ? machine.steamReport : undefined,
   };
 }
 

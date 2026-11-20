@@ -17,7 +17,8 @@ import codechicken.nei.NEIClientConfig;
 /**
  * The mod's side of the core's seams: log4j for {@link Log}, the Forge config and NEI's settings for
  * {@link CoreSettings} (read on every call, so a changed setting applies at once), Minecraft's language files for
- * {@link Text}, a secure generator for new ids, and the solver's worker threads ({@link SolverThreads}). Installed when
+ * {@link Text}, a secure generator for new ids, NEI for recipes ({@link com.gtnhplanner.nei.NeiRecipes}), and the
+ * solver's worker threads ({@link SolverThreads}). Installed when
  * the mod class loads, and before every test run (the test sources' launcher listener), so core code reads the same
  * things it read when it called these directly.
  */
@@ -89,5 +90,6 @@ public final class CoreHost {
         SolverThreads.install();
         com.gtnhplanner.data.flowchart.ModPlanHost.install();
         com.gtnhplanner.core.model.ResourceRegistry.install(GameResources.INSTANCE);
+        com.gtnhplanner.core.model.RecipeSource.install(com.gtnhplanner.nei.NeiRecipes.INSTANCE);
     }
 }

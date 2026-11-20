@@ -370,7 +370,8 @@ public final class Posting {
         /** The programmed circuit the card's recipe needs (never a port: GregTech keeps it), or null. */
         @Nullable
         private static Integer circuit(final Node node) {
-            final codechicken.nei.recipe.RecipeHandlerRef ref = com.gtnhplanner.nei.RecipeRefs.of(node.recipeId);
+            final codechicken.nei.recipe.RecipeHandlerRef ref = com.gtnhplanner.nei.RecipeRefs
+                .of(com.gtnhplanner.nei.NeiRecipes.id(node));
             if (ref == null) return null;
             try {
                 for (final codechicken.nei.PositionedStack ps : ref.handler.getIngredientStacks(ref.recipeIndex)) {
@@ -387,9 +388,10 @@ public final class Posting {
         @Override
         @Nullable
         public JsonObject neiRecipe(final Node node) {
-            if (node.isPower() || node.recipeId == null) return null;
+            if (node.isPower() || com.gtnhplanner.nei.NeiRecipes.id(node) == null) return null;
             try {
-                return node.recipeId.toJsonObject();
+                return com.gtnhplanner.nei.NeiRecipes.id(node)
+                    .toJsonObject();
             } catch (final RuntimeException e) {
                 return null;
             }

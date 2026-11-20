@@ -72,13 +72,13 @@ The board must stay smooth with 100+ cards on weak PCs.
   wire) and a port chip that answers exactly like a port row (`usePortRowBrowse`). Keep
   the two zones separate.
 - Solve mode: source and product drawers show a rule row, a rule button (Any / At least /
-  Exactly / At most) and a sunken rate box (`RuleInput`, `useRateRule`, `setStorageRule`). A buffer has none: it passes
-  what its users take, and the adapter sends it as Any whatever it stores (`docs/buffer-drawers.md`).
+  Exactly / At most) and a sunken rate box (`RuleInput`, `useRateRule`, `setStorageRule`). A buffer carries one too,
+  Any until set: the adapter sends its stored rule like a product's (`docs/buffer-drawers.md`).
   Any is `targetMode: "ignore"` or no number. Pool's table uses the same `RuleButton`
   in its "table" dress (`rate-rule.tsx`).
 - A buffer's spills (Up to makers making more than its users take, `plan.spills`) are the makers' forced rows; the
-  buffer only totals them on a small Forced out tile left of its figure (`.cd-forced`; the drawer grows a cell wider
-  by it, and routing and arrange read the measured size). Hovering any tile of a spill, or a maker's row, lights every tile of that
+  buffer only totals them on a small Forced out tile left of its figure (`.cd-forced`; the drawer grows wider
+  by it and its rule row moves right of the tile, and routing and arrange read the measured size). Hovering any tile of a spill, or a maker's row, lights every tile of that
   spill and nothing else (`clean/interaction/spill-hover.ts`, a store of its own).
 - The side key (`.cd-flip`, the delete key's twin at the top right, on hover) makes an input drawer an output one or
   the reverse (`flipStorageSide`): its wires come off and its rate goes, and its declared `poolSide` keeps it on the

@@ -1,0 +1,64 @@
+{
+ "record": "note",
+ "set": "menu",
+ "measure": "none",
+ "vectors": {
+  "menu": [
+   {
+    "index": 0,
+    "tag": "yellow",
+    "out": "Yellow"
+   },
+   {
+    "index": 1,
+    "tag": "orange",
+    "out": "Orange"
+   },
+   {
+    "index": 2,
+    "tag": "pink",
+    "out": "Pink"
+   },
+   {
+    "index": 3,
+    "tag": "scarlet",
+    "out": "Red"
+   },
+   {
+    "index": 4,
+    "tag": "lime",
+    "out": "Lime"
+   },
+   {
+    "index": 5,
+    "tag": "emerald",
+    "out": "Green"
+   },
+   {
+    "index": 6,
+    "tag": "light_blue",
+    "out": "Light blue"
+   },
+   {
+    "index": 7,
+    "tag": "azure",
+    "out": "Blue"
+   },
+   {
+    "index": 8,
+    "tag": "purple",
+    "out": "Purple"
+   },
+   {
+    "index": 9,
+    "tag": "white",
+    "out": "White"
+   },
+   {
+    "index": 10,
+    "tag": "steel",
+    "out": "Grey"
+   }
+  ]
+ }
+}

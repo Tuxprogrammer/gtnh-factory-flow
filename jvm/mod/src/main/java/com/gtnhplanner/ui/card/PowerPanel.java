@@ -21,76 +21,31 @@ final class PowerPanel {
     static final int GUIDE_W = 164;
     private static final int PAD = 7, LINE = 10;
     /** The most amps the chip takes, as on the website (laser hatches go that far). */
-    static final int MAX_AMPS = 1 << 24;
-
-    /** One run at a given number of amps: ticks, EU/t for all its parallels, parallels. */
-    record Run(int duration, long eut, int parallels) {
-
-        double runsPerSecond() {
-            return parallels * 20.0 / Math.max(1, duration);
-        }
-    }
-
-    /** What the panel shows, worked out once per model. */
-    record Facts(int amps, String tier, long volt, Run now, Integer nextAmps, Run next, int overclocks, int perfect,
-        double machines, double demand, boolean shared) {}
+    static final int MAX_AMPS = PowerInput.MAX_AMPS;
 
     private PowerPanel() {}
 
-    static Run runAt(final Node node, final int amps) {
+    /** One run of the card's recipe at {@code amps}: its machine maths with only the amps changed. */
+    static PowerInput.Run runAt(final Node node, final int amps) {
         final MachineConfig cfg = node.machineConfig;
         final MachineConfig copy = new MachineConfig(node, cfg.getProfile());
         copy.settings.putAll(cfg.settings);
         copy.settings.put("amp", amps);
         final EffectResult e = copy.computeEffect(node.properties);
-        return new Run(Math.max(1, e.durationTicks()), e.energyPerT(), Math.max(1, e.throughputFactor()));
-    }
-
-    private static boolean faster(final Run a, final Run b) {
-        return a.runsPerSecond() > b.runsPerSecond() * 1.0001;
+        return new PowerInput.Run(Math.max(1, e.durationTicks()), e.energyPerT(), Math.max(1, e.throughputFactor()));
     }
 
     /** For a card; {@code demand} is its whole draw (every recipe's, on a shared machine). */
-    static Facts facts(final CardModel m, final double demand, final boolean shared) {
-        final int t = CardDefaults.tierIndex(m.tier);
-        final long volt = t < 0 ? 0 : 8L << (2 * t);
-        final Run now = runAt(m.node, m.amps);
-        // The next amp count that runs it faster (past the one-tick floor more amps only draw more): double until one
-        // does, then halve the gap back.
-        Integer nextAmps = null;
-        Run next = null;
-        int lo = m.amps, hi = m.amps;
-        while (hi < MAX_AMPS) {
-            hi = (int) Math.min(MAX_AMPS, hi * 2L);
-            if (faster(runAt(m.node, hi), now)) break;
-            lo = hi;
-        }
-        if (lo < hi) {
-            final Run top = runAt(m.node, hi);
-            if (faster(top, now)) {
-                while (hi - lo > 1) {
-                    final int mid = lo + (hi - lo) / 2;
-                    if (!faster(runAt(m.node, mid), now)) lo = mid;
-                    else hi = mid;
-                }
-                nextAmps = hi;
-                next = runAt(m.node, hi);
-            }
-        }
-        // How many overclocks: each one quadruples the draw; the ones that also quarter the time are perfect.
-        int overclocks = 0, perfect = 0;
-        if (m.node.properties.get(GTKeys.EU_PER_TICK) instanceof final Number base && base.longValue() > 0
-            && m.node.properties.get(RecipePropertyAPI.DURATION_TICKS) instanceof final Number baseDur) {
-            final double perRun = (double) now.eut() / (base.doubleValue() * now.parallels());
-            overclocks = Math.max(0, (int) Math.round(Math.log(perRun) / Math.log(4)));
-            final double faster = baseDur.doubleValue() / now.duration();
-            final int halvings = Math.max(0, (int) Math.round(Math.log(faster) / Math.log(2)));
-            perfect = Math.max(0, Math.min(overclocks, halvings - overclocks));
-        }
-        return new Facts(m.amps, m.tier, volt, now, nextAmps, next, overclocks, perfect, m.machines, demand, shared);
+    static PowerInput.Facts facts(final CardModel m, final double demand, final boolean shared) {
+        final Long baseEu = m.node.properties.get(GTKeys.EU_PER_TICK) instanceof final Number base ? base.longValue()
+            : null;
+        final Double baseDuration = m.node.properties.get(
+            RecipePropertyAPI.DURATION_TICKS) instanceof final Number dur ? dur.doubleValue() : null;
+        return PowerInput
+            .facts(m.amps, m.tier, m.machines, amps -> runAt(m.node, amps), baseEu, baseDuration, demand, shared);
     }
 
-    static int height(final Facts f) {
+    static int height(final PowerInput.Facts f) {
         return PAD + 12 + 14 + 4 + 34 + 5 + (f.nextAmps() != null ? 12 + 30 + 44 : 14) + 5 + 18 + PAD;
     }
 
@@ -126,7 +81,7 @@ final class PowerPanel {
         return w - 3;
     }
 
-    static void draw(final Facts f, final int x, final int y) {
+    static void draw(final PowerInput.Facts f, final int x, final int y) {
         final int w = W, h = height(f), left = x + PAD, right = x + w - PAD, cw = right - left;
         Tip.beginPanel();
         Tip.chrome(x, y, w, h);
@@ -151,8 +106,8 @@ final class PowerPanel {
         // The stats, two columns between rules.
         Hyb.rect(left, ty, cw, 1, Tip.RULE);
         ty += 4;
-        final Run now = f.now();
-        final String[][] stats = { { "Overclocks", overclockText(f) },
+        final PowerInput.Run now = f.now();
+        final String[][] stats = { { "Overclocks", PowerInput.overclockText(f) },
             { "Parallels", Integer.toString(now.parallels()) }, { "Time / recipe", seconds(now.duration()) },
             { "Recipes / second", Fmt.compact(now.runsPerSecond()) },
             { "EU / recipe", Fmt.power(now.eut() * now.duration()) }, { "Draw", Fmt.power(now.eut()) + " EU/t" } };
@@ -170,7 +125,7 @@ final class PowerPanel {
             Hyb.textRight("none: more amps buy nothing", right, ty, Tip.SUBTLE);
             ty += 14;
         } else {
-            final Run next = f.next();
+            final PowerInput.Run next = f.next();
             Hyb.text("Next improvement", left, ty, Tip.TITLE);
             final String plus = "+" + amps(f.nextAmps() - f.amps());
             final int pw = sentenceWidth(plus, "@" + f.tier());
@@ -211,12 +166,6 @@ final class PowerPanel {
         Tip.endPanel();
     }
 
-    private static String overclockText(final Facts f) {
-        if (f.overclocks() == 0) return "none";
-        if (f.perfect() == 0) return Integer.toString(f.overclocks());
-        return f.perfect() + " perfect, " + (f.overclocks() - f.perfect());
-    }
-
     /** A before-and-after box: what it is, then "a -> b". */
     private static void box(final int x, final int y, final int w, final String label, final String unit,
         final String before, final String after) {
@@ -243,7 +192,7 @@ final class PowerPanel {
      * From nothing to the next step: the bar filled to what is supplied, ticks where the draw and the supply are, each
      * labelled; the label slides along its own width as the tick does, so it never leaves the bar's ends.
      */
-    private static void scale(final Facts f, final int x, final int y, final int w) {
+    private static void scale(final PowerInput.Facts f, final int x, final int y, final int w) {
         final double next = f.nextAmps();
         final double supplied = f.amps(), draw = f.volt() > 0 ? (double) f.now()
             .eut() / f.volt() : 0;

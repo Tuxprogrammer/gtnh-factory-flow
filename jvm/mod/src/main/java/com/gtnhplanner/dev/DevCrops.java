@@ -43,7 +43,7 @@ final class DevCrops {
                 .entrySet())
                 if (e.getKey() != null && e.getKey()
                     .getItem() != null && e.getValue() != null && e.getValue() > 0) drops.add(e.getKey());
-            final Node node = new Node(page, i, 0, 0);
+            final Node node = com.gtnhplanner.nei.NeiRecipes.node(page, i, 0, 0);
             final List<ItemStack> items = new ArrayList<>();
             for (final ItemStack d : drops) {
                 boolean seen = false;

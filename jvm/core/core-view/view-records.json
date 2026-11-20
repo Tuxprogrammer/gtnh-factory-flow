@@ -1,8 +1,16 @@
 {
- "roots": ["DrawerInput", "DrawerView", "GroupInput", "GroupView", "NoteLookInput", "NoteLookView", "NoticesInput", "NoticesNotice", "RailInput", "RailView"],
+ "roots": ["CardInputCase", "CardView", "DrawerInput", "DrawerView", "GroupInput", "GroupView", "MinimapInput", "MinimapView", "NoteLookInput", "NoteLookView", "NoticesInput", "NoticesNotice", "RailInput", "RailView"],
+ "enums": [
+  "jvm/core/core-base/src/main/java/com/gtnhplanner/core/base/RateUnit.java",
+  "jvm/core/core-model/src/main/java/com/gtnhplanner/data/flowchart/PinRule.java",
+  "jvm/core/core-solver/src/main/java/com/gtnhplanner/data/flowchart/balancer/UpToLoop.java",
+  "jvm/core/core-solver/src/main/java/com/gtnhplanner/data/flowchart/balancer/UpToReason.java"
+ ],
  "cases": {
+  "card/cases": { "input": "CardInputCase", "view": "CardView" },
   "drawer/cases": { "input": "DrawerInput", "view": "DrawerView" },
   "group/cases": { "input": "GroupInput", "view": "GroupView" },
+  "minimap/cases": { "input": "MinimapInput", "view": "MinimapView" },
   "note/look": { "input": "NoteLookInput", "view": "NoteLookView" },
   "notices/cases": { "input": "NoticesInput", "view": "NoticesNotice[]" },
   "rail/cases": { "input": "RailInput", "view": "RailView" }

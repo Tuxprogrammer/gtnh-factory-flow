@@ -252,6 +252,8 @@ public enum Sfx {
     public static final float GROUP_IN_PITCH = (float) ViewSounds.GROUP_IN_PITCH,
         GROUP_OUT_VOLUME = (float) ViewSounds.GROUP_OUT_VOLUME, GROUP_OUT_PITCH = (float) ViewSounds.GROUP_OUT_PITCH,
         UNGROUP_VOLUME = (float) ViewSounds.UNGROUP_VOLUME, UNGROUP_PITCH = (float) ViewSounds.UNGROUP_PITCH;
+    /** Cards carried over a group they would join, or off the one they were in: the snap, quieter (groupAimed). */
+    public static final float GROUP_AIM_VOLUME = (float) ViewSounds.GROUP_AIM_VOLUME;
 
     /** No sounds for a moment: a plan loading, a tab switching (its cards are not landing, they were there). */
     public static void quietFor(final long ms) {

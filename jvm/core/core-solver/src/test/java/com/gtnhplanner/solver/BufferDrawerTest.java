@@ -29,7 +29,7 @@ import com.gtnhplanner.data.flowchart.balancer.SolverMessage;
 import com.gtnhplanner.dev.SolveInputJson;
 
 /**
- * Buffer drawers in the solver ({@code docs/design/buffer-drawers.md}), on the corpus case {@code buffer-drawers},
+ * Buffer drawers in the solver ({@code docs/buffer-drawers.md}), on the corpus case {@code buffer-drawers},
  * three
  * islands whose answers are easy to work by hand. Every machine takes one second a craft, so extents are crafts a
  * second and, at one machine, counts.

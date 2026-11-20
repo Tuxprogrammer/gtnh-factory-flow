@@ -19,7 +19,7 @@ public final class FfDrawers {
 
     /**
      * FF's storage roles. A drawer's role comes from its wires: fed only, it is a drain (its drain mode says product,
-     * byproduct or trash); drawn from only, a source; both, a buffer ({@code docs/design/buffer-drawers.md}).
+     * byproduct or trash); drawn from only, a source; both, a buffer ({@code docs/buffer-drawers.md}).
      */
     public enum Role {
         SOURCE,

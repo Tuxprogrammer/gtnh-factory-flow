@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import type { FactoryNode, MachineConfigTierOption, Recipe } from "@/lib/model/types";
-import { GT_OVERCLOCK_TIERS, applyMachineHandlerToRecipe, applyRecipeInputOverrides, getRecipeAvailableVoltageTiers, getRecipeCoilTierControl, getRecipeMachineConfigTierControls, getRecipeMachineHandlers, getRecipeMaximumVoltageTier, getRunVoltageTier, getSelectedMachineHandler, getVoltageTierIndex, isSteamMachineHandler, makeResourceKey, type MachineConfigTierControl } from "@/lib/model";
+import { GT_OVERCLOCK_TIERS, getRecipeAvailableVoltageTiers, getRecipeCoilTierControl, getRecipeMachineConfigTierControls, getRecipeMachineHandlers, getRecipeMaximumVoltageTier, getRunVoltageTier, getSelectedMachineHandler, getVoltageTierIndex, isSteamMachineHandler, makeResourceKey, type MachineConfigTierControl } from "@/lib/model";
 import { formatCompact, formatPowerValue } from "@/lib/format/numbers";
 import { powerDisplayFromEuT, powerDisplaySuffix, rateSuffixForKind } from "@/lib/format/rate-unit";
 import { isCustomRateRecipe } from "@/lib/model/custom-rate";
@@ -13,12 +13,8 @@ import {
 } from "@/lib/model/programmed-circuit";
 import { stripBeeFrameSlotInputs } from "@/lib/model/bee-display";
 import { getOverclockedRecipeStats } from "@/lib/solver/overclock";
-import {
-  applyMachineOutputMultipliers,
-  getMachineParallelMultiplier,
-  getMachineStructuralParallels,
-} from "@/lib/solver/machine-effects";
-import { getNodePowerReport, getNodeSteamReport, hasPowerReport } from "@/lib/solver/power-report";
+import { applyCardOutputMultipliers, cardMachineMath } from "@/lib/core/machines";
+import type { getNodePowerReport, getNodeSteamReport } from "@/lib/solver/power-report";
 import { isMultiblockRecipe } from "@/lib/solver/power";
 import { prefersCuratedMachineMath } from "@/lib/solver/runtime-calculation";
 import { getFusionMachine } from "@/lib/machines/fusion";
@@ -29,6 +25,7 @@ import { makePortKey, parsePortKey } from "@/lib/solver/plan/port-key";
 import { parseSectionNodeId, sectionHandleId } from "@/lib/model/shared-machine";
 import type { PlanUpTo, UpToReason } from "@/lib/solver/plan/types";
 import { PIN_RULE_LABEL, pinRuleOf, withPinRule, type PinRule } from "@/lib/model/pin-rule";
+import { peakCount } from "@/lib/model/peak-count";
 import { getMachineStructureArt } from "@/lib/power/structure-art";
 import { powerCardTier } from "@/lib/power/power-recipe";
 import { turbineCard, type TurbineFlowCheck } from "@/lib/power/turbine-flow";
@@ -470,23 +467,24 @@ export function layoutStrip(chips: Array<Omit<CleanChipView, "x" | "y" | "width"
  * (the red ring). The first steps of the card's derived state, so the card and its shell cannot disagree.
  */
 export function deriveCardFace(recipe: Recipe, projectNode: FactoryNode) {
-  const selectedMachineHandler = getSelectedMachineHandler(recipe, projectNode);
-  const nodeRecipe = applyRecipeInputOverrides(recipe, projectNode);
-  const effectiveRecipe = applyMachineHandlerToRecipe(nodeRecipe, projectNode);
-  const machineDrawsEu = effectiveRecipe.eut > 0 && !isSteamMachineHandler(selectedMachineHandler);
-  const tierControl = machineDrawsEu ? getNodeTierControl(effectiveRecipe, projectNode) : undefined;
-  const powerReport =
-    machineDrawsEu && tierControl && hasPowerReport(nodeRecipe, projectNode)
-      ? getNodePowerReport(nodeRecipe, projectNode)
-      : undefined;
-  return {
-    selectedMachineHandler,
-    nodeRecipe,
-    effectiveRecipe,
-    machineDrawsEu,
-    tierControl,
-    powerReport,
-  };
+  // The machine figures come from the card's one readout (lib/core/machines.ts), and the face is kept beside them:
+  // a shell remounted by virtualization, and the card itself, read the same face.
+  return cardMachineMath(recipe, projectNode).keep(deriveCardFace, (machine) => {
+    const selectedMachineHandler = machine.handler;
+    const nodeRecipe = machine.nodeRecipe;
+    const effectiveRecipe = machine.effectiveRecipe;
+    const machineDrawsEu = effectiveRecipe.eut > 0 && !isSteamMachineHandler(selectedMachineHandler);
+    const tierControl = machineDrawsEu ? getNodeTierControl(effectiveRecipe, machine.node) : undefined;
+    const powerReport = machineDrawsEu && tierControl ? machine.powerReport : undefined;
+    return {
+      selectedMachineHandler,
+      nodeRecipe,
+      effectiveRecipe,
+      machineDrawsEu,
+      tierControl,
+      powerReport,
+    };
+  });
 }
 
 /**
@@ -1037,78 +1035,44 @@ export function cardNameIn(
   }
 }
 
-/** Everything the clean card draws and does, from the same inputs as the classic card. */
-export function useCleanCardModel(
-  data: RecipeNodeData,
-  selected: boolean,
-): { view: CleanCardView; actions: CleanCardActions; context: CleanCardContext } {
-  const { projectNode, recipe, result } = data;
-  useFontEpoch();
-  const updateNode = useFactoryStore((state) => state.updateNode);
-  const averageDraw = useWorkspaceView().averageMachineDraw;
-  useRateDisplayUnits();
-  // Pins live on the project, not the node: re-render when they move.
-  useFactoryStore((state) => state.project.settingPins);
-  const machineIcons = useMachineHandlerIconEntries();
-  const mapIcons = useRecipeMapIcons();
-  // The solve is read lazily like the classic card does: this component
-  // re-renders on every solver tick, which is when any of it can change.
-  const { project: liveProject, lastResult } = useFactoryStore.getState();
+/**
+ * What `cleanCardView` makes a card's view from: the node, its recipe, its solve and the facts its machine's maths and
+ * pictures give (`useCleanCardModel` works those out). Pure: the shared card cases (card-conformance.ts) run it, and the
+ * core's `CardViews.card` is its translation.
+ */
+export interface CleanCardFacts {
+  projectNode: Pick<
+    FactoryNode,
+    "id" | "solvePin" | "solvePinExact" | "parallel" | "portRates" | "machineConfigTiers"
+  >;
+  recipe: Pick<Recipe, "machineType" | "outputs" | "power"> & Partial<Recipe>;
+  result: RecipeNodeData["result"];
+  plan: PlanExtras;
+  rails: { inputs: RailPort[]; outputs: RailPort[] };
+  name: string;
+  hasPicker: boolean;
+  art?: string;
+  glanceArt?: string;
+  tierControl?: { current: string; fixed: boolean };
+  powerReport?: Pick<
+    NonNullable<ReturnType<typeof getNodePowerReport>>,
+    "state" | "tier" | "amps" | "drawEuT" | "parallels" | "recipeGateReason" | "isMultiblock" | "hatchChip"
+  >;
+  steamReport?: Pick<NonNullable<ReturnType<typeof getNodeSteamReport>>, "drawSteamPerTick" | "highPressure" | "parallels">;
+  showHatchControl: boolean;
+  parallel: number;
+  structuralParallel: number;
+  circuit?: RecipeProgrammedCircuit;
+  pinnedChips: Array<Omit<CleanChipView, "x" | "y" | "width">>;
+  turbineCheck?: TurbineFlowCheck;
+  averageDraw: boolean;
+  selected: boolean;
+  cardName: (id: string) => string | undefined;
+}
 
-  const derived = useMemo(() => {
-    const machineHandlers = getRecipeMachineHandlers(recipe);
-    const {
-      selectedMachineHandler,
-      nodeRecipe,
-      effectiveRecipe,
-      machineDrawsEu,
-      tierControl,
-      powerReport,
-    } = deriveCardFace(recipe, projectNode);
-    const steamReport = !machineDrawsEu ? getNodeSteamReport(nodeRecipe, projectNode) : undefined;
-    const showHatchControl = Boolean(
-      powerReport?.isMultiblock &&
-      prefersCuratedMachineMath(effectiveRecipe) &&
-      !getFusionMachine(effectiveRecipe.machineType),
-    );
-    const coilControl = getRecipeCoilTierControl(effectiveRecipe, projectNode);
-    const controls = getRecipeMachineConfigTierControls(effectiveRecipe, projectNode);
-    const overclockedStats = getOverclockedRecipeStats(nodeRecipe, projectNode);
-    const displayRecipe = stripBeeFrameSlotInputs(effectiveRecipe);
-    const adjusted = applyMachineOutputMultipliers(
-      displayRecipe,
-      projectNode,
-      overclockedStats.tier,
-    );
-    const overclockedRecipe = { ...displayRecipe, ...adjusted, ...overclockedStats };
-    return {
-      machineHandlers,
-      selectedMachineHandler,
-      nodeRecipe,
-      tierControl,
-      powerReport,
-      steamReport,
-      showHatchControl,
-      coilControl,
-      controls,
-      overclockedRecipe,
-      parallel: getMachineParallelMultiplier(effectiveRecipe, projectNode),
-      structuralParallel: getMachineStructuralParallels(effectiveRecipe, projectNode),
-      circuit: getRecipeProgrammedCircuit(effectiveRecipe) as RecipeProgrammedCircuit | undefined,
-    };
-  }, [recipe, projectNode]);
-
-  const pinControls = useMemo(() => settingControls(recipe, projectNode), [recipe, projectNode]);
-  const verdict = deriveNodeVerdict(liveProject, lastResult, projectNode.id);
-  const rails = buildRailPorts(
-    liveProject,
-    lastResult,
-    projectNode.id,
-    derived.overclockedRecipe,
-    verdict,
-  );
-  const plan = lastResult?.plan;
-
+/** A card's view from its facts: every string final, the strip laid out, the rows lit, the foot bar worked out. */
+export function cleanCardView(facts: CleanCardFacts): CleanCardView {
+  const { projectNode, recipe, result, plan, rails, name, tierControl, powerReport, steamReport } = facts;
   // Only this card's forced entries, and its spills into buffers, which it forces out the same way; the plan lists are
   // short, so no memo.
   const forcedAt = new Map<string, number>();
@@ -1119,20 +1083,10 @@ export function useCleanCardModel(
     if ("drawerId" in entry) spillAt.set(entry.portKey, entry.drawerId);
   }
 
-  const { selectedMachineHandler, machineHandlers, tierControl, powerReport, steamReport } =
-    derived;
-  const { machineIcon, art, name } = cardPicture(
-    recipe,
-    projectNode,
-    derived,
-    machineIcons,
-    mapIcons,
-  );
-
-  const hasPicker = machineHandlers.length > 1;
+  const hasPicker = facts.hasPicker;
   const tierLabel = powerReport?.isMultiblock ? powerReport.tier : tierControl?.current;
   const ampsLabel =
-    powerReport?.isMultiblock && derived.showHatchControl
+    powerReport?.isMultiblock && facts.showHatchControl
       ? (powerReport.hatchChip ?? `${formatCompact(powerReport.amps)}A`)
       : undefined;
 
@@ -1146,7 +1100,7 @@ export function useCleanCardModel(
   // Count: what runs, big; what you set, small, under it (docs/up-to.md).
   const countState = cardCountState(result, projectNode, plan, recipe);
   const { unset } = countState;
-  const count = buildCountView(countState, { ruleFixed: isCustomRateRecipe(recipe) });
+  const count = buildCountView(countState, { ruleFixed: isCustomRateRecipe(recipe as Recipe) });
 
   // Power row: a machine's draw, or a steam machine's litres.
   // An Up to card bills its count averaged by how full it got of it (its read-out's reached over capacity).
@@ -1156,11 +1110,15 @@ export function useCleanCardModel(
       ? Math.min(1, upTo.reached / upTo.capacity)
       : 0
     : Math.min(1, Math.max(0, result?.utilization ?? 1));
-  const drawScale = averageDraw ? usage : usage > 0 ? 1 : 0;
-  // The card's demand is the machines it has (the count set, fractions and all; else the solved count) times one
-  // machine's draw, as the mod prints it; averaged by its use (an Up to card's reached over its count).
+  const drawScale = facts.averageDraw ? usage : usage > 0 ? 1 : 0;
+  // The card's demand is the machines it has times one machine's draw, as the mod prints it. Averaged, the count set
+  // (fractions and all; else the solved count) by its use (an Up to card's reached over its count); at its peak, every
+  // machine built (`peakCount`: the count set or what the solve needs when more, else whole machines), as the overview
+  // bills it.
   const solvedNeeded = result?.theoreticalMachinesRequired ?? 0;
-  const machines = (count.set ?? solvedNeeded) * Math.max(1, projectNode.parallel);
+  const machines =
+    (facts.averageDraw ? (count.set ?? solvedNeeded) : peakCount(solvedNeeded, count.set, false)) *
+    Math.max(1, projectNode.parallel);
   let power: CleanPowerView | undefined;
   if (powerReport) {
     const stalled = powerReport.state !== "ok";
@@ -1187,37 +1145,17 @@ export function useCleanCardModel(
     };
   }
 
-  // Settings strip (the mod's pins): the settings pinned to this machine's cards, the coil by default on a heat recipe.
-  const settings: CleanCardContext["settings"] = [];
-  const rawChips: Array<Omit<CleanChipView, "x" | "y" | "width">> = [];
-  const pinKey = pinMachineKey(recipe, projectNode);
-  for (const control of pinControls) {
-    settings.push({
-      id: control.id,
-      label: control.label,
-      value: control.value,
-      steps: control.options.length > 1 || control.numeric !== undefined,
-    });
-    if (!isPinned(liveProject, pinKey, control)) continue;
-    rawChips.push({
-      id: control.id,
-      label: control.label,
-      value: control.value,
-      icon: control.icon,
-      warn: control.warn || undefined,
-      title: `${control.label}: ${control.value}`,
-    });
-  }
+  const rawChips = [...facts.pinnedChips];
   const parallelChip = parallelReading(
-    powerReport?.parallels ?? steamReport?.parallels ?? derived.parallel,
-    derived.structuralParallel,
+    powerReport?.parallels ?? steamReport?.parallels ?? facts.parallel,
+    facts.structuralParallel,
     powerReport?.state === "ok",
   );
   if (parallelChip) rawChips.push(parallelChip);
   const strip = layoutStrip(rawChips);
 
   // The rows an Up to card's reason names are lit in its colour (only while the card is Up to: `upTo` is its own).
-  const powerTier = powerCardTier(recipe);
+  const powerTier = powerCardTier(recipe as Recipe);
   const inputs = withReasonPorts(
     rails.inputs.map((port) =>
       buildPortView(projectNode.id, port, projectNode, forcedAt, spillAt, powerTier),
@@ -1236,25 +1174,18 @@ export function useCleanCardModel(
     count.rule === "any" && count.zero
       ? idleTradeOf(plan, projectNode.id, new Set(inputs.map((port) => port.resourceKey)))
       : undefined;
-  // A turbine card: what its whole turbines really make at the flow each gets.
-  const running = result?.theoreticalMachinesRequired ?? 0;
-  const turbineCheck = turbineCard(
-    recipe,
-    projectNode.machineConfigTiers,
-    running,
-    count.rule === "exact" ? count.set : undefined,
-  ).check;
+  const turbineCheck = facts.turbineCheck;
   const foot = buildFootView(
     count,
     countState.upTo,
     { inputs, outputs },
-    (id) => cardNameIn(liveProject, id),
+    facts.cardName,
     loop,
     idle,
     turbineCheck ? { ...turbineCheck, tier: powerTier } : undefined,
   );
 
-  const view: CleanCardView = {
+  return {
     nodeId: projectNode.id,
     name,
     nameSize,
@@ -1275,20 +1206,155 @@ export function useCleanCardModel(
     inputs,
     outputs,
     power,
-    art,
-    glanceArt: art ?? machineIcon?.iconPath,
+    art: facts.art,
+    glanceArt: facts.glanceArt,
     glanceProduct: glanceProduct(recipe.outputs),
     count,
     foot,
     loop,
     glance: glanceBar(countState.upTo, loop),
-    circuit: derived.circuit,
+    circuit: facts.circuit,
     chips: strip.chips,
     stripHeight: strip.height,
-    selected,
+    selected: facts.selected,
     cannotRun: powerReport !== undefined && powerReport.state !== "ok",
     unset,
   };
+}
+
+/** Everything the clean card draws and does, from the same inputs as the classic card. */
+export function useCleanCardModel(
+  data: RecipeNodeData,
+  selected: boolean,
+): { view: CleanCardView; actions: CleanCardActions; context: CleanCardContext } {
+  const { projectNode, recipe, result } = data;
+  useFontEpoch();
+  const updateNode = useFactoryStore((state) => state.updateNode);
+  const averageDraw = useWorkspaceView().averageMachineDraw;
+  useRateDisplayUnits();
+  // Pins live on the project, not the node: re-render when they move.
+  useFactoryStore((state) => state.project.settingPins);
+  const machineIcons = useMachineHandlerIconEntries();
+  const mapIcons = useRecipeMapIcons();
+  // The solve is read lazily like the classic card does: this component
+  // re-renders on every solver tick, which is when any of it can change.
+  const { project: liveProject, lastResult } = useFactoryStore.getState();
+
+  // From the card's one readout, kept beside it (lib/core/machines.ts): a remount reads it back.
+  const derived = useMemo(() => cardMachineMath(recipe, projectNode).keep(useCleanCardModel, (machine) => {
+    const machineHandlers = getRecipeMachineHandlers(recipe);
+    const {
+      selectedMachineHandler,
+      nodeRecipe,
+      effectiveRecipe,
+      machineDrawsEu,
+      tierControl,
+      powerReport,
+    } = deriveCardFace(recipe, machine.node);
+    const steamReport = !machineDrawsEu ? machine.steamReport : undefined;
+    const showHatchControl = Boolean(
+      powerReport?.isMultiblock &&
+      prefersCuratedMachineMath(effectiveRecipe) &&
+      !getFusionMachine(effectiveRecipe.machineType),
+    );
+    const coilControl = getRecipeCoilTierControl(effectiveRecipe, machine.node);
+    const controls = getRecipeMachineConfigTierControls(effectiveRecipe, machine.node);
+    const overclockedStats = machine.stats;
+    const displayRecipe = stripBeeFrameSlotInputs(effectiveRecipe);
+    const adjusted = applyCardOutputMultipliers(displayRecipe, machine);
+    const overclockedRecipe = { ...displayRecipe, ...adjusted, ...overclockedStats };
+    return {
+      machineHandlers,
+      selectedMachineHandler,
+      nodeRecipe,
+      tierControl,
+      powerReport,
+      steamReport,
+      showHatchControl,
+      coilControl,
+      controls,
+      overclockedRecipe,
+      parallel: machine.parallel,
+      structuralParallel: machine.structuralParallel,
+      circuit: getRecipeProgrammedCircuit(effectiveRecipe) as RecipeProgrammedCircuit | undefined,
+    };
+  }), [recipe, projectNode]);
+
+  const pinControls = useMemo(() => settingControls(recipe, projectNode), [recipe, projectNode]);
+  const verdict = deriveNodeVerdict(liveProject, lastResult, projectNode.id);
+  const rails = buildRailPorts(
+    liveProject,
+    lastResult,
+    projectNode.id,
+    derived.overclockedRecipe,
+    verdict,
+  );
+  const plan = lastResult?.plan;
+
+  const { selectedMachineHandler, machineHandlers, tierControl, powerReport } = derived;
+  const { machineIcon, art, name } = cardPicture(
+    recipe,
+    projectNode,
+    derived,
+    machineIcons,
+    mapIcons,
+  );
+
+  // Settings strip (the mod's pins): the settings pinned to this machine's cards, the coil by default on a heat recipe.
+  const settings: CleanCardContext["settings"] = [];
+  const pinnedChips: Array<Omit<CleanChipView, "x" | "y" | "width">> = [];
+  const pinKey = pinMachineKey(recipe, projectNode);
+  for (const control of pinControls) {
+    settings.push({
+      id: control.id,
+      label: control.label,
+      value: control.value,
+      steps: control.options.length > 1 || control.numeric !== undefined,
+    });
+    if (!isPinned(liveProject, pinKey, control)) continue;
+    pinnedChips.push({
+      id: control.id,
+      label: control.label,
+      value: control.value,
+      icon: control.icon,
+      warn: control.warn || undefined,
+      title: `${control.label}: ${control.value}`,
+    });
+  }
+
+  // A turbine card: what its whole turbines really make at the flow each gets.
+  const running = result?.theoreticalMachinesRequired ?? 0;
+  const turbineCheck = turbineCard(
+    recipe,
+    projectNode.machineConfigTiers,
+    running,
+    pinRuleOf(projectNode, recipe) === "exact" ? projectNode.solvePin : undefined,
+  ).check;
+
+  const view = cleanCardView({
+    projectNode,
+    recipe,
+    result,
+    plan,
+    rails,
+    name,
+    hasPicker: machineHandlers.length > 1,
+    art,
+    glanceArt: art ?? machineIcon?.iconPath,
+    tierControl,
+    powerReport,
+    steamReport: derived.steamReport,
+    showHatchControl: derived.showHatchControl,
+    parallel: derived.parallel,
+    structuralParallel: derived.structuralParallel,
+    circuit: derived.circuit,
+    pinnedChips,
+    turbineCheck,
+    averageDraw,
+    selected,
+    cardName: (id) => cardNameIn(liveProject, id),
+  });
+  const { count, inputs, outputs } = view;
 
   const actions: CleanCardActions = {
     stepTier: (direction) => {

@@ -285,7 +285,8 @@ final class Rebuild {
     /** NEI's open page, turned to the plan's recipe. */
     private static void openPlanRecipe(final Node plan) {
         final GuiRecipe<?> page = Targets.recipePage();
-        if (page != null && plan.recipeId != null) page.openTargetRecipe(plan.recipeId);
+        if (page != null && com.gtnhplanner.nei.NeiRecipes.id(plan) != null)
+            page.openTargetRecipe(com.gtnhplanner.nei.NeiRecipes.id(plan));
     }
 
     /** The plan button of the plan's recipe on NEI's page, found once and kept. */
@@ -301,7 +302,7 @@ final class Rebuild {
                 found[0] = null;
                 outer: for (final IRecipeHandler h : page.currenthandlers)
                     for (int i = 0; i < h.numRecipes(); i++) if (Recipe.RecipeId.of(h, i)
-                        .equals(plan.recipeId)) {
+                        .equals(com.gtnhplanner.nei.NeiRecipes.id(plan))) {
                             found[0] = h;
                             found[1] = i;
                             break outer;
@@ -425,8 +426,9 @@ final class Rebuild {
      */
     private static void place(final Node plan, final Uuid builtFrom, final boolean output, final int port) {
         final BoardSession s = session();
-        if (s == null || plan.recipeId == null) return;
-        final codechicken.nei.recipe.RecipeHandlerRef ref = codechicken.nei.recipe.RecipeHandlerRef.of(plan.recipeId);
+        if (s == null || com.gtnhplanner.nei.NeiRecipes.id(plan) == null) return;
+        final codechicken.nei.recipe.RecipeHandlerRef ref = codechicken.nei.recipe.RecipeHandlerRef
+            .of(com.gtnhplanner.nei.NeiRecipes.id(plan));
         if (ref == null || ref.handler == null) return;
         if (builtFrom != null) s.armLookup(builtFrom, output, port);
         s.addRecipe(ref.handler, ref.recipeIndex);

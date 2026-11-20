@@ -27,9 +27,11 @@ public final class NodeMath {
 
     /**
      * Whether this port computes the recipe. The Tree Growth Simulator and Bacterial Vat are the mod's own models;
-     * crops and bees are the website's alone.
+     * bee and crop cards are the passive-production models' ({@code Bees}, {@code CropsNh} and the website's own), told
+     * apart as the website tells them ({@link PassiveRecipes}).
      */
     public static boolean covers(final Web.Recipe recipe, final Web.Node node) {
+        if (PassiveRecipes.beeOrCrop(recipe)) return false;
         final Web.Recipe effective = recipe.machineType != null ? RecipeRules.applyHandler(recipe, node) : recipe;
         return !RecipeRules.TGS_MACHINE_TYPE.equals(effective.machineType)
             && !"Bacterial Vat".equals(effective.machineType);

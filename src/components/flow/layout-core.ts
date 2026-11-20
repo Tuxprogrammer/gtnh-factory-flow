@@ -2,17 +2,17 @@
  * The wire router, Arrange and the live-drag rule through the compiled core (jvm/core/core-layout, the website's own
  * router and Arrange translated line for line and held to them by conformance/layout), behind the layout flag.
  *
- * The flag is `ADOPT.layout` in `src/lib/core/adopt.ts` once that file lands; until then `LAYOUT_ADOPTED` below is
- * its stand-in, and a dev override set through adopt.ts's shared record (`__gtnhAdopt.set("layout", ...)`) already
- * counts. Nothing here waits for the core: `layoutCore()` is null until `loadCore()` has finished, or when it failed,
- * or when the flag is off, and the caller then runs the TypeScript. Pure and worker-safe.
+ * The flag is `ADOPT.layout` in `src/lib/core/adopt.ts` (a test or the dev console forces it with `setAdoptOverride`).
+ * Nothing here waits for the core: `layoutCore()` is null until `loadCore()` has finished, or when it failed, or when
+ * the flag is off, and the caller then runs the TypeScript. Pure and worker-safe.
  *
  * The router crosses as a board held in the core between calls (`CoreBoardRouter`): each call tells it only what
  * changed since the last (obstacles and requests put or gone, the order when it moved) and gets back only the routes
  * whose points changed. A drag beat therefore sends the moved card and its wires, not the board.
  */
 import type { CoreExports } from "@/lib/core/exports.generated";
-import { coreIfLoaded, coreInfo, loadCore } from "@/lib/core/loader";
+import { coreFor, isAdopted } from "@/lib/core/adopt";
+import { loadCore } from "@/lib/core/loader";
 import type { ArrangeJob, ArrangeJobResult, ArrangeProgress } from "@/lib/arrange-job";
 import type {
   GridEndpoint,
@@ -25,42 +25,11 @@ import type {
 import type { IncrementalStats, RouterSnapshot } from "./incremental-router";
 import type { RouterTuning } from "./router-tuning";
 
-/** Stand-in for adopt.ts's `layout` line: whether routing and Arrange go through the core when it is loaded. */
-export const LAYOUT_ADOPTED = true;
-
-// adopt.ts keeps its dev overrides in this record on globalThis; reading it here means one override governs both.
-const ADOPT_OVERRIDES = Symbol.for("gtnh.core.adopt");
-
-/** Whether the layout area computes through the core: a dev override if one is set, else the committed flag. */
-export function layoutAdopted(): boolean {
-  const g = globalThis as unknown as Record<symbol, Record<string, boolean | undefined> | undefined>;
-  return g[ADOPT_OVERRIDES]?.layout ?? LAYOUT_ADOPTED;
-}
-
-/** Forces the area on or off for this thread (tests, a dev console), or back to the flag (undefined). Memory only. */
-export function setLayoutAdoptOverride(value: boolean | undefined): void {
-  const g = globalThis as unknown as Record<symbol, Record<string, boolean | undefined> | undefined>;
-  const o = (g[ADOPT_OVERRIDES] ??= {});
-  if (value === undefined) delete o.layout;
-  else o.layout = value;
-}
-
 type Layout = CoreExports["LayoutExports"];
 
 /** The core's layout exports when the area is on and the core is loaded on this thread, else null. */
 export function layoutCore(): Layout | null {
-  return layoutAdopted() ? (coreIfLoaded()?.LayoutExports ?? null) : null;
-}
-
-/**
- * The core for Arrange: as `layoutCore()`, but on the WebAssembly build only. The JavaScript build of the core arranges
- * one reference board differently from the TypeScript (the column challenger of "factory-flow/Untitled design" in
- * conformance/layout/arrange.json.gz; the JVM and the WebAssembly build agree with the TypeScript), so an engine without
- * WebAssembly GC keeps the TypeScript Arrange until that is found and fixed. Its router answers are the TypeScript's
- * and it routes.
- */
-export function arrangeCore(): Layout | null {
-  return coreInfo()?.target === "wasm-gc" ? layoutCore() : null;
+  return coreFor("layout")?.LayoutExports ?? null;
 }
 
 /**
@@ -68,7 +37,7 @@ export function arrangeCore(): Layout | null {
  * not built or fails to start leaves the TypeScript in charge.
  */
 export function loadLayoutCore(): Promise<boolean> {
-  if (!layoutAdopted()) return Promise.resolve(false);
+  if (!isAdopted("layout")) return Promise.resolve(false);
   return loadCore().then(
     () => true,
     () => false,

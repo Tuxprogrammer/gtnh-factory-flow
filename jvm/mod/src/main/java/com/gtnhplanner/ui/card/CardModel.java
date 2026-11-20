@@ -242,7 +242,7 @@ public final class CardModel {
         final com.gtnhplanner.machines.game.WebSettings.Coil coil = web == null ? null
             : com.gtnhplanner.machines.game.WebSettings.coil(node, cfg, web);
 
-        final RecipeHandlerRef ref = com.gtnhplanner.nei.RecipeRefs.of(node.recipeId);
+        final RecipeHandlerRef ref = com.gtnhplanner.nei.RecipeRefs.of(com.gtnhplanner.nei.NeiRecipes.id(node));
         // A crop has no machine in NEI: its harvester (a Crop Manager at a tier, or the Industrial Farm) is a setting.
         final com.gtnhplanner.machines.CropsNh.Setup crop = com.gtnhplanner.machines.game.CropCards.setup(node);
         // A bee's housing is a setting too, and the card is named for its species (BeeCards).
@@ -372,7 +372,7 @@ public final class CardModel {
 
     /** The machines NEI says run a node's recipe. */
     public static List<ItemStack> catalystsOf(final Node node) {
-        return catalysts(com.gtnhplanner.nei.RecipeRefs.of(node.recipeId));
+        return catalysts(com.gtnhplanner.nei.RecipeRefs.of(com.gtnhplanner.nei.NeiRecipes.id(node)));
     }
 
     private static List<ItemStack> catalysts(final RecipeHandlerRef ref) {

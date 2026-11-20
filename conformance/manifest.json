@@ -25,7 +25,7 @@
       "generator": "website-out.json: GTNH_WRITE_GOLDEN=1 vitest run src/test-support/format-conformance.test.ts; mod-out.json: ./gradlew :core-view:test --tests '*FmtConformanceTest*' -PwriteVectors; mod-recipe-overlay-out.json: ./gradlew :mod:test --tests '*RecipeOverlayFormatTest*' -PwriteVectors; COMPARISON.md: node tools/conformance/format/compare.mjs; then node tools/conformance/manifest.mjs --write"
     },
     "layout": {
-      "specifies": "The wire router: every router call the website's router tests make (router-tests.json: solves with boards in and routes out, IncrementalRouter step sequences, cardRimDocks vectors) and the reference boards (boards.json.gz: the layout benchmark's plans as boxes and wires, each routed fresh, its busiest box dragged three beats and dropped), all answered by the website's TypeScript router; the Java router (core-layout) must give the same routes and search work to the bit; and the arrange (arrange.json.gz: every arrange call the website's arrange tests make, and the reference boards up to 80 wires arranged with the router judge, stage by stage and whole, answered by the website's Arrange, plus the optimiser's searches, free placements and proxy scores as it calls them); the Java Arrange (core-layout) must give the same positions, islands and steering stops to the bit. js-sort.json pins JavaScript's Array.prototype.sort as V8 runs it (consistent orders, equal keys and comparators that are no order at all, written by Node); core-layout's JsSort, through which every list sort of the router and the Arrange goes, must give the same order. tie-board.json.gz is a website board (a grid of 484 cards, 200 wires) whose dock order ties in cycles; the website routes it through the TypeScript and the compiled core on both targets and requires the same routes.",
+      "specifies": "The wire router: every router call the website's router tests make (router-tests.json: solves with boards in and routes out, IncrementalRouter step sequences, cardRimDocks vectors, and boards with open groups routed with the default dials so the costs of crossing and leaving a group are pinned) and the reference boards (boards.json.gz: the layout benchmark's plans as boxes and wires, each routed fresh, its busiest box dragged three beats and dropped), all answered by the website's TypeScript router; the Java router (core-layout) must give the same routes and search work to the bit; and the arrange (arrange.json.gz: every arrange call the website's arrange tests make, and the reference boards up to 80 wires arranged with the router judge, stage by stage and whole, answered by the website's Arrange, plus the optimiser's searches, free placements and proxy scores as it calls them); the Java Arrange (core-layout) must give the same positions, islands and steering stops to the bit. js-sort.json pins JavaScript's Array.prototype.sort as V8 runs it (consistent orders, equal keys and comparators that are no order at all, written by Node); core-layout's JsSort, through which every list sort of the router and the Arrange goes, must give the same order. tie-board.json.gz is a website board (a grid of 484 cards, 200 wires) whose dock order ties in cycles; the website routes it through the TypeScript and the compiled core on both targets and requires the same routes.",
       "readers": [
         "jvm: core-layout com.gtnhplanner.core.layout.RouterConformanceTest",
         "jvm: core-layout com.gtnhplanner.core.layout.arrange.ArrangeConformanceTest",
@@ -195,8 +195,8 @@
     },
     "layout/router-tests.json": {
       "area": "layout",
-      "bytes": 1688373,
-      "sha256": "6dacfaedf0c5eb1744e2e4f774747b5c56b0bd246006f2ad73653697d2f385d7"
+      "bytes": 1901546,
+      "sha256": "160d6f17f33d16c707898a0bbc743be7e67a99b15b2c214f82367065a4441761"
     },
     "layout/tie-board.json.gz": {
       "area": "layout",
@@ -1153,6 +1153,16 @@
       "bytes": 6601,
       "sha256": "dad06cb14862c075382f2b43fdffb9edfed3b8534cc221add8dbf7e3bf6a8664"
     },
+    "view/card/cases.json": {
+      "area": "view",
+      "bytes": 486628,
+      "sha256": "6f3e43eb7d52dfeba2d1d8947ea8075c9fee8a262567d9f3d7d82ced5b0b83b9"
+    },
+    "view/card/count.json": {
+      "area": "view",
+      "bytes": 2974,
+      "sha256": "001810ce3f822f0a532d7fee95334bdbabf469d288d30dd9ece7838b038f74ea"
+    },
     "view/drawer/cases.json": {
       "area": "view",
       "bytes": 140126,
@@ -1163,10 +1173,20 @@
       "bytes": 16300,
       "sha256": "5589c24af6f41a5ddcc3da29c9c253ca80662aa578c71f3eaa180f5188d134fe"
     },
+    "view/minimap/cases.json": {
+      "area": "view",
+      "bytes": 19183,
+      "sha256": "25ed149d7f24291be7fbf30b073be760342eabca80997ab9b0472dfd9fbab2ad"
+    },
     "view/note/look.json": {
       "area": "view",
       "bytes": 4891,
       "sha256": "893ad1786a962fb0a433273d6088c970c436c554dfeed52f59cb3ee60f081020"
+    },
+    "view/note/menu.json": {
+      "area": "view",
+      "bytes": 830,
+      "sha256": "52c66c8da1096947f69e2390496b116adac67b4df601713f9b6e4af466802e6b"
     },
     "view/notices/cases.json": {
       "area": "view",
@@ -1185,8 +1205,8 @@
     },
     "view/records.json": {
       "area": "view",
-      "bytes": 10479,
-      "sha256": "cc2558961fa8eb028cf8c9134e96b70bd0c410973ded2d11a4fcf4f6a0933113"
+      "bytes": 20727,
+      "sha256": "ead6fb47226c08358536ef4a5e299a6b5229cdad4ae14cbafbabc2277a33c0a0"
     }
   }
 }

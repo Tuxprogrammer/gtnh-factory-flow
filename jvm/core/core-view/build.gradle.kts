@@ -10,6 +10,9 @@ dependencies {
     // The card logic reads power sources and models (core-power), the machine maths' result (core-machines) and the
     // core's id type (core-base); core-power brings the other two.
     "api"(project(":core-power"))
+    // The card's rules read the plan model (PinRule, Edge) and the solver's read-outs (Up to, loops); core-model brings
+    // core-solver.
+    "api"(project(":core-model"))
     // javax.annotation.Nullable, as the mod uses it; annotations only, not shipped. The tests read it by reflection
     // (the view record conventions), so it is on their runtime path.
     compileOnly("com.google.code.findbugs:jsr305:3.0.2")

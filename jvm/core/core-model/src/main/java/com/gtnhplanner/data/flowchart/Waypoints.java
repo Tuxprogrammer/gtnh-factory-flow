@@ -11,6 +11,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.base.Float32Ops;
 import com.gtnhplanner.core.base.Uuid;
 
@@ -169,7 +170,8 @@ public final class Waypoints {
     /** A board x or y on the website's grid: the corner nearest it. */
     public static int toSite(final int v) {
         // Single precision, as it always was: through Float32Ops so every target rounds the same.
-        return Math.round(Float32Ops.div(Float32Ops.of(v), Float32Ops.of(SITE_GRID))) * SITE_GRID;
+        // Math.round of the float, through the double it widens to exactly: the same nearest whole, ties up.
+        return (int) ExactMath.round(Float32Ops.div(Float32Ops.of(v), Float32Ops.of(SITE_GRID))) * SITE_GRID;
     }
 
     /** The website's waypoints ([{x, y}, ...]) on the router's lines; empty for none or anything malformed. */
@@ -183,7 +185,7 @@ public final class Waypoints {
         for (final JsonElement e : json.getAsJsonArray()) {
             final double[] xy = xy(e);
             if (xy == null) continue;
-            final int x = (int) Math.round(xy[0]), y = (int) Math.round(xy[1]);
+            final int x = (int) ExactMath.round(xy[0]), y = (int) ExactMath.round(xy[1]);
             out.add(snap ? new int[] { onLine(x), onLine(y) } : new int[] { x, y });
         }
         return out.isEmpty() ? List.of() : Collections.unmodifiableList(out);

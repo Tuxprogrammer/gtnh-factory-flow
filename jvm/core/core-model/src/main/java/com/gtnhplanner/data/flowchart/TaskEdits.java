@@ -9,6 +9,8 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
+
 /**
  * The task board's edits on a graph, pure: what the task view and its panel do to {@link Graph#tasks},
  * {@link Graph#taskItems} and {@link Graph#taskComments}. Callers wrap them in one undoable edit. Lists come back in
@@ -743,8 +745,8 @@ public final class TaskEdits {
         if (Math.abs(dx) < 0.5 && Math.abs(dz) < 0.5) return "";
         // 0 east, counter-clockwise in the game's x and -z.
         // Math.toDegrees written out (the JDK's own: the angle times 180 / pi), which every target computes alike.
-        final double deg = Math.atan2(-dz, dx) * (180.0 / Math.PI);
-        final int sector = (int) Math.floorMod(Math.round(deg / 45), 8);
+        final double deg = ExactMath.atan2(-dz, dx) * (180.0 / Math.PI);
+        final int sector = (int) Math.floorMod(ExactMath.round(deg / 45), 8);
         return switch (sector) {
             case 0 -> "east";
             case 1 -> "north-east";
@@ -759,10 +761,10 @@ public final class TaskEdits {
 
     /** "12 m north-east", "here": how far a spot is and which way, across the ground. */
     public static String howFar(final double dx, final double dz) {
-        final long d = Math.round(Math.sqrt(dx * dx + dz * dz));
+        final long d = ExactMath.round(Math.sqrt(dx * dx + dz * dz));
         final String way = compass(dx, dz);
         if (d < 1 || way.isEmpty()) return "here";
-        return (d >= 10_000 ? Math.round(d / 1000.0) + " km " : d + " m ") + way;
+        return (d >= 10_000 ? ExactMath.round(d / 1000.0) + " km " : d + " m ") + way;
     }
 
     /** A spot's block as the game types it, "x y z" (the website's Copy where it is), to paste into a command. */

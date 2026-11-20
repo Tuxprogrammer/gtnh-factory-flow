@@ -2,6 +2,8 @@ package com.gtnhplanner.data.effect;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
+
 public class EffectResult {
 
     private int durationTicks;
@@ -66,8 +68,8 @@ public class EffectResult {
 
     /** Sets the exact duration and EU/t, the whole-number ones rounded from them. */
     public EffectResult exact(final double duration, final double energy) {
-        this.durationTicks = (int) Math.max(1, Math.round(duration));
-        this.costPerT = Math.round(energy);
+        this.durationTicks = (int) Math.max(1, ExactMath.round(duration));
+        this.costPerT = ExactMath.round(energy);
         this.exactDuration = duration;
         this.exactEnergy = energy;
         return this;

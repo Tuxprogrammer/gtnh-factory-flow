@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.data.effect.EffectResult;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.properties.RecipeProperty;
@@ -122,8 +123,8 @@ public class MachineConfig {
         final int tickMod = MachineProfile.getInt(settings, Settings.TICK_MODIFIER.key(), 100);
         if (tickMod > 0 && tickMod != 100) {
             final double factor = 100.0 / tickMod;
-            final int newDuration = Math.max(1, (int) Math.round(result.durationTicks() * factor));
-            final long newEnergyPerT = Math.round(result.energyPerT() / factor);
+            final int newDuration = Math.max(1, (int) ExactMath.round(result.durationTicks() * factor));
+            final long newEnergyPerT = ExactMath.round(result.energyPerT() / factor);
             result = new EffectResult(newDuration, newEnergyPerT, result.throughputFactor());
         }
         return result;

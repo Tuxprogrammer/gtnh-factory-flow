@@ -166,10 +166,13 @@ codec also runs where there is no board (the live service, the server's plan rou
 its own: measure it then.
 
 `ViewExports`: `viewCardWords(json)` installs the host's words as core-base `Text` (a key-to-pattern object, `%s`,
-`%n$s`, `%%`); `viewCard(caseJson)` and `viewCardsSix(dialsJson, cardsJson)` measure text six px a character (the shared
-cases); `viewCardMeasured(caseJson, measure)` and `viewCards(dialsJson, cardsJson, measure)` call
-`measure.width(style, text)` back for each width (`TextStyle` names). Each card answers `{"view", "geometry"}`.
-`tools/web-core/view.mjs` runs the shared card cases on both targets in the conformance run.
+`%n$s`, `%%`). The website's path is `viewCardJs(cardCase, measure)` (`viewCardJsSix(cardCase)` six px a character):
+the `CardInputCase` object in, `{view, geometry}` objects out, nothing as text (next section; facade
+`src/lib/core/card-wire.ts` `cardThroughCore`). The same answers as JSON text, for the conformance run and the tests:
+`viewCard(caseJson)` and `viewCardsSix(dialsJson, cardsJson)` six px; `viewCardMeasured(caseJson, measure)` and
+`viewCards(dialsJson, cardsJson, measure)` call `measure.width(style, text)` back for each width (`TextStyle` names).
+Each card answers `{"view", "geometry"}`. `tools/web-core/view.mjs` runs the shared card cases on both targets through
+both (`view/card`, `view/card-js`: the objects must be the JSON answer, text for text).
 
 ## Compiler options
 
@@ -215,10 +218,84 @@ together (243 KB against 264 KB gzipped).
 - `WebCore` (the main class) exports are top-level functions and start `webCore` (`webCoreExportVersion`,
   `webCoreRuntimeMaxMemory`).
 - Parameter and return types: `int`, `double`, `boolean`, `String`, `void`, or a JSO subtype. No `long`, arrays,
-  records or collections. Ids cross as hex strings; lists cross as a string. A structured result is a JSO type built
-  with `@JSBody` (see `UuidInfo`). A module with rich inputs exposes a JSON-in / JSON-out `String` entry point.
+  records or collections. Ids cross as hex strings. A record crosses as a JavaScript object through a generated codec
+  (next section) when it crosses often; a cold or large input (a whole plan to solve) may cross as JSON text, and every
+  module keeps a JSON-in / JSON-out `String` entry point on the conformance shapes for the conformance run.
 - No public static non-exported functions in an exports class.
 - `ExportConventionTest` checks all of this on the JVM.
+
+## Records across the boundary
+
+A record that crosses on a hot path (once per card, per frame, per edit) crosses as a JavaScript object, read and
+built by generated Java, never as JSON text. Measured on the recipe card, writing and parsing JSON was most of a call:
+the core's own rules take 9 to 13 us a card on WebAssembly, the JSON crossing took 60 to 75 more.
+
+**How a record crosses.** The Java record is the one description (the wire convention of
+`conformance/view/README.md`: numbers, booleans, strings, enums, lists, string-keyed maps, nested records; `@Nullable`
+is a key left out). `tools/web-core/gen-wire.mjs` reads it through `gen-records.mjs` (the same read that writes the
+TypeScript declarations `records.generated.ts` and the tracked shape table `conformance/view/records.json`) and writes
+`src/main/java/com/gtnhplanner/web/wire/ViewJs.java`:
+
+- `read<Record>(JSObject)` reads the website's object: one dedicated `@JSBody` accessor per component (`return o.x`),
+  so a number, a boolean or a string crosses as itself; an enum is read as its ordinal through a name table (the
+  shape table's order, which `ViewRecordsTest` holds to the compiler's); a list item by index, a map by its keys. A
+  missing key reads as the JSON reader's empty value (0, false, "", an empty list, map or record; null for an
+  optional); an enum name the record lacks fails loudly.
+- `js(record)` builds the website's object: one `@JSBody` factory per record, its components in order, an absent
+  optional left out, lists pushed item by item, enums as their names.
+
+The object is exactly what `JSON.parse` gives of the record's JSON, key order included, so the TypeScript side needs no
+code: the export takes and returns `JSObject` and a small facade gives it the declared types (the card's:
+`src/lib/core/card-wire.ts`). Differences from JSON text: NaN and the infinities cross as numbers (JSON has none) and
+-0 keeps its sign.
+
+**Adding a record.** Make it a root of `jvm/core/core-view/view-records.json` (its TypeScript declaration), list it in
+`wire-records.json` under `in` (the website hands it over) or `out` (the core answers it), run
+`node tools/web-core/gen-wire.mjs` and commit `ViewJs.java`. The file is tracked so the JVM build needs no Node, and is
+never rewritten by an npm pre-hook: `gen-wire.test.mjs` fails in CI when it is stale. The generator refuses a shape it
+cannot carry (a list of lists) instead of writing a wrong reader. Today it reads the records under `core-view`
+(`gen-records.mjs`'s sources); a record of another module needs that read widened first. Prove the new path the way the
+card is proved: its answers equal to the JSON export's, text for text, in the conformance run on both targets
+(`view/card-js`).
+
+**A trap for any `@JSBody`.** The JavaScript target inlines a script into its caller, so a local the script declares
+can capture a variable of the caller (`var v = {}` took the caller's `v`). Generated scripts name their locals `__w`,
+`__t`, `__k`; a hand-written script declares none or does the same.
+
+**What it costs** (the 722 recorded cards of `conformance/view-inputs/`, microseconds a card, median of nine passes;
+Node 24 on the build box with the website's widths called back, `card-shadow-cost.local.test.ts`; Chromium 153
+headless on the same box with the website's own builders and canvas widths bundled into the page):
+
+| Path | Node, Wasm GC | Node, JavaScript | Chromium, Wasm GC | Chromium, JavaScript |
+|---|---|---|---|---|
+| website TypeScript (`cleanCardView`) | 16 | 16 | 8 to 11 | 8 to 11 |
+| core, JSON text both ways (before) | 87 to 91 | 199 to 204 | 81 | 199 to 210 |
+| core, objects both ways (now) | 33 to 35 | 56 | 26 | 44 to 48 |
+| core, objects, six px (no width call backs) | 22 to 25 | 42 to 48 | 20 | 38 to 42 |
+| core rules alone, six px, input kept in the core, answer not crossing (the floor) | 11 to 13 | 46 | 9 | 34 |
+| website writes the input from its facts (`cardInputOf`) | 11 to 14 | 11 to 14 | 8 | 8 |
+
+Against the TypeScript the card through the core is 2.0 to 2.2 times on WebAssembly in Node and 2.4 to 3.1 times in
+Chromium (where the TypeScript is faster), from 5.5 and 7.5 to 9.8 times with JSON. What is left is not the crossing:
+the rules themselves on WebAssembly (9 to 13 us, 2.3 on the JVM) and the width call backs (14.7 a card, about 0.4 us
+of crossing each on top of the measuring). Counting the website's own input writer as well, a card costs 50 to 53 us
+in Node and 35 to 36 in Chromium.
+
+**Candidates measured** (same cards, end to end per card from the input object, widths called back: the website's in
+Node, a six-px function in this Chromium page; Wasm GC / JavaScript; the losing codecs and the probes are kept outside
+the repository):
+
+| Candidate | Node | Chromium | Notes |
+|---|---|---|---|
+| JSON text both ways | 101.6 / 205.7 | 74.2 / 170.8 | `JsonTree` parse and `NumberText` in the core, `JSON.stringify`/`parse` on the website |
+| packed: one `Float64Array` of numbers plus one text of every string, generated reader and writer on both sides | 38.1 / 70.7 | 24.2 / 47.9 | each crosses in one copy; reading the answer back in TypeScript costs more than JSO's objects |
+| JSO objects both ways (chosen) | 32.2 / 52.1 | 21.9 / 32.8 | read 4.9 us, answer 2.4 us on Wasm; no TypeScript codec |
+| input kept resident, rules only | 16.1 / 57.7 | 10.2 / 38.8 | the floor; the website rebuilds a card's input from its facts anyway, so keeping it saves only the read |
+
+Every candidate gave the JSON export's answer on all 722 cards, on both targets, in Node and in Chromium. Keeping
+inputs resident and sending what changed was not built: the website writes the whole input from its facts on every
+render (11 to 14 us, as much as the crossing), so a diff costs what writing costs; a per-card cache keyed by the input,
+which skips the crossing for an unchanged card, is the switch item's.
 
 ## Overrides
 

@@ -3,6 +3,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { gunzipSync } from "node:zlib";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { cardThroughCore } from "@/lib/core/card-wire";
 import {
   core,
   loadCore,
@@ -28,7 +29,9 @@ import { cleanCardView } from "./clean-model";
 /**
  * The card shadow (restructure/adoption.md, step one): what the website's TypeScript shows on a recipe card and what
  * the compiled core's `CardViews` makes of the same facts (`ViewExports`, on both targets) must agree, text, numbers,
- * tones, order and rows. No production path calls the core. Inputs:
+ * tones, order and rows. The core is called the way the website will call it, records as JavaScript objects
+ * (`cardThroughCore`, `viewCardJs`); its JSON export must give the same answer text for text. No production path calls
+ * the core. Inputs:
  *
  * - the shared card cases (conformance/view/card/cases.json): the core over each stored input gives the stored view,
  *   and the input the website writes from its own facts for the case (`cardInputOf`) is the stored input;
@@ -109,10 +112,14 @@ describe("card shadow: the website's card and the compiled core's agree", () => 
         const tally: Tally = { cards: 0, kinds: new Map() };
         for (const c of cases) {
           tally.cards++;
-          const made = JSON.parse(core().ViewExports.viewCard(JSON.stringify(c.input))) as {
-            view: unknown;
-          };
+          const made = cardThroughCore(core().ViewExports, c.input as unknown as CardInputCase);
           note(tally, c.name, differences(c.view, made.view));
+          // Text for text, key order and number spelling included, as the conformance run compares.
+          if (JSON.stringify(made.view) !== JSON.stringify(c.view))
+            note(tally, c.name, ["view: not the stored text"]);
+          const json = core().ViewExports.viewCard(JSON.stringify(c.input));
+          if (json !== JSON.stringify(made))
+            note(tally, c.name, ["json: the JSON export's text differs"]);
           const written = withCaseDials(c.input, () =>
             cardInputOf(caseFacts(c.input), c.input.card.menu),
           );
@@ -141,16 +148,19 @@ describe("card shadow: the website's card and the compiled core's agree", () => 
           const caseJson: CardInputCase = { dials: line.dials, card: input as CardInput };
           let made: { view: unknown; geometry: { anchors: unknown[] } };
           try {
-            made = JSON.parse(
-              withDials(line.dials, () =>
-                core().ViewExports.viewCardMeasured(JSON.stringify(caseJson), WEB_CARD_MEASURE),
-              ),
+            made = withDials(line.dials, () =>
+              cardThroughCore(core().ViewExports, caseJson, WEB_CARD_MEASURE),
             );
           } catch (e) {
             note(tally, name, [`core: threw ${String(e).slice(0, 200)}`]);
             continue;
           }
           note(tally, name, differences(shown, made.view));
+          const json = withDials(line.dials, () =>
+            core().ViewExports.viewCardMeasured(JSON.stringify(caseJson), WEB_CARD_MEASURE),
+          );
+          if (json !== JSON.stringify(made))
+            note(tally, name, ["json: the JSON export's text differs"]);
           const v = made.view as Record<string, unknown> & {
             inputs: unknown[];
             outputs: unknown[];

@@ -118,6 +118,13 @@ export interface NodeRailsCase {
 
 // endregion
 
+/** A recipe slot as either end reads it: an input's keep and consume chance, an output's chance. */
+export type RailsSlot = ResourceAmount & {
+  consumed?: boolean;
+  chance?: number;
+  consumeChance?: number;
+};
+
 const clamp01 = (value: number | undefined, fallback: number): number =>
   value === undefined || !Number.isFinite(value) ? fallback : Math.min(Math.max(value, 0), 1);
 
@@ -130,7 +137,7 @@ export function railsInputOf(
   rawProject: FactoryProject,
   result: ThroughputResult | undefined,
   nodeId: string,
-  displayRecipe: Pick<Recipe, "inputs" | "outputs">,
+  displayRecipe: { inputs: RailsSlot[]; outputs: RailsSlot[] },
   handleSection = 0,
 ): NodeRailsInputWire {
   const project = getPoolProject(rawProject);
@@ -194,7 +201,7 @@ const VERDICTS = new Set(["off", "no-recipe", "unwired", "balanced", "demand-set
 export function railsViewOf(
   verdict: NodeVerdict,
   rails: { inputs: RailPort[]; outputs: RailPort[] },
-  displayRecipe: Pick<Recipe, "inputs" | "outputs">,
+  displayRecipe: { inputs: RailsSlot[]; outputs: RailsSlot[] },
   solveMode: boolean,
 ): NodeRailsViewWire {
   // Past the three readings that need no solve, only a solved plan is the core's: the host's ladder answers the rest.
@@ -204,7 +211,7 @@ export function railsViewOf(
   ) {
     return { verdict: "legacy", pct: verdict.pct, inputs: [], outputs: [] };
   }
-  const row = (p: RailPort, resources: ResourceAmount[]): NodeRailsRowWire => {
+  const row = (p: RailPort, resources: RailsSlot[]): NodeRailsRowWire => {
     const at = resources.findIndex((r) => r.kind === p.kind && r.id === p.resourceId);
     return {
       key: p.key,
@@ -223,8 +230,8 @@ export function railsViewOf(
       showNameplate: p.showNameplate === true,
       energyPerUnit: p.energyPerUnit,
       free: p.free === true,
-      chance: p.resource?.chance,
-      consumeChance: p.resource?.consumeChance,
+      chance: (p.resource as RailsSlot | undefined)?.chance,
+      consumeChance: (p.resource as RailsSlot | undefined)?.consumeChance,
       alternatives: p.resource?.alternatives?.length ?? 0,
     };
   };
@@ -250,8 +257,8 @@ const res = (
   kind: "item" | "fluid",
   id: string,
   amount: number,
-  extra: Partial<ResourceAmount> = {},
-): ResourceAmount => ({ kind, id, amount, displayName: id, ...extra }) as ResourceAmount;
+  extra: Partial<RailsSlot> = {},
+): RailsSlot => ({ kind, id, amount, displayName: id, ...extra }) as RailsSlot;
 
 const flow = (
   kind: "item" | "fluid" | "power",
@@ -303,7 +310,7 @@ const wire = (
 
 interface Spec {
   name: string;
-  recipe: Pick<Recipe, "inputs" | "outputs">;
+  recipe: { inputs: RailsSlot[]; outputs: RailsSlot[] };
   edges?: ReturnType<typeof wire>[];
   /** The card's own result; undefined is a solve with no entry for it. */
   node?: NodeThroughputResult;

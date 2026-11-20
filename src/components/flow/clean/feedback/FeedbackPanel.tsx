@@ -6,12 +6,12 @@ import { OPEN_FEEDBACK_EVENT } from "@/components/chrome/chrome-events";
 import { activateOnKey } from "@/lib/hooks/button-keys";
 import { useDialogA11y } from "@/lib/hooks/use-dialog-a11y";
 import { withoutRuntimeTables } from "@/lib/import-export/plan-code";
+import { supportUrl } from "@/lib/site-url";
 import { useFactoryStore } from "@/store/factory-store";
 import { latestMinimapScene } from "../minimap/scene-store";
 import { planPictureBase64 } from "../minimap/picture";
 import {
   buildReport,
-  DISCORD_URL,
   faceRects,
   KINDS,
   MOODS,
@@ -25,9 +25,12 @@ import { closeFeedback, openFeedback, useFeedbackOpen } from "./feedback-store";
 import "./feedback.css";
 import { playSfx, sfxToggle } from "@/lib/sound/sfx";
 
+/** The instance's help or chat page (`NEXT_PUBLIC_SUPPORT_URL`); a call for help links to it only when there is one. */
+const support = supportUrl();
+
 /**
  * The top bar's Feedback, small and friendly (the mod's FeedbackPanel): three big faces (how it's going, if you
- * like), what it is (a bug, an idea, or a call for help, which points to the Discord first), one box to write in,
+ * like), what it is (a bug, an idea, or a call for help, which points to the support page first, when the instance has one), one box to write in,
  * a line saying what goes with it, and Send, which opens a public issue on the planner's repo through the site's
  * own /api/feedback (no account) and shows its link. What goes with it from a page: the open plan and a Simple
  * picture of it. No game log (a page has none).
@@ -198,10 +201,10 @@ export function FeedbackPanel({ onClose }: { onClose: () => void }) {
               })}
             </div>
             <div className="fb-prompt">
-              <span>{promptFor(kind)}</span>
-              {kind === "help" ? (
-                <a className="fb-discord" href={DISCORD_URL} target="_blank" rel="noopener noreferrer">
-                  Open Discord
+              <span>{promptFor(kind, support !== undefined)}</span>
+              {kind === "help" && support ? (
+                <a className="fb-support" href={support} target="_blank" rel="noopener noreferrer">
+                  Open support page
                 </a>
               ) : null}
             </div>

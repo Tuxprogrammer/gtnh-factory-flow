@@ -17,7 +17,7 @@ vi.mock("@/lib/server/feedback", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/server/feedback")>();
   return {
     ...actual,
-    openIssue: vi.fn(async () => ({ number: 12, url: "https://github.com/jackwrichards/gtnh-planner-mod/issues/12" })),
+    openIssue: vi.fn(async () => ({ number: 12, url: "https://github.com/Tuxprogrammer/gtnh-factory-flow/issues/12" })),
   };
 });
 
@@ -64,19 +64,33 @@ describe("the feedback route", () => {
 
   it("opens an issue with the plan linked and answers its page", async () => {
     vi.stubEnv("GITHUB_FEEDBACK_TOKEN", "token");
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://planner.test");
     const response = await send(report);
     expect(response.status).toBe(201);
     expect(await response.json()).toEqual({
       number: 12,
-      url: "https://github.com/jackwrichards/gtnh-planner-mod/issues/12",
+      url: "https://github.com/Tuxprogrammer/gtnh-factory-flow/issues/12",
     });
     const [token, repo, issue] = vi.mocked(openIssue).mock.calls[0]!;
     expect(token).toBe("token");
     expect(repo).toBe("Tuxprogrammer/gtnh-factory-flow");
     expect(issue.title).toBe("Idea: Copy a card");
     expect(issue.labels).toEqual(["from game", "enhancement"]);
-    expect(issue.body).toContain("[open in the planner](https://gtnhplanner.com/#p=gtnh1.");
-    expect(issue.body).toMatch(/\[plan file\]\(https:\/\/gtnhplanner\.com\/api\/feedback\/files\/[0-9a-f-]{36}\/plan-1\.json\)/);
+    expect(issue.body).toContain("[open in the planner](https://planner.test/#p=gtnh1.");
+    expect(issue.body).toMatch(/\[plan file\]\(https:\/\/planner\.test\/api\/feedback\/files\/[0-9a-f-]{36}\/plan-1\.json\)/);
+  });
+
+  it("names the plan but attaches nothing when the site has no configured address", async () => {
+    vi.stubEnv("GITHUB_FEEDBACK_TOKEN", "token");
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "");
+    vi.mocked(openIssue).mockClear();
+    const response = await send(report);
+    expect(response.status).toBe(201);
+    const body = vi.mocked(openIssue).mock.calls[0]![2].body;
+    expect(body).toContain("Steel line");
+    expect(body).not.toContain("open in the planner");
+    expect(body).not.toContain("plan file");
+    expect(body).not.toMatch(/https?:\/\/(?!github\.com)/);
   });
 
   it("opens a web planner's report under the web label, and refuses its shape dressed as the game's", async () => {

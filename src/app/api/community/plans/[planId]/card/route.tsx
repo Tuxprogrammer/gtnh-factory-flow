@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { PNG } from "pngjs";
 import { GT_TIER_COLORS } from "@/components/flow/tier-colors";
 import { getPlanPreviewPng, getPublicPlanRow } from "@/lib/server/plan-preview";
+import { siteHost } from "@/lib/site-url";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -233,7 +234,7 @@ export async function GET(
             }}
           >
             <div style={{ display: "flex", fontSize: 28, fontWeight: 700, color: BRAND }}>
-              gtnhplanner.com
+              {siteHost() ?? "GTNH Planner"}
             </div>
             {row.game_version ? (
               <div style={{ display: "flex", fontSize: 21, color: MUTED }}>

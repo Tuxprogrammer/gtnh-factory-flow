@@ -23,6 +23,7 @@ import { Analytics } from "./Analytics";
 import { AnalyticsHeartbeat } from "./AnalyticsHeartbeat";
 import { PowerCoreWarm } from "@/components/PowerCoreWarm";
 import { WhatsNewGate } from "@/components/WhatsNewGate";
+import { siteUrl } from "@/lib/site-url";
 import { GlobalTitleTooltip } from "@/components/nei/GlobalTitleTooltip";
 import "./globals.css";
 
@@ -120,17 +121,16 @@ const uiScaleBoot = uiScaleBootScript({
   snugMaxWidth: SNUG_MAX_WIDTH,
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://gtnhplanner.com";
+const site = siteUrl();
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  // Without a configured site there is no address to resolve against: no base, canonical or og:url.
+  ...(site ? { metadataBase: new URL(site) } : {}),
   applicationName: "GTNH Planner",
   title: "GTNH Planner | GregTech New Horizons Factory Calculator",
   description:
     "Plan and optimize GregTech: New Horizons factories on an interactive flowchart. Full recipe data for GTNH 2.9, throughput and power calculation, machine ratios, and community-shared plans.",
-  alternates: {
-    canonical: "/",
-  },
+  ...(site ? { alternates: { canonical: "/" } } : {}),
   robots: {
     index: true,
     follow: true,
@@ -156,7 +156,7 @@ export const metadata: Metadata = {
       "Free factory planner for GregTech: New Horizons with full recipe data for GTNH 2.9. Draw production chains, balance machine ratios, find bottlenecks, and share plans with the community.",
     siteName: "GTNH Planner",
     type: "website",
-    url: "/",
+    ...(site ? { url: "/" } : {}),
   },
   twitter: {
     card: "summary_large_image",
@@ -194,14 +194,12 @@ const structuredData = {
   "@graph": [
     {
       "@type": "WebSite",
-      "@id": `${siteUrl}/#website`,
-      url: `${siteUrl}/`,
+      ...(site ? { "@id": `${site}/#website`, url: `${site}/` } : {}),
       name: "GTNH Planner",
     },
     {
       "@type": "WebApplication",
-      "@id": `${siteUrl}/#app`,
-      url: `${siteUrl}/`,
+      ...(site ? { "@id": `${site}/#app`, url: `${site}/` } : {}),
       name: "GTNH Planner",
       alternateName: "GregTech New Horizons Factory Planner",
       description:
@@ -209,7 +207,7 @@ const structuredData = {
       applicationCategory: "GameApplication",
       operatingSystem: "Any",
       browserRequirements: "Requires JavaScript",
-      image: `${siteUrl}/icon-512.png`,
+      ...(site ? { image: `${site}/icon-512.png` } : {}),
       offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
       about: {
         "@type": "VideoGame",

@@ -20,14 +20,15 @@ import {
   type RouteSolveJob,
 } from "./grid-route-job";
 import { cardRimDocks, LANE_CAPACITY, type GridEndpoint, type GridObstacle, type GridRouteRequest } from "./grid-edge-router";
-import { arrangeCore, coreLiveDrag, layoutCore, runArrangeJobOnCore, setLayoutAdoptOverride } from "./layout-core";
+import { setAdoptOverride } from "@/lib/core/adopt";
+import { arrangeCore, coreLiveDrag, layoutCore, runArrangeJobOnCore } from "./layout-core";
 import { drawn, layoutTargets } from "./layout-shadow.test-support";
 import { DEFAULT_ROUTER_TUNING, type RouterTuning } from "./router-tuning";
 
 const targets = (await layoutTargets()).map(([target]) => target);
 
 afterAll(async () => {
-  setLayoutAdoptOverride(undefined);
+  setAdoptOverride("layout", undefined);
   resetBoardRouters();
   resetCoreForTests();
   await loadCore().catch(() => undefined);
@@ -37,17 +38,17 @@ afterAll(async () => {
 async function on<T>(target: string | undefined, fn: () => T): Promise<T> {
   resetBoardRouters();
   if (target === undefined) {
-    setLayoutAdoptOverride(false);
+    setAdoptOverride("layout", false);
   } else {
     resetCoreForTests();
     await loadCore({ target: target as "wasm-gc" | "js" });
-    setLayoutAdoptOverride(true);
+    setAdoptOverride("layout", true);
     expect(layoutCore()).not.toBeNull();
   }
   try {
     return fn();
   } finally {
-    setLayoutAdoptOverride(undefined);
+    setAdoptOverride("layout", undefined);
   }
 }
 
@@ -251,8 +252,9 @@ describe.skipIf(targets.length === 0)("Arrange through the core in the arrange w
 
   /**
    * Boards the JavaScript build of the core arranges differently from the TypeScript (the JVM and the WebAssembly
-   * build agree with it), so the worker keeps the TypeScript Arrange on that build (`arrangeCore`). A fix makes the
-   * entry fail here: delete it then.
+   * build agree with it), so the worker keeps the TypeScript Arrange on that build (`arrangeCore`). The cause is
+   * TeaVM's JavaScript printer reordering `sum += a + b + c` in the optimiser's score (layout-core.ts `arrangeCore`);
+   * the kernel's ExactMathPlugin fixes it, and then this entry fails: delete it and let `arrangeCore` take both builds.
    */
   const KNOWN_JS_ARRANGE = new Set<string>();
 

@@ -11,6 +11,7 @@ export default defineConfig({
       "src/components/flow/grid-edge-router.test.ts",
       "src/components/flow/incremental-router.test.ts",
       "tools/conformance/layout/boards.capture.ts",
+      "tools/conformance/layout/frames.capture.ts",
       "src/lib/board-arrange.test.ts",
       "tools/conformance/layout/arrange.capture.ts",
     ],

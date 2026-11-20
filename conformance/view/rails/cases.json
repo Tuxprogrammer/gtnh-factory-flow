@@ -1,0 +1,2194 @@
+{
+ "record": "rails",
+ "set": "cases",
+ "measure": "none",
+ "cases": [
+  {
+   "name": "a disabled card is off and draws no rows",
+   "input": {
+    "enabled": false,
+    "hasResult": false,
+    "missingRecipe": false,
+    "solveMode": true,
+    "hasSlots": true,
+    "utilization": 0,
+    "euT": 0,
+    "inputs": {
+     "slots": [
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [],
+     "wires": []
+    },
+    "outputs": {
+     "slots": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [],
+     "wires": []
+    }
+   },
+   "view": {
+    "verdict": "off",
+    "pct": 0,
+    "inputs": [],
+    "outputs": []
+   }
+  },
+  {
+   "name": "a card the solve has no entry for is no recipe, and its rows come from the recipe at nothing",
+   "input": {
+    "enabled": true,
+    "hasResult": false,
+    "missingRecipe": false,
+    "solveMode": true,
+    "hasSlots": true,
+    "utilization": 0,
+    "euT": 0,
+    "inputs": {
+     "slots": [
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "consumed": true,
+       "alternatives": 0
+      },
+      {
+       "key": "fluid:water",
+       "kind": "fluid",
+       "resourceId": "water",
+       "name": "water",
+       "handleId": "input:fluid:water",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [],
+     "wires": [
+      {
+       "key": "item:gt:plate",
+       "transferredPerSecond": 0
+      }
+     ]
+    },
+    "outputs": {
+     "slots": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [],
+     "wires": []
+    }
+   },
+   "view": {
+    "verdict": "no-recipe",
+    "pct": 0,
+    "inputs": [
+     {
+      "key": "item:gt:plate",
+      "handleId": "input:item:gt%3Aplate",
+      "kind": "item",
+      "resourceId": "gt:plate",
+      "name": "gt:plate",
+      "slot": 0,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 0,
+      "nameplatePerSecond": 0,
+      "tone": "ok",
+      "showNameplate": false,
+      "free": false,
+      "alternatives": 0
+     },
+     {
+      "key": "fluid:water",
+      "handleId": "input:fluid:water",
+      "kind": "fluid",
+      "resourceId": "water",
+      "name": "water",
+      "slot": 1,
+      "connected": false,
+      "unsupplied": true,
+      "boundaryFree": false,
+      "currentPerSecond": 0,
+      "nameplatePerSecond": 0,
+      "tone": "bind",
+      "shortBadge": 0,
+      "showNameplate": false,
+      "free": false,
+      "alternatives": 0
+     }
+    ],
+    "outputs": [
+     {
+      "key": "item:gt:gear",
+      "handleId": "output:item:gt%3Agear",
+      "kind": "item",
+      "resourceId": "gt:gear",
+      "name": "gt:gear",
+      "slot": 0,
+      "connected": false,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 0,
+      "nameplatePerSecond": 0,
+      "tone": "bind",
+      "showNameplate": false,
+      "free": false,
+      "alternatives": 0
+     }
+    ]
+   }
+  },
+  {
+   "name": "a card the solve could not find a recipe for is no recipe",
+   "input": {
+    "enabled": true,
+    "hasResult": true,
+    "missingRecipe": true,
+    "solveMode": true,
+    "hasSlots": true,
+    "utilization": 0,
+    "euT": 0,
+    "inputs": {
+     "slots": [
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [],
+     "wires": []
+    },
+    "outputs": {
+     "slots": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [],
+     "wires": []
+    }
+   },
+   "view": {
+    "verdict": "no-recipe",
+    "pct": 0,
+    "inputs": [],
+    "outputs": []
+   }
+  },
+  {
+   "name": "a flowing input with no wire is a bare slot, marked short at its nameplate, and so is a product with no taker",
+   "input": {
+    "enabled": true,
+    "hasResult": true,
+    "missingRecipe": false,
+    "solveMode": true,
+    "hasSlots": true,
+    "utilization": 0.5,
+    "euT": 30,
+    "inputs": {
+     "slots": [
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "consumed": true,
+       "alternatives": 0
+      },
+      {
+       "key": "item:gt:dust",
+       "kind": "item",
+       "resourceId": "gt:dust",
+       "name": "gt:dust",
+       "handleId": "input:item:gt%3Adust",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "amountPerSecond": 4
+      },
+      {
+       "key": "item:gt:dust",
+       "kind": "item",
+       "resourceId": "gt:dust",
+       "name": "gt:dust",
+       "handleId": "input:item:gt%3Adust",
+       "amountPerSecond": 2
+      }
+     ],
+     "wires": [
+      {
+       "key": "item:gt:plate",
+       "transferredPerSecond": 4
+      }
+     ]
+    },
+    "outputs": {
+     "slots": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "amountPerSecond": 2
+      }
+     ],
+     "wires": []
+    }
+   },
+   "view": {
+    "verdict": "unwired",
+    "pct": 50,
+    "bare": {
+     "inputs": [
+      {
+       "resourceKey": "item:gt:dust",
+       "kind": "item",
+       "displayName": "gt:dust"
+      }
+     ],
+     "outputs": [
+      {
+       "resourceKey": "item:gt:gear",
+       "kind": "item",
+       "displayName": "gt:gear"
+      }
+     ]
+    },
+    "inputs": [
+     {
+      "key": "item:gt:plate",
+      "handleId": "input:item:gt%3Aplate",
+      "kind": "item",
+      "resourceId": "gt:plate",
+      "name": "gt:plate",
+      "slot": 0,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 4,
+      "nameplatePerSecond": 4,
+      "tone": "ok",
+      "showNameplate": false,
+      "energyPerUnit": 150,
+      "free": false,
+      "alternatives": 0
+     },
+     {
+      "key": "item:gt:dust",
+      "handleId": "input:item:gt%3Adust",
+      "kind": "item",
+      "resourceId": "gt:dust",
+      "name": "gt:dust",
+      "slot": 1,
+      "connected": false,
+      "unsupplied": true,
+      "boundaryFree": false,
+      "currentPerSecond": 1,
+      "nameplatePerSecond": 2,
+      "tone": "bind",
+      "shortBadge": 2,
+      "showNameplate": false,
+      "energyPerUnit": 300,
+      "free": false,
+      "alternatives": 0
+     }
+    ],
+    "outputs": [
+     {
+      "key": "item:gt:gear",
+      "handleId": "output:item:gt%3Agear",
+      "kind": "item",
+      "resourceId": "gt:gear",
+      "name": "gt:gear",
+      "slot": 0,
+      "connected": false,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 1,
+      "nameplatePerSecond": 2,
+      "tone": "bind",
+      "showNameplate": false,
+      "energyPerUnit": 300,
+      "free": false,
+      "alternatives": 0
+     }
+    ]
+   }
+  },
+  {
+   "name": "a slotted card with no wires and no flows is unwired with nothing bare",
+   "input": {
+    "enabled": true,
+    "hasResult": true,
+    "missingRecipe": false,
+    "solveMode": true,
+    "hasSlots": true,
+    "utilization": 0,
+    "euT": 0,
+    "inputs": {
+     "slots": [
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [],
+     "wires": []
+    },
+    "outputs": {
+     "slots": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [],
+     "wires": []
+    }
+   },
+   "view": {
+    "verdict": "unwired",
+    "pct": 0,
+    "inputs": [],
+    "outputs": []
+   }
+  },
+  {
+   "name": "a card with no slots has nothing to wire and runs",
+   "input": {
+    "enabled": true,
+    "hasResult": true,
+    "missingRecipe": false,
+    "solveMode": true,
+    "hasSlots": false,
+    "utilization": 1,
+    "euT": 0,
+    "inputs": {
+     "slots": [],
+     "flows": [],
+     "wires": []
+    },
+    "outputs": {
+     "slots": [],
+     "flows": [],
+     "wires": []
+    }
+   },
+   "view": {
+    "verdict": "balanced",
+    "pct": 100,
+    "inputs": [],
+    "outputs": []
+   }
+  },
+  {
+   "name": "a wired card that runs is balanced and each row reads its wire's rate",
+   "input": {
+    "enabled": true,
+    "hasResult": true,
+    "missingRecipe": false,
+    "solveMode": true,
+    "hasSlots": true,
+    "utilization": 0.4375,
+    "euT": 120,
+    "inputs": {
+     "slots": [
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "consumed": true,
+       "alternatives": 0
+      },
+      {
+       "key": "fluid:water",
+       "kind": "fluid",
+       "resourceId": "water",
+       "name": "water",
+       "handleId": "input:fluid:water",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "amountPerSecond": 8
+      },
+      {
+       "key": "fluid:water",
+       "kind": "fluid",
+       "resourceId": "water",
+       "name": "Water",
+       "handleId": "input:fluid:water",
+       "amountPerSecond": 570
+      }
+     ],
+     "wires": [
+      {
+       "key": "item:gt:plate",
+       "transferredPerSecond": 3.5
+      },
+      {
+       "key": "fluid:water",
+       "transferredPerSecond": 250
+      }
+     ]
+    },
+    "outputs": {
+     "slots": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "Gear",
+       "handleId": "output:item:gt%3Agear",
+       "amountPerSecond": 4
+      }
+     ],
+     "wires": [
+      {
+       "key": "item:gt:gear",
+       "transferredPerSecond": 1.75
+      }
+     ]
+    }
+   },
+   "view": {
+    "verdict": "balanced",
+    "pct": 43.8,
+    "inputs": [
+     {
+      "key": "item:gt:plate",
+      "handleId": "input:item:gt%3Aplate",
+      "kind": "item",
+      "resourceId": "gt:plate",
+      "name": "gt:plate",
+      "slot": 0,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 3.5,
+      "nameplatePerSecond": 8,
+      "tone": "ok",
+      "showNameplate": false,
+      "energyPerUnit": 300,
+      "free": false,
+      "alternatives": 0
+     },
+     {
+      "key": "fluid:water",
+      "handleId": "input:fluid:water",
+      "kind": "fluid",
+      "resourceId": "water",
+      "name": "Water",
+      "slot": 1,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 250,
+      "nameplatePerSecond": 570,
+      "tone": "ok",
+      "showNameplate": false,
+      "energyPerUnit": 4.2105263157894735,
+      "free": false,
+      "alternatives": 0
+     }
+    ],
+    "outputs": [
+     {
+      "key": "item:gt:gear",
+      "handleId": "output:item:gt%3Agear",
+      "kind": "item",
+      "resourceId": "gt:gear",
+      "name": "Gear",
+      "slot": 0,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 1.75,
+      "nameplatePerSecond": 4,
+      "tone": "ok",
+      "showNameplate": false,
+      "energyPerUnit": 600,
+      "free": false,
+      "alternatives": 0
+     }
+    ]
+   }
+  },
+  {
+   "name": "two wires into one slot are one row that adds them",
+   "input": {
+    "enabled": true,
+    "hasResult": true,
+    "missingRecipe": false,
+    "solveMode": true,
+    "hasSlots": true,
+    "utilization": 0.5,
+    "euT": 0,
+    "inputs": {
+     "slots": [
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "amountPerSecond": 7.5
+      }
+     ],
+     "wires": [
+      {
+       "key": "item:gt:plate",
+       "transferredPerSecond": 1.25
+      },
+      {
+       "key": "item:gt:plate",
+       "transferredPerSecond": 2.5
+      }
+     ]
+    },
+    "outputs": {
+     "slots": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "amountPerSecond": 2
+      }
+     ],
+     "wires": [
+      {
+       "key": "item:gt:gear",
+       "transferredPerSecond": 1
+      }
+     ]
+    }
+   },
+   "view": {
+    "verdict": "balanced",
+    "pct": 50,
+    "inputs": [
+     {
+      "key": "item:gt:plate",
+      "handleId": "input:item:gt%3Aplate",
+      "kind": "item",
+      "resourceId": "gt:plate",
+      "name": "gt:plate",
+      "slot": 0,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 3.75,
+      "nameplatePerSecond": 7.5,
+      "tone": "ok",
+      "showNameplate": false,
+      "energyPerUnit": 0,
+      "free": false,
+      "alternatives": 0
+     }
+    ],
+    "outputs": [
+     {
+      "key": "item:gt:gear",
+      "handleId": "output:item:gt%3Agear",
+      "kind": "item",
+      "resourceId": "gt:gear",
+      "name": "gt:gear",
+      "slot": 0,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 1,
+      "nameplatePerSecond": 2,
+      "tone": "ok",
+      "showNameplate": false,
+      "energyPerUnit": 0,
+      "free": false,
+      "alternatives": 0
+     }
+    ]
+   }
+  },
+  {
+   "name": "a card the plan does not need is demand set, its wired rows calm, an idle row with no wire left out",
+   "input": {
+    "enabled": true,
+    "hasResult": true,
+    "missingRecipe": false,
+    "solveMode": true,
+    "hasSlots": true,
+    "utilization": 0,
+    "euT": 0,
+    "inputs": {
+     "slots": [
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "consumed": true,
+       "alternatives": 0
+      },
+      {
+       "key": "item:gt:dust",
+       "kind": "item",
+       "resourceId": "gt:dust",
+       "name": "gt:dust",
+       "handleId": "input:item:gt%3Adust",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "amountPerSecond": 0
+      },
+      {
+       "key": "item:gt:dust",
+       "kind": "item",
+       "resourceId": "gt:dust",
+       "name": "gt:dust",
+       "handleId": "input:item:gt%3Adust",
+       "amountPerSecond": 0
+      }
+     ],
+     "wires": [
+      {
+       "key": "item:gt:plate",
+       "transferredPerSecond": 0
+      }
+     ]
+    },
+    "outputs": {
+     "slots": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "amountPerSecond": 0
+      }
+     ],
+     "wires": [
+      {
+       "key": "item:gt:gear",
+       "transferredPerSecond": 0
+      }
+     ]
+    }
+   },
+   "view": {
+    "verdict": "demand-set",
+    "pct": 0,
+    "inputs": [
+     {
+      "key": "item:gt:plate",
+      "handleId": "input:item:gt%3Aplate",
+      "kind": "item",
+      "resourceId": "gt:plate",
+      "name": "gt:plate",
+      "slot": 0,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 0,
+      "nameplatePerSecond": 0,
+      "tone": "calm",
+      "showNameplate": false,
+      "free": false,
+      "alternatives": 0
+     }
+    ],
+    "outputs": [
+     {
+      "key": "item:gt:gear",
+      "handleId": "output:item:gt%3Agear",
+      "kind": "item",
+      "resourceId": "gt:gear",
+      "name": "gt:gear",
+      "slot": 0,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 0,
+      "nameplatePerSecond": 0,
+      "tone": "calm",
+      "showNameplate": false,
+      "free": false,
+      "alternatives": 0
+     }
+    ]
+   }
+  },
+  {
+   "name": "a card at half a percent is demand set and above it balanced",
+   "input": {
+    "enabled": true,
+    "hasResult": true,
+    "missingRecipe": false,
+    "solveMode": true,
+    "hasSlots": true,
+    "utilization": 0.005,
+    "euT": 0,
+    "inputs": {
+     "slots": [
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "amountPerSecond": 0.01
+      }
+     ],
+     "wires": [
+      {
+       "key": "item:gt:plate",
+       "transferredPerSecond": 0.01
+      }
+     ]
+    },
+    "outputs": {
+     "slots": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "amountPerSecond": 0.01
+      }
+     ],
+     "wires": [
+      {
+       "key": "item:gt:gear",
+       "transferredPerSecond": 0.01
+      }
+     ]
+    }
+   },
+   "view": {
+    "verdict": "demand-set",
+    "pct": 0.5,
+    "inputs": [
+     {
+      "key": "item:gt:plate",
+      "handleId": "input:item:gt%3Aplate",
+      "kind": "item",
+      "resourceId": "gt:plate",
+      "name": "gt:plate",
+      "slot": 0,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 0.01,
+      "nameplatePerSecond": 0.01,
+      "tone": "calm",
+      "showNameplate": false,
+      "energyPerUnit": 0,
+      "free": false,
+      "alternatives": 0
+     }
+    ],
+    "outputs": [
+     {
+      "key": "item:gt:gear",
+      "handleId": "output:item:gt%3Agear",
+      "kind": "item",
+      "resourceId": "gt:gear",
+      "name": "gt:gear",
+      "slot": 0,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 0.00005,
+      "nameplatePerSecond": 0.01,
+      "tone": "calm",
+      "showNameplate": false,
+      "energyPerUnit": 0,
+      "free": false,
+      "alternatives": 0
+     }
+    ]
+   }
+  },
+  {
+   "name": "the percentage is the utilisation to one place",
+   "input": {
+    "enabled": true,
+    "hasResult": true,
+    "missingRecipe": false,
+    "solveMode": true,
+    "hasSlots": true,
+    "utilization": 0.12345,
+    "euT": 0,
+    "inputs": {
+     "slots": [
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "amountPerSecond": 1
+      }
+     ],
+     "wires": [
+      {
+       "key": "item:gt:plate",
+       "transferredPerSecond": 1
+      }
+     ]
+    },
+    "outputs": {
+     "slots": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "amountPerSecond": 1
+      }
+     ],
+     "wires": [
+      {
+       "key": "item:gt:gear",
+       "transferredPerSecond": 1
+      }
+     ]
+    }
+   },
+   "view": {
+    "verdict": "balanced",
+    "pct": 12.3,
+    "inputs": [
+     {
+      "key": "item:gt:plate",
+      "handleId": "input:item:gt%3Aplate",
+      "kind": "item",
+      "resourceId": "gt:plate",
+      "name": "gt:plate",
+      "slot": 0,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 1,
+      "nameplatePerSecond": 1,
+      "tone": "ok",
+      "showNameplate": false,
+      "energyPerUnit": 0,
+      "free": false,
+      "alternatives": 0
+     }
+    ],
+    "outputs": [
+     {
+      "key": "item:gt:gear",
+      "handleId": "output:item:gt%3Agear",
+      "kind": "item",
+      "resourceId": "gt:gear",
+      "name": "gt:gear",
+      "slot": 0,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 0.12345,
+      "nameplatePerSecond": 1,
+      "tone": "ok",
+      "showNameplate": false,
+      "energyPerUnit": 0,
+      "free": false,
+      "alternatives": 0
+     }
+    ]
+   }
+  },
+  {
+   "name": "an input the recipe keeps is no row, and the lava the game gives follows as an inert row",
+   "input": {
+    "enabled": true,
+    "hasResult": true,
+    "missingRecipe": false,
+    "solveMode": true,
+    "hasSlots": true,
+    "utilization": 1,
+    "euT": 0,
+    "inputs": {
+     "slots": [
+      {
+       "key": "item:gt:circuit",
+       "kind": "item",
+       "resourceId": "gt:circuit",
+       "name": "gt:circuit",
+       "handleId": "input:item:gt%3Acircuit",
+       "consumed": false,
+       "alternatives": 0
+      },
+      {
+       "key": "item:gregtech:gt.metaitem.02@32765",
+       "kind": "item",
+       "resourceId": "gregtech:gt.metaitem.02@32765",
+       "name": "IT'S FREE! Place Lava on Side",
+       "handleId": "input:item:gregtech%3Agt.metaitem.02%4032765",
+       "consumed": false,
+       "alternatives": 0
+      },
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:gt:circuit",
+       "kind": "item",
+       "resourceId": "gt:circuit",
+       "name": "gt:circuit",
+       "handleId": "input:item:gt%3Acircuit",
+       "amountPerSecond": 1
+      },
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "amountPerSecond": 2
+      }
+     ],
+     "wires": [
+      {
+       "key": "item:gt:circuit",
+       "transferredPerSecond": 1
+      },
+      {
+       "key": "item:gt:plate",
+       "transferredPerSecond": 2
+      }
+     ]
+    },
+    "outputs": {
+     "slots": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "amountPerSecond": 1
+      }
+     ],
+     "wires": [
+      {
+       "key": "item:gt:gear",
+       "transferredPerSecond": 1
+      }
+     ]
+    }
+   },
+   "view": {
+    "verdict": "balanced",
+    "pct": 100,
+    "inputs": [
+     {
+      "key": "item:gt:plate",
+      "handleId": "input:item:gt%3Aplate",
+      "kind": "item",
+      "resourceId": "gt:plate",
+      "name": "gt:plate",
+      "slot": 2,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 2,
+      "nameplatePerSecond": 2,
+      "tone": "ok",
+      "showNameplate": false,
+      "energyPerUnit": 0,
+      "free": false,
+      "alternatives": 0
+     },
+     {
+      "key": "item:gregtech:gt.metaitem.02@32765",
+      "handleId": "input:item:gregtech%3Agt.metaitem.02%4032765",
+      "kind": "item",
+      "resourceId": "gregtech:gt.metaitem.02@32765",
+      "name": "IT'S FREE! Place Lava on Side",
+      "slot": 1,
+      "connected": false,
+      "unsupplied": false,
+      "boundaryFree": true,
+      "currentPerSecond": 0,
+      "nameplatePerSecond": 0,
+      "tone": "calm",
+      "showNameplate": false,
+      "free": true,
+      "alternatives": 0
+     }
+    ],
+    "outputs": [
+     {
+      "key": "item:gt:gear",
+      "handleId": "output:item:gt%3Agear",
+      "kind": "item",
+      "resourceId": "gt:gear",
+      "name": "gt:gear",
+      "slot": 0,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 1,
+      "nameplatePerSecond": 1,
+      "tone": "ok",
+      "showNameplate": false,
+      "energyPerUnit": 0,
+      "free": false,
+      "alternatives": 0
+     }
+    ]
+   }
+  },
+  {
+   "name": "a spawner's mob and a bee's species follow as inert rows",
+   "input": {
+    "enabled": true,
+    "hasResult": true,
+    "missingRecipe": false,
+    "solveMode": true,
+    "hasSlots": true,
+    "utilization": 1,
+    "euT": 0,
+    "inputs": {
+     "slots": [
+      {
+       "key": "item:factoryflow:eec_mob:zombie",
+       "kind": "item",
+       "resourceId": "factoryflow:eec_mob:zombie",
+       "name": "factoryflow:eec_mob:zombie",
+       "handleId": "input:item:factoryflow%3Aeec_mob%3Azombie",
+       "consumed": false,
+       "alternatives": 0
+      },
+      {
+       "key": "item:factoryflow:bee_species:forest",
+       "kind": "item",
+       "resourceId": "factoryflow:bee_species:forest",
+       "name": "factoryflow:bee_species:forest",
+       "handleId": "input:item:factoryflow%3Abee_species%3Aforest",
+       "consumed": false,
+       "alternatives": 0
+      }
+     ],
+     "flows": [],
+     "wires": []
+    },
+    "outputs": {
+     "slots": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "amountPerSecond": 1
+      }
+     ],
+     "wires": [
+      {
+       "key": "item:gt:gear",
+       "transferredPerSecond": 1
+      }
+     ]
+    }
+   },
+   "view": {
+    "verdict": "balanced",
+    "pct": 100,
+    "inputs": [
+     {
+      "key": "item:factoryflow:eec_mob:zombie",
+      "handleId": "input:item:factoryflow%3Aeec_mob%3Azombie",
+      "kind": "item",
+      "resourceId": "factoryflow:eec_mob:zombie",
+      "name": "factoryflow:eec_mob:zombie",
+      "slot": 0,
+      "connected": false,
+      "unsupplied": false,
+      "boundaryFree": true,
+      "currentPerSecond": 0,
+      "nameplatePerSecond": 0,
+      "tone": "calm",
+      "showNameplate": false,
+      "free": true,
+      "alternatives": 0
+     },
+     {
+      "key": "item:factoryflow:bee_species:forest",
+      "handleId": "input:item:factoryflow%3Abee_species%3Aforest",
+      "kind": "item",
+      "resourceId": "factoryflow:bee_species:forest",
+      "name": "factoryflow:bee_species:forest",
+      "slot": 1,
+      "connected": false,
+      "unsupplied": false,
+      "boundaryFree": true,
+      "currentPerSecond": 0,
+      "nameplatePerSecond": 0,
+      "tone": "calm",
+      "showNameplate": false,
+      "free": true,
+      "alternatives": 0
+     }
+    ],
+    "outputs": [
+     {
+      "key": "item:gt:gear",
+      "handleId": "output:item:gt%3Agear",
+      "kind": "item",
+      "resourceId": "gt:gear",
+      "name": "gt:gear",
+      "slot": 0,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 1,
+      "nameplatePerSecond": 1,
+      "tone": "ok",
+      "showNameplate": false,
+      "energyPerUnit": 0,
+      "free": false,
+      "alternatives": 0
+     }
+    ]
+   }
+  },
+  {
+   "name": "before the first solve a kept input and a free input are both no row",
+   "input": {
+    "enabled": true,
+    "hasResult": false,
+    "missingRecipe": false,
+    "solveMode": true,
+    "hasSlots": true,
+    "utilization": 0,
+    "euT": 0,
+    "inputs": {
+     "slots": [
+      {
+       "key": "item:gregtech:gt.metaitem.02@32765",
+       "kind": "item",
+       "resourceId": "gregtech:gt.metaitem.02@32765",
+       "name": "gregtech:gt.metaitem.02@32765",
+       "handleId": "input:item:gregtech%3Agt.metaitem.02%4032765",
+       "consumed": false,
+       "alternatives": 0
+      },
+      {
+       "key": "item:gt:circuit",
+       "kind": "item",
+       "resourceId": "gt:circuit",
+       "name": "gt:circuit",
+       "handleId": "input:item:gt%3Acircuit",
+       "consumed": false,
+       "alternatives": 0
+      },
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [],
+     "wires": []
+    },
+    "outputs": {
+     "slots": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [],
+     "wires": []
+    }
+   },
+   "view": {
+    "verdict": "no-recipe",
+    "pct": 0,
+    "inputs": [
+     {
+      "key": "item:gt:plate",
+      "handleId": "input:item:gt%3Aplate",
+      "kind": "item",
+      "resourceId": "gt:plate",
+      "name": "gt:plate",
+      "slot": 2,
+      "connected": false,
+      "unsupplied": true,
+      "boundaryFree": false,
+      "currentPerSecond": 0,
+      "nameplatePerSecond": 0,
+      "tone": "bind",
+      "shortBadge": 0,
+      "showNameplate": false,
+      "free": false,
+      "alternatives": 0
+     }
+    ],
+    "outputs": [
+     {
+      "key": "item:gt:gear",
+      "handleId": "output:item:gt%3Agear",
+      "kind": "item",
+      "resourceId": "gt:gear",
+      "name": "gt:gear",
+      "slot": 0,
+      "connected": false,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 0,
+      "nameplatePerSecond": 0,
+      "tone": "bind",
+      "showNameplate": false,
+      "free": false,
+      "alternatives": 0
+     }
+    ]
+   }
+  },
+  {
+   "name": "an ore dictionary slot reads its group's name, whatever the solve called it",
+   "input": {
+    "enabled": true,
+    "hasResult": true,
+    "missingRecipe": false,
+    "solveMode": true,
+    "hasSlots": true,
+    "utilization": 1,
+    "euT": 0,
+    "inputs": {
+     "slots": [
+      {
+       "key": "item:oredict:plateIron",
+       "kind": "item",
+       "resourceId": "oredict:plateIron",
+       "name": "Ore Dictionary: plateIron",
+       "oreLabel": "Any plate iron",
+       "handleId": "input:item:oredict%3AplateIron",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:oredict:plateIron",
+       "kind": "item",
+       "resourceId": "oredict:plateIron",
+       "name": "Ore Dictionary: plateIron",
+       "oreLabel": "Any plate iron",
+       "handleId": "input:item:oredict%3AplateIron",
+       "amountPerSecond": 1
+      }
+     ],
+     "wires": [
+      {
+       "key": "item:oredict:plateIron",
+       "transferredPerSecond": 1
+      }
+     ]
+    },
+    "outputs": {
+     "slots": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "amountPerSecond": 1
+      }
+     ],
+     "wires": [
+      {
+       "key": "item:gt:gear",
+       "transferredPerSecond": 1
+      }
+     ]
+    }
+   },
+   "view": {
+    "verdict": "balanced",
+    "pct": 100,
+    "inputs": [
+     {
+      "key": "item:oredict:plateIron",
+      "handleId": "input:item:oredict%3AplateIron",
+      "kind": "item",
+      "resourceId": "oredict:plateIron",
+      "name": "Any plate iron",
+      "slot": 0,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 1,
+      "nameplatePerSecond": 1,
+      "tone": "ok",
+      "showNameplate": false,
+      "energyPerUnit": 0,
+      "free": false,
+      "alternatives": 0
+     }
+    ],
+    "outputs": [
+     {
+      "key": "item:gt:gear",
+      "handleId": "output:item:gt%3Agear",
+      "kind": "item",
+      "resourceId": "gt:gear",
+      "name": "gt:gear",
+      "slot": 0,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 1,
+      "nameplatePerSecond": 1,
+      "tone": "ok",
+      "showNameplate": false,
+      "energyPerUnit": 0,
+      "free": false,
+      "alternatives": 0
+     }
+    ]
+   }
+  },
+  {
+   "name": "an EU output with no wire is not bare and carries no energy per unit",
+   "input": {
+    "enabled": true,
+    "hasResult": true,
+    "missingRecipe": false,
+    "solveMode": true,
+    "hasSlots": true,
+    "utilization": 1,
+    "euT": 32,
+    "inputs": {
+     "slots": [
+      {
+       "key": "fluid:steam",
+       "kind": "fluid",
+       "resourceId": "steam",
+       "name": "steam",
+       "handleId": "input:fluid:steam",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "fluid:steam",
+       "kind": "fluid",
+       "resourceId": "steam",
+       "name": "steam",
+       "handleId": "input:fluid:steam",
+       "amountPerSecond": 100
+      }
+     ],
+     "wires": [
+      {
+       "key": "fluid:steam",
+       "transferredPerSecond": 100
+      }
+     ]
+    },
+    "outputs": {
+     "slots": [
+      {
+       "key": "fluid:water",
+       "kind": "fluid",
+       "resourceId": "water",
+       "name": "water",
+       "handleId": "output:fluid:water",
+       "consumed": true,
+       "alternatives": 0
+      },
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "power:eu",
+       "kind": "power",
+       "resourceId": "eu",
+       "name": "eu",
+       "handleId": "output:power:eu",
+       "amountPerSecond": 640
+      },
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "amountPerSecond": 1
+      },
+      {
+       "key": "fluid:water",
+       "kind": "fluid",
+       "resourceId": "water",
+       "name": "water",
+       "handleId": "output:fluid:water",
+       "amountPerSecond": 1
+      }
+     ],
+     "wires": [
+      {
+       "key": "item:gt:gear",
+       "transferredPerSecond": 1
+      },
+      {
+       "key": "fluid:water",
+       "transferredPerSecond": 1
+      }
+     ]
+    }
+   },
+   "view": {
+    "verdict": "balanced",
+    "pct": 100,
+    "inputs": [
+     {
+      "key": "fluid:steam",
+      "handleId": "input:fluid:steam",
+      "kind": "fluid",
+      "resourceId": "steam",
+      "name": "steam",
+      "slot": 0,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 100,
+      "nameplatePerSecond": 100,
+      "tone": "ok",
+      "showNameplate": false,
+      "energyPerUnit": 6.4,
+      "free": false,
+      "alternatives": 0
+     }
+    ],
+    "outputs": [
+     {
+      "key": "power:eu",
+      "handleId": "output:power:eu",
+      "kind": "power",
+      "resourceId": "eu",
+      "name": "eu",
+      "connected": false,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 640,
+      "nameplatePerSecond": 640,
+      "tone": "bind",
+      "showNameplate": false,
+      "free": false,
+      "alternatives": 0
+     },
+     {
+      "key": "item:gt:gear",
+      "handleId": "output:item:gt%3Agear",
+      "kind": "item",
+      "resourceId": "gt:gear",
+      "name": "gt:gear",
+      "slot": 1,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 1,
+      "nameplatePerSecond": 1,
+      "tone": "ok",
+      "showNameplate": false,
+      "energyPerUnit": 640,
+      "free": false,
+      "alternatives": 0
+     },
+     {
+      "key": "fluid:water",
+      "handleId": "output:fluid:water",
+      "kind": "fluid",
+      "resourceId": "water",
+      "name": "water",
+      "slot": 0,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 1,
+      "nameplatePerSecond": 1,
+      "tone": "ok",
+      "showNameplate": false,
+      "energyPerUnit": 640,
+      "free": false,
+      "alternatives": 0
+     }
+    ]
+   }
+  },
+  {
+   "name": "a recipe slot's chance and choice count ride its row",
+   "input": {
+    "enabled": true,
+    "hasResult": true,
+    "missingRecipe": false,
+    "solveMode": true,
+    "hasSlots": true,
+    "utilization": 1,
+    "euT": 0,
+    "inputs": {
+     "slots": [
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "consumed": true,
+       "consumeChance": 0.5,
+       "alternatives": 2
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "amountPerSecond": 1
+      }
+     ],
+     "wires": [
+      {
+       "key": "item:gt:plate",
+       "transferredPerSecond": 1
+      }
+     ]
+    },
+    "outputs": {
+     "slots": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "consumed": true,
+       "chance": 0.25,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "amountPerSecond": 1
+      }
+     ],
+     "wires": [
+      {
+       "key": "item:gt:gear",
+       "transferredPerSecond": 1
+      }
+     ]
+    }
+   },
+   "view": {
+    "verdict": "balanced",
+    "pct": 100,
+    "inputs": [
+     {
+      "key": "item:gt:plate",
+      "handleId": "input:item:gt%3Aplate",
+      "kind": "item",
+      "resourceId": "gt:plate",
+      "name": "gt:plate",
+      "slot": 0,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 1,
+      "nameplatePerSecond": 1,
+      "tone": "ok",
+      "showNameplate": false,
+      "energyPerUnit": 0,
+      "free": false,
+      "consumeChance": 0.5,
+      "alternatives": 2
+     }
+    ],
+    "outputs": [
+     {
+      "key": "item:gt:gear",
+      "handleId": "output:item:gt%3Agear",
+      "kind": "item",
+      "resourceId": "gt:gear",
+      "name": "gt:gear",
+      "slot": 0,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 1,
+      "nameplatePerSecond": 1,
+      "tone": "ok",
+      "showNameplate": false,
+      "energyPerUnit": 0,
+      "free": false,
+      "chance": 0.25,
+      "alternatives": 0
+     }
+    ]
+   }
+  },
+  {
+   "name": "a shared machine's second section carries its section on every handle",
+   "input": {
+    "enabled": true,
+    "hasResult": true,
+    "missingRecipe": false,
+    "solveMode": true,
+    "hasSlots": true,
+    "utilization": 1,
+    "euT": 0,
+    "inputs": {
+     "slots": [
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "r2:input:item:gt%3Aplate",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "r2:input:item:gt%3Aplate",
+       "amountPerSecond": 1
+      }
+     ],
+     "wires": [
+      {
+       "key": "item:gt:plate",
+       "transferredPerSecond": 1
+      }
+     ]
+    },
+    "outputs": {
+     "slots": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "r2:output:item:gt%3Agear",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "r2:output:item:gt%3Agear",
+       "amountPerSecond": 1
+      }
+     ],
+     "wires": [
+      {
+       "key": "item:gt:gear",
+       "transferredPerSecond": 1
+      }
+     ]
+    }
+   },
+   "view": {
+    "verdict": "balanced",
+    "pct": 100,
+    "inputs": [
+     {
+      "key": "item:gt:plate",
+      "handleId": "r2:input:item:gt%3Aplate",
+      "kind": "item",
+      "resourceId": "gt:plate",
+      "name": "gt:plate",
+      "slot": 0,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 1,
+      "nameplatePerSecond": 1,
+      "tone": "ok",
+      "showNameplate": false,
+      "energyPerUnit": 0,
+      "free": false,
+      "alternatives": 0
+     }
+    ],
+    "outputs": [
+     {
+      "key": "item:gt:gear",
+      "handleId": "r2:output:item:gt%3Agear",
+      "kind": "item",
+      "resourceId": "gt:gear",
+      "name": "gt:gear",
+      "slot": 0,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 1,
+      "nameplatePerSecond": 1,
+      "tone": "ok",
+      "showNameplate": false,
+      "energyPerUnit": 0,
+      "free": false,
+      "alternatives": 0
+     }
+    ]
+   }
+  },
+  {
+   "name": "a plan that is not solved answers legacy with no rows, but a bare slot is still unwired",
+   "input": {
+    "enabled": true,
+    "hasResult": true,
+    "missingRecipe": false,
+    "solveMode": false,
+    "hasSlots": true,
+    "utilization": 1,
+    "euT": 0,
+    "inputs": {
+     "slots": [
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "amountPerSecond": 1
+      }
+     ],
+     "wires": [
+      {
+       "key": "item:gt:plate",
+       "transferredPerSecond": 1
+      }
+     ]
+    },
+    "outputs": {
+     "slots": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "amountPerSecond": 1
+      }
+     ],
+     "wires": [
+      {
+       "key": "item:gt:gear",
+       "transferredPerSecond": 1
+      }
+     ]
+    }
+   },
+   "view": {
+    "verdict": "legacy",
+    "pct": 100,
+    "inputs": [],
+    "outputs": []
+   }
+  },
+  {
+   "name": "a bare slot is unwired also when the plan is not solved",
+   "input": {
+    "enabled": true,
+    "hasResult": true,
+    "missingRecipe": false,
+    "solveMode": false,
+    "hasSlots": true,
+    "utilization": 1,
+    "euT": 0,
+    "inputs": {
+     "slots": [
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:gt:plate",
+       "kind": "item",
+       "resourceId": "gt:plate",
+       "name": "gt:plate",
+       "handleId": "input:item:gt%3Aplate",
+       "amountPerSecond": 1
+      }
+     ],
+     "wires": []
+    },
+    "outputs": {
+     "slots": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "consumed": true,
+       "alternatives": 0
+      }
+     ],
+     "flows": [
+      {
+       "key": "item:gt:gear",
+       "kind": "item",
+       "resourceId": "gt:gear",
+       "name": "gt:gear",
+       "handleId": "output:item:gt%3Agear",
+       "amountPerSecond": 1
+      }
+     ],
+     "wires": [
+      {
+       "key": "item:gt:gear",
+       "transferredPerSecond": 1
+      }
+     ]
+    }
+   },
+   "view": {
+    "verdict": "unwired",
+    "pct": 100,
+    "bare": {
+     "inputs": [
+      {
+       "resourceKey": "item:gt:plate",
+       "kind": "item",
+       "displayName": "gt:plate"
+      }
+     ],
+     "outputs": []
+    },
+    "inputs": [
+     {
+      "key": "item:gt:plate",
+      "handleId": "input:item:gt%3Aplate",
+      "kind": "item",
+      "resourceId": "gt:plate",
+      "name": "gt:plate",
+      "slot": 0,
+      "connected": false,
+      "unsupplied": true,
+      "boundaryFree": false,
+      "currentPerSecond": 1,
+      "nameplatePerSecond": 1,
+      "tone": "bind",
+      "shortBadge": 1,
+      "showNameplate": false,
+      "energyPerUnit": 0,
+      "free": false,
+      "alternatives": 0
+     }
+    ],
+    "outputs": [
+     {
+      "key": "item:gt:gear",
+      "handleId": "output:item:gt%3Agear",
+      "kind": "item",
+      "resourceId": "gt:gear",
+      "name": "gt:gear",
+      "slot": 0,
+      "connected": true,
+      "unsupplied": false,
+      "boundaryFree": false,
+      "currentPerSecond": 1,
+      "nameplatePerSecond": 1,
+      "tone": "ok",
+      "showNameplate": false,
+      "energyPerUnit": 0,
+      "free": false,
+      "alternatives": 0
+     }
+    ]
+   }
+  }
+ ]
+}

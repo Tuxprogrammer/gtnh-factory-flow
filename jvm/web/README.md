@@ -126,7 +126,7 @@ stubs in `src/main/java/org/teavm/classlib`): `DaemonPoolExecutor` runs a task o
 that TeaVM's classlib lacks. One more override is for speed only: `DenseTableau` is ojAlgo's own, its equilibration walking
 the non-zero entries row by row (the same values; the dense scan was 17% of the heaviest plan's solve). The core solves on one thread (`Parallel` uses `Worker.INLINE` by default), as the browser has
 none. `SolverExports.solverSolve(json)` takes the solve input in the JSON `SolveInputJson` writes and returns the answer in
-the corpus's golden format; `SolverCodec` reads and writes both with `JsonTree` (no reflection, no Gson). The run solves the
+the corpus's golden format; core-solver's `SolverCodec` (the codec the JVM tests read and compare with) reads and writes both with `JsonTree` (no reflection, no Gson); `solverSolveCached(json)` is the same through one island cache per module instance, for the website's solve Worker. The run solves the
 whole corpus in `conformance/solver/` on both targets and compares it as `SolverGoldenTest` and `UpToParityTest` do. It also
 runs the 223 recorded website cases (`conformance/solver/website/cases.json.gz`) as `WebsiteCasesTest` does: 219 equal by the
 golden rule (1e-6 relative), 3 listed as differing and 1 as equal within the LP's tolerance, each with its reason in

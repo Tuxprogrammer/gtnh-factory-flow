@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -336,8 +338,10 @@ public final class Balancer {
 
     /**
      * Islands already solved, by their snapshot and the solver's effort: an edit re-solves only the island it touched,
-     * and undo finds the answer it had. It keeps the islands of the last two solves, however many. A
-     * The mod's solve service keeps one for its plan.
+     * and undo finds the answer it had. {@code new Cache()} keeps the islands of the last two solves, however many (the
+     * mod's solve service keeps one for its plan); {@code new Cache(n)} keeps the {@code n} islands used last, across
+     * solves, as the website's own island cache does ({@code IslandCache} in {@code plan/cache.ts}), so going back to
+     * any recent state of a plan finds its answers. Neither changes an answer, only what is solved again.
      */
     public static final class Cache {
 
@@ -347,10 +351,30 @@ public final class Balancer {
         private Map<Object, Piece> before = new HashMap<>();
         /** The islands of the solve under way. */
         private Map<Object, Piece> current = new HashMap<>();
+        /** With a capacity: the islands used last, the least recently used first (kept in insertion order). */
+        @Nullable
+        private final LinkedHashMap<Object, Piece> recent;
+        private final int capacity;
+
+        /** The islands of the last two solves. */
+        public Cache() {
+            this(0);
+        }
+
+        /** The {@code islands} islands used last, across solves; 0 or less: the islands of the last two solves. */
+        public Cache(final int islands) {
+            capacity = islands;
+            recent = islands > 0 ? new LinkedHashMap<>() : null;
+        }
 
         @Nullable
         synchronized Piece get(final SolveInput island) {
             final Object key = keyOf(island);
+            if (recent != null) {
+                final Piece piece = recent.remove(key);
+                if (piece != null) recent.put(key, piece);
+                return piece;
+            }
             Piece piece = last.get(key);
             if (piece == null) piece = before.get(key);
             if (piece != null) current.put(key, piece);
@@ -358,14 +382,27 @@ public final class Balancer {
         }
 
         synchronized void put(final SolveInput island, final Piece piece) {
+            if (recent != null) {
+                final Object key = keyOf(island);
+                recent.remove(key);
+                recent.put(key, piece);
+                final Iterator<Object> eldest = recent.keySet()
+                    .iterator();
+                while (recent.size() > capacity) {
+                    eldest.next();
+                    eldest.remove();
+                }
+                return;
+            }
             current.put(keyOf(island), piece);
         }
 
         /**
          * A solve is over: its islands become the last, the last the ones before. A stopped solve keeps what it did
-         * finish beside the last, so its next try starts there.
+         * finish beside the last, so its next try starts there. With a capacity there is nothing to turn over.
          */
         synchronized void finish(final boolean stopped) {
+            if (recent != null) return;
             if (stopped) {
                 last.putAll(current);
             } else {

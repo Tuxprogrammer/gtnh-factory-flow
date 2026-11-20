@@ -1,5 +1,6 @@
 import { calculateThroughput } from "@/lib/solver";
 import { initLpEngine } from "@/lib/solver/lp-engine";
+import { warmSolveCore } from "@/lib/core/solve-adopt";
 import { attachClogLocks } from "@/components/flow/clog-lock";
 import type { FactoryProject } from "@/lib/model/types";
 import { setActiveGameRates, type ActiveGameRates } from "@/lib/model/game-rates";
@@ -24,6 +25,12 @@ const engineSettled = Promise.race([
   engineReady,
   new Promise<boolean>((resolve) => setTimeout(() => resolve(false), ENGINE_WAIT_MS)),
 ]);
+
+// The compiled core's solver loads beside HiGHS (src/lib/core/solve-adopt.ts; nothing when the solve area is off) and
+// takes the plan solve from the first one after it is ready. No solve waits for it: until then, and when it fails,
+// HiGHS solves as before, so the first answer after a page load is never later than without the core. HiGHS stays
+// loaded for the clog-lock proof below and for every solve the core does not take.
+void warmSolveCore();
 
 /**
  * The solver, off the main thread. One message in (a plan, the dataset's rates and the content key

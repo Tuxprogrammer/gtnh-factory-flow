@@ -23,6 +23,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.gtnhplanner.conformance.Conformance;
 import com.gtnhplanner.core.base.Uuid;
+import com.gtnhplanner.core.solver.SolverCodec;
 import com.gtnhplanner.data.flowchart.DrawerTypes;
 import com.gtnhplanner.data.flowchart.balancer.Balancer;
 import com.gtnhplanner.data.flowchart.balancer.DrawerReadout;
@@ -142,7 +143,7 @@ final class SolverCorpus {
                     new Case(
                         "up to: " + plan.get("name")
                             .getAsString(),
-                        SolveInputJson.read(plan.getAsJsonObject("input"))));
+                        read(plan.getAsJsonObject("input"))));
             }
         } catch (final IOException e) {
             throw new IllegalStateException(e);
@@ -165,7 +166,7 @@ final class SolverCorpus {
 
     static SolveInput plan(final String name) {
         try (InputStream in = Conformance.open("solver/corpus/inputs/" + name + ".json")) {
-            return SolveInputJson.read(
+            return read(
                 new JsonParser().parse(new InputStreamReader(in, StandardCharsets.UTF_8))
                     .getAsJsonObject());
         } catch (final IOException e) {
@@ -256,9 +257,30 @@ final class SolverCorpus {
         }
     }
 
-    /** The whole answer the board reads, as JSON: the solve's own timing left out. */
+    /**
+     * A solve input as the web build reads it ({@link SolverCodec#readInput}), checked to be the input the mod's reader
+     * makes of the same text: every test reads the corpus through the one codec.
+     */
+    static SolveInput read(final JsonObject input) {
+        final SolveInput in = SolverCodec.readInput(input.toString());
+        final JsonObject again = SolveInputJson.write(in), mod = SolveInputJson.write(SolveInputJson.read(input));
+        if (!again.equals(mod)) throw new IllegalStateException("the codec reads an input otherwise than SolveInputJson");
+        return in;
+    }
+
+    /**
+     * The whole answer the board reads, as JSON: the solve's own timing left out. It is the web build's answer text
+     * ({@link SolverCodec#writeAnswer}), checked on every answer to be the tree this class's reflective walk makes of
+     * the records, so a field either side leaves out fails here; the walk's tree is returned, whose text the digest
+     * dumps compare byte for byte.
+     */
     static JsonElement digest(final Balancer.Answer answer) {
-        return of(answer, 0);
+        final JsonElement walked = of(answer, 0);
+        final JsonElement codec = new JsonParser().parse(SolverCodec.writeAnswer(answer));
+        if (!walked.equals(codec)) throw new IllegalStateException(
+            "the codec's answer differs from the records: " + differences(walked, codec) + " exact: "
+                + abbreviate(walked) + " / " + abbreviate(codec));
+        return walked;
     }
 
     private static JsonElement of(final Object o, final int depth) {

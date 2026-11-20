@@ -22,8 +22,9 @@ export const ADOPT = {
   power: true,
   // layout: the wire router and Arrange (LayoutExports).
   layout: true,
-  // solve: the plan solve (SolverExports).
-  solve: false,
+  // solve: the plan solve (SolverExports), in the solve Worker and the server's plan routes, on WebAssembly GC only
+  // (src/lib/core/solve-adopt.ts).
+  solve: true,
 } as const satisfies Record<string, boolean>;
 
 export type AdoptArea = keyof typeof ADOPT;

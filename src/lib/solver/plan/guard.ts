@@ -13,7 +13,6 @@
 import type { SolveContext } from "./context";
 import { baseModel, runModel } from "./lp";
 import { heldAt } from "./trade";
-import { NUMERICS } from "./validate";
 
 /** The connected ports on an Up to machine's wire networks that no drawer is linked to, ascending. */
 export function guardedPorts(ctx: SolveContext): number[] {
@@ -47,9 +46,8 @@ export function prepareGuard(ctx: SolveContext): void {
   if (!least.ok) return;
   let reached = 0;
   for (const p of ports) reached += least.point.externals[p]! * ctx.externalWeight(p);
+  // Held to the least trade itself: a rounding allowance on top was tried (1e-7, and 1e-3) and moved no answer on any
+  // case, the Exactly pins against Up to cards that reach here included.
   const held = heldAt(reached, least.point.extents);
-  ctx.guard = {
-    ports,
-    cap: held <= 0 ? 0 : held * (1 + NUMERICS.qtyEps) + NUMERICS.qtyEps * Math.max(1, held),
-  };
+  ctx.guard = { ports, cap: Math.max(0, held) };
 }

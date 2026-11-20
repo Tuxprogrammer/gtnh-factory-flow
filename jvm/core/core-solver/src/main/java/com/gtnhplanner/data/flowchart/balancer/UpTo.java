@@ -82,11 +82,10 @@ public final class UpTo {
                 if (least.isRejected()) return;
                 double reached = 0;
                 for (final int p : ports) reached += least.point().externals[p] * ctx.externalWeight(p);
+                // Held to the least trade itself: a rounding allowance on top was tried (1e-7, and 1e-3) and moved no
+                // answer on any case, the Exactly pins against Up to cards that reach here included.
                 final double held = Solver.heldAt(ctx, reached, least.point().extents);
-                final double qtyEps = ctx.heuristics.numerics().qtyEps;
-                ctx.guard = new SolveContext.Guard(
-                    ports,
-                    held <= 0 ? 0 : held * (1 + qtyEps) + qtyEps * Math.max(1, held));
+                ctx.guard = new SolveContext.Guard(ports, Math.max(0, held));
             } finally {
                 ctx.guardReady = true;
             }

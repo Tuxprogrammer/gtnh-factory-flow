@@ -59,7 +59,7 @@ final class DevRecipes {
                     // The board is open: add it the way NEI's "+" does, placed.
                     node = board.addRecipe(handler, i);
                 } else {
-                    node = new Node(handler, i, x, y);
+                    node = com.gtnhplanner.nei.NeiRecipes.node(handler, i, x, y);
                     com.gtnhplanner.ui.card.CardDefaults.apply(node);
                     com.gtnhplanner.ui.card.CardDefaults.seedHatches(node);
                     final Graph graph = Plan.getActiveGraph();
@@ -125,7 +125,7 @@ final class DevRecipes {
                     describe(handler.getResultStack(i) == null ? List.of() : List.of(handler.getResultStack(i))));
                 m.put("others", describe(handler.getOtherStacks(i)));
                 m.put("catalysts", describe(codechicken.nei.recipe.RecipeCatalysts.getRecipeCatalysts(handler)));
-                final Node node = new Node(handler, i, 0, 0);
+                final Node node = com.gtnhplanner.nei.NeiRecipes.node(handler, i, 0, 0);
                 final List<String> ports = new ArrayList<>();
                 node.inputs.forEach(
                     p -> ports.add("in  " + p.getDisplayName() + " x" + p.getAmount() + " chance " + p.getChance()));

@@ -79,8 +79,8 @@ public final class WebEffect {
     @Nullable
     public static Web.Recipe recipe(final Node node) {
         final Object stamp = Arrays.asList(
-            node.recipeId,
-            node.handlerRecipeIndex,
+            com.gtnhplanner.nei.NeiRecipes.id(node),
+            node.recipe.index(),
             new HashMap<>(node.properties),
             node.inputs.size(),
             node.outputs.size());

@@ -1204,7 +1204,7 @@ public final class BoardSession {
             index.put(n.id, clipNodes.size());
             clipNodes.add(
                 new ClipNode(
-                    n.recipeId,
+                    com.gtnhplanner.nei.NeiRecipes.id(n),
                     new HashMap<>(n.machineConfig.settings),
                     n.machineName,
                     n.isMachineCountFixed(),
@@ -1292,7 +1292,8 @@ public final class BoardSession {
                 made.add(null);
                 continue;
             }
-            final Node n = new Node(ref.handler, ref.recipeIndex, snap(worldX + c.dx()), snap(worldY + c.dy()));
+            final Node n = com.gtnhplanner.nei.NeiRecipes
+                .node(ref.handler, ref.recipeIndex, snap(worldX + c.dx()), snap(worldY + c.dy()));
             n.machineConfig.settings.clear();
             n.machineConfig.settings.putAll(c.settings());
             n.machineName = c.machineName();
@@ -2341,7 +2342,7 @@ public final class BoardSession {
         Sfx.ADJUST.play();
         edit(() -> {
             final List<String> ins = keys(node.inputs), outs = keys(node.outputs);
-            node.remake(ref.handler, ref.recipeIndex);
+            com.gtnhplanner.nei.NeiRecipes.remake(node, ref.handler, ref.recipeIndex);
             followPorts(node, ins, outs);
             followRates(node.targetOutputRates, outs, keys(node.outputs));
             followRates(node.targetInputRates, ins, keys(node.inputs));
@@ -2711,9 +2712,10 @@ public final class BoardSession {
                 copies.add(copy);
                 continue;
             }
-            final RecipeHandlerRef ref = from == null ? null : com.gtnhplanner.nei.RecipeRefs.of(from.recipeId);
+            final RecipeHandlerRef ref = from == null ? null
+                : com.gtnhplanner.nei.RecipeRefs.of(com.gtnhplanner.nei.NeiRecipes.id(from));
             if (ref == null) return;
-            final Node copy = new Node(ref.handler, ref.recipeIndex, at[0], at[1]);
+            final Node copy = com.gtnhplanner.nei.NeiRecipes.node(ref.handler, ref.recipeIndex, at[0], at[1]);
             copy.machineConfig.copySettingsFrom(from.machineConfig);
             copy.machineName = from.machineName;
             copy.inputPicks.putAll(from.inputPicks);

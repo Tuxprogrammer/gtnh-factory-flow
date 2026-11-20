@@ -11,6 +11,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import com.gtnhplanner.core.base.Float32Ops;
 import com.gtnhplanner.core.base.Uuid;
 
 /**
@@ -167,7 +168,8 @@ public final class Waypoints {
 
     /** A board x or y on the website's grid: the corner nearest it. */
     public static int toSite(final int v) {
-        return Math.round(v / (float) SITE_GRID) * SITE_GRID;
+        // Single precision, as it always was: through Float32Ops so every target rounds the same.
+        return Math.round(Float32Ops.div(Float32Ops.of(v), Float32Ops.of(SITE_GRID))) * SITE_GRID;
     }
 
     /** The website's waypoints ([{x, y}, ...]) on the router's lines; empty for none or anything malformed. */

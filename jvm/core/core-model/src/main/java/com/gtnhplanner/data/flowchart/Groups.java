@@ -6,7 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.jetbrains.annotations.Nullable;
+import javax.annotation.Nullable;
 
 import com.gtnhplanner.core.base.Uuid;
 

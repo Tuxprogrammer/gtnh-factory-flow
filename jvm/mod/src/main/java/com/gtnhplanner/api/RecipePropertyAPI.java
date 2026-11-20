@@ -30,8 +30,8 @@ public final class RecipePropertyAPI {
 
     private static final ArrayListMultimap<Class<?>, PropertyProvider> extractors = ArrayListMultimap.create();
 
-    public static final RecipeProperty<Integer> DURATION_TICKS = RecipeProperty.<Integer>builder("duration_ticks", 0)
-        .build();
+    /** The core's {@link RecipeProperty#DURATION_TICKS}: the same object. */
+    public static final RecipeProperty<Integer> DURATION_TICKS = RecipeProperty.DURATION_TICKS;
 
     public static final ResourceProperty<ItemStack> ITEM = ResourceProperty.builder("item", new ItemStack(Blocks.dirt))
         .displayFormatter(ItemStack::getDisplayName)

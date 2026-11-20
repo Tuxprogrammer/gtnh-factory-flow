@@ -73,7 +73,7 @@ public final class AutoWorkbench {
     /** Whether {@code node} is a crafting-grid recipe (NEI's shaped or shapeless crafting page). */
     public static boolean crafts(@Nullable final Node node) {
         if (node == null || node.isPower()) return false;
-        final RecipeHandlerRef ref = com.gtnhplanner.nei.RecipeRefs.of(node.recipeId);
+        final RecipeHandlerRef ref = com.gtnhplanner.nei.RecipeRefs.of(com.gtnhplanner.nei.NeiRecipes.id(node));
         return ref != null && crafts(ref.handler);
     }
 
@@ -84,7 +84,7 @@ public final class AutoWorkbench {
 
     /** The website's machine type for {@code node}'s crafting page. */
     public static String machineType(final Node node) {
-        final RecipeHandlerRef ref = com.gtnhplanner.nei.RecipeRefs.of(node.recipeId);
+        final RecipeHandlerRef ref = com.gtnhplanner.nei.RecipeRefs.of(com.gtnhplanner.nei.NeiRecipes.id(node));
         return ref != null && ref.handler instanceof ShapelessRecipeHandler ? SHAPELESS : SHAPED;
     }
 

@@ -29,8 +29,6 @@ import com.gtnhplanner.data.MachineProfileRegistry;
 import com.gtnhplanner.data.SettingDef;
 import com.gtnhplanner.data.flowchart.balancer.BalanceMode;
 
-import codechicken.nei.recipe.Recipe;
-
 public final class Serializer {
 
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting()
@@ -499,11 +497,13 @@ public final class Serializer {
         }
         // Null-tolerant on both sides: an unresolved recipe must not make the slot
         // unsaveable, and downstream treats a null recipeId as "handler unavailable".
-        if (node.recipeId != null) {
-            obj.add("recipeId", node.recipeId.toJsonObject());
+        final JsonObject recipeId = com.gtnhplanner.nei.NeiRecipes.json(node);
+        if (recipeId != null) {
+            obj.add("recipeId", recipeId);
         }
-        obj.addProperty("handlerRecipeIndex", node.handlerRecipeIndex);
-        obj.addProperty("extractorIndex", node.getExtractorIndex());
+        obj.addProperty("handlerRecipeIndex", node.recipe.index());
+        // Which of a page's readers read it: nothing chooses another than the first, so every save has 0.
+        obj.addProperty("extractorIndex", 0);
         // A whole count as the whole number it always was; a fraction (a website pin of 0.5) as it is.
         final double count = node.machineConfig.machineCount();
         if (Math.floor(count) == count && Math.abs(count) <= Integer.MAX_VALUE)
@@ -570,13 +570,13 @@ public final class Serializer {
         final Node node = new Node(id, x, y);
         node.machineName = obj.get("machine")
             .getAsString();
-        if (obj.has("recipeId")) {
-            node.recipeId = Recipe.RecipeId.of(
-                obj.get("recipeId")
-                    .getAsJsonObject());
-        }
-        node.handlerRecipeIndex = obj.has("handlerRecipeIndex") ? obj.get("handlerRecipeIndex")
-            .getAsInt() : 0;
+        com.gtnhplanner.nei.NeiRecipes.load(
+            node,
+            obj.has("recipeId") ? obj.get("recipeId")
+                .getAsJsonObject() : null,
+            obj.has("handlerRecipeIndex") ? obj.get("handlerRecipeIndex")
+                .getAsInt() : 0,
+            !obj.has("power"));
         if (obj.has("power")) {
             node.powerSource = obj.get("power")
                 .getAsString();
@@ -589,7 +589,7 @@ public final class Serializer {
                             .getAsString());
                 }
             }
-        } else node.initExtractor();
+        }
         // Before the refresh, which sets each input to the item picked for it.
         if (obj.has("inputPicks") && obj.get("inputPicks")
             .isJsonObject()) {

@@ -46,7 +46,7 @@ public class Drawer extends GraphData implements DrawerTypes {
         private final Uuid nodeId;
         private final int portIndex;
         /** The dots steering the link's wire ({@link Waypoints}); null for none, so a save leaves it out. */
-        @org.jetbrains.annotations.Nullable
+        @javax.annotation.Nullable
         private final List<int[]> waypoints;
 
         public Link(final Uuid nodeId, final int portIndex) {
@@ -54,7 +54,7 @@ public class Drawer extends GraphData implements DrawerTypes {
         }
 
         private Link(final Uuid nodeId, final int portIndex,
-            @org.jetbrains.annotations.Nullable final List<int[]> waypoints) {
+            @javax.annotation.Nullable final List<int[]> waypoints) {
             this.nodeId = Objects.requireNonNull(nodeId, "nodeId");
             this.portIndex = portIndex;
             this.waypoints = waypoints;
@@ -114,7 +114,7 @@ public class Drawer extends GraphData implements DrawerTypes {
     /** The resource's display name as last resolved by the client, for when it cannot resolve. */
     private String label = "";
     /** The board group it is in ({@link BoardGroup}), or null. */
-    @org.jetbrains.annotations.Nullable
+    @javax.annotation.Nullable
     private Uuid group;
 
     /** A product drawer with no resource, no links and no rule; also Gson's constructor. */
@@ -297,12 +297,12 @@ public class Drawer extends GraphData implements DrawerTypes {
         this.resourceKey = Objects.requireNonNull(resourceKey, "resourceKey");
     }
 
-    @org.jetbrains.annotations.Nullable
+    @javax.annotation.Nullable
     public Uuid getGroup() {
         return group;
     }
 
-    public void setGroup(@org.jetbrains.annotations.Nullable final Uuid group) {
+    public void setGroup(@javax.annotation.Nullable final Uuid group) {
         this.group = group;
     }
 

@@ -55,7 +55,7 @@ public final class WebCards {
         // The Extreme Entity Crusher's recipes are kubatech's own, on MobsInfo's page: the website files them so.
         if (EecCards.isEec(node)) return com.gtnhplanner.machines.MobDrops.MAP_ID;
         if (node.properties.get(GTProvider.RECIPE_MAP) instanceof final RecipeMap<?> map) return map.unlocalizedName;
-        final RecipeHandlerRef ref = com.gtnhplanner.nei.RecipeRefs.of(node.recipeId);
+        final RecipeHandlerRef ref = com.gtnhplanner.nei.RecipeRefs.of(com.gtnhplanner.nei.NeiRecipes.id(node));
         return ref != null && ref.handler instanceof FurnaceRecipeHandler ? SMELTING : null;
     }
 
@@ -68,7 +68,7 @@ public final class WebCards {
         if (entry == null) return null;
         final boolean smelting = SMELTING.equals(mapId);
         final Web.Recipe r = new Web.Recipe();
-        r.id = mapId + ":" + node.recipeId;
+        r.id = mapId + ":" + com.gtnhplanner.nei.NeiRecipes.id(node);
         r.name = node.machineName;
         r.kind = "gregtech_machine";
         r.category = "gregtech";
@@ -113,7 +113,7 @@ public final class WebCards {
     private static Web.Recipe craftingRecipe(final Node node) {
         final Web.Recipe r = new Web.Recipe();
         final String type = AutoWorkbench.machineType(node);
-        r.id = "crafting:" + node.recipeId;
+        r.id = "crafting:" + com.gtnhplanner.nei.NeiRecipes.id(node);
         r.name = node.machineName;
         r.kind = "gregtech_machine";
         r.category = "crafting";
@@ -177,7 +177,8 @@ public final class WebCards {
         return value instanceof final Number n ? n.doubleValue() : 0;
     }
 
-    private static List<Web.Resource> resources(final List<Port<?>> ports) {
+    /** The ports as the dataset's resource amounts (kind, id, amount, chance, name). */
+    public static List<Web.Resource> resources(final List<Port<?>> ports) {
         final List<Web.Resource> out = new ArrayList<>();
         for (final Port<?> port : ports) {
             final Web.Resource res = new Web.Resource();

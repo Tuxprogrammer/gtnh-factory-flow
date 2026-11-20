@@ -25,7 +25,7 @@ import com.gtnhplanner.data.flowchart.Port;
 public final class CustomRate {
 
     /** Its source id, stored in plans: never rename. */
-    public static final String ID = "custom-rate";
+    public static final String ID = Node.CUSTOM_RATE;
     public static final String MODE = "mode", RATE = "rate", RESOURCE = "resource";
     public static final String SUPPLY = "supply", REQUEST = "request";
     /** The rate a card starts on, before anyone has dialed one. */

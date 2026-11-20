@@ -1,12 +1,12 @@
 package com.gtnhplanner.data;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.gtnhplanner.core.base.ExactMath;
+import com.gtnhplanner.core.base.JavaHashMap;
 import com.gtnhplanner.data.effect.EffectResult;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.properties.RecipeProperty;
@@ -14,10 +14,10 @@ import com.gtnhplanner.data.properties.RecipeProperty;
 public class MachineConfig {
 
     public String profileId;
-    public final Map<String, Object> settings = new HashMap<>();
+    public final Map<String, Object> settings = new JavaHashMap<>();
     // todo make these functional
-    public final Map<Integer, Float> inputConsumption = new HashMap<>();
-    public final Map<Integer, Float> outputProductivity = new HashMap<>();
+    public final Map<Integer, Float> inputConsumption = new JavaHashMap<>();
+    public final Map<Integer, Float> outputProductivity = new JavaHashMap<>();
 
     private final Node parentRef;
 

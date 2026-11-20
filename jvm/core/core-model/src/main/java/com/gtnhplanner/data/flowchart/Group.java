@@ -32,7 +32,7 @@ public class Group extends GraphData {
     @Nonnull
     SortedMap<Uuid, GraphData> children = new TreeMap<>();
     @Nonnull
-    Set<Uuid> nodeIds = new java.util.HashSet<>();
+    Set<Uuid> nodeIds = new com.gtnhplanner.core.base.JavaHashSet<>();
 
     public Group() {
         super(Uuid.randomUUID());

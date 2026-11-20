@@ -92,14 +92,18 @@ public final class PurityCheck {
         final String reason;
         final Pattern path;
         final int lineNo;
+        /** How many findings the entry excuses ({@code rule:N}), or 0 for any number. */
+        final int count;
+        int matched;
         boolean used;
 
-        Allow(final String glob, final String rule, final String reason, final int lineNo) {
+        Allow(final String glob, final String rule, final String reason, final int lineNo, final int count) {
             this.glob = glob;
             this.rule = rule;
             this.reason = reason;
             this.path = globToRegex(glob);
             this.lineNo = lineNo;
+            this.count = count;
         }
     }
 
@@ -136,12 +140,7 @@ public final class PurityCheck {
             if (a == null) open.add(f);
             else excused++;
         }
-        for (final Allow a : allows) {
-            if (!a.used && a.glob.startsWith("core/" + module + "/")) {
-                problems.add("allow.txt:" + a.lineNo + ": '" + a.glob + " " + a.rule
-                    + "' matches nothing in this module any more; remove it");
-            }
-        }
+        problems.addAll(staleProblems(allows, module));
         final String report = check.render(open);
         System.out.print(report);
         for (final String p : problems) System.out.println(p);
@@ -469,24 +468,60 @@ public final class PurityCheck {
                 problems.add("allow.txt:" + n + ": needs a path, a rule and a reason in words");
                 continue;
             }
-            if (!f[1].equals("*") && !ruleIds.contains(f[1])) {
-                problems.add("allow.txt:" + n + ": no rule '" + f[1] + "' in rules.txt");
+            final int colon = f[1].indexOf(':');
+            final String rule = colon < 0 ? f[1] : f[1].substring(0, colon);
+            int count = 0;
+            if (colon >= 0) {
+                try {
+                    count = Integer.parseInt(f[1].substring(colon + 1));
+                } catch (final NumberFormatException e) {
+                    count = 0;
+                }
+                if (count < 1) {
+                    problems.add("allow.txt:" + n + ": '" + f[1] + "' needs a whole number above 0 after the colon");
+                    continue;
+                }
+            }
+            if (!rule.equals("*") && !ruleIds.contains(rule)) {
+                problems.add("allow.txt:" + n + ": no rule '" + rule + "' in rules.txt");
                 continue;
             }
-            out.add(new Allow(f[0], f[1], f[2], n));
+            out.add(new Allow(f[0], rule, f[2], n, count));
         }
         return out;
     }
 
+    /**
+     * The entry that excuses a finding, or null. An entry written {@code rule:N} excuses N findings and no more: the
+     * next one is open, so a new use in a file already on the list is seen.
+     */
     static Allow allowed(final List<Allow> allows, final Finding f) {
         for (final Allow a : allows) {
             if ((a.rule.equals("*") || a.rule.equals(f.rule)) && a.path.matcher(f.path)
                 .matches()) {
+                if (a.count > 0 && a.matched >= a.count) continue;
                 a.used = true;
+                a.matched++;
                 return a;
             }
         }
         return null;
+    }
+
+    /** Entries of a module that excuse nothing, or fewer findings than they say: the list only shrinks. */
+    static List<String> staleProblems(final List<Allow> allows, final String module) {
+        final List<String> problems = new ArrayList<>();
+        for (final Allow a : allows) {
+            if (!a.glob.startsWith("core/" + module + "/")) continue;
+            if (!a.used) {
+                problems.add("allow.txt:" + a.lineNo + ": '" + a.glob + " " + a.rule
+                    + "' matches nothing in this module any more; remove it");
+            } else if (a.count > 0 && a.matched < a.count) {
+                problems.add("allow.txt:" + a.lineNo + ": '" + a.glob + " " + a.rule + ":" + a.count
+                    + "' matches only " + a.matched + " now; lower the count");
+            }
+        }
+        return problems;
     }
 
     // --- output ---
@@ -597,6 +632,25 @@ public final class PurityCheck {
         if (problems.size() != 1) wrong.add("allow: an entry without a reason was not refused: " + problems);
         if (allowed(allows, sample) == null) wrong.add("allow: the entry did not excuse " + sample);
         if (allows.size() != 2 || allows.get(1).used) wrong.add("allow: a stale entry was not left unused");
+        // A counted entry excuses that many findings and no more, and says so when it excuses fewer.
+        final Finding one = new Finding("uuid", "core/planted/src/main/java/A.java", 1, "x");
+        final Finding two = new Finding("uuid", "core/planted/src/main/java/A.java", 2, "x");
+        Files.writeString(allowFile, "core/planted/src/main/java/A.java uuid:1 one use is argued here\n"
+            + "core/planted/src/main/java/B.java uuid:2 two uses are argued here\n"
+            + "core/planted/src/main/java/B.java uuid:0 a count of nothing\n");
+        final List<String> countProblems = new ArrayList<>();
+        final List<Allow> counted = readAllow(allowFile, rules.keySet(), countProblems);
+        if (countProblems.size() != 1 || counted.size() != 2) wrong.add("allow: a count below 1 was not refused");
+        if (allowed(counted, one) == null) wrong.add("allow: a counted entry did not excuse its first finding");
+        if (allowed(counted, two) != null) wrong.add("allow: a counted entry excused more than its count");
+        final List<String> short1 = staleProblems(counted, "planted");
+        if (short1.size() != 1 || !short1.get(0)
+            .contains("matches nothing")) wrong.add("allow: an unused counted entry was not reported: " + short1);
+        counted.get(1).used = true;
+        counted.get(1).matched = 1;
+        final List<String> short2 = staleProblems(counted, "planted");
+        if (short2.size() != 1 || !short2.get(0)
+            .contains("lower the count")) wrong.add("allow: a count above the findings was not reported: " + short2);
         for (final String w : wrong) System.out.println("  " + w);
         final boolean ok = wrong.isEmpty();
         System.out.println("PURITY-SELFTEST: " + (ok ? "PASS" : "FAIL") + " (" + rules.size() + " rules, "

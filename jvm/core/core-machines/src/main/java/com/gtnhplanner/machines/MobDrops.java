@@ -1,6 +1,7 @@
 package com.gtnhplanner.machines;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +48,8 @@ public final class MobDrops {
     public record Modifier(String name, Map<String, Object> fields) {
 
         public Modifier {
-            fields = Map.copyOf(fields);
+            // The fields keep the order they were read in: Map.copyOf iterates in an order the JDK salts at each start.
+            fields = Collections.unmodifiableMap(new LinkedHashMap<>(fields));
         }
     }
 

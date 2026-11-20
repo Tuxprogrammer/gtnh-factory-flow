@@ -1,7 +1,6 @@
 package com.gtnhplanner.data.flowchart.balancer;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +9,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 
+import com.gtnhplanner.core.base.JavaHashSet;
 import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.DrawerTypes;
 
@@ -226,10 +226,10 @@ public final class UpToRead {
                     if (q != null) out.add(new Blame(ref, model.portComponent[q]));
                 }
                 blames.add(out);
-                final Set<Integer> own = new HashSet<>(
+                final Set<Integer> own = new JavaHashSet<>(
                     model.pools.get(p)
                         .machines());
-                final Set<Integer> networks = new HashSet<>();
+                final Set<Integer> networks = new JavaHashSet<>();
                 // A starved pool is fed by those that make there; a clogged one is held by those that take there.
                 for (int q = 0; q < model.connectedPorts.size(); q++) {
                     final ModelData.ConnectedPort cp = model.connectedPorts.get(q);
@@ -369,7 +369,7 @@ public final class UpToRead {
             if (!port.input()) outputs.get(port.machine())
                 .add(p);
         }
-        final Set<Integer> reached = new HashSet<>();
+        final Set<Integer> reached = new JavaHashSet<>();
         final List<Integer> queue = new ArrayList<>(
             model.pools.get(pool)
                 .machines());
@@ -395,7 +395,7 @@ public final class UpToRead {
     /** The unmet drawers with a lower bound linked to the pool or to what it feeds, in shortfall order. */
     private static List<Unmet> unmetFed(final SolveContext ctx, final int pool, final Set<Integer> below) {
         final ModelData model = ctx.model;
-        final Set<Integer> own = new HashSet<>(
+        final Set<Integer> own = new JavaHashSet<>(
             model.pools.get(pool)
                 .machines());
         final List<Unmet> out = new ArrayList<>();
@@ -495,7 +495,7 @@ public final class UpToRead {
         final StageOutcome point = ctx.point();
         final double[] scales = ctx.dustScales(point.extents, point.flows, point.externals)
             .ports();
-        final Set<Integer> counted = new HashSet<>();
+        final Set<Integer> counted = new JavaHashSet<>();
         double demand = 0;
         for (final int m : model.pools.get(pool)
             .machines()) {
@@ -733,7 +733,7 @@ public final class UpToRead {
             if (q == pool) continue;
             final Read r = read.get(q);
             if (r.reason != UpToReason.FULL && r.reason != UpToReason.BOTTLENECK) continue;
-            final Set<Integer> members = new HashSet<>(
+            final Set<Integer> members = new JavaHashSet<>(
                 model.pools.get(q)
                     .machines());
             boolean makes = false;

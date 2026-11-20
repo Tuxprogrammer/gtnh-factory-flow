@@ -1,10 +1,8 @@
-// Track the GregTech the pack actually ships (GTNH 2.9.0-beta-2 loads
-// gregtech-5.09.54.20.jar), so the symbols the exporter compiles against are
-// the ones it reflects over at runtime. The older 5.09.52.258 pin no longer
-// resolves at all: it drags in Thaumic_Exploration, whose pom asks for a
-// CodeChickenLib:1.3.0 that GTNH's nexus has since unpublished.
+// The GregTech the planner mod compiles against (jvm/mod/dependencies.gradle), because this jar compiles the mod's
+// recipe reader (com.gtnhplanner.read.gt, see build.gradle): one reader, one set of GregTech symbols. The pack ships
+// a newer build; the reader reaches what moved between builds by reflection.
 dependencies {
-    implementation("com.github.GTNewHorizons:GT5-Unofficial:5.09.54.20:dev")
+    implementation("com.github.GTNewHorizons:GT5-Unofficial:5.09.54.205:dev")
 
     shadowImplementation("com.google.code.gson:gson:2.10.1")
 }

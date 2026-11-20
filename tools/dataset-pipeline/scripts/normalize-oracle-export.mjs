@@ -192,7 +192,10 @@ function normalizeGregtech(domain) {
         ...(rawRecipe.nonConsumedInputs ?? []).map((entry) =>
           resourceAmount(entry, { consumed: false }),
         ),
-        ...(rawRecipe.fluidInputs ?? []).map((entry) => resourceAmount(entry)),
+        // A fluid is used up by chance the way an item is (the reader exports GregTech's mFluidInputChances).
+        ...(rawRecipe.fluidInputs ?? []).map((entry) =>
+          withInputChance(resourceAmount(entry), entry.inputChance),
+        ),
       ].filter(Boolean);
       const outputs = [
         ...(rawRecipe.itemOutputs ?? []).map((entry) =>
@@ -2448,8 +2451,9 @@ function voltageTierForEu(eut) {
     ["UHV", 2097152],
     ["UEV", 8388608],
     ["UIV", 33554432],
-    ["UXV", 134217728],
-    ["OpV", 536870912],
+    // GregTech's names (GTValues.VN): UMV, then UXV. "OpV" is a GTCEu name the website reads as UXV.
+    ["UMV", 134217728],
+    ["UXV", 536870912],
   ];
   return tiers.find(([, max]) => value <= max)?.[0] ?? "MAX";
 }

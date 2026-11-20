@@ -652,8 +652,7 @@ final class PlanRead {
         final Set<String> seen = new HashSet<>();
         for (int i = 0; i < ports.size(); i++) {
             final com.gtnhplanner.data.flowchart.Port<?> p = ports.get(i);
-            final PlanExport.Res r = p.fromModel ? null
-                : p.getValue() instanceof com.gtnhplanner.power.Energy ? PlanExport.EU : game.port(p);
+            final PlanExport.Res r = PlanExport.recipePort(p, game);
             final boolean named = r != null && seen.add(r.kind() + ":" + r.id());
             if (!named && had.containsKey(i) && !on.containsKey(i)) on.put(i, had.get(i));
         }

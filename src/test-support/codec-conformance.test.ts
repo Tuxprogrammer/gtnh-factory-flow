@@ -13,8 +13,8 @@ import {
 /**
  * The website's side of the shared plan codec (core-codec's PlanJson, CodecTest on the JVM): a plan's text read and
  * written again is what JSON.stringify writes, for the hand-written cases and every committed plan, and the plans the
- * mod writes name each wire's port as the card's recipe names it, so every wire lands on the website. Rewrite
- * conformance/codec/plan-text.json with GTNH_WRITE_GOLDEN=1.
+ * mod writes, to files and to the cloud, name each wire's port as the card's recipe names it, so every wire lands on
+ * the website. Rewrite conformance/codec/plan-text.json with GTNH_WRITE_GOLDEN=1.
  */
 
 type PlanText = {
@@ -105,9 +105,9 @@ function parseHandle(handle: string | undefined): { section: number; id: string 
   return { section: m ? Number(m[1]) : 0, id: decodeURIComponent(parts[2]) };
 }
 
-describe("plans the mod writes to files, links and posts", () => {
-  // export-* are PlanExport's. cloud-* are the cloud map's, which still names a drawer's wire by the drawer's own key.
-  for (const f of listConformance("plans/mod").filter((name) => name.startsWith("export-"))) {
+describe("plans the mod writes to files, links, posts and the cloud", () => {
+  // export-* are PlanExport's, cloud-* the cloud map's: both name a drawer's wire as the port it lands on does.
+  for (const f of listConformance("plans/mod")) {
     it(`${f}: every wire names a port its card's recipe has`, () => {
       const plan = readConformanceJson("plans/mod", f) as Plan;
       const recipes = new Map(plan.recipes.map((r) => [r.id, r]));

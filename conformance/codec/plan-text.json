@@ -88,19 +88,19 @@
     },
     {
       "path": "plans/mod/cloud-corpus-benzene.json",
-      "sha256": "9f8d669c500d3293f94981d96e1ef0996e7db8231469bbda15c65f113bbe2e4d"
+      "sha256": "e6c060238bcb4c8d3ea53a517f64f5f61da4859817490a1ac0a233d380dcc1a7"
     },
     {
       "path": "plans/mod/cloud-corpus-glass.json",
-      "sha256": "87e1180ad9c6e78649a3f65f1fab51447efb51f65b388d2928298abc17cb69e3"
+      "sha256": "13b307ed79d0c932510a4bae78843df3da51eede95cda7170eb0c90041f13025"
     },
     {
       "path": "plans/mod/cloud-corpus-hv-diesel.json",
-      "sha256": "9623d66eb1a34b7f84c42d82593c53e6ccc27bc89edab7b55524d3509069d49c"
+      "sha256": "9b2106795231bd4f3e1658d286921722cc5462d3b65f7153a8661dc1eb9a2416"
     },
     {
       "path": "plans/mod/cloud-corpus-mv.json",
-      "sha256": "15bef1ba3a64fc0eed6c608701ad8b96ff38e24d22f85f467fdbbb8c2a370f33"
+      "sha256": "3d6844aaff0b86b4a4e715fe4232c9ea270aa7b55d4692eabf43f79e9a15c327"
     },
     {
       "path": "plans/mod/cloud-corpus-single-card-v2.json",

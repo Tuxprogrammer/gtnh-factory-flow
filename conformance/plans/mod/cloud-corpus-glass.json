@@ -527,8 +527,8 @@
     {
       "id": "e12a3f88-9e4c-46f1-a7cc-dc937d54ad27",
       "kind": "item",
-      "resourceId": "glass",
-      "displayName": "glass",
+      "resourceId": "Glass",
+      "displayName": "Glass",
       "drainMode": "product",
       "position": {
         "x": 220,
@@ -546,7 +546,7 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "8ef3659d0679d400"
+        "sum": "cac22dacdd081ff4"
       }
     }
   ],
@@ -555,16 +555,16 @@
       "id": "e12a3f88-9e4c-46f1-a7cc-dc937d54ad27:2f139d94-18e6-4acb-b28e-c2fbcd0b9bac:0",
       "source": "2f139d94-18e6-4acb-b28e-c2fbcd0b9bac",
       "target": "e12a3f88-9e4c-46f1-a7cc-dc937d54ad27",
-      "sourceHandle": "output:item:glass",
-      "targetHandle": "input:item:glass",
+      "sourceHandle": "output:item:Glass",
+      "targetHandle": "input:item:Glass",
       "resourceKind": "item",
-      "resourceId": "glass",
+      "resourceId": "Glass",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 0
         },
-        "sum": "a487ff19d69a7b37"
+        "sum": "6356bc4b27590e8e"
       }
     },
     {

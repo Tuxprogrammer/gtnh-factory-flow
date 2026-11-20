@@ -170,7 +170,8 @@ final class Fresh {
             final int[] at = inGroup(g, d.getGroup(), d.getX(), d.getY());
             final String in = pocket(g, names, d.getGroup());
             out.put(gameKey, new Thing("storages", id, gameKey, Canon.of(data), data, true, at[0], at[1], in, () -> {
-                final JsonObject site = withoutPlace(PlanExport.storage(d, resource(d, game)));
+                final JsonObject site = withoutPlace(
+                    PlanExport.storage(d, PlanExport.linkResource(g, d, resource(d, game), p -> port(game, p))));
                 site.addProperty("id", id);
                 return new JsonObject[] { site };
             }));
@@ -194,7 +195,9 @@ final class Fresh {
                     .isEmpty()) data.add("waypoints", Waypoints.toJson(link.waypoints()));
                 out.put(gameKey, new Thing("edges", id, gameKey, Canon.of(data), data, false, 0, 0, () -> {
                     final String from = feeds ? drawerId : nodeId, to = feeds ? nodeId : drawerId;
-                    return new JsonObject[] { PlanExport.edge(id, from, to, resource(d, game), link.waypoints()) };
+                    final PlanExport.Res r = PlanExport
+                        .portResource(n, link.portIndex(), feeds, p -> port(game, p), resource(d, game));
+                    return new JsonObject[] { PlanExport.edge(id, from, to, r, link.waypoints()) };
                 }));
             }
         }
@@ -312,10 +315,10 @@ final class Fresh {
         // The one-mode board's plan, as the posting export writes it: the website holds a buffer's rule live there.
         site.addProperty("planMode", true);
         // The picks both planners edit, as the website spells them (the game's own spelling rides in its data).
-        final JsonObject pins = PlanPins.sitePins(g, game);
+        final JsonObject pins = PlanExport.capped(PlanPins.sitePins(g, game), PlanExport.MAX_SETTING_PINS);
         if (!pins.entrySet()
             .isEmpty()) site.add("settingPins", pins);
-        final JsonObject shares = PlanPins.siteShares(g, names);
+        final JsonObject shares = PlanExport.sharesCapped(PlanPins.siteShares(g, names));
         if (!shares.entrySet()
             .isEmpty()) site.add("spareShares", shares);
         if (g.getPrimaryView() != null) site.addProperty("primaryView", g.getPrimaryView());
@@ -467,8 +470,7 @@ final class Fresh {
 
     /** A port's resource as a wire names it: as the export names it, else as the importer reads it. */
     static PlanExport.Res port(final CloudGame game, final Port<?> port) {
-        if (port.getValue() instanceof com.gtnhplanner.power.Energy) return PlanExport.EU;
-        final PlanExport.Res r = game.port(port);
+        final PlanExport.Res r = PlanExport.named(port, game);
         return r != null ? r : described(game, port);
     }
 

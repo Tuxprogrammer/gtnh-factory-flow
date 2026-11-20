@@ -3646,6 +3646,11 @@ public final class BoardSession {
     /** The open plan's link on the website: its plan code after {@code #p=}, so it never reaches a server. */
     @Nullable
     private String websiteLink() {
+        if (!com.gtnhplanner.library.CommunityApi.configured()) {
+            flash(Severity.WARN, "No website is set up on this install. Use Export plan file");
+            Sfx.DENY.play();
+            return null;
+        }
         try {
             return com.gtnhplanner.importer.FfPlanCode.link(
                 com.gtnhplanner.library.CommunityApi.site(),

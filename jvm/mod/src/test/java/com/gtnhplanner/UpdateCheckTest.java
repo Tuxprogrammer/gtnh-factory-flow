@@ -38,13 +38,30 @@ class UpdateCheckTest {
 
     @Test
     void picksTheNewestReleaseThatIsNotADraft() throws Exception {
-        final String json = "[{\"tag_name\":\"0.2.0-alpha.7\",\"html_url\":\"u7\",\"draft\":true},"
-            + "{\"tag_name\":\"0.2.0-alpha.5\",\"html_url\":\"u5\",\"draft\":false},"
-            + "{\"tag_name\":\"0.2.0-alpha.6\",\"html_url\":\"u6\",\"draft\":false,\"prerelease\":true}]";
+        final String json = "[{\"tag_name\":\"0.2.0-alpha.7\",\"html_url\":\"http://127.0.0.1/u7\",\"draft\":true},"
+            + "{\"tag_name\":\"0.2.0-alpha.5\",\"html_url\":\"http://127.0.0.1/u5\",\"draft\":false},"
+            + "{\"tag_name\":\"0.2.0-alpha.6\",\"html_url\":\"http://127.0.0.1/u6\",\"draft\":false,\"prerelease\":true}]";
         final UpdateCheck.Release r = newest(json);
         assertEquals("0.2.0-alpha.6", r.tag());
-        assertEquals("u6", r.url());
+        assertEquals("http://127.0.0.1/u6", r.url());
         assertNull(newest("{\"message\":\"rate limited\"}"));
+    }
+
+    @Test
+    void aReleasePageThatIsNotAWebAddressIsNeverOffered() throws Exception {
+        final String json = "[{\"tag_name\":\"0.3.0\",\"html_url\":\"file:///etc/passwd\"},"
+            + "{\"tag_name\":\"0.2.9\",\"html_url\":\"javascript:alert(1)\"},"
+            + "{\"tag_name\":\"0.2.0\",\"html_url\":\"https://releases.test/0.2.0\"}]";
+        assertEquals("0.2.0", newest(json).tag());
+    }
+
+    @Test
+    void withNoAddressConfiguredNothingIsAsked() throws Exception {
+        com.gtnhplanner.library.SiteConfig.useUpdate(null);
+        UpdateCheck.start();
+        final java.lang.reflect.Field started = UpdateCheck.class.getDeclaredField("started");
+        started.setAccessible(true);
+        assertEquals(false, started.get(null), "no thread, no connection");
     }
 
     private static UpdateCheck.Release newest(final String json) throws Exception {

@@ -9,7 +9,7 @@ import java.util.TreeMap;
 
 import javax.annotation.Nullable;
 
-import com.gtnhplanner.core.base.Float32;
+import com.gtnhplanner.core.base.Float32Ops;
 import com.gtnhplanner.core.base.JsonTree;
 import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.DrawerTypes;
@@ -134,7 +134,7 @@ public final class SolverCodec {
                 new SolveInput.PortIn(
                     JsonTree.num(j, "amount"),
                     // A float: rounded through its bit pattern, which every target narrows (a plain cast does not on JS).
-                    (float) Float32.round(JsonTree.num(j, "chance")),
+                    Float32Ops.of(JsonTree.num(j, "chance")),
                     JsonTree.num(j, "multiplier"),
                     (int) JsonTree.num(j, "resource"),
                     JsonTree.str(j, "name"),

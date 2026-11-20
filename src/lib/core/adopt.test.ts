@@ -62,6 +62,8 @@ describe("core adoption flags", () => {
 
   it("gives no core before the load, when the area is off, or when the load failed", async () => {
     resetCoreForTests();
+    // An area that is off (machines is on in adopt.ts: the override turns it off here).
+    setAdoptOverride("machines", false);
     expect(coreFor("machines")).toBeNull();
     expect(coreState()).toBe("idle");
     await expect(loadCore({ dir: path.join(process.cwd(), "no-such-core-dir") })).rejects.toThrow();

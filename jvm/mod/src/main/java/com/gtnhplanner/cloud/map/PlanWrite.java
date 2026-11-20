@@ -37,6 +37,8 @@ final class PlanWrite {
     private final JsonObject base;
     private final Basis basis;
     private final Basis next = new Basis();
+    /** Whether the plan is new to the cloud. */
+    private final boolean first;
     /** Recipes the board's cards changed or brought, by id. */
     private final Map<String, JsonObject> recipes = new LinkedHashMap<>();
     /** Plan ids of the cards and drawers the board lost. */
@@ -51,6 +53,7 @@ final class PlanWrite {
     PlanWrite(final Graph graph, final CloudGame game, @Nullable final JsonObject base, @Nullable final Basis basis) {
         this.graph = graph;
         this.game = game;
+        this.first = base == null;
         this.base = base == null ? new JsonObject() : base;
         this.basis = basis == null ? new Basis() : basis;
         next.carried.putAll(this.basis.carried);
@@ -81,7 +84,28 @@ final class PlanWrite {
             if (list.size() > 0 || base.has(c) || ALWAYS.contains(c)) out.add(c, list);
         }
         out.add("recipes", recipes(baseRecipes, out));
-        return new CloudPlans.Written(out, next);
+        return new CloudPlans.Written(first && !graph.site.isEmpty() ? carried(out) : out, next);
+    }
+
+    /**
+     * A plan new to the cloud with what the website plan it came from held that the board has no place for
+     * ({@link Graph#site}) put back, as the file export writes it. Only on the first write: a plan that exists already
+     * holds those things as the plan's own (written as they were), and putting them back on every save would bring
+     * back one the website deleted. The sums are worked out again over what the plan now holds.
+     */
+    private JsonObject carried(final JsonObject out) {
+        final JsonObject plan = PlanExport.carried(out, graph);
+        for (final String c : LiveOps.COLLECTIONS) {
+            for (final JsonObject thing : PlanRead.objects(plan, c)) {
+                final JsonElement ext = thing.get("gtnhplanner");
+                if (ext != null && ext.isJsonObject()) ext.getAsJsonObject()
+                    .addProperty("sum", Fresh.sum(thing));
+            }
+        }
+        final JsonElement ext = plan.get("gtnhplanner");
+        if (ext != null && ext.isJsonObject()) ext.getAsJsonObject()
+            .addProperty("sum", PlanRead.metaSum(plan));
+        return plan;
     }
 
     /**

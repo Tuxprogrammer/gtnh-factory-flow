@@ -369,8 +369,8 @@
     {
       "id": "89900894-2d26-4cce-bf9c-5990a995078e",
       "kind": "item",
-      "resourceId": "naphthenic acid",
-      "displayName": "naphthenic acid",
+      "resourceId": "Naphthenic Acid",
+      "displayName": "Naphthenic Acid",
       "drainMode": "trash",
       "position": {
         "x": 220,
@@ -388,14 +388,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "cb8155564c8da719"
+        "sum": "195a2d1d96bec6a9"
       }
     },
     {
       "id": "9275d439-13d9-4bda-8bea-2a7217b7b0c6",
       "kind": "item",
-      "resourceId": "sulfur dust",
-      "displayName": "sulfur dust",
+      "resourceId": "Sulfur Dust",
+      "displayName": "Sulfur Dust",
       "drainMode": "trash",
       "position": {
         "x": -303,
@@ -412,14 +412,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "dfebffa9c927296f"
+        "sum": "dcee5096b952bacf"
       }
     },
     {
       "id": "99d5d115-b6e0-4ba6-b2c4-b0b4f0eeaa25",
       "kind": "item",
-      "resourceId": "sulfuric naphtha",
-      "displayName": "sulfuric naphtha",
+      "resourceId": "Sulfuric Naphtha",
+      "displayName": "Sulfuric Naphtha",
       "drainMode": "product",
       "position": {
         "x": -303,
@@ -436,14 +436,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "651eebc5cd6b61ee"
+        "sum": "71cbd1edd9b6ff57"
       }
     },
     {
       "id": "bec295da-446c-4412-bafa-ffd302e2155f",
       "kind": "item",
-      "resourceId": "sulfuric gas",
-      "displayName": "sulfuric gas",
+      "resourceId": "Sulfuric Gas",
+      "displayName": "Sulfuric Gas",
       "drainMode": "product",
       "position": {
         "x": -303,
@@ -460,14 +460,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "68adbcceae3cf585"
+        "sum": "967edf38249cfce0"
       }
     },
     {
       "id": "fdb3e9e7-8e31-4efd-808c-bb32fffb6ba8",
       "kind": "item",
-      "resourceId": "diesel",
-      "displayName": "diesel",
+      "resourceId": "Diesel",
+      "displayName": "Diesel",
       "position": {
         "x": -303,
         "y": 401
@@ -483,14 +483,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "7aa936bb9c3fbe65"
+        "sum": "362eb755cb7c5ae7"
       }
     },
     {
       "id": "2682c2ea-e240-43ab-8ef7-85ccb658f873",
       "kind": "item",
-      "resourceId": "diesel",
-      "displayName": "diesel",
+      "resourceId": "Diesel",
+      "displayName": "Diesel",
       "drainMode": "product",
       "position": {
         "x": -303,
@@ -507,14 +507,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "fc5b94904e6a50a7"
+        "sum": "e8b4c0d9b289e6cb"
       }
     },
     {
       "id": "3a5cc1ca-1df5-4162-9218-658b75f47bf5",
       "kind": "item",
-      "resourceId": "eu",
-      "displayName": "eu",
+      "resourceId": "EU",
+      "displayName": "EU",
       "drainMode": "product",
       "position": {
         "x": -303,
@@ -531,7 +531,7 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "3ffd4646bbfbfa8a"
+        "sum": "9745040c42b293c0"
       }
     }
   ],
@@ -540,112 +540,112 @@
       "id": "89900894-2d26-4cce-bf9c-5990a995078e:860692c4-ca29-45a7-b9b5-8e8714487b50:3",
       "source": "860692c4-ca29-45a7-b9b5-8e8714487b50",
       "target": "89900894-2d26-4cce-bf9c-5990a995078e",
-      "sourceHandle": "output:item:naphthenic%20acid",
-      "targetHandle": "input:item:naphthenic%20acid",
+      "sourceHandle": "output:item:Naphthenic%20Acid",
+      "targetHandle": "input:item:Naphthenic%20Acid",
       "resourceKind": "item",
-      "resourceId": "naphthenic acid",
+      "resourceId": "Naphthenic Acid",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 3
         },
-        "sum": "396f1f963489659c"
+        "sum": "8bdd197dc89b5fb8"
       }
     },
     {
       "id": "9275d439-13d9-4bda-8bea-2a7217b7b0c6:9af84517-e69f-4aaa-b6c9-869176650845:0",
       "source": "9af84517-e69f-4aaa-b6c9-869176650845",
       "target": "9275d439-13d9-4bda-8bea-2a7217b7b0c6",
-      "sourceHandle": "output:item:sulfur%20dust",
-      "targetHandle": "input:item:sulfur%20dust",
+      "sourceHandle": "output:item:Sulfur%20Dust",
+      "targetHandle": "input:item:Sulfur%20Dust",
       "resourceKind": "item",
-      "resourceId": "sulfur dust",
+      "resourceId": "Sulfur Dust",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 0
         },
-        "sum": "c42df7b22d397ed2"
+        "sum": "276ca56d55777e8a"
       }
     },
     {
       "id": "99d5d115-b6e0-4ba6-b2c4-b0b4f0eeaa25:860692c4-ca29-45a7-b9b5-8e8714487b50:2",
       "source": "860692c4-ca29-45a7-b9b5-8e8714487b50",
       "target": "99d5d115-b6e0-4ba6-b2c4-b0b4f0eeaa25",
-      "sourceHandle": "output:item:sulfuric%20naphtha",
-      "targetHandle": "input:item:sulfuric%20naphtha",
+      "sourceHandle": "output:item:Sulfuric%20Naphtha",
+      "targetHandle": "input:item:Sulfuric%20Naphtha",
       "resourceKind": "item",
-      "resourceId": "sulfuric naphtha",
+      "resourceId": "Sulfuric Naphtha",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 2
         },
-        "sum": "5906787f1ee223b1"
+        "sum": "ef9b8a044c9b6082"
       }
     },
     {
       "id": "bec295da-446c-4412-bafa-ffd302e2155f:860692c4-ca29-45a7-b9b5-8e8714487b50:4",
       "source": "860692c4-ca29-45a7-b9b5-8e8714487b50",
       "target": "bec295da-446c-4412-bafa-ffd302e2155f",
-      "sourceHandle": "output:item:sulfuric%20gas",
-      "targetHandle": "input:item:sulfuric%20gas",
+      "sourceHandle": "output:item:Sulfuric%20Gas",
+      "targetHandle": "input:item:Sulfuric%20Gas",
       "resourceKind": "item",
-      "resourceId": "sulfuric gas",
+      "resourceId": "Sulfuric Gas",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 4
         },
-        "sum": "199526e53ece340a"
+        "sum": "bdb52ed423b9f6e4"
       }
     },
     {
       "id": "fdb3e9e7-8e31-4efd-808c-bb32fffb6ba8:63af1774-294e-4b6f-bc25-a3908a5a0bd9:0",
       "source": "fdb3e9e7-8e31-4efd-808c-bb32fffb6ba8",
       "target": "63af1774-294e-4b6f-bc25-a3908a5a0bd9",
-      "sourceHandle": "output:item:diesel",
-      "targetHandle": "input:item:diesel",
+      "sourceHandle": "output:item:Diesel",
+      "targetHandle": "input:item:Diesel",
       "resourceKind": "item",
-      "resourceId": "diesel",
+      "resourceId": "Diesel",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 0
         },
-        "sum": "07cc82856c3b5576"
+        "sum": "bdfe6a9cf9d68b42"
       }
     },
     {
       "id": "2682c2ea-e240-43ab-8ef7-85ccb658f873:29c05102-a7e5-4736-99f3-d8fa505bf531:0",
       "source": "29c05102-a7e5-4736-99f3-d8fa505bf531",
       "target": "2682c2ea-e240-43ab-8ef7-85ccb658f873",
-      "sourceHandle": "output:item:diesel",
-      "targetHandle": "input:item:diesel",
+      "sourceHandle": "output:item:Diesel",
+      "targetHandle": "input:item:Diesel",
       "resourceKind": "item",
-      "resourceId": "diesel",
+      "resourceId": "Diesel",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 0
         },
-        "sum": "3b804396c4eb03c2"
+        "sum": "5800a2b2ce64a19c"
       }
     },
     {
       "id": "3a5cc1ca-1df5-4162-9218-658b75f47bf5:63af1774-294e-4b6f-bc25-a3908a5a0bd9:0",
       "source": "63af1774-294e-4b6f-bc25-a3908a5a0bd9",
       "target": "3a5cc1ca-1df5-4162-9218-658b75f47bf5",
-      "sourceHandle": "output:item:eu",
-      "targetHandle": "input:item:eu",
+      "sourceHandle": "output:item:EU",
+      "targetHandle": "input:item:EU",
       "resourceKind": "item",
-      "resourceId": "eu",
+      "resourceId": "EU",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 0
         },
-        "sum": "6b2cc085187f5e31"
+        "sum": "dd8636ebd64e5067"
       }
     },
     {

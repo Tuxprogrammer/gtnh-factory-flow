@@ -1619,8 +1619,8 @@
     {
       "id": "8e08fcc8-8c04-4199-8172-6560352e0b02",
       "kind": "item",
-      "resourceId": "water",
-      "displayName": "water",
+      "resourceId": "Water",
+      "displayName": "Water",
       "position": {
         "x": 220,
         "y": 324
@@ -1637,14 +1637,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "f30f76b04982d32f"
+        "sum": "bc5870773d6ef19d"
       }
     },
     {
       "id": "9081a48e-40d5-4415-a6ec-fcac2e378c40",
       "kind": "item",
-      "resourceId": "carbon dust",
-      "displayName": "carbon dust",
+      "resourceId": "Carbon Dust",
+      "displayName": "Carbon Dust",
       "drainMode": "product",
       "position": {
         "x": -303,
@@ -1661,14 +1661,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "cbbe931027b757b0"
+        "sum": "5a3a2326e14095a2"
       }
     },
     {
       "id": "9d072769-0c05-443c-af65-1c5800da78a1",
       "kind": "item",
-      "resourceId": "empty cell",
-      "displayName": "empty cell",
+      "resourceId": "Empty Cell",
+      "displayName": "Empty Cell",
       "drainMode": "product",
       "position": {
         "x": -303,
@@ -1685,14 +1685,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "2ae0cc061d6cdf49"
+        "sum": "458a9d9258f3a03f"
       }
     },
     {
       "id": "a42828eb-e1fb-44ee-859f-1e5f4a3aa2bc",
       "kind": "item",
-      "resourceId": "chlorine",
-      "displayName": "chlorine",
+      "resourceId": "Chlorine",
+      "displayName": "Chlorine",
       "drainMode": "product",
       "position": {
         "x": -303,
@@ -1709,14 +1709,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "6e37cf6bdcc02729"
+        "sum": "57982c69fba064b4"
       }
     },
     {
       "id": "b1c09f98-ccdf-4ca4-8001-727627e07f39",
       "kind": "item",
-      "resourceId": "banded iron dust",
-      "displayName": "banded iron dust",
+      "resourceId": "Banded Iron Dust",
+      "displayName": "Banded Iron Dust",
       "drainMode": "product",
       "position": {
         "x": -303,
@@ -1733,14 +1733,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "f15bf84f5e7d79ff"
+        "sum": "60085a1a2c66bd15"
       }
     },
     {
       "id": "b4817ae6-7d71-4892-93ca-d1a3e566422a",
       "kind": "item",
-      "resourceId": "propene cell",
-      "displayName": "propene cell",
+      "resourceId": "Propene Cell",
+      "displayName": "Propene Cell",
       "position": {
         "x": -303,
         "y": 498
@@ -1756,14 +1756,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "0f81fd76bc3d11c3"
+        "sum": "fc24a8c379ae9e79"
       }
     },
     {
       "id": "b670521f-5ec4-46d6-89df-68ecf07180f6",
       "kind": "item",
-      "resourceId": "phenol",
-      "displayName": "phenol",
+      "resourceId": "Phenol",
+      "displayName": "Phenol",
       "drainMode": "product",
       "position": {
         "x": -303,
@@ -1780,14 +1780,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "416d8262fd632deb"
+        "sum": "e1fadedfdd6e4783"
       }
     },
     {
       "id": "bc2370d4-a70f-4ec0-98ef-b5610bf391ee",
       "kind": "item",
-      "resourceId": "phosphorus pentoxide dust",
-      "displayName": "phosphorus pentoxide dust",
+      "resourceId": "Phosphorus Pentoxide Dust",
+      "displayName": "Phosphorus Pentoxide Dust",
       "drainMode": "product",
       "position": {
         "x": -303,
@@ -1804,14 +1804,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "967568b2349c1114"
+        "sum": "c2c78c28b8a8ef95"
       }
     },
     {
       "id": "bd63e63c-60f4-4ee4-9f29-6f025b640a14",
       "kind": "item",
-      "resourceId": "phosphoric acid cell",
-      "displayName": "phosphoric acid cell",
+      "resourceId": "Phosphoric Acid Cell",
+      "displayName": "Phosphoric Acid Cell",
       "position": {
         "x": -303,
         "y": 789
@@ -1827,14 +1827,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "7761578d18a351c2"
+        "sum": "73d55e7df36d240e"
       }
     },
     {
       "id": "ccaaa14c-65d0-4546-900d-b18019c1d2c8",
       "kind": "item",
-      "resourceId": "eu",
-      "displayName": "eu",
+      "resourceId": "EU",
+      "displayName": "EU",
       "drainMode": "product",
       "position": {
         "x": -303,
@@ -1851,14 +1851,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "649178ce7a974171"
+        "sum": "75a21d9e83e8ca6e"
       }
     },
     {
       "id": "cd2ed24e-0ee5-4dae-ba9d-0196d8899475",
       "kind": "item",
-      "resourceId": "potassium dust",
-      "displayName": "potassium dust",
+      "resourceId": "Potassium Dust",
+      "displayName": "Potassium Dust",
       "drainMode": "product",
       "position": {
         "x": -303,
@@ -1875,14 +1875,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "b5ee0b3aad281ee2"
+        "sum": "daa4c35b060f6753"
       }
     },
     {
       "id": "d9bfc31a-13ef-42bd-8c42-df0f46e4d2be",
       "kind": "item",
-      "resourceId": "lubricant",
-      "displayName": "lubricant",
+      "resourceId": "Lubricant",
+      "displayName": "Lubricant",
       "position": {
         "x": -303,
         "y": 1080
@@ -1898,14 +1898,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "abde49af15c3e22d"
+        "sum": "fb227595beca62a0"
       }
     },
     {
       "id": "db2c6947-5070-43b0-8f8f-88c3b69056d6",
       "kind": "item",
-      "resourceId": "magnesia dust",
-      "displayName": "magnesia dust",
+      "resourceId": "Magnesia Dust",
+      "displayName": "Magnesia Dust",
       "drainMode": "product",
       "position": {
         "x": -303,
@@ -1922,14 +1922,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "fda39c139b67b06f"
+        "sum": "8184487e26e4e167"
       }
     },
     {
       "id": "e011889e-05a9-441c-b759-18754c21eb2f",
       "kind": "item",
-      "resourceId": "oxygen",
-      "displayName": "oxygen",
+      "resourceId": "Oxygen",
+      "displayName": "Oxygen",
       "position": {
         "x": -303,
         "y": 1274
@@ -1945,14 +1945,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "7f1f022b47109e80"
+        "sum": "bdf9643e96757957"
       }
     },
     {
       "id": "e7877c6b-9eb0-4170-ac4f-ced056b8e602",
       "kind": "item",
-      "resourceId": "oxygen",
-      "displayName": "oxygen",
+      "resourceId": "Oxygen",
+      "displayName": "Oxygen",
       "drainMode": "product",
       "position": {
         "x": -303,
@@ -1969,14 +1969,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "5457e7b7abcd5d2a"
+        "sum": "1d5d2bf2b7f2cfe8"
       }
     },
     {
       "id": "38bf41a2-0ae6-474d-9014-adc5c10105a2",
       "kind": "item",
-      "resourceId": "eu",
-      "displayName": "eu",
+      "resourceId": "EU",
+      "displayName": "EU",
       "drainMode": "product",
       "position": {
         "x": -303,
@@ -1993,14 +1993,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "25c929cf3d1ef5cf"
+        "sum": "d94e67091daf7136"
       }
     },
     {
       "id": "3bbf82bd-3d61-4a3f-97f8-226263dca320",
       "kind": "item",
-      "resourceId": "soda ash dust",
-      "displayName": "soda ash dust",
+      "resourceId": "Soda Ash Dust",
+      "displayName": "Soda Ash Dust",
       "drainMode": "product",
       "position": {
         "x": -303,
@@ -2017,14 +2017,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "f14c1696fd48015c"
+        "sum": "aa7dac0f428fff57"
       }
     },
     {
       "id": "420fd9c2-3dd5-47d2-acfc-db620cab4aa2",
       "kind": "item",
-      "resourceId": "charcoal",
-      "displayName": "charcoal",
+      "resourceId": "Charcoal",
+      "displayName": "Charcoal",
       "drainMode": "product",
       "position": {
         "x": -303,
@@ -2041,14 +2041,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "6affd22219f66f4c"
+        "sum": "039ebd10db84c8ff"
       }
     },
     {
       "id": "461ca716-3064-4573-9b0b-00e9beafb8f7",
       "kind": "item",
-      "resourceId": "potash dust",
-      "displayName": "potash dust",
+      "resourceId": "Potash Dust",
+      "displayName": "Potash Dust",
       "drainMode": "product",
       "position": {
         "x": -303,
@@ -2065,14 +2065,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "d66bfbe875e966e8"
+        "sum": "15473366a528fa01"
       }
     },
     {
       "id": "5278afe1-bde5-4286-948f-a922be3b8020",
       "kind": "item",
-      "resourceId": "quicklime dust",
-      "displayName": "quicklime dust",
+      "resourceId": "Quicklime Dust",
+      "displayName": "Quicklime Dust",
       "drainMode": "product",
       "position": {
         "x": -303,
@@ -2089,14 +2089,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "118ceda01285ebaa"
+        "sum": "d1af89ab03247302"
       }
     },
     {
       "id": "64f8ff03-878e-45cb-91a4-4713f23e18f9",
       "kind": "item",
-      "resourceId": "eu",
-      "displayName": "eu",
+      "resourceId": "EU",
+      "displayName": "EU",
       "drainMode": "product",
       "position": {
         "x": -303,
@@ -2113,14 +2113,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "1f837d8e1e00818a"
+        "sum": "d1859a531c0f1074"
       }
     },
     {
       "id": "6be66b93-bb6a-48bf-b55c-fd184c04bc37",
       "kind": "item",
-      "resourceId": "water",
-      "displayName": "water",
+      "resourceId": "Water",
+      "displayName": "Water",
       "position": {
         "x": -303,
         "y": 2050
@@ -2136,14 +2136,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "e446a3e491c497be"
+        "sum": "e93be8584affc1f2"
       }
     },
     {
       "id": "6bfcefcb-1926-41f9-8620-e3cf8d4cd6c6",
       "kind": "item",
-      "resourceId": "empty cell",
-      "displayName": "empty cell",
+      "resourceId": "Empty Cell",
+      "displayName": "Empty Cell",
       "position": {
         "x": -303,
         "y": 2147
@@ -2159,14 +2159,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "6a08bd67d3012836"
+        "sum": "b5800dfe06d47612"
       }
     },
     {
       "id": "75e1ffa1-87cd-4a8f-b1e4-18a73fa24a8a",
       "kind": "item",
-      "resourceId": "water",
-      "displayName": "water",
+      "resourceId": "Water",
+      "displayName": "Water",
       "drainMode": "product",
       "position": {
         "x": -303,
@@ -2183,14 +2183,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "128419daf59dddac"
+        "sum": "52844c4db673001b"
       }
     },
     {
       "id": "782ce3df-1194-4c02-8c68-b0897a11a4a8",
       "kind": "item",
-      "resourceId": "eu",
-      "displayName": "eu",
+      "resourceId": "EU",
+      "displayName": "EU",
       "drainMode": "product",
       "position": {
         "x": -303,
@@ -2207,7 +2207,7 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "535ffeda2d027ebe"
+        "sum": "6e53b4ea306b73d9"
       }
     }
   ],
@@ -2216,464 +2216,464 @@
       "id": "8e08fcc8-8c04-4199-8172-6560352e0b02:f09fba72-dba6-463e-a511-5f16a8155801:1",
       "source": "8e08fcc8-8c04-4199-8172-6560352e0b02",
       "target": "f09fba72-dba6-463e-a511-5f16a8155801",
-      "sourceHandle": "output:item:water",
-      "targetHandle": "input:item:water",
+      "sourceHandle": "output:item:Water",
+      "targetHandle": "input:item:Water",
       "resourceKind": "item",
-      "resourceId": "water",
+      "resourceId": "Water",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 1
         },
-        "sum": "3dd113d7bb0fd9a8"
+        "sum": "2a3e68071cfbf5ae"
       }
     },
     {
       "id": "9081a48e-40d5-4415-a6ec-fcac2e378c40:41ce918e-044a-4ea7-8d56-dbd55054050b:0",
       "source": "41ce918e-044a-4ea7-8d56-dbd55054050b",
       "target": "9081a48e-40d5-4415-a6ec-fcac2e378c40",
-      "sourceHandle": "output:item:carbon%20dust",
-      "targetHandle": "input:item:carbon%20dust",
+      "sourceHandle": "output:item:Carbon%20Dust",
+      "targetHandle": "input:item:Carbon%20Dust",
       "resourceKind": "item",
-      "resourceId": "carbon dust",
+      "resourceId": "Carbon Dust",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 0
         },
-        "sum": "1d94d016777a39ea"
+        "sum": "097f0ebd4a028359"
       }
     },
     {
       "id": "9d072769-0c05-443c-af65-1c5800da78a1:c902e1bc-a541-425e-83b1-4eb325bb5bf1:0",
       "source": "c902e1bc-a541-425e-83b1-4eb325bb5bf1",
       "target": "9d072769-0c05-443c-af65-1c5800da78a1",
-      "sourceHandle": "output:item:empty%20cell",
-      "targetHandle": "input:item:empty%20cell",
+      "sourceHandle": "output:item:Empty%20Cell",
+      "targetHandle": "input:item:Empty%20Cell",
       "resourceKind": "item",
-      "resourceId": "empty cell",
+      "resourceId": "Empty Cell",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 0
         },
-        "sum": "9f70eddad3da53d0"
+        "sum": "6a98a471be2e9ecc"
       }
     },
     {
       "id": "a42828eb-e1fb-44ee-859f-1e5f4a3aa2bc:a0ce7c79-6ba9-40df-8f16-de05c6355594:1",
       "source": "a0ce7c79-6ba9-40df-8f16-de05c6355594",
       "target": "a42828eb-e1fb-44ee-859f-1e5f4a3aa2bc",
-      "sourceHandle": "output:item:chlorine",
-      "targetHandle": "input:item:chlorine",
+      "sourceHandle": "output:item:Chlorine",
+      "targetHandle": "input:item:Chlorine",
       "resourceKind": "item",
-      "resourceId": "chlorine",
+      "resourceId": "Chlorine",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 1
         },
-        "sum": "813885d739dac760"
+        "sum": "ceff6a8b3b096ca3"
       }
     },
     {
       "id": "a42828eb-e1fb-44ee-859f-1e5f4a3aa2bc:61bb0c34-56bc-47e2-9126-6a8a3c9f0d4b:1",
       "source": "61bb0c34-56bc-47e2-9126-6a8a3c9f0d4b",
       "target": "a42828eb-e1fb-44ee-859f-1e5f4a3aa2bc",
-      "sourceHandle": "output:item:chlorine",
-      "targetHandle": "input:item:chlorine",
+      "sourceHandle": "output:item:Chlorine",
+      "targetHandle": "input:item:Chlorine",
       "resourceKind": "item",
-      "resourceId": "chlorine",
+      "resourceId": "Chlorine",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 1
         },
-        "sum": "3daabf1a18abe014"
+        "sum": "e940490507358743"
       }
     },
     {
       "id": "b1c09f98-ccdf-4ca4-8001-727627e07f39:1b5c5b51-7abe-48d2-8ae7-a46789dd4e72:5",
       "source": "1b5c5b51-7abe-48d2-8ae7-a46789dd4e72",
       "target": "b1c09f98-ccdf-4ca4-8001-727627e07f39",
-      "sourceHandle": "output:item:banded%20iron%20dust",
-      "targetHandle": "input:item:banded%20iron%20dust",
+      "sourceHandle": "output:item:Banded%20Iron%20Dust",
+      "targetHandle": "input:item:Banded%20Iron%20Dust",
       "resourceKind": "item",
-      "resourceId": "banded iron dust",
+      "resourceId": "Banded Iron Dust",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 5
         },
-        "sum": "1ba6bc23161adcbd"
+        "sum": "19ff6e45a52fd143"
       }
     },
     {
       "id": "b4817ae6-7d71-4892-93ca-d1a3e566422a:c902e1bc-a541-425e-83b1-4eb325bb5bf1:0",
       "source": "b4817ae6-7d71-4892-93ca-d1a3e566422a",
       "target": "c902e1bc-a541-425e-83b1-4eb325bb5bf1",
-      "sourceHandle": "output:item:propene%20cell",
-      "targetHandle": "input:item:propene%20cell",
+      "sourceHandle": "output:item:Propene%20Cell",
+      "targetHandle": "input:item:Propene%20Cell",
       "resourceKind": "item",
-      "resourceId": "propene cell",
+      "resourceId": "Propene Cell",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 0
         },
-        "sum": "2368e5fea2c71163"
+        "sum": "5c84f4aceb99793d"
       }
     },
     {
       "id": "b670521f-5ec4-46d6-89df-68ecf07180f6:a7228e91-cc91-40e4-8296-2f9afa3d2768:1",
       "source": "a7228e91-cc91-40e4-8296-2f9afa3d2768",
       "target": "b670521f-5ec4-46d6-89df-68ecf07180f6",
-      "sourceHandle": "output:item:phenol",
-      "targetHandle": "input:item:phenol",
+      "sourceHandle": "output:item:Phenol",
+      "targetHandle": "input:item:Phenol",
       "resourceKind": "item",
-      "resourceId": "phenol",
+      "resourceId": "Phenol",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 1
         },
-        "sum": "7b89ec01c588d906"
+        "sum": "b522bec9a188ccb5"
       }
     },
     {
       "id": "bc2370d4-a70f-4ec0-98ef-b5610bf391ee:1b5c5b51-7abe-48d2-8ae7-a46789dd4e72:3",
       "source": "1b5c5b51-7abe-48d2-8ae7-a46789dd4e72",
       "target": "bc2370d4-a70f-4ec0-98ef-b5610bf391ee",
-      "sourceHandle": "output:item:phosphorus%20pentoxide%20dust",
-      "targetHandle": "input:item:phosphorus%20pentoxide%20dust",
+      "sourceHandle": "output:item:Phosphorus%20Pentoxide%20Dust",
+      "targetHandle": "input:item:Phosphorus%20Pentoxide%20Dust",
       "resourceKind": "item",
-      "resourceId": "phosphorus pentoxide dust",
+      "resourceId": "Phosphorus Pentoxide Dust",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 3
         },
-        "sum": "8395eedf6b9c5db0"
+        "sum": "4067331f6edb0889"
       }
     },
     {
       "id": "bd63e63c-60f4-4ee4-9f29-6f025b640a14:c902e1bc-a541-425e-83b1-4eb325bb5bf1:1",
       "source": "bd63e63c-60f4-4ee4-9f29-6f025b640a14",
       "target": "c902e1bc-a541-425e-83b1-4eb325bb5bf1",
-      "sourceHandle": "output:item:phosphoric%20acid%20cell",
-      "targetHandle": "input:item:phosphoric%20acid%20cell",
+      "sourceHandle": "output:item:Phosphoric%20Acid%20Cell",
+      "targetHandle": "input:item:Phosphoric%20Acid%20Cell",
       "resourceKind": "item",
-      "resourceId": "phosphoric acid cell",
+      "resourceId": "Phosphoric Acid Cell",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 1
         },
-        "sum": "595c59df399d4b3f"
+        "sum": "2526d72244c26266"
       }
     },
     {
       "id": "ccaaa14c-65d0-4546-900d-b18019c1d2c8:e2c76404-dc1f-4fde-bd40-3e63d0852962:0",
       "source": "e2c76404-dc1f-4fde-bd40-3e63d0852962",
       "target": "ccaaa14c-65d0-4546-900d-b18019c1d2c8",
-      "sourceHandle": "output:item:eu",
-      "targetHandle": "input:item:eu",
+      "sourceHandle": "output:item:EU",
+      "targetHandle": "input:item:EU",
       "resourceKind": "item",
-      "resourceId": "eu",
+      "resourceId": "EU",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 0
         },
-        "sum": "dd6271d6b5e8d4ba"
+        "sum": "a2d08ca3cb1d8520"
       }
     },
     {
       "id": "cd2ed24e-0ee5-4dae-ba9d-0196d8899475:a0ce7c79-6ba9-40df-8f16-de05c6355594:0",
       "source": "a0ce7c79-6ba9-40df-8f16-de05c6355594",
       "target": "cd2ed24e-0ee5-4dae-ba9d-0196d8899475",
-      "sourceHandle": "output:item:potassium%20dust",
-      "targetHandle": "input:item:potassium%20dust",
+      "sourceHandle": "output:item:Potassium%20Dust",
+      "targetHandle": "input:item:Potassium%20Dust",
       "resourceKind": "item",
-      "resourceId": "potassium dust",
+      "resourceId": "Potassium Dust",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 0
         },
-        "sum": "3b333ec26835b702"
+        "sum": "d93832d952116714"
       }
     },
     {
       "id": "cd2ed24e-0ee5-4dae-ba9d-0196d8899475:6ab1fe5e-3680-41b0-960c-619133a57b5a:0",
       "source": "6ab1fe5e-3680-41b0-960c-619133a57b5a",
       "target": "cd2ed24e-0ee5-4dae-ba9d-0196d8899475",
-      "sourceHandle": "output:item:potassium%20dust",
-      "targetHandle": "input:item:potassium%20dust",
+      "sourceHandle": "output:item:Potassium%20Dust",
+      "targetHandle": "input:item:Potassium%20Dust",
       "resourceKind": "item",
-      "resourceId": "potassium dust",
+      "resourceId": "Potassium Dust",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 0
         },
-        "sum": "9a6cf503e5f4277f"
+        "sum": "d07d4cdf9201627d"
       }
     },
     {
       "id": "d9bfc31a-13ef-42bd-8c42-df0f46e4d2be:520a24dc-88b1-4083-a0c3-3313823c5619:1",
       "source": "d9bfc31a-13ef-42bd-8c42-df0f46e4d2be",
       "target": "520a24dc-88b1-4083-a0c3-3313823c5619",
-      "sourceHandle": "output:item:lubricant",
-      "targetHandle": "input:item:lubricant",
+      "sourceHandle": "output:item:Lubricant",
+      "targetHandle": "input:item:Lubricant",
       "resourceKind": "item",
-      "resourceId": "lubricant",
+      "resourceId": "Lubricant",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 1
         },
-        "sum": "cb4390bf01e67337"
+        "sum": "0793582eb7964a42"
       }
     },
     {
       "id": "d9bfc31a-13ef-42bd-8c42-df0f46e4d2be:747c0180-d902-44d4-a39c-9a80aefbf435:1",
       "source": "d9bfc31a-13ef-42bd-8c42-df0f46e4d2be",
       "target": "747c0180-d902-44d4-a39c-9a80aefbf435",
-      "sourceHandle": "output:item:lubricant",
-      "targetHandle": "input:item:lubricant",
+      "sourceHandle": "output:item:Lubricant",
+      "targetHandle": "input:item:Lubricant",
       "resourceKind": "item",
-      "resourceId": "lubricant",
+      "resourceId": "Lubricant",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 1
         },
-        "sum": "31023a06b81ead00"
+        "sum": "d9e74cdd6117af67"
       }
     },
     {
       "id": "db2c6947-5070-43b0-8f8f-88c3b69056d6:1b5c5b51-7abe-48d2-8ae7-a46789dd4e72:2",
       "source": "1b5c5b51-7abe-48d2-8ae7-a46789dd4e72",
       "target": "db2c6947-5070-43b0-8f8f-88c3b69056d6",
-      "sourceHandle": "output:item:magnesia%20dust",
-      "targetHandle": "input:item:magnesia%20dust",
+      "sourceHandle": "output:item:Magnesia%20Dust",
+      "targetHandle": "input:item:Magnesia%20Dust",
       "resourceKind": "item",
-      "resourceId": "magnesia dust",
+      "resourceId": "Magnesia Dust",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 2
         },
-        "sum": "2ead6e9847eb98fa"
+        "sum": "514a61b507fc6b28"
       }
     },
     {
       "id": "e011889e-05a9-441c-b759-18754c21eb2f:747c0180-d902-44d4-a39c-9a80aefbf435:2",
       "source": "e011889e-05a9-441c-b759-18754c21eb2f",
       "target": "747c0180-d902-44d4-a39c-9a80aefbf435",
-      "sourceHandle": "output:item:oxygen",
-      "targetHandle": "input:item:oxygen",
+      "sourceHandle": "output:item:Oxygen",
+      "targetHandle": "input:item:Oxygen",
       "resourceKind": "item",
-      "resourceId": "oxygen",
+      "resourceId": "Oxygen",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 2
         },
-        "sum": "918679ec0cd76136"
+        "sum": "69a75bea7f932709"
       }
     },
     {
       "id": "e011889e-05a9-441c-b759-18754c21eb2f:520a24dc-88b1-4083-a0c3-3313823c5619:2",
       "source": "e011889e-05a9-441c-b759-18754c21eb2f",
       "target": "520a24dc-88b1-4083-a0c3-3313823c5619",
-      "sourceHandle": "output:item:oxygen",
-      "targetHandle": "input:item:oxygen",
+      "sourceHandle": "output:item:Oxygen",
+      "targetHandle": "input:item:Oxygen",
       "resourceKind": "item",
-      "resourceId": "oxygen",
+      "resourceId": "Oxygen",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 2
         },
-        "sum": "ec12a654dffaa67d"
+        "sum": "fcb1f6efcfc9bb6b"
       }
     },
     {
       "id": "e7877c6b-9eb0-4170-ac4f-ced056b8e602:88e0c186-56cc-459c-81c7-fe5d66cbfcd6:0",
       "source": "88e0c186-56cc-459c-81c7-fe5d66cbfcd6",
       "target": "e7877c6b-9eb0-4170-ac4f-ced056b8e602",
-      "sourceHandle": "output:item:oxygen",
-      "targetHandle": "input:item:oxygen",
+      "sourceHandle": "output:item:Oxygen",
+      "targetHandle": "input:item:Oxygen",
       "resourceKind": "item",
-      "resourceId": "oxygen",
+      "resourceId": "Oxygen",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 0
         },
-        "sum": "9d02d37a2dcfbda6"
+        "sum": "46c3692acbff2b4d"
       }
     },
     {
       "id": "38bf41a2-0ae6-474d-9014-adc5c10105a2:3ba27523-3df4-48b0-9c34-6758946090ec:0",
       "source": "3ba27523-3df4-48b0-9c34-6758946090ec",
       "target": "38bf41a2-0ae6-474d-9014-adc5c10105a2",
-      "sourceHandle": "output:item:eu",
-      "targetHandle": "input:item:eu",
+      "sourceHandle": "output:item:EU",
+      "targetHandle": "input:item:EU",
       "resourceKind": "item",
-      "resourceId": "eu",
+      "resourceId": "EU",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 0
         },
-        "sum": "69316edbd608434b"
+        "sum": "e5f7137fbdb84c61"
       }
     },
     {
       "id": "3bbf82bd-3d61-4a3f-97f8-226263dca320:1b5c5b51-7abe-48d2-8ae7-a46789dd4e72:4",
       "source": "1b5c5b51-7abe-48d2-8ae7-a46789dd4e72",
       "target": "3bbf82bd-3d61-4a3f-97f8-226263dca320",
-      "sourceHandle": "output:item:soda%20ash%20dust",
-      "targetHandle": "input:item:soda%20ash%20dust",
+      "sourceHandle": "output:item:Soda%20Ash%20Dust",
+      "targetHandle": "input:item:Soda%20Ash%20Dust",
       "resourceKind": "item",
-      "resourceId": "soda ash dust",
+      "resourceId": "Soda Ash Dust",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 4
         },
-        "sum": "4948531912d573b0"
+        "sum": "108878b8e6d83a11"
       }
     },
     {
       "id": "420fd9c2-3dd5-47d2-acfc-db620cab4aa2:07f84300-64b1-4d35-84e5-e19402ad6dab:0",
       "source": "07f84300-64b1-4d35-84e5-e19402ad6dab",
       "target": "420fd9c2-3dd5-47d2-acfc-db620cab4aa2",
-      "sourceHandle": "output:item:charcoal",
-      "targetHandle": "input:item:charcoal",
+      "sourceHandle": "output:item:Charcoal",
+      "targetHandle": "input:item:Charcoal",
       "resourceKind": "item",
-      "resourceId": "charcoal",
+      "resourceId": "Charcoal",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 0
         },
-        "sum": "a8197ad8fce412f2"
+        "sum": "1d50acf2f9e8c224"
       }
     },
     {
       "id": "461ca716-3064-4573-9b0b-00e9beafb8f7:1b5c5b51-7abe-48d2-8ae7-a46789dd4e72:1",
       "source": "1b5c5b51-7abe-48d2-8ae7-a46789dd4e72",
       "target": "461ca716-3064-4573-9b0b-00e9beafb8f7",
-      "sourceHandle": "output:item:potash%20dust",
-      "targetHandle": "input:item:potash%20dust",
+      "sourceHandle": "output:item:Potash%20Dust",
+      "targetHandle": "input:item:Potash%20Dust",
       "resourceKind": "item",
-      "resourceId": "potash dust",
+      "resourceId": "Potash Dust",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 1
         },
-        "sum": "16e47527058f055a"
+        "sum": "693fcff1e26ac9b7"
       }
     },
     {
       "id": "5278afe1-bde5-4286-948f-a922be3b8020:1b5c5b51-7abe-48d2-8ae7-a46789dd4e72:0",
       "source": "1b5c5b51-7abe-48d2-8ae7-a46789dd4e72",
       "target": "5278afe1-bde5-4286-948f-a922be3b8020",
-      "sourceHandle": "output:item:quicklime%20dust",
-      "targetHandle": "input:item:quicklime%20dust",
+      "sourceHandle": "output:item:Quicklime%20Dust",
+      "targetHandle": "input:item:Quicklime%20Dust",
       "resourceKind": "item",
-      "resourceId": "quicklime dust",
+      "resourceId": "Quicklime Dust",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 0
         },
-        "sum": "18df699880acf4cd"
+        "sum": "3beb65023e989d7f"
       }
     },
     {
       "id": "64f8ff03-878e-45cb-91a4-4713f23e18f9:520a24dc-88b1-4083-a0c3-3313823c5619:0",
       "source": "520a24dc-88b1-4083-a0c3-3313823c5619",
       "target": "64f8ff03-878e-45cb-91a4-4713f23e18f9",
-      "sourceHandle": "output:item:eu",
-      "targetHandle": "input:item:eu",
+      "sourceHandle": "output:item:EU",
+      "targetHandle": "input:item:EU",
       "resourceKind": "item",
-      "resourceId": "eu",
+      "resourceId": "EU",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 0
         },
-        "sum": "c8ffc8748c962ce9"
+        "sum": "491bd9b38cb4f1db"
       }
     },
     {
       "id": "6be66b93-bb6a-48bf-b55c-fd184c04bc37:0ee804b0-4514-4d08-accb-6e4160804739:2",
       "source": "6be66b93-bb6a-48bf-b55c-fd184c04bc37",
       "target": "0ee804b0-4514-4d08-accb-6e4160804739",
-      "sourceHandle": "output:item:water",
-      "targetHandle": "input:item:water",
+      "sourceHandle": "output:item:Water",
+      "targetHandle": "input:item:Water",
       "resourceKind": "item",
-      "resourceId": "water",
+      "resourceId": "Water",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 2
         },
-        "sum": "c7a1f1509fea67b4"
+        "sum": "6fd414a4d8cde499"
       }
     },
     {
       "id": "6bfcefcb-1926-41f9-8620-e3cf8d4cd6c6:b4c4be87-1a44-484c-999c-8e2b519f415e:0",
       "source": "6bfcefcb-1926-41f9-8620-e3cf8d4cd6c6",
       "target": "b4c4be87-1a44-484c-999c-8e2b519f415e",
-      "sourceHandle": "output:item:empty%20cell",
-      "targetHandle": "input:item:empty%20cell",
+      "sourceHandle": "output:item:Empty%20Cell",
+      "targetHandle": "input:item:Empty%20Cell",
       "resourceKind": "item",
-      "resourceId": "empty cell",
+      "resourceId": "Empty Cell",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 0
         },
-        "sum": "5aea5584890d0adf"
+        "sum": "d73ac6a8914cdc4a"
       }
     },
     {
       "id": "75e1ffa1-87cd-4a8f-b1e4-18a73fa24a8a:41ce918e-044a-4ea7-8d56-dbd55054050b:2",
       "source": "41ce918e-044a-4ea7-8d56-dbd55054050b",
       "target": "75e1ffa1-87cd-4a8f-b1e4-18a73fa24a8a",
-      "sourceHandle": "output:item:water",
-      "targetHandle": "input:item:water",
+      "sourceHandle": "output:item:Water",
+      "targetHandle": "input:item:Water",
       "resourceKind": "item",
-      "resourceId": "water",
+      "resourceId": "Water",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 2
         },
-        "sum": "eef8cedef3f4420c"
+        "sum": "bc14a6cf0e5a8576"
       }
     },
     {
       "id": "782ce3df-1194-4c02-8c68-b0897a11a4a8:747c0180-d902-44d4-a39c-9a80aefbf435:0",
       "source": "747c0180-d902-44d4-a39c-9a80aefbf435",
       "target": "782ce3df-1194-4c02-8c68-b0897a11a4a8",
-      "sourceHandle": "output:item:eu",
-      "targetHandle": "input:item:eu",
+      "sourceHandle": "output:item:EU",
+      "targetHandle": "input:item:EU",
       "resourceKind": "item",
-      "resourceId": "eu",
+      "resourceId": "EU",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 0
         },
-        "sum": "5fb24174d1028416"
+        "sum": "a09e102b4675113e"
       }
     },
     {

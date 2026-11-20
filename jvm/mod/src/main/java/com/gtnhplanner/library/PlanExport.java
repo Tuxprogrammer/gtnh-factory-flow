@@ -213,14 +213,18 @@ public final class PlanExport {
         // later recipe's ports named r<n>: (the website's sections). Every recipe is still written out.
         final Sections sections = Sections.of(g);
         final Map<Uuid, JsonObject> hostNodes = new HashMap<>();
+        final List<Runnable> later = new java.util.ArrayList<>();
         for (final Node n : g.getNodes()) {
             final Card card = card(n, "gtnhplanner:" + n.id, world, world.machines(n));
             res.putAll(card.ports());
             recipes.add(card.recipe());
             final Sections.At at = sections.at(n.id);
             if (at != null && at.section() > 0) {
-                final JsonObject host = hostNodes.get(at.host());
-                if (host != null) section(host, card.node(), at.section(), "gtnhplanner:" + n.id);
+                // Onto its host once every card is made: the host may come later in the board's order.
+                later.add(() -> {
+                    final JsonObject host = hostNodes.get(at.host());
+                    if (host != null) section(host, card.node(), at.section(), "gtnhplanner:" + n.id);
+                });
                 continue;
             }
             if (at != null) {
@@ -230,6 +234,7 @@ public final class PlanExport {
             inGroup(g, card.node(), n.group, n.x, n.y);
             nodes.add(card.node());
         }
+        later.forEach(Runnable::run);
         for (final Edge e : g.getEdges()) {
             final Node from = g.nodes.get(e.sourceNodeId), to = g.nodes.get(e.targetNodeId);
             if (from == null || to == null || e.sourceOutputIndex >= from.outputs.size()) continue;
@@ -248,7 +253,7 @@ public final class PlanExport {
                 .linksInputs();
             // A drawer's wires name its resource as the port each lands on does (the recipe's own spelling), so the
             // website finds the port; the drawer itself as its first port names it.
-            final Res r = linkResource(g, d, own, res);
+            final Res r = linkResource(g, d, own, res::get);
             final JsonObject storage = storage(d, r);
             inGroup(g, storage, d.getGroup(), d.getX(), d.getY());
             storages.add(storage);
@@ -258,7 +263,7 @@ public final class PlanExport {
                 final Node n = g.nodes.get(link.nodeId());
                 if (n == null) continue;
                 final String id = d.getId() + ":" + link.nodeId() + ":" + link.portIndex();
-                final Res lr = portResource(n, link.portIndex(), source, res, own);
+                final Res lr = portResource(n, link.portIndex(), source, res::get, own);
                 final String card = sections.card(n.id);
                 edges.add(
                     sections.prefix(
@@ -271,7 +276,7 @@ public final class PlanExport {
             for (final Drawer.Link link : d.getTakers()) {
                 final Node n = g.nodes.get(link.nodeId());
                 if (n == null) continue;
-                final Res lr = portResource(n, link.portIndex(), true, res, own);
+                final Res lr = portResource(n, link.portIndex(), true, res::get, own);
                 edges.add(
                     sections.prefix(
                         edge(
@@ -328,7 +333,15 @@ public final class PlanExport {
         if (shares.entrySet()
             .size() > 0) p.add("spareShares", shares);
         Tasks.write(g, p, true);
-        // What a website plan held that the board has no place for, back as it came (core-codec SiteCarry).
+        return carried(p, g);
+    }
+
+    /**
+     * What a website plan held that the board has no place for ({@link Graph#site}), back in the plan the board wrote,
+     * as it came (core-codec SiteCarry). A new plan is made; {@code p} is not changed. The file export and a plan's
+     * first upload to the cloud both write it here.
+     */
+    public static JsonObject carried(final JsonObject p, final Graph g) {
         if (g.site.isEmpty()) return p;
         final Map<String, Object> tree = GsonTrees.map(p);
         SiteCarry.writeBack(tree, g.site);
@@ -336,9 +349,9 @@ public final class PlanExport {
     }
 
     /** The website's caps ({@code plan.schema.json}): setting pins per plan, leftovers, bearers per leftover. */
-    static final int MAX_SETTING_PINS = 512, MAX_SPARES = 1024, MAX_BEARERS = 64;
+    public static final int MAX_SETTING_PINS = 512, MAX_SPARES = 1024, MAX_BEARERS = 64;
 
-    private static JsonObject capped(final JsonObject o, final int max) {
+    public static JsonObject capped(final JsonObject o, final int max) {
         if (o.entrySet()
             .size() <= max) return o;
         final JsonObject out = new JsonObject();
@@ -350,7 +363,7 @@ public final class PlanExport {
         return out;
     }
 
-    private static JsonObject sharesCapped(final JsonObject shares) {
+    public static JsonObject sharesCapped(final JsonObject shares) {
         final JsonObject out = new JsonObject();
         for (final Map.Entry<String, com.google.gson.JsonElement> e : capped(shares, MAX_SPARES).entrySet()) out.add(
             e.getKey(),
@@ -364,18 +377,38 @@ public final class PlanExport {
         return out;
     }
 
-    /** The resource a drawer's link names: as the port it lands on names it, else the drawer's own. */
-    private static Res portResource(final Node n, final int port, final boolean input, final Map<Port<?>, Res> res,
-        final Res own) {
+    /**
+     * A port's resource as a recipe slot names it: EU for power, nothing for a port the website has no slot for (one
+     * the
+     * model added), else what the world calls it. The export's ports and the cloud's wires read it here.
+     */
+    @Nullable
+    public static Res recipePort(final Port<?> p, final World world) {
+        return p.fromModel ? null : named(p, world);
+    }
+
+    /** As {@link #recipePort} for a port that is kept whatever it is (the cloud writes every wire). */
+    @Nullable
+    public static Res named(final Port<?> p, final World world) {
+        return p.getValue() instanceof Energy ? EU : world.port(p);
+    }
+
+    /**
+     * The resource a drawer's link names: as the port it lands on names it ({@code res}: each port's), else the
+     * drawer's own. The one rule for a wire between a drawer and a card, in the file export and in the cloud.
+     */
+    public static Res portResource(final Node n, final int port, final boolean input,
+        final java.util.function.Function<Port<?>, Res> res, final Res own) {
         if (own == EU) return own;
         final List<Port<?>> ports = input ? n.inputs : n.outputs;
-        final Res r = port >= 0 && port < ports.size() ? res.get(ports.get(port)) : null;
+        final Res r = port >= 0 && port < ports.size() ? res.apply(ports.get(port)) : null;
         return r != null && r.kind()
             .equals(own.kind()) ? r : own;
     }
 
     /** A drawer's resource as the port of its first link names it, else its own. */
-    private static Res linkResource(final Graph g, final Drawer d, final Res own, final Map<Port<?>, Res> res) {
+    public static Res linkResource(final Graph g, final Drawer d, final Res own,
+        final java.util.function.Function<Port<?>, Res> res) {
         if (own == EU) return own;
         final boolean source = d.getKind()
             .linksInputs();
@@ -396,11 +429,17 @@ public final class PlanExport {
      */
     private static void section(final JsonObject host, final JsonObject node, final int section,
         final String recipeId) {
-        final JsonArray extra = host.has("extraRecipes") ? host.getAsJsonArray("extraRecipes") : new JsonArray();
         final JsonObject x = new JsonObject();
         x.addProperty("recipeId", recipeId);
         if (node.has("recipeInputOverrides")) x.add("recipeInputOverrides", node.get("recipeInputOverrides"));
-        extra.add(x);
+        // At its section's place: the recipes come in the board's order, the handles name the section's number.
+        final List<com.google.gson.JsonElement> slots = new java.util.ArrayList<>();
+        if (host.has("extraRecipes"))
+            for (final com.google.gson.JsonElement e : host.getAsJsonArray("extraRecipes")) slots.add(e);
+        while (slots.size() < section) slots.add(com.google.gson.JsonNull.INSTANCE);
+        slots.set(section - 1, x);
+        final JsonArray extra = new JsonArray();
+        for (final com.google.gson.JsonElement e : slots) extra.add(e);
         host.add("extraRecipes", extra);
         if (node.has("portRates")) {
             final JsonObject rates = host.has("portRates") ? host.getAsJsonObject("portRates") : new JsonObject();
@@ -913,8 +952,7 @@ public final class PlanExport {
         final Map<Port<?>, Res> res, @Nullable final JsonObject picks) {
         final JsonArray out = new JsonArray();
         for (final Port<?> p : ports) {
-            if (p.fromModel) continue;
-            final Res r = p.getValue() instanceof Energy ? EU : world.port(p);
+            final Res r = recipePort(p, world);
             if (r == null) continue;
             res.put(p, r);
             if (picks != null && !outputs && p.hasChoices() && Double.isNaN(p.getExactAmount())) {

@@ -161,7 +161,7 @@
     "codec/plan-text.json": {
       "area": "codec",
       "bytes": 5307,
-      "sha256": "ea8503d4f05f01807b429bf9450354667e44560b818ee995561fdbcef3940e9b"
+      "sha256": "0f18b636403458b01ca667d2d7d92c6a18b867ab4a0845998c756ea76b0c9a68"
     },
     "codec/round-trip/website-only-things.json": {
       "area": "codec",
@@ -331,22 +331,22 @@
     "plans/mod/cloud-corpus-benzene.json": {
       "area": "plans",
       "bytes": 14747,
-      "sha256": "41f52c39a5e03c30a0dac4a48527f5e7b8f45abd16cadf0782b6c11af60e165c"
+      "sha256": "55a6bd78c46e6bd3dbf0fcd99c8440578876d11dfc724273ee4723667f4cfda1"
     },
     "plans/mod/cloud-corpus-glass.json": {
       "area": "plans",
       "bytes": 34555,
-      "sha256": "ffe82ae808a7936c415ed50589c51d9ee5344ebd814c41c609d914e957365fa3"
+      "sha256": "d59aa69b2acccee5b724c2e92273253caf573387509f9c1418cecd7cddd88f6b"
     },
     "plans/mod/cloud-corpus-hv-diesel.json": {
       "area": "plans",
       "bytes": 34218,
-      "sha256": "acf6d143ddf016a27b249abd6f167413d11dc01d747bbca8fa8b4f61152999c2"
+      "sha256": "e00dbfdffc5ac842d20aefa0a717b8e5c6503d8ede25d8fc306e13085da661b4"
     },
     "plans/mod/cloud-corpus-mv.json": {
       "area": "plans",
       "bytes": 131882,
-      "sha256": "245fe9280c51a3f03f67d1cb2d8063740e5f9a984fea4531883a19ab54c4881a"
+      "sha256": "f0d805109a91940bab84256ec2b0c8a1d922b0a82e467bc84cb86eb8e08993f4"
     },
     "plans/mod/cloud-corpus-single-card-v2.json": {
       "area": "plans",

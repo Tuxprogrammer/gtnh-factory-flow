@@ -122,8 +122,8 @@
     {
       "id": "df46d804-c0fa-4b59-bf6c-742fc0d53161",
       "kind": "item",
-      "resourceId": "oxygen",
-      "displayName": "oxygen",
+      "resourceId": "Oxygen",
+      "displayName": "Oxygen",
       "position": {
         "x": 220,
         "y": 324
@@ -140,14 +140,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "e7b63f91a7e33f4e"
+        "sum": "a1bf48b821810009"
       }
     },
     {
       "id": "2e50eeda-7d71-44da-adde-0aadaf2a69ec",
       "kind": "item",
-      "resourceId": "distilled water",
-      "displayName": "distilled water",
+      "resourceId": "Distilled Water",
+      "displayName": "Distilled Water",
       "drainMode": "product",
       "position": {
         "x": -303,
@@ -164,14 +164,14 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "d9453b9cbc444e98"
+        "sum": "8aaee086950f7e80"
       }
     },
     {
       "id": "781a9079-2392-4d4b-99d8-c00f100d928b",
       "kind": "item",
-      "resourceId": "hydrogen",
-      "displayName": "hydrogen",
+      "resourceId": "Hydrogen",
+      "displayName": "Hydrogen",
       "position": {
         "x": -303,
         "y": 207
@@ -187,7 +187,7 @@
           "header": "Drawer",
           "type": "drawer"
         },
-        "sum": "5eb5c9930d5d8bc9"
+        "sum": "ff4152c6f426a175"
       }
     }
   ],
@@ -196,48 +196,48 @@
       "id": "df46d804-c0fa-4b59-bf6c-742fc0d53161:6bcdde86-54bd-44b7-935c-d857ee18e9a5:1",
       "source": "df46d804-c0fa-4b59-bf6c-742fc0d53161",
       "target": "6bcdde86-54bd-44b7-935c-d857ee18e9a5",
-      "sourceHandle": "output:item:oxygen",
-      "targetHandle": "input:item:oxygen",
+      "sourceHandle": "output:item:Oxygen",
+      "targetHandle": "input:item:Oxygen",
       "resourceKind": "item",
-      "resourceId": "oxygen",
+      "resourceId": "Oxygen",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 1
         },
-        "sum": "bb00108505ad2856"
+        "sum": "dfed98bd24e69a81"
       }
     },
     {
       "id": "2e50eeda-7d71-44da-adde-0aadaf2a69ec:6bcdde86-54bd-44b7-935c-d857ee18e9a5:0",
       "source": "6bcdde86-54bd-44b7-935c-d857ee18e9a5",
       "target": "2e50eeda-7d71-44da-adde-0aadaf2a69ec",
-      "sourceHandle": "output:item:distilled%20water",
-      "targetHandle": "input:item:distilled%20water",
+      "sourceHandle": "output:item:Distilled%20Water",
+      "targetHandle": "input:item:Distilled%20Water",
       "resourceKind": "item",
-      "resourceId": "distilled water",
+      "resourceId": "Distilled Water",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 0
         },
-        "sum": "f95f796bf89c43c4"
+        "sum": "5eb7231831aaca09"
       }
     },
     {
       "id": "781a9079-2392-4d4b-99d8-c00f100d928b:6bcdde86-54bd-44b7-935c-d857ee18e9a5:0",
       "source": "781a9079-2392-4d4b-99d8-c00f100d928b",
       "target": "6bcdde86-54bd-44b7-935c-d857ee18e9a5",
-      "sourceHandle": "output:item:hydrogen",
-      "targetHandle": "input:item:hydrogen",
+      "sourceHandle": "output:item:Hydrogen",
+      "targetHandle": "input:item:Hydrogen",
       "resourceKind": "item",
-      "resourceId": "hydrogen",
+      "resourceId": "Hydrogen",
       "gtnhplanner": {
         "v": 1,
         "game": {
           "port": 0
         },
-        "sum": "b64a3433c738dc04"
+        "sum": "49ed917b4ff841dc"
       }
     }
   ],

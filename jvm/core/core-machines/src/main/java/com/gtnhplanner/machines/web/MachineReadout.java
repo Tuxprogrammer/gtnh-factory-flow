@@ -21,46 +21,92 @@ import com.gtnhplanner.core.base.JsonTree;
 public final class MachineReadout {
 
     private final Map<String, Web.Recipe> recipes = new HashMap<>();
-    /** Control tables kept under the host's names for them ({@link #addControl}), as parsed JSON. */
-    private final Map<String, Object> controls = new HashMap<>();
+    /**
+     * Control tables kept under the host's names for them ({@link #addControl}), bound once: every recipe that names a
+     * table shares its one bound {@link Web.Control} (null for a table that is not a JSON object, which binds as null).
+     * Sharing is safe because the maths never change a control in place: a changed control is always a copy
+     * (RecipeRules), as a changed recipe is.
+     */
+    private final Map<String, Web.Control> controls = new HashMap<>();
 
     /**
      * Keeps a control table (one entry of a {@code machineConfigControls} list, the website's JSON) under a name the
      * host picks; a recipe sent later may then carry {@code {"$ref": name}} in that list instead of the table. The
-     * tables are most of a recipe's text and the same few on most of a plan's recipes, so each crosses and is read once.
+     * tables are most of a recipe's text and the same few on most of a plan's recipes, so each crosses, is read and is
+     * bound once.
      */
     public void addControl(final String ref, final String controlJson) {
-        controls.put(ref, JsonTree.parse(controlJson));
+        final Object tree = JsonTree.parse(controlJson);
+        controls.put(ref, tree instanceof Map ? WebJson.control(JsonTree.object(tree)) : null);
+    }
+
+    /**
+     * Handlers kept under the host's names for them ({@link #addHandler}), bound once and shared by every recipe that
+     * names one (null for one that is not a JSON object). Safe for the same reason as the control tables: a changed
+     * handler is always a copy (RecipeRules, Fusion).
+     */
+    private final Map<String, Web.Handler> handlers = new HashMap<>();
+
+    /**
+     * Keeps a handler (one entry of a recipe's {@code machineHandlers} list, the website's JSON, its control tables
+     * possibly written {@code {"$ref": name}}) under a name the host picks; a recipe sent later may carry
+     * {@code {"$ref": name}} in that list instead. Most of a map's recipes list the same few handlers, so each crosses,
+     * is read and is bound once.
+     */
+    public void addHandler(final String ref, final String handlerJson) {
+        final Object tree = JsonTree.parse(handlerJson);
+        if (!(tree instanceof Map)) {
+            handlers.put(ref, null);
+            return;
+        }
+        final Map<String, Object> o = JsonTree.object(tree);
+        final Web.Handler handler = WebJson.handler(o);
+        resolveControls(o, handler.machineConfigControls);
+        handlers.put(ref, handler);
     }
 
     /**
      * Keeps a recipe (the website's JSON) under an id for later questions; a second recipe under an id replaces it. A
-     * control written {@code {"$ref": name}} is the table kept under that name: the recipe reads exactly as if the
-     * table's text stood there.
+     * control written {@code {"$ref": name}} is the table kept under that name, and a handler written so the handler
+     * kept under that name: the recipe reads exactly as if their text stood there.
      */
     public void addRecipe(final String id, final String recipeJson) {
         final Object tree = JsonTree.parse(recipeJson);
-        if (tree instanceof Map) {
-            final Map<String, Object> o = JsonTree.object(tree);
-            resolveControls(o);
-            if (o.get("machineHandlers") instanceof List)
-                for (final Object h : JsonTree.array(o.get("machineHandlers"))) if (h instanceof Map) resolveControls(JsonTree.object(h));
-        }
         final Web.Recipe recipe = WebJson.recipe(tree);
         if (recipe == null) throw new IllegalArgumentException("Not a recipe: " + id);
+        final Map<String, Object> o = JsonTree.object(tree);
+        resolveControls(o, recipe.machineConfigControls);
+        if (o.get("machineHandlers") instanceof List) {
+            // WebJson binds the list item by item, so the bound handlers sit at the same places as the tree's.
+            final List<Object> list = JsonTree.array(o.get("machineHandlers"));
+            for (int i = 0; i < list.size(); i++) {
+                if (!(list.get(i) instanceof Map)) continue;
+                final Map<String, Object> h = JsonTree.object(list.get(i));
+                final String ref = ref(h);
+                if (ref == null) resolveControls(h, recipe.machineHandlers.get(i).machineConfigControls);
+                else if (!handlers.containsKey(ref)) throw new IllegalArgumentException("No handler kept under " + ref);
+                else recipe.machineHandlers.set(i, handlers.get(ref));
+            }
+        }
         recipes.put(id, recipe);
     }
 
-    private void resolveControls(final Map<String, Object> owner) {
-        if (!(owner.get("machineConfigControls") instanceof List)) return;
+    /** The name in a {@code {"$ref": name}} entry; null for anything else. */
+    @Nullable
+    private static String ref(final Map<String, Object> entry) {
+        return entry.size() == 1 && entry.get("$ref") instanceof String ? (String) entry.get("$ref") : null;
+    }
+
+    /** Puts the kept table in place of each {@code {"$ref": name}} entry of the owner's bound control list. */
+    private void resolveControls(final Map<String, Object> owner, @Nullable final List<Web.Control> bound) {
+        if (bound == null || !(owner.get("machineConfigControls") instanceof List)) return;
         final List<Object> list = JsonTree.array(owner.get("machineConfigControls"));
         for (int i = 0; i < list.size(); i++) {
             if (!(list.get(i) instanceof Map)) continue;
-            final Map<String, Object> c = JsonTree.object(list.get(i));
-            if (c.size() != 1 || !(c.get("$ref") instanceof String)) continue;
-            final Object table = controls.get((String) c.get("$ref"));
-            if (table == null) throw new IllegalArgumentException("No control kept under " + c.get("$ref"));
-            list.set(i, table);
+            final String ref = ref(JsonTree.object(list.get(i)));
+            if (ref == null) continue;
+            if (!controls.containsKey(ref)) throw new IllegalArgumentException("No control kept under " + ref);
+            bound.set(i, controls.get(ref));
         }
     }
 

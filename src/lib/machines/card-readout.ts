@@ -141,8 +141,9 @@ export class CardReadout implements CardMachineMath {
   }
 
   /**
-   * The core's figures, when the area is on, the core has loaded, it covers the machine and the node takes the recipe
-   * as it is (the core holds the dataset's recipe, not one with this node's inputs overridden); else null.
+   * The core's figures, when the area is on, the core has loaded and keeps this recipe, it covers the machine and the
+   * node takes the recipe as it is (the core holds the dataset's recipe, not one with this node's inputs overridden);
+   * else null.
    */
   private core(): CardMachineMath | null {
     if (this._core !== UNSET) return this._core;

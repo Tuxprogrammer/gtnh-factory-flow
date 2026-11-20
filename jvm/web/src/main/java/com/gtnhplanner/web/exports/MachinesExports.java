@@ -39,6 +39,15 @@ public final class MachinesExports {
     }
 
     /**
+     * Keeps a handler (one entry of a recipe's machineHandlers, the website's JSON; its control tables may be written
+     * {"$ref": name}) under a name the host picks; a recipe sent later may write {"$ref": name} in its place.
+     */
+    @JSExport
+    public static void machinesAddHandler(final String ref, final String handlerJson) {
+        MACHINES.addHandler(ref, handlerJson);
+    }
+
+    /**
      * Runs the card maths on a recipe of each of the first {@code maps} recipe maps, so the tables are read and the code
      * is warm before a plan's cards ask (a host calls it in idle time after loading); answers the cards computed.
      */
@@ -49,7 +58,8 @@ public final class MachinesExports {
 
     /**
      * Keeps a recipe (the website's JSON shape) under its id; a second recipe under the same id replaces it. A control
-     * written {"$ref": name} is the table machinesAddControl kept under that name.
+     * written {"$ref": name} is the table machinesAddControl kept under that name, a handler so written the handler
+     * machinesAddHandler kept.
      */
     @JSExport
     public static void machinesAddRecipe(final String recipeId, final String recipeJson) {

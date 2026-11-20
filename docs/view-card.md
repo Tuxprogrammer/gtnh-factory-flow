@@ -191,7 +191,9 @@ path calls them yet. `src/components/flow/clean/card-shadow.test.ts` holds the t
   tests draw, and every recipe card of the plan fixtures (conformance/plans, examples/) solved by the website's engine
   under three sets of dials (per second, EU/t, average; per minute, Amps, peak; per tick, an HV tier, average) and once
   more with every running card set to Up to its count. Each replays through `cleanCardView` and, as the core's input,
-  through `CardViews` with the website's own widths called back (`WEB_CARD_MEASURE`). Recorder:
+  through `CardViews` with the website's own widths called back (`WEB_CARD_MEASURE`), the way the website will call it:
+  records as JavaScript objects (`cardThroughCore`, `ViewExports.viewCardJs`); the JSON export must give the same answer
+  text for text. Recorder:
   `node tools/audits/card-test-inputs/record.mjs`.
 
 Result: no difference on either target (views equal key for key, numbers spelt the same; geometry has one anchor per
@@ -207,7 +209,9 @@ What one card costs (Node 24 on the build box, the 722 recorded cards, warm, med
 |---|---|
 | website `cleanCardView` | 17 us |
 | website writes the core's input and its JSON (`cardInputOf`) | 16 to 21 us |
-| core, Wasm GC, one call per card, widths called back (14.7 widths a card) | 90 to 94 us |
+| core, Wasm GC, one call per card, records as objects, widths called back (the website's path now) | 33 to 35 us |
+| core, JavaScript, the same | 56 us |
+| core, Wasm GC, one call per card, widths called back (14.7 widths a card), JSON | 90 to 94 us |
 | core, Wasm GC, one call per card, six px (no call back) | 78 to 83 us (63 us of it inside the call; 8 us `JSON.parse` of the answer) |
 | core, Wasm GC, one call per board (5 boards of 75 to 220 cards) | 106 to 120 us |
 | core, JavaScript, one call per card, widths called back | 189 to 210 us |
@@ -215,7 +219,8 @@ What one card costs (Node 24 on the build box, the 722 recorded cards, warm, med
 | an empty call | 0.2 us (Wasm GC), 0.4 us (JavaScript) |
 
 On the JVM (warm, the shared cases) a card costs 6 us to read its JSON, 2.3 us of rules and 6.6 us to write its view:
-the codec is most of a call. Batching per board saves nothing (a crossing costs 0.2 us; the long JSON text costs more
+the codec is most of a call. The records now cross as JavaScript objects with no text (`jvm/web/README.md`, "Records
+across the boundary", has the candidates measured and the table in Node and in Chromium). Batching per board saves nothing (a crossing costs 0.2 us; the long JSON text costs more
 than it saves), and the widths' call backs cost about 0.7 us each.
 
 ## Switching the website to the compiled core (not in this item)
@@ -223,12 +228,11 @@ than it saves), and the widths' call backs cost about 0.7 us each.
 The website keeps its TypeScript builders, bound by the shared cases and the shadow. To switch (`src/lib/core/adopt.ts`,
 a `card` area), it will need:
 
-1. A per-card call (`viewCardMeasured`) behind a per-card cache keyed by the input's text: per board saves nothing.
-   Uncached, the core is about five times the TypeScript on Wasm GC and eleven times on JavaScript (a board of a
-   thousand cards rebuilt whole: about 90 ms against 17 ms, 200 ms on JavaScript), so a card that did not change must
-   not cross. Most of a call is JSON (on the JVM 12 of 15 us): a cheaper crossing (JSO records, or the view's numbers
-   written without the exact decimal printer where they are whole) is the first thing to try if the cache is not
-   enough. Measure on `next start` with a real board before switching (adoption rule 2).
+1. A per-card call (`cardThroughCore` in `src/lib/core/card-wire.ts`, `viewCardJs`: records as objects, no JSON)
+   behind a per-card cache keyed by the input: per board saves nothing. Uncached, the core is about two times the
+   TypeScript on Wasm GC in Node and 2.4 to 3.1 times in Chromium, 3.5 times on JavaScript (it was five and eleven with
+   JSON), so a card that did not change should still not cross. What is left is the rules on WebAssembly and the width
+   call backs, not the crossing. Measure on `next start` with a real board before switching (adoption rule 2).
 2. `TextMeasure` from JavaScript: done as a call back (`WEB_CARD_MEASURE`, 0.7 us a width); a two-pass design is not
    needed.
 3. `Text` on the website: `viewCardWords` with the `gtnhplanner.card.*` words. The shadow reads them from the mod's

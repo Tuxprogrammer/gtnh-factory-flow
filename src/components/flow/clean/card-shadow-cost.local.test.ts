@@ -1,8 +1,9 @@
 /**
  * What one card's view costs on each path, for the switch item to decide per card or per board (a scratch harness, not
- * in the suite): the website's `cleanCardView`, the writer of the core's input, and the compiled core per card and per
- * board, with the website's widths called back for each string and with the built-in six px (no call back), on both
- * targets. Also a planted check that the comparison sees a difference when the widths differ.
+ * in the suite): the website's `cleanCardView`, the writer of the core's input, and the compiled core per card with
+ * the records as JavaScript objects (`cardThroughCore`, the website's path) and as JSON text, per card and per board,
+ * with the website's widths called back for each string and with the built-in six px (no call back), on both targets.
+ * Also a planted check that the comparison sees a difference when the widths differ.
  *
  *   npx vitest run src/components/flow/clean/card-shadow-cost.local.test.ts --config vitest.local.config.ts
  */
@@ -11,7 +12,9 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { gunzipSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
+import { cardThroughCore } from "@/lib/core/card-wire";
 import { core, coreInfo, loadCore, resetCoreForTests, type CoreTarget } from "@/lib/core/loader";
+import type { CardInputCase } from "@/lib/core/records.generated";
 import { WEB_CARD_MEASURE, cardInputOf } from "./card-input";
 import { cardViewJson, type CardCaseInput } from "./card-conformance";
 import { decodeLine, differences, replayFacts, withDials, type RecordedCard } from "./card-shadow";
@@ -67,8 +70,11 @@ describe("card view cost", () => {
     const writer = perCard(() => {
       for (const p of prepared) JSON.stringify(withDials(p.line.dials, () => cardInputOf(p.facts)));
     }, n);
+    const inputOnly = perCard(() => {
+      for (const p of prepared) withDials(p.line.dials, () => cardInputOf(p.facts));
+    }, n);
     console.log(
-      `[card cost] ${n} cards; TypeScript cleanCardView ${ts} us a card; input writer + JSON ${writer} us a card`,
+      `[card cost] ${n} cards; TypeScript cleanCardView ${ts} us a card; input writer ${inputOnly} us, + JSON ${writer} us a card`,
     );
   });
 
@@ -90,6 +96,27 @@ describe("card view cost", () => {
       };
       for (const p of prepared) JSON.parse(v.viewCardMeasured(p.json, counting));
       const callsPerCard = Math.round((calls / n) * 10) / 10;
+      const cases = prepared.map((p) => ({ dials: p.line.dials, card: p.input }) as CardInputCase);
+      const objectMeasured = perCard(() => {
+        for (const c of cases) cardThroughCore(v, c, WEB_CARD_MEASURE);
+      }, n);
+      const objectSix = perCard(() => {
+        for (const c of cases) cardThroughCore(v, c);
+      }, n);
+      const fromFacts = perCard(() => {
+        for (const p of prepared)
+          cardThroughCore(
+            v,
+            {
+              dials: p.line.dials,
+              card: withDials(p.line.dials, () => cardInputOf(p.facts)),
+            } as CardInputCase,
+            WEB_CARD_MEASURE,
+          );
+      }, n);
+      console.log(
+        `[card cost] ${target}: objects (the website's path) ${objectMeasured} us a card measured by call back, ${objectSix} us six px; from the facts (input writer + call) ${fromFacts} us`,
+      );
       const oneMeasured = perCard(() => {
         for (const p of prepared) JSON.parse(v.viewCardMeasured(p.json, WEB_CARD_MEASURE));
       }, n);
@@ -138,7 +165,11 @@ describe("card view cost", () => {
             card: p.input,
           } as unknown as CardCaseInput,
         );
-        const made = JSON.parse(v.viewCardMeasured(p.json, wide)) as { view: unknown };
+        const made = cardThroughCore(
+          v,
+          { dials: p.line.dials, card: p.input } as CardInputCase,
+          wide,
+        );
         if (differences(shown, made.view).length) differ++;
       }
       console.log(`[card cost] ${target}: planted wide widths differ on ${differ} of ${n} cards`);

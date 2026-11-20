@@ -20,11 +20,14 @@ import com.gtnhplanner.core.view.card.CardInput;
 import com.gtnhplanner.core.view.card.CardInputJson;
 import com.gtnhplanner.core.view.card.CardView;
 import com.gtnhplanner.core.view.card.CardViews;
+import com.gtnhplanner.web.wire.ViewJs;
 
 /**
- * core-view for JavaScript: a recipe card's whole view from its facts, one call per card or per board, JSON in and JSON
- * out on the record convention (conformance/view/README.md): in {@code CardInput.Case} ({@code {dials, card}}), out
- * {@code {"view": CardView, "geometry": CardGeometry}} with the website's geometry ({@code CardGeometry.web}).
+ * core-view for JavaScript: a recipe card's whole view from its facts. The website's path is one call per card with
+ * the records as JavaScript objects ({@link #viewCardJs}: jvm/web/README.md, "Records across the boundary"): in a
+ * {@code CardInput.Case} ({@code {dials, card}}), out {@code {view: CardView, geometry: CardGeometry}} with the
+ * website's geometry ({@code CardGeometry.web}). The same answers as JSON text, one call per card or per board, stay
+ * for the conformance run and the tests (record convention: conformance/view/README.md).
  *
  * <p>
  * The words a card shows are the core's {@link Text} keys ({@code gtnhplanner.card.*}); the host hands its word table
@@ -94,6 +97,31 @@ public final class ViewExports {
     public static String viewCardsSix(final String dialsJson, final String cardsJson) {
         return cards(dialsJson, cardsJson, SIX);
     }
+
+    /**
+     * One card, the website's path: its {@code CardInputCase} object in, {@code {view, geometry}} objects out (the
+     * objects {@code JSON.parse} gives of {@link #viewCardMeasured}'s answer, key order included), measured by the
+     * host. Nothing crosses as text.
+     */
+    @JSExport
+    public static JSObject viewCardJs(final JSObject cardCase, final CardMeasure measure) {
+        return cardJs(cardCase, measure(measure));
+    }
+
+    /** {@link #viewCardJs} measured six px a character (the shared cases). */
+    @JSExport
+    public static JSObject viewCardJsSix(final JSObject cardCase) {
+        return cardJs(cardCase, SIX);
+    }
+
+    private static JSObject cardJs(final JSObject cardCase, final TextMeasure measure) {
+        final CardInput.Case c = ViewJs.readCardInputCase(cardCase);
+        final CardView view = CardViews.card(c.card(), c.dials(), measure, CardViews.Host.WEB);
+        return viewAndGeometry(ViewJs.js(view), ViewJs.js(CardGeometry.web(view)));
+    }
+
+    @JSBody(params = { "view", "geometry" }, script = "return { view: view, geometry: geometry };")
+    private static native JSObject viewAndGeometry(JSObject view, JSObject geometry);
 
     private static String cards(final String dialsJson, final String cardsJson, final TextMeasure m) {
         final CardInput.Dials dials = CardInputJson.dials(JsonTree.parse(dialsJson));

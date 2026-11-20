@@ -29,6 +29,11 @@ public final class Fmt {
             this.suffix = "/" + core.per;
             this.perSecond = core.perSecond;
         }
+
+        /** The core's unit this is. */
+        public com.gtnhplanner.core.base.RateUnit core() {
+            return core;
+        }
     }
 
     private Fmt() {}

@@ -1153,6 +1153,16 @@
       "bytes": 6601,
       "sha256": "dad06cb14862c075382f2b43fdffb9edfed3b8534cc221add8dbf7e3bf6a8664"
     },
+    "view/card/cases.json": {
+      "area": "view",
+      "bytes": 486628,
+      "sha256": "6f3e43eb7d52dfeba2d1d8947ea8075c9fee8a262567d9f3d7d82ced5b0b83b9"
+    },
+    "view/card/count.json": {
+      "area": "view",
+      "bytes": 2974,
+      "sha256": "001810ce3f822f0a532d7fee95334bdbabf469d288d30dd9ece7838b038f74ea"
+    },
     "view/drawer/cases.json": {
       "area": "view",
       "bytes": 140126,
@@ -1185,8 +1195,8 @@
     },
     "view/records.json": {
       "area": "view",
-      "bytes": 10479,
-      "sha256": "cc2558961fa8eb028cf8c9134e96b70bd0c410973ded2d11a4fcf4f6a0933113"
+      "bytes": 18944,
+      "sha256": "0282e6a1434e393ef7084ae4b819588cc48f6eaa4e1e968eaad6eff1c0ec522c"
     }
   }
 }

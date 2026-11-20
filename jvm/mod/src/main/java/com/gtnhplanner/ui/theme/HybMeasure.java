@@ -22,7 +22,9 @@ public final class HybMeasure implements TextMeasure {
         return switch (style) {
             case ROW_FIGURE -> Hyb.FIGURE;
             case ROW_NAME_SMALL -> 0.75f;
-            case LABEL, ROW_UNIT, ROW_NAME, GAME -> 1f;
+            case LABEL, ROW_UNIT, ROW_NAME, GAME, NAME_SMALL -> 1f;
+            case NAME_LARGE -> 1.5f;
+            case NAME_MEDIUM -> 1.25f;
         };
     }
 

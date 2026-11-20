@@ -82,7 +82,8 @@ export function energyPerUnitDisplayValue(euPerUnit: number): number {
 
 export function energyPerUnitDisplaySuffix(kind: string): string {
   const per = kind === "fluid" ? "L" : "Item";
-  return powerState.unit === "eu" ? ` EU/${per}` : ` A ${powerState.unit}/${per}`;
+  // The Amps key reads each card in its own tier, and an energy reading has none: it stays EU, as its value does.
+  return powerState.unit === "eu" || powerState.unit === "amps" ? ` EU/${per}` : ` A ${powerState.unit}/${per}`;
 }
 
 /** Multiply a per-second figure by this before display. */

@@ -1,0 +1,233 @@
+{
+ "record": "card",
+ "set": "count",
+ "measure": "none",
+ "vectors": {
+  "wheel": [
+   {
+    "rule": "ANY",
+    "value": 2.4,
+    "direction": 1,
+    "out": 3
+   },
+   {
+    "rule": "ANY",
+    "value": 2.4,
+    "direction": -1,
+    "out": 3
+   },
+   {
+    "rule": "ANY",
+    "value": 0,
+    "direction": 1,
+    "out": 1
+   },
+   {
+    "rule": "ANY",
+    "value": 0,
+    "direction": -1,
+    "out": 1
+   },
+   {
+    "rule": "ANY",
+    "value": 3.0000005,
+    "direction": 1,
+    "out": 3
+   },
+   {
+    "rule": "ANY",
+    "value": 3.0000005,
+    "direction": -1,
+    "out": 3
+   },
+   {
+    "rule": "UP_TO",
+    "set": 3,
+    "value": 2,
+    "direction": 1,
+    "out": 4
+   },
+   {
+    "rule": "UP_TO",
+    "set": 3,
+    "value": 2,
+    "direction": -1,
+    "out": 2
+   },
+   {
+    "rule": "UP_TO",
+    "set": 2.5,
+    "value": 2,
+    "direction": 1,
+    "out": 4
+   },
+   {
+    "rule": "UP_TO",
+    "set": 2.5,
+    "value": 2,
+    "direction": -1,
+    "out": 2
+   },
+   {
+    "rule": "UP_TO",
+    "set": 1,
+    "value": 1,
+    "direction": 1,
+    "out": 2
+   },
+   {
+    "rule": "UP_TO",
+    "set": 1,
+    "value": 1,
+    "direction": -1
+   },
+   {
+    "rule": "EXACT",
+    "set": 1.4,
+    "value": 1,
+    "direction": 1,
+    "out": 2
+   },
+   {
+    "rule": "EXACT",
+    "set": 1.4,
+    "value": 1,
+    "direction": -1
+   },
+   {
+    "rule": "EXACT",
+    "set": 0.5,
+    "value": 1,
+    "direction": 1,
+    "out": 2
+   },
+   {
+    "rule": "EXACT",
+    "set": 0.5,
+    "value": 1,
+    "direction": -1
+   }
+  ],
+  "parse": [
+   {
+    "text": "12",
+    "out": 12
+   },
+   {
+    "text": " ×3 ",
+    "out": 3
+   },
+   {
+    "text": "x 4.5",
+    "out": 4.5
+   },
+   {
+    "text": "",
+    "out": 0
+   },
+   {
+    "text": "  ",
+    "out": 0
+   },
+   {
+    "text": "0",
+    "out": 0
+   },
+   {
+    "text": "-2"
+   },
+   {
+    "text": "abc"
+   },
+   {
+    "text": "2.5k",
+    "out": 2.5
+   },
+   {
+    "text": "1e3",
+    "out": 1000
+   },
+   {
+    "text": ".5",
+    "out": 0.5
+   },
+   {
+    "text": "5.",
+    "out": 5
+   },
+   {
+    "text": "+7",
+    "out": 7
+   },
+   {
+    "text": "Infinity"
+   },
+   {
+    "text": "×",
+    "out": 0
+   }
+  ],
+  "draft": [
+   {
+    "draft": "",
+    "value": 2.4,
+    "direction": 1,
+    "out": "3"
+   },
+   {
+    "draft": "",
+    "value": 2.4,
+    "direction": -1,
+    "out": "3"
+   },
+   {
+    "draft": "3",
+    "value": 1,
+    "direction": 1,
+    "out": "4"
+   },
+   {
+    "draft": "3",
+    "value": 1,
+    "direction": -1,
+    "out": "2"
+   },
+   {
+    "draft": "1",
+    "value": 1,
+    "direction": 1,
+    "out": "2"
+   },
+   {
+    "draft": "1",
+    "value": 1,
+    "direction": -1,
+    "out": ""
+   },
+   {
+    "draft": "abc",
+    "value": 0,
+    "direction": 1,
+    "out": "1"
+   },
+   {
+    "draft": "abc",
+    "value": 0,
+    "direction": -1,
+    "out": "1"
+   },
+   {
+    "draft": "2.6",
+    "value": 5,
+    "direction": 1,
+    "out": "4"
+   },
+   {
+    "draft": "2.6",
+    "value": 5,
+    "direction": -1,
+    "out": "2"
+   }
+  ]
+ }
+}

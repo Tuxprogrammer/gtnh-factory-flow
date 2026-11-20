@@ -18,6 +18,7 @@ import com.google.gson.JsonPrimitive;
 import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Node;
+import com.gtnhplanner.library.PlanExport;
 
 /**
  * The plan-wide picks both planners edit, between the board's spelling and the plan's top-level fields: setting pins
@@ -39,7 +40,7 @@ import com.gtnhplanner.data.flowchart.Node;
  * and joined by {@code |}: the board's cards by their UUIDs, the plan's by their plan ids (a website shared machine's
  * later recipe as {@code <card>#r<n>}).
  */
-final class PlanPins {
+public final class PlanPins {
 
     /** A website machine the board has no card of: its pins kept on the board under this prefix. */
     static final String SITE = "site:";
@@ -51,7 +52,7 @@ final class PlanPins {
     // region Setting pins
 
     /** The board's setting pins as the website keys them; the ones it has no word for left out. */
-    static JsonObject sitePins(final Graph g, final CloudGame game) {
+    static JsonObject sitePins(final Graph g, final PlanExport.World game) {
         final Map<String, List<String>> out = new TreeMap<>();
         for (final Map.Entry<String, List<String>> e : g.settingPins.entrySet()) {
             final String key = e.getKey();
@@ -76,8 +77,15 @@ final class PlanPins {
         return o;
     }
 
+    /**
+     * The board's setting pins as a plan file writes them (the website's keys; the ones it has no word for left out).
+     */
+    public static JsonObject exportPins(final Graph g, final PlanExport.World world) {
+        return sitePins(g, world);
+    }
+
     /** The website's keys for a board pin key: a power source as itself, a machine by its cards' handler ids. */
-    private static Set<String> siteMachines(final Graph g, final CloudGame game, final String key) {
+    private static Set<String> siteMachines(final Graph g, final PlanExport.World game, final String key) {
         final Set<String> out = new LinkedHashSet<>();
         if (key.startsWith(POWER)) out.add(key);
         else if (key.startsWith(MACHINE)) {
@@ -179,6 +187,11 @@ final class PlanPins {
     // endregion
 
     // region Leftover splits
+
+    /** The board's leftover splits as a plan file writes them: each bearer's card named by {@code card}. */
+    public static JsonObject exportShares(final Graph g, final Function<String, String> card) {
+        return shares(g.spareShares, card);
+    }
 
     /** The board's leftover splits with its cards named as the plan names them. */
     static JsonObject siteShares(final Graph g, final Basis names) {

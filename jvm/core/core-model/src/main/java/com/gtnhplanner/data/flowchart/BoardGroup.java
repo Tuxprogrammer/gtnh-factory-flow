@@ -25,25 +25,25 @@ public class BoardGroup {
     /** ...and the smallest a frame gets. */
     public static final int MIN_W = 160, MIN_H = 80;
 
-    private final Uuid id;
+    Uuid id;
     /**
      * The website's id of the board this came from ({@code pocket-...}), kept so it goes back out the same; or null.
      */
     @Nullable
-    private String ffId;
-    private String name = "";
+    String ffId;
+    String name = "";
     /** A colour tag ({@code NoteColors}); null takes the theme's, or the one its id gives it. */
     @Nullable
-    private String color;
+    String color;
     /** The group it sits in, or null for the board. */
     @Nullable
-    private Uuid parent;
+    Uuid parent;
     /** The frame, absolute board px; a collapsed group's summary card sits at its corner. */
-    private int x, y, width = MIN_W, height = MIN_H;
-    private boolean collapsed;
+    int x, y, width = MIN_W, height = MIN_H;
+    boolean collapsed;
     /** The website's paper and ruling, kept for the round trip; never drawn. */
     @Nullable
-    private String theme, pattern;
+    String theme, pattern;
 
     public BoardGroup() {
         this(Uuid.randomUUID());

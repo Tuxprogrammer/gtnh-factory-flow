@@ -31,10 +31,13 @@ import com.gtnhplanner.data.flowchart.balancer.BalanceMode;
 
 public final class Serializer {
 
+    /**
+     * Prints the save's trees (pretty, as every save so far). It binds no class: each thing's fields are written and
+     * read by the core's {@link SaveCodec} and this class, so no field is found by reflection. The id adapter is for
+     * callers that still bind a class of their own with it (tests).
+     */
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting()
         .enableComplexMapKeySerialization()
-        .registerTypeAdapter(GraphData.class, new GraphDataAdapter())
-        // The saved excess choice's ports name their nodes by the core's id: written and read as a Uuid always was.
         .registerTypeAdapter(Uuid.class, CoreIds.GSON)
         .create();
 
@@ -135,8 +138,7 @@ public final class Serializer {
 
     @Nonnull
     private static JsonObject planTree(final Plan plan, final boolean debug) {
-        final JsonObject root = GSON.toJsonTree(plan, Plan.class)
-            .getAsJsonObject();
+        final JsonObject root = planToJson(plan);
 
         final JsonArray arr = new JsonArray();
         for (final Graph graph : plan.getGraphs()) {
@@ -193,10 +195,11 @@ public final class Serializer {
      */
     @Nonnull
     public static Plan decodePlan(final String json) {
-        final Plan plan = GSON.fromJson(json, Plan.class);
+        final JsonObject root = new com.google.gson.JsonParser().parse(json)
+            .getAsJsonObject();
+        final Plan plan = jsonToPlan(root);
 
         // graphs need to be decoded
-        final JsonObject root = GSON.fromJson(json, JsonObject.class);
         if (root.has("graphs")) {
             for (final JsonElement elem : root.getAsJsonArray("graphs")) {
                 final JsonObject obj = elem.getAsJsonObject();
@@ -352,11 +355,11 @@ public final class Serializer {
         root.add("edges", edgesArray);
 
         final JsonArray notesArray = new JsonArray();
-        for (Note note : graph.getNotes()) notesArray.add(GSON.toJsonTree(note));
+        for (Note note : graph.getNotes()) notesArray.add(noteToJson(note));
         root.add("notes", notesArray);
 
         final JsonArray groupsArray = new JsonArray();
-        for (Group group : graph.getGroups()) groupsArray.add(GSON.toJsonTree(group));
+        for (Group group : graph.getGroups()) groupsArray.add(groupToJson(group));
         root.add("groups", groupsArray);
 
         // Written only when there are: an older build reads the plan as it always did (its groups are lost there).
@@ -367,11 +370,13 @@ public final class Serializer {
         }
 
         final JsonArray drawersArray = new JsonArray();
-        for (final Drawer drawer : graph.getDrawers()) drawersArray.add(GSON.toJsonTree(drawer, Drawer.class));
+        for (final Drawer drawer : graph.getDrawers()) drawersArray.add(drawerToJson(drawer));
         root.add("drawers", drawersArray);
 
         // The task board, as the shared plan spells it; absent when the plan has none.
         Tasks.write(graph, root, pictures);
+        // What a website plan held that the board has no place for; written only when there is (older builds skip it).
+        if (!graph.site.isEmpty()) root.add("site", GsonTrees.json(graph.site));
 
         return root;
     }
@@ -409,14 +414,13 @@ public final class Serializer {
         graph.addEdgesLoaded(loadedEdges);
 
         for (final JsonElement elem : root.getAsJsonArray("notes")) {
-            final Note note = GSON.fromJson(elem, Note.class);
+            final Note note = readNote(elem);
             graph.notes.put(note.getId(), note);
         }
 
         for (final JsonElement elem : root.getAsJsonArray("groups")) {
-            // Through GraphData, not Group: the type field decides whether this is a plain group or
-            // a machine group, and reading it as Group would drop the machine group's own fields.
-            final Group group = (Group) GSON.fromJson(elem, GraphData.class);
+            // The type field decides whether this is a plain group or a machine group.
+            final Group group = readGroup(elem);
             graph.groups.put(group.getId(), group);
         }
 
@@ -446,6 +450,8 @@ public final class Serializer {
 
         // Absent from saves written before task boards existed; those load with none.
         Tasks.read(root, graph);
+        if (root.has("site") && root.get("site")
+            .isJsonObject()) graph.site.putAll(GsonTrees.map(root.getAsJsonObject("site")));
 
         if (root.has("boardGroups") && root.get("boardGroups")
             .isJsonArray()) {
@@ -462,8 +468,7 @@ public final class Serializer {
     /** One board group as the save writes it (under {@code boardGroups}). */
     @Nonnull
     public static JsonObject boardGroupToJson(final BoardGroup group) {
-        return GSON.toJsonTree(group)
-            .getAsJsonObject();
+        return GsonTrees.object(SaveCodec.boardGroup(group));
     }
 
     /** One board group as the save wrote it ({@link #boardGroupToJson}), or null when it is malformed. */
@@ -471,8 +476,7 @@ public final class Serializer {
     public static BoardGroup readBoardGroup(@Nullable final JsonElement saved) {
         if (saved == null || !saved.isJsonObject()) return null;
         try {
-            final BoardGroup g = GSON.fromJson(saved, BoardGroup.class);
-            return g != null && g.getId() != null ? g : null;
+            return SaveCodec.readBoardGroup(GsonTrees.map(saved.getAsJsonObject()));
         } catch (final RuntimeException ignored) {
             // A malformed group is left out; its members stay on the board.
             return null;
@@ -785,10 +789,111 @@ public final class Serializer {
     /** One saved drawer, repaired; null when the entry is not a drawer at all (no id). */
     @Nullable
     public static Drawer readDrawer(final JsonElement elem) {
-        final Drawer drawer = GSON.fromJson(elem, Drawer.class);
-        if (drawer == null || drawer.getId() == null) return null;
-        drawer.sanitize();
-        return drawer;
+        if (elem == null || elem.isJsonNull()) return null;
+        return SaveCodec.readDrawer(GsonTrees.map(elem.getAsJsonObject()));
+    }
+
+    /** One note as the save writes it. */
+    @Nonnull
+    public static JsonObject noteToJson(final Note note) {
+        return GsonTrees.object(SaveCodec.note(note));
+    }
+
+    /** One note as the save wrote it ({@link #noteToJson}). */
+    @Nonnull
+    public static Note readNote(final JsonElement saved) {
+        return SaveCodec.readNote(GsonTrees.map(saved.getAsJsonObject()));
+    }
+
+    /** One group (plain or a machine group) as the save writes it. */
+    @Nonnull
+    public static JsonObject groupToJson(final Group group) {
+        return GsonTrees.object(SaveCodec.group(group));
+    }
+
+    /** One group as the save wrote it ({@link #groupToJson}), plain or a machine group by its type. */
+    @Nonnull
+    public static Group readGroup(final JsonElement saved) {
+        return SaveCodec.readGroup(GsonTrees.map(saved.getAsJsonObject()));
+    }
+
+    /** One drawer as the save writes it. */
+    @Nonnull
+    public static JsonObject drawerToJson(final Drawer drawer) {
+        return GsonTrees.object(SaveCodec.drawer(drawer));
+    }
+
+    /**
+     * The plan's own fields as the save writes them (before its {@code graphs}): the active slot, the grid snap and
+     * the summary panel.
+     */
+    @Nonnull
+    static JsonObject planToJson(final Plan plan) {
+        final JsonObject o = new JsonObject();
+        o.addProperty("activeIndex", plan.activeIndex);
+        o.addProperty("snapToGrid", plan.snapToGrid);
+        if (plan.summary != null) o.add("summary", summaryToJson(plan.summary));
+        return o;
+    }
+
+    @Nonnull
+    private static JsonObject summaryToJson(final Summary s) {
+        final java.util.Map<String, Object> o = new java.util.LinkedHashMap<>();
+        o.put("collapsedSummaryFolds", s.collapsedSummaryFolds);
+        if (s.excessChoice != null) o.put("excessChoice", SaveCodec.choiceKey(s.excessChoice));
+        if (s.mode != null) o.put("mode", s.mode.name());
+        if (s.rateUnit != null) o.put("rateUnit", s.rateUnit.name());
+        if (s.sectionOrder != null) {
+            final List<Object> order = new ArrayList<>();
+            for (final int i : s.sectionOrder) order.add(i);
+            o.put("sectionOrder", order);
+        }
+        SaveCodec.graphData(o, s);
+        return GsonTrees.object(o);
+    }
+
+    /** A plan from its own fields as the save wrote them ({@link #planToJson}); its slots are read after. */
+    @Nonnull
+    static Plan jsonToPlan(final JsonObject root) {
+        final Plan plan = new Plan();
+        if (has(root, "activeIndex")) plan.activeIndex = root.get("activeIndex")
+            .getAsInt();
+        if (has(root, "snapToGrid")) plan.snapToGrid = root.get("snapToGrid")
+            .getAsBoolean();
+        if (root.has("summary")) plan.summary = root.get("summary")
+            .isJsonObject() ? jsonToSummary(GsonTrees.map(root.getAsJsonObject("summary"))) : null;
+        return plan;
+    }
+
+    @Nonnull
+    private static Summary jsonToSummary(final java.util.Map<String, Object> o) {
+        final Summary s = new Summary();
+        if (o.get("collapsedSummaryFolds") instanceof final Number d) s.collapsedSummaryFolds = d.intValue();
+        if (o.containsKey("excessChoice")) s.excessChoice = SaveCodec.readChoiceKey(o.get("excessChoice"));
+        if (o.containsKey("mode")) s.mode = enumOf(Summary.Mode.values(), o.get("mode"));
+        if (o.containsKey("rateUnit")) s.rateUnit = enumOf(Summary.RateUnit.values(), o.get("rateUnit"));
+        if (o.containsKey("sectionOrder")) {
+            if (o.get("sectionOrder") instanceof final List<?> l) {
+                s.sectionOrder = new int[l.size()];
+                for (int i = 0; i < l.size(); i++)
+                    s.sectionOrder[i] = l.get(i) instanceof final Number d ? d.intValue() : 0;
+            } else s.sectionOrder = null;
+        }
+        SaveCodec.readGraphData(o, s);
+        return s;
+    }
+
+    /** An enum by its saved name; an unknown or missing one is null, as Gson read it. */
+    @Nullable
+    private static <E extends Enum<E>> E enumOf(final E[] values, @Nullable final Object name) {
+        for (final E e : values) if (e.name()
+            .equals(name)) return e;
+        return null;
+    }
+
+    private static boolean has(final JsonObject o, final String key) {
+        return o.has(key) && !o.get(key)
+            .isJsonNull();
     }
 
     // ── Port helpers ──

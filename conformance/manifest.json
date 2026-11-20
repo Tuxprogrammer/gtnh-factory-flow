@@ -8,6 +8,14 @@
       ],
       "generator": "mod-answers.json: tools/parity/s1/README.md (S1ParityTest, a throwaway JUnit run in a mod checkout)"
     },
+    "codec": {
+      "specifies": "The plan codec (core-codec): canon.json is the canonical spelling and 16-hex SHA-256 sum of JSON values that core-codec's Canon and the mod's cloud-map Canon must give alike (written from the mod's Canon); plan-text.json is what JSON.stringify(JSON.parse(text)) writes for hand-made cases and the SHA-256 of every committed plan written compact, which core-codec's PlanJson must match (written by the website test).",
+      "readers": [
+        "mod: cloud/map/CodecParityTest (Canon against the cloud map's; writes canon.json with -PwriteVectors)",
+        "core-codec: CodecTest (Canon, Sha256, PlanJson)",
+        "website: src/test-support/codec-conformance.test.ts (writes plan-text.json with GTNH_WRITE_GOLDEN=1; checks every wire of plans/mod/export-* names a port its card's recipe has)"
+      ]
+    },
     "core-base": {
       "specifies": "The kernel's value semantics: number-text/number-text-vectors.json is JavaScript's own answer (String(n), JSON.stringify, toFixed, Number(s), Math.round) for doubles given as 64-bit hex, which NumberText and JsMath must spell and read the same; uuid/uuid-vectors.json is java.util.UUID's answers (toString, hashCode, compareTo order, name-based ids, parsed spellings), which Uuid must reproduce. exact-math/exact-math-vectors.json is the JVM's StrictMath (fdlibm; Math for round, rint and ulp) on special and drawn arguments, as 64-bit patterns, which core-base's ExactMath must give bit for bit on the JVM and on both web targets.",
       "readers": [
@@ -137,6 +145,21 @@
       "area": "board",
       "bytes": 29350,
       "sha256": "0fa167c57c6b686b695d8d6125f20fc04ee6a7ac8740e5fab34f9ae1550e1512"
+    },
+    "codec/canon.json": {
+      "area": "codec",
+      "bytes": 2720,
+      "sha256": "3307110eb157d9f575e33eae5ade161ed59e14713d3c6d2d6a696972c8b55a6c"
+    },
+    "codec/plan-text.json": {
+      "area": "codec",
+      "bytes": 5307,
+      "sha256": "ea8503d4f05f01807b429bf9450354667e44560b818ee995561fdbcef3940e9b"
+    },
+    "codec/round-trip/website-only-things.json": {
+      "area": "codec",
+      "bytes": 5341,
+      "sha256": "af62622e96b5eb662c9d9ff41e5f495234d768e001d7f112cfed5d3bcd4ff351"
     },
     "core-base/exact-math/exact-math-vectors.json": {
       "area": "core-base",
@@ -325,28 +348,28 @@
     },
     "plans/mod/export-corpus-benzene.json": {
       "area": "plans",
-      "bytes": 6382,
-      "sha256": "65b68d86fcc4cea090ccb64c4e6fc9f8827ce59108a539d93079ab9bcf3badea"
+      "bytes": 8586,
+      "sha256": "be6063ec4ced2f7f691d55b3e09ca357be71ec175e8e98a17a59ccce79975fef"
     },
     "plans/mod/export-corpus-glass.json": {
       "area": "plans",
-      "bytes": 18980,
-      "sha256": "6dca8bd5a624d2a009d95d17dd3cd8da5f11997c27ef430aa7140667a0b882ba"
+      "bytes": 21180,
+      "sha256": "ca3ec61bc825b14b65a2336b7b6bc1af1e7cdf7e2bc92cd88418bd483b8ae80b"
     },
     "plans/mod/export-corpus-hv-diesel.json": {
       "area": "plans",
-      "bytes": 18134,
-      "sha256": "a0b6526bc3bdf91cb45aebe7920a3ba110ea3be9797dab50c880f04176a6b4ce"
+      "bytes": 20039,
+      "sha256": "0e881c73c0eb044afd47182c40b793951cf0b4fcff86e562cfb91b32da8bbe2d"
     },
     "plans/mod/export-corpus-mv.json": {
       "area": "plans",
-      "bytes": 79306,
-      "sha256": "e789819562d85cffbf3552068f90064bdcabb4a24ae4967576487f828db6172e"
+      "bytes": 81500,
+      "sha256": "ae8275e36188a8667119a0f8a52ef8e3697cdb52e59a80ad7b13f8c4b8e65755"
     },
     "plans/mod/export-corpus-single-card-v2.json": {
       "area": "plans",
-      "bytes": 4307,
-      "sha256": "1cad8a815e1aa6b1f70be9082665e2999e4ddb39dfb443c2a3f325995657b047"
+      "bytes": 6525,
+      "sha256": "04efe1520ec303a14ab35513f75821a98435a886b3fe932a79f4c96ed23a866d"
     },
     "plans/valid/empty.json": {
       "area": "plans",

@@ -14,13 +14,16 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.gtnhplanner.core.base.JsonTree;
 import com.gtnhplanner.core.base.Uuid;
+import com.gtnhplanner.core.codec.SiteCarry;
 import com.gtnhplanner.data.flowchart.BoardGroup;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.Graph;
+import com.gtnhplanner.data.flowchart.GsonTrees;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Note;
 import com.gtnhplanner.data.flowchart.Port;
+import com.gtnhplanner.data.flowchart.Tasks;
 import com.gtnhplanner.data.flowchart.Waypoints;
 import com.gtnhplanner.data.properties.RecipeProperty;
 import com.gtnhplanner.importer.FfPlan;
@@ -206,10 +209,24 @@ public final class PlanExport {
             edges = new JsonArray();
         // Each port's resource, once: edges and drawers name them as the recipes do.
         final Map<Port<?>, Res> res = new HashMap<>();
+        // A shared machine is one card on the website: its first recipe's card, the others its extraRecipes, each
+        // later recipe's ports named r<n>: (the website's sections). Every recipe is still written out.
+        final Sections sections = Sections.of(g);
+        final Map<Uuid, JsonObject> hostNodes = new HashMap<>();
         for (final Node n : g.getNodes()) {
             final Card card = card(n, "gtnhplanner:" + n.id, world, world.machines(n));
             res.putAll(card.ports());
             recipes.add(card.recipe());
+            final Sections.At at = sections.at(n.id);
+            if (at != null && at.section() > 0) {
+                final JsonObject host = hostNodes.get(at.host());
+                if (host != null) section(host, card.node(), at.section(), "gtnhplanner:" + n.id);
+                continue;
+            }
+            if (at != null) {
+                hostNodes.put(n.id, card.node());
+                sections.pin(card.node(), n);
+            }
             inGroup(g, card.node(), n.group, n.x, n.y);
             nodes.add(card.node());
         }
@@ -218,48 +235,53 @@ public final class PlanExport {
             if (from == null || to == null || e.sourceOutputIndex >= from.outputs.size()) continue;
             final Res r = res.get(from.outputs.get(e.sourceOutputIndex));
             if (r == null) continue;
-            edges.add(edge(e.id.toString(), from.id.toString(), to.id.toString(), r, e.waypoints));
+            edges.add(
+                sections.prefix(
+                    edge(e.id.toString(), sections.card(from.id), sections.card(to.id), r, e.waypoints),
+                    from.id,
+                    to.id));
         }
         for (final Drawer d : g.getDrawers()) {
-            final Res r = resource(d, world);
-            if (r == null) continue;
+            final Res own = resource(d, world);
+            if (own == null) continue;
             final boolean source = d.getKind()
                 .linksInputs();
+            // A drawer's wires name its resource as the port each lands on does (the recipe's own spelling), so the
+            // website finds the port; the drawer itself as its first port names it.
+            final Res r = linkResource(g, d, own, res);
             final JsonObject storage = storage(d, r);
             inGroup(g, storage, d.getGroup(), d.getX(), d.getY());
             storages.add(storage);
+            final String drawerId = d.getId()
+                .toString();
             for (final Drawer.Link link : d.getLinks()) {
                 final Node n = g.nodes.get(link.nodeId());
                 if (n == null) continue;
                 final String id = d.getId() + ":" + link.nodeId() + ":" + link.portIndex();
+                final Res lr = portResource(n, link.portIndex(), source, res, own);
+                final String card = sections.card(n.id);
                 edges.add(
-                    source ? edge(
-                        id,
-                        d.getId()
-                            .toString(),
-                        n.id.toString(),
-                        r,
-                        link.waypoints())
-                        : edge(
-                            id,
-                            n.id.toString(),
-                            d.getId()
-                                .toString(),
-                            r,
-                            link.waypoints()));
+                    sections.prefix(
+                        source ? edge(id, drawerId, card, lr, link.waypoints())
+                            : edge(id, card, drawerId, lr, link.waypoints()),
+                        source ? null : n.id,
+                        source ? n.id : null));
             }
             // A buffer's users: a wire from it to each, so the site reads it as fed and drawn from (a buffer).
             for (final Drawer.Link link : d.getTakers()) {
                 final Node n = g.nodes.get(link.nodeId());
                 if (n == null) continue;
+                final Res lr = portResource(n, link.portIndex(), true, res, own);
                 edges.add(
-                    edge(
-                        d.getId() + ":" + link.nodeId() + ":in:" + link.portIndex(),
-                        d.getId()
-                            .toString(),
-                        n.id.toString(),
-                        r,
-                        link.waypoints()));
+                    sections.prefix(
+                        edge(
+                            d.getId() + ":" + link.nodeId() + ":in:" + link.portIndex(),
+                            drawerId,
+                            sections.card(n.id),
+                            lr,
+                            link.waypoints()),
+                        null,
+                        n.id));
             }
         }
         final JsonArray annotations = new JsonArray();
@@ -298,7 +320,164 @@ public final class PlanExport {
         final JsonObject meta = new JsonObject();
         meta.addProperty("source", "GTNH Planner");
         p.add("metadata", meta);
-        return p;
+        // The board's setting pins and leftover splits, within the website's caps, and its task board.
+        final JsonObject pins = capped(com.gtnhplanner.cloud.map.PlanPins.exportPins(g, world), MAX_SETTING_PINS);
+        if (pins.entrySet()
+            .size() > 0) p.add("settingPins", pins);
+        final JsonObject shares = sharesCapped(com.gtnhplanner.cloud.map.PlanPins.exportShares(g, sections::bearer));
+        if (shares.entrySet()
+            .size() > 0) p.add("spareShares", shares);
+        Tasks.write(g, p, true);
+        // What a website plan held that the board has no place for, back as it came (core-codec SiteCarry).
+        if (g.site.isEmpty()) return p;
+        final Map<String, Object> tree = GsonTrees.map(p);
+        SiteCarry.writeBack(tree, g.site);
+        return GsonTrees.object(tree);
+    }
+
+    /** The website's caps ({@code plan.schema.json}): setting pins per plan, leftovers, bearers per leftover. */
+    static final int MAX_SETTING_PINS = 512, MAX_SPARES = 1024, MAX_BEARERS = 64;
+
+    private static JsonObject capped(final JsonObject o, final int max) {
+        if (o.entrySet()
+            .size() <= max) return o;
+        final JsonObject out = new JsonObject();
+        for (final Map.Entry<String, com.google.gson.JsonElement> e : o.entrySet()) {
+            if (out.entrySet()
+                .size() >= max) break;
+            out.add(e.getKey(), e.getValue());
+        }
+        return out;
+    }
+
+    private static JsonObject sharesCapped(final JsonObject shares) {
+        final JsonObject out = new JsonObject();
+        for (final Map.Entry<String, com.google.gson.JsonElement> e : capped(shares, MAX_SPARES).entrySet()) out.add(
+            e.getKey(),
+            e.getValue()
+                .isJsonObject()
+                    ? capped(
+                        e.getValue()
+                            .getAsJsonObject(),
+                        MAX_BEARERS)
+                    : e.getValue());
+        return out;
+    }
+
+    /** The resource a drawer's link names: as the port it lands on names it, else the drawer's own. */
+    private static Res portResource(final Node n, final int port, final boolean input, final Map<Port<?>, Res> res,
+        final Res own) {
+        if (own == EU) return own;
+        final List<Port<?>> ports = input ? n.inputs : n.outputs;
+        final Res r = port >= 0 && port < ports.size() ? res.get(ports.get(port)) : null;
+        return r != null && r.kind()
+            .equals(own.kind()) ? r : own;
+    }
+
+    /** A drawer's resource as the port of its first link names it, else its own. */
+    private static Res linkResource(final Graph g, final Drawer d, final Res own, final Map<Port<?>, Res> res) {
+        if (own == EU) return own;
+        final boolean source = d.getKind()
+            .linksInputs();
+        for (final Drawer.Link link : d.getLinks()) {
+            final Node n = g.nodes.get(link.nodeId());
+            if (n != null) return portResource(n, link.portIndex(), source, res, own);
+        }
+        for (final Drawer.Link link : d.getTakers()) {
+            final Node n = g.nodes.get(link.nodeId());
+            if (n != null) return portResource(n, link.portIndex(), true, res, own);
+        }
+        return own;
+    }
+
+    /**
+     * A shared machine's later recipe onto its first recipe's card: an {@code extraRecipes} entry (with its picks), its
+     * port rates under the section's handles.
+     */
+    private static void section(final JsonObject host, final JsonObject node, final int section,
+        final String recipeId) {
+        final JsonArray extra = host.has("extraRecipes") ? host.getAsJsonArray("extraRecipes") : new JsonArray();
+        final JsonObject x = new JsonObject();
+        x.addProperty("recipeId", recipeId);
+        if (node.has("recipeInputOverrides")) x.add("recipeInputOverrides", node.get("recipeInputOverrides"));
+        extra.add(x);
+        host.add("extraRecipes", extra);
+        if (node.has("portRates")) {
+            final JsonObject rates = host.has("portRates") ? host.getAsJsonObject("portRates") : new JsonObject();
+            for (final Map.Entry<String, com.google.gson.JsonElement> e : node.getAsJsonObject("portRates")
+                .entrySet()) rates.add("r" + section + ":" + e.getKey(), e.getValue());
+            host.add("portRates", rates);
+        }
+    }
+
+    /** The board's shared machines (machine groups drawn as one card): which card each recipe is, and its section. */
+    private record Sections(Map<Uuid, At> of, Map<Uuid, com.gtnhplanner.data.flowchart.MachineGroup> groups) {
+
+        record At(Uuid host, int section) {}
+
+        static Sections of(final Graph g) {
+            final Map<Uuid, At> of = new HashMap<>();
+            final Map<Uuid, com.gtnhplanner.data.flowchart.MachineGroup> groups = new HashMap<>();
+            for (final com.gtnhplanner.data.flowchart.Group grp : g.getGroups()) {
+                if (!(grp instanceof final com.gtnhplanner.data.flowchart.MachineGroup m) || !m.isShared()) continue;
+                final List<Uuid> sections = new java.util.ArrayList<>();
+                for (final Uuid id : m.getSections()) if (g.nodes.containsKey(id)) sections.add(id);
+                if (sections.size() < 2) continue;
+                for (int i = 0; i < sections.size(); i++) of.putIfAbsent(sections.get(i), new At(sections.get(0), i));
+                groups.put(sections.get(0), m);
+            }
+            return new Sections(of, groups);
+        }
+
+        @Nullable
+        At at(final Uuid node) {
+            return of.get(node);
+        }
+
+        /** The website card a board card is: its shared machine's first recipe's, else its own. */
+        String card(final Uuid node) {
+            final At at = of.get(node);
+            return (at == null ? node : at.host()).toString();
+        }
+
+        /** A leftover's bearer key with a later recipe's card named as the website names it ({@code <card>#r<n>}). */
+        String bearer(final String card) {
+            try {
+                final At at = of.get(Uuid.fromString(card));
+                return at == null || at.section() == 0 ? card : at.host() + "#r" + at.section();
+            } catch (final IllegalArgumentException e) {
+                return card;
+            }
+        }
+
+        /** A wire with each end that is a later recipe's port given its section's {@code r<n>:} prefix. */
+        JsonObject prefix(final JsonObject edge, @Nullable final Uuid source, @Nullable final Uuid target) {
+            section(edge, "sourceHandle", source);
+            section(edge, "targetHandle", target);
+            return edge;
+        }
+
+        private void section(final JsonObject edge, final String field, @Nullable final Uuid node) {
+            final At at = node == null ? null : of.get(node);
+            if (at == null || at.section() == 0 || !edge.has(field)) return;
+            edge.addProperty(
+                field,
+                "r" + at.section()
+                    + ":"
+                    + edge.get(field)
+                        .getAsString());
+        }
+
+        /** The shared machine's set count and rule on its card, as the website keeps a shared machine's pin. */
+        void pin(final JsonObject card, final Node host) {
+            final com.gtnhplanner.data.flowchart.MachineGroup m = groups.get(host.id);
+            if (m == null) return;
+            card.remove("solvePin");
+            card.remove("solvePinExact");
+            if (!m.isPinned()) return;
+            card.addProperty("solvePin", m.machineCount());
+            if (m.isExact()) card.addProperty("solvePinExact", true);
+        }
     }
 
     private static JsonObject recipe(final Node n, final String id, final World world, final Map<Port<?>, Res> res,
@@ -884,7 +1063,10 @@ public final class PlanExport {
             if (!settings.entrySet()
                 .isEmpty()) o.add("machineConfigTiers", settings);
         }
-        if (n.isMachineCountFixed()) o.addProperty("solvePin", count);
+        // The count as the player set it, never the solve's answer (parity decision: posts and links carry set counts).
+        if (n.isMachineCountFixed()) o.addProperty(
+            "solvePin",
+            Math.max(0, n.machineConfig.machineCount()) / (com.gtnhplanner.power.FluidTank.is(n) ? 20.0 : 1.0));
         // Exactly only: a set count without it is Up to, the website's default.
         if (n.isMachineCountExact()) o.addProperty("solvePinExact", true);
         o.add("position", position(n.x, n.y));

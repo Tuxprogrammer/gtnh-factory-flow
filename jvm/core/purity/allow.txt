@@ -34,7 +34,7 @@ core/core-machines/src/main/java/com/gtnhplanner/machines/CropsNh.java hash-orde
 core/core-machines/src/main/java/com/gtnhplanner/machines/MobDrops.java hash-order:2 two constant sets of modifier names, asked contains
 core/core-machines/src/main/java/com/gtnhplanner/machines/web/Fusion.java hash-order:2 machines and startup thresholds by name or recipe key, read by get
 core/core-machines/src/main/java/com/gtnhplanner/machines/web/HandlerData.java hash-order:3 maps and controls by id, read by get (warm-up reads the maps in any order and counts them), and a membership set
-core/core-machines/src/main/java/com/gtnhplanner/machines/web/MachineReadout.java hash-order:2 kept recipes and control tables by id, read by get
+core/core-machines/src/main/java/com/gtnhplanner/machines/web/MachineReadout.java hash-order:3 kept recipes, control tables and handlers by id, read by get
 core/core-machines/src/main/java/com/gtnhplanner/machines/web/MachineTable.java hash-order:1 behaviours by normalised name, put in table order and read by get
 core/core-machines/src/main/java/com/gtnhplanner/machines/web/RecipeRules.java hash-order:3 constant tables and sets of machine names, read by get and contains
 core/core-model/src/main/java/com/gtnhplanner/core/model/FluidContainers.java hash-order:1 a constant set, asked contains

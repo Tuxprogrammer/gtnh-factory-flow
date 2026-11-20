@@ -16,8 +16,9 @@ import type { CoreExports, CoreModuleName } from "./exports.generated";
 import { coreIfLoaded, loadCore, moduleState } from "./loader";
 
 export const ADOPT = {
-  // machines: per-card machine, bee and crop readouts (MachinesExports).
-  machines: false,
+  // machines: per-card machine, bee and crop readouts (MachinesExports), for a card whose recipe the core keeps (a
+  // recipe crosses in idle time; until then the TypeScript answers: src/lib/core/machines.ts).
+  machines: true,
   // power: the power planner's sources and models (PowerExports).
   power: true,
   // layout: the wire router and Arrange (LayoutExports).

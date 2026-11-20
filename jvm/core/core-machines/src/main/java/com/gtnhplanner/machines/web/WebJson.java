@@ -74,6 +74,10 @@ public final class WebJson {
         return n;
     }
 
+    /**
+     * A port. The website sends a recipe's ports with only these keys (PORT_KEYS in src/lib/core/machines.ts): a key read
+     * here goes into that list too.
+     */
     static Web.Resource resource(final Map<String, Object> o) {
         final Web.Resource r = new Web.Resource();
         r.kind = JsonTree.str(o, "kind");

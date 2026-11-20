@@ -13,6 +13,7 @@ import type { ProductionGroup, PoolResourceRule } from "@/lib/model/types";
 
 import { normalizeFullFarms } from "@/lib/model/full-farms";
 import { ownsItsRecipe } from "@/lib/model/owns-recipe";
+import { sameRecipeOr } from "@/lib/model/same-recipe";
 
 import { carryMachineVoltage, normalizeProjectHatchInputs } from "@/lib/solver/hatch-input";
 
@@ -1372,7 +1373,7 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
         ...state.project,
         recipes: state.project.recipes.map((recipe) => {
           const refreshedRecipe = refreshedFor(recipe.id);
-          return refreshedRecipe ? mergeRefreshedRecipe(refreshedRecipe, recipe) : recipe;
+          return refreshedRecipe ? sameRecipeOr(recipe, mergeRefreshedRecipe(refreshedRecipe, recipe)) : recipe;
         }),
         nodes: state.project.nodes.map((node) => {
           const recipe = state.project.recipes.find((entry) => entry.id === node.recipeId);

@@ -35,10 +35,11 @@ import {
   cardMachineMath,
   cardMachineMathCounts,
   clearCardMachineMath,
+  keepRecipe,
   resetCardMachineMathCounts,
 } from "./machines";
-import { withAdopt } from "./adopt";
-import { loadCore, resetCoreForTests, wasmGcSupported } from "./loader";
+import { setAdoptOverride, withAdopt } from "./adopt";
+import { core, loadCore, resetCoreForTests, wasmGcSupported } from "./loader";
 
 // The card's one readout (machines.ts `cardMachineMath`): the same figures every consumer computed for itself before,
 // computed once per (recipe object, node content, game rates), and never stale when any of those changes.
@@ -127,6 +128,11 @@ function figuresOf(recipe: Recipe, node: FactoryNode) {
     display: applyCardOutputMultipliers(stripBeeFrameSlotInputs(m.effectiveRecipe), m),
   };
 }
+
+// These tests count the TypeScript's computations: the machines area is off here (it is on in production, where a
+// loaded core would take over cards between tests), and the last block turns it on for the core path.
+beforeAll(() => setAdoptOverride("machines", false));
+afterAll(() => setAdoptOverride("machines", undefined));
 
 const ratesBefore = getGameRates();
 afterEach(() => {
@@ -392,6 +398,12 @@ describe.skipIf(!corePresent)(
             before = figuresAsBefore(input.recipe, input.node);
           } catch {
             return;
+          }
+          // The core answers for a resident recipe (until it is, the TypeScript does: machines-resident.test.ts).
+          try {
+            keepRecipe(core(), input.recipe);
+          } catch {
+            // Left to the TypeScript, as the readout leaves it.
           }
           resetCardMachineMathCounts();
           const got = figuresOf(input.recipe, input.node);

@@ -287,7 +287,7 @@ describe("plan solve shadow: the website's engine and the compiled core agree", 
     beforeAll(async () => {
       await initLpEngine();
       resetCoreForTests();
-      await loadCore();
+      await loadCore({ modules: ["solver"] });
       // The solve Worker's own module, in this thread: its `self` is a stand-in that hands its replies back.
       let reply: ((r: WorkerReply) => void) | undefined;
       const scope: {

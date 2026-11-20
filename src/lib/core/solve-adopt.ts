@@ -51,8 +51,8 @@ import { coreInfo, loadCore, wasmGcSupported, type CoreTarget, type LoadOptions 
  */
 export const SOLVE_TARGETS: readonly CoreTarget[] = ["wasm-gc"];
 
-/** The solver's module (the split build loads it alone; a single-module build ignores the option and loads it all). */
-const SOLVER_LOAD = { modules: ["solver"] } as unknown as LoadOptions;
+/** The solver's module: the split build loads it alone, on first use, inside the solve Worker. */
+const SOLVER_LOAD: LoadOptions = { modules: ["solver"] };
 
 /** Which target the solver module runs on, once loaded. */
 export function solverTarget(): CoreTarget | null {

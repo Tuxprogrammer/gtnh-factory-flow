@@ -9,6 +9,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.base.Format;
 import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.core.base.RateUnit;
@@ -323,7 +324,7 @@ public final class CardViews {
 
     /** "42.5%": a share of one as a percent, two decimals at most (JavaScript's spelling). */
     static String percent(final double share) {
-        return NumberText.of(Math.round(share * 10000) / 100.0) + "%";
+        return NumberText.of(ExactMath.round(share * 10000) / 100.0) + "%";
     }
 
     /** A per-second power flow under the power dial, in the card's own tier (a generator's EU row). */
@@ -512,7 +513,7 @@ public final class CardViews {
 
     /** The set count as the card prints it: up to three decimals, no trailing zeros. */
     public static String setText(final double value) {
-        return NumberText.of(Math.round(value * 1000) / 1000.0);
+        return NumberText.of(ExactMath.round(value * 1000) / 1000.0);
     }
 
     /** A rule's word on the card: "Any", "Up to", "Exactly". */
@@ -763,7 +764,7 @@ public final class CardViews {
         @Nullable final UpToLoop.Kind loop, @Nullable final Idle idle, @Nullable final CardInput.Turbine turbine,
         @Nullable final String turbineTier, final Dials dials, final TextMeasure measure) {
         if (turbine != null && loop == null) {
-            final String pct = Math.round(100 * turbine.flow() / turbine.optimal()) + "%";
+            final String pct = ExactMath.round(100 * turbine.flow() / turbine.optimal()) + "%";
             final String eu = turbineEuText(turbine.euMade(), turbineTier, dials);
             final String many = turbine.turbines() > 1 ? t("foot.flow.many", Integer.toString(turbine.turbines())) + " "
                 : "";
@@ -807,8 +808,8 @@ public final class CardViews {
                 : null;
             // The bar's end is the count, or what the line wants when that is more.
             final double end = wants != null ? wants : capacity;
-            final int fill = (int) Math.round(FOOT_TRACK * share(reached, end));
-            final int ghostLeft = (int) Math.round(FOOT_TRACK * share(capacity, end));
+            final int fill = (int) ExactMath.round(FOOT_TRACK * share(reached, end));
+            final int ghostLeft = (int) ExactMath.round(FOOT_TRACK * share(capacity, end));
             final String frac = Format.solvedMachines(reached) + " / " + Format.solvedMachines(end);
             final String resource = reason == UpToReason.STARVED ? resourceName(upTo.resourceKey(), inputs)
                 : reason == UpToReason.CLOGGED || reason == UpToReason.UNUSED ? resourceName(

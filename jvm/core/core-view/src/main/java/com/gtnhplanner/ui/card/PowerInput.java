@@ -4,6 +4,7 @@ import java.util.function.IntFunction;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.view.card.CardTiers;
 
 /**
@@ -72,9 +73,9 @@ public final class PowerInput {
         int overclocks = 0, perfect = 0;
         if (baseEuPerTick != null && baseEuPerTick > 0 && baseDurationTicks != null) {
             final double perRun = (double) now.eut() / (baseEuPerTick.doubleValue() * now.parallels());
-            overclocks = Math.max(0, (int) Math.round(Math.log(perRun) / Math.log(4)));
+            overclocks = Math.max(0, (int) ExactMath.round(ExactMath.log(perRun) / ExactMath.log(4)));
             final double quicker = baseDurationTicks / now.duration();
-            final int halvings = Math.max(0, (int) Math.round(Math.log(quicker) / Math.log(2)));
+            final int halvings = Math.max(0, (int) ExactMath.round(ExactMath.log(quicker) / ExactMath.log(2)));
             perfect = Math.max(0, Math.min(overclocks, halvings - overclocks));
         }
         return new Facts(amps, tier, volt, now, nextAmps, next, overclocks, perfect, machines, demand, shared);

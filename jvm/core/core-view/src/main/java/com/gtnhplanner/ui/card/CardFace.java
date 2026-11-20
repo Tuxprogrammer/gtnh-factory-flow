@@ -8,6 +8,7 @@ import java.util.function.ToIntFunction;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.base.Float32Ops;
 import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.core.base.Uuid;
@@ -60,7 +61,7 @@ public final class CardFace {
         final UpToReadout upTo = rule == PinRule.UP_TO ? readout : null;
         final double value = upTo != null ? Math.max(0, upTo.reached()) : solved;
         final String note = pinned ? ""
-            : unset ? SET_COUNT : crop ? Math.round(value) == 1 ? "crop planted" : "crops planted" : "";
+            : unset ? SET_COUNT : crop ? ExactMath.round(value) == 1 ? "crop planted" : "crops planted" : "";
         return new Count(
             (crop ? "" : "×") + Fmt.machines(value),
             value,
@@ -83,7 +84,7 @@ public final class CardFace {
     public static String setText(final double value) {
         if (!(value > 0) || Double.isInfinite(value)) return "0";
         // The website's String(Math.round(value * 1000) / 1000): JavaScript's spelling of the rounded number.
-        return NumberText.of(Math.round(value * 1000) / 1000.0);
+        return NumberText.of(ExactMath.round(value * 1000) / 1000.0);
     }
 
     /**
@@ -93,7 +94,7 @@ public final class CardFace {
     @Nullable
     public static Long wheel(final PinRule rule, final double set, final double value, final int direction) {
         if (rule == PinRule.ANY || !(set > 0)) return (long) Math.max(1, Math.ceil(value - 0.000001));
-        final long next = Math.round(set) + direction;
+        final long next = ExactMath.round(set) + direction;
         return next >= 1 ? next : null;
     }
 
@@ -200,8 +201,8 @@ public final class CardFace {
         // The bar ends at the count, or at what the line wants when that is more.
         final double end = wants != null ? wants : capacity;
         final double share = share(reached, end);
-        final int fill = (int) Math.round(FOOT_TRACK * share);
-        final int ghostLeft = (int) Math.round(FOOT_TRACK * share(capacity, end));
+        final int fill = (int) ExactMath.round(FOOT_TRACK * share);
+        final int ghostLeft = (int) ExactMath.round(FOOT_TRACK * share(capacity, end));
         final int ghostWidth = wants != null ? FOOT_TRACK - ghostLeft : 0;
         final String frac = Fmt.machines(reached) + " / " + Fmt.machines(end);
         final String resource = reason == UpToReason.STARVED || reason == UpToReason.CLOGGED
@@ -402,9 +403,9 @@ public final class CardFace {
     static int mix(final int a, final int b, final float share) {
         final float s = Math.max(0, Math.min(1, share));
         final float rest = Float32Ops.sub(1, s);
-        final int r = Math.round(channel(a >> 16 & 0xFF, b >> 16 & 0xFF, s, rest));
-        final int g = Math.round(channel(a >> 8 & 0xFF, b >> 8 & 0xFF, s, rest));
-        final int bl = Math.round(channel(a & 0xFF, b & 0xFF, s, rest));
+        final int r = (int) ExactMath.round(channel(a >> 16 & 0xFF, b >> 16 & 0xFF, s, rest));
+        final int g = (int) ExactMath.round(channel(a >> 8 & 0xFF, b >> 8 & 0xFF, s, rest));
+        final int bl = (int) ExactMath.round(channel(a & 0xFF, b & 0xFF, s, rest));
         return 0xFF000000 | r << 16 | g << 8 | bl;
     }
 

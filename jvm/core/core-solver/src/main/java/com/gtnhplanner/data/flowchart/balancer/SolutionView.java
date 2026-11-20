@@ -1,8 +1,6 @@
 package com.gtnhplanner.data.flowchart.balancer;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -12,6 +10,8 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 import com.gtnhplanner.core.base.CoreSettings;
+import com.gtnhplanner.core.base.JavaHashMap;
+import com.gtnhplanner.core.base.JavaHashSet;
 import com.gtnhplanner.core.base.Uuid;
 
 /**
@@ -87,7 +87,7 @@ public final class SolutionView {
         final double dust = ctx.heuristics.numerics().dust;
         final SolveContext.DustScales scales = ctx.dustScales(ctx.extents(), ctx.flows(), ctx.externals());
         // An idle Up to machine is UNUSED in its read-out, never "(set count)" (docs/design/up-to.md, "Anchoring").
-        final Set<Integer> upToMachines = new HashSet<>();
+        final Set<Integer> upToMachines = new JavaHashSet<>();
         for (final int p : ctx.upToPools) upToMachines.addAll(
             model.pools.get(p)
                 .machines());
@@ -190,7 +190,7 @@ public final class SolutionView {
         // the reader, and the message that describes it is identical either way.
         final Set<Note> result = new LinkedHashSet<>();
         // A port a source drawer supplies is imported on purpose: the player said where it comes from.
-        final Set<PortRef> supplied = new HashSet<>();
+        final Set<PortRef> supplied = new JavaHashSet<>();
         for (final ModelData.DrawerRow row : model.drawers) {
             if (row.kind()
                 .linksInputs()) supplied.addAll(row.links());
@@ -244,9 +244,9 @@ public final class SolutionView {
 
         private final ModelData model;
         /** Per ingredient, the connected output ports making it, in port order. */
-        private final Map<Integer, List<Integer>> connected = new HashMap<>();
+        private final Map<Integer, List<Integer>> connected = new JavaHashMap<>();
         /** Per ingredient, the first machine making it at an output with no edge. */
-        private final Map<Integer, ModelData.Machine> loose = new HashMap<>();
+        private final Map<Integer, ModelData.Machine> loose = new JavaHashMap<>();
 
         Producers(final ModelData model) {
             this.model = model;

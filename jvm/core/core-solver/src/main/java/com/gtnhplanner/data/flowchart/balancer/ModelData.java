@@ -2,13 +2,13 @@ package com.gtnhplanner.data.flowchart.balancer;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.JavaHashMap;
 import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.DrawerTypes;
 
@@ -147,7 +147,7 @@ public final class ModelData {
     }
 
     public final List<Machine> machines = new ArrayList<>();
-    public final Map<Uuid, Integer> machineIndex = new HashMap<>();
+    public final Map<Uuid, Integer> machineIndex = new JavaHashMap<>();
     public final List<EdgeData> edges = new ArrayList<>();
     /**
      * How many of {@link #edges} are the plan's own wires; the rest, after them, are the buffers' edges
@@ -157,7 +157,7 @@ public final class ModelData {
     /** Per drawer of the input, in its order, the buffer edges it drew (empty for any other kind). */
     private final List<int[]> bufferEdges = new ArrayList<>();
     public final List<ConnectedPort> connectedPorts = new ArrayList<>();
-    public final Map<Long, Integer> portLookup = new HashMap<>();
+    public final Map<Long, Integer> portLookup = new JavaHashMap<>();
     public final List<Gate> gates = new ArrayList<>();
     public final List<Pool> pools = new ArrayList<>();
     public final List<DrawerRow> drawers = new ArrayList<>();
@@ -225,7 +225,7 @@ public final class ModelData {
      */
     private int[] steps() {
         final int n = machines.size();
-        final Map<Integer, Integer> networkNode = new HashMap<>();
+        final Map<Integer, Integer> networkNode = new JavaHashMap<>();
         for (int p = 0; p < connectedPorts.size(); p++)
             networkNode.putIfAbsent(portComponent[p], n + networkNode.size());
         final int nodes = n + networkNode.size();
@@ -469,7 +469,7 @@ public final class ModelData {
         }
         portGate = new int[n];
         portComponent = new int[n];
-        final Map<Long, Integer> gateLookup = new HashMap<>();
+        final Map<Long, Integer> gateLookup = new JavaHashMap<>();
         for (int p = 0; p < n; p++) {
             final boolean input = connectedPorts.get(p)
                 .input();

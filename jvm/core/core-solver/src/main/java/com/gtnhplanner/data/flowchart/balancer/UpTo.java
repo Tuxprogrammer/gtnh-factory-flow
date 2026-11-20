@@ -1,11 +1,12 @@
 package com.gtnhplanner.data.flowchart.balancer;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.gtnhplanner.core.base.JavaHashSet;
 
 /**
  * The Up to rule in the solver (docs/design/up-to.md; the website's {@code guard.ts} and {@code push.ts}): the guard
@@ -44,12 +45,12 @@ public final class UpTo {
     /** The connected ports on an Up to machine's wire networks that no drawer is linked to, ascending. */
     static int[] guardedPorts(final SolveContext ctx) {
         final ModelData model = ctx.model;
-        final Set<Integer> upTo = new HashSet<>();
+        final Set<Integer> upTo = new JavaHashSet<>();
         for (final int p : ctx.upToPools) upTo.addAll(
             model.pools.get(p)
                 .machines());
         if (upTo.isEmpty()) return new int[0];
-        final Set<Integer> networks = new HashSet<>();
+        final Set<Integer> networks = new JavaHashSet<>();
         for (int p = 0; p < model.connectedPorts.size(); p++) {
             if (upTo.contains(
                 model.connectedPorts.get(p)
@@ -194,7 +195,7 @@ public final class UpTo {
             final List<Integer> candidates = new ArrayList<>();
             for (final int p : active) if (levelOf(ctx, p, lifted.point().extents) <= least + tol) candidates.add(p);
             final List<Integer> activeNow = active;
-            final Set<Integer> rises = new HashSet<>();
+            final Set<Integer> rises = new JavaHashSet<>();
             if (candidates.size() > 1) {
                 // All of them at once first: each is at least the level, so if their sum cannot pass k levels by the
                 // tolerance, none of them can rise (one model where k would do, the common case of cards that sit

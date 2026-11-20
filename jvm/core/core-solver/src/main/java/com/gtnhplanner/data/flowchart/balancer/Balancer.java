@@ -2,8 +2,6 @@ package com.gtnhplanner.data.flowchart.balancer;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,6 +16,8 @@ import javax.annotation.Nullable;
 import com.gtnhplanner.core.base.CoreSettings;
 import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.base.Float32Ops;
+import com.gtnhplanner.core.base.JavaHashMap;
+import com.gtnhplanner.core.base.JavaHashSet;
 import com.gtnhplanner.core.base.Log;
 import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.balancer.alternatives.Alternative;
@@ -215,12 +215,12 @@ public final class Balancer {
         final double[] extents = new double[model.machines.size()];
         final double[] flows = new double[model.edges.size()];
         final double[] externals = new double[model.connectedPorts.size()];
-        final Map<Uuid, Integer> edgeIndex = new HashMap<>();
+        final Map<Uuid, Integer> edgeIndex = new JavaHashMap<>();
         for (int e = 0; e < model.edges.size(); e++) edgeIndex.put(
             model.edges.get(e)
                 .id(),
             e);
-        final Set<Integer> support = new HashSet<>();
+        final Set<Integer> support = new JavaHashSet<>();
         final List<Alternative> options = new ArrayList<>();
         final List<Note> choiceNotes = new ArrayList<>();
         final List<Spares.Leftover> spares = new ArrayList<>();
@@ -346,11 +346,11 @@ public final class Balancer {
     public static final class Cache {
 
         /** The islands of the last solve. */
-        private Map<Object, Piece> last = new HashMap<>();
+        private Map<Object, Piece> last = new JavaHashMap<>();
         /** The islands of the solve before it, so undo finds its answer. */
-        private Map<Object, Piece> before = new HashMap<>();
+        private Map<Object, Piece> before = new JavaHashMap<>();
         /** The islands of the solve under way. */
-        private Map<Object, Piece> current = new HashMap<>();
+        private Map<Object, Piece> current = new JavaHashMap<>();
         /** With a capacity: the islands used last, the least recently used first (kept in insertion order). */
         @Nullable
         private final LinkedHashMap<Object, Piece> recent;
@@ -409,7 +409,7 @@ public final class Balancer {
                 before = last;
                 last = current;
             }
-            current = new HashMap<>();
+            current = new JavaHashMap<>();
         }
 
         private static Object keyOf(final SolveInput island) {
@@ -472,7 +472,7 @@ public final class Balancer {
                 new Answer.Solved(view, new Alternatives(ctx.keyOf(ctx.support()), List.of(), true, List.of())));
         }
         final int notesBefore = ctx.notes.size(), stageNotesBefore = ctx.stageNotes.size();
-        final Map<ChoiceKey, StageOutcome> points = new HashMap<>();
+        final Map<ChoiceKey, StageOutcome> points = new JavaHashMap<>();
         final Alternatives alternatives = Enumerator.enumerate(ctx, points);
         final StageOutcome own = ctx.point();
         final List<Spares.Leftover> spares = Spares.apply(ctx, alternatives, points, input.spares());
@@ -589,7 +589,7 @@ public final class Balancer {
      */
     @Nonnull
     private static Map<Uuid, Double> configuredCounts(final SolveInput input) {
-        final Map<Uuid, Double> counts = new HashMap<>();
+        final Map<Uuid, Double> counts = new JavaHashMap<>();
         for (final SolveInput.Machine machine : input.machines()) {
             counts.put(machine.id(), machine.machineCount());
         }
@@ -606,8 +606,8 @@ public final class Balancer {
     private static BalanceResult buildResultFractional(final SolveInput input, final Map<Uuid, Double> machineCounts,
         final List<Note> notes, @Nullable final SolutionView auto, @Nullable final Alternatives alternatives,
         final DrawerReadout drawers) {
-        final Map<Uuid, NodeBalance> nodeBalances = new HashMap<>();
-        final Map<Object, Long> propertyTotals = new HashMap<>();
+        final Map<Uuid, NodeBalance> nodeBalances = new JavaHashMap<>();
+        final Map<Object, Long> propertyTotals = new JavaHashMap<>();
         double totalOps = 0;
         double totalDuration = 0;
 
@@ -622,7 +622,7 @@ public final class Balancer {
             final long totalEnergy = ExactMath.round(eutPerOp * durPerOp * count);
             if (durPerOp > totalDuration) totalDuration = durPerOp;
 
-            final Map<Integer, Float> effOuts = new HashMap<>(
+            final Map<Integer, Float> effOuts = new JavaHashMap<>(
                 machine.outputs()
                     .size());
             for (int i = 0; i < machine.outputs()
@@ -637,7 +637,7 @@ public final class Balancer {
                 effOuts.put(i, total);
             }
 
-            final Map<Integer, Float> effIns = new HashMap<>(
+            final Map<Integer, Float> effIns = new JavaHashMap<>(
                 machine.inputs()
                     .size());
             for (int i = 0; i < machine.inputs()

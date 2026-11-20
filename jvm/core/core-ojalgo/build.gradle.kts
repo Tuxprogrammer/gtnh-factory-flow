@@ -1,7 +1,9 @@
 // ojAlgo as the core uses it: the published jar with every call of a java.lang.Math or StrictMath function that
-// core-base's ExactMath has (log10 and pow in its scaling and tolerances, among others) sent to ExactMath, and every
-// BigDecimal.valueOf(double) sent to core-base's NumberText.javaDecimal, by RewriteMath.java beside this file (JDK 25
-// class-file API). On the JVM those functions are processor- and JDK-specific code that can differ from StrictMath in
+// core-base's ExactMath has (log10 and pow in its scaling and tolerances, among others) sent to ExactMath, every
+// BigDecimal.valueOf(double) sent to core-base's NumberText.javaDecimal, and every HashMap and HashSet made a core-base
+// JavaHashMap and JavaHashSet, by RewriteMath.java beside this file (JDK 25 class-file API). ojAlgo lays out an LP's
+// rows and a row's terms in HashMap order, which the web compile's HashMap does not share with the JDK's; JavaHashMap
+// iterates as JDK 19+'s HashMap does on every target, so the JVM's answers stay and the web's join them. On the JVM those functions are processor- and JDK-specific code that can differ from StrictMath in
 // the last place (on the build box: pow on one argument in ten, pow(10, k) for 64 of the 801 k from -400 to 400), and
 // BigDecimal.valueOf reads Double.toString, which Java 8 and 17 and the web compile spell differently; the web build
 // sends the same calls to the same places (jvm/web ExactMathPlugin). So the mod, players' JDKs and the browser run one
@@ -19,13 +21,14 @@ val ojalgo: Configuration by configurations.creating {
 }
 dependencies {
     ojalgo("org.ojalgo:ojalgo:$ojalgoVersion")
-    // The test reads the jar this project makes.
+    // The test reads the jar this project makes, and loads its classes, which call core-base.
     "testRuntimeOnly"(files(tasks.named("jar")))
+    "testRuntimeOnly"(project(":core-base"))
 }
 
 val rewritten = layout.buildDirectory.file("rewritten/ojalgo-$ojalgoVersion-exactmath.jar")
 val rewrite = tasks.register<Exec>("ojalgoExactMath") {
-    description = "Writes ojAlgo with its maths and BigDecimal.valueOf sent to core-base"
+    description = "Writes ojAlgo with its maths, BigDecimal.valueOf, HashMap and HashSet sent to core-base"
     val published: FileCollection = files(ojalgo)
     val tool = file("RewriteMath.java")
     inputs.files(published).withPropertyName("ojalgo")

@@ -1,13 +1,13 @@
 package com.gtnhplanner.data.flowchart.balancer;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.gtnhplanner.core.base.JavaHashMap;
+import com.gtnhplanner.core.base.JavaHashSet;
 import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.DrawerTypes;
 
@@ -31,7 +31,7 @@ final class Islands {
         final List<SolveInput.Machine> machines = input.machines();
         final int n = machines.size();
         if (n <= 1) return List.of(input);
-        final Map<Uuid, Integer> index = new HashMap<>(n * 2);
+        final Map<Uuid, Integer> index = new JavaHashMap<>(n * 2);
         for (int m = 0; m < n; m++) index.put(
             machines.get(m)
                 .id(),
@@ -75,7 +75,7 @@ final class Islands {
         final List<Set<Uuid>> ids = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
             pins.add(new LinkedHashMap<>());
-            ids.add(new HashSet<>());
+            ids.add(new JavaHashSet<>());
         }
         for (int m = 0; m < n; m++) {
             final SolveInput.Machine machine = machines.get(m);

@@ -161,7 +161,10 @@ describe("card view switch", () => {
         expect(view()).toEqual(first);
         expect(cardViewCounts().kept).toBe(1);
         // A dial repaints it.
-        const minute = { ...line.dials, rate: line.dials.rate === "MINUTE" ? "SECOND" : "MINUTE" } as const;
+        const minute = {
+          ...line.dials,
+          rate: line.dials.rate === "MINUTE" ? "SECOND" : "MINUTE",
+        } as const;
         view(undefined, minute);
         expect(cardViewCounts().core).toBe(2);
         // So does a face that loaded late (every width so far is dropped).
@@ -188,10 +191,15 @@ describe("card view switch", () => {
 
       it("keeps the widths it measured while the font state stays, and measures again under a new one", () => {
         const line = recorded().find((l) => l.facts.rails.inputs.length > 0)!;
-        const input = { dials: line.dials, card: withDials(line.dials, () => cardInputOf(replayFacts(line))) };
+        const input = {
+          dials: line.dials,
+          card: withDials(line.dials, () => cardInputOf(replayFacts(line))),
+        };
         let asked = 0;
         const narrow = { width: (s: string, t: string) => (asked++, WEB_CARD_MEASURE.width(s, t)) };
-        const wide = { width: (s: string, t: string) => (asked++, 3 * WEB_CARD_MEASURE.width(s, t)) };
+        const wide = {
+          width: (s: string, t: string) => (asked++, 3 * WEB_CARD_MEASURE.width(s, t)),
+        };
         const card = (measure: typeof narrow, state?: number) =>
           withDials(line.dials, () => cardThroughCore(core().ViewExports, input, measure, state));
         const first = card(narrow, 1_000_001);
@@ -208,39 +216,47 @@ describe("card view switch", () => {
       });
 
       it(`draws through the core on this target only when it is one of CARD_TARGETS`, () => {
-        withAdopt({ card: true }, () => expect(cardCore()).toBe(CARD_TARGETS.includes(target) ? core() : null));
+        withAdopt({ card: true }, () =>
+          expect(cardCore()).toBe(CARD_TARGETS.includes(target) ? core() : null),
+        );
         withAdopt({ card: false }, () => expect(cardCore()).toBeNull());
       });
 
-      it.skipIf(!CARD_TARGETS.includes(target))("is the switch's path when the area is on: a card's first view by the builders, the core's from then on", () => {
-        const line = recorded()[1]!;
-        const facts = replayFacts(line);
-        const want = withDials(line.dials, () => cleanCardView(facts));
-        withAdopt({ card: true }, () => {
-          const draw = (f = facts) => withDials(line.dials, () => cardViewOf(f));
-          expect(draw()).toEqual(want);
-          expect(cardViewCounts()).toEqual({ core: 0, kept: 0, ts: 0, first: 1, filled: 0 });
-          // Idle time: the core makes the waiting card's view, and the next draw takes it.
-          withDials(line.dials, () => fillWaitingCardViews());
-          expect(cardViewCounts().filled).toBe(1);
-          expect(draw()).toEqual(want);
-          expect(cardViewCounts()).toMatchObject({ core: 0, kept: 1, first: 1 });
-          // A changed card is the core's at once.
-          const changed = { ...facts, selected: !facts.selected };
-          expect(draw(changed)).toEqual(withDials(line.dials, () => cleanCardView(changed)));
-          expect(cardViewCounts()).toMatchObject({ core: 1, first: 1 });
-        });
-      });
+      it.skipIf(!CARD_TARGETS.includes(target))(
+        "is the switch's path when the area is on: a card's first view by the builders, the core's from then on",
+        () => {
+          const line = recorded()[1]!;
+          const facts = replayFacts(line);
+          const want = withDials(line.dials, () => cleanCardView(facts));
+          withAdopt({ card: true }, () => {
+            const draw = (f = facts) => withDials(line.dials, () => cardViewOf(f));
+            expect(draw()).toEqual(want);
+            expect(cardViewCounts()).toEqual({ core: 0, kept: 0, ts: 0, first: 1, filled: 0 });
+            // Idle time: the core makes the waiting card's view, and the next draw takes it.
+            withDials(line.dials, () => fillWaitingCardViews());
+            expect(cardViewCounts().filled).toBe(1);
+            expect(draw()).toEqual(want);
+            expect(cardViewCounts()).toMatchObject({ core: 0, kept: 1, first: 1 });
+            // A changed card is the core's at once.
+            const changed = { ...facts, selected: !facts.selected };
+            expect(draw(changed)).toEqual(withDials(line.dials, () => cleanCardView(changed)));
+            expect(cardViewCounts()).toMatchObject({ core: 1, first: 1 });
+          });
+        },
+      );
 
-      it.skipIf(!CARD_TARGETS.includes(target))("drops a waiting card whose font changed before idle time", () => {
-        const line = recorded()[2]!;
-        withAdopt({ card: true }, () => {
-          withDials(line.dials, () => cardViewOf(replayFacts(line)));
-          resetMeasuredFont();
-          fillWaitingCardViews();
-        });
-        expect(cardViewCounts()).toMatchObject({ first: 1, filled: 0 });
-      });
+      it.skipIf(!CARD_TARGETS.includes(target))(
+        "drops a waiting card whose font changed before idle time",
+        () => {
+          const line = recorded()[2]!;
+          withAdopt({ card: true }, () => {
+            withDials(line.dials, () => cardViewOf(replayFacts(line)));
+            resetMeasuredFont();
+            fillWaitingCardViews();
+          });
+          expect(cardViewCounts()).toMatchObject({ first: 1, filled: 0 });
+        },
+      );
     });
   }
 });

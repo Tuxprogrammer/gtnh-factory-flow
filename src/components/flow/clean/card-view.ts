@@ -39,8 +39,15 @@ import {
 import type { LoopTone } from "./loops";
 import { currentFontEpoch } from "./text-measure";
 
-const RULE: Record<CardView["count"]["rule"], PinRule> = { ANY: "any", UP_TO: "upTo", EXACT: "exact" };
-const LOOP: Record<NonNullable<CardView["loop"]>, LoopTone> = { DEAD_LOOP: "dead", CLOG_LOCK: "clog" };
+const RULE: Record<CardView["count"]["rule"], PinRule> = {
+  ANY: "any",
+  UP_TO: "upTo",
+  EXACT: "exact",
+};
+const LOOP: Record<NonNullable<CardView["loop"]>, LoopTone> = {
+  DEAD_LOOP: "dead",
+  CLOG_LOCK: "clog",
+};
 const NAME_SIZE = [10, 9, 8];
 const tone = (role: TonesRole) => role.toLowerCase() as FootTone;
 
@@ -77,7 +84,9 @@ function chipView(c: CardViewChipView): CleanChipView {
     value: c.value,
     icon: c.icon,
     reading: c.reading || undefined,
-    powerCap: c.powerCap ? { running: c.powerCap.running, structure: c.powerCap.structure } : undefined,
+    powerCap: c.powerCap
+      ? { running: c.powerCap.running, structure: c.powerCap.structure }
+      : undefined,
     warn: c.warn || undefined,
     title: c.title,
     x: c.x,
@@ -120,15 +129,22 @@ function footView(f: CardViewFootView): CleanFootView {
  * programmed circuit) from the facts the view was made of. The menu rows and the frame's tone are the record's own
  * (the website draws its menu from `cardRecipeRows` and its frame from the foot).
  */
-export function cleanViewOf(view: CardView, facts: Pick<CleanCardFacts, "rails" | "circuit">): CleanCardView {
+export function cleanViewOf(
+  view: CardView,
+  facts: Pick<CleanCardFacts, "rails" | "circuit">,
+): CleanCardView {
   const { rails } = facts;
   return {
     nodeId: view.nodeId,
     name: view.name,
     nameSize: NAME_SIZE[view.nameStep] ?? 8,
     hasPicker: view.hasPicker,
-    tier: view.tier ? { label: view.tier.label, fixed: view.tier.fixed, title: view.tier.title } : undefined,
-    amps: view.amps ? { label: view.amps.label, value: view.amps.value, editable: view.amps.editable } : undefined,
+    tier: view.tier
+      ? { label: view.tier.label, fixed: view.tier.fixed, title: view.tier.title }
+      : undefined,
+    amps: view.amps
+      ? { label: view.amps.label, value: view.amps.value, editable: view.amps.editable }
+      : undefined,
     inputs: view.inputs.map((p, i) => portView(p, view.nodeId, rails.inputs[i]!)),
     outputs: view.outputs.map((p, i) => portView(p, view.nodeId, rails.outputs[i]!)),
     power: view.power
@@ -162,7 +178,9 @@ export function cleanViewOf(view: CardView, facts: Pick<CleanCardFacts, "rails" 
     },
     foot: view.foot ? footView(view.foot) : undefined,
     loop: view.loop ? LOOP[view.loop] : undefined,
-    glance: view.glance ? { tone: tone(view.glance.tone), fill: view.glance.fill, word: view.glance.word } : undefined,
+    glance: view.glance
+      ? { tone: tone(view.glance.tone), fill: view.glance.fill, word: view.glance.word }
+      : undefined,
     circuit: view.circuit ? facts.circuit : undefined,
     chips: view.chips.map(chipView),
     stripHeight: view.stripHeight,
@@ -208,7 +226,12 @@ const SLOTS_PER_CARD = 2;
 const CARDS_KEPT = 4096;
 const kept = new Map<string, Slot[]>();
 
-function lookup(id: string, input: CardInput, dials: CardInputDials, epoch: number): CardView | undefined {
+function lookup(
+  id: string,
+  input: CardInput,
+  dials: CardInputDials,
+  epoch: number,
+): CardView | undefined {
   const slots = kept.get(id);
   if (!slots) return undefined;
   for (let i = 0; i < slots.length; i++) {
@@ -263,7 +286,12 @@ function words(c: CoreExports): void {
   worded.add(c);
 }
 
-function viewThroughCore(c: CoreExports, input: CardInput, dials: CardInputDials, epoch: number): CardView {
+function viewThroughCore(
+  c: CoreExports,
+  input: CardInput,
+  dials: CardInputDials,
+  epoch: number,
+): CardView {
   words(c);
   const view = cardThroughCore(c.ViewExports, { dials, card: input }, WEB_CARD_MEASURE, epoch).view;
   keep(input.nodeId, { input, dials, epoch, view });
@@ -308,6 +336,7 @@ interface Waiting {
 }
 const waiting = new Map<string, Waiting>();
 let waitingCore: CoreExports | undefined;
+const FILL_SLICE_MS = 8;
 let fillScheduled = false;
 
 function wait(c: CoreExports, entry: Waiting): void {
@@ -318,15 +347,18 @@ function wait(c: CoreExports, entry: Waiting): void {
   fillScheduled = true;
   const idle = (
     globalThis as {
-      requestIdleCallback?: (cb: (d: IdleDeadline) => void, options?: { timeout: number }) => number;
+      requestIdleCallback?: (cb: (d: IdleDeadline) => void) => number;
     }
   ).requestIdleCallback;
   const run = (deadline?: IdleDeadline) => {
     fillScheduled = false;
-    const more = fillWaitingCardViews(deadline ? Math.max(1, deadline.timeRemaining() - 1) : 8);
+    // At most a few cards a slice, and only in idle time (no timeout that would force a slice into a busy frame):
+    // the cards waiting already show the builders' view, so nothing is late.
+    const budget = deadline ? Math.min(FILL_SLICE_MS, deadline.timeRemaining() - 1) : FILL_SLICE_MS;
+    const more = fillWaitingCardViews(Math.max(1, budget));
     if (more && waitingCore) wait(waitingCore, waiting.values().next().value!);
   };
-  if (idle) idle(run, { timeout: 2000 });
+  if (idle) idle(run);
   else setTimeout(run, 50);
 }
 
@@ -390,6 +422,7 @@ export function cardViewWith(c: CoreExports | null, facts: CleanCardFacts): Clea
 /** A card the core cannot draw is drawn by the builders, and said once: the switch's test should have caught it. */
 let failed = false;
 function said(error: unknown): void {
-  if (!failed) console.error("card view: the core failed on a card; the website's builders draw it", error);
+  if (!failed)
+    console.error("card view: the core failed on a card; the website's builders draw it", error);
   failed = true;
 }

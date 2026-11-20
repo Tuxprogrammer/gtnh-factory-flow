@@ -21,6 +21,7 @@ import com.gtnhplanner.core.view.card.CardInput;
 import com.gtnhplanner.core.view.card.CardInputJson;
 import com.gtnhplanner.core.view.card.CardView;
 import com.gtnhplanner.core.view.card.CardViews;
+import com.gtnhplanner.core.view.rails.NodeRails;
 import com.gtnhplanner.web.wire.ViewJs;
 
 /**
@@ -162,6 +163,15 @@ public final class ViewExports {
         final CardInput.Case c = ViewJs.readCardInputCase(cardCase);
         final CardView view = CardViews.card(c.card(), c.dials(), measure, CardViews.Host.WEB);
         return viewAndGeometry(ViewJs.js(view), ViewJs.js(CardGeometry.web(view)));
+    }
+
+    /**
+     * A node's rail rows and verdict ({@link NodeRails#build}), records as JavaScript objects: a {@code NodeRailsInput}
+     * in, a {@code NodeRailsView} out, the same object {@code JSON.parse} gives of the JSON the conformance cases keep.
+     */
+    @JSExport
+    public static JSObject viewRailsJs(final JSObject railsInput) {
+        return ViewJs.js(NodeRails.build(ViewJs.readNodeRailsInput(railsInput)));
     }
 
     @JSBody(params = { "view", "geometry" }, script = "return { view: view, geometry: geometry };")

@@ -23,6 +23,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import com.gtnhplanner.importer.FfPlanCode;
+import com.gtnhplanner.library.SiteConfig;
 
 /**
  * The website's "Open in the mod" listener: what it answers, and above all what it refuses. Requests are fed straight
@@ -30,7 +31,7 @@ import com.gtnhplanner.importer.FfPlanCode;
  */
 class WebsiteListenerTest {
 
-    private static final String SITE = "https://gtnhplanner.com";
+    private static final String SITE = "https://planner.test";
     private static final String PLAN = "{\"version\":1,\"name\":\"Steel line\",\"nodes\":[],\"edges\":[]}";
 
     private final List<WebsiteListener.Arrival> arrived = new ArrayList<>();
@@ -110,8 +111,8 @@ class WebsiteListenerTest {
     void otherSitesAndNoOriginAreRefused() throws IOException {
         try (WebsiteListener l = listener()) {
             final String code = FfPlanCode.encode(PLAN);
-            for (final String origin : new String[] { "https://evil.example", "https://gtnhplanner.com.evil.example",
-                "http://gtnhplanner.com", "null", "https://localhost" }) {
+            for (final String origin : new String[] { "https://evil.example", "https://planner.test.evil.example",
+                "http://planner.test", "null", "https://localhost" }) {
                 final String answer = send(l, post(origin, "application/json", body(code, "x")));
                 assertTrue(answer.startsWith("HTTP/1.1 403"), origin + ": " + answer);
                 assertFalse(answer.contains("Access-Control-Allow-Origin"), origin);
@@ -242,6 +243,22 @@ class WebsiteListenerTest {
             }
         }
         assertNull(WebsiteListener.start(1, 0, "x", o -> true, a -> {}), "an empty range listens nowhere");
+    }
+
+    @Test
+    void noSiteMeansNoWebsiteOriginUntilTheConfigListsOne() {
+        // With no site configured nothing is the site, not even an empty Origin.
+        assertFalse(WebsiteListener.websiteOrigin("", ""));
+        assertFalse(WebsiteListener.websiteOrigin("https://planner.test", ""));
+        assertTrue(WebsiteListener.websiteOrigin("http://localhost:3000", ""), "a copy served on this computer");
+        assertFalse(WebsiteListener.websiteOrigin("https://planner.test", "https://other.test"));
+        SiteConfig.useOrigins(List.of("https://planner.test/some/path"));
+        try {
+            assertTrue(WebsiteListener.websiteOrigin("https://planner.test", ""));
+            assertFalse(WebsiteListener.websiteOrigin("https://planner.test.evil.example", ""));
+        } finally {
+            SiteConfig.useOrigins(List.of());
+        }
     }
 
     @Test

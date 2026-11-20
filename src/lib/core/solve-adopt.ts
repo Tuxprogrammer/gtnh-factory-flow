@@ -1,9 +1,9 @@
 /**
  * The compiled core behind the plan solve's seam (`src/lib/solver/plan/adapter/engine.ts`). Plan code may not reach
- * the loader, so the core's side lives here: importing this file installs the bridge. Only the threads that may load
- * the solver import it: the solve Worker (`src/store/solve-books.worker.ts`) and the server's plan routes
- * (`src/lib/server/plan-engine.ts`). The main thread never does, so it never fetches the solver module and its
- * solves (only where there is no Worker) keep the website's own engine.
+ * the loader, so the core's side lives here: importing this file installs the bridge. Only the threads that solve
+ * import it: the solve Worker (`src/store/solve-books.worker.ts`), the server's plan routes
+ * (`src/lib/server/plan-engine.ts`) and, where there is no Worker, the main thread (`src/store/solve-books.ts`, on
+ * demand). A main thread with a Worker never fetches the solver module.
  *
  * Everything between a plan and the solver's input, and between its answer and the board, stays the website's
  * (`adapter/model.ts`, `answer.ts`, `finalize.ts`): only the engine changes. One call per solve:

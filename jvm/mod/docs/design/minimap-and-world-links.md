@@ -1,5 +1,7 @@
 # Minimap, world links and the AR lens
 
+> Since this was written the minimap's scene builder and the card records it draws moved to core-view (`jvm/core/core-view`, checked against `conformance/view/minimap`), shared with the website; world links, the AR lens and the drawing stay in the mod.
+
 The planner should be useful while you build, not only in its own screen. Five pieces, each usable on its own, in the
 order they are built.
 

@@ -1,5 +1,7 @@
 # Up to: a machine count that is what you have
 
+> Since this was written the solver and the card view-model it names moved to core-solver and core-view in `jvm/core` under the same package names, and its parity test reads `conformance/solver/up-to/` at the repo root.
+
 Written 2026-10-17. The mod's side of the website's Up to rule. The website's `docs/up-to.md` (branch `up-to-card`,
 worktree `C:\Users\jack\ff-upto`) is the design both follow: the rule, how it reaches the engine, the guard, the push,
 the read-out and the card. This file says where each part lives here, and what is done. The two solvers must give the

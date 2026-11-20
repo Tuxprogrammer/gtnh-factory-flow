@@ -18,14 +18,15 @@ export const KINDS: ReadonlyArray<{ id: FeedbackKind; label: string; colour: str
 ];
 export const MOODS: readonly FeedbackMood[] = ["happy", "okay", "sad"];
 export const MOOD_INK = ["#5EE9B5", "#E7C35A", "#E57373"] as const;
-export const DISCORD_URL = "https://discord.com/channels/181078474394566657/1531402304530682036";
 
-export function promptFor(kind: FeedbackKind): string {
+export function promptFor(kind: FeedbackKind, hasSupportPage = false): string {
   return kind === "bug"
     ? "What happened, and what did you expect?"
     : kind === "idea"
       ? "What would make the planner better?"
-      : "Quick questions do well on the Discord.";
+      : hasSupportPage
+        ? "Quick questions do well on the support page."
+        : "What do you need help with?";
 }
 
 /** What goes with the words, as a sentence: the open plan by name, and its picture. */

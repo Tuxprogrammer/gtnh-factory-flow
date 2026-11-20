@@ -2,7 +2,6 @@ package com.gtnhplanner.data.flowchart.balancer.alternatives;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -10,6 +9,7 @@ import java.util.TreeMap;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.JavaHashSet;
 import com.gtnhplanner.data.flowchart.balancer.ChoiceKey;
 import com.gtnhplanner.data.flowchart.balancer.External;
 import com.gtnhplanner.data.flowchart.balancer.ModelData;
@@ -104,7 +104,7 @@ public final class Enumerator {
         // A leftover the plan cannot balance without, every other place open, has nowhere else to go: one LP each.
         final List<Integer> decisions = sorted(incumbent);
         final List<Boolean> movable = Parallel.map(ctx, decisions, out -> {
-            final Set<Integer> without = new HashSet<>();
+            final Set<Integer> without = new JavaHashSet<>();
             for (int g = 0; g < ctx.model.gates.size(); g++) if (g != out) without.add(g);
             return !Solver.fixedQuantity(ctx, without)
                 .isRejected();
@@ -112,7 +112,7 @@ public final class Enumerator {
         // With Up to pools (docs/design/up-to.md) a gate whose every port is a buffer's bank, or closed by the guard,
         // can
         // never open as a gate: never swapped into (it would only drop the gate it replaces).
-        final Set<Integer> shut = new HashSet<>(ctx.bankPorts.keySet());
+        final Set<Integer> shut = new JavaHashSet<>(ctx.bankPorts.keySet());
         final SolveContext.Guard guard = ctx.guard;
         if (guard != null && guard.cap() <= 0) for (final int p : guard.ports()) shut.add(p);
         final List<int[]> swaps = new ArrayList<>();
@@ -131,14 +131,14 @@ public final class Enumerator {
         final List<StageOutcome> answers = Parallel.map(ctx, order, i -> {
             if (cannot[i]) return null;
             final int[] swap = tried.get(i);
-            final Set<Integer> trial = new HashSet<>(open);
+            final Set<Integer> trial = new JavaHashSet<>(open);
             trial.remove(swap[0]);
             trial.add(swap[1]);
             return evaluateSupport(ctx, trial);
         });
 
         final Map<Integer, List<Alternative>> byDecision = new TreeMap<>();
-        final Set<ChoiceKey> seen = new HashSet<>();
+        final Set<ChoiceKey> seen = new JavaHashSet<>();
         seen.add(chosen);
         for (int i = 0; i < tried.size(); i++) {
             final StageOutcome alt = answers.get(i);
@@ -216,7 +216,7 @@ public final class Enumerator {
 
     /** Whether a stored {@link ChoiceKey} still names a support on this chart, or null when it does not. */
     public static @Nullable Set<Integer> resolve(final SolveContext ctx, final ChoiceKey choice) {
-        final Set<Integer> support = new HashSet<>();
+        final Set<Integer> support = new JavaHashSet<>();
         for (final PortRef anchor : choice.gateAnchors()) {
             final Integer machine = ctx.model.machineIndex.get(anchor.nodeId());
             if (machine == null) return null;
@@ -340,7 +340,7 @@ public final class Enumerator {
     private static void screen(final SolveContext ctx, final Set<Integer> open, final List<int[]> tried,
         final Solver.Level first, final List<Integer> group, final List<Integer> out) {
         if (group.size() < 2) return;
-        final Set<Integer> gates = new HashSet<>(open);
+        final Set<Integer> gates = new JavaHashSet<>(open);
         gates.remove(tried.get(group.get(0))[0]);
         for (final int i : group) gates.add(tried.get(i)[1]);
         final SolveResult least = Solver.leastAt(ctx, Solver.Trades.within(gates), first);

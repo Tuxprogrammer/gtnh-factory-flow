@@ -29,7 +29,7 @@ import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
 
 /**
- * Signing in to gtnhplanner.com, and posting, changing and taking down the player's plans there, from the game: the
+ * Signing in to the configured site, and posting, changing and taking down the player's plans there, from the game: the
  * calls run in the background and answer on the client thread. The plan goes as Factory Flow's project JSON
  * ({@link PlanExport}). A plan remembers the post it went up as ({@link Graph#getPostId()}), so posting it again
  * updates that post, keeping its votes, downloads and comments.

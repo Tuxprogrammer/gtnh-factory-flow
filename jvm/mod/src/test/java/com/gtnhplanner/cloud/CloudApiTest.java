@@ -108,7 +108,7 @@ class CloudApiTest {
 
     @Test
     void theLiveAddressFollowsTheSite() {
-        assertEquals("wss://gtnhplanner.com/live", CloudApi.liveFor("https://gtnhplanner.com"));
+        assertEquals("wss://planner.test/live", CloudApi.liveFor("https://planner.test"));
         assertEquals("wss://example.org:8443/live", CloudApi.liveFor("https://example.org:8443"));
         assertEquals("ws://localhost:3001/live", CloudApi.liveFor("http://localhost:3000"));
         assertEquals("ws://127.0.0.1:8790/live", CloudApi.liveFor("http://127.0.0.1:8789"));

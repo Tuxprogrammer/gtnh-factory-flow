@@ -2,7 +2,6 @@ package com.gtnhplanner.core.solver.lp;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +15,7 @@ import org.ojalgo.optimisation.integer.IntegerStrategy;
 import org.ojalgo.optimisation.linear.LinearSolver;
 import org.ojalgo.type.context.NumberContext;
 
+import com.gtnhplanner.core.base.JavaHashMap;
 import com.gtnhplanner.core.base.NumberText;
 
 /**
@@ -56,9 +56,9 @@ public final class OjAlgoEngine implements LpEngine {
     private static final class Decimals {
 
         private static final int LIMIT = 1 << 15;
-        private static final Map<Long, BigDecimal> SHARED = new HashMap<>();
+        private static final Map<Long, BigDecimal> SHARED = new JavaHashMap<>();
 
-        private final Map<Long, BigDecimal> own = new HashMap<>();
+        private final Map<Long, BigDecimal> own = new JavaHashMap<>();
 
         @Nullable
         BigDecimal of(final double value) {

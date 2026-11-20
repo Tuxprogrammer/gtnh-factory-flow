@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import "./chrome/mod-panel.css";
 import { Download, Play, X } from "lucide-react";
+import { GITHUB_URL } from "./HeaderLinks";
 
 /**
  * Closing the announcement in any way (the X, Dismiss, Escape, the backdrop,
@@ -12,8 +13,8 @@ import { Download, Play, X } from "lucide-react";
  */
 export const MOD_ANNOUNCEMENT_KEY = "gtnh-factory-flow.mod-announcement-dismissed.v1";
 
-/** The mod's newest release: GitHub resolves `latest` to it. */
-export const MOD_RELEASE_URL = "https://github.com/jackwrichards/gtnh-planner-mod/releases/latest";
+/** The mod's newest release on this repository: GitHub resolves `latest` to it. */
+export const MOD_RELEASE_URL = `${GITHUB_URL}/releases/latest`;
 
 /** Opens a moment after load, so the board is up and the popup is not a flash on arrival. */
 const OPEN_DELAY_MS = 1200;

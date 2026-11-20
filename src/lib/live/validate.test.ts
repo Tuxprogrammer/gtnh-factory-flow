@@ -236,10 +236,10 @@ describe("live protocol helpers", () => {
 
 describe("the live socket address", () => {
   it("is the configured one, or a path on the page's own host", () => {
-    const page = { protocol: "https:", host: "new.gtnhplanner.com" };
+    const page = { protocol: "https:", host: "planner.test" };
     expect(liveSocketUrl(undefined, page)).toBeUndefined();
     expect(liveSocketUrl("", page)).toBeUndefined();
-    expect(liveSocketUrl("/live", page)).toBe("wss://new.gtnhplanner.com/live");
+    expect(liveSocketUrl("/live", page)).toBe("wss://planner.test/live");
     expect(liveSocketUrl("/live", { protocol: "http:", host: "localhost:3000" })).toBe(
       "ws://localhost:3000/live",
     );

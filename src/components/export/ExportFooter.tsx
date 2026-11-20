@@ -3,6 +3,7 @@
 import type { CommunityPlanStats, EntryIcon, PlanResourceStat } from "@/lib/community/types";
 import { formatSlotRate } from "@/components/flow/flow-explainers";
 import { TierBadge } from "@/components/shelf-cards";
+import { siteHost } from "@/lib/site-url";
 import { fluidArtPixels, isSwatchFluid, ResourceIcon } from "@/components/nei/ResourceIcon";
 
 /**
@@ -176,7 +177,7 @@ export function ExportFooter({
             </div>
             <div className="mt-0.5 text-[12px]">
               <span style={{ color: palette.brand }} className="font-semibold">
-                gtnhplanner.com
+                {siteHost() ?? "GTNH Planner"}
               </span>
             </div>
           </div>

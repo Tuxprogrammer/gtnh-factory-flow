@@ -1,11 +1,11 @@
-// A local stand-in for gtnhplanner.com's community API, for testing the planner's Library, sign-in, posting, and
-// editing and deleting one's own posts without touching the real site: accounts and posts live in memory, posted
+// A local stand-in for the website's community API, for testing the planner's Library, sign-in, posting, and
+// editing and deleting one's own posts without touching a real site: accounts and posts live in memory, posted
 // plans are written to build/dev-client/mock-posts/ for a look (or a run past the website's own schema). It has no
 // item lists, so icons go up without the website's picture of them.
 //
 //   node tools/dev/mock-library.mjs [port]          (default 8789)
 //   tools/dev/mc.sh call 'library?url=http://127.0.0.1:8789'   points the running game at it
-//   tools/dev/mc.sh call 'library?url=https://gtnhplanner.com' back to the real site
+//   tools/dev/mc.sh call 'library?url='                        turns the site off again
 //
 // Cloud plans, sharing and the live service come from tools/dev/mock-live.mjs: point the live service here too with
 //   tools/dev/mc.sh call 'library?url=http://127.0.0.1:8789&live=ws://127.0.0.1:8789/live'
@@ -173,7 +173,7 @@ const server = createServer(async (req, res) => {
     writeFileSync(join(feedbackDir, `${number}.json`), JSON.stringify(rest, null, 2));
     if (picture) writeFileSync(join(feedbackDir, `${number}.png`), Buffer.from(picture, "base64"));
     console.log(`  report #${number}: ${b.kind} '${b.title}', ${b.plans?.length ?? 0} plans${picture ? ", a picture" : ""}${b.log ? ", the log" : ""}${b.crash ? ", a crash report" : ""}`);
-    return json(res, 201, { number, url: `https://github.com/jackwrichards/gtnh-planner-mod/issues/${number}` });
+    return json(res, 201, { number, url: `http://127.0.0.1/mock-issues/${number}` });
   }
   if (req.method === "GET" && path === "/api/community/plans") {
     const mine = url.searchParams.get("mine") === "1";
@@ -192,4 +192,4 @@ const live = mockLive(server, {
   stateFile: join(root, "build", "dev-client", "mock-designs.json"),
   users,
 });
-server.listen(port, "127.0.0.1", () => console.log(`mock gtnhplanner.com on http://127.0.0.1:${port}, its live service at ws://127.0.0.1:${port}/live`));
+server.listen(port, "127.0.0.1", () => console.log(`mock community site on http://127.0.0.1:${port}, its live service at ws://127.0.0.1:${port}/live`));

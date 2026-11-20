@@ -5,6 +5,7 @@ import {
   type PlanRow,
 } from "@/lib/server/community";
 import { describePlanRow } from "@/lib/server/plan-preview";
+import { siteUrl } from "@/lib/site-url";
 import { APP_VERSION } from "@/lib/version";
 
 /**
@@ -38,7 +39,8 @@ async function topPlans(base: string): Promise<string[]> {
 }
 
 export async function GET() {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://gtnhplanner.com";
+  // Without a configured site the links are relative to the page that serves this file.
+  const base = siteUrl() ?? "";
   const plans = await topPlans(base);
 
   const lines = [

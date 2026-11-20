@@ -1,5 +1,7 @@
 # Adding a feature to both planners
 
+> Since this was written the mod and the website share one repository: the solver, layout and machine maths are core modules in `jvm/core`, tests and shared data are in `conformance/`, Gradle runs from `jvm/` (`./gradlew :core-solver:test`, `:mod:test`), and the steps that sync two repositories or branch from the mod's own `origin/main` no longer apply.
+
 Written 2026-10-14 by adding buffer drawers (`buffer-drawers.md`) to both the mod and the website, start to finish. The
 mod is GTNH Planner (Java 25 downgraded to 8, Minecraft 1.7.10, this repo). The website is Factory Flow's one-mode board
 (Next.js and TypeScript, `C:\Users\jack\gtnh-ff-backport`, branch `mod-backport`). A copy of this file lives in the

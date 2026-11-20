@@ -2,8 +2,6 @@ package com.gtnhplanner.data.flowchart.balancer;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +10,8 @@ import java.util.function.BooleanSupplier;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.JavaHashMap;
+import com.gtnhplanner.core.base.JavaHashSet;
 import com.gtnhplanner.core.base.Log;
 import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.DrawerTypes;
@@ -59,7 +59,7 @@ public final class SolveContext {
     /** What each unmet drawer can reach and what holds it back, as found by the relaxation. */
     public final List<DrawerReadout.Shortfall> shortfalls = new ArrayList<>();
     /** Pool rows ({@link ModelData#pools}) left out of the models built now; the relaxation's and read-out's probes. */
-    final Set<Integer> droppedPools = new HashSet<>();
+    final Set<Integer> droppedPools = new JavaHashSet<>();
     /** The Up to pools' indices ({@link ModelData.Pool#upTo()}), in pool order (docs/design/up-to.md). */
     public final List<Integer> upToPools;
     /**
@@ -216,7 +216,7 @@ public final class SolveContext {
         for (int p = 0; p < model.pools.size(); p++) if (model.pools.get(p)
             .upTo()) upTo.add(p);
         this.upToPools = List.copyOf(upTo);
-        final Set<Integer> drawn = new HashSet<>();
+        final Set<Integer> drawn = new JavaHashSet<>();
         for (final ModelData.DrawerRow row : model.drawers) for (final int p : row.externalPorts()) drawn.add(p);
         final Map<Integer, Integer> bank = new java.util.LinkedHashMap<>();
         if (!upToPools.isEmpty()) {
@@ -287,7 +287,7 @@ public final class SolveContext {
      * "every machine runs" floors just as a pinned machine does.
      */
     private Set<Integer> anchorMachines() {
-        final Set<Integer> out = new HashSet<>();
+        final Set<Integer> out = new JavaHashSet<>();
         for (int i = 0; i < model.drawers.size(); i++) {
             final ModelData.DrawerRow row = model.drawers.get(i);
             final boolean asksForFlow = !Double.isNaN(drawerLower[i]) && drawerLower[i] > 0;
@@ -445,7 +445,7 @@ public final class SolveContext {
 
     /** Every gate the point puts flow through, however little - the set that must stay open. */
     public Set<Integer> carryingGates(final double[] externals, final Set<Integer> fallback) {
-        final Set<Integer> carrying = new HashSet<>(fallback);
+        final Set<Integer> carrying = new JavaHashSet<>(fallback);
         final double[] scales = dustScales(null, null, externals).ports();
         for (int p = 0; p < externals.length; p++) {
             // What a buffer banks opens no gate (docs/design/up-to.md, "Buffers").
@@ -462,7 +462,7 @@ public final class SolveContext {
             if (!bankPorts.containsKey(p)) gateFlow[model.portGate[p]] += externals[p];
         }
         final double tol = zeroTolerance(gateFlow);
-        final Set<Integer> support = new HashSet<>();
+        final Set<Integer> support = new JavaHashSet<>();
         for (int g = 0; g < gateFlow.length; g++) {
             if (gateFlow[g] > tol) support.add(g);
         }
@@ -523,7 +523,7 @@ public final class SolveContext {
         final DustScales scales = dustScales(committed.extents, committed.flows, committed.externals);
         final double[] extents = committed.extents.clone(), flows = committed.flows.clone(),
             externals = committed.externals.clone();
-        final Map<Integer, List<Integer>> portsOf = new HashMap<>();
+        final Map<Integer, List<Integer>> portsOf = new JavaHashMap<>();
         for (int p = 0; p < model.connectedPorts.size(); p++) portsOf.computeIfAbsent(
             model.connectedPorts.get(p)
                 .machine(),
@@ -626,7 +626,7 @@ public final class SolveContext {
         if (pinned.size() < 2) return null;
         pinned.sort(Comparator.comparingInt(m -> PIN_STRENGTH.indexOf(pinKind[m])));
 
-        final Map<Integer, Double> saved = new HashMap<>();
+        final Map<Integer, Double> saved = new JavaHashMap<>();
         final List<Note> dropped = new ArrayList<>();
         // Without the guard (docs/design/up-to.md): a rate the Up to machines cannot reach is the drawer relaxation's
         // to report, never a pin conflict.

@@ -345,8 +345,9 @@ public final class Minimap {
     private static void drawWires(final List<PlanSnapshot.Line> lines, final MinimapView scene, final float ox,
         final float oy, final float z, @Nullable final PlanSnapshot.Line lit) {
         final int[] colour = new int[lines.size()];
-        for (final MinimapView.Wire w : scene.wires()) colour[Integer.parseInt(w.id())] = 0xFF000000
-            | Integer.parseInt(w.color().substring(1), 16);
+        for (final MinimapView.Wire w : scene.wires()) {
+            colour[Integer.parseInt(w.id())] = rgb(w.color());
+        }
         Hyb.beginBatch();
         for (int i = 0; i < lines.size(); i++) {
             final PlanSnapshot.Line l = lines.get(i);
@@ -407,18 +408,26 @@ public final class Minimap {
         }
     }
 
+    /** A scene colour, {@code #rrggbb}, as an opaque ARGB int. */
+    private static int rgb(final String hex) {
+        return 0xFF000000 | Integer.parseInt(hex.substring(1), 16);
+    }
+
     /**
-     * Groups as the board draws them (docs/design/groups.md, the website's minimap the same), from the scene's tiles: an
-     * open one its colour at 25% with a 1 px border in it, a collapsed one its summary card's box in 30% of it over the
+     * Groups as the board draws them (docs/design/groups.md, the website's minimap the same), from the scene's tiles:
+     * an open one its colour at 25% with a 1 px border in it, a collapsed one its summary card's box in 30% of it over
+     * the
      * card surface.
      */
     private static void drawGroups(final MinimapView scene, final float ox, final float oy, final float z) {
         for (final MinimapView.Tile g : scene.tiles()) {
-            if (!g.kind().equals("board") && !g.kind().equals("group")) continue;
+            final String kind = g.kind();
+            final boolean group = kind.equals("group");
+            if (!group && !kind.equals("board")) continue;
             final float x = ox + (float) g.x() * z, y = oy + (float) g.y() * z, w = (float) g.w() * z,
                 h = (float) g.h() * z;
-            final int color = 0xFF000000 | Integer.parseInt(g.tint().substring(1), 16);
-            if (g.kind().equals("group")) {
+            final int color = rgb(g.tint());
+            if (group) {
                 Hyb.rect(x, y, w, h, Hyb.mix(color, com.gtnhplanner.ui.card.CardPaint.SURFACE, 0.3f));
                 continue;
             }

@@ -81,3 +81,4 @@ tools/parity/out/
 public/core/
 src/lib/core/exports.generated.ts
 src/lib/core/records.generated.ts
+src/lib/core/card-words.generated.ts

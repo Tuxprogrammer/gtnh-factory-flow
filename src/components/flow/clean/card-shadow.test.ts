@@ -30,8 +30,8 @@ import { cleanCardView } from "./clean-model";
  * The card shadow (restructure/adoption.md, step one): what the website's TypeScript shows on a recipe card and what
  * the compiled core's `CardViews` makes of the same facts (`ViewExports`, on both targets) must agree, text, numbers,
  * tones, order and rows. The core is called the way the website will call it, records as JavaScript objects
- * (`cardThroughCore`, `viewCardJs`); its JSON export must give the same answer text for text. No production path calls
- * the core. Inputs:
+ * (`cardThroughCore`, `viewCardJs`); its JSON export must give the same answer text for text. The board's own path
+ * through the core (card-view.ts) is held by card-view.test.ts. Inputs:
  *
  * - the shared card cases (conformance/view/card/cases.json): the core over each stored input gives the stored view,
  *   and the input the website writes from its own facts for the case (`cardInputOf`) is the stored input;

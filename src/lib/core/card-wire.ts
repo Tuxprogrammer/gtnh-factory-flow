@@ -13,14 +13,21 @@ export interface CardMeasure {
   width(style: string, text: string): number;
 }
 
-/** A card's view and geometry from its input; widths from `measure`, or six px a character when it is left out. */
+/**
+ * A card's view and geometry from its input; widths from `measure`, or six px a character when it is left out. With a
+ * `fontState` the core keeps the widths it asked while the state stays the same (`viewCardJsKept`): the measure must
+ * give one width per (style, text) for one state.
+ */
 export function cardThroughCore(
   view: CoreExports["ViewExports"],
   input: CardInputCase,
   measure?: CardMeasure,
+  fontState?: number,
 ): { view: CardView; geometry: CardGeometry } {
-  const out = measure
-    ? view.viewCardJs(input, measure as unknown as Record<string, unknown>)
-    : view.viewCardJsSix(input);
+  const out = !measure
+    ? view.viewCardJsSix(input)
+    : fontState !== undefined
+      ? view.viewCardJsKept(input, measure as unknown as Record<string, unknown>, fontState)
+      : view.viewCardJs(input, measure as unknown as Record<string, unknown>);
   return out as { view: CardView; geometry: CardGeometry };
 }

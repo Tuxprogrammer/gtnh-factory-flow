@@ -1,5 +1,6 @@
 package com.gtnhplanner.web.exports;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,11 +50,43 @@ public final class ViewExports {
     private static final TextMeasure SIX = (style, text) -> (style == TextStyle.ROW_FIGURE ? 9.0 : 6.0) * text.length();
 
     private static final TextStyle[] STYLES = TextStyle.values();
+    private static final String[] STYLE_NAMES = new String[STYLES.length];
+    static {
+        for (int i = 0; i < STYLES.length; i++) STYLE_NAMES[i] = STYLES[i].name();
+    }
 
     private static TextMeasure measure(final CardMeasure m) {
-        final String[] names = new String[STYLES.length];
-        for (int i = 0; i < names.length; i++) names[i] = STYLES[i].name();
-        return (style, text) -> width(m, names[style.ordinal()], text);
+        return (style, text) -> width(m, STYLE_NAMES[style.ordinal()], text);
+    }
+
+    /**
+     * Widths the host measured, by style and text, kept while its font state stays the one they were measured in
+     * ({@link #viewCardJsKept}): a width asked again crosses no boundary. Dropped whole when the state changes or past
+     * {@link #KEPT_WIDTHS_MAX} entries (a board's names and figures are a few thousand).
+     */
+    private static final List<Map<String, Double>> KEPT_WIDTHS = new ArrayList<>();
+    static {
+        for (int i = 0; i < STYLES.length; i++) KEPT_WIDTHS.add(new HashMap<>());
+    }
+    private static final int KEPT_WIDTHS_MAX = 50_000;
+    private static int keptFontState;
+    private static int keptWidths;
+
+    private static TextMeasure keptMeasure(final CardMeasure m, final int fontState) {
+        if (fontState != keptFontState || keptWidths > KEPT_WIDTHS_MAX) {
+            for (final Map<String, Double> widths : KEPT_WIDTHS) widths.clear();
+            keptFontState = fontState;
+            keptWidths = 0;
+        }
+        return (style, text) -> {
+            final Map<String, Double> widths = KEPT_WIDTHS.get(style.ordinal());
+            final Double kept = widths.get(text);
+            if (kept != null) return kept;
+            final double w = width(m, STYLE_NAMES[style.ordinal()], text);
+            widths.put(text, w);
+            keptWidths++;
+            return w;
+        };
     }
 
     /**
@@ -106,6 +139,17 @@ public final class ViewExports {
     @JSExport
     public static JSObject viewCardJs(final JSObject cardCase, final CardMeasure measure) {
         return cardJs(cardCase, measure(measure));
+    }
+
+    /**
+     * {@link #viewCardJs} with the host's widths kept in the core: the host's measure must be a pure function of
+     * (style, text) while {@code fontState} stays the same, and the host passes a new state whenever a width could
+     * change (the website's font epoch: a face that loads late, another face picked). Widths kept under another state
+     * are dropped before the card is measured.
+     */
+    @JSExport
+    public static JSObject viewCardJsKept(final JSObject cardCase, final CardMeasure measure, final int fontState) {
+        return cardJs(cardCase, keptMeasure(measure, fontState));
     }
 
     /** {@link #viewCardJs} measured six px a character (the shared cases). */

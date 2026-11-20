@@ -68,5 +68,11 @@ holder, a crop card. Bees, the Extreme Entity Crusher and every other machine ar
   `cleanCardView` to `conformance/view/card/cases.json`; `card-shadow.test.ts` runs the compiled core
   (`ViewExports`) beside it on those cases and on every card the website's tests and the plan fixtures draw
   (`conformance/view-inputs/`, recorded by `tools/audits/card-test-inputs/record.mjs`: re-record after a change to
-  what a card's facts hold). `card-input.ts` writes the core's input from a card's facts. No production path calls
-  the core yet. A change to a card rule changes `clean-model.ts`, `CardViews` and the cases together.
+  what a card's facts hold). `card-input.ts` writes the core's input from a card's facts. A change to a card rule
+  changes `clean-model.ts`, `CardViews` and the cases together.
+- `card-view.ts` is the switch (`ADOPT.card` in `src/lib/core/adopt.ts`): with the area on and the core loaded,
+  `useCleanCardModel`'s view is the core's `CardView` read back as a `CleanCardView` (`cleanViewOf`); otherwise, and
+  when the core fails on a card, `cleanCardView`. A card's last view is kept by its input, dials and font epoch
+  (`sameData`), so a remount or a render that changed nothing of it makes no call; a card's first view is the
+  builders' and the core makes it in idle time. `card-view.test.ts` holds the two equal on every recorded card. Never
+  add work per frame or over the board there: it runs once per card React renders.

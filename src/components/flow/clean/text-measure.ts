@@ -103,6 +103,8 @@ let fixedMeasure: FixedTextMeasure | undefined;
 
 export function setFixedTextMeasure(measure: FixedTextMeasure | undefined): void {
   fixedMeasure = measure;
+  // Every width may change: what was kept under the epoch (the card view's, the core's) is measured again.
+  fontEpoch += 1;
 }
 
 /** The shared cases' measure: six px a character in every style, nine for the row figure, one px before the unit. */

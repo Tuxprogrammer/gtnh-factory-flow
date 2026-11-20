@@ -172,7 +172,12 @@ the `CardInputCase` object in, `{view, geometry}` objects out, nothing as text (
 `viewCard(caseJson)` and `viewCardsSix(dialsJson, cardsJson)` six px; `viewCardMeasured(caseJson, measure)` and
 `viewCards(dialsJson, cardsJson, measure)` call `measure.width(style, text)` back for each width (`TextStyle` names).
 Each card answers `{"view", "geometry"}`. `tools/web-core/view.mjs` runs the shared card cases on both targets through
-both (`view/card`, `view/card-js`: the objects must be the JSON answer, text for text).
+both (`view/card`, `view/card-js`: the objects must be the JSON answer, text for text). The board's switch
+(`src/components/flow/clean/card-view.ts`) calls `viewCardJsKept(cardCase, measure, fontState)`: the same, with each
+width the core asked kept per (style, text) while `fontState` stays the same, so a width asked again does not cross.
+The host's measure must be a pure function of (style, text) for one state: the website passes its font epoch
+(text-measure.ts), which moves when a face loads late or another face is picked, and the core drops every kept width
+when it moves.
 
 ## Compiler options
 

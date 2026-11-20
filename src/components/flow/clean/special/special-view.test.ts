@@ -29,6 +29,7 @@ import {
 import { specialParts, type SpecialFacts } from "./special-parts";
 import {
   coreSpecialParts,
+  fillWaitingSpecialViews,
   forgetSpecialViews,
   partsOfRecord,
   specialInputOf,
@@ -103,7 +104,7 @@ describe("special card switch", () => {
         withDials(line.dials, () => specialPartsOf(facts, line.special, cleanCardView(facts))),
       ).toEqual(websiteParts(line));
     });
-    expect(specialViewCounts()).toEqual({ core: 0, kept: 0, ts: 1 });
+    expect(specialViewCounts()).toEqual({ core: 0, kept: 0, ts: 1, first: 0, filled: 0 });
   });
 
   it("draws with the website's rules when the core fails on a card, and says so once", () => {
@@ -124,12 +125,14 @@ describe("special card switch", () => {
       const draw = () =>
         withDials(line.dials, () => specialPartsWith(broken, facts, line.special, cleanCardView(facts)));
       expect(draw()).toEqual(websiteParts(line));
+      withDials(line.dials, () => fillWaitingSpecialViews());
+      // The core made no parts of it: the website's rules keep drawing it.
       expect(draw()).toEqual(websiteParts(line));
     } finally {
       console.error = quiet;
     }
     expect(said.length).toBeLessThanOrEqual(1);
-    expect(specialViewCounts()).toMatchObject({ core: 0, ts: 2 });
+    expect(specialViewCounts()).toMatchObject({ core: 0, filled: 0, first: 2 });
   });
 
   const targets: CoreTarget[] = wasmGcSupported() ? ["wasm-gc", "js"] : ["js"];
@@ -199,16 +202,26 @@ describe("special card switch", () => {
       });
 
       it.skipIf(!CARD_TARGETS.includes(target))(
-        "is the switch's path when the area is on, for the kinds the shared rules cover",
+        "is the switch's path when the area is on: a card's first parts by the website's rules, the core's from then on",
         () => {
           const line = recorded()[0]!;
           const facts = replayFacts(line);
           withAdopt({ card: true }, () => {
-            const got = withDials(line.dials, () =>
-              specialPartsOf(facts, line.special, cleanCardView(facts)),
+            const draw = (f = facts) =>
+              withDials(line.dials, () => specialPartsOf(f, line.special, cleanCardView(f)));
+            // A card's first parts by the website's rules; the core makes them in idle time and the next draw takes them.
+            expect(draw()).toEqual(websiteParts(line));
+            expect(specialViewCounts()).toMatchObject({ core: 0, ts: 0, first: 1 });
+            withDials(line.dials, () => fillWaitingSpecialViews());
+            expect(specialViewCounts().filled).toBe(1);
+            expect(draw()).toEqual(websiteParts(line));
+            expect(specialViewCounts()).toMatchObject({ core: 0, kept: 1, first: 1 });
+            // A changed card is the core's at once.
+            const changed = { ...facts, selected: !facts.selected };
+            expect(draw(changed)).toEqual(
+              withDials(line.dials, () => specialParts(cleanCardView(changed), line.special)),
             );
-            expect(got).toEqual(websiteParts(line));
-            expect(specialViewCounts()).toMatchObject({ core: 1, ts: 0 });
+            expect(specialViewCounts()).toMatchObject({ core: 1, first: 1 });
           });
         },
       );

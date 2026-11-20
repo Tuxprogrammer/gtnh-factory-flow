@@ -162,17 +162,21 @@ interface Slot {
 const SLOTS_PER_CARD = 2;
 const CARDS_KEPT = 1024;
 const kept = new Map<string, Slot[]>();
-const counts = { core: 0, kept: 0, ts: 0 };
+const counts = { core: 0, kept: 0, ts: 0, first: 0, filled: 0 };
 
-/** How many parts came from the core, from kept parts and from the website's rules; for tests and probes. */
+/**
+ * How many parts came from the core, from kept parts and from the website's rules, how many first parts the website's
+ * rules drew while the core had none, and how many of those the core made in idle time; for tests and probes.
+ */
 export function specialViewCounts(): Readonly<typeof counts> {
   return { ...counts };
 }
 
-/** Zeroes the counts and forgets every kept part (tests). */
+/** Zeroes the counts and forgets every kept part and every card waiting for the core (tests). */
 export function forgetSpecialViews(): void {
   for (const k of Object.keys(counts) as (keyof typeof counts)[]) counts[k] = 0;
   kept.clear();
+  waiting.clear();
 }
 
 /**
@@ -183,11 +187,19 @@ export function coreSpecialParts(
   c: CoreExports,
   cardFacts: CleanCardFacts,
   facts: SpecialFacts,
+  first?: { base: CleanCardView },
 ): SpecialParts {
-  const card = cardInputOf(cardFacts);
-  const special = specialInputOf(facts);
   const dials = cardDials(cardFacts.averageDraw);
   const epoch = currentFontEpoch();
+  if (first && !kept.has(cardFacts.projectNode.id)) {
+    // A card the core has never drawn: the website's rules draw it now, and the core makes its parts in idle time, so
+    // opening a plan stays at the rules' cost (the recipe card's first view does the same, card-view.ts).
+    counts.first++;
+    wait(c, { cardFacts, facts, dials, epoch });
+    return specialParts(first.base, facts);
+  }
+  const card = cardInputOf(cardFacts);
+  const special = specialInputOf(facts);
   const id = card.nodeId;
   const slots = kept.get(id) ?? [];
   for (const s of slots) {
@@ -233,13 +245,70 @@ export function specialPartsWith(
 ): SpecialParts {
   if (c) {
     try {
-      return coreSpecialParts(c, cardFacts, facts);
+      return coreSpecialParts(c, cardFacts, facts, { base });
     } catch (error) {
       said(error);
     }
   }
   counts.ts++;
   return specialParts(base, facts);
+}
+
+/** Special cards drawn first by the website's rules, waiting for the core (the latest facts per card). */
+interface Waiting {
+  cardFacts: CleanCardFacts;
+  facts: SpecialFacts;
+  dials: CardInputDials;
+  epoch: number;
+}
+const waiting = new Map<string, Waiting>();
+let waitingCore: CoreExports | undefined;
+const FILL_SLICE_MS = 8;
+let fillScheduled = false;
+
+function wait(c: CoreExports, entry: Waiting): void {
+  waiting.delete(entry.cardFacts.projectNode.id);
+  waiting.set(entry.cardFacts.projectNode.id, entry);
+  waitingCore = c;
+  if (fillScheduled) return;
+  fillScheduled = true;
+  const idle = (
+    globalThis as { requestIdleCallback?: (cb: (d: IdleDeadline) => void) => number }
+  ).requestIdleCallback;
+  const run = (deadline?: IdleDeadline) => {
+    fillScheduled = false;
+    const budget = deadline ? Math.min(FILL_SLICE_MS, deadline.timeRemaining() - 1) : FILL_SLICE_MS;
+    const more = fillWaitingSpecialViews(Math.max(1, budget));
+    if (more && waitingCore) wait(waitingCore, waiting.values().next().value!);
+  };
+  if (idle) idle(run);
+  else setTimeout(run, 50);
+}
+
+/**
+ * Makes the waiting special cards' parts through the core for at most `budgetMs` (idle time; tests call it directly).
+ * A card whose font changed since it waited is dropped: its next draw is new parts anyway. Answers whether cards still
+ * wait.
+ */
+export function fillWaitingSpecialViews(budgetMs = Number.POSITIVE_INFINITY): boolean {
+  const c = waitingCore;
+  if (!c) return false;
+  const until = performance.now() + budgetMs;
+  for (const [id, w] of waiting) {
+    if (performance.now() >= until) return true;
+    waiting.delete(id);
+    if (w.epoch !== currentFontEpoch() || kept.has(id)) continue;
+    try {
+      const card = cardInputOf(w.cardFacts);
+      const special = specialInputOf(w.facts);
+      const parts = partsOfRecord(specialThroughCore(c, { dials: w.dials, card, special }, w.epoch));
+      kept.set(id, [{ card, special, dials: w.dials, epoch: w.epoch, parts }]);
+      counts.filled++;
+    } catch (error) {
+      said(error);
+    }
+  }
+  return false;
 }
 
 let failed = false;

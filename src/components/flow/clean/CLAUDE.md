@@ -70,6 +70,12 @@ holder, a crop card. Bees, the Extreme Entity Crusher and every other machine ar
   (`conformance/view-inputs/`, recorded by `tools/audits/card-test-inputs/record.mjs`: re-record after a change to
   what a card's facts hold). `card-input.ts` writes the core's input from a card's facts. A change to a card rule
   changes `clean-model.ts`, `CardViews` and the cases together.
+- A special card's own parts are one rule with the core's `SpecialViews` (docs/view-card.md, "Special cards"), so far
+  for the custom rate card and the fluid tank: `special/special-parts.ts` is the website's rules and puts the parts
+  together with the card's view; `special/special-view.ts` is their switch (the card's flag and targets, kept per card);
+  `special-conformance.test.ts` holds the rules to `conformance/view/special/cases.json`, `special-view.test.ts` the core
+  to the rules on those cases and on the recorded holder cards. A change to a holder's parts changes `special-parts.ts`,
+  `SpecialViews` and the cases together. The other kinds still build their whole view in `use-special.ts`.
 - `card-view.ts` is the switch (`ADOPT.card` in `src/lib/core/adopt.ts`): with the area on and the core loaded,
   `useCleanCardModel`'s view is the core's `CardView` read back as a `CleanCardView` (`cleanViewOf`); otherwise, and
   when the core fails on a card, `cleanCardView`. A card's last view is kept by its input, dials and font epoch

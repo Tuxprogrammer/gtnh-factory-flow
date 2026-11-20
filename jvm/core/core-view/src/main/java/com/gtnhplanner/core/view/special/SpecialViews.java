@@ -8,6 +8,8 @@ import com.gtnhplanner.core.base.JsMath;
 import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.core.base.Text;
 import com.gtnhplanner.core.view.TextMeasure;
+import com.gtnhplanner.core.view.Tokens;
+import com.gtnhplanner.core.view.card.CardGeometry;
 import com.gtnhplanner.core.view.card.CardInput;
 import com.gtnhplanner.core.view.card.CardView;
 import com.gtnhplanner.core.view.card.CardViews;
@@ -134,6 +136,52 @@ public final class SpecialViews {
             !tank && base.unset(),
             false,
             false);
+    }
+
+    /** The website's holder well: special.css's 78 px picture and its 1 px margins (the plain card's is 120). */
+    public static final int WEB_HOLDER_PICTURE = 80;
+    /** An empty holder's socket on the website: 4 px down, a 36 px dashed box (its hint hangs below, in no row). */
+    public static final int WEB_SOCKET_TOP = 4, WEB_SOCKET = 36;
+    /** The anchors of an empty holder's two sockets: a host names its own socket handles by these. */
+    public static final String TAKE = "take", GIVE = "give";
+
+    /**
+     * A holder card on the website, from its parts and its card's view: the head, the rails (the card's rows, or the
+     * two sockets of an empty one) beside a well 80 px tall, the strip, the bar along the foot. Each row's anchor as the
+     * plain card's ({@link CardGeometry}); a socket's in its middle.
+     */
+    public static CardGeometry webHolder(final SpecialView v, final CardView base) {
+        if (!covers(v.kind())) throw new IllegalArgumentException("not a holder: " + v.kind());
+        final int head = CardGeometry.WEB_HEAD, row = CardGeometry.WEB_ROW;
+        final List<CardGeometry.Anchor> anchors = new ArrayList<>();
+        int in = 0, out = 0;
+        if (v.empty()) {
+            if (v.sockets() != null) {
+                final int y = head + WEB_SOCKET_TOP + WEB_SOCKET / 2;
+                anchors.add(new CardGeometry.Anchor(TAKE, false, y));
+                anchors.add(new CardGeometry.Anchor(GIVE, true, y));
+                in = out = WEB_SOCKET_TOP + WEB_SOCKET;
+            }
+        } else {
+            in = rail(base.inputs(), false, anchors, head, row) + (v.power() != null ? row : 0);
+            out = rail(base.outputs(), true, anchors, head, row);
+        }
+        final int rails = Math.max(WEB_HOLDER_PICTURE, Math.max(in, out));
+        final int stripTop = head + rails;
+        final boolean foot = v.foot() != null;
+        return new CardGeometry(Tokens.Card.CARD_WIDTH, stripTop + v.stripHeight() + (foot ? CardGeometry.WEB_FOOT : 0),
+            head, rails, anchors, stripTop, v.stripHeight(), foot ? stripTop + v.stripHeight() + 1 : -1);
+    }
+
+    private static int rail(final List<CardView.PortView> ports, final boolean output,
+        final List<CardGeometry.Anchor> anchors, final int head, final int row) {
+        int y = 0;
+        for (final CardView.PortView p : ports) {
+            final int slot = p.forced() != null ? 2 * row : row;
+            anchors.add(new CardGeometry.Anchor(p.handleId(), output, head + y + slot / 2));
+            y += slot;
+        }
+        return y;
     }
 
     /**

@@ -22,12 +22,15 @@ const engineReady = initLpEngine({
  */
 const ENGINE_WAIT_MS = 20_000;
 const engineSettled = Promise.race([
-  // The compiled core's solver loads beside HiGHS (src/lib/core/solve-adopt.ts; nothing when the solve area is off).
-  // HiGHS stays: the clog-lock proof below and every solve the core does not take run on it. The first solve waits
-  // for both, so the first answer comes from the engine every later one does.
-  Promise.all([engineReady, warmSolveCore()]),
+  engineReady,
   new Promise<boolean>((resolve) => setTimeout(() => resolve(false), ENGINE_WAIT_MS)),
 ]);
+
+// The compiled core's solver loads beside HiGHS (src/lib/core/solve-adopt.ts; nothing when the solve area is off) and
+// takes the plan solve from the first one after it is ready. No solve waits for it: until then, and when it fails,
+// HiGHS solves as before, so the first answer after a page load is never later than without the core. HiGHS stays
+// loaded for the clog-lock proof below and for every solve the core does not take.
+void warmSolveCore();
 
 /**
  * The solver, off the main thread. One message in (a plan, the dataset's rates and the content key

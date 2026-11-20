@@ -2,6 +2,8 @@ package com.gtnhplanner.solver;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;
@@ -132,6 +134,60 @@ class SolverIslandTest {
         final SolutionView fresh = solved(Balancer.solveWithAlternatives(edit));
         assertEquals(fresh.machineCounts, cached.machineCounts);
         assertEquals(fresh.edgeFlowsPerSecond, cached.edgeFlowsPerSecond);
+    }
+
+    /**
+     * A cache with a capacity (the website's solve Worker keeps 64 islands, as its own engine's cache does) still has a
+     * state three solves back; the default keeps the last two solves only. A one-island plan's answer read back from
+     * the cache is the very answer it kept.
+     */
+    @Test
+    void aCacheWithACapacityKeepsOlderStates() {
+        final SolveInput plan = SolverCorpus.plan("single-card-v2");
+        final SolveInput[] states = { plan, withCount(plan, 1), withCount(plan, 2), plan };
+        final Balancer.Answer[] lru = new Balancer.Answer[states.length], two = new Balancer.Answer[states.length];
+        final Balancer.Cache withCapacity = new Balancer.Cache(64), lastTwo = new Balancer.Cache();
+        for (int i = 0; i < states.length; i++) {
+            lru[i] = Balancer.solveWithAlternatives(states[i], withCapacity, () -> false);
+            two[i] = Balancer.solveWithAlternatives(states[i], lastTwo, () -> false);
+        }
+        assertSame(lru[0], lru[3]);
+        assertNotSame(two[0], two[3]);
+        assertEquals(solved(two[3]).machineCounts, solved(lru[3]).machineCounts);
+    }
+
+    /** The plan with its first pinned machine's count raised by {@code more}. */
+    private static SolveInput withCount(final SolveInput in, final int more) {
+        final java.util.List<SolveInput.Machine> machines = new java.util.ArrayList<>(in.machines());
+        for (int m = 0; m < machines.size(); m++) {
+            final SolveInput.Machine x = machines.get(m);
+            if (!x.countFixed()) continue;
+            machines.set(
+                m,
+                new SolveInput.Machine(
+                    x.id(),
+                    x.name(),
+                    x.durationTicks(),
+                    x.energyPerTick(),
+                    x.throughputFactor(),
+                    x.inputs(),
+                    x.outputs(),
+                    true,
+                    x.machineCount() + more,
+                    x.targetOutputRates(),
+                    x.properties(),
+                    x.targetInputRates()));
+            break;
+        }
+        return new SolveInput(
+            in.mode(),
+            in.choice(),
+            machines,
+            in.edges(),
+            in.pools(),
+            in.drawers(),
+            in.extentPins(),
+            in.spares());
     }
 
     private static SolutionView solved(final Balancer.Answer answer) {

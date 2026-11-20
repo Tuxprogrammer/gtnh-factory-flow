@@ -26,6 +26,13 @@ nowhere or goes nowhere except through a source, a drawer or trash. Longer versi
 - Engines: `lp-engine.ts` uses HiGHS (WASM) when loaded, else the homegrown simplex
   (`simplex.ts`). Big or slow boards solve in a worker (`src/store/solve-books.ts`);
   nothing that size may run on the main thread.
+- The plan solve's engine is `getSolveCore()` (`plan/adapter/engine.ts`), the one seam. In the solve Worker and the
+  server's plan routes `src/lib/core/solve-adopt.ts` puts the compiled core behind it (`ADOPT.solve`, WebAssembly GC
+  only): the input goes over as JSON (`SolverExports.solverSolveCached`, island cache in the module), the golden digest
+  comes back as the website's `Answer`; ids the website mints are renamed to UUIDs in the solve's own order and named
+  back. Nothing waits for the core: until it has loaded, where it fails, on the JavaScript fallback and on the main
+  thread the TypeScript solver answers. The two are held equal by `src/lib/core/solve-shadow.test.ts` (every recorded
+  input, also with the website's kind of ids, and the Worker's books for every reference plan).
 - Plan solver dust (`plan/validate.ts` `dustScales`) is judged per network, never over the whole point: a
   reactor's billions of EU a second must not zero a 0.03/s item wire (the answer then fails its own check).
 - HiGHS misses rows by about 1e-7 on its own scaling, so values held from one stage's point can leave a later stage

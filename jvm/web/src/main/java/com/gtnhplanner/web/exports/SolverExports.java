@@ -17,10 +17,11 @@ public final class SolverExports {
     private SolverExports() {}
 
     /**
-     * The islands of the last two cached solves ({@link Balancer.Cache}), held by this module's instance: one per
-     * thread that loads the solver module, which on the website is the solve Worker, so it lives as long as the Worker.
+     * The 64 islands solved last ({@link Balancer.Cache}), as the website's own engine keeps them (its
+     * {@code IslandCache(64)}), held by this module's instance: one per thread that loads the solver module, which on
+     * the website is the solve Worker, so it lives as long as the Worker.
      */
-    private static final Balancer.Cache CACHE = new Balancer.Cache();
+    private static final Balancer.Cache CACHE = new Balancer.Cache(64);
 
     /** Solves one plan and returns its answer's digest. Nothing is kept between calls. */
     @JSExport

@@ -38,7 +38,7 @@ import type {
 } from "@/lib/solver/plan/types";
 import { coreFor, isAdopted } from "./adopt";
 import type { CoreExports } from "./exports.generated";
-import { coreInfo, loadCore, type CoreTarget, type LoadOptions } from "./loader";
+import { coreInfo, loadCore, wasmGcSupported, type CoreTarget, type LoadOptions } from "./loader";
 
 /**
  * The targets the core solves on. WebAssembly GC: no slower than the website's engine from edit to answer on the
@@ -58,12 +58,20 @@ export function solverTarget(): CoreTarget | null {
 }
 
 /**
- * Starts loading the solver module when the solve area is adopted. Resolves true when the core will solve, false when
- * it will not (off, missing, failed, or a target not chosen); never rejects. A thread awaits it once before its first
- * solve so the first answer comes from the engine every later one does.
+ * Whether this engine can load the core on a target it solves on. Without WebAssembly GC the loader would fetch the
+ * JavaScript build, which does not solve here: nothing is fetched at all.
+ */
+function solvesHere(): boolean {
+  return SOLVE_TARGETS.includes("js") || wasmGcSupported();
+}
+
+/**
+ * Starts loading the solver module when the solve area is adopted and this engine can run it on a solving target.
+ * Resolves true when the core will solve, false when it will not (off, missing, failed, or a target not chosen); never
+ * rejects. Nothing waits for it to solve: until it is ready the website's engine answers.
  */
 export async function warmSolveCore(): Promise<boolean> {
-  if (!isAdopted("solve")) return false;
+  if (!isAdopted("solve") || !solvesHere()) return false;
   try {
     await loadCore(SOLVER_LOAD);
   } catch {
@@ -78,6 +86,7 @@ export function solveEngine(): "core" | "website" {
 }
 
 function coreEngine(): SolveCore | null {
+  if (!isAdopted("solve") || !solvesHere()) return null;
   const core = coreFor("solve");
   if (!core) return null;
   const target = solverTarget();

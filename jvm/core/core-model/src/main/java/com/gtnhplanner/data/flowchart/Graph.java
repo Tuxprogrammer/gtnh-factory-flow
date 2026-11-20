@@ -107,8 +107,8 @@ public class Graph {
     private boolean open = true;
 
     /**
-     * The post on gtnhplanner.com this plan went up as (its id there), so posting it again updates that post; null when
-     * it has none. Saved with the slot, never in a plan code.
+     * The post on the website this plan went up as (its id there), so posting it again updates that post; null when it
+     * has none. Saved with the slot, never in a plan code.
      */
     @Nullable
     private String postId;

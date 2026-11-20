@@ -91,7 +91,7 @@ public final class PlanPins {
         else if (key.startsWith(MACHINE)) {
             final String name = key.substring(MACHINE.length());
             for (final Node n : g.getNodes()) {
-                if (n.isPower()) continue;
+                if (n.isPower() || n.shown != null) continue;
                 final String handler = com.gtnhplanner.library.PlanExport.siteHandler(game, n);
                 if (handler != null && name.equals(game.pinName(n))) out.add(handler);
             }
@@ -177,7 +177,8 @@ public final class PlanPins {
         final Set<String> out = new LinkedHashSet<>();
         if (key.startsWith(POWER)) out.add(key);
         else for (final Node n : g.getNodes()) {
-            if (n.isPower() || !key.equals(com.gtnhplanner.library.PlanExport.siteHandler(game, n))) continue;
+            if (n.isPower() || n.shown != null || !key.equals(com.gtnhplanner.library.PlanExport.siteHandler(game, n)))
+                continue;
             final String name = game.pinName(n);
             if (name != null) out.add(MACHINE + name);
         }

@@ -584,11 +584,20 @@ public final class BoardSession {
     }
 
     /**
+     * Whether a card is one the board only shows (a website card it cannot run, {@link Node#shown}): it can be moved,
+     * wired and deleted, never edited into something else, so every edit here leaves it as it is.
+     */
+    private static boolean readOnly(final Node node) {
+        return node.shown != null;
+    }
+
+    /**
      * Sets an input to another of the items its recipe slot takes (an ore dictionary slot's members, GregTech's
      * alternatives), the wheel over it: wires that no longer fit it go, and a drawer feeding it alone follows it to
      * the new item (one feeding other inputs too lets go of it). A spin of the wheel is one undo step.
      */
     public void pickInput(final Node node, final int index, final String key) {
+        if (readOnly(node)) return;
         live(() -> applyInputPick(node, index, key), null);
     }
 
@@ -2243,6 +2252,7 @@ public final class BoardSession {
 
     /** An edit to a card's machine (one undo step); a shared machine's other recipes take it too. */
     public void editMachine(final Node node, final Runnable change) {
+        if (readOnly(node)) return;
         edit(() -> {
             change.run();
             syncShared(node);
@@ -2321,6 +2331,7 @@ public final class BoardSession {
      * wherever it now is on the card, and goes when the card no longer has it (a fuel switched for another).
      */
     public void setPowerSetting(final Node node, final String settingId, final String value) {
+        if (readOnly(node)) return;
         if (!node.isPower() || value.equals(node.powerSettings.get(settingId))) return;
         if ("true".equals(value)) Sfx.TOGGLE_ON.play();
         else if ("false".equals(value)) Sfx.TOGGLE_OFF.play();
@@ -2339,6 +2350,7 @@ public final class BoardSession {
      * to where it now is, gone where the card no longer has it.
      */
     public void swapRecipe(final Node node, final codechicken.nei.recipe.RecipeHandlerRef ref) {
+        if (readOnly(node)) return;
         Sfx.ADJUST.play();
         edit(() -> {
             final List<String> ins = keys(node.inputs), outs = keys(node.outputs);
@@ -2354,6 +2366,7 @@ public final class BoardSession {
      * world), set up as one added from NEI is.
      */
     public void pickCrop(final Node farm, final codechicken.nei.recipe.RecipeHandlerRef ref) {
+        if (readOnly(farm)) return;
         Sfx.ADJUST.play();
         edit(() -> {
             final Node crop = MachineChoices.newNode(ref.handler, ref.recipeIndex, null);
@@ -2423,6 +2436,7 @@ public final class BoardSession {
     }
 
     public void setVoltage(final Node node, final String tier) {
+        if (readOnly(node)) return;
         edit(() -> {
             node.machineConfig.setString("voltage", tier);
             syncShared(node);
@@ -2430,6 +2444,7 @@ public final class BoardSession {
     }
 
     public void setSetting(final Node node, final String key, final Object value) {
+        if (readOnly(node)) return;
         if (value instanceof final Boolean on) (on ? Sfx.TOGGLE_ON : Sfx.TOGGLE_OFF).play();
         else Sfx.ADJUST.play();
         edit(() -> {
@@ -2442,6 +2457,7 @@ public final class BoardSession {
 
     /** Sets several of a card's settings as one edit (a crop farm's units, kept as one normalized set). */
     public void setSettings(final Node node, final java.util.Map<String, String> values) {
+        if (readOnly(node)) return;
         Sfx.ADJUST.play();
         edit(() -> {
             for (final java.util.Map.Entry<String, String> e : values.entrySet())
@@ -2452,6 +2468,7 @@ public final class BoardSession {
 
     /** Picks which machine runs the recipe; GregTech single blocks bring their tier, multiblocks their options. */
     public void chooseMachine(final Node node, final ItemStack machine, final boolean gregtech) {
+        if (readOnly(node)) return;
         edit(() -> {
             CardDefaults.switchMachine(node, machine, gregtech);
             syncShared(node);
@@ -2463,6 +2480,7 @@ public final class BoardSession {
      * the plan decide (Any). On a shared machine the count is the machine's. Written through {@link PinRule}.
      */
     public void pin(final Node node, final double count) {
+        if (readOnly(node)) return;
         // The count it has already (a number box closed on it): no edit, and no sound for nothing done.
         if (count > 0 ? rule(node) != PinRule.ANY && Math.max(1, Math.round(count)) == setCount(node)
             : rule(node) == PinRule.ANY) return;
@@ -2477,6 +2495,7 @@ public final class BoardSession {
 
     /** A machine count from the wheel: solved at once, one undo step once the wheel goes still ({@link #live}). */
     public void wheelPin(final Node node, final double count) {
+        if (readOnly(node)) return;
         final com.gtnhplanner.data.flowchart.MachineGroup g = sharedOf(node.id);
         if (g != null) live(() -> applyPinShared(g, count), count > 0 ? Sfx.PIN : Sfx.UNPIN);
         else live(() -> applyPin(node, count), count > 0 ? Sfx.PIN : Sfx.UNPIN);
@@ -2484,6 +2503,7 @@ public final class BoardSession {
 
     /** A setting from the wheel (a card's amps): solved at once, one undo step once the wheel goes still. */
     public void wheelSetting(final Node node, final String key, final int value) {
+        if (readOnly(node)) return;
         live(() -> {
             node.machineConfig.setInt(key, value);
             syncShared(node);
@@ -2527,6 +2547,7 @@ public final class BoardSession {
      * a shared machine it is the machine's.
      */
     public void setRule(final Node node, final PinRule rule, final double count) {
+        if (readOnly(node)) return;
         if (rule == rule(node)) return;
         (rule == PinRule.ANY ? Sfx.UNPIN : Sfx.PIN).play();
         final com.gtnhplanner.data.flowchart.MachineGroup g = sharedOf(node.id);
@@ -2649,6 +2670,7 @@ public final class BoardSession {
      * count; zero or less clears it and lets the plan decide.
      */
     public void setPortTarget(final Node node, final boolean output, final int index, final double perSecond) {
+        if (readOnly(node)) return;
         (perSecond > 0 ? Sfx.PIN : Sfx.UNPIN).play();
         edit(() -> applyPortTarget(node, output, index, perSecond));
     }
@@ -2669,6 +2691,7 @@ public final class BoardSession {
      * A port's rate from the wheel: shown and solved at once, one undo step once the wheel goes still ({@link #live}).
      */
     public void wheelPortRate(final Node node, final boolean output, final int index, final double perSecond) {
+        if (readOnly(node)) return;
         if (wheeledPorts == null) wheeledPorts = new HashMap<>();
         final Double was = wheeledPortRate(node, output, index);
         final Double set = was != null ? was : portTarget(node, output, index);

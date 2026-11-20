@@ -522,27 +522,42 @@ class FfConverterTest {
     }
 
     @Test
-    void aCardWithNoRecipeInGameIsLeftOutAndSaysWhy() {
+    void aCardWithNoRecipeInGameIsShownAndSaysWhy() {
         final FakeGame game = new FakeGame();
         game.missing.add("oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:6db988ddcbfcf8e3");
         final FfConverter.Result r = convert(FakeGame.fixture("titanium-line-chembath.slim.json"), game);
-        assertEquals(9, r.graph().nodes.size());
-        final List<ImportReport.Entry> unmatched = r.report()
-            .entries(Kind.UNMATCHED);
-        assertEquals(1, unmatched.size());
-        assertTrue(
-            unmatched.getFirst()
-                .subject()
-                .startsWith("Large Chemical Reactor"));
+        // On the board as a display-only card, with its wires: nothing is left out.
+        assertEquals(10, r.graph().nodes.size());
         assertEquals(
-            "not in this game",
-            unmatched.getFirst()
-                .message());
-        assertTrue(has(r.report(), Kind.WIRE, "5 wires to cards that were left out"));
+            1,
+            r.graph()
+                .getNodes()
+                .stream()
+                .filter(n -> n.shown != null)
+                .count());
         assertTrue(
             r.report()
+                .entries(Kind.UNMATCHED)
+                .isEmpty());
+        final List<ImportReport.Entry> shown = r.report()
+            .entries(Kind.CONVERTED)
+            .stream()
+            .filter(
+                e -> e.subject()
+                    .startsWith("Large Chemical Reactor"))
+            .toList();
+        assertEquals(1, shown.size());
+        assertTrue(
+            shown.getFirst()
+                .message()
+                .startsWith("not in this game; shown as it is, not editable here"),
+            shown.getFirst()
+                .message());
+        assertFalse(has(r.report(), Kind.WIRE, "to cards that were left out"));
+        assertFalse(
+            r.report()
                 .summary()
-                .contains("1 left out"));
+                .contains("left out"));
     }
 
     /** A mixer and a dryer, a power card, a switched-off card and a custom rate card supplying water. */
@@ -592,8 +607,14 @@ class FfConverterTest {
     void customRateCardsBecomeDrawersAndPowerAndOffCardsGo() {
         final FfConverter.Result r = convert(SMALL.formatted("", SMALL_WIRES), new FakeGame());
         final Graph g = r.graph();
-        assertEquals(2, g.nodes.size(), "the mixer and the dryer");
-        assertEquals(1, g.edges.size(), "mud, mixer to dryer");
+        assertEquals(4, g.nodes.size(), "the mixer and the dryer, the generator and the switched-off card shown");
+        assertEquals(
+            2,
+            g.getNodes()
+                .stream()
+                .filter(n -> n.shown != null)
+                .count());
+        assertEquals(2, g.edges.size(), "mud, mixer to dryer and to the switched-off card");
         assertEquals(3, g.drawers.size(), "dust, clay, and the custom rate card's water");
         final Drawer water = drawer(g, "fluid:water");
         assertNotNull(water);
@@ -602,10 +623,10 @@ class FfConverterTest {
         assertEquals(100, water.getRate(), "50/s on each of 2 machines");
         assertEquals(Drawer.Rule.ANY, drawer(g, "item:a:clay:0").getRule(), "Build: no drawer rules");
         // The stand-in game builds no generators; the real one rebuilds the card from its source (PowerCardTest).
-        assertTrue(has(r.report(), Kind.UNMATCHED, "generator"));
-        assertTrue(has(r.report(), Kind.DROPPED, "switched-off"));
+        assertTrue(has(r.report(), Kind.CONVERTED, "generator"));
+        assertTrue(has(r.report(), Kind.CONVERTED, "a switched-off card; shown as it is, not editable here"));
         assertTrue(has(r.report(), Kind.CONVERTED, "source drawer for Water, at most 100/s"));
-        assertTrue(has(r.report(), Kind.WIRE, "1 wire to cards that were left out"));
+        assertFalse(has(r.report(), Kind.WIRE, "to cards that were left out"));
     }
 
     /** A mixer making oxygen cells, a tank (FF's Tank map) emptying them, and a dryer taking the oxygen. */
@@ -731,7 +752,8 @@ class FfConverterTest {
             {"id": "w5", "source": "d", "target": "clay", "resourceKind": "item", "resourceId": "a:clay"}""";
         final FfConverter.Result r = convert(SMALL.formatted("\"poolMode\": true,", wires), new FakeGame());
         final Graph g = r.graph();
-        assertEquals(2, g.nodes.size());
+        // The generator and the switched-off card are shown, outside the pool.
+        assertEquals(4, g.nodes.size());
         assertEquals(1, g.edges.size(), "mud runs from the mixer to the dryer");
         final Drawer clay = drawer(g, "item:a:clay:0");
         assertNotNull(clay);

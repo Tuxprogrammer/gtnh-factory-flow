@@ -584,6 +584,40 @@ public final class DevHarness {
                         com.gtnhplanner.ui.tutorial.Tutorial.where());
                 });
             }
+            case "/importplan":
+                // A plan file (plan JSON, code or link; file= from the repo root) opened as a new plan, as Paste plan
+                // does with the clipboard: importplan?file=conformance/codec/round-trip/display-cards.json.
+                requireWorld(); {
+                java.io.File f = new java.io.File(q.get("file"));
+                if (!f.isAbsolute()) f = new java.io.File(new java.io.File(mc.mcDataDir, "../.."), q.get("file"));
+                final String text = java.nio.file.Files.readString(f.toPath());
+                return onClient(() -> {
+                    final com.gtnhplanner.importer.FfConverter.Result result = com.gtnhplanner.importer.game.FactoryFlowImport
+                        .importAsSlot(text);
+                    final Map<String, Object> r = new LinkedHashMap<>();
+                    r.put(
+                        "summary",
+                        result.report()
+                            .summary());
+                    r.put(
+                        "report",
+                        result.report()
+                            .toString());
+                    r.put(
+                        "shown",
+                        result.graph()
+                            .getNodes()
+                            .stream()
+                            .filter(n -> n.shown != null)
+                            .map(
+                                n -> n.shown.planId() + " "
+                                    + n.shown.reason()
+                                        .word()
+                                    + (n.shown.solved() ? " solved" : " outside"))
+                            .toList());
+                    return r;
+                });
+            }
             case "/replay":
                 // Filming: rebuild the open plan a card at a time (DevReplay). replay?ms=400[&order=left][&frame=recent
                 // &recent=6]; replay?stop=1; replay alone says how far it is.
@@ -1313,6 +1347,7 @@ public final class DevHarness {
             List.of(
                 "/status - ready flag, current screen, display and GUI sizes, mouse position (GUI coords)",
                 "/open - open the GTNH Planner flowchart; /close - close the current screen",
+                "/importplan?file= - a plan file (JSON, code or link) opened as a new plan, as Paste plan does",
                 "/screenshot?name=x.png[&x&y&w&h] - save the next frame (optionally a GUI-coord crop), returns the path",
                 "/widgets - dump the ModularUI widget tree with GUI-coordinate areas",
                 "/move?x&y, /click?x&y&button&count&mods, /drag?x1&y1&x2&y2&steps&button&mods, /scroll?x&y&amount - GUI coords",

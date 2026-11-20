@@ -51,7 +51,10 @@ import com.gtnhplanner.importer.NodeMaker.PortInfo;
  * <li>Positions keep FF's layout, scaled to GTNH Planner's cards; an Arrange afterwards tidies it.</li>
  * <li>Text notes become the board's notes, placed and sized at the same scale, with their colour and text size.</li>
  * </ul>
- * Power cards and disabled cards are left out.
+ * A card the board cannot run as its own (switched off, a recipe kind the game has no page for, a recipe it lacks, or
+ * one the plan does not carry) comes in, when the plan's own text is at hand, as a display-only card
+ * ({@code core-codec DisplayCards}): where the plan has it, with the plan's name, ports and counts, wired as the plan
+ * wires it, not editable here.
  */
 public final class FfConverter {
 
@@ -79,7 +82,17 @@ public final class FfConverter {
     private FfConverter() {}
 
     public static Result convert(final FfPlan plan, final RecipeIndex index, final NodeMaker maker) {
-        return new Run(plan, index, maker).run();
+        return convert(plan, index, maker, null);
+    }
+
+    /**
+     * As {@link #convert(FfPlan, RecipeIndex, NodeMaker)}, with the plan as its JSON tree ({@code tree}, null for
+     * none):
+     * then a card the board cannot run comes in as a display-only card made from the plan's own spelling of it.
+     */
+    public static Result convert(final FfPlan plan, final RecipeIndex index, final NodeMaker maker,
+        @Nullable final Map<String, Object> tree) {
+        return new Run(plan, index, maker, tree).run();
     }
 
     /** One recipe of a card, on the board. */
@@ -150,6 +163,11 @@ public final class FfConverter {
         final NodeMaker maker;
         final ImportReport report = new ImportReport();
         final Graph graph;
+        /** The plan as its JSON tree, for display-only cards; null when the caller has none. */
+        @Nullable
+        final Map<String, Object> tree;
+        /** Display-only cards, by plan card id. */
+        final Map<String, Node> shown = new LinkedHashMap<>();
         final Map<String, FfRecipe> recipes;
         final Map<String, FfStorage> storages = new LinkedHashMap<>();
         final Map<String, Role> roles;
@@ -172,8 +190,10 @@ public final class FfConverter {
         /** Buffers joined into wires (wired to another drawer or by a cell wire): no drawer of their own. */
         final Set<String> joinedBuffers = new HashSet<>();
 
-        Run(final FfPlan plan, final RecipeIndex index, final NodeMaker maker) {
+        Run(final FfPlan plan, final RecipeIndex index, final NodeMaker maker,
+            @Nullable final Map<String, Object> tree) {
             this.plan = plan;
+            this.tree = tree;
             this.index = index;
             this.maker = maker;
             this.graph = new Graph(plan.name());
@@ -230,6 +250,8 @@ public final class FfConverter {
             reportUnusedStorages();
             placeNotes();
             placeBoards();
+            // Where a display-only card stands once the plan is laid out: one never moved goes back as the plan has it.
+            for (final Node n : shown.values()) n.shown = n.shown.at(n.x, n.y, n.group);
             if (lostWires > 0) report.add(
                 Kind.WIRE,
                 "Plan",
@@ -253,7 +275,7 @@ public final class FfConverter {
                         java.util.Collections.min(
                             e.getValue()
                                 .keySet()));
-                cards.put(e.getKey(), host.node().id.toString());
+                cards.put(e.getKey(), shown.containsKey(e.getKey()) ? e.getKey() : host.node().id.toString());
             }
             for (final Map.Entry<Uuid, String> e : origin.entrySet()) {
                 if (graph.nodes.containsKey(e.getKey())) cards.putIfAbsent(
@@ -273,7 +295,7 @@ public final class FfConverter {
             for (final String id : droppedEdges) unjoin(id, dropped, kept);
             final Set<String> converted = new LinkedHashSet<>(joinedBuffers);
             converted.removeAll(kept);
-            return new SiteCarry.Placed(cards, drawers, dropped, converted);
+            return new SiteCarry.Placed(cards, drawers, dropped, converted, new LinkedHashSet<>(shown.keySet()));
         }
 
         /** A dropped wire as the plan's own wires: a joined one as the two it joined, its buffer kept. */
@@ -291,6 +313,48 @@ public final class FfConverter {
         // region Cards
 
         void placeCard(final FfNode card) {
+            final int mark = report.size();
+            placeOwn(card);
+            if (!placed.containsKey(card.id()) && !customRates.containsKey(card.id())) show(card, mark);
+        }
+
+        /**
+         * A card the board cannot run as its own, as a display-only card at its place, wired as the plan wires it:
+         * its name, ports and counts as the plan states them ({@code DisplayCards}). Nothing without the plan's tree.
+         */
+        void show(final FfNode card, final int mark) {
+            if (tree == null) return;
+            Map<String, Object> own = null;
+            for (final Object o : tree.get("nodes") instanceof List ? (List<?>) tree.get("nodes") : List.of())
+                if (o instanceof final Map<?, ?> m && card.id()
+                    .equals(m.get("id"))) {
+                    @SuppressWarnings("unchecked")
+                    final Map<String, Object> found = (Map<String, Object>) m;
+                    own = found;
+                    break;
+                }
+            if (own == null) return;
+            final FfRecipe recipe = recipes.get(card.recipeId());
+            final com.gtnhplanner.core.model.Shown.Reason reason = ShownCards.reason(card.enabled(), recipe);
+            final Node node = com.gtnhplanner.core.codec.DisplayCards.card(
+                own,
+                com.gtnhplanner.core.codec.DisplayCards.recipeOf(own, tree.get("recipes")),
+                reason,
+                Uuid.randomUUID(),
+                px(card.x()),
+                py(card.y()));
+            graph.addNode(node);
+            shown.put(card.id(), node);
+            final String name = recipe == null ? card.recipeId() : recipe.name();
+            placed.computeIfAbsent(card.id(), k -> new HashMap<>())
+                .put(0, new Placed(node, card, recipe, card.overrides(), 0, name));
+            // Its rates a second as the plan pins them, on a card the solve runs.
+            if (node.shown.solved()) FfCards.portRates(ports, node, recipe, card.overrides(), card, 0, name, report);
+            // What said it was left out now says it is shown.
+            report.shown(mark, name, ShownCards.reportLine(node.shown.solved()));
+        }
+
+        void placeOwn(final FfNode card) {
             final FfRecipe recipe = recipes.get(card.recipeId());
             if (recipe == null) {
                 report.add(Kind.UNMATCHED, card.recipeId(), "the plan does not carry this card's recipe");
@@ -640,7 +704,9 @@ public final class FfConverter {
         void wirePool() {
             final Map<String, List<int[]>> makers = new LinkedHashMap<>(), users = new LinkedHashMap<>();
             final List<Placed> all = new ArrayList<>();
-            for (final Map<Integer, Placed> sections : placed.values()) all.addAll(sections.values());
+            // A card the board only shows is no part of the pool (the pool is the board's own cards).
+            for (final Map<Integer, Placed> sections : placed.values())
+                for (final Placed p : sections.values()) if (p.node().shown == null) all.add(p);
             for (int n = 0; n < all.size(); n++) {
                 final Node node = all.get(n)
                     .node();

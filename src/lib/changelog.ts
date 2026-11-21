@@ -40,6 +40,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "4.7.0-tux.2",
+    date: "2026-11-20",
+    headline: "Power numbers from the game, and one solver for every browser",
+    notes: [
+      "Generators follow the game's source: fusion, HTGR and large boiler numbers are corrected, and large boiler liquid fuels burn in whole ticks.",
+      "Plasma turbines take only the plasmas the game burns: seven that make nothing are gone, nine are new, and a removed one in an old plan reads as Helium Plasma.",
+      "The Advanced Boiler burns logs, planks, sticks, saplings, wood pulp and coal dusts, the Solar Boiler and Solar Tower have a Duty % setting, and the IC2 fluid reactor's custom rate stops at 10,000 L/s.",
+      "Peak power on a shared machine counts whole machines: 0.75 machines of work peaks at one machine's draw.",
+      "Every browser solves plans the same way, so a plan no longer shows one set of numbers and then another just after opening.",
+      "A buffer drawer keeps the rule saved with it, and its row shows the rule and its rate.",
+      "Generator, holder and shared machine cards name themselves at the same size as other cards.",
+      "The header and help menu no longer link to the original project's Discord and Ko-fi.",
+    ],
+  },
+  {
     version: "4.7.0-tux.1",
     date: "2026-11-19",
     headline: "Bug fixes for this server's pack",

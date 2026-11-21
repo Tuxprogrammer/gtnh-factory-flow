@@ -42,11 +42,6 @@ const ALLOWED: Allowed[] = [
     reason: "Changelog history: an old entry's link, as it was written.",
   },
   {
-    file: "src/lib/version.ts",
-    line: "gtnhplanner.com/api/version",
-    reason: "A maintainer note in a file the orchestrator owns; it sends nothing at run time.",
-  },
-  {
     file: "src/lib/power/sources/railcraft.ts",
     line: "GTNewHorizons/Railcraft",
     reason: "Credit: which game source tag the numbers were read from.",

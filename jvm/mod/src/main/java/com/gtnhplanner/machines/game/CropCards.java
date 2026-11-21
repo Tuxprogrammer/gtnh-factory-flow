@@ -136,9 +136,9 @@ public final class CropCards {
         public EffectResult apply(final EffectResult current, final Map<String, Object> s, final RecipeContext ctx) {
             final CropsNh.Stats stats = stats(ctx.properties());
             if (stats == null) return current;
-            current.durationTicks(
-                (int) Math.max(1, Math.round(current.durationTicks() * CropsNh.durationMultiplier(stats, s))));
-            current.energyPerT(0);
+            // The harvest time stays fractional (a farm's 512 / 4.5 is 113.78 ticks): the solver and the website's
+            // readout both rate the crops by it, and whole ticks would move every output by up to half a tick.
+            current.exact(current.duration() * CropsNh.durationMultiplier(stats, s), 0);
             current.throughputFactor(1);
             return current;
         }

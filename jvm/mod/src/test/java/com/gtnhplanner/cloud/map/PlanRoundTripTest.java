@@ -440,8 +440,11 @@ class PlanRoundTripTest {
             out = byId(
                 t.out()
                     .get("nodes"));
-        for (final String id : shown.keySet())
-            assertEquals(Canon.of(in.get(id)), Canon.of(out.get(id)), id + " goes back as it came");
+        // The import moved the plan to the board's corner: each goes out at its board place, as the cards around it.
+        for (final Map.Entry<String, Node> e : shown.entrySet()) assertEquals(
+            Canon.of(atBoardPlace(in.get(e.getKey()), e.getValue())),
+            Canon.of(out.get(e.getKey())),
+            e.getKey() + " goes back as it came, where the board has it");
         final Map<String, Map<String, Object>> recipesIn = byId(
             t.plan()
                 .get("recipes")),
@@ -500,8 +503,144 @@ class PlanRoundTripTest {
         assertFalse(byId(out.get("recipes")).containsKey("r-off"), "with its recipe");
         for (final Map<String, Object> e : objects(out.get("edges")))
             assertFalse("n-off".equals(e.get("source")) || "n-off".equals(e.get("target")), "and its wires");
-        for (final String id : new String[] { "n-infusion", "n-gone", "n-norecipe" })
-            assertEquals(Canon.of(in.get(id)), Canon.of(nodes.get(id)), id + " untouched");
+        for (final String id : new String[] { "n-infusion", "n-gone", "n-norecipe" }) assertEquals(
+            Canon.of(atBoardPlace(in.get(id), shown.get(id))),
+            Canon.of(nodes.get(id)),
+            id + " untouched but for the import's shift");
+    }
+
+    /** A plan card as it came, at the board card's place (the export writes every card where the board has it). */
+    private static Map<String, Object> atBoardPlace(final Map<String, Object> card, final Node n) {
+        final Map<String, Object> out = new LinkedHashMap<>(card);
+        out.put("position", PlanJson.parse("{\"x\":" + n.x + ",\"y\":" + n.y + "}"));
+        return out;
+    }
+
+    /**
+     * A file import moves the whole plan to the board's corner; written back with nothing moved, every card (the
+     * game's and the display-only ones), drawer, note, group and wire bend keeps its offset to every other.
+     */
+    @Test
+    void anImportedPlanGoesBackWithEverythingWhereItWasToEverythingElse()
+        throws IOException, ReflectiveOperationException {
+        final Map<String, Object> plan = PlanJson.parse(Conformance.text(DISPLAY));
+        // Off the board's corner, with a group holding a display-only card and a drawer, a note and a bent wire.
+        for (final String c : new String[] { "nodes", "storages" })
+            for (final Map<String, Object> o : objects(plan.get(c))) shift(o, -300, 160);
+        plan.put(
+            "pockets",
+            List.of(
+                PlanJson.parse(
+                    "{\"id\":\"pk\",\"name\":\"Kept\",\"position\":{\"x\":1300,\"y\":160},\"expanded\":true,"
+                        + "\"size\":{\"width\":800,\"height\":600}}")));
+        for (final Map<String, Object> o : objects(plan.get("nodes"))) if ("n-norecipe".equals(o.get("id"))) {
+            o.put("pocketId", "pk");
+            o.put("position", PlanJson.parse("{\"x\":40,\"y\":40}"));
+        }
+        for (final Map<String, Object> o : objects(plan.get("storages"))) if ("s-bolt".equals(o.get("id"))) {
+            o.put("pocketId", "pk");
+            o.put("position", PlanJson.parse("{\"x\":440,\"y\":40}"));
+        }
+        plan.put(
+            "annotations",
+            List.of(
+                PlanJson.parse(
+                    "{\"id\":\"a-note\",\"kind\":\"text\",\"text\":\"Here\",\"position\":{\"x\":-200,"
+                        + "\"y\":900},\"size\":{\"width\":200,\"height\":100}}")));
+        for (final Map<String, Object> e : objects(plan.get("edges")))
+            if ("n-plate".equals(e.get("source"))) e.put("waypoints", List.of(PlanJson.parse("{\"x\":0,\"y\":300}")));
+        final Trip t = trip(PlanJson.write(plan), "shifted", Set.of("r-gone"), true);
+
+        final var placed = t.result()
+            .placed();
+        final Map<String, double[]> was = places(t.plan()), now = places(t.out());
+        final Map<String, String> as = new LinkedHashMap<>();
+        for (final String id : was.keySet()) as.put(id, id);
+        as.putAll(placed.cards());
+        as.putAll(placed.storages());
+        for (final Map<String, Object> pk : objects(
+            t.out()
+                .get("pockets")))
+            if ("Kept".equals(pk.get("name"))) as.put("pocket:pk", "pocket:" + pk.get("id"));
+        for (final Map<String, Object> a : objects(
+            t.out()
+                .get("annotations")))
+            if ("Here".equals(a.get("text"))) as.put("note:a-note", "note:" + a.get("id"));
+        for (final Map<String, Object> e : objects(
+            t.out()
+                .get("edges")))
+            if (placed.cards()
+                .get("n-plate")
+                .equals(e.get("source"))) as.put("bend:n-plate", "bend:" + e.get("source"));
+        final Map<String, String> moved = new LinkedHashMap<>();
+        for (final Map.Entry<String, double[]> e : was.entrySet()) {
+            final double[] a = e.getValue(), b = now.get(as.get(e.getKey()));
+            assertNotNull(b, e.getKey() + " is written back");
+            moved.put(e.getKey(), Math.round(b[0] - a[0]) + "," + Math.round(b[1] - a[1]));
+        }
+        assertEquals(
+            moved.size(),
+            moved.values()
+                .stream()
+                .filter(
+                    v -> v.equals(
+                        moved.values()
+                            .iterator()
+                            .next()))
+                .count(),
+            "everything moved alike: " + moved);
+    }
+
+    private static void shift(final Map<String, Object> o, final double dx, final double dy) {
+        final Map<String, Object> p = object(o.get("position"));
+        o.put(
+            "position",
+            PlanJson.parse(
+                "{\"x\":" + Math.round(((Number) p.get("x")).doubleValue() + dx)
+                    + ",\"y\":"
+                    + Math.round(((Number) p.get("y")).doubleValue() + dy)
+                    + "}"));
+    }
+
+    /**
+     * Where each thing of a plan stands on its board, groups flattened: cards and drawers by id, groups as
+     * {@code pocket:<id>}, notes as {@code note:<id>}, a wire's first bend as {@code bend:<source>}.
+     */
+    private static Map<String, double[]> places(final Map<String, Object> plan) {
+        final Map<String, Map<String, Object>> pockets = byId(plan.get("pockets"));
+        final Map<String, double[]> out = new LinkedHashMap<>();
+        for (final String c : new String[] { "nodes", "storages" })
+            for (final Map<String, Object> o : objects(plan.get(c)))
+                out.put(String.valueOf(o.get("id")), at(o, pockets));
+        for (final Map.Entry<String, Map<String, Object>> p : pockets.entrySet())
+            out.put("pocket:" + p.getKey(), at(p.getValue(), pockets));
+        for (final Map<String, Object> a : objects(plan.get("annotations")))
+            out.put("note:" + a.get("id"), at(a, pockets));
+        for (final Map<String, Object> e : objects(plan.get("edges"))) {
+            final List<Map<String, Object>> bends = objects(e.get("waypoints"));
+            if (!bends.isEmpty()) out.put(
+                "bend:" + e.get("source"),
+                new double[] { ((Number) bends.get(0)
+                    .get("x")).doubleValue(),
+                    ((Number) bends.get(0)
+                        .get("y")).doubleValue() });
+        }
+        return out;
+    }
+
+    /** A thing's place on the board: its position plus the corners of the groups it sits in. */
+    private static double[] at(final Map<String, Object> o, final Map<String, Map<String, Object>> pockets) {
+        final Map<String, Object> p = object(o.get("position"));
+        final double[] xy = { ((Number) p.get("x")).doubleValue(), ((Number) p.get("y")).doubleValue() };
+        Object in = o.get(o.containsKey("parentPocketId") ? "parentPocketId" : "pocketId");
+        for (int depth = 0; in != null && pockets.containsKey(in) && depth < 16; depth++) {
+            final Map<String, Object> pk = pockets.get(in);
+            final Map<String, Object> q = object(pk.get("position"));
+            xy[0] += ((Number) q.get("x")).doubleValue();
+            xy[1] += ((Number) q.get("y")).doubleValue();
+            in = pk.get("parentPocketId");
+        }
+        return xy;
     }
 
     /** A board with display-only cards saves and reads back with them where they stand, their wires on them. */

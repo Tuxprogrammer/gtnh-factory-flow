@@ -5,7 +5,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { FactoryProject, ThroughputResult } from "@/lib/model/types";
 import { withAdopt } from "@/lib/core/adopt";
 import { core, loadCore, resetCoreForTests } from "@/lib/core/loader";
-import { initLpEngine } from "@/lib/solver/lp-engine";
 import { node, project, recipe, wire } from "@/lib/solver/plan/adapter/test-kit";
 
 /**
@@ -85,7 +84,6 @@ describe("the main thread asks for the core", () => {
 
 describe.skipIf(!present)("a main-thread solve through the core", () => {
   it("goes through the core once it is loaded and answers what the website's engine answers", async () => {
-    await initLpEngine();
     resetCoreForTests();
     try {
       vi.resetModules();

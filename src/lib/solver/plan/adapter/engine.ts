@@ -19,7 +19,7 @@ export const islandCache: PieceCache = new IslandCache(64);
 
 const cached: SolveCore = (input) => solvePlan(input, planExtensions, islandCache);
 
-/** The website's own engine (TypeScript, HiGHS where loaded), whatever else is installed. */
+/** The website's own engine (TypeScript on its homegrown simplex), whatever else is installed. */
 export const typescriptSolveCore: SolveCore = cached;
 
 /**

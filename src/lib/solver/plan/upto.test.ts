@@ -1,16 +1,17 @@
 /**
  * The Up to rule in the engine (docs/up-to.md): the guard, the push, the drawer relaxation naming the card, and the
  * read-out (`SolutionView.upTo`). Hand-built plans; every machine runs a craft a second per machine unless it says
- * otherwise. Determinism is checked by solving every plan again with the columns in reverse order.
+ * otherwise. The plans solve on the compiled core, as every board does; the internals the website's own engine keeps
+ * (its contexts, chain and LP count: the stand-in where the core cannot load) are checked on that engine.
  */
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { initLpEngine } from "../lp-engine";
+import { CORE_LOAD_MS, coreSolve, useCoreSolver } from "@/test-support/core-solve";
 import { differences } from "./__fixtures__/compare";
 import { loadInput } from "./__fixtures__/load";
 import { SolveContext } from "./context";
 import { evaluateSupportWith, resolveChoice } from "./enumerate";
-import { setColumnOrder, takeLpCount } from "./lp";
+import { takeLpCount } from "./lp";
 import { MAX_READOUT_LPS, readoutBudget } from "./readout";
 import { runChain, solvePiece } from "./solve-core";
 import { planExtensions, solvePlan } from "./solve-plan";
@@ -51,12 +52,10 @@ import {
 } from "./__fixtures__/up-to/plans";
 import type { Answer, Note, PortRef, SolutionView, SolveInput, UpToReadout } from "./types";
 
-beforeAll(async () => {
-  await initLpEngine();
-});
+beforeAll(() => useCoreSolver(), CORE_LOAD_MS);
 
 function solved(i: SolveInput): Extract<Answer, { kind: "solved" }> {
-  const answer = solvePlan(i);
+  const answer = coreSolve(i);
   if (answer.kind !== "solved") throw new Error(`failed: ${JSON.stringify(answer.failure)}`);
   return answer;
 }
@@ -586,20 +585,13 @@ describe("Up to: determinism and work", () => {
   ];
 
   it.each(cases)(
-    "%s answers the same solved again and built in reverse column order",
+    "%s answers the same solved again",
     (_name, make) => {
       const i = make();
-      const first = solvePlan(i);
-      const again = solvePlan(i);
-      setColumnOrder("reverse");
-      let reversed: Answer;
-      try {
-        reversed = solvePlan(i);
-      } finally {
-        setColumnOrder("forward");
-      }
+      const first = coreSolve(i);
+      const again = coreSolve(i);
       expect(first.kind).toBe("solved");
-      for (const other of [again, reversed]) expect(differences(first, other, 5)).toEqual([]);
+      expect(differences(first, again, 5)).toEqual([]);
     },
   );
 

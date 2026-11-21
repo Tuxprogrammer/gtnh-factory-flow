@@ -93,15 +93,15 @@
  "answer": {
   "solution": {
    "extentsPerSecond": {
-    "6a98e549-9a91-3d1b-b52c-03fcc7664810": 2.6666666666666665,
-    "1c63531c-cf55-3f3f-a216-6d3f7736d535": 1.3333333333333333
+    "1c63531c-cf55-3f3f-a216-6d3f7736d535": 1.33333333333333,
+    "6a98e549-9a91-3d1b-b52c-03fcc7664810": 2.66666666666667
    },
    "machineCounts": {
-    "6a98e549-9a91-3d1b-b52c-03fcc7664810": 2.6666666666666665,
-    "1c63531c-cf55-3f3f-a216-6d3f7736d535": 1.3333333333333333
+    "1c63531c-cf55-3f3f-a216-6d3f7736d535": 1.33333333333333,
+    "6a98e549-9a91-3d1b-b52c-03fcc7664810": 2.66666666666667
    },
    "edgeFlowsPerSecond": {
-    "d24966ba-c895-3251-8a82-fda896241f6c": 2.6666666666666665
+    "d24966ba-c895-3251-8a82-fda896241f6c": 2.66666666666667
    },
    "gatedSources": [],
    "gatedSinks": [],
@@ -112,7 +112,7 @@
       "portIndex": 0,
       "input": true
      },
-     "ratePerSecond": 1.3333333333333333
+     "ratePerSecond": 1.33333333333333
     }
    ],
    "terminalOutputs": [
@@ -122,13 +122,13 @@
       "portIndex": 0,
       "input": false
      },
-     "ratePerSecond": 2.6666666666666665
+     "ratePerSecond": 2.66666666666667
     }
    ],
    "unneeded": [],
    "openGates": 0,
    "externalQuantity": 0,
-   "totalInternalFlow": 2.6666666666666665,
+   "totalInternalFlow": 2.66666666666667,
    "notes": [],
    "key": {
     "gateAnchors": []

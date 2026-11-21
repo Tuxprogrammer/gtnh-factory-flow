@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { factoryProjectSchema } from "@/lib/model/schemas";
 import { calculateThroughput } from "@/lib/solver";
 import { normalizeLoadedProject } from "@/lib/model/project-normalize";
-import { ensurePlanEngine } from "@/lib/server/plan-engine";
+import { ensurePlanEngine, PlanEngineUnavailableError } from "@/lib/server/plan-engine";
 import { computeCommunityPlanStats } from "@/lib/community/plan-stats";
 import { APP_VERSION } from "@/lib/version";
 import {
@@ -359,6 +359,8 @@ export async function POST(request: Request) {
     invalidatePlanListCache();
     return NextResponse.json({ id: data.id }, { status: 201 });
   } catch (error) {
+    if (error instanceof PlanEngineUnavailableError)
+      return NextResponse.json({ error: error.message }, { status: 503 });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Sharing the plan failed." },
       { status: 500 },

@@ -16,8 +16,8 @@ export function planSolveWith(
   try {
     answer = core(model.input);
   } catch (error) {
-    // An engine that cannot run (HiGHS missing on a thread without it, a
-    // program it rejects) is a failed solve the board can show, never a crash.
+    // An engine that cannot run (a program it rejects) is a failed solve the
+    // board can show, never a crash.
     answer = {
       kind: "failed",
       failure: {

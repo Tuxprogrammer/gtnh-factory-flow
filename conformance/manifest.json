@@ -110,23 +110,15 @@
       ],
       "generator": "goldens and buffer-drawers.json: ./gradlew :mod:test --tests '*SolverGoldenTest*' --tests '*BufferDrawerTest*' -PwriteGoldens (from jvm/); other inputs: the mod's /solvedump command"
     },
-    "solver/highs-differs": {
-      "specifies": "Islands of two generated stress boards (484 and 1,000 cards) where the website's engine on HiGHS answers otherwise than the shared core: points read to six digits, an equal split read as 6/6/0, dust that turns an Up to reason, and one island HiGHS cannot solve. cases.json.gz is {cases: [{name, input, answer}]} as solver/website: input in the mod's dump format, answer the core's digest, which both cores must give (1e-6, golden rules). The evidence for retiring HiGHS.",
-      "readers": [
-        "website: src/lib/solver/plan/__fixtures__/highs-differs.test.ts",
-        "jvm: core-solver solver/HighsDiffersTest"
-      ],
-      "generator": "scratch probe on the stress boards (tools/perf/stress.mjs output), not kept: the cases are the record"
-    },
     "solver/up-to": {
-      "specifies": "Up to parity: each file is {name, input, answer}, a plan the website's engine solved, for the mod's engine to solve again and match by the golden rules. Hand-built Up to plans plus every corpus plan with each exact count turned Up to.",
+      "specifies": "Up to parity: each file is {name, input, answer}, a plan with the compiled core's answer (the website's engine), for the mod's kernel to solve again and match by the golden rules. Hand-built Up to plans plus every corpus plan with each exact count turned Up to.",
       "readers": [
         "mod: solver/UpToParityTest, solver/SolverCorpus.upToCases"
       ],
       "generator": "UPTO_EXPORT_DIR=$PWD/conformance/solver/up-to npx vitest run up-to-export (website), then node tools/conformance/manifest.mjs --write"
     },
     "solver/website": {
-      "specifies": "The two solvers on the website's own cases: cases.json.gz holds {generator, cases:[{name, input, answer}]}, every distinct solve input the website's tests (its solver test scenarios, the board parity scenarios, every other test that solves a plan) and the reference plans hand the plan solver, minus those already in the corpus or the Up to plans, each with the website's answer as the golden digest (or {failed: message}). The Java kernel must give the same answer, equal to 1e-6 relative; where a plan has several optimal answers the case says so in the Java reader's list.",
+      "specifies": "The two solvers on the website's own cases: cases.json.gz holds {generator, cases:[{name, input, answer}]}, every distinct solve input the website's tests (its solver test scenarios, the board parity scenarios, every other test that solves a plan) and the reference plans hand the plan solver, minus those already in the corpus or the Up to plans, each with the compiled core's answer (the website's engine) as the golden digest (or {failed: message}). The Java kernel must give the same answer, equal to 1e-6 relative; no case is listed as differing.",
       "readers": [
         "website: src/lib/solver/plan/__fixtures__/website-cases.test.ts",
         "jvm: core-solver com.gtnhplanner.solver.WebsiteCasesTest"
@@ -837,11 +829,6 @@
       "bytes": 9752,
       "sha256": "7ffec210637a35bd04d1798aca7680a1e32fc2f9c921dcbcd4ad72a5a2a5ffcb"
     },
-    "solver/highs-differs/cases.json.gz": {
-      "area": "solver/highs-differs",
-      "bytes": 37261,
-      "sha256": "a6555b5f8fe326b766d7684e2adbe3611064c167ba678c3741163024065f5e58"
-    },
     "solver/up-to/alternatives-chosen.json": {
       "area": "solver/up-to",
       "bytes": 7181,
@@ -854,8 +841,8 @@
     },
     "solver/up-to/alumina-line-shared-reactor-every-count-up-to.json": {
       "area": "solver/up-to",
-      "bytes": 41356,
-      "sha256": "43656034ac8a69ccac334349b7612efdb465a5174b87c51790f862ee1556afca"
+      "bytes": 41398,
+      "sha256": "e42019f0e7c79b53991da8c04a5bfddd9b71c473e4620e687dd7cb2f1eaf12ae"
     },
     "solver/up-to/banked-any-taker.json": {
       "area": "solver/up-to",
@@ -870,37 +857,37 @@
     "solver/up-to/benzene-every-count-up-to.json": {
       "area": "solver/up-to",
       "bytes": 3519,
-      "sha256": "f33a517c97ac8f16bce13a03e670c279ed7ff159b245c2b7e38445bf7f3de5a9"
+      "sha256": "fb3810fdaee2d18d1b7bcff19377edb592d623b1cad0f88cf2cb78a41b79e31c"
     },
     "solver/up-to/benzene.json": {
       "area": "solver/up-to",
-      "bytes": 3801,
-      "sha256": "3c6f5c7bc2af6207943285728c1ea6a0d171c0b2bf297c58ea3c7a1e8c05e079"
+      "bytes": 3817,
+      "sha256": "4de295d7e7810316fba80c92832ec9ef1afc19065618e5a951f69456505608dd"
     },
     "solver/up-to/buffer-any-taker.json": {
       "area": "solver/up-to",
       "bytes": 3990,
-      "sha256": "6a4fdf84d2653134da7de84cec92960280f3a860451e2b59d3aca536d82758fa"
+      "sha256": "8917713829532e4380e562cf27abb29c9c54d03fe00e0bbd34cdd86ffb6c2157"
     },
     "solver/up-to/buffer-drawers-every-count-up-to.json": {
       "area": "solver/up-to",
-      "bytes": 13720,
-      "sha256": "1ca54ebb32a2bf17f7518fd0b1c21271f1cb588b27c830bca47bd036f147812d"
+      "bytes": 13573,
+      "sha256": "f574ba67547b38d04fbde13c27a727f894e46b3a3eb08f2dc9bb4d716ed3c144"
     },
     "solver/up-to/buffer-up-to-taker.json": {
       "area": "solver/up-to",
       "bytes": 4404,
-      "sha256": "fcc52062ca7a3e343e636c1060a3b514dc50e7c6412f9a209d33f16e3e15ecdb"
+      "sha256": "cca127b0256410c8b42a6ab9a943e3802eed58b6a8f070731e949ddb7b4177fd"
     },
     "solver/up-to/buffer-with-a-rule.json": {
       "area": "solver/up-to",
       "bytes": 4323,
-      "sha256": "24be23c1b6df66e7dbba2a7f6b0d0a04c2e3e888906dc8960a87c25ec0a8e3e2"
+      "sha256": "1fd22cb766b86a6d2a067f4ae3a500c3d86399ee9284985aee11f4ce48471c33"
     },
     "solver/up-to/capped-drawers.json": {
       "area": "solver/up-to",
       "bytes": 4400,
-      "sha256": "e69f31cadfaf35bd85bbeb0e04e401718b8135dcb07a744e7a514316d64d68aa"
+      "sha256": "a62b6a23dd8fe5768f2a209b8060604d6685ad5edd9da0d69aaf72148bc53171"
     },
     "solver/up-to/chain-first-slower.json": {
       "area": "solver/up-to",
@@ -910,7 +897,7 @@
     "solver/up-to/chain-of-three.json": {
       "area": "solver/up-to",
       "bytes": 5088,
-      "sha256": "749b377ffaebb89c223b27951dd95e590cdb0d41bd4d132958e3a9cad5d381df"
+      "sha256": "40f25515ac20f84d835079ecdbca54ecf6e54293db599278fc0784c98c8ab584"
     },
     "solver/up-to/chain-second-slower.json": {
       "area": "solver/up-to",
@@ -920,7 +907,7 @@
     "solver/up-to/clog-ring.json": {
       "area": "solver/up-to",
       "bytes": 4250,
-      "sha256": "078343019376cd838201e7fabcca294ec07477ebf6ac948cfb29ddc1c7152606"
+      "sha256": "315c64bf1cdee36e792d4ced8321b4888b2004ee2967fee51cd73765b0d67a14"
     },
     "solver/up-to/dead-ring-of-one.json": {
       "area": "solver/up-to",
@@ -930,7 +917,7 @@
     "solver/up-to/dead-ring-of-three.json": {
       "area": "solver/up-to",
       "bytes": 5740,
-      "sha256": "bb57ca534b68e7a5eda46d0759e8390c1238c423442e48aa358ad7954faafc2e"
+      "sha256": "3e30bb57ab007414c972de2d35a8d4dbbecddbb98cd057003e54ea70d343f5a5"
     },
     "solver/up-to/dead-ring-of-two.json": {
       "area": "solver/up-to",
@@ -940,7 +927,7 @@
     "solver/up-to/exact-consumer.json": {
       "area": "solver/up-to",
       "bytes": 4753,
-      "sha256": "2cf2c6abc684a133c54b5fe596acd945d41a0342e0319937bb2237f9b58ad9d1"
+      "sha256": "cf42deab19f9741cae9c67d90b88c26c87254acabcb153133d9b1d99b34d7b77"
     },
     "solver/up-to/exact-producer.json": {
       "area": "solver/up-to",
@@ -950,52 +937,52 @@
     "solver/up-to/fed-ring.json": {
       "area": "solver/up-to",
       "bytes": 4494,
-      "sha256": "289feaece5ca21055d87bea698f4bf515ac38bca79e173221d6b05297d73c411"
+      "sha256": "d94b5bc44fe5ba4c8547c8f95ba5a9f0dc70d5a69361ba31e68e8999ee10eb01"
     },
     "solver/up-to/full-platline-every-count-up-to.json": {
       "area": "solver/up-to",
       "bytes": 103493,
-      "sha256": "0deec4688ea4bb73cda0bf5ab1a44b784f104838fcabb2199296a40ee3f142e7"
+      "sha256": "00b932f5395e479964c90ae61da9c588a52d033a624670322a8f70e13eb72247"
     },
     "solver/up-to/glass-every-count-up-to.json": {
       "area": "solver/up-to",
-      "bytes": 18490,
-      "sha256": "e57153a0d578a5d3c41eb818a4b6e794e9942f5e726503059f8d8bd952e5b203"
+      "bytes": 18455,
+      "sha256": "fe9dee58725cad3ee15c79095b091f8612aec8402a345d8a88ab73bb67f3d051"
     },
     "solver/up-to/gtnh-flow-230-platline-every-count-up-to.json": {
       "area": "solver/up-to",
-      "bytes": 53430,
-      "sha256": "490999420a7a547f7d0531694e2cea7eba66478746f8a0e5621cdb910fa5497c"
+      "bytes": 53475,
+      "sha256": "bd09f9b7eacd54356d61f489eceb91d2aaba96113c818e6019cf9d27154ac71d"
     },
     "solver/up-to/gtnh-flow-cetane-every-count-up-to.json": {
       "area": "solver/up-to",
-      "bytes": 18814,
-      "sha256": "27d49b5b8091f7898509a42ad230f7313b760cf182025f4c305463272edf86fa"
+      "bytes": 18895,
+      "sha256": "325d68935b89212e8f1ae4382bd40ec9db58ef3b0644f610232f1c0bb8ae9e28"
     },
     "solver/up-to/gtnh-flow-excess-choice-every-count-up-to.json": {
       "area": "solver/up-to",
-      "bytes": 5698,
-      "sha256": "e81472c9f37377b416545abee4090e3f3155eaccc11da12458555b7dbefeabd9"
+      "bytes": 5724,
+      "sha256": "fef8daffc0cc4b728ae25a91e8d5b2bc82ffdb03d0f51f78cbd017a638a581ad"
     },
     "solver/up-to/gtnh-flow-jet-fuel-every-count-up-to.json": {
       "area": "solver/up-to",
-      "bytes": 26532,
-      "sha256": "ac1653ebea7aa5889d8f67dbf71649e8e6df2839cf734fe7ebc5fc892d173643"
+      "bytes": 26480,
+      "sha256": "246a7f5fe03c13fb783a6a361febb9557babd212477fe5e83101f9235946f036"
     },
     "solver/up-to/gtnh-flow-light-fuel-every-count-up-to.json": {
       "area": "solver/up-to",
       "bytes": 5267,
-      "sha256": "3920273193cfdbe159170c23c9be6ec4ce2a8524f6af09084538c585551a6aff"
+      "sha256": "68f935304c9de333cf47c251f0c613149220019a58c14353fc00deaa3900eaaa"
     },
     "solver/up-to/gtnh-flow-light-fuel-hydrogen-loop-every-count-up-to.json": {
       "area": "solver/up-to",
-      "bytes": 5214,
-      "sha256": "0998423cdd9ddd4506c48fe13b3aa7741de272fcdbf64cea1b6cd144387b68e8"
+      "bytes": 5228,
+      "sha256": "e422d48b80ca6c5ab3f0e9717bb4b85e7e209478af472f2495c61d55feabb544"
     },
     "solver/up-to/gtnh-flow-loopgraph-every-count-up-to.json": {
       "area": "solver/up-to",
       "bytes": 3787,
-      "sha256": "ccf774668034909ffb6c63650b4e566d738680ea44d6b5d193d998f8b785bab2"
+      "sha256": "d4f6de16044e5cd9f690cb0b2a54f1ad7a9df184da1eab25b11c83f56f9bee62"
     },
     "solver/up-to/gtnh-flow-microsheep-every-count-up-to.json": {
       "area": "solver/up-to",
@@ -1004,38 +991,38 @@
     },
     "solver/up-to/gtnh-flow-mk1-every-count-up-to.json": {
       "area": "solver/up-to",
-      "bytes": 6742,
-      "sha256": "c2abfa4fd1ecddc5c60aded3349c533d8b9dd921c28f9f271c4b4195a99f7388"
+      "bytes": 6652,
+      "sha256": "4b8af790095543bcbed8066898c6d661935abe41cb18281434992d191e10ce53"
     },
     "solver/up-to/gtnh-flow-mk1-tiberium-every-count-up-to.json": {
       "area": "solver/up-to",
       "bytes": 6330,
-      "sha256": "bdfebaccce2f13cb2aab205535bd4ab4fade3e52cf683e6bac9b7b0b170ccd2b"
+      "sha256": "00e450a4875eff319a1dafddc42d07218be552d6d016a6f4fcb3f63b11f9d852"
     },
     "solver/up-to/gtnh-flow-nanocircuits-every-count-up-to.json": {
       "area": "solver/up-to",
-      "bytes": 581965,
-      "sha256": "24cb24c8dbf050bac5e4a13146db5bb106941f29e5bec0e5ccc5146bedcd800a"
+      "bytes": 583099,
+      "sha256": "0fa6cf3ba52b7e333a1e9d0399d931bf74cb2b6a409715566c67167fb9800533"
     },
     "solver/up-to/gtnh-flow-palladium-every-count-up-to.json": {
       "area": "solver/up-to",
-      "bytes": 7398,
-      "sha256": "f18d7fcdbeb9617b4c8b283d8737d1691ca5791b03756cb81122ae076c67226b"
+      "bytes": 7392,
+      "sha256": "7a8f83c40547ef76a5d621057ea883515b0f5c15e3a918e197d2fcada527176d"
     },
     "solver/up-to/gtnh-flow-palladium-line-every-count-up-to.json": {
       "area": "solver/up-to",
-      "bytes": 123526,
-      "sha256": "4a7a6bd05aa156248c3c6451bdefd711db7baf95575fdcd7b21a29020d3f5638"
+      "bytes": 123589,
+      "sha256": "5569532c3a0cf31ed94ce29af3a86656b98b630bbd4fefd4424ddae522933261"
     },
     "solver/up-to/gtnh-flow-symmetric-choice-every-count-up-to.json": {
       "area": "solver/up-to",
       "bytes": 7335,
-      "sha256": "4d215d4ea8d78fc63bda19a92bc36eb8c4ff487b609d34a4ac73a575792b56ee"
+      "sha256": "015a29eccd0b3bb76e9d6bb5f939befe891c611b542f50ec079a2e5152ab6b0a"
     },
     "solver/up-to/gtnh-flow-two-decisions-every-count-up-to.json": {
       "area": "solver/up-to",
       "bytes": 13847,
-      "sha256": "97fb82e4d6f3042da19f8433c5b8d6962267e023099bd5c8c44e510de6fda1e8"
+      "sha256": "936d52fe9c5695274f8fc01e76294ceacfb57d56e3ed8b66d7180b2fdfc42ba9"
     },
     "solver/up-to/gtnh-flow-twoslack-every-count-up-to.json": {
       "area": "solver/up-to",
@@ -1044,28 +1031,28 @@
     },
     "solver/up-to/hv-diesel-every-count-up-to.json": {
       "area": "solver/up-to",
-      "bytes": 17889,
-      "sha256": "9fe827654c562f57814cdaa58b5fd1d17a0d89ecbe3bb37ac464d6ccbd6b296e"
+      "bytes": 17883,
+      "sha256": "03d3d9b7fac81e9880885aeacc83f594765c38a7ca31bf352ffde11a79a3461a"
     },
     "solver/up-to/idle-noise-beside-a-lone-card.json": {
       "area": "solver/up-to",
-      "bytes": 60226,
-      "sha256": "295302fa40c3f23ddab8c0244bc4f0bec70bf7f7cfe83e618c6b9ac50555a590"
+      "bytes": 60478,
+      "sha256": "77ef19e4dd57b99f8b143e987f7d2e0b741044667254c288d764d6d6aac5f30a"
     },
     "solver/up-to/idle-noise.json": {
       "area": "solver/up-to",
-      "bytes": 58571,
-      "sha256": "61cc8abb064f1dc2aa1f855dc7677b797bd1053a7e2ef63d43c7d15f4a07aaa9"
+      "bytes": 58823,
+      "sha256": "bf4e2954368d240ae3b06e4c75c797234c09c4edd0538a453722b222a2bc667a"
     },
     "solver/up-to/mega-iv-nitrobenzene-power-plant-every-count-up-to.json": {
       "area": "solver/up-to",
-      "bytes": 49934,
-      "sha256": "fcedb6711af1d57ddac005d9f1888646543fd9763fb30234482ea10d152fa079"
+      "bytes": 49921,
+      "sha256": "1d285fbaaf3294405bd1f81f5101fe3a280d4747724375ddd65aed756ce6c610"
     },
     "solver/up-to/mv-every-count-up-to.json": {
       "area": "solver/up-to",
-      "bytes": 73990,
-      "sha256": "273f603ef990a1f4aabe05a0cad9fe44a353e23dc626aec2735868aeb2a019d0"
+      "bytes": 75659,
+      "sha256": "75ad96c41fd375991aa5c31e919bb0b880abf84c6a4f6ce748aa42d2b5833aab"
     },
     "solver/up-to/no-up-to.json": {
       "area": "solver/up-to",
@@ -1084,43 +1071,43 @@
     },
     "solver/up-to/oxygen-silicon-loop-every-count-up-to.json": {
       "area": "solver/up-to",
-      "bytes": 6751,
-      "sha256": "9689ad13540926a6879f0f94ff86b990195b3f80eb58401ee121044ac539a262"
+      "bytes": 6736,
+      "sha256": "42c4035ec72dd5537762e817bf857f499d3c556e71977029924d65fffa99894c"
     },
     "solver/up-to/pa-cell-loop-every-count-up-to.json": {
       "area": "solver/up-to",
-      "bytes": 16008,
-      "sha256": "47e926b56c9b4f5751760b2fb7ea5a6ca5f92e8d769385bcdcb735c22b2c7222"
+      "bytes": 15972,
+      "sha256": "421df2b916133bfe413c12839d8547b5c7c41aa0b6988f1e802d1da4d91ca301"
     },
     "solver/up-to/pin-diagnosis.json": {
       "area": "solver/up-to",
       "bytes": 6903,
-      "sha256": "21ae5e892955243f8abcd9a9d0b8338d1c74b72043fc7d416f553711a5039f77"
+      "sha256": "ec224c1f8fb6738866e6292fe4e1e1970d1a4914d9ab325535169c90d8fd9dc3"
     },
     "solver/up-to/platline-every-count-up-to.json": {
       "area": "solver/up-to",
       "bytes": 108973,
-      "sha256": "66767343100bd2b71ec7774263726f3cfdcffe567b77699e152496f1f5d106c3"
+      "sha256": "f927e63083c59b62b974fbed9c49163fe722a63ee0b879a2f409f22feea49407"
     },
     "solver/up-to/platline-x4-every-count-up-to.json": {
       "area": "solver/up-to",
       "bytes": 433387,
-      "sha256": "67ca783edc035831f193e9d9313def17758787507cd5d24a140864cb13291ed9"
+      "sha256": "9dd0f8958613cf11952a4d2a1d6e2d575b540a2049f72e0ac43ec6ced43ca5b7"
     },
     "solver/up-to/read-out-budget.json": {
       "area": "solver/up-to",
       "bytes": 76145,
-      "sha256": "ab54312e1bdec1676bc858f2cd9a76ae8712e36832c78071e321d59758962699"
+      "sha256": "1e93d4b52ed552700325f636ab16273cf0ed3f181e84c75285f2b9b933182a7b"
     },
     "solver/up-to/shared-pool.json": {
       "area": "solver/up-to",
-      "bytes": 3367,
-      "sha256": "ec406ace0b6b056f16b0a948db038419e337f00c882c9096c9ad86eb79f695f3"
+      "bytes": 3351,
+      "sha256": "3d6197893084fd8c04b818bfc00457eee4d54acaa33b731129f5dee84eadabe8"
     },
     "solver/up-to/shared-producer.json": {
       "area": "solver/up-to",
       "bytes": 4552,
-      "sha256": "8c2dc53fac3a028b9f6a8e12979514ce5c416a4c95a09585d22841c374fff69a"
+      "sha256": "865b69efe56866f4593832b4fb1f196ae34b17b0aa264591bb2ce753897c0367"
     },
     "solver/up-to/single-card-v2-every-count-up-to.json": {
       "area": "solver/up-to",
@@ -1130,7 +1117,7 @@
     "solver/up-to/stage-a.json": {
       "area": "solver/up-to",
       "bytes": 4260,
-      "sha256": "d00aab5fdc191110b2286d9dfb6927d7e1f6eeb0bbb9724acbc3c4fbf4afa194"
+      "sha256": "59fc3d0db2add12e053455a7863d20be5eedf00b7add67a18442a01acebb5084"
     },
     "solver/up-to/starved-chain.json": {
       "area": "solver/up-to",
@@ -1140,57 +1127,57 @@
     "solver/up-to/sulfuric-acid-every-count-up-to.json": {
       "area": "solver/up-to",
       "bytes": 19462,
-      "sha256": "147dec1db7abc97f96dbba8b22e9bc543f3b1a590dfbc242d3d2e4dcf66d72ba"
+      "sha256": "a8fc7925a4ed2caa9e14e29dc0b58f428a9f4ed998477bb729b8e86dc4f5fda2"
     },
     "solver/up-to/titanium-line-chembath-every-count-up-to.json": {
       "area": "solver/up-to",
       "bytes": 25132,
-      "sha256": "99b9e6b9364ede316fd813c1b71df60630e17417ca2b01675bdf38906378653e"
+      "sha256": "cb98ed199c00b1664b6b645a2cfd4ac12e95dd81e5a288034c69f8cd23e82082"
     },
     "solver/up-to/titanium-line-tour-every-count-up-to.json": {
       "area": "solver/up-to",
-      "bytes": 14847,
-      "sha256": "5a470106d652c2c132c95519addccf995b514913a60fc15f677eb80269c62ec9"
+      "bytes": 14835,
+      "sha256": "4922e5ec26bd2bfdb2433159ea25a72b4ff98f0a7b428f5eb187ad5ac6242ddb"
     },
     "solver/up-to/topped-loop-capped.json": {
       "area": "solver/up-to",
       "bytes": 5922,
-      "sha256": "e7bda8861f0473d41cea114ebd0ac5833570be147a7c95d3010e3ce88b83844a"
+      "sha256": "ce031e86730e08780e0b642f3071d9e33dbe5d2af44ea3dfef2e049948bff2e2"
     },
     "solver/up-to/topped-loop-trading.json": {
       "area": "solver/up-to",
       "bytes": 10030,
-      "sha256": "c9c766cf0b5796a64a6931c74e5de09aec8df08854f6fb8ac2c6f60f52ccf2c6"
+      "sha256": "9c17c80365419eadc28ebf2a742edfd21a9e15cfbae11daecd2403a47b4735e6"
     },
     "solver/up-to/topped-loop.json": {
       "area": "solver/up-to",
       "bytes": 5841,
-      "sha256": "7d2bde2ad3d88186b01e6c04823357f255692f24263ea90e368d5909b7e8f8ec"
+      "sha256": "cefe8dd053dbdc234652bedfc0aba59380be4338521c0e971aa5bb5fc1c42c5e"
     },
     "solver/up-to/two-full-outputs.json": {
       "area": "solver/up-to",
       "bytes": 3978,
-      "sha256": "46cb0fc2fc765473959249273d9f53542dd2e43beda2c319a6911814b344e6ac"
+      "sha256": "bd20c1477425623941b78a700b16ce44477278ea3da66a819b2b7b27976800cb"
     },
     "solver/up-to/two-islands.json": {
       "area": "solver/up-to",
       "bytes": 6542,
-      "sha256": "b19beae3a47946760a9f8ebca5d66ce1c06b1d4b75d7ecfbdc2bd7ac3b98540a"
+      "sha256": "cb110470efb925c4bf7744f1e4c7a1653a319d74730a14c8a62ab5950779d2e0"
     },
     "solver/up-to/two-producers.json": {
       "area": "solver/up-to",
-      "bytes": 5347,
-      "sha256": "9d7354e207c04b8257f879d6580e95abd4985cb74e3472b47d52dcbb0a34c815"
+      "bytes": 5305,
+      "sha256": "ff364bdabf3d7c134a0f1c2050d7228e8e92d8e9bce04cf8e119192168933bda"
     },
     "solver/up-to/two-rings.json": {
       "area": "solver/up-to",
       "bytes": 9043,
-      "sha256": "b22390d4849050626bcafa003546006608397bc7ea1e5b65adfff3b06606da9b"
+      "sha256": "a93be420354751ce60985d0062f10f7ff6df5d70b8fc46b57f80676f348f2972"
     },
     "solver/up-to/two-short-inputs.json": {
       "area": "solver/up-to",
       "bytes": 3975,
-      "sha256": "9f3e94981877f296583e711280c4fd6d9cb0f576bb8b278aef5e434e559736a3"
+      "sha256": "ee568efb73482cacacef523b724cb076a28751cc794b82ac83724efb54f3cadd"
     },
     "solver/up-to/two-sided-output-tighter.json": {
       "area": "solver/up-to",
@@ -1205,7 +1192,7 @@
     "solver/up-to/unreachable-drawer.json": {
       "area": "solver/up-to",
       "bytes": 4166,
-      "sha256": "c6afbce7a27603ca226e99326914689fa83db842a61d95fc9c47e9aa7dbcbc60"
+      "sha256": "0a08078381b2d6bb116c99a5ab093e3c6f795fd07096d2cb8918f3d46ee10890"
     },
     "solver/up-to/unwired.json": {
       "area": "solver/up-to",
@@ -1214,8 +1201,8 @@
     },
     "solver/website/cases.json.gz": {
       "area": "solver/website",
-      "bytes": 117522,
-      "sha256": "a19c46262b5a3d5ab64c78fdd150cda13f5a0f60bedbe0abca589f953fb7422e"
+      "bytes": 126213,
+      "sha256": "c7fb5d2ba9dd55bf1395b8d20b6f3505c8e5d0ab2066f4b28dcd2e35616afeaf"
     },
     "tasks/order-key-vectors.json": {
       "area": "tasks",

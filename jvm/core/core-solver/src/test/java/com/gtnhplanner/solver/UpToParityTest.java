@@ -22,36 +22,14 @@ import com.gtnhplanner.data.flowchart.balancer.Balancer;
 /**
  * The Up to rule answers the same in the mod as on the website (docs/design/up-to.md): every plan the website's
  * {@code parity/up-to-export.test.ts} wrote under {@code conformance/solver/up-to/} (its hand-built Up to plans, and
- * every
- * corpus plan with each exact count turned Up to) is solved here and its whole answer, the read-out, its rings and what
- * a buffer banks included, compared with the website's by the golden rules ({@link SolverCorpus#differences}:
- * floating-point
- * noise and nothing else). Re-export there after a change to either engine.
+ * every corpus plan with each exact count turned Up to, answered by the compiled core) is solved here and its whole
+ * answer, the read-out, its rings and what a buffer banks included, compared with the website's by the golden rules
+ * ({@link SolverCorpus#differences}: floating-point noise and nothing else). Re-export there after a change to the
+ * core that is meant to move an answer.
  */
 class UpToParityTest {
 
     private static final Path PLANS = Conformance.path("solver/up-to");
-
-    /**
-     * Plans the two engines answer alike only to within the LP's own tolerance, with why. In each the website's
-     * committed point breaks one of its own rows by less than its solver's tolerance (its exact-basis refinement keeps
-     * a basis whose primal breaks a row the basis does not hold tight), which ojAlgo, keeping the rows, does not: the
-     * difference is a sliver near a millionth of a unit a second, too small to see, but it can open a gate or move a
-     * few
-     * millionths of a machine onto another recipe. For these the read-out, its rings and the machine counts are
-     * compared, the
-     * counts to a hundred-thousandth of a machine; every other plan is compared whole.
-     */
-    private static final java.util.Map<String, String> WITHIN_TOLERANCE = java.util.Map.of(
-        "mv-every-count-up-to.json",
-        "the website's point loses 1.3e-6 charcoal/s at the pyrolyse oven's wired output (2.8e-7 of the port, inside"
-            + " the conservation check's 1e-6); ojAlgo keeps it and sends it to the charcoal drawer, a gate",
-        "idle-noise.json",
-        "the website's canonical point runs 1.6e-7 over the sink drawers' held total and so routes 1e-6 machines"
-            + " through other recipes than ojAlgo, which holds the total exactly",
-        "idle-noise-beside-a-lone-card.json",
-        "the same plan as idle-noise beside a lone Up to card");
-
 
     @TestFactory
     Stream<DynamicTest> theWebsiteAndTheModAnswerAlike() throws IOException {
@@ -79,48 +57,12 @@ class UpToParityTest {
         final Balancer.Answer answer = Balancer
             .solveWithAlternatives(SolverCorpus.read(plan.getAsJsonObject("input")));
         final JsonElement expected = plan.get("answer"), actual = normalised(digest(answer));
-        final String why = WITHIN_TOLERANCE.get(
-            file.getFileName()
-                .toString());
-        if (why != null) {
-            final List<String> whole = SolverCorpus.differences(expected, actual);
-            System.out.println(
-                "[up to parity] " + file
-                    .getFileName() + " within tolerance (" + why + "): " + whole.size() + " differences");
-            final List<String> d = SolverCorpus.differences(part(expected, "upTo"), part(actual, "upTo"));
-            d.addAll(SolverCorpus.differences(part(expected, "upToLoops"), part(actual, "upToLoops")));
-            d.addAll(countsDiffer(part(expected, "machineCounts"), part(actual, "machineCounts")));
-            assertTrue(d.isEmpty(), file.getFileName() + " read-outs or counts differ:\n  " + String.join("\n  ", d));
-            return;
-        }
         final List<String> d = SolverCorpus.differences(expected, actual);
         assertTrue(
             d.isEmpty(),
             plan.get("name")
                 .getAsString() + " answers differently from the website:\n  "
                 + String.join("\n  ", d));
-    }
-
-    /** The solution's {@code key} part of a digest. */
-    static JsonElement part(final JsonElement digest, final String key) {
-        final JsonObject solution = digest.getAsJsonObject()
-            .getAsJsonObject("solution");
-        return solution == null || !solution.has(key) ? new JsonObject() : solution.get(key);
-    }
-
-    /** Machine counts further apart than a hundred-thousandth of a machine. */
-    static List<String> countsDiffer(final JsonElement expected, final JsonElement actual) {
-        final List<String> out = new java.util.ArrayList<>();
-        for (final java.util.Map.Entry<String, JsonElement> e : expected.getAsJsonObject()
-            .entrySet()) {
-            final JsonElement got = actual.getAsJsonObject()
-                .get(e.getKey());
-            if (got == null || Math.abs(
-                got.getAsDouble() - e.getValue()
-                    .getAsDouble())
-                > 1e-5) out.add("machineCounts/" + e.getKey() + ": " + e.getValue() + " / " + got);
-        }
-        return out;
     }
 
     /**

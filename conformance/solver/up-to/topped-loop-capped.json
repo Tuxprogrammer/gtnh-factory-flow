@@ -142,8 +142,8 @@
     "c8d13d6f-f353-3a22-9cec-b0ab06460788": 1
    },
    "edgeFlowsPerSecond": {
-    "de09bd25-06b6-3cdf-b673-fead9256f3d7": 1,
-    "8bc59312-b08c-3569-b325-3f8837690776": 0.5
+    "8bc59312-b08c-3569-b325-3f8837690776": 0.5,
+    "de09bd25-06b6-3cdf-b673-fead9256f3d7": 1
    },
    "gatedSources": [
     {
@@ -174,8 +174,8 @@
    },
    "drawers": {
     "rates": {
-     "24c3ae0e-3b5f-31ae-89e1-98114a263150": 0.5,
-     "06eca647-bd53-3a8b-bdad-8a18e3da1590": 0
+     "06eca647-bd53-3a8b-bdad-8a18e3da1590": 0,
+     "24c3ae0e-3b5f-31ae-89e1-98114a263150": 0.5
     },
     "unmet": [],
     "shortfalls": [],

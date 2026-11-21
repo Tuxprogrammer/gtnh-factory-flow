@@ -154,13 +154,13 @@
   "solution": {
    "extentsPerSecond": {
     "1ef7e05d-0185-3c30-9e1a-18b7fbe4fa14": 0,
-    "a7bd54bb-3b14-3f83-9deb-4b090030e405": 0,
-    "83677e69-b889-3976-a10a-cdcff48a2ac9": 0
+    "83677e69-b889-3976-a10a-cdcff48a2ac9": 0,
+    "a7bd54bb-3b14-3f83-9deb-4b090030e405": 0
    },
    "machineCounts": {
     "1ef7e05d-0185-3c30-9e1a-18b7fbe4fa14": 0,
-    "a7bd54bb-3b14-3f83-9deb-4b090030e405": 0,
-    "83677e69-b889-3976-a10a-cdcff48a2ac9": 0
+    "83677e69-b889-3976-a10a-cdcff48a2ac9": 0,
+    "a7bd54bb-3b14-3f83-9deb-4b090030e405": 0
    },
    "edgeFlowsPerSecond": {
     "11d7f354-05de-30d2-8e66-a4bbc95371b4": 0,

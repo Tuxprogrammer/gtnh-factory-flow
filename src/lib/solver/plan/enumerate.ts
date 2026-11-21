@@ -10,7 +10,7 @@ import { leastFlowHolding } from "./flow-min";
 import { prepareGuard } from "./guard";
 import { comparePortRef } from "./ids";
 import { portKey } from "./model";
-import { fixedQuantity, gatesThatMayHelp } from "./probes";
+import { fixedQuantity } from "./probes";
 import { pushUpTo } from "./push";
 import { levels, measureLevel, settleDrawers, settleTrades, type Trades } from "./trade";
 import type { Alternative, Alternatives, ChoiceKey, External, Note, PortRef, Rank } from "./types";
@@ -236,24 +236,9 @@ export function enumerate(
   const cap = Math.min(swaps.length, effort(MAX_ALT_SWAPS));
   const tried = swaps.slice(0, cap);
 
-  // The swaps that can balance at all (the rest are not asked about one by one; the budget above still counts them).
-  const intos = new Map<number, number[]>();
-  for (const [out, into] of tried) {
-    const list = intos.get(out) ?? [];
-    intos.set(out, list);
-    list.push(into);
-  }
-  const workable = new Set<string>();
-  for (const [out, list] of intos) {
-    const rest = new Set(open);
-    rest.delete(out);
-    for (const into of gatesThatMayHelp(ctx, rest, list)) workable.add(`${out}:${into}`);
-  }
-
   const byDecision = new Map<number, Alternative[]>();
   const seen = new Set<string>([keyString(chosen)]);
   for (const [out, into] of tried) {
-    if (!workable.has(`${out}:${into}`)) continue;
     const trial = new Set(open);
     trial.delete(out);
     trial.add(into);

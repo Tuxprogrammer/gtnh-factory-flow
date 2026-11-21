@@ -101,7 +101,12 @@ class PlanRoundTripTest {
      */
     static Trip trip(final String text, final String name, final Set<String> missing, final boolean routed)
         throws ReflectiveOperationException {
-        final TestGame game = routed(new TestGame(), routed);
+        return trip(routed(new TestGame(), routed), text, name, missing);
+    }
+
+    /** A plan in and out of {@code game}. */
+    static Trip trip(final TestGame game, final String text, final String name, final Set<String> missing)
+        throws ReflectiveOperationException {
         if (!missing.isEmpty()) {
             final Field f = FakeGame.class.getDeclaredField("missing");
             f.setAccessible(true);
@@ -324,6 +329,148 @@ class PlanRoundTripTest {
             plans++;
         }
         assertTrue(plans >= 15, "plans: " + plans);
+    }
+
+    /**
+     * A plan in and out of a game that has none of its recipes and no name for what its drawers hold, as the game has
+     * none for a demo plan's: every card is a website-only one.
+     */
+    private static Trip allShown(final String text, final String name) throws ReflectiveOperationException {
+        final TestGame game = new TestGame();
+        game.names = key -> false;
+        final Set<String> missing = new HashSet<>();
+        for (final Map<String, Object> r : objects(
+            PlanJson.parse(text)
+                .get("recipes")))
+            missing.add(String.valueOf(r.get("id")));
+        return trip(game, text, name, missing);
+    }
+
+    /** What a plan's wire end is on the board the export wrote: a card or drawer it made; null for neither. */
+    private static String boardEnd(final com.gtnhplanner.core.codec.SiteCarry.Placed placed, final String id) {
+        final String card = placed.cards()
+            .get(id);
+        return card != null ? card
+            : placed.storages()
+                .get(id);
+    }
+
+    /** The plan's wires the board holds, each missing from the export between the things its ends became. */
+    private static List<String> wiresLost(final Trip t, final String name) {
+        final List<String> lost = new ArrayList<>();
+        // A Pool plan's wires are the board's own: every maker of a resource to every user of it.
+        if (Boolean.TRUE.equals(
+            t.plan()
+                .get("poolMode")))
+            return lost;
+        final var placed = t.result()
+            .placed();
+        final Set<String> out = new HashSet<>();
+        for (final Map<String, Object> e : objects(
+            t.out()
+                .get("edges")))
+            out.add(e.get("source") + " > " + e.get("target"));
+        for (final Map<String, Object> e : objects(
+            t.plan()
+                .get("edges"))) {
+            final String id = String.valueOf(e.get("id")), source = String.valueOf(e.get("source")),
+                target = String.valueOf(e.get("target"));
+            if (placed.droppedEdges()
+                .contains(id)
+                || placed.converted()
+                    .contains(source)
+                || placed.converted()
+                    .contains(target))
+                continue;
+            final String from = boardEnd(placed, source), to = boardEnd(placed, target);
+            if (from != null && to != null && !out.contains(from + " > " + to)) lost.add(name + ": wire " + id);
+        }
+        return lost;
+    }
+
+    /**
+     * A drawer on a website-only card (the demo's byproduct drawer on its electrolyzer, which the game has no recipe
+     * for) stays on the board, wired, and goes back out with its wire, every field as it came.
+     */
+    @Test
+    void aDrawerOnAWebsiteOnlyCardGoesBackWithItsWire() throws IOException, ReflectiveOperationException {
+        final Trip t = allShown(Conformance.text("plans/website/biodiesel-demo.json"), "biodiesel-demo");
+        nothingLost(t, "biodiesel-demo");
+        final var placed = t.result()
+            .placed();
+        assertTrue(
+            placed.shown()
+                .contains("node-electrolyzer"),
+            "the electrolyzer is a website-only card");
+        final String drawer = placed.storages()
+            .get("demo-carbon-drawer");
+        assertNotNull(drawer, "the drawer is on the board");
+        assertEquals(
+            1,
+            t.board().drawers.get(com.gtnhplanner.core.base.Uuid.fromString(drawer))
+                .getLinks()
+                .size(),
+            "and wired to the card");
+        final Map<String, Object> in = byId(
+            t.plan()
+                .get("storages")).get("demo-carbon-drawer"),
+            out = byId(
+                t.out()
+                    .get("storages")).get(drawer);
+        assertNotNull(out, "the drawer goes out");
+        for (final Map.Entry<String, Object> e : in.entrySet())
+            if (!"id".equals(e.getKey()) && !"position".equals(e.getKey()))
+                assertEquals(Canon.of(e.getValue()), Canon.of(out.get(e.getKey())), "drawer field " + e.getKey());
+        // At its board place, moved as the card it hangs off.
+        final Map<String, double[]> was = places(t.plan()), now = places(t.out());
+        for (int i = 0; i < 2; i++) assertEquals(
+            Math.round(now.get("node-electrolyzer")[i] - was.get("node-electrolyzer")[i]),
+            Math.round(now.get(drawer)[i] - was.get("demo-carbon-drawer")[i]),
+            "the drawer moved as its card");
+        final Map<String, Object> wire = byId(
+            t.plan()
+                .get("edges")).get("edge-carbon-spare");
+        final List<Map<String, Object>> wires = new ArrayList<>();
+        for (final Map<String, Object> e : objects(
+            t.out()
+                .get("edges")))
+            if ("node-electrolyzer".equals(e.get("source")) && drawer.equals(e.get("target"))) wires.add(e);
+        assertEquals(1, wires.size(), "the wire goes out");
+        for (final String k : new String[] { "resourceKind", "resourceId" }) assertEquals(
+            wire.get(k),
+            wires.getFirst()
+                .get(k),
+            "wire " + k);
+    }
+
+    /**
+     * No website plan loses a drawer or a wire on the way in and out, whether the game runs its cards or has none of
+     * them (every card website-only, nothing its drawers hold named).
+     */
+    @Test
+    void noWebsitePlanLosesADrawerOrAWireEitherWay() throws IOException, ReflectiveOperationException {
+        final List<String> lost = new ArrayList<>();
+        int plans = 0;
+        for (final Path p : Conformance.list("plans/website")) {
+            final String text = new String(
+                java.nio.file.Files.readAllBytes(p),
+                java.nio.charset.StandardCharsets.UTF_8);
+            final String name = p.getFileName()
+                .toString();
+            for (final boolean shown : new boolean[] { false, true }) {
+                final String as = name + (shown ? " (all website-only)" : "");
+                final Trip t = shown ? allShown(text, as) : trip(text, as, Set.of());
+                try {
+                    nothingLost(t, as);
+                } catch (final AssertionError e) {
+                    lost.add(e.getMessage());
+                }
+                lost.addAll(wiresLost(t, as));
+            }
+            plans++;
+        }
+        assertTrue(plans >= 7, "plans: " + plans);
+        assertEquals(List.of(), lost);
     }
 
     /** A board's shared machines and set counts, as a plan of it reads back. */

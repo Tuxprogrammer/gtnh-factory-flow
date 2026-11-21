@@ -369,3 +369,6 @@ gtnhplanner.card.dial.supply=Supply
 gtnhplanner.card.dial.request=Request
 gtnhplanner.card.dial.rate=Rate (%s)
 gtnhplanner.card.dial.rate.title=The rate it holds.
+gtnhplanner.card.generator.unlocks=Unlocks at %s
+gtnhplanner.card.generator.on=On
+gtnhplanner.card.generator.off=Off

@@ -63,9 +63,9 @@ wheel, the read-out, the prompt or the dials change) and draws from it:
 - every port row's number and unit through `CardViews.powerFigure` and the core's rate format, and energy readings
   through `CardViews.energyFigure`, on every card (generators, crops and shared machines too).
 
-Cards the shared rules do not cover yet keep the mod's own count and power rows: shared machines, crop cards,
-generators (their rows' figures are shared), and an empty crop farm. The holders (custom rate card, fluid tank) take the
-shared card rules and their own parts from the special rules (section "Special cards" below). The website draws the
+Cards the shared rules do not cover yet keep the mod's own count and power rows: shared machines, crop cards and an
+empty crop farm. The holders (custom rate card, fluid tank) and generators take the shared card rules and their own
+parts from the special rules (section "Special cards" below). The website draws the
 others' own parts through `special/use-special.ts`, not translated yet.
 
 What a mod player sees change:
@@ -148,7 +148,7 @@ general design wins. "Here" means settled in this item; "next" names who carries
 | 46 | Lit rows | falls back to the resource's row; never a free row | by port only | more general | here |
 | 47 | Shared section rule words | "Take this recipe off the machine"; circuit tip | "Remove this recipe from the card"; no circuit tip | union | next: shared cards |
 | 48 | Generator tips | name and "Generator" | per-machine rows, unknown-source note | union | next: tips |
-| 49 | Generator strip | enabled pinned settings only | readings and disabled settings too | union | next |
+| 49 | Generator strip | enabled pinned settings only | readings and disabled settings too | union (decided): a pinned setting switched off shows greyed; pinned readings on both | here: one record, a pin for readings in the website's sheet |
 | 50 | Holder tips | fixed notes | supplies/requests, held amounts | union | next: tips |
 | 51 | Custom rate dial | in the board's rate unit | always /s, L/s, EU/t | more general (the dial follows the unit) | here: the board's unit on both, typed in it on both |
 | 52 | Holder socket tips | the socket word, tank-aware | an explanation, same on a tank | union | next |
@@ -168,17 +168,20 @@ A shared machine, a generator, the two holders (a custom rate card, a fluid tank
 with parts of their own (the website's `special/`, the mod's branches in `RecipeCard`). Those parts are a second record
 in `core-view` (`com.gtnhplanner.core.view.special`), drawn over the card's own `CardView`:
 
-- `SpecialInput` (in): the kind and its kind's facts (so far a holder's: empty or not, a custom rate card's dial: which
-  way it faces, its rate a second, the held resource's kind, which of its two chips the card shows). The card's own
+- `SpecialInput` (in): the kind and its kind's facts: a holder's (empty or not, a custom rate card's dial: which way it
+  faces, its rate a second, the held resource's kind, which of its two chips the card shows) or a generator's (its
+  source's name, its tier select's value and whether it is fixed, every other setting with its kind, value, unit, whether
+  the others leave it meaning anything and whether the plan pins it, its readings with their pins, its warnings). The card's own
   facts are its `CardInput`. `SpecialInput.Case` (dials, card, special) is the shared case's input.
 - `SpecialView` (out): what the card shows in place of its card's own parts: the name and its step on the card's ladder,
   its ink, the head's chips, whether the rails are replaced (empty holder, empty crop farm), a shared machine's
   sections with their rule rows, the power row, an empty holder's sockets and their hints, the gauge, the count (none on
   a fluid tank), the bar along the foot, the strip's chips (a chip typed into carries its text and its scale to the
-  stored value), warnings. The rows, picture, ring and zoomed-out bar stay the card's own.
+  stored value, and whether it is off: a pinned setting the others make moot, greyed), warnings. The rows, picture, ring
+  and zoomed-out bar stay the card's own.
 - `SpecialViews.special(input, card, cardView, dials, measure, host)`: the rules, a translation of use-special.ts kind by
-  kind. `SpecialViews.covers(kind)` says which kinds are translated: the custom rate card and the fluid tank. The other
-  kinds keep each host's own rules until they are.
+  kind. `SpecialViews.covers(kind)` says which kinds are translated: the custom rate card, the fluid tank and the
+  generator. A shared machine and a crop card keep each host's own rules until they are.
 
 Geometry: `SpecialViews.webHolder(view, cardView)` is a holder card on the website: the head, the rails (the card's
 rows, or an empty holder's two sockets anchored at their middle, 62 px down, named `take` and `give` for the host's
@@ -189,23 +192,31 @@ heights, rails, strip tops and anchors equal (`HolderGeometryTest` holds the num
 
 Shared cases: `conformance/view/special/cases.json` (25 holder cards: empty and holding, supply and request, items,
 fluids and EU under every rate unit and power dial, rates past a thousandth, unpinned chips, a forced input, nothing
-set), written by the website's rules (`special/special-conformance.ts`, `special-parts.ts` over `cleanCardView`; the view
+set; 14 generators: nothing pinned, a choice, numbers with and without a unit, a switch, a pinned setting switched off,
+a fraction, readings after the settings, two rows of chips, a fixed tier, no tier select, a long name, warnings, the
+Amps dial, Exactly, nothing set), written by the website's rules (`special/special-conformance.ts`, `special-parts.ts` over `cleanCardView`; the view
 generator runs it), read by `SpecialCasesTest` (JVM), `special-conformance.test.ts` and the Node run on both targets
 (`tools/web-core/view.mjs`, group `view/special`).
 
 Website: `special-parts.ts` holds the website's rules (`specialParts`, kept as the path without the core) and
 `specialViewFrom` (the parts and the card's view as the `SpecialView` SpecialCard.tsx draws, with the host's pictures,
 handles and how a typed chip is stored). `special-view.ts` is the switch, under the recipe card's flag and targets
-(`ADOPT.card`, `CARD_TARGETS`): `specialPartsOf(cardFacts, facts, cardView)` takes the core's parts
-(`ViewExports.viewSpecialJsKept`: `{dials, card, special}` in, the `SpecialView` object out, the card's view made on the
-way, widths kept per font epoch) read back by `partsOfRecord`, kept per card by its inputs, dials and font epoch, else
-the website's rules; a core that throws leaves the card to the website's rules. `useHolderCardModel` is the one caller.
+(`ADOPT.card`, `CARD_TARGETS`): `specialPartsOf(cardFacts, facts, cardView)` takes the core's parts read back by
+`partsOfRecord`, kept per card by its inputs, dials and font epoch, else the website's rules; a core that throws leaves
+the card to the website's rules. The core's call starts from the card view the core made for the card: every
+`viewCardJsKept` holds its card (input, view, font state) under a ticket in a ring of 512 (`viewCardTicket`), card-view.ts
+keeps the ticket with the view (`cardTicketOf`), and `ViewExports.viewSpecialJsHeld(ticket, special, measure, fontState)`
+takes only the kind's facts; a card the ring has let go (`viewCardHeld` false) goes the long way
+(`viewSpecialJsKept`: `{dials, card, special}` in, the card made again on the way). `useHolderCardModel` and
+`usePowerCardModel` are the callers.
 
-Mod: `ui/card/SpecialInputs` writes a holder's `SpecialInput` from its node (empty when it has no port, the dial from
+Mod: `ui/card/SpecialInputs` writes a holder's or a generator's `SpecialInput` from its node (`of`; a generator's
+settings and readings from `PowerTiles`, its pins from `SettingPins`, its warnings from its model), a holder's (empty when it has no port, the dial from
 `CustomRate`, the chips shown from the plan's pins) and turns the view's chips into the card's own setting controls.
-`RecipeCard` draws a holder through the shared card rules (count, menu) and its parts from the `SpecialView`: the name,
-the sockets' words and hints, the strip (laid out again when the dials turn), and the rate chip typed in the board's
-unit (`rateBox`: the edit's scale back to a rate a second, EU a tick on a card holding EU).
+`RecipeCard` draws a holder and a generator through the shared card rules (count, menu) and their parts from the
+`SpecialView`: the name, the sockets' words and hints, the strip (laid out again when the dials turn; a reading's chip is
+its `reading:<label>` control, an off chip greyed), and the rate chip typed in the board's unit (`rateBox`: the edit's
+scale back to a rate a second, EU a tick on a card holding EU).
 
 Switch: on for WebAssembly GC, with the recipe card (`ADOPT.card`, `CARD_TARGETS`). As the recipe card's first view,
 a special card's first parts are the website's rules' and the core makes them in idle time
@@ -253,7 +264,7 @@ then how cleanly its parts come apart from the card.
 |---|---|---|---|
 | Custom rate card | blue name, two sockets with hints while empty, gauge picture, count fixed to Exactly (its dial), mode and rate chips, no power row, no tier | rate chip: board's unit / always a second: the board's (more general); count title: Exactly line / "Runs at its dial.": the mod's (union); count line: shared look / the mod's old one: shared; chips unpinnable on the mod only: kept (union: the record carries which chips show) | shared record, both sides |
 | Fluid tank | blue name, sockets while empty, the Tank map's picture, no count, no foot bar | none in the parts; the mod's count was already hidden | shared record, both sides |
-| Generator | amber name, tier chip from its tier select ("Unlocks at" when fixed), pinned settings on the strip, warnings under it, readings in the gear sheet, EU rows in its own tier (shared since W7) | disabled pinned setting: hidden / greyed: open (union says show it greyed; the website's chip has no disabled look yet); readings: sheet only / pinnable on the strip: the mod's (union), the website needs pin keys for readings; a number chip: "Label: N unit" / "Label (unit): N": one rule to pick (the custom rate's caption style is the mod's on both); tier chip on a non-voltage tier select: shown / not: game data decides (check the catalog); the mod's count still its own | next; left untouched |
+| Generator | amber name, tier chip from its tier select ("Unlocks at" when fixed), pinned settings and readings on the strip, warnings under it, readings in the gear sheet, EU rows in its own tier (shared since W7) | decided: a pinned setting switched off shows greyed on both (the website hid it); readings pinned to the strip on both (the website gains a pin per reading in its sheet, kept as `reading:<label>` under `power:<source>` as the mod keeps it, and the plan carries it both ways); a number chip reads "Label" and "N unit" on both (the mod read "Label (unit)" and "N" with grouping); tier chip on a non-voltage tier select: none in the catalog (the only "tier" selects are voltage tiers; the heat exchanger's "tier" is a number), so the two tests agree; the mod's count is the shared one | shared record, both sides |
 | Crop card | count in seeds (no times sign, "seed(s)" beside it, its own title), harvesters chip (Crop Managers / Industrial Farms, pinned by default, typed in machines), harvester's draw as the power row in its own tier, tier chip from the manager or seed bed control, crop key in the head | count unit on every rule / "crop(s) planted" on Any only: game (seeds), unit on every rule (row 4); harvesters chip / in tips and the glance only: union (row 54); power row only when the harvester draws / always "0 EU/t": game (row 55); the mod's power row bills its own way | next; left untouched |
 | Empty crop farm | "Pick a crop..." name, a dashed full-width key in place of the rails, no count | "Pick a crop..." with a full-width key / "Crop Farm" with a key over the output rail and a hint: one wording to pick (row 53); geometry 120 / 160 px | next; left untouched |
 | Shared machine | a rule row over each recipe (share %, its machines or UNUSED, circuit, up, down, off), each recipe's rows under its handle prefix, one power row after them all, the count and bar over the whole pool, the picker over every recipe's machines | power row: amps only when every recipe runs at one tier / divides the whole by the first recipe's tier: game (row 14); rule tips (row 47); geometry: a rule row 20 px and no gap / 16 px and an 8 px gap; the mod's count and bar still its own | next; left untouched |

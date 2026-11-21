@@ -1,5 +1,7 @@
 ## New
 
+- The Share menu can put a plan's recipes in your NEI bookmarks. Bookmark recipes adds each one on its own. Bookmark as chain adds them as one crafting chain, so NEI's crafting tree works on the whole plan.
+
 ## Better
 
 ## Fixed

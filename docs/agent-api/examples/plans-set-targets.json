@@ -1,0 +1,31 @@
+{
+  "endpoint": "plans/set-targets",
+  "request": {
+    "planId": "xgvwfpswhw7t4n7gau3g",
+    "targets": [
+      {
+        "resource": {
+          "id": "gregtech:gt.metaitem.01@11028",
+          "kind": "item"
+        },
+        "rate": 1
+      }
+    ],
+    "player": {
+      "name": "Steve"
+    }
+  },
+  "status": 200,
+  "response": {
+    "planId": "xgvwfpswhw7t4n7gau3g",
+    "targets": [
+      {
+        "id": "gregtech:gt.metaitem.01@11028",
+        "kind": "item",
+        "name": "Titanium Ingot",
+        "rate": 1,
+        "cardId": "c1"
+      }
+    ]
+  }
+}

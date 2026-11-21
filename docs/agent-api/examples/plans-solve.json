@@ -1,0 +1,138 @@
+{
+  "endpoint": "plans/solve",
+  "request": {
+    "planId": "xgvwfpswhw7t4n7gau3g",
+    "player": {
+      "name": "Steve"
+    }
+  },
+  "status": 200,
+  "response": {
+    "dataset": "stable-2.9.0-tuxmine",
+    "planId": "xgvwfpswhw7t4n7gau3g",
+    "solved": true,
+    "targetsMet": true,
+    "targets": [
+      {
+        "id": "gregtech:gt.metaitem.01@11028",
+        "kind": "item",
+        "name": "Titanium Ingot",
+        "rate": 1,
+        "made": 1,
+        "met": true,
+        "cardId": "c1"
+      }
+    ],
+    "unsupplied": [
+      {
+        "id": "chlorine",
+        "kind": "fluid",
+        "name": "Chlorine",
+        "perSecond": 4000
+      },
+      {
+        "id": "water",
+        "kind": "fluid",
+        "name": "Water",
+        "perSecond": 200
+      },
+      {
+        "id": "gregtech:gt.metaitem.01@2375",
+        "kind": "item",
+        "name": "Rutile Dust",
+        "perSecond": 3
+      },
+      {
+        "id": "gregtech:gt.metaitem.01@3018",
+        "kind": "item",
+        "name": "Impure Pile of Magnesium Dust",
+        "perSecond": 2
+      },
+      {
+        "id": "gregtech:gt.metaitem.01@2010",
+        "kind": "item",
+        "name": "Carbon Dust",
+        "perSecond": 2
+      }
+    ],
+    "byproducts": [
+      {
+        "id": "gregtech:gt.metaitem.01@2377",
+        "kind": "item",
+        "name": "Magnesiumchloride Dust",
+        "perSecond": 6
+      }
+    ],
+    "euT": 552,
+    "warnings": [],
+    "cardColumns": [
+      "cardId",
+      "recipe",
+      "machine",
+      "tier",
+      "count",
+      "in",
+      "out",
+      "dials"
+    ],
+    "cards": [
+      [
+        "c1",
+        "Vacuum Freezer: Titanium Ingot",
+        "Vacuum Freezer",
+        "HV",
+        0.15,
+        {
+          "Hot Titanium Ingot": 1
+        },
+        {
+          "Titanium Ingot": 1
+        }
+      ],
+      [
+        "c2",
+        "Blast Furnace: Hot Titanium Ingot",
+        "Electric Blast Furnace",
+        "HV",
+        0.65,
+        {
+          "Magnesium Dust": 2,
+          "Titaniumtetrachloride": 1000
+        },
+        {
+          "Hot Titanium Ingot": 1,
+          "Magnesiumchloride Dust": 6
+        }
+      ],
+      [
+        "c3",
+        "Simple Dust Washer: Magnesium Dust",
+        "Steam Purifier",
+        "ULV",
+        0.025,
+        {
+          "Impure Pile of Magnesium Dust": 2,
+          "Water": 200
+        },
+        {
+          "Magnesium Dust": 2
+        }
+      ],
+      [
+        "c4",
+        "Chemical Reactor: Titaniumtetrachloride",
+        "Chemical Reactor",
+        "HV",
+        0.35,
+        {
+          "Rutile Dust": 3,
+          "Carbon Dust": 2,
+          "Chlorine": 4000
+        },
+        {
+          "Titaniumtetrachloride": 1000
+        }
+      ]
+    ]
+  }
+}

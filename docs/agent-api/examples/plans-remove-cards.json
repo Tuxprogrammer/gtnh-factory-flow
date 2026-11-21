@@ -1,0 +1,22 @@
+{
+  "endpoint": "plans/remove-cards",
+  "request": {
+    "planId": "xvw95tag7sybzuqd42ru",
+    "cardIds": [
+      "c2"
+    ],
+    "player": {
+      "name": "Steve"
+    }
+  },
+  "status": 200,
+  "response": {
+    "planId": "xvw95tag7sybzuqd42ru",
+    "removed": [
+      "c2"
+    ],
+    "wiresRemoved": 1,
+    "cardCount": 1,
+    "targets": []
+  }
+}

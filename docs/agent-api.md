@@ -4,8 +4,9 @@ An HTTP API that lets an assistant look up recipes in the site's dataset and des
 own solver. It is meant for a tool server on the instance's internal network that maps its tools one to one to these
 endpoints. Players never call it.
 
-Status: `resources/search`, `recipes/search` and `recipes/get` are built. Every other endpoint below is specified and
-marked **not yet built**; until it is, its path answers 404.
+Status: `resources/search`, `recipes/search`, `recipes/get` and the draft endpoints `plans/create`, `plans/add-cards`,
+`plans/remove-cards`, `plans/set-targets`, `plans/connect`, `plans/disconnect`, `plans/get` and `plans/solve` are built.
+Every other endpoint below is specified and marked **not yet built**; until it is, its path answers 404.
 
 Code: `src/app/api/agent/v1/**` (routes) and `src/lib/agent-api/**` (logic, request and response schemas in
 `schemas.ts`). Examples: `docs/agent-api/examples/*.json`, one real request and response per built endpoint, checked
@@ -21,7 +22,8 @@ against the schemas by `src/lib/agent-api/agent-api-examples.test.ts`.
   `404 Not Found` (text, not the error envelope), the same as a path that does not exist.
 - With the token set, a missing or wrong token answers `401` with code `unauthorized`.
 - The path is for the internal network only: the instance's public proxy answers 404 for `/api/agent/`.
-- Request bodies are at most 64 KB. Unknown fields are refused (`bad_request`), so a misspelt option fails loudly.
+- Request bodies are at most 64 KB (`plans/import`, once built, alone takes up to 512 KB: it carries the player's open
+  plan). Unknown fields are refused (`bad_request`), so a misspelt option fails loudly.
 - Every request may carry `player: {name, uuid?}`: the player the assistant acts for. It is logged for audit and
   never used to grant anything.
 - Each call writes one log line: `[agent-api] route=<route> player=<name> outcome=<status or code> ms=<n> bytes=<n>`.
@@ -55,17 +57,18 @@ message is for people and may change.
 | `bad_request`         | 400  | not JSON, over 64 KB, unknown field, wrong type, missing field, wrong method |
 | `unknown_resource`    | 404  | a resource id the dataset does not have                                    |
 | `unknown_recipe`      | 404  | a recipe id the dataset does not have                                      |
-| `no_recipe`           | 422  | nothing makes the resource under the constraints (plans, not yet built)    |
-| `tier_too_low`        | 422  | a card's tier is below its recipe's minimum (plans, not yet built)         |
-| `plan_not_found`      | 404  | unknown or expired draft id (plans, not yet built)                         |
-| `plan_too_big`        | 413  | a draft would go over 60 cards (plans, not yet built)                      |
-| `rate_limited`        | 429  | a daily limit is spent (plans, not yet built)                              |
+| `no_recipe`           | 422  | nothing makes the resource: no card in the draft makes a target            |
+| `tier_too_low`        | 422  | a card's tier is below its machine's minimum, or nothing runs it at or below the draft's `tierCap` |
+| `plan_not_found`      | 404  | unknown or expired draft id                                                |
+| `plan_too_big`        | 413  | a draft would go over 60 cards                                             |
+| `rate_limited`        | 429  | a daily limit is spent (300 drafts a day; deliveries not yet built)        |
 | `dataset_unavailable` | 503  | the server has no dataset installed or cannot read it                      |
-| `internal`            | 500  | anything else; the server log has the detail                               |
+| `internal`            | 500  | anything else, and `plans/solve` when the server cannot load its solver; the server log has the detail |
 
 ## Constraints
 
-Accepted by `recipes/search` now, and by `plans/expand-inputs` and `plans/solve` once built:
+Accepted by `recipes/search` and `plans/create` (a draft keeps its constraints; `plans/solve` takes none of its own),
+and by `plans/expand-inputs` once built:
 
 ```json
 { "tierCap": "HV", "heat": 4500, "cleanroom": false, "lowgrav": false, "banned": ["..."], "free": ["..."] }
@@ -84,6 +87,10 @@ What `recipes/search` does with each:
 
 A search given any field it does not enforce lists those fields in `notEnforced`, so the caller knows the results were
 not narrowed by them.
+
+What a draft does with its constraints: `tierCap` caps the default machine and tier of every card and refuses a tier
+above it; `banned` keeps a machine from being chosen; `free` marks those resources `free: true` in the solve's
+`unsupplied` list. `heat`, `cleanroom` and `lowgrav` do nothing to a draft (a card shows the `heat` its recipe needs).
 
 ## resources/search
 
@@ -172,26 +179,139 @@ Response: `{dataset, recipe}` where `recipe` is
 
 Example: `docs/agent-api/examples/recipes-get.json`.
 
-## plans/* (drafts) - not yet built
+## plans/* (drafts)
 
-A draft is a plan held by the server for the assistant to build: in the server's memory, keyed by a random id, kept 24
-hours after its last change, at most 60 cards. A restart drops drafts. At most 300 drafts a day. Nothing here edits or
-deletes a player's design or library entry, publishes to the community hub, or touches accounts.
+A draft is a plan the server holds for the assistant to build: a real plan in the site's own model (the same plan the
+planner opens, in plan mode), in the server's memory, under a random id. It is kept 24 hours after its last change,
+holds at most 60 cards, and at most 300 are created a day (UTC). A restart drops drafts; the assistant starts over.
+Nothing here reads or writes a player's design, library entry, account or session, or the community hub.
 
-| endpoint              | request                                                         | response                                                         |
-| --------------------- | --------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `plans/create`        | `{name, player?, constraints?}`                                 | `{planId}`                                                       |
-| `plans/import`        | `{snapshot, player?}`: the player's open plan, as the planner exports it | `{planId}`: a draft holding a copy of it                 |
-| `plans/add-cards`     | `{planId, cards: [{recipeId, machine?, tier?, ...dials}]}`      | `{cardIds}`; wires are made by resource automatically            |
-| `plans/remove-cards`  | `{planId, cardIds}`                                             | `{removed}`                                                      |
-| `plans/connect`       | `{planId, from: {cardId, resource}, to: {cardId, resource}}`    | `{wireId}`: overrides the automatic wiring                       |
-| `plans/disconnect`    | `{planId, wireId}`                                              | `{removed}`                                                      |
-| `plans/set-targets`   | `{planId, targets: [{resource, rate}]}`                         | `{targets}`                                                      |
-| `plans/get`           | `{planId}`                                                      | the draft's cards, wires and targets, compact                    |
-| `plans/solve`         | `{planId, fields?}`                                             | summary first (unsupplied raws, byproducts with nowhere to go, total EU/t, warnings), then one line per card (machine, tier, count, rates) |
-| `plans/expand-inputs` | `{planId, resources?, constraints?, max?}` (max 3)              | for each unsupplied input, up to `max` recipes ranked by the solver, each with a one-line reason (EU per item, machines needed, new raws it introduces) |
-| `plans/diff`          | `{planId}` of an imported draft                                 | `{proposalId, summary}`: what the draft adds or changes relative to the imported snapshot (cards, wires, targets), stored like a delivery |
-| `plans/deliver`       | `{planId, player: {name, uuid}}`                                | `{name, id, code, url?}`                                         |
+Ids: a draft is `x` and 19 characters from `abcdefghjkmnpqrstuvwxyz23456789`; cards are `c1`, `c2`, ... and wires
+`w1`, `w2`, ..., never reused within a draft. A card id in a response names a card listed in the same draft (its name
+is the card's `name` in `plans/get` and `plans/add-cards`).
+
+Every change validates the whole request first: a refused request leaves the draft as it was.
+
+| endpoint              | request                                                              | response                                              | built |
+| --------------------- | -------------------------------------------------------------------- | ----------------------------------------------------- | ----- |
+| `plans/create`        | `{name, constraints?, player?}`                                      | `{dataset, planId, name, expiresAt, constraints?}`    | yes   |
+| `plans/add-cards`     | `{planId, cards: [{recipeId, machine?, tier?, dials?}], player?}`    | `{planId, cards, wires, cardCount}`                   | yes   |
+| `plans/remove-cards`  | `{planId, cardIds, player?}`                                         | `{planId, removed, wiresRemoved, cardCount, targets}` | yes   |
+| `plans/set-targets`   | `{planId, targets: [{resource, rate}], player?}`                     | `{planId, targets}`                                   | yes   |
+| `plans/connect`       | `{planId, from: {cardId, resource}, to: {cardId, resource?}, player?}` | `{planId, wire, created}`                           | yes   |
+| `plans/disconnect`    | `{planId, wireId, player?}`                                          | `{planId, removed}`                                   | yes   |
+| `plans/get`           | `{planId, fields?, cardIds?, player?}`                               | the draft's cards, wires and targets, compact         | yes   |
+| `plans/solve`         | `{planId, fields?, player?}`                                         | summary first, then one row per card                  | yes   |
+| `plans/import`        | `{snapshot, player?}`: the player's open plan, as the planner exports it (body up to 512 KB) | `{planId}`: a draft holding a copy of it | no |
+| `plans/expand-inputs` | `{planId, resources?, constraints?, max?}` (max 3)                   | for each unsupplied input, up to `max` recipes ranked by the solver, each with a one-line reason (EU per item, machines needed, new raws it introduces) | no |
+| `plans/diff`          | `{planId}` of an imported draft                                      | `{proposalId, summary}`: what the draft adds or changes relative to the imported snapshot (cards, wires, targets), stored like a delivery | no |
+| `plans/deliver`       | `{planId, player: {name, uuid}}`                                     | `{name, id, code, url?}`                              | no    |
+
+Examples, one real call each against the pack dataset (a titanium line): `docs/agent-api/examples/plans-*.json`.
+
+### A card
+
+What `plans/add-cards` sends and what the draft endpoints return for a card:
+
+```
+request:  {recipeId, machine?, tier?, dials?: {<dialId>: <option key or number>}}
+response: {cardId, recipeId, name, machine: {id, name}, tier, dials?, heat?}
+```
+
+- `machine`: a machine that runs the recipe, by id or name (without case), as `recipes/get` lists them. Default: the
+  recipe's first multiblock that runs it at or below the draft's `tierCap`, else its first single block that does
+  (else its first machine that does). A machine banned by the draft's constraints is never chosen, and asking for one
+  is `bad_request`.
+- `tier`: the tier the card runs at. Default: the lowest that machine can run the recipe at. Below the machine's
+  minimum for the recipe is `tier_too_low`; above the draft's `tierCap`, or a tier the machine is not built at, is
+  `bad_request`. A recipe nothing runs at or below `tierCap` is `tier_too_low`. A recipe whose tier is not a voltage
+  tier (crafting, `NONE`) keeps its own and is never capped.
+- `dials`: a nested object, never spread into the card. Keys are the dial ids `recipes/get` lists for that machine
+  (the coil is `heatingCoil`); values are an option `key` or, for a numeric dial, a number in its range. An unknown
+  dial id, an unknown option, a number out of range or an option below the recipe's minimum (a coil too cold for the
+  recipe) is `bad_request` naming the dial. Dials not given keep the machine's defaults (the coil the recipe needs).
+- `heat`: the heat in K the recipe needs, on a heat machine.
+- A card's machine count is not set: the solver chooses it. A card starts with no other settings (no power or hatch
+  choices); they are the planner's defaults.
+- Errors name the card: `cards[2]: ...`. An unknown recipe is `unknown_recipe`.
+
+### Wires
+
+- **Automatic, by resource**, when cards are added: the board's own Auto-connect rule, for each new card against
+  every card in the draft, both ways. Every output slot of one card is wired to every input slot of another that uses
+  it up and takes it (same kind, same id, or a member of an "any of" slot, which the wire then sets to that resource;
+  catalysts, molds and programmed circuits are never wired). One wire per pair of slot rows. So when two cards make the
+  same thing, both are wired to its takers; the solver shares the flow.
+- `plans/connect` adds one wire from a card's output of `from.resource` to the other card's input that uses it up and
+  takes it; `to.resource` picks the input slot when several could (an "any of" slot by a member). A wire that already
+  exists is returned with `created: false`. The response's `wire` carries `manual: true`.
+- `plans/disconnect` removes a wire by id. Automatic wiring never makes that wire (same two cards, same resource) again;
+  `plans/connect` can.
+- A wire: `{wireId, from, to, id, kind, name, manual?}`: card ids and the resource it carries.
+
+### Targets
+
+- `plans/set-targets` replaces the whole target list (an empty list clears it). `rate` is per second, above 0, at most
+  16 targets, each resource once.
+- Each target sits on the card that makes it: the first card whose main (first) output it is, else the first card
+  that makes it. It is plan mode's own target, a rate pinned on that card's output, so the solver sizes everything
+  else around it. A target no card makes is `no_recipe`. A target whose card is removed moves to the next card that
+  makes it, or stays without one (`cardId` absent; the solve warns).
+- A target: `{id, kind, name, rate, cardId?}`.
+
+### Positions
+
+Cards are laid out left to right after every change: a card's column is the longest chain of wires feeding it (wires
+that close a loop are not counted), cards stack in card order within a column. The board's own Arrange is pure and
+could run here, but it takes about 0.3 s for 10 cards, 2.3 s for 30 and 11.6 s for 60 on the build box; the player can
+press Arrange on the delivered plan.
+
+### plans/get
+
+`{dataset, planId, name, expiresAt, constraints?, cardCount, wireCount, cards?, wires?, targets?, truncated?}`.
+
+- `fields`: any of `cards`, `wires`, `targets` (default all three).
+- `cardIds`: only those cards and the wires that touch them.
+- Over the 12 KB aim the answer drops wires from its end, then cards, and says `truncated: true`; `cardCount` and
+  `wireCount` are always the whole draft's. A 60-card draft of pack recipes is about 15 KB of cards and 7 KB of
+  wires: ask for `fields: ["wires"]` and pages of `cardIds`.
+
+### plans/solve
+
+The draft solved by the site's plan solver on the compiled core, as the site solves a saved plan. About 0.4 s for the
+first solve of a 60-card draft after the server starts, 20 to 50 ms after; a 60-card answer is under 12 KB.
+
+```
+{dataset, planId, solved, targetsMet,
+ targets:    [{id, kind, name, rate, made, met, cardId?}],
+ unsupplied: [{id, kind, name, perSecond, free?}],
+ byproducts: [{id, kind, name, perSecond}],
+ euT, warnings: [string],
+ cardColumns: ["cardId", "recipe", "machine", "tier", "count", "in", "out", "dials"],
+ cards: [[cardId, recipe, machine, tier, count, {<resource name>: perSecond}, {<resource name>: perSecond}, dials?]],
+ truncated?}
+```
+
+- `solved`: the solver found an answer. `targetsMet`: there is at least one target and every target's card makes at
+  least its rate.
+- `unsupplied`: what the draft still needs from outside, per second, largest first: every input no card supplies (an
+  unwired input slot) and anything forced in at a wired one. `free: true` marks resources the draft's constraints list
+  as `free` (raw on purpose).
+- `byproducts`: what the draft makes that nothing takes and is not a target, per second, largest first.
+- `euT`: the draft's total power draw at the solved counts.
+- `warnings`: plain sentences, at most 12: no target set, a target with no card, a target not met, the board's own
+  notices (rates that cannot be met, loops that starve or clog, with the card ids), and cards no target needs (they
+  run at 0).
+- `cards`: one row per card, in card order, laid out as `cardColumns` says: the card's id, its recipe's name, its
+  machine's name, its tier, the machine count the solve needs (fractional), what it takes and makes per second (by
+  resource name; a name used by both an item and a fluid on one card gets ` (item)` or ` (fluid)`), and its `dials`
+  when any are set. Rates are at the solved count; amounts round to 4 significant figures.
+- `fields`: any of `targets`, `unsupplied`, `byproducts`, `power` (`euT`), `warnings`, `cards`; `dataset`, `planId`,
+  `solved` and `targetsMet` are always there. An answer over 12 KB drops card rows from its end and says
+  `truncated: true`.
+- The solve reads no dataset and no account: the draft's recipes were copied into it when the cards were added.
+
+### Not yet built
 
 `plans/deliver` stores the finished plan durably under a short random `id` (kept 30 days; at most 100 deliveries a
 day) and returns it with the plan code. It creates a NEW plan; it never writes to an existing design and is not a

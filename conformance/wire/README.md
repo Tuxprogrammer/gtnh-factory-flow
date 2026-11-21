@@ -78,15 +78,40 @@ account id from its first part.
 | datasets                                           | no                                                | no                                    |
 | `WS /live`                                         | yes, on the upgrade, and no `Origin`              | a bad or missing session is accepted, told `auth` and closed 4001 |
 
-## One extra header on every request (a design, not built)
+## A guarded site: one extra header on every request
 
-A site behind a gateway may need a fixed header (a name and a value) on every request. The smallest change:
+A site behind a guarding reverse proxy lets a request through only when it carries a pre-shared header, and answers
+every other one with a 302 to its sign-in page, which the mod cannot follow. The install's operator gives the mod that
+header in the `network` category of `config/gtnhplanner.cfg`:
 
-- `SiteConfig` reads two keys from the `network` config: the header's name and its value. Both unset means nothing is
-  sent.
-- `CommunityApi.send` and `CloudApi.send` set it on the `HttpURLConnection` beside `User-Agent`, only when the request's
-  host is the configured site's (the live address counts as the site's).
-- `LiveSocket.connect` adds it to the upgrade request's headers, so the handshake carries it.
-- The value is never written to a log or to a thrown message; `SiteConfig` shows the name and `set` or `unset`.
-- A test pins that no log line, refusal text or exception carries the value, and that a redirect to another host does
-  not carry it.
+```
+network {
+    S:headerName=X-Access-Key
+    S:headerValue=<the value the site's owner gives out>
+}
+```
+
+- Keys `headerName` and `headerValue`; the system properties `-Dgtnhplanner.header.name` and
+  `-Dgtnhplanner.header.value` win over the file, as for the other keys. Both empty is the default and sends nothing;
+  one without the other sends nothing and warns with the key names.
+- A name is refused (nothing is sent, a warning names the key) when it is not an HTTP token or is one the client sets
+  itself or that frames a request: `Cookie`, `Host`, `Content-Length`, `Content-Type`, `Transfer-Encoding`, `Upgrade`,
+  `Connection`, `User-Agent`, `Origin`, `Accept`, `Accept-Encoding`, `Expect`, `TE`, `Trailer`, `Keep-Alive`,
+  `Content-Encoding`, `Set-Cookie`, and any `Sec-WebSocket-*` or `Proxy-*`. A value is refused when it holds anything
+  but printable ASCII (no line break, no control character).
+- The header goes on every REST request (`CommunityApi.send`, `CloudApi.send`) and on the `/live` WebSocket upgrade
+  (`LiveSocket.connect`), only when the request's host and port are the configured site's or the live service's. Any
+  other host gets none, and the update check sends none even to the site's own host.
+- A redirect is never followed, so the header cannot reach another host that way. A 301, 302, 303, 307 or 308 from the
+  site is reported as a refusal (status kept) whose text is `SiteHeader.SIGN_IN`, "The site asked for a sign-in the mod
+  cannot do. If its owner gave you an access header, set it in the mod's config.", never a parse error. The cloud
+  session shows that text once as a notice and stops retrying the live socket (state `CLOSED`, reason `sign-in`).
+- The value is never logged, never in an exception or a refusal text, a crash report or the debug overlay. There is no
+  getter for it; the one place that holds it is `library/SiteHeader`.
+- The dev stand-in plays such a site: `MOCK_REQUIRE_HEADER=<name>=<value> node tools/dev/mock-library.mjs` answers 302
+  to `/sign-in` on every route, and on the WebSocket upgrade, without exactly that header, and serves as usual with it.
+  Its log says only that the header was missing.
+
+Pinned by `SiteHeaderConfigTest` (keys, refused names and values, which hosts get it), `SiteHeaderTest` (every request
+kind and the upgrade carry it, a 302 gives the plain text and is not followed, no value in any log line or exception),
+the `CloudSessionTest` sign-in case, and `src/test-support/wire-mock-header.test.ts` (the node stand-in behaves the same).

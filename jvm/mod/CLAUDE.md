@@ -404,7 +404,16 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   `.support.url` win over the file. Empty switches a feature off: a call that needs the site throws `SiteOff` before it
   connects, so nothing is sent, and the player is told "No community site is set up on this install." (the share and
   link rows that need a site are left out; the Feedback box says sending is not set up). A value that is not a web
-  address of the right kind is ignored with a warning. `NoRemoteHostTest` scans the mod and core sources for a remote
+  address of the right kind is ignored with a warning. `headerName` and `headerValue` (`-Dgtnhplanner.header.name` and
+  `.value`) are one extra header, empty by default, for a site behind a guarding reverse proxy: `library/SiteHeader`
+  holds the pair, `CommunityApi.send`, `CloudApi.send` and `LiveSocket.connect` add it only when the request's host and
+  port are the site's or the live service's, and a redirect is never followed, so it reaches no other host. A name that
+  would override `Cookie`, `Host`, `Content-Length` or another header the client sets, and a value with a control
+  character, turn it off with a warning naming the key. The value is never logged or put in an exception, a refusal, a
+  crash report or the debug overlay (`SiteHeaderTest` pins it). A 301, 302, 303, 307 or 308 is a `Refused` with
+  `SiteHeader.SIGN_IN`, which the cloud session shows once as a notice; on the live upgrade it closes the socket with
+  reason `LiveSocket.SIGN_IN` and no retry. `UpdateCheck` sends no header. `MOCK_REQUIRE_HEADER=<name>=<value>` makes
+  the dev mock play such a site. `NoRemoteHostTest` scans the mod and core sources for a remote
   host literal and fails on one; `SiteOffTest` pins the off state. An install's operator decides what goes in the file.
 - Players never see the website (the owner, 2026-10-09): no links or keys to it, and no text naming the website's
   address or Factory Flow in the UI, its messages, the config files it writes or `mcmod.info`. The library is "the library";

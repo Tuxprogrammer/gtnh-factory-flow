@@ -1,0 +1,22 @@
+{
+  "endpoint": "plans/create",
+  "request": {
+    "name": "Titanium line",
+    "constraints": {
+      "tierCap": "EV"
+    },
+    "player": {
+      "name": "Steve"
+    }
+  },
+  "status": 200,
+  "response": {
+    "dataset": "stable-2.9.0-tuxmine",
+    "planId": "xgvwfpswhw7t4n7gau3g",
+    "name": "Titanium line",
+    "expiresAt": "2026-11-22T21:17:01.705Z",
+    "constraints": {
+      "tierCap": "EV"
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "endpoint": "plans/connect",
+  "request": {
+    "planId": "xvw95tag7sybzuqd42ru",
+    "from": {
+      "cardId": "c2",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@12028",
+        "kind": "item"
+      }
+    },
+    "to": {
+      "cardId": "c1"
+    },
+    "player": {
+      "name": "Steve"
+    }
+  },
+  "status": 200,
+  "response": {
+    "planId": "xvw95tag7sybzuqd42ru",
+    "wire": {
+      "wireId": "w2",
+      "from": "c2",
+      "to": "c1",
+      "id": "gregtech:gt.metaitem.01@12028",
+      "kind": "item",
+      "name": "Hot Titanium Ingot",
+      "manual": true
+    },
+    "created": true
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "endpoint": "plans/get",
+  "request": {
+    "planId": "xgvwfpswhw7t4n7gau3g",
+    "player": {
+      "name": "Steve"
+    }
+  },
+  "status": 200,
+  "response": {
+    "dataset": "stable-2.9.0-tuxmine",
+    "planId": "xgvwfpswhw7t4n7gau3g",
+    "name": "Titanium line",
+    "expiresAt": "2026-11-22T21:17:02.647Z",
+    "constraints": {
+      "tierCap": "EV"
+    },
+    "cardCount": 4,
+    "wireCount": 3,
+    "targets": [
+      {
+        "id": "gregtech:gt.metaitem.01@11028",
+        "kind": "item",
+        "name": "Titanium Ingot",
+        "rate": 1,
+        "cardId": "c1"
+      }
+    ],
+    "cards": [
+      {
+        "cardId": "c1",
+        "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-vacuumfreezer:d19c53e6ba8bf0ff",
+        "name": "Vacuum Freezer: Titanium Ingot",
+        "machine": {
+          "id": "vacuum-freezer",
+          "name": "Vacuum Freezer"
+        },
+        "tier": "HV"
+      },
+      {
+        "cardId": "c2",
+        "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-blastfurnace:6762a0576bfbf6d8",
+        "name": "Blast Furnace: Hot Titanium Ingot",
+        "machine": {
+          "id": "electric-blast-furnace",
+          "name": "Electric Blast Furnace"
+        },
+        "tier": "HV",
+        "heat": 2140
+      },
+      {
+        "cardId": "c3",
+        "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-simplewasher:e0f98d3e195d09f1",
+        "name": "Simple Dust Washer: Magnesium Dust",
+        "machine": {
+          "id": "steam-purifier",
+          "name": "Steam Purifier"
+        },
+        "tier": "ULV"
+      },
+      {
+        "cardId": "c4",
+        "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-chemicalreactor:b46b5421788484fa",
+        "name": "Chemical Reactor: Titaniumtetrachloride",
+        "machine": {
+          "id": "chemical-reactor",
+          "name": "Chemical Reactor"
+        },
+        "tier": "HV"
+      }
+    ],
+    "wires": [
+      {
+        "wireId": "w1",
+        "from": "c2",
+        "to": "c1",
+        "id": "gregtech:gt.metaitem.01@12028",
+        "kind": "item",
+        "name": "Hot Titanium Ingot"
+      },
+      {
+        "wireId": "w2",
+        "from": "c3",
+        "to": "c2",
+        "id": "gregtech:gt.metaitem.01@2018",
+        "kind": "item",
+        "name": "Magnesium Dust"
+      },
+      {
+        "wireId": "w3",
+        "from": "c4",
+        "to": "c2",
+        "id": "titaniumtetrachloride",
+        "kind": "fluid",
+        "name": "Titaniumtetrachloride"
+      }
+    ]
+  }
+}

@@ -11,6 +11,24 @@ import {
   resourcesSearchResponse,
 } from "./schemas";
 import { RESPONSE_AIM_BYTES } from "./size";
+import {
+  plansAddCardsRequest,
+  plansAddCardsResponse,
+  plansConnectRequest,
+  plansConnectResponse,
+  plansCreateRequest,
+  plansCreateResponse,
+  plansDisconnectRequest,
+  plansDisconnectResponse,
+  plansGetRequest,
+  plansGetResponse,
+  plansRemoveCardsRequest,
+  plansRemoveCardsResponse,
+  plansSetTargetsRequest,
+  plansSetTargetsResponse,
+  plansSolveRequest,
+  plansSolveResponse,
+} from "./plan-schemas";
 
 /**
  * The committed examples (docs/agent-api/examples) are what the assistant's tool server tests against, so each must
@@ -20,6 +38,14 @@ const SCHEMAS: Record<string, { request: z.ZodType; response: z.ZodType }> = {
   "resources/search": { request: resourcesSearchRequest, response: resourcesSearchResponse },
   "recipes/search": { request: recipesSearchRequest, response: recipesSearchResponse },
   "recipes/get": { request: recipesGetRequest, response: recipesGetResponse },
+  "plans/create": { request: plansCreateRequest, response: plansCreateResponse },
+  "plans/add-cards": { request: plansAddCardsRequest, response: plansAddCardsResponse },
+  "plans/remove-cards": { request: plansRemoveCardsRequest, response: plansRemoveCardsResponse },
+  "plans/set-targets": { request: plansSetTargetsRequest, response: plansSetTargetsResponse },
+  "plans/connect": { request: plansConnectRequest, response: plansConnectResponse },
+  "plans/disconnect": { request: plansDisconnectRequest, response: plansDisconnectResponse },
+  "plans/get": { request: plansGetRequest, response: plansGetResponse },
+  "plans/solve": { request: plansSolveRequest, response: plansSolveResponse },
 };
 
 const DIR = path.join(process.cwd(), "docs", "agent-api", "examples");

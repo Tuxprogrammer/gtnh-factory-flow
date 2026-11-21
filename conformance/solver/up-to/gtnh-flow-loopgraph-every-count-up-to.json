@@ -123,16 +123,16 @@
  "answer": {
   "solution": {
    "extentsPerSecond": {
-    "e1dd6ea8-bc64-3626-a9d1-989b99ae435e": 0,
-    "51ab2cea-e8c7-39dc-bac0-4b27a4f7cd5d": 0
+    "51ab2cea-e8c7-39dc-bac0-4b27a4f7cd5d": 0,
+    "e1dd6ea8-bc64-3626-a9d1-989b99ae435e": 0
    },
    "machineCounts": {
-    "e1dd6ea8-bc64-3626-a9d1-989b99ae435e": 0,
-    "51ab2cea-e8c7-39dc-bac0-4b27a4f7cd5d": 0
+    "51ab2cea-e8c7-39dc-bac0-4b27a4f7cd5d": 0,
+    "e1dd6ea8-bc64-3626-a9d1-989b99ae435e": 0
    },
    "edgeFlowsPerSecond": {
-    "dcc004c7-d04b-3670-a05f-e0e2fd9e16b7": 0,
-    "75a4ab06-bba8-373f-ad9c-f318a4af047c": 0
+    "75a4ab06-bba8-373f-ad9c-f318a4af047c": 0,
+    "dcc004c7-d04b-3670-a05f-e0e2fd9e16b7": 0
    },
    "gatedSources": [],
    "gatedSinks": [],

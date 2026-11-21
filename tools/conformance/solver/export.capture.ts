@@ -2,8 +2,8 @@
  * Writes conformance/solver/website/cases.json.gz from what capture.config.ts recorded (tools/conformance/solver/
  * generate.mjs): every distinct solve input the website's tests and the reference plans handed the plan solver, as
  * both engines read it (ids made UUIDs and renamed in their order, the mod's dump format, a chance rounded to the Java
- * float it is there), with the website's answer to it through the public entry (`solvePlan`, no cache) as the golden
- * digest. Inputs already in
+ * float it is there), with the compiled core's answer to it (`src/test-support/core-solve.ts`, the path the solve
+ * Worker takes) as the golden digest. Inputs already in
  * the corpus or the Up to plans are left out (those are checked there), and so are inputs a JSON file cannot hold
  * (a non-finite number). Run only by export.config.ts.
  */
@@ -13,8 +13,7 @@ import { gzipSync } from "node:zlib";
 
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { initLpEngine } from "@/lib/solver/lp-engine";
-import { websiteCaseAnswer } from "@/lib/solver/plan/__fixtures__/website-cases";
+import { coreCaseAnswer, corePresent, useCoreSolver } from "@/test-support/core-solve";
 import { toDump, withOrderedIds, withUuids } from "@/lib/solver/plan/__fixtures__/dump";
 import { caseNames, loadInput, parseSolveInput } from "@/lib/solver/plan/__fixtures__/load";
 import type { SolveInput } from "@/lib/solver/plan/types";
@@ -39,10 +38,11 @@ function asCase(input: SolveInput): { read: SolveInput; text: string } {
 
 describe("website solver cases", () => {
   beforeAll(async () => {
-    await initLpEngine();
-  });
+    if (!corePresent) throw new Error("the answers are the compiled core's: build it first (tools/copy-core.mjs)");
+    await useCoreSolver();
+  }, 120_000);
 
-  it("writes every recorded input with the website's answer", () => {
+  it("writes every recorded input with the core's answer", () => {
     const known = new Set<string>();
     for (const name of caseNames()) known.add(asCase(loadInput(name)).text);
     const upTo = conformancePath("solver", "up-to");
@@ -75,7 +75,7 @@ describe("website solver cases", () => {
         cases.push({
           name: `${captured.file.replaceAll("~", "/")} > ${name}`,
           input: JSON.parse(text),
-          answer: websiteCaseAnswer(read),
+          answer: coreCaseAnswer(read),
         });
       }
     }

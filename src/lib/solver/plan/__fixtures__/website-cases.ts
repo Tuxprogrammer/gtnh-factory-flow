@@ -1,16 +1,15 @@
 /**
  * The website solver cases (`conformance/solver/website/cases.json.gz`, tools/conformance/solver/generate.mjs): every
- * distinct solve input the website's tests and the reference plans hand the plan solver, with the answer the website
- * gave, which the Java kernel must give too (core-solver `WebsiteCasesTest`). One answer form for the writer and both
- * readers. Node-only; never import this from app code.
+ * distinct solve input the website's tests and the reference plans hand the plan solver, with the compiled core's
+ * answer (`src/test-support/core-solve.ts` `coreCaseAnswer`), which the Java kernel must give too (core-solver
+ * `WebsiteCasesTest`). One answer form for the writer and both readers. Node-only; never import this from app code.
  */
 import { readFileSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
 
 import { conformancePath } from "@/test-support/conformance";
 
-import { solvePlan } from "../solve-plan";
-import type { Answer, SolveInput } from "../types";
+import type { Answer } from "../types";
 import { digest } from "./digest";
 
 export interface WebsiteCase {
@@ -25,11 +24,6 @@ export interface WebsiteCase {
 export function answerDigest(answer: Answer): unknown {
   if (answer.kind === "failed") return { failed: answer.failure.message };
   return digest(answer);
-}
-
-/** The website's answer to a case: the public entry, no cache. */
-export function websiteCaseAnswer(input: SolveInput): unknown {
-  return answerDigest(solvePlan(input));
 }
 
 export function loadWebsiteCases(): WebsiteCase[] {

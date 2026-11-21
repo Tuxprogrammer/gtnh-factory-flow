@@ -104,8 +104,6 @@ unwired, balanced, demand set), and the Worker's `attachClogLocks` runs no LP.
 (`lib/blueprints/io-stats.ts`) still solve a payload as a Build plan, and the Inspector's selection
 flow runs on the main thread's homegrown simplex, but no player reaches either: nothing opens the
 blueprint save dialog, and plan boards show the overview, not the Inspector.
-`conformance/solver/highs-differs` holds the stress-board islands where HiGHS answers otherwise
-than the core (the core's answer is the expected one).
 
 - Shared machines: `expandSharedMachines` stands each extra section up as a hidden node;
   the ONLY coupling is a time row (`listSharedMachineGroups`): sections' acts sum to at

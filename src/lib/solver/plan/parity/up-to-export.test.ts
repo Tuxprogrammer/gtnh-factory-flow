@@ -1,7 +1,7 @@
 /**
  * The Up to parity export (docs/up-to.md): every hand-built Up to plan of `upto.test.ts` and every corpus plan with
- * each exact count turned Up to, written with this engine's answer for the mod's `UpToParityTest`, which solves each
- * input with the Java engine and compares the two answers by the golden rules (`compare.ts`, the mod's
+ * each exact count turned Up to, written with the compiled core's answer (the website's engine) for the mod's
+ * `UpToParityTest`, which solves each input with the Java kernel and compares the two answers by the golden rules (`compare.ts`, the mod's
  * `SolverCorpus.differences`). Skipped unless `UPTO_EXPORT_DIR` names where to write (`conformance/solver/up-to/`,
  * which both suites read; run `node tools/conformance/manifest.mjs --write` after it so the manifest holds the new hashes):
  *
@@ -16,8 +16,7 @@ import path from "node:path";
 
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { initLpEngine } from "../../lp-engine";
-import { digest } from "../__fixtures__/digest";
+import { coreCaseAnswer, coreSolve, corePresent, useCoreSolver } from "@/test-support/core-solve";
 import { toDump, withUuids } from "../__fixtures__/dump";
 import { caseNames, loadInput } from "../__fixtures__/load";
 import {
@@ -29,16 +28,9 @@ import {
   pinDiagnosis,
   withAlternatives,
 } from "../__fixtures__/up-to/plans";
-import { solvePlan } from "../solve-plan";
-import type { Answer, MachineIn, SolveInput } from "../types";
+import type { MachineIn, SolveInput } from "../types";
 
 const OUT = process.env.UPTO_EXPORT_DIR;
-
-/** A solved answer's digest; a failed one as its failure, which the mod's test reads the same way. */
-function answerDigest(answer: Answer): unknown {
-  if (answer.kind === "failed") return { failed: answer.failure.message };
-  return digest(answer);
-}
 
 const lone = (id: string): MachineIn => ({
   id,
@@ -95,7 +87,7 @@ function exactly(i: SolveInput): SolveInput {
 /** The alternatives plan with its first other place stored as the choice. */
 function chosen(): SolveInput {
   const base = withUuids(withAlternatives());
-  const first = solvePlan(base);
+  const first = coreSolve(base);
   if (first.kind !== "solved") throw new Error("the alternatives plan failed");
   const other = first.alternatives.options.find((o) => o.rank !== "DEFAULT");
   if (!other) throw new Error("the alternatives plan offers no other place");
@@ -117,22 +109,20 @@ if (!OUT) {
 } else {
   describe("Up to parity export", () => {
     beforeAll(async () => {
-      await initLpEngine();
+      if (!corePresent) throw new Error("the answers are the compiled core's: build it first (tools/copy-core.mjs)");
+      await useCoreSolver();
       mkdirSync(OUT, { recursive: true });
       for (const f of readdirSync(OUT)) if (f.endsWith(".json")) rmSync(path.join(OUT, f));
-    });
+    }, 120_000);
 
     it.each(cases())(
       "%s",
       (name, make) => {
         const input = make();
-        const answer = solvePlan(input);
+        const answer = coreCaseAnswer(input);
         const file = path.join(OUT, `${slug(name)}.json`);
-        writeFileSync(
-          file,
-          `${JSON.stringify({ name, input: toDump(input), answer: answerDigest(answer) }, null, 1)}\n`,
-        );
-        expect(answer.kind).toBe("solved");
+        writeFileSync(file, `${JSON.stringify({ name, input: toDump(input), answer }, null, 1)}\n`);
+        expect(answer).not.toHaveProperty("failed");
       },
       120_000,
     );

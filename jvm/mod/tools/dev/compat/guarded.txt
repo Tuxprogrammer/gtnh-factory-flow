@@ -19,3 +19,7 @@ CLASS thaumic/tinkerer/client/nei/NEINecromancyHandler  <- data/provider/Thaumic
 
 # GregTech before beta-3 has no fake Tree Growth Simulator map: only the dev harness's machinedata call reads it.
 MEMBER gregtech/api/recipe/RecipeMaps.treeGrowthSimulatorFakeRecipes : Lgregtech/api/recipe/RecipeMap;  <- dev/DevMachineData  # dev harness only
+
+# NEI before beta-3 has no RecipeId.getHandlerName: RecipeRefs.of catches the LinkageError around withoutResult, and a
+# recipe with no result stays unfound there as before.
+MEMBER codechicken/nei/recipe/Recipe$RecipeId.getHandlerName()Ljava/lang/String;  <- nei/RecipeRefs  # RecipeRefs.of catches LinkageError

@@ -38,6 +38,7 @@ const requireHeader = (() => {
 const passesGate = (req) => !requireHeader || req.headers[requireHeader.name] === requireHeader.value;
 
 const users = new Map(); // name -> password
+const deliveries = new Map(); // id -> what GET /api/deliveries/<id> answers
 const sessions = new Map(); // token -> name
 const posts = []; // summaries, newest first
 const plans = new Map(); // id -> { name, plan }
@@ -102,6 +103,18 @@ const server = createServer(async (req, res) => {
   console.log(new Date().toISOString().slice(11, 19), req.method, req.url, userOf(req) ? `(as ${userOf(req)})` : "");
   // Cloud plans, sharing and the live service (tools/dev/mock-live.mjs).
   if (await live.rest(req, res, url, json)) return;
+  // What the site's assistant hands over by id (/gtnhplanner open|apply): a probe PUTs a synthetic delivery or
+  // proposal to /mock/deliveries/<id> ({kind, name, plan} or {kind, name, basePlanId, proposal}); GET serves it as
+  // the site does, 404 for an id it does not hold.
+  const delivery = path.match(/^\/(api|mock)\/deliveries\/([^/]+)$/);
+  if (delivery && req.method === "PUT" && delivery[1] === "mock") {
+    deliveries.set(delivery[2], { id: delivery[2], ...(await body(req)) });
+    return json(res, 201, { id: delivery[2] });
+  }
+  if (delivery && req.method === "GET" && delivery[1] === "api") {
+    const d = deliveries.get(delivery[2]);
+    return d ? json(res, 200, d) : json(res, 404, { error: "Plan not found." });
+  }
   if (req.method === "POST" && path === "/api/community/auth/register") {
     const { username = "", password = "" } = await body(req);
     if (!/^[a-zA-Z0-9_-]{3,24}$/.test(username.trim()))

@@ -78,6 +78,8 @@ public class ClientProxy extends CommonProxy {
         // The website's "Open in the mod": plans it sends to this game, asked about before they open.
         ClientCommandHandler.instance.registerCommand(new com.gtnhplanner.client.WebsiteCommand());
         com.gtnhplanner.client.WebsiteInbox.start();
+        // What the site's assistant hands over by id: /gtnhplanner open|apply <id>.
+        ClientCommandHandler.instance.registerCommand(new com.gtnhplanner.client.PlannerCommand());
         // The tour: drives the planner while the player watches.
         com.gtnhplanner.ui.tutorial.Tutorial.register();
 

@@ -177,6 +177,11 @@ public final class CommunityApi {
         return new Download(string(root, "name"), plan.toString());
     }
 
+    /** A plan or a change the site's assistant made, by its short id ({@code client/PlannerCommand}): the answer. */
+    public static String delivery(final String id) throws IOException {
+        return request("GET", site + "/api/deliveries/" + enc(id), null, null);
+    }
+
     // region Accounts and posting: the website's own username and password accounts and its session
 
     /** A signed-in account, and the session the site gave it (its {@value #SESSION_COOKIE} cookie). */

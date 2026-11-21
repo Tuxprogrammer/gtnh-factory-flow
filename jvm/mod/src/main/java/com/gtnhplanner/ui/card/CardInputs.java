@@ -183,7 +183,26 @@ public final class CardInputs {
             null,
             names,
             session.isSelected(m.node.id),
-            new CardInput.Menu(false, false, false, false, holder, com.gtnhplanner.power.CropFarm.is(m.node), true));
+            new CardInput.Menu(
+                false,
+                false,
+                false,
+                false,
+                holder,
+                com.gtnhplanner.power.CropFarm.is(m.node),
+                true,
+                m.node.shown != null),
+            readOnly(m.node));
+    }
+
+    /** A card the board only shows (a website card it cannot run): why, and whether the solve counts it. */
+    @Nullable
+    static CardInput.ReadOnly readOnly(final com.gtnhplanner.data.flowchart.Node node) {
+        return node.shown == null ? null
+            : new CardInput.ReadOnly(
+                node.shown.reason()
+                    .word(),
+                node.shown.solved());
     }
 
     /** A high-pressure steam machine: GregTech names its steam machines' second tier so. */

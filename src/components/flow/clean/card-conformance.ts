@@ -129,6 +129,7 @@ export interface CardInputJson {
     holder: boolean;
     emptyCropFarm: boolean;
     tasks: boolean;
+    readOnly: boolean;
   };
 }
 
@@ -182,6 +183,7 @@ const MENU = {
   holder: false,
   emptyCropFarm: false,
   tasks: false,
+  readOnly: false,
 };
 
 /** A chemical reactor on HV, solved at 2.4 machines, nothing set. */

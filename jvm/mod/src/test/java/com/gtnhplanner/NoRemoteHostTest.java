@@ -68,8 +68,6 @@ class NoRemoteHostTest {
         new String[] { "src/main/resources/LICENSE", "jackwrichards" },
         // The credit for the mod this one was built on.
         new String[] { "src/main/resources/mcmod.info", "github.com/sbancuz/PlanNH" },
-        // A comment in a file the model stream owns; drop this line when it says "the website" instead.
-        new String[] { "data/flowchart/Graph.java", "The post on gtnhplanner.com" },
         // This test spells the names it hunts.
         new String[] { "NoRemoteHostTest.java", "" });
 

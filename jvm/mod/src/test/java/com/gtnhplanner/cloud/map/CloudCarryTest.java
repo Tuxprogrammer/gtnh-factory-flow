@@ -199,10 +199,14 @@ class CloudCarryTest {
             edges = byId(plan, "edges");
         for (final String id : new String[] { "n-off", "n-gone", "n-norecipe" })
             assertTrue(nodes.containsKey(id), "card " + id + " kept");
-        for (final String id : new String[] { "s-lone", "s-x", "s-y" })
-            assertTrue(storages.containsKey(id), "drawer " + id + " kept");
-        for (final String id : new String[] { "e-drawers", "e-cell", "e-rod", "e-off" })
-            assertTrue(edges.containsKey(id), "wire " + id + " kept");
+        assertTrue(edges.containsKey("e-cell"), "wire e-cell kept");
+        // The cards the board shows have their wires and drawers on the board: written with the plan's card id.
+        for (final String id : new String[] { "n-off", "n-gone" }) assertTrue(
+            edges.values()
+                .stream()
+                .anyMatch(e -> id.equals(PlanRead.str(e, "source"))),
+            "a wire from " + id);
+        assertEquals(3, storages.size(), "s-gear, s-lone and s-y on the board, s-x joined into a wire");
         assertEquals(
             "Plan notes the mod has no place for.",
             plan.get("notes")
@@ -275,6 +279,55 @@ class CloudCarryTest {
                 .has("view")
                 && saved.plan()
                     .has("notes"));
+    }
+
+    /**
+     * A website plan with cards the game cannot run goes up whole: those cards as they came, the board's wires on them
+     * naming their ports as the plan's recipes do. A later save that changes the board's setting pins keeps the
+     * plan's pins for machines the board has no card of.
+     */
+    @Test
+    void displayCardsGoUpWholeAndThePlansOtherPinsStay() throws IOException, ReflectiveOperationException {
+        final TestGame game = PlanRoundTripTest.routed(new TestGame(), true);
+        final Field f = FakeGame.class.getDeclaredField("missing");
+        f.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        final Set<String> missing = (Set<String>) f.get(game.fake);
+        missing.add("r-gone");
+        final String text = Conformance.text("codec/round-trip/display-cards.json");
+        final Graph g = FfImport.importFromText(text, game.fake, game.fake)
+            .graph();
+        game.knowing(g);
+        final CloudPlans.Written first = CloudPlans.write(g, game, null, null);
+        final JsonObject source = new com.google.gson.JsonParser().parse(text)
+            .getAsJsonObject();
+        final Map<String, JsonObject> in = byId(source, "nodes"), up = byId(first.plan(), "nodes");
+        for (final String id : new String[] { "n-vein", "n-infusion", "n-off", "n-gone", "n-norecipe" })
+            assertEquals(in.get(id), up.get(id), id + " goes up as it came");
+        assertEquals(List.of(), unresolved(first.plan()), "every wire names a port its card's recipe has");
+        assertTrue(
+            first.plan()
+                .getAsJsonObject("settingPins")
+                .has("handler:elsewhere"));
+        assertSums(first.plan());
+
+        // The board pins a generator's fuel: its pins are the board's, the website machine's stay the plan's.
+        g.settingPins.put("power:steam-boiler", new ArrayList<>(List.of("power:fuel")));
+        final JsonObject later = CloudPlans.write(g, game, first.plan(), first.basis())
+            .plan();
+        final JsonObject pins = later.getAsJsonObject("settingPins");
+        assertEquals(
+            "[\"mode\"]",
+            pins.get("handler:elsewhere")
+                .toString(),
+            "the plan's own pins stay: " + pins);
+        assertEquals(
+            "[\"fuel\"]",
+            pins.get("power:steam-boiler")
+                .toString(),
+            "the board's pins are written: " + pins);
+        for (final String id : new String[] { "n-vein", "n-off" })
+            assertEquals(in.get(id), byId(later, "nodes").get(id), id + " untouched by a later save");
     }
 
     // endregion

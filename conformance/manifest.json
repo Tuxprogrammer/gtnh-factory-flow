@@ -178,6 +178,11 @@
       "bytes": 5307,
       "sha256": "0f18b636403458b01ca667d2d7d92c6a18b867ab4a0845998c756ea76b0c9a68"
     },
+    "codec/round-trip/display-cards.json": {
+      "area": "codec",
+      "bytes": 6616,
+      "sha256": "2e2a72fe3a476d4296831f8447686412bca1744524e6a9d1db75baefa1553148"
+    },
     "codec/round-trip/website-only-things.json": {
       "area": "codec",
       "bytes": 5341,
@@ -1215,8 +1220,8 @@
     },
     "view/card/cases.json": {
       "area": "view",
-      "bytes": 486628,
-      "sha256": "6f3e43eb7d52dfeba2d1d8947ea8075c9fee8a262567d9f3d7d82ced5b0b83b9"
+      "bytes": 489103,
+      "sha256": "52a75761a5d1c01786a7202c3da0b3793908755a37ad47753ba3162da59dff19"
     },
     "view/card/count.json": {
       "area": "view",
@@ -1270,8 +1275,8 @@
     },
     "view/records.json": {
       "area": "view",
-      "bytes": 23559,
-      "sha256": "9ba04903bbb1c5ad5b9471f958dbbccc09dbf1df949a49fa35fe5e76d41bdec0"
+      "bytes": 23758,
+      "sha256": "d9df3530171db6567262226c5c8a49c0eb2a3d05a90a13a75ccac0e82e5d94b7"
     }
   }
 }

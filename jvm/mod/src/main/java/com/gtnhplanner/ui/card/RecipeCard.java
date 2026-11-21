@@ -390,6 +390,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
      */
     private CardFace.Foot buildFoot(final Fmt.RateUnit unit) {
         if (model == null || countless()) return null;
+        if (model.node.shown != null) return readOnlyFoot();
         final List<CardFace.Forced> forced = new ArrayList<>();
         for (final CardModel m : models) for (final CardModel.PortView p : m.inputs) if (p.hasExtra() && !p.isPower())
             forced.add(new CardFace.Forced(p.name(), Fmt.rate(p.extra(), unit, p.isFluid())));
@@ -405,6 +406,32 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
             },
             Hyb::width,
             session.loopOf(nodeId));
+    }
+
+    /**
+     * A card the board only shows (a website card it cannot run): VIEW ONLY and why, by the shared card rules
+     * (core-view CardViews.readOnlyFoot).
+     */
+    private CardFace.Foot readOnlyFoot() {
+        final com.gtnhplanner.data.flowchart.PinRule rule = session.rule(model.node);
+        final double set = session.setCount(model.node);
+        final com.gtnhplanner.core.view.card.CardView.FootView v = com.gtnhplanner.core.view.card.CardViews
+            .readOnlyFoot(
+                CardInputs.readOnly(model.node),
+                rule,
+                machinesTotal(),
+                rule == com.gtnhplanner.data.flowchart.PinRule.ANY ? null : set,
+                com.gtnhplanner.ui.theme.HybMeasure.INSTANCE);
+        return new CardFace.Foot(
+            CardFace.Tone.PLAIN,
+            v.word(),
+            v.say(),
+            "",
+            0,
+            0,
+            0,
+            0,
+            new CardFace.Facts(null, false, machinesTotal(), set, null, null, List.of(), List.of(), List.of(), null));
     }
 
     /**
@@ -2431,6 +2458,8 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
      */
     private Result act(final Part part, final int mouseButton, final float x, final float y) {
         final Node node = model.node;
+        // A card the board only shows (a website card it cannot run): every part is its body, its key its menu.
+        if (node.shown != null && part != Part.BODY && part != Part.ACTIONS) return act(Part.BODY, mouseButton, x, y);
         switch (part) {
             case ACTIONS -> {
                 if (mouseButton == 0) openActions();
@@ -2542,7 +2571,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
 
     @Override
     public boolean onMouseScroll(final UpOrDown direction, final int amount) {
-        if (model == null) return false;
+        if (model == null || model.node.shown != null) return false;
         // While a leftover is carried the wheel is the board's: how much is in hand.
         if (canvas() != null && canvas().carryingSpare()) return false;
         // With "Scroll changes values" off nothing here takes it: the board zooms.
@@ -2959,7 +2988,8 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
                 shared(),
                 com.gtnhplanner.power.Holders.is(node),
                 emptyCropFarm(),
-                true))) {
+                true,
+                node.shown != null))) {
             switch (row.id()) {
                 case "clone" -> {
                     rows.add(PickList.Entry.of(row.label(), () -> session.cloneNode(node)));
@@ -2984,7 +3014,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
                                 "Remove from the world",
                                 () -> com.gtnhplanner.ui.world.WorldLinks.clear(session.graph(), node)));
                     }
-                    rows.add(PickList.Entry.rule());
+                    if (!rows.isEmpty()) rows.add(PickList.Entry.rule());
                     rows.add(new PickList.Entry(null, row.label(), "", Hyb.RED_INK, false, () -> session.delete(node)));
                 }
                 default -> {}

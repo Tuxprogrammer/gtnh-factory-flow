@@ -43,6 +43,11 @@ public final class PatternNet {
 
     private PatternNet() {}
 
+    /** Runs {@code task} on the server's next tick (the dev game's comparison drives the server through this). */
+    public static void onServerTick(final Runnable task) {
+        SERVER.add(task);
+    }
+
     /** Both sides, in pre-init: the channel, its messages and the ticks that run them. */
     public static void init() {
         net = NetworkRegistry.INSTANCE.newSimpleChannel("gtnhplanner");

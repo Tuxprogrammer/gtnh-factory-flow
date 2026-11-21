@@ -3,6 +3,7 @@ package com.gtnhplanner;
 import com.gtnhplanner.annotation.VersionedInjector;
 import com.gtnhplanner.config.ConfigMain;
 import com.gtnhplanner.machines.game.PackRates;
+import com.gtnhplanner.pattern.PatternNet;
 
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
@@ -16,6 +17,7 @@ public class CommonProxy {
 
         Config.synchronizeConfiguration(event.getSuggestedConfigurationFile());
         ConfigMain.registerConfigs();
+        PatternNet.init();
     }
 
     public void init(final FMLInitializationEvent event) {}

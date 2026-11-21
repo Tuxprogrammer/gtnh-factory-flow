@@ -1,6 +1,10 @@
 package com.gtnhplanner.pattern;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 
 import com.gtnhplanner.GtnhPlanner;
 
@@ -36,18 +40,35 @@ public final class PatternServer {
         return ready;
     }
 
+    /** What came of one recipe: a {@link PatternRules} outcome, stacks left out, and a copy of the pattern given. */
+    public record Made(byte outcome, int dropped, @Nullable ItemStack pattern) {
+
+        static Made not(final byte outcome) {
+            return new Made(outcome, 0, null);
+        }
+    }
+
+    /**
+     * The server's one entry point, on the server thread: one recipe as Not Enough Energistics packs it for a pattern
+     * terminal ({@code in} keyed {@code #0} ..., {@code out} keyed {@code Outputs0} ..., null for a crafting-table
+     * recipe) becomes one encoded pattern in {@code player}'s inventory, from one of their blank patterns (none in
+     * creative). {@code regular} encodes a processing recipe on the 9-input pattern terminal rather than the
+     * processing pattern terminal.
+     */
+    public static Made make(final EntityPlayerMP player, final NBTTagCompound in, @Nullable final NBTTagCompound out,
+        final boolean regular) {
+        if (!ready()) return Made.not(PatternRules.NO_SERVER);
+        try {
+            return AePatterns.make(player, in, out, regular);
+        } catch (final RuntimeException | LinkageError e) {
+            GtnhPlanner.LOG.warn("Pattern this could not encode a recipe", e);
+            return Made.not(PatternRules.CANNOT);
+        }
+    }
+
     static void answer(final EntityPlayerMP player, final PatternNet.Ask ask) {
         if (player.playerNetServerHandler == null) return;
-        PatternNet.Reply reply;
-        if (!ready()) reply = new PatternNet.Reply(ask.id, PatternRules.NO_SERVER, 0);
-        else {
-            try {
-                reply = AePatterns.make(player, ask);
-            } catch (final RuntimeException | LinkageError e) {
-                GtnhPlanner.LOG.warn("Pattern this could not encode a recipe", e);
-                reply = new PatternNet.Reply(ask.id, PatternRules.CANNOT, 0);
-            }
-        }
-        PatternNet.net.sendTo(reply, player);
+        final Made made = make(player, ask.in, ask.out, false);
+        PatternNet.net.sendTo(new PatternNet.Reply(ask.id, made.outcome(), made.dropped()), player);
     }
 }

@@ -81,7 +81,8 @@ public final class PatternRules {
         if (t.made() > 0) parts.add(t.made() == 1 ? "Made a pattern" : "Made " + t.made() + " patterns");
         if (t.noServer() > 0) parts.add("This server cannot make patterns");
         else if (t.noBlank() > 0) parts.add(
-            t.made() > 0 ? "Out of blank patterns for " + t.noBlank() + " more" : "No blank patterns in your inventory");
+            t.made() > 0 ? "Out of blank patterns for " + t.noBlank() + " more"
+                : "No blank patterns in your inventory");
         if (t.cannot() > 0) parts.add(
             t.total() == 1 ? "This recipe cannot be patterned"
                 : t.cannot() + (t.cannot() == 1 ? " recipe cannot" : " recipes cannot") + " be patterned");

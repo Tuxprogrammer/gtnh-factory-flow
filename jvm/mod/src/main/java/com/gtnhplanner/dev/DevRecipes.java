@@ -184,7 +184,7 @@ final class DevRecipes {
         return out;
     }
 
-    private static boolean hasIngredient(final ICraftingHandler handler, final int recipe, final String filter) {
+    static boolean hasIngredient(final ICraftingHandler handler, final int recipe, final String filter) {
         for (final PositionedStack ps : handler.getIngredientStacks(recipe)) {
             for (final ItemStack s : ps.items) {
                 if (s != null && s.getDisplayName()
@@ -244,7 +244,7 @@ final class DevRecipes {
         return out;
     }
 
-    private static ItemStack resolveStack(final String key) {
+    static ItemStack resolveStack(final String key) {
         // A fluid ("fluid:mutagen"): NEI's GregTech pages find it as GregTech's fluid display item.
         if (key.startsWith("fluid:")) {
             final net.minecraftforge.fluids.Fluid fluid = net.minecraftforge.fluids.FluidRegistry

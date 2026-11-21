@@ -29,12 +29,13 @@ nowhere or goes nowhere except through a source, a drawer or trash. Longer versi
 - The plan solve's engine is `getSolveCore()` (`plan/adapter/engine.ts`), the one seam. In the solve Worker and the
   server's plan routes, and on a main thread with no Worker (`solve-books.ts` imports it on the first solve there),
   `src/lib/core/solve-adopt.ts` puts the compiled core behind it (`ADOPT.solve`, WebAssembly GC
-  only): the input goes over as JSON (`SolverExports.solverSolveCached`, island cache in the module), the golden digest
+  or its JavaScript build, same answers): the input goes over as JSON (`SolverExports.solverSolveCached`, island cache in the module), the golden digest
   comes back as the website's `Answer`; ids the website mints are renamed to UUIDs in the solve's own order and named
   back. In the Worker a solve waits for the core where it solves (`src/store/solve-engines.ts`: bounded, HiGHS is
   never fetched there), so a plan never shows HiGHS's numbers first; HiGHS and the TypeScript solver answer only where
-  the core does not solve: no WebAssembly GC (the JavaScript build), a failed or hung load, a server without a core,
-  and a main thread with no Worker until the core has loaded. The two are held equal by `src/lib/core/solve-shadow.test.ts` (every recorded
+  the core does not solve: a failed or hung load, and a main thread with no Worker until the core has loaded. The
+  server's plan routes solve on the core only (`src/lib/server/plan-engine.ts`): without it they answer 503, and
+  `npm run build` fails without a core (`prebuild`: `tools/copy-core.mjs --required`). The two are held equal by `src/lib/core/solve-shadow.test.ts` (every recorded
   input, also with the website's kind of ids, and the Worker's books for every reference plan).
 - Plan solver dust (`plan/validate.ts` `dustScales`) is judged per network, never over the whole point: a
   reactor's billions of EU a second must not zero a 0.03/s item wire (the answer then fails its own check).

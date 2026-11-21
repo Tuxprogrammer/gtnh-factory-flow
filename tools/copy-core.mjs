@@ -8,7 +8,8 @@
 //     GTNH_CORE_DIR                      a finished build (a CI artifact, a build host's output): wasm-gc/ and js/ inside it
 //     jvm/web/build/generated/teavm      what `./gradlew :web:webCore` writes
 //   --build or GTNH_CORE_BUILD=1         run Gradle first (needs JDK 25; the build downloads TeaVM from Maven Central)
-//   --required or GTNH_CORE_REQUIRED=1   no core is an error (CI, a deploy that serves features needing the core)
+//   --required or GTNH_CORE_REQUIRED=1   no core is an error (CI, and `prebuild`: every production build, since the
+//                                       plan solve runs on the core)
 //
 // With none of these and no build on disk it prints one line and exits 0: the site runs without the core and the loader
 // says it is unavailable (a checkout with only Node).
@@ -78,8 +79,10 @@ export function run({ build = false, required = false } = {}) {
     const reason = explicit
       ? `GTNH_CORE_DIR ${explicit} is missing ${CORE_FILES.filter((f) => !existsSync(path.join(explicit, f))).join(", ")}`
       : "no core build found (run with GTNH_CORE_BUILD=1 and JDK 25, or point GTNH_CORE_DIR at a finished build)";
-    if (required || explicit) throw new Error(reason);
-    console.log(`[copy-core] ${reason}; the site runs without the core`);
+    // The plan solve runs on the core: a build that serves plans without it would solve them on a slow stand-in.
+    if (required) throw new Error(`${reason}. A production build needs the compiled core: every plan solves on it`);
+    if (explicit) throw new Error(reason);
+    console.log(`[copy-core] ${reason}; the site runs without the core and solves plans on a slow stand-in`);
     return { status: "unavailable", reason };
   }
   // The source map is not shipped (a debugging build is `-Pplain`), so the comment that names it goes too.

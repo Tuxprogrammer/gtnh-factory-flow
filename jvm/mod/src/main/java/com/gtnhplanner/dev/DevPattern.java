@@ -46,8 +46,9 @@ import codechicken.nei.recipe.RecipeHandlerRef;
  * {@code pattern?output=&handler=&input=&nth=&term=ex|regular} finds a recipe in NEI and makes it twice: by hand (the
  * terminal opened as a right click opens it, NEE's own transfer from the open terminal's screen as NEI's overlay button
  * runs it, and the terminal container's own Encode) and by the button (the card's network path, or with
- * {@code direct=1} the server entry point, which {@code term=regular} needs). It answers both patterns' NBT without
- * {@code encodedAt} (wall time) and whether they are the same.
+ * {@code direct=1} the server entry point, which {@code term=regular} needs for a processing recipe). It answers both
+ * patterns' NBT without {@code encodedAt} (wall time) and whether they are the same. {@code card=1} with the planner
+ * open puts the recipe ({@code join=N} recipes, joined as one shared machine) on the board and runs the card's row.
  */
 final class DevPattern {
 
@@ -66,6 +67,7 @@ final class DevPattern {
     static Map<String, Object> route(final Map<String, String> q, final OnClient client) throws Exception {
         if (q.containsKey("setup")) return setup();
         if (q.containsKey("noblank")) return noBlank();
+        if (q.containsKey("card")) return card(q, client);
         return compare(q, client);
     }
 
@@ -121,7 +123,7 @@ final class DevPattern {
 
     private static Map<String, Object> compare(final Map<String, String> q, final OnClient client) throws Exception {
         final boolean regular = "regular".equals(q.getOrDefault("term", "ex"));
-        final boolean direct = q.containsKey("direct") || regular;
+        final boolean direct = q.containsKey("direct");
         final int[] at = regular ? regularAt : exAt;
         if (at == null) throw new IllegalArgumentException("run pattern?setup=1 first");
         final Map<String, Object> m = new LinkedHashMap<>();
@@ -236,6 +238,43 @@ final class DevPattern {
         return m;
     }
 
+    /** The card's row on a card of the board: one pattern per recipe of its shared machine. */
+    private static Map<String, Object> card(final Map<String, String> q, final OnClient client) throws Exception {
+        final int join = Integer.parseInt(q.getOrDefault("join", "1"));
+        final int before = server(() -> {
+            removeEncoded(player());
+            return blankCount(player());
+        });
+        final Map<String, Object> m = new LinkedHashMap<>();
+        m.put("offered", client.run(() -> {
+            final com.gtnhplanner.ui.BoardSession session = com.gtnhplanner.ui.BoardSession.current();
+            if (session == null) throw new IllegalStateException("open the planner first");
+            com.gtnhplanner.data.flowchart.Node host = null;
+            for (int n = 0; n < join; n++) {
+                final RecipeHandlerRef ref = find(
+                    q.getOrDefault("output", ""),
+                    q.getOrDefault("handler", ""),
+                    q.getOrDefault("input", ""),
+                    n);
+                final com.gtnhplanner.data.flowchart.Node node = session.addRecipe(ref.handler, ref.recipeIndex);
+                if (host == null) host = node;
+                else com.gtnhplanner.ui.CardRecipes.join(session.graph(), host, node, null);
+            }
+            final boolean offered = PatternThis.offered();
+            PatternThis.card(session, host);
+            return offered;
+        }));
+        Thread.sleep(2000);
+        m.put("said", client.run(PatternThis::lastSummary));
+        m.putAll(server(() -> {
+            final Map<String, Object> r = new LinkedHashMap<>();
+            r.put("blanksTaken", before - blankCount(player()));
+            r.put("encodedGiven", encodedCount(player()));
+            return r;
+        }));
+        return m;
+    }
+
     /** The stack's NBT as an item, without the pattern's wall-clock time. */
     private static NBTTagCompound plain(final ItemStack s) {
         if (s == null) return null;
@@ -276,9 +315,20 @@ final class DevPattern {
                 .parts()
                 .patternTerminal()).maybeStack(1)
                     .orNull();
-        if (!AEApi.instance()
-            .partHelper()
-            .placeBus(part, x, y, z, 1, p, w)) throw new IllegalStateException("AE2 did not place the terminal");
+        // A cable bus with the terminal on its underside, facing the stone (what a right click on its top places).
+        w.setBlock(
+            x,
+            y + 1,
+            z,
+            AEApi.instance()
+                .definitions()
+                .blocks()
+                .multiPart()
+                .maybeBlock()
+                .get());
+        if (!(w.getTileEntity(x, y + 1, z) instanceof final IPartHost host)
+            || host.addPart(part, ForgeDirection.DOWN, p) == null)
+            throw new IllegalStateException("AE2 did not place the terminal");
         return new int[] { x, y + 1, z };
     }
 

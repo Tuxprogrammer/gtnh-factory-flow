@@ -1,5 +1,7 @@
 ## New
 
+- Pattern this, in a recipe card's menu, turns a blank pattern from your inventory into an AE2 pattern of the card's recipe (one for each recipe of a shared machine): the same pattern as moving the recipe from NEI into a pattern terminal and pressing Encode. It needs AE2 and Not Enough Energistics, and this mod on the server too.
+
 ## Better
 
 ## Fixed

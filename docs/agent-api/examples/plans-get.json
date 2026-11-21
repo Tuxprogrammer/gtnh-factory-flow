@@ -1,7 +1,7 @@
 {
   "endpoint": "plans/get",
   "request": {
-    "planId": "xgvwfpswhw7t4n7gau3g",
+    "planId": "xpb89ssr6kjcfq82e9af",
     "player": {
       "name": "Steve"
     }
@@ -9,12 +9,13 @@
   "status": 200,
   "response": {
     "dataset": "stable-2.9.0-tuxmine",
-    "planId": "xgvwfpswhw7t4n7gau3g",
+    "planId": "xpb89ssr6kjcfq82e9af",
     "name": "Titanium line",
-    "expiresAt": "2026-11-22T21:17:02.647Z",
+    "expiresAt": "2026-11-22T23:19:49.122Z",
     "constraints": {
       "tierCap": "EV"
     },
+    "cardTier": "EV",
     "cardCount": 4,
     "wireCount": 3,
     "targets": [
@@ -35,7 +36,7 @@
           "id": "vacuum-freezer",
           "name": "Vacuum Freezer"
         },
-        "tier": "HV"
+        "tier": "EV"
       },
       {
         "cardId": "c2",
@@ -45,7 +46,7 @@
           "id": "electric-blast-furnace",
           "name": "Electric Blast Furnace"
         },
-        "tier": "HV",
+        "tier": "EV",
         "heat": 2140
       },
       {
@@ -53,10 +54,10 @@
         "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-simplewasher:e0f98d3e195d09f1",
         "name": "Simple Dust Washer: Magnesium Dust",
         "machine": {
-          "id": "steam-purifier",
-          "name": "Steam Purifier"
+          "id": "ore-washing-plant-multiblock",
+          "name": "Ore Washing Plant"
         },
-        "tier": "ULV"
+        "tier": "EV"
       },
       {
         "cardId": "c4",
@@ -66,7 +67,7 @@
           "id": "chemical-reactor",
           "name": "Chemical Reactor"
         },
-        "tier": "HV"
+        "tier": "EV"
       }
     ],
     "wires": [

@@ -72,7 +72,7 @@ Accepted by `recipes/search`, `plans/create` (a draft keeps its constraints; `pl
 `plans/expand-inputs` (joined with the draft's; see its section):
 
 ```json
-{ "tierCap": "HV", "heat": 4500, "cleanroom": false, "lowgrav": false, "banned": ["..."], "free": ["..."] }
+{ "tierCap": "HV", "heat": 4500, "cleanroom": false, "lowgrav": false, "banned": ["..."], "free": ["..."], "steam": false }
 ```
 
 What `recipes/search` does with each:
@@ -82,6 +82,7 @@ What `recipes/search` does with each:
 | `tierCap`   | **filters**: recipes whose minimum tier is above the cap are left out                                  |
 | `heat`      | **filters**: a recipe on a heat machine (Electric Blast Furnace and kin) that needs more heat in K is left out |
 | `banned`    | **filters**: ids or names, matched without case against the recipe id, its recipe map, and each machine's id, name and type. A recipe is left out when the recipe or its map is banned, or every machine that runs it is; otherwise the first machine that is not banned is the one shown |
+| `steam`     | **filters**, default `false`: unless it is `true` or `tierCap` is `ULV`, a steam or primitive machine is never the machine shown, and a recipe only they run is left out and counted in `steamOnly`. Naming one in `machine` shows it |
 | `cleanroom` | **not enforced**: the dataset carries no cleanroom flag on any recipe, so nothing can be filtered on it |
 | `lowgrav`   | **not enforced**: the dataset carries no low-gravity flag on any recipe                                 |
 | `free`      | **not enforced** by search: it means "treat as raw" to expand and solve                                |
@@ -89,9 +90,20 @@ What `recipes/search` does with each:
 A search given any field it does not enforce lists those fields in `notEnforced`, so the caller knows the results were
 not narrowed by them.
 
+Steam and primitive machines (no electricity):
+
+- Steam: every machine the site bills in litres of steam instead of EU, the "Steam ..." and "High Pressure ..." line
+  (21 in the pack: the eight steam multiblocks, their single blocks, and the Steam Ammo Press).
+- Primitive: the Bricked Blast Furnace and Railcraft's Coke Oven (a named list: the dataset has no flag for them, and
+  their 0 EU and ULV are what generators, crafting and the Multi Smelter read too; a check against the pack dataset
+  fails when a new 0 EU machine is neither steam, primitive, nor known to be something else).
+- Every tier filter counts them as ULV, whatever their tier reads in the dataset (it comes from the recipe's EU).
+
 What a draft does with its constraints: `tierCap` caps the default machine and tier of every card and refuses a tier
-above it; `banned` keeps a machine from being chosen; `free` marks those resources `free: true` in the solve's
-`unsupplied` list. `heat`, `cleanroom` and `lowgrav` do nothing to a draft (a card shows the `heat` its recipe needs).
+above it; `banned` keeps a machine from being chosen; `steam` (unless `true`, or `tierCap` is `ULV`) keeps a steam or
+primitive machine from being a card's default machine, though a card may name one; `free` marks those resources
+`free: true` in the solve's `unsupplied` list. `heat`, `cleanroom` and `lowgrav` do nothing to a draft (a card shows the
+`heat` its recipe needs). The draft's `cardTier` (from `plans/create`, default `tierCap`) is the tier cards default to.
 
 ## resources/search
 
@@ -120,8 +132,9 @@ Request: `{makes?, takes?, text?, machine?, constraints?, limit?, offset?, detai
 - `limit`: 1 to 25, default 8. `offset`: 0 to 1000, default 0.
 - `detail`: adds each recipe's map, its machines, and up to 5 alternatives for an "any of" input.
 
-Response: `{dataset, results, total, offset, more, truncated?, notEnforced?}`. `total` counts every match before
-constraints; `more` says another page may hold results.
+Response: `{dataset, results, total, offset, more, truncated?, notEnforced?, steamOnly?}`. `total` counts every match
+before constraints; `more` says another page may hold results. `steamOnly`: how many of the recipes looked at were left
+out because only steam or primitive machines run them (set `constraints.steam` to see them).
 
 A compact recipe:
 
@@ -132,7 +145,8 @@ A compact recipe:
  map?, machines?: [{id, name, kind}]}            (map and machines with detail only)
 ```
 
-- `machine` is the machine shown for the recipe: its default one, or the first not banned.
+- `machine` is the machine shown for the recipe: its default one, or the first not banned, and not a steam or
+  primitive one unless `steam` allows it or `machine` names it.
 - `consumed: false` marks an input the recipe holds but does not use up (a catalyst, a mold, a circuit).
 - `chance` (0 to 1) appears only on an output that is not certain.
 - `heat` is the heat in K the recipe needs, only for recipes on a heat machine. `circuit` names the programmed circuit.
@@ -197,7 +211,7 @@ Every change validates the whole request first: a refused request leaves the dra
 
 | endpoint              | request                                                              | response                                              | built |
 | --------------------- | -------------------------------------------------------------------- | ----------------------------------------------------- | ----- |
-| `plans/create`        | `{name, constraints?, player?}`                                      | `{dataset, planId, name, expiresAt, constraints?}`    | yes   |
+| `plans/create`        | `{name, constraints?, cardTier?, player?}`                           | `{dataset, planId, name, expiresAt, constraints?, cardTier?}` | yes |
 | `plans/add-cards`     | `{planId, cards: [{recipeId, machine?, tier?, dials?}], player?}`    | `{planId, cards, wires, cardCount}`                   | yes   |
 | `plans/remove-cards`  | `{planId, cardIds, player?}`                                         | `{planId, removed, wiresRemoved, cardCount, targets}` | yes   |
 | `plans/set-targets`   | `{planId, targets: [{resource, rate}], player?}`                     | `{planId, targets}`                                   | yes   |
@@ -212,6 +226,10 @@ Every change validates the whole request first: a refused request leaves the dra
 
 Examples, one real call each against the pack dataset (a titanium line): `docs/agent-api/examples/plans-*.json`.
 
+`plans/create`'s `cardTier`: the tier the draft's cards default to, a tier name at most `constraints.tierCap` (above it
+is `bad_request`). Default: `tierCap`; with neither, cards take the lowest tier that runs them. The draft keeps it;
+`plans/get` returns it.
+
 ### A card
 
 What `plans/add-cards` sends and what the draft endpoints return for a card:
@@ -223,12 +241,19 @@ response: {cardId, recipeId, name, machine: {id, name}, tier, dials?, heat?}
 
 - `machine`: a machine that runs the recipe, by id or name (without case), as `recipes/get` lists them. Default: the
   recipe's first multiblock that runs it at or below the draft's `tierCap`, else its first single block that does
-  (else its first machine that does). A machine banned by the draft's constraints is never chosen, and asking for one
-  is `bad_request`.
-- `tier`: the tier the card runs at. Default: the lowest that machine can run the recipe at. Below the machine's
-  minimum for the recipe is `tier_too_low`; above the draft's `tierCap`, or a tier the machine is not built at, is
-  `bad_request`. A recipe nothing runs at or below `tierCap` is `tier_too_low`. A recipe whose tier is not a voltage
-  tier (crafting, `NONE`) keeps its own and is never capped.
+  (else its first machine that does), leaving out steam and primitive machines unless the draft's `steam` allows them
+  (or its `tierCap` is `ULV`). A machine banned by the draft's constraints is never chosen, and asking for one is
+  `bad_request`. Naming a steam or primitive machine is allowed: the player asked for it. A recipe only steam or
+  primitive machines run, with no machine named and steam not allowed, is `bad_request` saying so.
+- `tier`: the tier the card runs at. Default: the highest tier the machine is built at that is at or below the draft's
+  `cardTier` (or `tierCap` when it has none), and never below the recipe's minimum: a recipe whose minimum is above
+  `cardTier` but within `tierCap` runs at its minimum. With neither set, and for a machine that draws no EU on the
+  recipe (a cauldron), the lowest it runs at. The solve overclocks the card at that tier by the site's own machine
+  math; a multiblock gets an energy hatch of that tier when the plan is opened, with the same numbers. Below the
+  machine's minimum for the recipe is `tier_too_low`; above the draft's `tierCap`, or a tier the machine is not built
+  at, is `bad_request`. A recipe nothing runs at or below `tierCap` is `tier_too_low`. A recipe whose tier is not a
+  voltage tier (crafting, `NONE`) keeps its own and is never capped. A steam or primitive machine keeps the tier the
+  dataset gives it (it does not overclock); asking for another is `bad_request`.
 - `dials`: a nested object, never spread into the card. Keys are the dial ids `recipes/get` lists for that machine
   (the coil is `heatingCoil`); values are an option `key` or, for a numeric dial, a number in its range. An unknown
   dial id, an unknown option, a number out of range or an option below the recipe's minimum (a coil too cold for the
@@ -271,7 +296,7 @@ press Arrange on the delivered plan.
 
 ### plans/get
 
-`{dataset, planId, name, expiresAt, constraints?, cardCount, wireCount, cards?, wires?, targets?, truncated?}`.
+`{dataset, planId, name, expiresAt, constraints?, cardTier?, cardCount, wireCount, cards?, wires?, targets?, truncated?}`.
 
 - `fields`: any of `cards`, `wires`, `targets` (default all three).
 - `cardIds`: only those cards and the wires that touch them.
@@ -301,10 +326,13 @@ first solve of a 60-card draft after the server starts, 20 to 50 ms after; a 60-
   unwired input slot) and anything forced in at a wired one. `free: true` marks resources the draft's constraints list
   as `free` (raw on purpose).
 - `byproducts`: what the draft makes that nothing takes and is not a target, per second, largest first.
-- `euT`: the draft's total power draw at the solved counts.
+- `euT`: the draft's total power draw at the solved counts. Steam machines draw no EU.
 - `warnings`: plain sentences, at most 12: no target set, a target with no card, a target not met, the board's own
-  notices (rates that cannot be met, loops that starve or clog, with the card ids), and cards no target needs (they
-  run at 0).
+  notices (rates that cannot be met, loops that starve or clog, with the card ids), the steam the draft's steam
+  machines burn, and cards no target needs (they run at 0).
+- Steam: the site's solver does not carry steam as a flow, so it is in neither `unsupplied` nor `euT`. When a card
+  burns steam, one warning gives the total, by the site's card math (litres per machine times the solved count), and
+  the card ids: "Steam machines burn 32.81 L/s of steam, which is not in unsupplied or euT: c1."
 - `cards`: one row per card, in card order, laid out as `cardColumns` says: the card's id, its recipe's name, its
   machine's name, its tier, the machine count the solve needs (fractional), what it takes and makes per second (by
   resource name; a name used by both an item and a fluid on one card gets ` (item)` or ` (fluid)`), and its `dials`
@@ -325,7 +353,8 @@ Request: `{planId, resources?, constraints?, max?, player?}`
   largest rate first. A named resource the draft does not need from outside is answered with no candidates and a
   `note`.
 - `constraints`: joined with the draft's for this call only: the lower `tierCap` and `heat`, `banned` and `free`
-  lists together. The draft keeps its own.
+  lists together, and the call's `steam` when it gives one, else the draft's. The draft keeps its own. A steam
+  candidate a call allows that the draft does not is added with `plans/add-cards` naming its `machine`.
 - `max`: candidates per input, 1 to 3, default 3.
 - A draft with no target needs nothing, so it is `bad_request`.
 
@@ -333,9 +362,10 @@ Response:
 
 ```
 {dataset, planId,
- inputs: [{id, kind, name, perSecond, raw?, found, skipped?, note?,
+ inputs: [{id, kind, name, perSecond, raw?, found, skipped?, steamOnly?, note?,
            candidates: [{recipeId, name, machine, tier, euT, seconds, inputs, outputs,
-                         reason, newRaws: [{id, kind, name, perSecond}], usesByproducts?, machines, euPerItem, works?}]}],
+                         reason, newRaws: [{id, kind, name, perSecond}], usesByproducts?, machines, euPerItem,
+                         steamPerSecond?, works?}]}],
  accepted: [{id, kind, name, perSecond}],
  more, remaining?: [{id, kind, name}], notEnforced?, truncated?}
 ```
@@ -343,22 +373,26 @@ Response:
 - `accepted`: unsupplied inputs the constraints mark `free` (matched by id or name, without case). They are raw on
   purpose and never expanded.
 - `raw: true`: the input is itself raw to a player (see Rawness below); fine to leave unsupplied or add to `free`.
-- `found`: recipes the search found that make it, before constraints. `skipped`: recipes left out (below).
+- `found`: recipes the search found that make it, before constraints. `skipped`: recipes left out (below);
+  `steamOnly`: how many of them only steam or primitive machines run (constraints `steam` allows them).
 - A candidate: the recipe in the compact form of `recipes/search` (`euT` and `seconds` are the recipe's own), the
-  `machine` and `tier` `plans/add-cards` would give it under the joined constraints, and what the trial measured:
-  `machines` the solve needs of it, `euPerItem` (the draft's added EU per unit of the input it supplies, per L for a
-  fluid), `newRaws` (inputs the draft did not need before and would need from outside with it, per second, largest
+  `machine` and `tier` `plans/add-cards` would give it under the joined constraints and the draft's `cardTier` (lowered
+  to the joined `tierCap`), and what the trial measured: `machines` the solve needs of it, `euPerItem` (the draft's
+  added EU per unit of the input it supplies, per L for a fluid; a steam machine's steam counts at 2 L per EU, GregTech's
+  rate, so steam and electric candidates compare), `steamPerSecond` (litres of steam a steam machine burns at the
+  solved count, by the site's card math), `newRaws` (inputs the draft did not need before and would need from outside with it, per second, largest
   first), `usesByproducts` (inputs it takes that the draft already makes and nothing uses: a good sign).
   `works: false` marks a candidate the solve could not use (it fails, or supplies none of the input); it is ranked
   last.
-- `reason`: one plain sentence or a few: rate, machines, tier and EU per unit; each new input with its rawness; the
+- `reason`: one plain sentence or a few: rate, machines, tier and EU per unit; the steam it burns ("Burns 37.5 L/s of
+  steam (counted at 2 L per EU)."); each new input with its rawness; the
   draft's spare byproducts it uses; spare byproducts it leaves; other unsupplied inputs it also supplies; how much of
   the need it covers when not all; and "recycling" when it gives back material made elsewhere.
 - Adding a candidate: `plans/add-cards` with its `recipeId`. Auto-connect wires it as the trial did.
 
 Where candidates come from: the `recipes/search` `makes` search (its ranking: main product before byproduct,
 producing before giving back), the first 12, filtered by the joined constraints as search filters them (`tierCap`,
-`heat`, `banned`; `cleanroom` and `lowgrav` are listed in `notEnforced` when given). Skipped before trying, and
+`heat`, `banned`, `steam`; `cleanroom` and `lowgrav` are listed in `notEnforced` when given). Skipped before trying, and
 counted in `skipped`:
 
 - a recipe that takes what it makes (a loop);
@@ -369,6 +403,8 @@ counted in `skipped`:
   titanium tetrachloride a titanium furnace takes). One that takes only a byproduct is kept: it is a use for it;
 - a recipe already a card in the draft, and the same reaction on another machine at the same power and time
   (Chemical Reactor and Large Chemical Reactor), tried once;
+- a recipe only steam or primitive machines run, unless the joined constraints allow steam (also counted in
+  `steamOnly`);
 - a recipe `plans/add-cards` would refuse (nothing runs it under the tier cap).
 
 Trying a candidate: the card is added to a copy of the draft, wired by Auto-connect, targets re-seated, and the copy
@@ -408,7 +444,6 @@ Known limits, honestly:
   them. An assistant that knows the pack's veins should judge `raw` itself.
 - Spare byproducts are named in `reason` but do not change the rank: for Chlorine the terlinguaite electrolysis
   (an ore dust, 0.08 EU per L) ranks before salt (0.15 EU per L) though it leaves twice as much Mercury as Chlorine.
-- Steam machines show 0 EU per unit; the steam they burn is not counted.
 - Only the search's first 12 recipes are looked at, after its own ranking; a good recipe further down its list is not
   tried.
 

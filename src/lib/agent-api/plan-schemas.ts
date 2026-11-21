@@ -18,7 +18,13 @@ const player = playerSchema.optional();
 export const MAX_DRAFT_CARDS = 60;
 
 export const plansCreateRequest = z
-  .object({ name: z.string().trim().min(1).max(80), constraints: constraintsSchema.optional(), player })
+  .object({
+    name: z.string().trim().min(1).max(80),
+    constraints: constraintsSchema.optional(),
+    /** The tier cards default to; at most constraints.tierCap. Default: the tier cap. */
+    cardTier: tierName.optional(),
+    player,
+  })
   .strict();
 
 /** A dial value: an option key (coils, tier parts) or a number (numeric settings). */
@@ -114,6 +120,7 @@ export const plansCreateResponse = z
     name: z.string(),
     expiresAt: z.string(),
     constraints: constraintsSchema.optional(),
+    cardTier: tierName.optional(),
   })
   .strict();
 
@@ -149,6 +156,7 @@ export const plansGetResponse = z
     name: z.string(),
     expiresAt: z.string(),
     constraints: constraintsSchema.optional(),
+    cardTier: tierName.optional(),
     cardCount: z.number().int(),
     wireCount: z.number().int(),
     cards: z.array(draftCard).optional(),

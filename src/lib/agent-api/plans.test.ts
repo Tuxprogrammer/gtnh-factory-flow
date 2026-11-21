@@ -12,7 +12,9 @@ import { factoryProjectSchema } from "@/lib/model/schemas";
 import type { MachineHandler, Recipe } from "@/lib/model/types";
 import { getDatasetRecipe, getDatasetResource, getDefaultDatasetVersionId } from "@/lib/server/dataset-query";
 import { CORE_LOAD_MS, useCoreSolver } from "@/test-support/core-solve";
+import { normalizeLoadedProject } from "@/lib/model/project-normalize";
 import { DRAFT_TTL_MS, DRAFTS_PER_DAY, getDraft, resetDrafts, setDraftClock } from "./drafts";
+import { solveProject } from "./solve";
 import {
   plansAddCardsResponse,
   plansConnectResponse,
@@ -107,6 +109,51 @@ const RECIPES: Record<string, Recipe> = {
   }),
 };
 
+/** The steam age: a recipe steam and electric machines share (in the dataset's order), and one only bricks run. */
+RECIPES["r-bronze"] = recipe("r-bronze", {
+  name: "Alloy Smelter: Bronze Ingot",
+  machineType: "Alloy Smelter",
+  minimumTier: "ULV",
+  eut: 8,
+  inputs: [slot("item", "dust", 3)],
+  outputs: [slot("item", "ingot", 4)],
+  machineHandlers: [
+    handler("alloy-smelter", "Alloy Smelter", "single", "ULV", { availableTiers: ["LV", "MV", "HV"] }),
+    // The steam machines' tiers read the recipe's EU, not anything they are built at.
+    handler("steam-alloy-smelter", "Steam Alloy Smelter", "single", "LuV"),
+    handler("steam-fuser", "Steam Fuser", "multiblock", "LuV"),
+    handler("zyngen", "Zyngen", "multiblock", "ULV"),
+  ],
+});
+RECIPES["r-smelt"] = recipe("r-smelt", {
+  name: "Furnace: Titanium Ingot",
+  machineType: "Furnace",
+  minimumTier: "NONE" as Recipe["minimumTier"],
+  eut: 0,
+  inputs: [slot("item", "dust", 1)],
+  outputs: [slot("item", "ingot", 1)],
+  machineHandlers: [
+    handler("steam-hearth", "Steam Hearth", "multiblock", "NONE"),
+    handler("multi-smelter", "Multi Smelter", "multiblock", "NONE"),
+  ],
+});
+RECIPES["r-cauldron"] = recipe("r-cauldron", {
+  name: "Cauldron: Titanium Dust",
+  machineType: "Cauldron",
+  minimumTier: "ULV",
+  eut: 0,
+  inputs: [slot("item", "ore", 1)],
+  outputs: [slot("item", "dust", 1)],
+});
+RECIPES["r-bbf"] = recipe("r-bbf", {
+  name: "Bricked Blast Furnace: Steel Ingot",
+  machineType: "Bricked Blast Furnace",
+  minimumTier: "ULV",
+  eut: 0,
+  inputs: [slot("item", "dust", 1)],
+  outputs: [slot("item", "ingot", 1)],
+});
+
 /** A 60-step chain for the size and time check: step n turns part n into part n+1. */
 for (let n = 0; n < 60; n += 1) {
   RECIPES[`r-step-${n}`] = recipe(`r-step-${n}`, {
@@ -166,8 +213,8 @@ afterEach(() => {
   setDraftClock();
 });
 
-async function create(constraints?: object): Promise<string> {
-  const body = await call(createPost, { name: "Titanium", ...(constraints ? { constraints } : {}) }, plansCreateResponse);
+async function create(constraints?: object, extra: object = {}): Promise<string> {
+  const body = await call(createPost, { name: "Titanium", ...(constraints ? { constraints } : {}), ...extra }, plansCreateResponse);
   return body.planId;
 }
 
@@ -226,9 +273,9 @@ describe("plans/add-cards", () => {
     });
     const capped = await create({ tierCap: "MV" });
     const single = await call(addCardsPost, { planId: capped, cards: [{ recipeId: "r-dust" }] }, plansAddCardsResponse);
-    expect(single.cards[0]).toMatchObject({ machine: { id: "mock-macerator" }, tier: "LV" });
+    expect(single.cards[0]).toMatchObject({ machine: { id: "mock-macerator" }, tier: "MV" });
     const node = getDraft(capped).project.nodes[0]!;
-    expect(node).toMatchObject({ recipeId: "r-dust", overclockTier: "LV", machineCount: 1, enabled: true });
+    expect(node).toMatchObject({ recipeId: "r-dust", overclockTier: "MV", machineCount: 1, enabled: true });
     expect(node.machineHandlerId).toBeUndefined();
   });
 
@@ -278,6 +325,87 @@ describe("plans/add-cards", () => {
     await fails(addCardsPost, { planId, cards: cards(2) }, "plan_too_big", 413);
     const last = await call(addCardsPost, { planId, cards: cards(1) }, plansAddCardsResponse);
     expect(last.cardCount).toBe(60);
+  });
+});
+
+describe("steam, primitive machines and the card tier", () => {
+  beforeAll(() => useCoreSolver(), CORE_LOAD_MS);
+
+  const added = async (planId: string, card: object) =>
+    (await call(addCardsPost, { planId, cards: [{ recipeId: "r-bronze", ...card }] }, plansAddCardsResponse)).cards[0]!;
+
+  it("never defaults to a steam machine, and with steam allowed or a ULV cap offers them as before", async () => {
+    // The dataset puts the Steam Fuser before the Zyngen; at EV the Zyngen is the electric multiblock.
+    expect(await added(await create({ tierCap: "EV" }), {})).toMatchObject({ machine: { id: "zyngen" }, tier: "EV" });
+    expect(await added(await create(), {})).toMatchObject({ machine: { id: "zyngen" }, tier: "ULV" });
+    // Steam counts as ULV whatever its tier reads (LuV here), and keeps that tier: it does not overclock.
+    expect(await added(await create({ tierCap: "EV", steam: true }), {})).toMatchObject({ machine: { id: "steam-fuser" }, tier: "LuV" });
+    expect(await added(await create({ tierCap: "ULV" }), {})).toMatchObject({ machine: { id: "steam-fuser" } });
+    // The Multi Smelter reads NONE like the steam furnaces, and is electric.
+    const smelt = await create({ tierCap: "EV" });
+    const smelter = (await call(addCardsPost, { planId: smelt, cards: [{ recipeId: "r-smelt" }] }, plansAddCardsResponse)).cards[0]!;
+    expect(smelter.machine.id).toBe("multi-smelter");
+    // Named, a steam machine is the player's choice.
+    const named = await create({ tierCap: "EV" });
+    expect(await added(named, { machine: "Steam Alloy Smelter" })).toMatchObject({ machine: { id: "steam-alloy-smelter" }, tier: "LuV" });
+    expect(await fails(addCardsPost, { planId: named, cards: [{ recipeId: "r-bronze", machine: "steam-fuser", tier: "EV" }] }, "bad_request", 400)).toMatch(/burns steam/);
+  });
+
+  it("leaves a recipe only primitive machines run to a request that names one", async () => {
+    const planId = await create({ tierCap: "EV" });
+    expect(await fails(addCardsPost, { planId, cards: [{ recipeId: "r-bbf" }] }, "bad_request", 400)).toMatch(/Bricked Blast Furnace.*constraints\.steam/);
+    const card = (await call(addCardsPost, { planId, cards: [{ recipeId: "r-bbf", machine: "Bricked Blast Furnace" }] }, plansAddCardsResponse)).cards[0]!;
+    expect(card).toMatchObject({ machine: { name: "Bricked Blast Furnace" }, tier: "ULV" });
+    const open = await create({ steam: true });
+    expect((await call(addCardsPost, { planId: open, cards: [{ recipeId: "r-bbf" }] }, plansAddCardsResponse)).cards[0]!.tier).toBe("ULV");
+  });
+
+  it("puts a card at the highest tier at or below cardTier the machine is built at, never below the recipe's", async () => {
+    const ev = await create({ tierCap: "IV" }, { cardTier: "EV" });
+    expect(await added(ev, {})).toMatchObject({ machine: { id: "zyngen" }, tier: "EV" });
+    // The single block is built at LV to HV only.
+    expect(await added(ev, { machine: "Alloy Smelter" })).toMatchObject({ tier: "HV" });
+    // A recipe above the card tier but within the cap runs at its own minimum.
+    const iv = (await call(addCardsPost, { planId: ev, cards: [{ recipeId: "r-iv" }] }, plansAddCardsResponse)).cards[0]!;
+    expect(iv.tier).toBe("IV");
+    // A machine that draws no EU stays at its own tier.
+    const cauldron = (await call(addCardsPost, { planId: ev, cards: [{ recipeId: "r-cauldron" }] }, plansAddCardsResponse)).cards[0]!;
+    expect(cauldron.tier).toBe("ULV");
+    const low = await create({ tierCap: "EV" }, { cardTier: "LV" });
+    expect(await added(low, {})).toMatchObject({ tier: "LV" });
+    expect(await fails(createPost, { name: "x", constraints: { tierCap: "HV" }, cardTier: "EV" }, "bad_request", 400)).toMatch(/cardTier/);
+    const got = await call(getPost, { planId: ev, fields: ["targets"] }, plansGetResponse);
+    expect(got).toMatchObject({ cardTier: "EV", constraints: { tierCap: "IV" } });
+  });
+
+  it("solves a card at its tier as the planner shows it once the plan is opened", async () => {
+    const planId = await create({ tierCap: "EV" });
+    await call(addCardsPost, { planId, cards: [{ recipeId: "r-dust" }] }, plansAddCardsResponse);
+    await call(setTargetsPost, { planId, targets: [{ resource: "dust", rate: 4 }] }, plansSetTargetsResponse);
+    const project = getDraft(planId).project;
+    expect(project.nodes[0]).toMatchObject({ overclockTier: "EV" });
+    const draft = await solveProject(project);
+    // The planner's load funnel gives the multiblock its EV hatch; the numbers must not move.
+    const opened = normalizeLoadedProject(structuredClone(project));
+    expect(opened.nodes[0]).toMatchObject({ hatchVoltageTier: "EV" });
+    const shown = await solveProject(opened);
+    expect(shown.totalEuT).toBeCloseTo(draft.totalEuT, 6);
+    expect(shown.nodes.c1!.theoreticalMachinesRequired).toBeCloseTo(draft.nodes.c1!.theoreticalMachinesRequired, 6);
+    // At EV the card overclocks past its HV minimum, so it needs fewer machines than at HV.
+    const hv = await create({ tierCap: "HV" });
+    await call(addCardsPost, { planId: hv, cards: [{ recipeId: "r-dust" }] }, plansAddCardsResponse);
+    await call(setTargetsPost, { planId: hv, targets: [{ resource: "dust", rate: 4 }] }, plansSetTargetsResponse);
+    const slower = await solveProject(getDraft(hv).project);
+    expect(draft.nodes.c1!.theoreticalMachinesRequired).toBeLessThan(slower.nodes.c1!.theoreticalMachinesRequired);
+  });
+
+  it("says in the solve what steam its steam machines burn", async () => {
+    const planId = await create({ steam: true, tierCap: "EV" });
+    await call(addCardsPost, { planId, cards: [{ recipeId: "r-bronze" }] }, plansAddCardsResponse);
+    await call(setTargetsPost, { planId, targets: [{ resource: "ingot", rate: 1 }] }, plansSetTargetsResponse);
+    const solved = await call(solvePost, { planId, fields: ["warnings", "power"] }, plansSolveResponse);
+    expect(solved.euT).toBe(0);
+    expect(solved.warnings!.join(" ")).toMatch(/Steam machines burn [\d.]+ L\/s of steam, which is not in unsupplied or euT: c1\./);
   });
 });
 
@@ -359,7 +487,7 @@ describe("plans/solve", () => {
   beforeAll(() => useCoreSolver(), CORE_LOAD_MS);
 
   it("solves a small chain: targets, raws still needed, byproducts, power, one line per card", async () => {
-    const planId = await create({ tierCap: "MV", free: ["ore"] });
+    const planId = await create({ tierCap: "MV", free: ["ore"] }, { cardTier: "LV" });
     await call(addCardsPost, { planId, cards: [{ recipeId: "r-dust" }, { recipeId: "r-ingot" }] }, plansAddCardsResponse);
     const unset = await call(solvePost, { planId }, plansSolveResponse);
     expect(unset.targetsMet).toBe(false);

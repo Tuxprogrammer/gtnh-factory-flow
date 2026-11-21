@@ -2,7 +2,7 @@ import { randomInt } from "node:crypto";
 import { createNewProject } from "@/examples/empty-project";
 import type { FactoryProject, ResourceKind } from "@/lib/model/types";
 import { AgentApiError } from "./errors";
-import type { AgentConstraints } from "./schemas";
+import type { AgentConstraints, TierName } from "./schemas";
 
 /**
  * The draft store: plans the assistant builds, held in the server process's memory (one site process on the
@@ -27,6 +27,8 @@ export interface Draft {
   name: string;
   dataset: string;
   constraints?: AgentConstraints;
+  /** The tier cards default to (plans/create's cardTier); absent, they default to the tier cap (cards.ts). */
+  cardTier?: TierName;
   createdAt: number;
   touchedAt: number;
   /** A real plan in the site's model (plan mode), card ids `c<n>`, wire ids `w<n>`. */
@@ -94,7 +96,12 @@ function sweep(now: number): void {
   }
 }
 
-export function createDraft(fields: { name: string; dataset: string; constraints?: AgentConstraints }): Draft {
+export function createDraft(fields: {
+  name: string;
+  dataset: string;
+  constraints?: AgentConstraints;
+  cardTier?: TierName;
+}): Draft {
   const now = clock();
   const current = store();
   const day = new Date(now).toISOString().slice(0, 10);
@@ -117,6 +124,7 @@ export function createDraft(fields: { name: string; dataset: string; constraints
     name: fields.name,
     dataset: fields.dataset,
     ...(fields.constraints ? { constraints: fields.constraints } : {}),
+    ...(fields.cardTier ? { cardTier: fields.cardTier } : {}),
     createdAt: now,
     touchedAt: now,
     project: {

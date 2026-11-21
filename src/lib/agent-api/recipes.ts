@@ -3,10 +3,11 @@ import type { RecipeSummary } from "@/lib/datasets/types";
 import type { RecipeQueryClause } from "@/lib/datasets/recipe-query";
 import { queryDatasetRecipes } from "@/lib/server/dataset-query";
 import { getVoltageTierIndex } from "@/lib/model/tiers";
-import type { MachineTier } from "@/lib/model/types";
-import { bannedSet, checkRecipe, notEnforced } from "./constraints";
+import type { MachineHandler, MachineTier } from "@/lib/model/types";
+import { bannedSet, checkRecipe, handlerBanned, notEnforced } from "./constraints";
 import { agentDatasetVersion, resolveResource, withDataset, type ResolvedResource } from "./dataset";
-import { formatCompactRecipe, recipeMapOf } from "./format";
+import { formatCompactRecipe, machinesOf, recipeMapOf } from "./format";
+import { unpoweredKind } from "./power-source";
 import { fitList } from "./size";
 import type { recipesSearchRequest, recipesSearchResponse } from "./schemas";
 
@@ -150,6 +151,14 @@ function machineMatches(recipe: RecipeSummary, machine: string): boolean {
   return names.some((name) => name?.toLowerCase() === wanted);
 }
 
+function namedUnpowered(recipe: RecipeSummary, machine: string): MachineHandler | undefined {
+  const wanted = machine.trim().toLowerCase();
+  return machinesOf(recipe).find(
+    (handler) =>
+      (handler.id.toLowerCase() === wanted || handler.label.toLowerCase() === wanted) && unpoweredKind(handler, recipe),
+  );
+}
+
 export async function searchRecipes(body: SearchRequest): Promise<SearchResponse> {
   return withDataset(async () => {
     const versionId = await agentDatasetVersion();
@@ -218,15 +227,20 @@ export async function searchRecipes(body: SearchRequest): Promise<SearchResponse
     const banned = bannedSet(body.constraints);
     const kept: RecipeSummary[] = [];
     const machineByRecipe = new Map<string, string>();
+    let steamOnly = 0;
     for (const recipe of candidates) {
       if (body.machine && !machineMatches(recipe, body.machine)) {
         continue;
       }
-      const handler = checkRecipe(recipe, body.constraints, banned);
-      if (!handler) {
+      // Naming a steam or primitive machine asks for it, as naming it on a card does.
+      const wanted = body.machine ? namedUnpowered(recipe, body.machine) : undefined;
+      const named = wanted && !handlerBanned(wanted, banned) ? wanted : undefined;
+      const check = checkRecipe(recipe, named ? { ...body.constraints, steam: true } : body.constraints, banned);
+      if (!check.machine) {
+        steamOnly += check.steamOnly ? 1 : 0;
         continue;
       }
-      machineByRecipe.set(recipe.id, handler.label);
+      machineByRecipe.set(recipe.id, (named ?? check.machine).label);
       kept.push(recipe);
     }
     const ranked = rankRecipes(kept, makes, takes, body.text);
@@ -243,6 +257,7 @@ export async function searchRecipes(body: SearchRequest): Promise<SearchResponse
       more: body.offset + body.limit < ranked.length || total > candidates.length,
       ...(truncated ? { truncated } : {}),
       ...(skipped ? { notEnforced: skipped } : {}),
+      ...(steamOnly ? { steamOnly } : {}),
     }));
   });
 }

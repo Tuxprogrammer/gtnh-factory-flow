@@ -86,6 +86,8 @@ add(recipe("r-ore", "Mock Macerator", [slot("item", "ore", 1)], [slot("item", "d
 add(recipe("r-ore-dup", "Mock Big Macerator", [slot("item", "ore", 1)], [slot("item", "dust", 1)]));
 add(recipe("r-ore-hot", "Mock Hot Macerator", [slot("item", "ore", 1)], [slot("item", "dust", 1)], { eut: 120 }));
 add(recipe("r-ore-water", "Mock Washer", [slot("item", "ore", 1), slot("fluid", "water", 100)], [slot("item", "dust", 1)], { eut: 8 }));
+// A steam machine only: left out unless steam is allowed; its steam then counts at 2 L per EU.
+add(recipe("r-ore-steam", "Steam Grinder", [slot("item", "ore", 1)], [slot("item", "dust", 1)], { eut: 8 }));
 add(recipe("r-chem", "Mock Reactor", [slot("fluid", "tetra", 100), slot("item", "mg", 1)], [slot("item", "dust", 1), slot("item", "chloride", 1)], { eut: 8 }));
 add(recipe("r-loop", "Mock Doubler", [slot("item", "dust", 1), slot("item", "ore", 1)], [slot("item", "dust", 2)]));
 add(recipe("r-reverse", "Mock Grinder", [slot("item", "ingot", 1)], [slot("item", "dust", 1)]));
@@ -174,8 +176,11 @@ afterEach(() => {
   setDraftClock();
 });
 
-async function ingotDraft(constraints: object = { free: ["nitrogen"], tierCap: "MV", banned: ["Mock Banned"] }): Promise<string> {
-  const { planId } = await call(createPost, { name: "Titanium", constraints }, plansCreateResponse);
+async function ingotDraft(
+  constraints: object = { free: ["nitrogen"], tierCap: "MV", banned: ["Mock Banned"] },
+  cardTier = "LV",
+): Promise<string> {
+  const { planId } = await call(createPost, { name: "Titanium", constraints, cardTier }, plansCreateResponse);
   await call(addCardsPost, { planId, cards: [{ recipeId: "r-ingot" }] }, plansAddCardsResponse);
   await call(setTargetsPost, { planId, targets: [{ resource: "ingot", rate: 1 }] }, plansSetTargetsResponse);
   return planId;
@@ -187,6 +192,8 @@ describe("mergeConstraints", () => {
       mergeConstraints({ tierCap: "EV", heat: 3000, banned: ["a"], free: ["x"] }, { tierCap: "MV", heat: 4500, banned: ["b"] }),
     ).toEqual({ tierCap: "MV", heat: 3000, banned: ["a", "b"], free: ["x"] });
     expect(mergeConstraints(undefined, { tierCap: "HV" })).toEqual({ tierCap: "HV" });
+    expect(mergeConstraints({ steam: false }, { steam: true })).toEqual({ steam: true });
+    expect(mergeConstraints({ steam: true }, { tierCap: "EV" })).toEqual({ tierCap: "EV", steam: true });
   });
 });
 
@@ -206,8 +213,9 @@ describe("plans/expand-inputs", () => {
     const dust = answer.inputs[0]!;
     expect(dust).toMatchObject({ id: "dust", kind: "item", name: "Titanium Dust", perSecond: 2 });
     // The loop (takes dust), the reverse of the furnace card (grinds the ingot back) and the same reaction as r-ore on
-    // another machine are skipped.
-    expect(dust.skipped).toBe(3);
+    // another machine are skipped, and so is the recipe only a steam machine runs.
+    expect(dust.skipped).toBe(4);
+    expect(dust.steamOnly).toBe(1);
     expect(dust.candidates.map((candidate) => candidate.recipeId)).toEqual(["r-slag", "r-ore", "r-ore-hot"]);
 
     const [slag, ore, hot] = dust.candidates;
@@ -233,6 +241,30 @@ describe("plans/expand-inputs", () => {
     expect(chem.reason).toMatch(/\(made\)/);
     expect(chem.reason).toMatch(/Leaves spare Magnesium Chloride Dust\./);
     expect(answer.inputs[0]!.candidates[1]!.reason).toMatch(/Brings in Water \(raw\) and Titanium Ore \(ore\)\./);
+  });
+
+  it("offers steam machines when steam is allowed, their steam counted at 2 L per EU", async () => {
+    const planId = await ingotDraft();
+    const answer = await expand({ planId, constraints: { steam: true } });
+    const dust = answer.inputs[0]!;
+    expect(dust.steamOnly).toBeUndefined();
+    const steam = dust.candidates.find((candidate) => candidate.recipeId === "r-ore-steam")!;
+    expect(steam.machine).toBe("Steam Grinder");
+    expect(steam.steamPerSecond).toBeGreaterThan(0);
+    // 2 dust a second: EU per item = (L/s / 2) / 2.
+    expect(steam.euPerItem).toBeCloseTo(steam.steamPerSecond! / 4, 2);
+    expect(steam.reason).toMatch(/Burns [\d.]+ L\/s of steam \(counted at 2 L per EU\)\./);
+    const electric = dust.candidates.find((candidate) => candidate.recipeId === "r-ore");
+    expect(electric?.steamPerSecond).toBeUndefined();
+  });
+
+  it("gives candidates the draft's card tier", async () => {
+    const planId = await ingotDraft({ free: ["nitrogen"], tierCap: "EV", banned: ["Mock Banned"] }, "HV");
+    const answer = await expand({ planId, resources: ["dust"] });
+    expect(answer.inputs[0]!.candidates.find((candidate) => candidate.recipeId === "r-ore")!.tier).toBe("HV");
+    // The call's lower cap holds the card tier down.
+    const capped = await expand({ planId, resources: ["dust"], constraints: { tierCap: "MV" } });
+    expect(capped.inputs[0]!.candidates.find((candidate) => candidate.recipeId === "r-ore")!.tier).toBe("MV");
   });
 
   it("never expands a free resource, and answers a named input the draft does not need with a note", async () => {

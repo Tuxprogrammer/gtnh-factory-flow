@@ -1,7 +1,7 @@
 {
   "endpoint": "plans/expand-inputs",
   "request": {
-    "planId": "x4knwv6wwjtm3fmvycur",
+    "planId": "xpnqxaybw6uu4kxhry92",
     "max": 3,
     "player": {
       "name": "Steve"
@@ -10,7 +10,7 @@
   "status": 200,
   "response": {
     "dataset": "stable-2.9.0-tuxmine",
-    "planId": "x4knwv6wwjtm3fmvycur",
+    "planId": "xpnqxaybw6uu4kxhry92",
     "inputs": [
       {
         "id": "titaniumtetrachloride",
@@ -20,72 +20,10 @@
         "found": 9,
         "candidates": [
           {
-            "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-chemicalreactor:b46b5421788484fa",
-            "name": "Chemical Reactor: Titaniumtetrachloride",
-            "machine": "Chemical Reactor",
-            "tier": "HV",
-            "euT": 480,
-            "seconds": 0.35,
-            "inputs": [
-              {
-                "id": "gregtech:gt.metaitem.01@2375",
-                "kind": "item",
-                "name": "Rutile Dust",
-                "amount": 3,
-                "consumed": true
-              },
-              {
-                "id": "gregtech:gt.metaitem.01@2010",
-                "kind": "item",
-                "name": "Carbon Dust",
-                "amount": 2,
-                "consumed": true
-              },
-              {
-                "id": "chlorine",
-                "kind": "fluid",
-                "name": "Chlorine",
-                "amount": 4000,
-                "consumed": true
-              }
-            ],
-            "outputs": [
-              {
-                "id": "titaniumtetrachloride",
-                "kind": "fluid",
-                "name": "Titaniumtetrachloride",
-                "amount": 1000
-              }
-            ],
-            "reason": "1000/s from 0.35 Chemical Reactor at HV, 3.36 EU per L. Brings in Chlorine (made), Rutile Dust (ore dust) and Carbon Dust (ore dust).",
-            "newRaws": [
-              {
-                "id": "chlorine",
-                "kind": "fluid",
-                "name": "Chlorine",
-                "perSecond": 4000
-              },
-              {
-                "id": "gregtech:gt.metaitem.01@2375",
-                "kind": "item",
-                "name": "Rutile Dust",
-                "perSecond": 3
-              },
-              {
-                "id": "gregtech:gt.metaitem.01@2010",
-                "kind": "item",
-                "name": "Carbon Dust",
-                "perSecond": 2
-              }
-            ],
-            "machines": 0.35,
-            "euPerItem": 3.36
-          },
-          {
             "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-largechemicalreactor:5fb0535b4bb94dfa",
             "name": "Large Chemical Reactor: Carbon Monoxide",
             "machine": "Large Chemical Reactor",
-            "tier": "HV",
+            "tier": "EV",
             "euT": 480,
             "seconds": 0.35,
             "inputs": [
@@ -125,7 +63,7 @@
                 "amount": 1000
               }
             ],
-            "reason": "1000/s from 0.35 Large Chemical Reactor at HV, 3.36 EU per L. Brings in Chlorine (made), Rutile Dust (ore dust) and Carbon Dust (ore dust). Leaves spare Carbon Monoxide.",
+            "reason": "1000/s from 0.05 Large Chemical Reactor at EV, 1.92 EU per L. Brings in Chlorine (made), Rutile Dust (ore dust) and Carbon Dust (ore dust). Leaves spare Carbon Monoxide.",
             "newRaws": [
               {
                 "id": "chlorine",
@@ -146,14 +84,76 @@
                 "perSecond": 2
               }
             ],
-            "machines": 0.35,
-            "euPerItem": 3.36
+            "machines": 0.05,
+            "euPerItem": 1.92
+          },
+          {
+            "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-chemicalreactor:b46b5421788484fa",
+            "name": "Chemical Reactor: Titaniumtetrachloride",
+            "machine": "Chemical Reactor",
+            "tier": "EV",
+            "euT": 480,
+            "seconds": 0.35,
+            "inputs": [
+              {
+                "id": "gregtech:gt.metaitem.01@2375",
+                "kind": "item",
+                "name": "Rutile Dust",
+                "amount": 3,
+                "consumed": true
+              },
+              {
+                "id": "gregtech:gt.metaitem.01@2010",
+                "kind": "item",
+                "name": "Carbon Dust",
+                "amount": 2,
+                "consumed": true
+              },
+              {
+                "id": "chlorine",
+                "kind": "fluid",
+                "name": "Chlorine",
+                "amount": 4000,
+                "consumed": true
+              }
+            ],
+            "outputs": [
+              {
+                "id": "titaniumtetrachloride",
+                "kind": "fluid",
+                "name": "Titaniumtetrachloride",
+                "amount": 1000
+              }
+            ],
+            "reason": "1000/s from 0.15 Chemical Reactor at EV, 5.76 EU per L. Brings in Chlorine (made), Rutile Dust (ore dust) and Carbon Dust (ore dust).",
+            "newRaws": [
+              {
+                "id": "chlorine",
+                "kind": "fluid",
+                "name": "Chlorine",
+                "perSecond": 4000
+              },
+              {
+                "id": "gregtech:gt.metaitem.01@2375",
+                "kind": "item",
+                "name": "Rutile Dust",
+                "perSecond": 3
+              },
+              {
+                "id": "gregtech:gt.metaitem.01@2010",
+                "kind": "item",
+                "name": "Carbon Dust",
+                "perSecond": 2
+              }
+            ],
+            "machines": 0.15,
+            "euPerItem": 5.76
           },
           {
             "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-chemicalreactor:6dcf206b33924302",
             "name": "Chemical Reactor: Carbon Monoxide Cell",
             "machine": "Chemical Reactor",
-            "tier": "HV",
+            "tier": "EV",
             "euT": 480,
             "seconds": 0.35,
             "inputs": [
@@ -193,7 +193,7 @@
                 "amount": 1000
               }
             ],
-            "reason": "1000/s from 0.35 Chemical Reactor at HV, 3.36 EU per L. Brings in Chlorine (made), Rutile Dust (ore dust) and Carbon Cell (made). Leaves spare Carbon Monoxide Cell.",
+            "reason": "1000/s from 0.15 Chemical Reactor at EV, 5.76 EU per L. Brings in Chlorine (made), Rutile Dust (ore dust) and Carbon Cell (made). Leaves spare Carbon Monoxide Cell.",
             "newRaws": [
               {
                 "id": "chlorine",
@@ -214,8 +214,8 @@
                 "perSecond": 2
               }
             ],
-            "machines": 0.35,
-            "euPerItem": 3.36
+            "machines": 0.15,
+            "euPerItem": 5.76
           }
         ],
         "skipped": 6
@@ -232,7 +232,7 @@
             "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-hammer:fb1a902062c17b8c",
             "name": "Forge Hammer: Magnesium Dust",
             "machine": "Industrial Sledgehammer",
-            "tier": "LV",
+            "tier": "EV",
             "euT": 15,
             "seconds": 0.05,
             "inputs": [
@@ -252,7 +252,7 @@
                 "amount": 1
               }
             ],
-            "reason": "2/s from 0.05 Industrial Sledgehammer at LV, 15 EU per item. Brings in Centrifuged Magnesium Ore (ore step).",
+            "reason": "2/s from 0.0007353 Industrial Sledgehammer at EV, 5.294 EU per item. Brings in Centrifuged Magnesium Ore (ore step).",
             "newRaws": [
               {
                 "id": "gregtech:gt.metaitem.01@7018",
@@ -261,15 +261,15 @@
                 "perSecond": 2
               }
             ],
-            "machines": 0.05,
-            "euPerItem": 15
+            "machines": 0.0007353,
+            "euPerItem": 5.294
           },
           {
-            "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-simplewasher:e0f98d3e195d09f1",
-            "name": "Simple Dust Washer: Magnesium Dust",
-            "machine": "Steam Purifier",
+            "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-cauldron:b4afef3913f1036a",
+            "name": "Cauldron: Magnesium Dust",
+            "machine": "Cauldron",
             "tier": "ULV",
-            "euT": 7,
+            "euT": 0,
             "seconds": 0.05,
             "inputs": [
               {
@@ -283,7 +283,7 @@
                 "id": "water",
                 "kind": "fluid",
                 "name": "Water",
-                "amount": 100,
+                "amount": 333,
                 "consumed": true
               }
             ],
@@ -295,13 +295,13 @@
                 "amount": 1
               }
             ],
-            "reason": "2/s from 0.025 Steam Purifier at ULV, 0 EU per item. Brings in Water (raw) and Impure Pile of Magnesium Dust (ore step).",
+            "reason": "2/s from 0.1 Cauldron at ULV, 0 EU per item. Brings in Water (raw) and Impure Pile of Magnesium Dust (ore step).",
             "newRaws": [
               {
                 "id": "water",
                 "kind": "fluid",
                 "name": "Water",
-                "perSecond": 200
+                "perSecond": 666
               },
               {
                 "id": "gregtech:gt.metaitem.01@3018",
@@ -310,15 +310,15 @@
                 "perSecond": 2
               }
             ],
-            "machines": 0.025,
+            "machines": 0.1,
             "euPerItem": 0
           },
           {
-            "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-simplewasher:9938be047077cb9a",
-            "name": "Simple Dust Washer: Magnesium Dust",
-            "machine": "Steam Purifier",
+            "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-cauldron:1092e983e0748dab",
+            "name": "Cauldron: Magnesium Dust",
+            "machine": "Cauldron",
             "tier": "ULV",
-            "euT": 7,
+            "euT": 0,
             "seconds": 0.05,
             "inputs": [
               {
@@ -332,7 +332,7 @@
                 "id": "water",
                 "kind": "fluid",
                 "name": "Water",
-                "amount": 100,
+                "amount": 333,
                 "consumed": true
               }
             ],
@@ -344,13 +344,13 @@
                 "amount": 1
               }
             ],
-            "reason": "2/s from 0.025 Steam Purifier at ULV, 0 EU per item. Brings in Water (raw) and Purified Pile of Magnesium Dust (ore step).",
+            "reason": "2/s from 0.1 Cauldron at ULV, 0 EU per item. Brings in Water (raw) and Purified Pile of Magnesium Dust (ore step).",
             "newRaws": [
               {
                 "id": "water",
                 "kind": "fluid",
                 "name": "Water",
-                "perSecond": 200
+                "perSecond": 666
               },
               {
                 "id": "gregtech:gt.metaitem.01@4018",
@@ -359,7 +359,7 @@
                 "perSecond": 2
               }
             ],
-            "machines": 0.025,
+            "machines": 0.1,
             "euPerItem": 0
           }
         ]

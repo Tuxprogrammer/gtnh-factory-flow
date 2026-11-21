@@ -361,6 +361,39 @@ describe("recipes/search", () => {
     expect(queryDatasetRecipes).toHaveBeenCalledWith(VERSION, expect.objectContaining({ maxTier: "HV" }));
   });
 
+  it("never shows a steam or primitive machine unless steam is allowed or one is named, and counts what only they run", async () => {
+    const recipes = [
+      recipe("shared", {
+        machineType: "Mixer",
+        handlers: [handler("steam-grinder", "Steam Grinder", "Steam Grinder", "multiblock"), handler("ims", "Industrial Maceration Stack", "x", "multiblock")],
+      }),
+      recipe("steam-only", { machineType: "Mixer", handlers: [handler("steam-macerator", "Steam Macerator", "Steam Macerator")] }),
+      // The primitive check reads the recipe's EU: the brick furnace's recipes draw none.
+      { ...recipe("bricks", { machineType: "Bricked Blast Furnace", handlers: [] }), eut: 0 },
+      recipe("smelter", { machineType: "Furnace", handlers: [handler("multi-smelter", "Multi Smelter", "Multi Smelter", "multiblock")] }),
+    ];
+    vi.mocked(queryDatasetRecipes).mockResolvedValue(searchPage(recipes) as never);
+    const search = async (body: object) =>
+      recipesSearchResponse.parse(await (await call(searchRecipesPost, { makes: "dust_titanium", ...body })).json());
+    const plain = await search({ constraints: { tierCap: "EV" } });
+    expect(plain.results.map((entry) => [entry.recipeId, entry.machine])).toEqual([
+      ["shared", "Industrial Maceration Stack"],
+      ["smelter", "Multi Smelter"],
+    ]);
+    expect(plain.steamOnly).toBe(2);
+    const steam = await search({ constraints: { tierCap: "EV", steam: true } });
+    expect(steam.results.map((entry) => [entry.recipeId, entry.machine])).toEqual([
+      ["shared", "Steam Grinder"],
+      ["steam-only", "Steam Macerator"],
+      ["bricks", "Bricked Blast Furnace"],
+      ["smelter", "Multi Smelter"],
+    ]);
+    expect(steam.steamOnly).toBeUndefined();
+    expect((await search({ constraints: { tierCap: "ULV" } })).steamOnly).toBeUndefined();
+    const named = await search({ machine: "Steam Grinder" });
+    expect(named.results.map((entry) => [entry.recipeId, entry.machine])).toEqual([["shared", "Steam Grinder"]]);
+  });
+
   it("keeps to the limit, pages with offset and adds machines in detail form", async () => {
     vi.mocked(queryDatasetRecipes).mockResolvedValue(
       searchPage(Array.from({ length: 12 }, (_, index) => recipe(`r${String(index).padStart(2, "0")}`))) as never,

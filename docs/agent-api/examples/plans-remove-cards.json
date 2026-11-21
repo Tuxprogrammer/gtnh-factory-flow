@@ -1,7 +1,7 @@
 {
   "endpoint": "plans/remove-cards",
   "request": {
-    "planId": "xvw95tag7sybzuqd42ru",
+    "planId": "x7kzzpzr8k5q4me9hfvk",
     "cardIds": [
       "c2"
     ],
@@ -11,7 +11,7 @@
   },
   "status": 200,
   "response": {
-    "planId": "xvw95tag7sybzuqd42ru",
+    "planId": "x7kzzpzr8k5q4me9hfvk",
     "removed": [
       "c2"
     ],

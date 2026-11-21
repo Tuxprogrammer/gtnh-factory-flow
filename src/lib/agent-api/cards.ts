@@ -8,6 +8,7 @@ import {
 import { getVoltageTierIndex, isVoltageTierName } from "@/lib/model/tiers";
 import type { FactoryNode, MachineHandler, Recipe } from "@/lib/model/types";
 import { bannedSet } from "./constraints";
+import { steamAllowed, unpoweredKind, type PowerSource } from "./power-source";
 import { AgentApiError } from "./errors";
 import { machinesOf, recipeHeat } from "./format";
 import type { CardRequest, draftCard } from "./plan-schemas";
@@ -18,9 +19,13 @@ import { TIER_NAMES, type AgentConstraints } from "./schemas";
  * runs at and its dials, checked against what recipes/get offers for that recipe.
  *
  * Defaults: the machine is the recipe's first multiblock that runs it at or below the draft's `tierCap`, else its
- * first single block that does; the tier is the lowest that machine can run the recipe at. A recipe nothing can run
- * at or below the cap is tier_too_low. A recipe whose tier is not a voltage tier (a crafting table, a steam machine's
- * "NONE") keeps its own tier and is never capped.
+ * first single block that does, never a steam or primitive machine unless the constraints allow them
+ * (`steamAllowed`) or the request names one. The tier is the highest the machine is built at that is at or below the
+ * draft's card tier (`cardTier`, else `tierCap`) and not below the recipe's minimum; with neither, or for a machine
+ * that draws no EU on the recipe, the lowest. A
+ * recipe nothing can run at or below the cap is tier_too_low. A recipe whose tier is not a voltage tier (a crafting
+ * table, a furnace's "NONE") keeps its own tier and is never capped. Steam and primitive machines count as ULV for
+ * every cap whatever their tier reads, and keep that tier: they do not overclock.
  */
 
 const CAP_INDEX_NONE = TIER_NAMES.length - 1;
@@ -30,6 +35,8 @@ interface MachineFit {
   applied: Recipe;
   /** The lowest tier the machine runs the recipe at, at or below the cap; undefined when none. */
   lowest?: string;
+  /** It burns steam or is primitive. */
+  unpowered?: PowerSource;
 }
 
 function tierIndex(tier: string): number {
@@ -54,6 +61,10 @@ function fit(recipe: Recipe, handler: MachineHandler, capIndex: number): Machine
   const handled = applyMachineHandlerToRecipe(recipe, { machineHandlerId: handler.id });
   // A handler that states no minimum runs the recipe at the recipe's own.
   const applied = handled.minimumTier ? handled : { ...handled, minimumTier: recipe.minimumTier };
+  const unpowered = unpoweredKind(handler, recipe);
+  if (unpowered) {
+    return { handler, applied, lowest: String(applied.minimumTier), unpowered };
+  }
   const lowest = allowedTiers(applied).find((tier) => !isVoltageTierName(tier) || tierIndex(tier) <= capIndex);
   return { handler, applied, ...(lowest ? { lowest } : {}) };
 }
@@ -92,7 +103,14 @@ function chooseMachine(recipe: Recipe, request: CardRequest, constraints: AgentC
   if (open.length === 0) {
     throw new AgentApiError("bad_request", "Every machine that runs this recipe is banned by the draft's constraints.");
   }
-  const fits = open.map((handler) => fit(recipe, handler, capIndex));
+  const all = open.map((handler) => fit(recipe, handler, capIndex));
+  const fits = steamAllowed(constraints) ? all : all.filter((entry) => !entry.unpowered);
+  if (fits.length === 0) {
+    throw new AgentApiError(
+      "bad_request",
+      `Only steam or primitive machines run this recipe (${all.map((entry) => entry.handler.label).join(", ")}): name one in machine, or set constraints.steam.`,
+    );
+  }
   const chosen =
     fits.find((entry) => entry.lowest && entry.handler.kind === "multiblock") ??
     fits.find((entry) => entry.lowest && (entry.handler.kind ?? "single") === "single") ??
@@ -107,7 +125,26 @@ function chooseMachine(recipe: Recipe, request: CardRequest, constraints: AgentC
   return chosen;
 }
 
-function chooseTier(machine: MachineFit, request: CardRequest, constraints: AgentConstraints | undefined): string {
+/** The tier a card defaults to: the highest the machine is built at, at or below the card tier, else the lowest. */
+function defaultTier(machine: MachineFit, constraints: AgentConstraints | undefined, cardTier: string | undefined): string {
+  const lowest = machine.lowest!;
+  const cap = constraints?.tierCap;
+  const wanted = cardTier && cap ? (tierIndex(cardTier) <= tierIndex(cap) ? cardTier : cap) : (cardTier ?? cap);
+  // A machine that draws no EU (a cauldron, a generator's fuel page) gains nothing from a higher tier.
+  if (!wanted || machine.unpowered || !isVoltageTierName(lowest) || !(machine.applied.eut > 0)) {
+    return lowest;
+  }
+  const below = allowedTiers(machine.applied).filter((tier) => isVoltageTierName(tier) && tierIndex(tier) <= tierIndex(wanted));
+  // A recipe whose minimum is above the card tier but within the cap runs at its minimum.
+  return below.at(-1) ?? lowest;
+}
+
+function chooseTier(
+  machine: MachineFit,
+  request: CardRequest,
+  constraints: AgentConstraints | undefined,
+  cardTier: string | undefined,
+): string {
   const { applied, handler } = machine;
   const min = String(applied.minimumTier);
   if (!request.tier) {
@@ -117,9 +154,18 @@ function chooseTier(machine: MachineFit, request: CardRequest, constraints: Agen
         `${handler.label} needs ${min} for this recipe, above the draft's tierCap ${constraints?.tierCap}.`,
       );
     }
-    return machine.lowest;
+    return defaultTier(machine, constraints, cardTier);
   }
   const tier = request.tier;
+  if (machine.unpowered && tier !== min) {
+    throw new AgentApiError(
+      "bad_request",
+      `${handler.label} ${machine.unpowered === "steam" ? "burns steam" : "is primitive"} and has no voltage tier (it runs as ${min}).`,
+    );
+  }
+  if (machine.unpowered) {
+    return tier;
+  }
   if (!isVoltageTierName(min)) {
     throw new AgentApiError("bad_request", `${handler.label} has no voltage tier for this recipe (it runs at ${min}).`);
   }
@@ -201,10 +247,18 @@ export interface PlannedCard {
   handler: MachineHandler;
 }
 
-/** The card a request makes, or the error that says why it cannot be made. Pure: the draft is not touched. */
-export function planCard(recipe: Recipe, request: CardRequest, constraints: AgentConstraints | undefined): PlannedCard {
+/**
+ * The card a request makes, or the error that says why it cannot be made. Pure: the draft is not touched. `cardTier`
+ * is the draft's (plans/create); without it a card defaults to the highest tier at or below `tierCap`.
+ */
+export function planCard(
+  recipe: Recipe,
+  request: CardRequest,
+  constraints: AgentConstraints | undefined,
+  cardTier?: string,
+): PlannedCard {
   const machine = chooseMachine(recipe, request, constraints);
-  const tier = chooseTier(machine, request, constraints);
+  const tier = chooseTier(machine, request, constraints, cardTier);
   const dials = chooseDials(machine.applied, request);
   const isDefault = machinesOf(recipe)[0]?.id === machine.handler.id;
   return {

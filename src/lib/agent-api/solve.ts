@@ -7,6 +7,7 @@ import type { FactoryProject, ResourceFlow, ResourceKind, ThroughputResult } fro
 import { ensurePlanEngine, PlanEngineUnavailableError } from "@/lib/server/plan-engine";
 import { calculateThroughput } from "@/lib/solver";
 import { describeCard } from "./cards";
+import { steamPerTick } from "./power-source";
 import { getDraft, type Draft } from "./drafts";
 import { AgentApiError } from "./errors";
 import { targetCards } from "./plans";
@@ -187,6 +188,23 @@ export async function solveDraft(body: z.infer<typeof plansSolveRequest>): Promi
     if (notice.id !== "no-pin") {
       warnings.push(notice.focus.length ? `${notice.text} (${notice.focus.join(", ")})` : notice.text);
     }
+  }
+  // The plan solver does not carry steam as a flow; the site's cards bill it per machine. Say what it adds up to.
+  const recipes = new Map(project.recipes.map((recipe) => [recipe.id, recipe]));
+  let steam = 0;
+  const steamCards: string[] = [];
+  for (const node of project.nodes) {
+    const recipe = recipes.get(node.recipeId);
+    const perTick = recipe ? steamPerTick(recipe, node) : 0;
+    if (perTick > 0) {
+      steamCards.push(node.id);
+      steam += perTick * 20 * (result.nodes[node.id]?.theoreticalMachinesRequired ?? 0);
+    }
+  }
+  if (steamCards.length) {
+    warnings.push(
+      `Steam machines burn ${figure(steam)} L/s of steam, which is not in unsupplied or euT: ${steamCards.join(", ")}.`,
+    );
   }
   if (solved) {
     const idle = (result.plan?.unneeded ?? []).filter((id) => project.nodes.some((node) => node.id === id));

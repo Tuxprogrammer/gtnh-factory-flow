@@ -205,8 +205,9 @@ public final class CraftingReader {
 
     /**
      * A list cell: Forge hands a ShapedOreRecipe the ore dictionary's list, not its name, so a list that is exactly
-     * some names' lists is those names (sorted by name: their ids follow registration, which is not the same every run,
-     * and the first names the cell); else the items themselves, one of which fills the cell.
+     * some names' lists is those names, in the ore dictionary's own order (their ids), the first naming the cell: a
+     * plan stores the cell by that name, so the order is the game's, as it always was, even where a mod's registration
+     * order moves it between launches; else the items themselves, one of which fills the cell.
      */
     private Slot listSlot(final List<?> list) {
         final List<String> names = oreNamesFor(list);
@@ -233,7 +234,7 @@ public final class CraftingReader {
         if (list.isEmpty()) return Collections.emptyList();
         if (oreNamesBySignature == null) {
             oreNamesBySignature = new HashMap<String, List<String>>();
-            for (final String name : OreLists.names()) {
+            for (final String name : OreDictionary.getOreNames()) {
                 final String signature = signature(OreDictionary.getOres(name));
                 if (signature.length() == 0) continue;
                 List<String> names = oreNamesBySignature.get(signature);

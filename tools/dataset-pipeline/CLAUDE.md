@@ -42,11 +42,13 @@ are pinned (`StableNames`). Left to the game: NBT text, kept as the game prints 
 paths minted from it), so the same tag built two ways prints two ways (data orbs: about 60
 records and 32 icon names move per export); Thaumcraft's generated aspects of some items
 (about 45 recipes), a few EEC mobs whose drops or health come from a live entity, the
-shown item of one assembly-line slot, a handful of Thaumcraft recipes whose list position
+shown item of one assembly-line slot and of a few Crop Breeder catalyst cells, the name a
+multi-name ore dictionary cell shows (the first in the game's ore id order; these two stay as
+the game picks them because plans store a cell by that id), a handful of Thaumcraft recipes whose list position
 moves (their raw ids; Thaumcraft keeps the game's order on purpose, because the served ids
 follow it), and icons drawn from animated textures (bytes and colour only). A new rule
 that reads a game collection says what fixes its order. `carry-recipe-ids.mjs` reads an
-ore dictionary cell as its set of names, so a cell keeps its id whichever name it shows.
+ore dictionary cell as its set of names, so a recipe keeps its id whichever name the cell shows.
 
 When an export only ADDS fields, graft them onto the published export
 (`~/graft-sparge.js`, matching recipes by content key) and confirm with a shard diff

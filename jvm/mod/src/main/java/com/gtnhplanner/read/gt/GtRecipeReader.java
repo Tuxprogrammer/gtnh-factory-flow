@@ -106,10 +106,6 @@ public final class GtRecipeReader {
             sortEyeOfHarmonyItems(r.itemOutputs, recipe.mSpecialItems);
         }
         if (isForestryCentrifugeCopy(r.mapId, recipe)) Collections.sort(r.itemOutputs, BY_CHANCE_THEN_ID);
-        // The Crop Breeder's catalyst cells list blocks CropsNH keeps in hash sets (SubSoilRequirement's MetaSet), and
-        // GregTech shows the first: the cell's item is the first by id, the others follow by id.
-        if (CROP_BREEDER_MAP.equals(r.mapId))
-            for (int i = 0; i < r.itemInputs.size(); i++) r.itemInputs.set(i, firstById(r.itemInputs.get(i)));
         for (final Object value : iterable(recipe.mSpecialItems)) {
             if (!(value instanceof ItemStack)) continue;
             final Stack item = itemStack((ItemStack) value);
@@ -336,9 +332,6 @@ public final class GtRecipeReader {
     private static final String CENTRIFUGE_MAP = "gt.recipe.centrifuge",
         MULTI_CENTRIFUGE_MAP = "gt.recipe.multicentrifuge";
 
-    /** CropsNH's Crop Breeder map. */
-    private static final String CROP_BREEDER_MAP = "cropsnh.recipes.cropBreeder";
-
     /**
      * The Eye of Harmony's items in the game's own order, most made first (EyeOfHarmonyRecipe sorts them by amount),
      * with equal amounts by id: the game leaves those in its TMap's hash order.
@@ -373,20 +366,6 @@ public final class GtRecipeReader {
                 return byAmount != 0 ? byAmount : left.id.compareTo(right.id);
             }
         });
-    }
-
-    /** A cell with alternatives as its first alternative by id, the rest after it by id; else the cell itself. */
-    private static Stack firstById(final Stack cell) {
-        if (cell.alternatives == null || cell.alternatives.size() < 2) return cell;
-        final List<Stack> sorted = new ArrayList<Stack>(cell.alternatives);
-        Collections.sort(sorted, BY_ID);
-        final Stack first = selfCopy(sorted.get(0));
-        first.amount = cell.amount;
-        first.consumed = cell.consumed;
-        first.inputChance = cell.inputChance;
-        first.chance = cell.chance;
-        first.alternatives = sorted;
-        return first;
     }
 
     /** The items Forestry's centrifuge takes, as registry name and damage; read once, null until then. */

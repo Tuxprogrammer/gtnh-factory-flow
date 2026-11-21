@@ -6,6 +6,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -130,7 +131,19 @@ public final class AePatterns {
         // AE2's hand-over for an encode to the inventory (ContainerPatternTerm.encodeAndMoveToInventory).
         if (!player.inventory.addItemStackToInventory(made)) player.entityDropItem(made, 0);
         player.inventoryContainer.detectAndSendChanges();
+        // The button is pressed on the planner's board, a screen of the client's own: while it is open the client puts
+        // slot updates outside the hotbar into the board's container, so the pattern and the blank taken would not
+        // show until the next login. The whole inventory, sent as a window of its own, always lands in the inventory.
+        player.sendContainerToPlayer(player.inventoryContainer);
         return new PatternServer.Made(PatternRules.MADE, dropped, given);
+    }
+
+    /** Blank patterns in the player's own inventory, by the rule {@link #make} takes them by (either side's player). */
+    static int blanks(final EntityPlayer player) {
+        int n = 0;
+        for (final ItemStack s : player.inventory.mainInventory)
+            if (s != null && s.stackSize > 0 && IPatternTerminal.isBlankPattern(s)) n += s.stackSize;
+        return n;
     }
 
     /** The first slot of the player's own inventory holding a blank pattern, or -1. */

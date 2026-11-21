@@ -39,6 +39,9 @@ public final class PatternNet {
     /** Asks waiting for the server's tick are capped, so a client cannot queue without end. */
     static final int MAX_WAITING = 256;
 
+    /** Asks run on one server tick at most: a big plan spreads over ticks rather than holding one up. */
+    static final int PER_TICK = 32;
+
     static SimpleNetworkWrapper net;
 
     private PatternNet() {}
@@ -68,7 +71,12 @@ public final class PatternNet {
 
         @SubscribeEvent
         public void onServerTick(final TickEvent.ServerTickEvent e) {
-            if (e.phase == TickEvent.Phase.END) for (Runnable r; (r = SERVER.poll()) != null;) r.run();
+            if (e.phase != TickEvent.Phase.END) return;
+            for (int i = 0; i < PER_TICK; i++) {
+                final Runnable r = SERVER.poll();
+                if (r == null) break;
+                r.run();
+            }
         }
 
         @SubscribeEvent

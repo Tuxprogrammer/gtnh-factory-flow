@@ -41,6 +41,11 @@ nowhere or goes nowhere except through a source, a drawer or trash. Longer versi
 - Plan solver dust (`plan/validate.ts` `dustScales`) is judged per network, never over the whole point: a
   reactor's billions of EU a second must not zero a 0.03/s item wire (the answer then fails its own check).
 - Node rates in results are FULL SPEED; actual = nameplate x `min(1, max(0, utilization))`.
+- The core's LP engine answers to about 14 significant digits, so a ratio like 2/3 comes back a few ulps off and a figure
+  on a display half (0.625 A) printed one step down. Every number a solve hands out is read once, where it leaves the
+  solver (`SolutionView`), as the small ratio it is within 1e-12 of (core-base `SolvedNumber`: continued fraction,
+  q <= 100000); dust is still judged on the raw values. Never round for display anywhere else. Exams: `SolvedNumberTest`,
+  `solved-digits.test.ts`, the mod's `SolvedDigitsTest`.
 - The plan adapter reads per-craft amounts from the nameplate loop (`PlanUnit.perCraft`): a card with no count has
   zero flows, and the bare recipe would drop machine effects (a TGS's tier and tools). Exam: `adapter/per-craft.test.ts`.
 - Only synchronous solves write `lastSolveDurationMs` in `solve-books.ts`; worker timings

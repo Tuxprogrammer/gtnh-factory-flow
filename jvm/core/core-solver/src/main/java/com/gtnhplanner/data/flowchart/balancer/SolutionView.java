@@ -12,6 +12,7 @@ import javax.annotation.Nullable;
 import com.gtnhplanner.core.base.CoreSettings;
 import com.gtnhplanner.core.base.JavaHashMap;
 import com.gtnhplanner.core.base.JavaHashSet;
+import com.gtnhplanner.core.base.SolvedNumber;
 import com.gtnhplanner.core.base.Uuid;
 
 /**
@@ -86,6 +87,11 @@ public final class SolutionView {
         final ModelData model = ctx.model;
         final double dust = ctx.heuristics.numerics().dust;
         final SolveContext.DustScales scales = ctx.dustScales(ctx.extents(), ctx.flows(), ctx.externals());
+        // Every number the view hands out is the ratio it is within the engine's noise of (SolvedNumber), read once
+        // here so the website and the mod print the same digits. What is dust, what a drawer holds and every sum are
+        // still taken on the solver's own values; a sum is cleaned as a whole.
+        final double[] extents = cleaned(ctx.extents()), flows = cleaned(ctx.flows()),
+            externals = cleaned(ctx.externals());
         // An idle Up to machine is UNUSED in its read-out, never "(set count)" (docs/design/up-to.md, "Anchoring").
         final Set<Integer> upToMachines = new JavaHashSet<>();
         for (final int p : ctx.upToPools) upToMachines.addAll(
@@ -93,8 +99,10 @@ public final class SolutionView {
                 .machines());
         for (int m = 0; m < model.machines.size(); m++) {
             final ModelData.Machine md = model.machines.get(m);
-            extentsPerSecond.put(md.spec.id(), ctx.extents()[m]);
-            machineCounts.put(md.spec.id(), ctx.extents()[m] * md.durTicks / (double) Numerics.TICKS_PER_SECOND);
+            extentsPerSecond.put(md.spec.id(), extents[m]);
+            machineCounts.put(
+                md.spec.id(),
+                SolvedNumber.clean(ctx.extents()[m] * md.durTicks / (double) Numerics.TICKS_PER_SECOND));
             if (Double.isNaN(ctx.pinnedExtent[m]) && !upToMachines.contains(m)
                 && ctx.extents()[m] <= dust * scales.machines()[m])
                 unneeded.add(md.spec.id());
@@ -104,7 +112,7 @@ public final class SolutionView {
             edgeFlowsPerSecond.put(
                 model.edges.get(e)
                     .id(),
-                ctx.flows()[e]);
+                flows[e]);
         }
         double quantity = 0;
         for (int p = 0; p < ctx.externals().length; p++) {
@@ -112,7 +120,7 @@ public final class SolutionView {
             // What a buffer banks is the buffer's (DrawerReadout.banked), not a forced flow.
             if (ext <= dust * scales.ports()[p] || ctx.bankPorts.containsKey(p)) continue;
             final ModelData.ConnectedPort port = model.connectedPorts.get(p);
-            final External external = new External(ctx.refOf(p), ext);
+            final External external = new External(ctx.refOf(p), externals[p]);
             (port.input() ? gatedSources : gatedSinks).add(external);
             quantity += ext;
         }
@@ -123,16 +131,23 @@ public final class SolutionView {
         }
         this.openGates = ctx.support()
             .size();
-        this.externalQuantity = quantity;
-        this.totalInternalFlow = flow;
+        this.externalQuantity = SolvedNumber.clean(quantity);
+        this.totalInternalFlow = SolvedNumber.clean(flow);
         this.wallMillis = wallMillis;
         this.key = ctx.keyOf(ctx.support());
-        this.drawers = DrawerReadout.of(ctx, ctx.extents(), ctx.flows(), ctx.externals());
+        this.drawers = DrawerReadout.of(ctx, ctx.extents(), ctx.flows(), ctx.externals())
+            .cleaned();
         final List<Note> allNotes = new ArrayList<>();
         allNotes.addAll(ctx.notes);
         allNotes.addAll(ctx.stageNotes);
         allNotes.addAll(wiringDiagnostics(ctx, scales.ports(), terminalInputs));
         this.notes = List.copyOf(allNotes);
+    }
+
+    private static double[] cleaned(final double[] values) {
+        final double[] out = new double[values.length];
+        for (int i = 0; i < values.length; i++) out[i] = SolvedNumber.clean(values[i]);
+        return out;
     }
 
     /** The view over the run's committed point. */
@@ -162,7 +177,7 @@ public final class SolutionView {
             if (model.portLookup.containsKey(key)) continue; // connected, not a terminal
             final double rate = ctx.extents()[m] * qty;
             if (rate <= tol) continue;
-            out.add(new External(new PortRef(md.spec.id(), i, input), rate));
+            out.add(new External(new PortRef(md.spec.id(), i, input), SolvedNumber.clean(rate)));
         }
     }
 

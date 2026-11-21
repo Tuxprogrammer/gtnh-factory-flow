@@ -10,6 +10,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.SolvedNumber;
 import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.DrawerTypes;
 
@@ -172,6 +173,35 @@ public record DrawerReadout(Map<Uuid, Double> rates, Set<Uuid> unmet, List<Short
                     .equals(ref)) rate += flows[e];
             }
             out.add(new External(ref, rate));
+        }
+        return out;
+    }
+
+    /**
+     * This read-out with every rate read as the ratio it is within the engine's noise of ({@link SolvedNumber}), each
+     * total cleaned as a whole; what is unmet was judged on the solver's own values and stays.
+     */
+    DrawerReadout cleaned() {
+        final Map<Uuid, Double> cleanRates = new LinkedHashMap<>();
+        for (final Map.Entry<Uuid, Double> e : rates.entrySet())
+            cleanRates.put(e.getKey(), SolvedNumber.clean(e.getValue()));
+        Map<Uuid, Double> cleanBanked = null;
+        if (banked != null) {
+            cleanBanked = new LinkedHashMap<>();
+            for (final Map.Entry<Uuid, Double> e : banked.entrySet())
+                cleanBanked.put(e.getKey(), SolvedNumber.clean(e.getValue()));
+        }
+        return new DrawerReadout(cleanRates, unmet, shortfalls, cleanedPorts(ports), cleanBanked,
+            spills == null ? null : cleanedPorts(spills));
+    }
+
+    private static Map<Uuid, List<External>> cleanedPorts(final Map<Uuid, List<External>> byDrawer) {
+        final Map<Uuid, List<External>> out = new LinkedHashMap<>();
+        for (final Map.Entry<Uuid, List<External>> e : byDrawer.entrySet()) {
+            final List<External> list = new ArrayList<>();
+            for (final External x : e.getValue())
+                list.add(new External(x.port(), SolvedNumber.clean(x.ratePerSecond())));
+            out.put(e.getKey(), list);
         }
         return out;
     }

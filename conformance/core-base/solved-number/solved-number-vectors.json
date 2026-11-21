@@ -1,0 +1,140 @@
+{
+ "about": "SolvedNumber.clean (jvm/core/core-base): [input, answer, what] as 64-bit hex patterns, written by hand. A solved value becomes the nearest double to the first continued-fraction convergent p/q of it with q <= 100000 that lies within 1e-12 relative of it and within 1e-4 / q^2 absolute; any other value stays. Held bit for bit by SolvedNumberTest on the JVM and by tools/web-core on both web targets, in the core module and the solver module.",
+ "rows": [
+  [
+   "3fe5555555555546",
+   "3fe5555555555555",
+   "2/3 as the engine solved the titanium line's Chemical Reactor: 2/3"
+  ],
+  [
+   "3fe5555555555555",
+   "3fe5555555555555",
+   "2/3 itself stays"
+  ],
+  [
+   "3fd5555555555546",
+   "3fd5555555555555",
+   "1/3 with the engine's noise: 1/3"
+  ],
+  [
+   "3ff2d2d2d2d2d2e3",
+   "3ff2d2d2d2d2d2d3",
+   "20/17 with noise: 20/17"
+  ],
+  [
+   "3ff2d2d2d2d2d2d3",
+   "3ff2d2d2d2d2d2d3",
+   "20/17 itself stays"
+  ],
+  [
+   "4010000000000000",
+   "4010000000000000",
+   "4 stays"
+  ],
+  [
+   "400fffffffffffff",
+   "4010000000000000",
+   "4 one ulp under: 4"
+  ],
+  [
+   "4010000000000002",
+   "4010000000000000",
+   "4 two ulps over: 4"
+  ],
+  [
+   "3fe3fffde7210be9",
+   "3fe3fffde7210be9",
+   "a value legitimately at x.xx4999 stays, and prints 0.62"
+  ],
+  [
+   "4000ffff79c842fa",
+   "4000ffff79c842fa",
+   "another legitimately at x.xx4999 stays"
+  ],
+  [
+   "3fbffffffff50140",
+   "3fbffffffff50140",
+   "1e-10 under 1/8 is no noise: stays"
+  ],
+  [
+   "3fe4000000000000",
+   "3fe4000000000000",
+   "5/8 stays"
+  ],
+  [
+   "bfe5555555555546",
+   "bfe5555555555555",
+   "a negative value the same way"
+  ],
+  [
+   "3fe5555555563fe5",
+   "3fe5555555563fe5",
+   "1e-11 off 2/3 is past the tolerance: stays"
+  ],
+  [
+   "3fe333333333354f",
+   "3fe3333333333333",
+   "3/5 at 1e-13: 3/5"
+  ],
+  [
+   "3fa11111111110fe",
+   "3fa1111111111111",
+   "an extent of 1/30 per second with noise: 1/30"
+  ],
+  [
+   "41c3de4355555560",
+   "41c3de4355555555",
+   "a large total, 2e9/3, with noise"
+  ],
+  [
+   "406fb7459540ca9e",
+   "406fb7459540ca9e",
+   "within 1e-12 of 18480985/72838, but a value with no reason to be that ratio lands that near one by chance: stays"
+  ],
+  [
+   "400921fb54442d18",
+   "400921fb54442d18",
+   "pi has no convergent within 1e-12 under q = 100000: stays"
+  ],
+  [
+   "3fbf9add3746f62e",
+   "3fbf9add3746f62e",
+   "a value that is no small ratio stays"
+  ],
+  [
+   "4376345785d8a000",
+   "4376345785d8a000",
+   "past 2^53 stays"
+  ],
+  [
+   "0000000000000001",
+   "0000000000000001",
+   "the least subnormal stays"
+  ],
+  [
+   "01a56e1fc2f8f359",
+   "01a56e1fc2f8f359",
+   "a tiny value stays"
+  ],
+  [
+   "0000000000000000",
+   "0000000000000000",
+   "zero stays"
+  ],
+  [
+   "7ff0000000000000",
+   "7ff0000000000000",
+   "infinity stays"
+  ],
+  [
+   "fff0000000000000",
+   "fff0000000000000",
+   "negative infinity stays"
+  ],
+  [
+   "7ff8000000000000",
+   "7ff8000000000000",
+   "NaN stays NaN"
+  ]
+ ]
+}

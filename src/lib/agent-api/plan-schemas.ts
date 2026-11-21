@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { constraintsSchema, playerSchema, resourceRef, tierName } from "./schemas";
+import { THING_ID_PATTERN } from "./slim";
 
 /**
  * Request and response shapes of the draft endpoints (plans/*, docs/agent-api.md). Strict like the rest of the API:
@@ -9,8 +10,9 @@ import { constraintsSchema, playerSchema, resourceRef, tierName } from "./schema
 /** A draft id: `x` and 19 characters of the delivery alphabet (no 0, 1, i, l, o). */
 export const PLAN_ID_PATTERN = /^x[a-hjkmnp-z2-9]{19}$/;
 const planId = z.string().regex(PLAN_ID_PATTERN, "planId is not a draft id.");
-const cardId = z.string().regex(/^c[1-9][0-9]{0,5}$/, "not a card id.");
-const wireId = z.string().regex(/^w[1-9][0-9]{0,5}$/, "not a wire id.");
+/** Card and wire ids: `c<n>` and `w<n>` in a draft made here; an imported plan keeps its own ids (`THING_ID_PATTERN`). */
+const cardId = z.string().regex(THING_ID_PATTERN, "not a card id.");
+const wireId = z.string().regex(THING_ID_PATTERN, "not a wire id.");
 const player = playerSchema.optional();
 
 export const MAX_DRAFT_CARDS = 60;

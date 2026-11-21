@@ -259,8 +259,8 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
 - The top bar (`ui/TopBar`) holds account things only: tabs and +, live status and faces, Plans, Share, the account
   key (Sign in, or the account's face with a menu of the username and Sign out), feedback, settings, help; short of
   room Plans, Share and Sign in are picture keys (`BoardScreen.pictureKey`), their tips leading with their names. The
-  overview's width is the player's: a handle on its board-side edge (`ui/RailHandle`, below the toolbar's row, 2 px over
-  the overview and 7 over the board) drags it from 160 to 300 (198 by default; double-click resets it), kept in the
+  overview's width is the player's: a handle on its board-side edge (`ui/RailHandle`, below the toolbar's row, 7 px over
+  the board and none over the overview, whose scroll bar runs to its edge) drags it from 160 to 300 (198 by default; double-click resets it), kept in the
   settings (`PlannerSettings.overviewWidth`). What edits or
   views the board is `ui/BoardToolbar`, a strip along the top of the board in the middle column (Non-recipe, undo, redo,
   Arrange, Fit, the rate unit, EU/t, then the pencil key that opens the empty-board menu; wraps only on a board narrower than its row; Peak

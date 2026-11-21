@@ -360,7 +360,7 @@ public final class GtnhCalcOracleExporter {
             return String.valueOf(value == null ? "" : value.getClass().getName());
         }
         ItemStack stack = (ItemStack) value;
-        return stackKey(stack) + (stack.stackTagCompound == null ? "" : GtRecipeReader.nbtText(stack.stackTagCompound));
+        return stackKey(stack) + (stack.stackTagCompound == null ? "" : stack.stackTagCompound.toString());
     }
 
     private Map<String, Object> exportThaumcraft(List<Map<String, Object>> adapters) {
@@ -2499,7 +2499,7 @@ public final class GtnhCalcOracleExporter {
             item.put("modId", modId);
         }
         if (stack.stackTagCompound != null) {
-            item.put("nbt", GtRecipeReader.nbtText(stack.stackTagCompound));
+            item.put("nbt", stack.stackTagCompound.toString());
         }
         String icon = ItemStackIconExporter.captureIcon(stack);
         if (icon != null && icon.length() > 0) {

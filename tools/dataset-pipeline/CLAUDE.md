@@ -37,8 +37,10 @@ export's, and its powers are the game's own products (`scripts/game-math.mjs`), 
 `Math.pow`, so Node 22 and 24 agree. The exporter never relies on hash order: furnace and
 crafting recipes, ore names, bee species and products, crop drops, soils and biomes,
 aspects, IC2 crop samples (seeded), GregTech recipe order (by content), hash-built slot
-lists and outputs, NBT text (keys in one order) are all sorted or pinned; joke item names
-are pinned (`StableNames`). Left to the game: Thaumcraft's generated aspects of some items
+lists and outputs are all sorted or pinned; joke item names
+are pinned (`StableNames`). Left to the game: NBT text, kept as the game prints it (plans store icon
+paths minted from it), so the same tag built two ways prints two ways (data orbs: about 60
+records and 32 icon names move per export); Thaumcraft's generated aspects of some items
 (about 45 recipes), a few EEC mobs whose drops or health come from a live entity, the
 shown item of one assembly-line slot, a handful of Thaumcraft recipes whose list position
 moves (their raw ids; Thaumcraft keeps the game's order on purpose, because the served ids

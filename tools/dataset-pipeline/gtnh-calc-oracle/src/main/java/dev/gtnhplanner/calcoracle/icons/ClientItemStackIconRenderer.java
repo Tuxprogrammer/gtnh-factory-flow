@@ -20,7 +20,6 @@ import javax.imageio.ImageIO;
 
 import dev.gtnhplanner.calcoracle.GtnhCalcOracleMod;
 import dev.gtnhplanner.calcoracle.StableNames;
-import com.gtnhplanner.read.gt.GtRecipeReader;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -816,8 +815,7 @@ public final class ClientItemStackIconRenderer {
     }
 
     private static String stackKey(ItemStack stack) {
-        // The NBT's text in one key order: the game's own order differs between two stacks holding the same tag.
-        String nbt = stack.hasTagCompound() ? GtRecipeReader.nbtText(stack.getTagCompound()) : "";
+        String nbt = stack.hasTagCompound() ? stack.getTagCompound().toString() : "";
         return String.valueOf(Item.itemRegistry.getNameForObject(stack.getItem()))
             + "@" + stack.getItemDamage()
             + "#" + nbt;

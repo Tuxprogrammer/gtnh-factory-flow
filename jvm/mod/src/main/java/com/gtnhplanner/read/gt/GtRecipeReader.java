@@ -12,9 +12,6 @@ import java.util.Map;
 
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTBase;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.StatCollector;
 import net.minecraftforge.fluids.FluidStack;
 
@@ -211,39 +208,9 @@ public final class GtRecipeReader {
         item.displayName = displayName(stack, registryId);
         final int separator = registryId.indexOf(':');
         if (separator > 0) item.modId = registryId.substring(0, separator);
-        if (stack.stackTagCompound != null) item.nbt = nbtText(stack.stackTagCompound);
+        if (stack.stackTagCompound != null) item.nbt = stack.stackTagCompound.toString();
         item.host = stack;
         return item;
-    }
-
-    /**
-     * An item's NBT as the game prints it, with each compound's keys in one fixed order. The game prints a compound in
-     * its HashMap's order, and two keys sharing a bucket come out in the order they were set, which differs from one
-     * recipe (and one run) to the next for the same tag: {mDataName:..,mDataTitle:..} and {mDataTitle:..,mDataName:..}.
-     * A copy that sets its keys sorted prints the same text for the same tag every time.
-     */
-    public static String nbtText(final NBTTagCompound tag) {
-        return canonical(tag).toString();
-    }
-
-    private static NBTTagCompound canonical(final NBTTagCompound tag) {
-        final List<String> keys = new ArrayList<String>();
-        for (final Object key : tag.func_150296_c()) keys.add(String.valueOf(key));
-        Collections.sort(keys);
-        final NBTTagCompound out = new NBTTagCompound();
-        for (final String key : keys) out.setTag(key, canonicalValue(tag.getTag(key)));
-        return out;
-    }
-
-    private static NBTBase canonicalValue(final NBTBase value) {
-        if (value instanceof NBTTagCompound) return canonical((NBTTagCompound) value);
-        if (value instanceof NBTTagList && ((NBTTagList) value).func_150303_d() == 10) {
-            final NBTTagList list = (NBTTagList) value;
-            final NBTTagList out = new NBTTagList();
-            for (int i = 0; i < list.tagCount(); i++) out.appendTag(canonical(list.getCompoundTagAt(i)));
-            return out;
-        }
-        return value.copy();
     }
 
     /** A fluid stack as a slot; null when it is empty. */

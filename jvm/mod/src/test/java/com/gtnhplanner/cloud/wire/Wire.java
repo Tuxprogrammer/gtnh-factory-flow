@@ -55,9 +55,7 @@ public final class Wire {
                 if (v == null) throw new IllegalStateException("no value for {" + part.group(1) + "}");
                 part.appendReplacement(
                     out,
-                    Matcher.quoteReplacement(
-                        v.isJsonPrimitive() ? v.getAsString()
-                            : v.toString()));
+                    Matcher.quoteReplacement(v.isJsonPrimitive() ? v.getAsString() : v.toString()));
             }
             part.appendTail(out);
             return new JsonPrimitive(out.toString());

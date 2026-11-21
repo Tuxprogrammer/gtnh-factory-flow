@@ -50,7 +50,9 @@ class WireShapeTest {
         check("\"$LiveCursor|null\"", "null", true);
         check("\"object\"", "[]", false);
         check("\"array\"", "[]", true);
-        assertTrue(WireShape.problems(SHAPES, j("\"any\""), null).isEmpty());
+        assertTrue(
+            WireShape.problems(SHAPES, j("\"any\""), null)
+                .isEmpty());
     }
 
     @Test

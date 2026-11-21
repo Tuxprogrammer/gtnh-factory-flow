@@ -32,20 +32,24 @@ public final class WireShape {
         final boolean present = v != null;
         switch (name) {
             case "string":
-                return present && v.isJsonPrimitive() && v.getAsJsonPrimitive()
-                    .isString();
+                return present && v.isJsonPrimitive()
+                    && v.getAsJsonPrimitive()
+                        .isString();
             case "number":
-                return present && v.isJsonPrimitive() && v.getAsJsonPrimitive()
-                    .isNumber();
+                return present && v.isJsonPrimitive()
+                    && v.getAsJsonPrimitive()
+                        .isNumber();
             case "integer":
-                return present && v.isJsonPrimitive() && v.getAsJsonPrimitive()
-                    .isNumber()
+                return present && v.isJsonPrimitive()
+                    && v.getAsJsonPrimitive()
+                        .isNumber()
                     && v.getAsBigDecimal()
                         .stripTrailingZeros()
                         .scale() <= 0;
             case "boolean":
-                return present && v.isJsonPrimitive() && v.getAsJsonPrimitive()
-                    .isBoolean();
+                return present && v.isJsonPrimitive()
+                    && v.getAsJsonPrimitive()
+                        .isBoolean();
             case "null":
                 return present && v.isJsonNull();
             case "object":
@@ -59,7 +63,9 @@ public final class WireShape {
         }
     }
 
-    /** The problems with {@code value} against {@code shape} (empty: it matches). Shape names resolve in {@code shapes}. */
+    /**
+     * The problems with {@code value} against {@code shape} (empty: it matches). Shape names resolve in {@code shapes}.
+     */
     public static List<String> problems(final JsonObject shapes, final JsonElement shape,
         @Nullable final JsonElement value) {
         return problems(shapes, shape, value, "$");
@@ -103,22 +109,29 @@ public final class WireShape {
         }
         if (shape.isJsonObject()) {
             final JsonObject s = shape.getAsJsonObject();
-            if (s.entrySet().size() == 1 && s.has("=")) {
+            if (s.entrySet()
+                .size() == 1 && s.has("=")) {
                 return s.get("=")
-                    .equals(value) ? List.of()
-                        : List.of(at + ": expected " + s.get("=") + ", got " + describe(value));
+                    .equals(value) ? List.of() : List.of(at + ": expected " + s.get("=") + ", got " + describe(value));
             }
-            if (s.entrySet().size() == 1 && s.has("in")) {
-                for (final JsonElement candidate : s.getAsJsonArray("in")) if (candidate.equals(value)) return List.of();
+            if (s.entrySet()
+                .size() == 1 && s.has("in")) {
+                for (final JsonElement candidate : s.getAsJsonArray("in"))
+                    if (candidate.equals(value)) return List.of();
                 return List.of(at + ": expected one of " + s.get("in") + ", got " + describe(value));
             }
-            if (value == null || !value.isJsonObject()) return List.of(at + ": expected object, got " + describe(value));
+            if (value == null || !value.isJsonObject())
+                return List.of(at + ": expected object, got " + describe(value));
             final List<String> out = new ArrayList<>();
             for (final Map.Entry<String, JsonElement> e : s.entrySet()) {
                 final boolean optional = e.getKey()
                     .endsWith("?");
                 final String name = optional ? e.getKey()
-                    .substring(0, e.getKey().length() - 1) : e.getKey();
+                    .substring(
+                        0,
+                        e.getKey()
+                            .length() - 1)
+                    : e.getKey();
                 if (!value.getAsJsonObject()
                     .has(name)) {
                     if (!optional) out.add(at + "." + name + ": missing");

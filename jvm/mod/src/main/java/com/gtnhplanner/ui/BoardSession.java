@@ -367,6 +367,37 @@ public final class BoardSession {
         pendingLookup = null;
     }
 
+    /** A card's recipe row armed on NEI's +: the pick joins that card ({@code replace} false) or replaces it. */
+    private record RecipePick(Uuid nodeId, boolean replace) {}
+
+    /** What NEI's + does next when a card's recipe row opened the page; null for a new card, as always. */
+    private RecipePick pendingPick;
+
+    /**
+     * Arms NEI's + for a card's "Add another recipe" ({@code replace} false: the pick joins the card as one more
+     * section) or "Replace the recipe" (the pick takes the card's place). Closing the page without a pick lets go of it
+     * the way a port's lookup is let go of ({@link #disarmPending}).
+     */
+    public void armRecipePick(final Uuid nodeId, final boolean replace) {
+        pendingLookup = null;
+        pendingPick = new RecipePick(hostOf(nodeId), replace);
+    }
+
+    /** Forgets an armed recipe row, when its page never opened. */
+    public void disarmRecipePick() {
+        pendingPick = null;
+    }
+
+    /**
+     * Whether a card runs only its own recipe and shares a machine with nothing (the website's ownsItsRecipe): a
+     * generator or holder, a crop card or crop farm, an Extreme Entity Crusher.
+     */
+    public static boolean ownsRecipe(final Node node) {
+        return node.isPower() || com.gtnhplanner.machines.game.CropCards.isCrop(node)
+            || com.gtnhplanner.power.CropFarm.is(node)
+            || com.gtnhplanner.machines.game.EecCards.isEec(node);
+    }
+
     /** Set when the board comes back; its next tick forgets what is still armed. */
     private boolean disarmOnTick;
 
@@ -419,8 +450,21 @@ public final class BoardSession {
      * machine, a custom rate card) never wires itself.
      */
     private Node add(final Node node, final boolean focus, final boolean fromNei) {
+        final RecipePick pick = fromNei ? pendingPick : null;
+        pendingPick = null;
+        final Node card = pick == null ? null : graph.nodes.get(pick.nodeId());
+        if (card != null && !pick.replace()) {
+            pendingLookup = null;
+            return joinCard(card, node) ? node : null;
+        }
+        if (card != null && replaceCard(card, node)) {
+            pendingLookup = null;
+            return node;
+        }
         focusAdded = focus;
-        final NodeLookupContext origin = fromNei ? pendingLookup : null;
+        // A replacement none of the card's wires would survive lands beside it, fed into it where it can be (the
+        // website's refactor: the old card stays).
+        final NodeLookupContext origin = card != null ? besideOf(card, node) : fromNei ? pendingLookup : null;
         pendingLookup = null;
         justAdded = node.id;
         edit(() -> {
@@ -430,10 +474,83 @@ public final class BoardSession {
                 node.x = origin.output() ? from.x + CardLayout.W + NewCards.GAP : from.x - CardLayout.W - NewCards.GAP;
                 node.y = from.y;
                 for (int tries = 0; tries < 50 && NewCards.overlapsAnything(graph, node); tries++) node.y += 40;
+            } else if (card != null) {
+                node.x = card.x + CardLayout.W + NewCards.GAP;
+                node.y = card.y;
+                for (int tries = 0; tries < 50 && NewCards.overlapsAnything(graph, node); tries++) node.y += 40;
             } else NewCards.place(graph, node);
         });
         Sfx.PLACE.play();
         return node;
+    }
+
+    /**
+     * "Add another recipe"'s pick: it joins the card as its last section (the website's addRecipeToNode), on the
+     * card's machine when that runs it too, else on the first machine that runs everything on the card. Refused when
+     * either owns its recipe or no machine runs them all. One undo step.
+     */
+    private boolean joinCard(final Node card, final Node pick) {
+        if (readOnly(card)) return false;
+        final Uuid hostId = hostOf(card.id);
+        final Node host = graph.nodes.get(hostId);
+        final CardModel hostModel = models.get(hostId);
+        final String name = hostModel != null && hostModel.machineName != null ? hostModel.machineName : "this card";
+        if (host == null || ownsRecipe(host) || ownsRecipe(pick)) {
+            Sfx.DENY.play();
+            flash(Severity.WARN, "That recipe cannot share a machine with " + name);
+            return false;
+        }
+        final List<ItemStack> common = new ArrayList<>(commonMachines(sectionsOf(hostId)));
+        final List<ItemStack> runs = CardModel.catalystsOf(pick);
+        common.removeIf(
+            c -> runs.stream()
+                .noneMatch(o -> ItemStack.areItemStacksEqual(o, c)));
+        if (common.isEmpty()) {
+            Sfx.DENY.play();
+            flash(Severity.WARN, "No machine runs both that recipe and what " + name + " already has");
+            return false;
+        }
+        final boolean hostCommon = hostModel != null && hostModel.machineStack != null
+            && common.stream()
+                .anyMatch(c -> ItemStack.areItemStacksEqual(c, hostModel.machineStack));
+        final String machine = hostCommon ? null : CardDefaults.itemKey(common.get(0));
+        edit(() -> CardRecipes.join(graph, host, pick, machine));
+        selection.clear();
+        selection.add(hostId);
+        justAdded = hostId;
+        focusAdded = false;
+        Sfx.MERGE.play();
+        return true;
+    }
+
+    /**
+     * "Replace the recipe"'s pick: it takes the card's place when the card has no wires or one would survive
+     * ({@link CardRecipes#replace}); false when every wire would be lost, and the pick lands beside it instead. The
+     * same recipe again changes nothing. One undo step.
+     */
+    private boolean replaceCard(final Node card, final Node pick) {
+        if (readOnly(card)) return true;
+        final Object was = com.gtnhplanner.nei.NeiRecipes.id(card);
+        if (was != null && was.equals(com.gtnhplanner.nei.NeiRecipes.id(pick))) return true;
+        if (!CardRecipes.fits(graph, card, pick, Resources::key)) return false;
+        edit(() -> CardRecipes.replace(graph, card, pick, Resources::key));
+        selection.clear();
+        selection.add(pick.id);
+        justAdded = pick.id;
+        focusAdded = true;
+        Sfx.PLACE.play();
+        return true;
+    }
+
+    /** Where a replacement that keeps none of a card's wires is fed into it: the card's input its first output fits. */
+    @Nullable
+    private static NodeLookupContext besideOf(final Node card, final Node pick) {
+        if (pick.outputs.isEmpty()) return null;
+        final String key = Resources.key(pick.outputs.get(0));
+        if (key.isEmpty()) return null;
+        for (int i = 0; i < card.inputs.size(); i++)
+            if (key.equals(Resources.key(card.inputs.get(i)))) return new NodeLookupContext(card.id, false, i);
+        return null;
     }
 
     // region Wires and drawers (each one undoable, saved, re-solved)
@@ -2093,9 +2210,6 @@ public final class BoardSession {
     /** Each section's shared machine, as of the last tick. */
     private Map<Uuid, com.gtnhplanner.data.flowchart.MachineGroup> sharedBySection = Map.of();
 
-    /** The settings that belong to the machine rather than the recipe: a shared card keeps them the same throughout. */
-    private static final Set<String> RECIPE_SETTINGS = Set.of("duration_ticks", "recipe_heat", "machines");
-
     /** The shared machine a recipe is a section of, or null when its card is its own. */
     public com.gtnhplanner.data.flowchart.MachineGroup sharedOf(final Uuid nodeId) {
         return sharedBySection.get(nodeId);
@@ -2240,14 +2354,7 @@ public final class BoardSession {
 
     /** Gives every section the host's machine and its machine settings; each keeps its own recipe's. */
     private void copyMachineSettings(final Node host, final List<Uuid> sections) {
-        for (final Uuid s : sections) {
-            final Node n = graph.nodes.get(s);
-            if (n == null || n == host) continue;
-            n.machineName = host.machineName;
-            for (final Map.Entry<String, Object> e : host.machineConfig.settings.entrySet()) {
-                if (!RECIPE_SETTINGS.contains(e.getKey())) n.machineConfig.settings.put(e.getKey(), e.getValue());
-            }
-        }
+        CardRecipes.copyMachineSettings(graph, host, sections);
     }
 
     /** An edit to a card's machine (one undo step); a shared machine's other recipes take it too. */
@@ -2386,31 +2493,7 @@ public final class BoardSession {
      * a port follows its resource to where it now is, and goes when the card no longer has it.
      */
     private void followPorts(final Node node, final List<String> ins, final List<String> outs) {
-        final List<String> nowIns = keys(node.inputs), nowOuts = keys(node.outputs);
-        for (final Edge e : new ArrayList<>(graph.getEdges())) {
-            if (e.sourceNodeId.equals(node.id)) {
-                final int at = moved(outs, nowOuts, e.sourceOutputIndex);
-                if (at < 0) graph.removeEdge(e.id);
-                else e.sourceOutputIndex = at;
-            }
-            if (e.targetNodeId.equals(node.id)) {
-                final int at = moved(ins, nowIns, e.targetInputIndex);
-                if (at < 0) graph.removeEdge(e.id);
-                else e.targetInputIndex = at;
-            }
-        }
-        for (final Drawer d : graph.getDrawers()) {
-            for (final Drawer.Held held : d.held()) {
-                final Drawer.Link link = held.link();
-                final boolean input = held.input();
-                if (!link.nodeId()
-                    .equals(node.id)) continue;
-                final int at = input ? moved(ins, nowIns, link.portIndex()) : moved(outs, nowOuts, link.portIndex());
-                if (at == link.portIndex()) continue;
-                graph.unlinkDrawerPort(d.getId(), link, input);
-                if (at >= 0) graph.linkDrawerPort(d.getId(), new Drawer.Link(node.id, at), input);
-            }
-        }
+        CardRecipes.followPorts(graph, node, ins, outs, Resources::key);
     }
 
     private static void followRates(final Map<Integer, Double> rates, final List<String> was, final List<String> now) {
@@ -2425,14 +2508,12 @@ public final class BoardSession {
     }
 
     private static List<String> keys(final List<com.gtnhplanner.data.flowchart.Port<?>> ports) {
-        final List<String> keys = new ArrayList<>(ports.size());
-        for (final com.gtnhplanner.data.flowchart.Port<?> p : ports) keys.add(Resources.key(p));
-        return keys;
+        return CardRecipes.keys(ports, Resources::key);
     }
 
     /** Where the port that was at {@code index} is now, by its resource; -1 when it is gone. */
     private static int moved(final List<String> was, final List<String> now, final int index) {
-        return index >= 0 && index < was.size() ? now.indexOf(was.get(index)) : -1;
+        return CardRecipes.moved(was, now, index);
     }
 
     public void setVoltage(final Node node, final String tier) {
@@ -2831,6 +2912,7 @@ public final class BoardSession {
         if (disarmOnTick) {
             disarmOnTick = false;
             pendingLookup = null;
+            pendingPick = null;
         }
         follow();
         try {

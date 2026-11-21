@@ -107,15 +107,16 @@ describe("Industrial Sledgehammer solenoid (MTEIndustrialForgeHammer)", () => {
 
   it("runs what the solenoid and the supply allow", () => {
     // Four EV hatches (8 A) sum to IV voltage: UV solenoid gives 6 x 8 x 5 = 240
-    // parallels, the half-tick run banks to 480 a tick under the cap of
-    // 16,384 / 30 = 546: 480 x 9 x 20 = 86,400 pieces a second. An MV solenoid
+    // parallels; the game's under-one-tick rule banks the half-tick run past the
+    // cap of 16,384 / 30 = 546, so the supply holds it there: 546 x 9 x 20 =
+    // 98,280 pieces a second. An MV solenoid
     // gives 60 parallels, cheap enough for one overclock: 240 a tick, half that.
     const rate = (node: FactoryNode) => {
       const stats = getOverclockedRecipeStats(sunnarium, node);
       return (getNodePowerReport(sunnarium, node).parallels * 9 * 20) / stats.durationTicks;
     };
     expect(getNodePowerReport(sunnarium, sledge("EV", 8, "uv")).parallels).toBe(240);
-    expect(rate(sledge("EV", 8, "uv"))).toBe(86400);
+    expect(rate(sledge("EV", 8, "uv"))).toBe(98280);
     expect(rate(sledge("EV", 8))).toBe(43200);
   });
 

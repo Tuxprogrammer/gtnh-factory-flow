@@ -1,9 +1,12 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { NoticeRow } from "./NoticeBar";
 
 describe("a conversion notice row", () => {
+  // Vitest runs without globals: nothing unmounts the row unless the test does.
+  afterEach(cleanup);
+
   it("shows its sentence and a Dismiss key that calls its dismiss", () => {
     const dismiss = vi.fn();
     render(

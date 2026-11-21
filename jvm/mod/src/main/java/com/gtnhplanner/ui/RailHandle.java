@@ -12,19 +12,19 @@ import com.gtnhplanner.ui.popup.Tip;
 import com.gtnhplanner.ui.theme.Hyb;
 
 /**
- * The strip on the overview's edge that drags it wider or narrower (the website's PanelHandle): {@value #INSIDE} px
- * over the overview and {@value #OUTSIDE} over the board, easy to catch with the overview's scroll bar left clear
- * inside it. It starts below the board's toolbar row, so the fold key and the toolbar's first key keep their clicks. A
- * line on the overview's edge shows while the mouse is on it, gold while it is dragged; a double click puts the
- * default width back. The width is kept in the settings ({@link PlannerSettings#overviewWidth()}).
+ * The strip on the overview's edge that drags it wider or narrower (the website's PanelHandle): {@value #OUTSIDE} px
+ * over the board, none over the overview, whose scroll bar runs to its edge and keeps every press on it. It starts
+ * below the board's toolbar row, so the fold key and the toolbar's first key keep their clicks. A line on the
+ * overview's edge shows while the mouse is on it, gold while it is dragged; a double click puts the default width
+ * back. The width is kept in the settings ({@link PlannerSettings#overviewWidth()}).
  *
  * <p>
  * It is dragged as the board's cards are, through ModularUI's draggables, so letting go anywhere ends it.
  */
 final class RailHandle extends Widget<RailHandle> implements Interactable, IDraggable {
 
-    /** How far it reaches into the overview and out over the board. */
-    static final int INSIDE = 2, OUTSIDE = 7;
+    /** How far it reaches out over the board, and the width of the line it shows. */
+    static final int OUTSIDE = 7, LINE = 2;
     /** Two presses this close are a double click. */
     private static final long DOUBLE_MS = 350;
 
@@ -34,6 +34,11 @@ final class RailHandle extends Widget<RailHandle> implements Interactable, IDrag
     private boolean dragging, moving;
     private int grabX, grabWidth;
     private long pressedAt;
+
+    /** Its left for an overview {@code railWidth} wide: the overview's edge, past its scroll bar. */
+    static int leftOf(final int railWidth) {
+        return railWidth;
+    }
 
     RailHandle(final OverviewRail rail, final BooleanSupplier covered) {
         this.rail = rail;
@@ -53,7 +58,7 @@ final class RailHandle extends Widget<RailHandle> implements Interactable, IDrag
     @Override
     public void draw(final ModularGuiContext context, final WidgetThemeEntry<?> widgetTheme) {
         if (!active() || !dragging && !isHovering()) return;
-        Hyb.rect(0, 0, INSIDE, getArea().height, dragging ? Hyb.GOLD : 0xFF5A5C65);
+        Hyb.rect(0, 0, LINE, getArea().height, dragging ? Hyb.GOLD : 0xFF5A5C65);
     }
 
     @Override

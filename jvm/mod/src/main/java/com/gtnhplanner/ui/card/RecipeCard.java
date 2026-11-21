@@ -3095,6 +3095,18 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
                         () -> com.gtnhplanner.ui.task.TaskActions
                             .addMenu(session, session.panel(), taskCards, sx, sy)));
                 case "delete" -> {
+                    // An AE2 pattern from a blank in the inventory, made by the server's own pattern terminal.
+                    if (com.gtnhplanner.nei.NeiRecipes.id(node) != null
+                        && com.gtnhplanner.pattern.PatternThis.offered())
+                        rows.add(
+                            new PickList.Entry(
+                                null,
+                                "Pattern this",
+                                java.util.Objects
+                                    .requireNonNullElse(com.gtnhplanner.pattern.PatternThis.unavailable(), ""),
+                                Hyb.INK,
+                                false,
+                                () -> com.gtnhplanner.pattern.PatternThis.card(session, node)));
                     if (placed()) {
                         rows.add(
                             PickList.Entry.of(

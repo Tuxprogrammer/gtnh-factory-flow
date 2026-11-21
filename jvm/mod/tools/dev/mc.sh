@@ -19,6 +19,7 @@
 #      PLANNH_BEES=1 with it (Forestry and NEI Addons too, for bee cards).
 #      PLANNH_CROPS=1 with it (CropsNH too, for crop cards); PLANNH_MOBS=1 with it (MobsInfo and EnderIO too, for the
 #      Extreme Entity Crusher's mobs). Either adds to any of the others, and to the world's name.
+#      PLANNH_AE=1 with it (AE2 and Not Enough Energistics, for "Pattern this"); adds to the world's name too.
 #      PLANNH_QUESTS=1 with it (the quest book, BetterQuesting, with the full pack's quests when its Prism instance is here).
 set -uo pipefail
 
@@ -135,6 +136,11 @@ start() {
         if [ "${PLANNH_MOBS:-0}" = 1 ]; then
             run_args=(-PmobsDev "${run_args[@]}")
             world="$world-mobs"
+        fi
+        # AE2 and Not Enough Energistics at the pack's versions, for "Pattern this" (pattern terminals, blank patterns).
+        if [ "${PLANNH_AE:-0}" = 1 ]; then
+            run_args=(-PaeDev "${run_args[@]}")
+            world="$world-ae"
         fi
         run_args+=("--mcJvmArgs=-Dgtnhplanner.dev.world=$world")
     fi

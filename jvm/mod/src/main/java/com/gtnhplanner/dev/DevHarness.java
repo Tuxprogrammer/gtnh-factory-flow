@@ -323,6 +323,10 @@ public final class DevHarness {
                     if (handled == 0) mc.thePlayer.sendChatMessage(cmd);
                     return ok();
                 });
+            case "/pattern":
+                // "Pattern this" against a pattern made by hand (DevPattern; PLANNH_GTNH=1 PLANNH_AE=1).
+                requireWorld();
+                return DevPattern.route(q, this::onClient);
             case "/addrecipe":
                 requireWorld();
                 return onClient(

@@ -119,6 +119,12 @@ dependencies {
             runtimeOnlyNonPublishable('com.github.GTNewHorizons:Mobs-Info:0.6.0-GTNH:dev') { transitive = false }
             runtimeOnlyNonPublishable('com.github.GTNewHorizons:EnderIO:2.10.48:dev')
         }
+        // AE2 and Not Enough Energistics (`PLANNH_AE=1 tools/dev/mc.sh start`), the 2.9.0 pack's versions, for "Pattern
+        // this": the pattern terminals, NEI's transfer into them, and blank patterns.
+        if (project.hasProperty('aeDev')) {
+            runtimeOnlyNonPublishable('com.github.GTNewHorizons:Applied-Energistics-2-Unofficial:rv3-beta-1095-GTNH:dev') { transitive = false }
+            runtimeOnlyNonPublishable('com.github.GTNewHorizons:NotEnoughEnergistics:1.7.50:dev') { transitive = false }
+        }
         // The quest book (`PLANNH_QUESTS=1 tools/dev/mc.sh start`), for quests on tasks.
         if (project.hasProperty('questsDev')) {
             runtimeOnlyNonPublishable('com.github.GTNewHorizons:BetterQuesting:3.8.89-GTNH:dev') { transitive = false }

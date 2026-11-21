@@ -5,8 +5,10 @@ own solver. It is meant for a tool server on the instance's internal network tha
 endpoints. Players never call it.
 
 Status: `resources/search`, `recipes/search`, `recipes/get` and the draft endpoints `plans/create`, `plans/add-cards`,
-`plans/remove-cards`, `plans/set-targets`, `plans/connect`, `plans/disconnect`, `plans/get` and `plans/solve` are built.
-Every other endpoint below is specified and marked **not yet built**; until it is, its path answers 404.
+`plans/remove-cards`, `plans/set-targets`, `plans/connect`, `plans/disconnect`, `plans/get`, `plans/solve` and
+`plans/expand-inputs` are built, and so are `plans/deliver`, `plans/import`, `plans/diff` and the read route
+`GET /api/deliveries/{id}`.
+Every endpoint of v1 is built.
 
 Code: `src/app/api/agent/v1/**` (routes) and `src/lib/agent-api/**` (logic, request and response schemas in
 `schemas.ts`). Examples: `docs/agent-api/examples/*.json`, one real request and response per built endpoint, checked
@@ -22,8 +24,7 @@ against the schemas by `src/lib/agent-api/agent-api-examples.test.ts`.
   `404 Not Found` (text, not the error envelope), the same as a path that does not exist.
 - With the token set, a missing or wrong token answers `401` with code `unauthorized`.
 - The path is for the internal network only: the instance's public proxy answers 404 for `/api/agent/`.
-- Request bodies are at most 64 KB (`plans/import`, once built, alone takes up to 512 KB: it carries the player's open
-  plan). Unknown fields are refused (`bad_request`), so a misspelt option fails loudly.
+- Request bodies are at most 64 KB (`plans/import` alone takes up to 512 KB: it carries the player's open plan). Unknown fields are refused (`bad_request`), so a misspelt option fails loudly.
 - Every request may carry `player: {name, uuid?}`: the player the assistant acts for. It is logged for audit and
   never used to grant anything.
 - Each call writes one log line: `[agent-api] route=<route> player=<name> outcome=<status or code> ms=<n> bytes=<n>`.
@@ -60,15 +61,15 @@ message is for people and may change.
 | `no_recipe`           | 422  | nothing makes the resource: no card in the draft makes a target            |
 | `tier_too_low`        | 422  | a card's tier is below its machine's minimum, or nothing runs it at or below the draft's `tierCap` |
 | `plan_not_found`      | 404  | unknown or expired draft id                                                |
-| `plan_too_big`        | 413  | a draft would go over 60 cards                                             |
-| `rate_limited`        | 429  | a daily limit is spent (300 drafts a day; deliveries not yet built)        |
+| `plan_too_big`        | 413  | a draft would go over 60 cards (200 for an imported plan)                  |
+| `rate_limited`        | 429  | a daily limit is spent (UTC days: 300 drafts, 100 deliveries, 300 proposals) |
 | `dataset_unavailable` | 503  | the server has no dataset installed or cannot read it                      |
 | `internal`            | 500  | anything else, and `plans/solve` when the server cannot load its solver; the server log has the detail |
 
 ## Constraints
 
-Accepted by `recipes/search` and `plans/create` (a draft keeps its constraints; `plans/solve` takes none of its own),
-and by `plans/expand-inputs` once built:
+Accepted by `recipes/search`, `plans/create` (a draft keeps its constraints; `plans/solve` takes none of its own) and
+`plans/expand-inputs` (joined with the draft's; see its section):
 
 ```json
 { "tierCap": "HV", "heat": 4500, "cleanroom": false, "lowgrav": false, "banned": ["..."], "free": ["..."] }
@@ -187,7 +188,9 @@ holds at most 60 cards, and at most 300 are created a day (UTC). A restart drops
 Nothing here reads or writes a player's design, library entry, account or session, or the community hub.
 
 Ids: a draft is `x` and 19 characters from `abcdefghjkmnpqrstuvwxyz23456789`; cards are `c1`, `c2`, ... and wires
-`w1`, `w2`, ..., never reused within a draft. A card id in a response names a card listed in the same draft (its name
+`w1`, `w2`, ..., never reused within a draft. An imported draft keeps the player's own card, drawer and wire ids (any
+of `^[A-Za-z0-9_][A-Za-z0-9_.:-]{0,99}$`); cards and wires added to it continue the `c<n>` and `w<n>` numbering past
+any such id the plan already has. A card id in a response names a card listed in the same draft (its name
 is the card's `name` in `plans/get` and `plans/add-cards`).
 
 Every change validates the whole request first: a refused request leaves the draft as it was.
@@ -202,10 +205,10 @@ Every change validates the whole request first: a refused request leaves the dra
 | `plans/disconnect`    | `{planId, wireId, player?}`                                          | `{planId, removed}`                                   | yes   |
 | `plans/get`           | `{planId, fields?, cardIds?, player?}`                               | the draft's cards, wires and targets, compact         | yes   |
 | `plans/solve`         | `{planId, fields?, player?}`                                         | summary first, then one row per card                  | yes   |
-| `plans/import`        | `{snapshot, player?}`: the player's open plan, as the planner exports it (body up to 512 KB) | `{planId}`: a draft holding a copy of it | no |
-| `plans/expand-inputs` | `{planId, resources?, constraints?, max?}` (max 3)                   | for each unsupplied input, up to `max` recipes ranked by the solver, each with a one-line reason (EU per item, machines needed, new raws it introduces) | no |
-| `plans/diff`          | `{planId}` of an imported draft                                      | `{proposalId, summary}`: what the draft adds or changes relative to the imported snapshot (cards, wires, targets), stored like a delivery | no |
-| `plans/deliver`       | `{planId, player: {name, uuid}}`                                     | `{name, id, code, url?}`                              | no    |
+| `plans/import`        | `{snapshot, player?}`: the player's open plan as a slim snapshot (body up to 512 KB) | `{dataset, planId, name, expiresAt, cardCount, wireCount, warnings}` | yes |
+| `plans/expand-inputs` | `{planId, resources?, constraints?, max?}` (max 3)                   | for each unsupplied input, up to `max` recipes ranked by trying each in the solver, each with a one-line reason (EU per item, machines needed, new raws it introduces) | yes |
+| `plans/diff`          | `{planId, player?}` of an imported draft                             | `{proposalId, basePlanId, expiresAt, summary, text}`: what the draft adds to the imported plan, stored as a proposal | yes |
+| `plans/deliver`       | `{planId, player: {name, uuid}}`                                     | `{name, id, code, url?, expiresAt, cardCount}`        | yes   |
 
 Examples, one real call each against the pack dataset (a titanium line): `docs/agent-api/examples/plans-*.json`.
 
@@ -311,25 +314,249 @@ first solve of a 60-card draft after the server starts, 20 to 50 ms after; a 60-
   `truncated: true`.
 - The solve reads no dataset and no account: the draft's recipes were copied into it when the cards were added.
 
-### Not yet built
+### plans/expand-inputs
 
-`plans/deliver` stores the finished plan durably under a short random `id` (kept 30 days; at most 100 deliveries a
-day) and returns it with the plan code. It creates a NEW plan; it never writes to an existing design and is not a
-community post. The player opens it in game with `/gtnhplanner open <id>`, or by the plan code.
+What could make each input the draft still needs, ranked by trying each recipe in the draft. This is where the
+assistant chooses the next cards, so every candidate says what it costs and what it brings in.
 
-`plans/diff` stores a proposal the same way. The player applies it in game with `/gtnhplanner apply <id>`, as one
-undoable step that only adds.
+Request: `{planId, resources?, constraints?, max?, player?}`
 
-## Mod read route: GET /api/deliveries/{id} - not yet built
+- `resources`: only these inputs, in this order (up to 16). Default: every unsupplied input of the draft's solve,
+  largest rate first. A named resource the draft does not need from outside is answered with no candidates and a
+  `note`.
+- `constraints`: joined with the draft's for this call only: the lower `tierCap` and `heat`, `banned` and `free`
+  lists together. The draft keeps its own.
+- `max`: candidates per input, 1 to 3, default 3.
+- A draft with no target needs nothing, so it is `bad_request`.
 
-The one route outside `/api/agent/`: the in-game planner reads a delivered plan or a proposal by id. It sits beside
-the routes the mod already calls (`/api/library`, `/api/community`, `/api/feedback`), behind the same guard as they
-are, and is reachable wherever the mod's other paths are. It is read-only, needs no account and no agent token, and
-answers only the one stored entry the id names.
+Response:
+
+```
+{dataset, planId,
+ inputs: [{id, kind, name, perSecond, raw?, found, skipped?, note?,
+           candidates: [{recipeId, name, machine, tier, euT, seconds, inputs, outputs,
+                         reason, newRaws: [{id, kind, name, perSecond}], usesByproducts?, machines, euPerItem, works?}]}],
+ accepted: [{id, kind, name, perSecond}],
+ more, remaining?: [{id, kind, name}], notEnforced?, truncated?}
+```
+
+- `accepted`: unsupplied inputs the constraints mark `free` (matched by id or name, without case). They are raw on
+  purpose and never expanded.
+- `raw: true`: the input is itself raw to a player (see Rawness below); fine to leave unsupplied or add to `free`.
+- `found`: recipes the search found that make it, before constraints. `skipped`: recipes left out (below).
+- A candidate: the recipe in the compact form of `recipes/search` (`euT` and `seconds` are the recipe's own), the
+  `machine` and `tier` `plans/add-cards` would give it under the joined constraints, and what the trial measured:
+  `machines` the solve needs of it, `euPerItem` (the draft's added EU per unit of the input it supplies, per L for a
+  fluid), `newRaws` (inputs the draft did not need before and would need from outside with it, per second, largest
+  first), `usesByproducts` (inputs it takes that the draft already makes and nothing uses: a good sign).
+  `works: false` marks a candidate the solve could not use (it fails, or supplies none of the input); it is ranked
+  last.
+- `reason`: one plain sentence or a few: rate, machines, tier and EU per unit; each new input with its rawness; the
+  draft's spare byproducts it uses; spare byproducts it leaves; other unsupplied inputs it also supplies; how much of
+  the need it covers when not all; and "recycling" when it gives back material made elsewhere.
+- Adding a candidate: `plans/add-cards` with its `recipeId`. Auto-connect wires it as the trial did.
+
+Where candidates come from: the `recipes/search` `makes` search (its ranking: main product before byproduct,
+producing before giving back), the first 12, filtered by the joined constraints as search filters them (`tierCap`,
+`heat`, `banned`; `cleanroom` and `lowgrav` are listed in `notEnforced` when given). Skipped before trying, and
+counted in `skipped`:
+
+- a recipe that takes what it makes (a loop);
+- a recipe that takes the same stuff in another container or state ("Chlorine Cell" or "Chlorine Plasma" for
+  Chlorine): a canner or freezer, not a source;
+- a recipe that undoes the draft's work: it takes a main product the draft makes from the input, or the same material
+  in a form that is not ore (macerating the ingot back to the dust the furnace card smelts; titanium dust to make the
+  titanium tetrachloride a titanium furnace takes). One that takes only a byproduct is kept: it is a use for it;
+- a recipe already a card in the draft, and the same reaction on another machine at the same power and time
+  (Chemical Reactor and Large Chemical Reactor), tried once;
+- a recipe `plans/add-cards` would refuse (nothing runs it under the tier cap).
+
+Trying a candidate: the card is added to a copy of the draft, wired by Auto-connect, targets re-seated, and the copy
+is solved on the site's plan solver. The draft itself is never changed. At most 6 candidates are tried per input and
+36 per call.
+
+Ranking, lowest first, compared in order:
+
+1. candidates that work before ones that do not;
+2. fewer new inputs that are made (they need recipes of their own, crafting tools too);
+3. fewer new inputs that are nearly raw (a step of ore processing of a material with an ore block, a plain dust of a
+   material with no ore block);
+4. fewer new inputs that are raw;
+5. less EU per unit;
+6. fewer machines;
+7. the search's own order.
+
+Rawness of a resource, by name and the dataset's ore blocks:
+
+- raw: water, air and its gases (oxygen, nitrogen, argon, helium, neon, carbon dioxide), steam, lava, stone, sand,
+  gravel, dirt, clay, ice, netherrack, end stone, logs and wood; an ore block in any stone, or a raw ore; a dust of a
+  material that has an ore block ("Rutile Dust": Rutile Ore); an item mined under its own name ("Salt": Salt Ore); a
+  `free` resource;
+- nearly raw: crushed, purified, centrifuged or refined ore, impure or purified piles, shards, of a material with an
+  ore block; a dust of a material with none;
+- made: everything else.
+
+Paging and limits: at most 6 inputs a call; inputs past them, past the trial budget, or past 3.5 s are listed in
+`remaining` with `more: true`; ask again with `resources` set to them. An answer over 12 KB moves whole inputs from its
+end to `remaining`. On the build box with the pack dataset: a draft with 9 unsupplied inputs answers in two pages of
+5 and 4 inputs, 11.4 KB and 10.1 KB; the first call after a start takes about 2 s a page, then 0.2 to 0.9 s.
+
+Known limits, honestly:
+
+- The dataset has no world generation. GregTech makes ore blocks for materials that never spawn, so "Titanium Dust"
+  and "Magnesium Dust" read as raw (Titanium Ore and Magnesium Ore exist as blocks) whether or not the pack spawns
+  them. An assistant that knows the pack's veins should judge `raw` itself.
+- Spare byproducts are named in `reason` but do not change the rank: for Chlorine the terlinguaite electrolysis
+  (an ore dust, 0.08 EU per L) ranks before salt (0.15 EU per L) though it leaves twice as much Mercury as Chlorine.
+- Steam machines show 0 EU per unit; the steam they burn is not counted.
+- Only the search's first 12 recipes are looked at, after its own ranking; a good recipe further down its list is not
+  tried.
+
+Example: `docs/agent-api/examples/plans-expand-inputs.json` (the titanium tetrachloride furnace line, first call).
+
+### plans/deliver
+
+Stores the draft as a NEW plan the player opens, under a short random id, and returns the id and the plan code. It never
+writes to an existing design or library entry and is not a community post.
+
+Request: `{planId, player: {name, uuid}}` (both required: the player it is for, kept with the entry for audit and never
+served).
+
+Response: `{name, id, code, url?, expiresAt, cardCount}`.
+
+- `id`: `d` and 15 characters (see the read route). The player opens it in game with `/gtnhplanner open <id>`; the
+  site and the game read it from `GET /api/deliveries/{id}`. Kept 30 days.
+- `code`: the plan code the site's own Copy plan code makes (`gtnh1.` and the plan, deflated, URL-safe base64); paste it
+  into the planner's Paste a copied plan. It runs to thousands of characters: the id is what travels in chat.
+- `url`: the site's link that opens the code (`<site>/#p=<code>`), only when the server knows its address
+  (`NEXT_PUBLIC_SITE_URL`). Nothing is published to open it.
+- The stored plan is the draft as the site's own code reads it back: plan mode, a new plan id, the draft's name, the
+  full dataset recipe bodies of every card. Opened, it lands as a new design like any pasted plan.
+- At most 100 deliveries a day (UTC), counted in the database: `rate_limited`. A draft with no cards is `bad_request`.
+- A card an import kept without its recipe (see `plans/import`) is delivered as it is, without a recipe body.
+
+Example: `docs/agent-api/examples/plans-deliver.json`.
+
+### plans/import
+
+Makes a draft from the player's open plan, so the assistant can solve it, add to it and propose the additions
+(`plans/diff`). The plan arrives as a slim snapshot (below), not the planner's export: recipe bodies are rebuilt from
+the dataset by id.
+
+Request: `{snapshot, player?}`, body up to 512 KB (this route only).
+
+Response: `{dataset, planId, name, expiresAt, cardCount, wireCount, warnings}`.
+
+- The draft keeps the snapshot's ids, positions, boards, drawers, wires and pins, and is not laid out again until a
+  card is added. It counts toward the 300 drafts a day and lives 24 hours like any draft.
+- Up to 200 cards (`plan_too_big` beyond), and add-cards may grow it to 200.
+- A card whose recipe id (or a shared section's) the dataset does not have is kept as an opaque card: it stays in the
+  draft as it was, nothing wires to it automatically, the solve reads no recipe for it, and it must not be changed or
+  removed (a diff that finds it changed refuses). Each one is one line in `warnings`, at most 20 lines.
+- Targets: each resource's first pin on a card's own main output slot (`output:<kind>:<id>`, no slot number or section)
+  becomes one of the draft's targets, carried by that same card; `plans/get` and `plans/solve` show it. Every other pin
+  (input pins, slot or section pins, a second pin of the same resource) stays on its card exactly as it was.
+- A snapshot whose wire, target or board names something that is not in it, or that uses an id twice, is `bad_request`.
+
+Example: `docs/agent-api/examples/plans-import.json`.
+
+### The slim snapshot
+
+What the planner (the site, or the game's panel) sends for its open plan. The website makes it with
+`toSlimSnapshot(project)` in `src/lib/agent-api/slim.ts`; the game builds the same shape field for field. Version 1:
+
+```
+{
+  version: 1,
+  plan:    {id, name},                       the open plan's id: a proposal made from it names it as basePlanId
+  boards?: [{id, name, parent?, position}],  the plan's boards (pockets); absent when it has none
+  cards:   [{id, recipeId, machine?, tier, dials?, count?, exact?, sections?, position, board?}],
+  drawers: [{id, resource, mode?, position, board?}],
+  wires:   [{id, from, to, resource, fromPort?, toPort?}],
+  targets: [{card, port, rate}]
+}
+position = {x, y}            resource = {id, kind}   kind: item | fluid | aspect | power
+```
+
+| field                | meaning (the plan document's field)                                                       |
+| -------------------- | ----------------------------------------------------------------------------------------- |
+| `card.id`            | the card's id (`node.id`); ids match `^[A-Za-z0-9_][A-Za-z0-9_.:-]{0,99}$`                 |
+| `card.recipeId`      | its recipe (`recipeId`), looked up in the dataset on import                               |
+| `card.machine`       | the machine handler id (`machineHandlerId`), only when it is not the recipe's default     |
+| `card.tier`          | the tier it runs at (`overclockTier`), as a string                                         |
+| `card.dials`         | `heatingCoil` is the coil (`coilTier`); every other key is a tier part (`machineConfigTiers`); absent when none |
+| `card.count`         | the pinned machine count (`solvePin`); absent: the solver chooses it                      |
+| `card.exact`         | `true` when that count is Exactly (`solvePinExact`); only with `count`                    |
+| `card.sections`      | a shared machine's further recipe ids in order (`extraRecipes[].recipeId`)                |
+| `card.board`         | the board it sits on (`pocketId`); absent is the root board                               |
+| `drawer.mode`        | `byproduct` or `trash` (`drainMode`); absent is a product drain                           |
+| `wire.from`, `wire.to` | the card or drawer ids at each end (`source`, `target`)                                 |
+| `wire.fromPort`, `wire.toPort` | the slot handles as stored (`sourceHandle`, `targetHandle`), when the plan has them |
+| `target`             | one pinned rate (`portRates[port]` on card `card`), per second, above 0                    |
+| `board.parent`       | the board it sits in (`parentPocketId`)                                                   |
+
+- Order: cards, drawers, wires and boards in the plan's order; targets in card order, each card's ports sorted by code
+  unit. Optional fields are left out, never `null`. Unknown fields are refused.
+- Not carried (the planner's defaults on import): oredict picks, power, hatch and parallel settings, custom rate cards'
+  dials, colours, notes, annotations, tasks. A plan's snapshot is a few hundred bytes per card; the game's panel
+  refuses one over 256 KiB and says the plan is too big.
+- Round trip: importing a snapshot and taking the snapshot of the draft gives the same snapshot (with the draft's own
+  plan id), as `handoff.test.ts` checks.
+
+### plans/diff and proposals
+
+What an imported draft now has that the imported plan did not, stored as a proposal the player applies in game with
+`/gtnhplanner apply <id>`, as one undoable step that only adds.
+
+Request: `{planId, player?}`. Response: `{proposalId, basePlanId, expiresAt, summary, text}`.
+
+- `summary`: `{addedCards, addedWires, addedDrawers, changedTargets}` (`changedTargets`: pins that are new or whose
+  rate changed). `text`: one plain sentence for the player ("Adds 1 card (Bending Machine: Titanium Foil c2), 1 wire.").
+- **Add-only.** If the draft removed or changed anything the snapshot had (a card's recipe, machine, tier, dials, count
+  or board; a drawer; a wire; a board; a pinned rate that is gone), the answer is `bad_request` naming what, and no
+  proposal is stored: tell the player the change in words instead. Positions do not count: the draft lays cards out
+  again after each change, and the proposal never moves the player's cards.
+- A draft that was not made by `plans/import` is `bad_request`; so is one that adds nothing.
+- At most 300 proposals a day (UTC): `rate_limited`. Kept 30 days.
+
+The stored proposal (served by the read route as `proposal`):
+
+```
+{version: 1, basePlanId, summary,
+ recipes: [Recipe],          full dataset bodies of the recipes the added cards use
+ cards:   [FactoryNode],     the added cards, in the plan document's own format, ids c<n> new to the plan
+ drawers: [FactoryStorage],  the added drawers
+ wires:   [FactoryEdge],     the added wires; an end on a card the plan already had names that card's own id
+ targets: [{card, port, rate}]}  pins to set: new ones and changed rates, on new or existing cards
+```
+
+- Added cards are placed to the right of the player's plan (600 to the right of its rightmost card or drawer, top
+  aligned with its highest), keeping the draft's layout among themselves.
+- Apply rule for the game: refuse unless the open plan's id is `basePlanId`; add the recipes it lacks, then the cards,
+  drawers and wires, then set the pins; never remove or change anything else.
+
+Example: `docs/agent-api/examples/plans-diff.json`.
+
+## The read route: GET /api/deliveries/{id}
+
+The one route outside `/api/agent/`: the in-game planner and the site read a delivered plan or a proposal by id. It
+sits beside the routes the mod already calls (`/api/library`, `/api/community`, `/api/feedback`) and is reachable
+wherever they are; its path goes on the proxy's list of public paths. It is read-only, needs no account and no agent
+token, and answers only the one stored entry the id names. It serves stored entries whether or not the agent API is on.
 
 - `id`: a `d` (delivery) or `p` (proposal) followed by 15 characters from `abcdefghjkmnpqrstuvwxyz23456789`
-  (regex `^[dp][a-hjkmnp-z2-9]{15}$`): about 74 bits, not guessable. Anything else answers 404 without a lookup.
-- `200`: `{id, kind: "delivery" | "proposal", name, createdAt, expiresAt, plan}` for a delivery, where `plan` is the
-  plan document as the planner exports it; a proposal also carries `basePlanId` (the imported plan it was made from)
-  and `summary`, and `plan` holds only what it adds.
-- `404` `{error: "Plan not found."}` for an unknown or expired id. Only `GET` is served.
+  (regex `^[dp][a-hjkmnp-z2-9]{15}$`, from a cryptographic random source): about 74 bits, not guessable. Anything else
+  answers 404 without a lookup.
+- `200`, delivery: `{id, kind: "delivery", name, createdAt, expiresAt, plan}`, `plan` the plan document as the planner
+  exports it (open it as a NEW plan, never over the open one).
+- `200`, proposal: `{id, kind: "proposal", name, createdAt, expiresAt, basePlanId, proposal}`, `proposal` as above.
+- Never the player's name or uuid. `Cache-Control: no-store` on every answer.
+- `404` `{error: "Plan not found."}` for an unknown, expired (30 days after it was made) or malformed id. `429`
+  `{error}` past 60 reads a minute from one address. `503` `{error}` when the database cannot be read. Only `GET`.
+
+Examples: `docs/agent-api/examples/deliveries/delivery.json` and `deliveries/proposal.json` (checked by
+`handoff.test.ts`).
+
+Storage: table `agent_deliveries` (`supabase/migrations/2026-11-21-agent-deliveries.sql`): id, kind, name, payload
+(jsonb), base_plan_id, player_name, player_uuid, created_at, expires_at. Create-only; no route updates or deletes a
+row. Expired rows may be deleted by a later sweep.

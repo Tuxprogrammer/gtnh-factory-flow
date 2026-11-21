@@ -72,7 +72,7 @@ function cardLines(draft: Draft, result: ThroughputResult): CardLine[] {
   });
 }
 
-interface BoundaryFlow {
+export interface BoundaryFlow {
   side: "in" | "out";
   id: string;
   kind: ResourceKind;
@@ -85,7 +85,7 @@ interface BoundaryFlow {
  * material forced in or out at a wired port with no drawer (`plan.forced`). Inputs are what the draft still needs
  * from outside; outputs are what has nowhere to go. Largest first.
  */
-function boundaryFlows(project: FactoryProject, result: ThroughputResult): BoundaryFlow[] {
+export function boundaryFlows(project: FactoryProject, result: ThroughputResult): BoundaryFlow[] {
   const names = new Map<string, string>();
   for (const recipe of project.recipes) {
     for (const slot of [...recipe.inputs, ...recipe.outputs]) {
@@ -126,7 +126,7 @@ function boundaryFlows(project: FactoryProject, result: ThroughputResult): Bound
     .map((flow) => ({ ...flow, perSecond: figure(flow.perSecond) }));
 }
 
-function solveProject(project: FactoryProject): Promise<ThroughputResult> {
+export function solveProject(project: FactoryProject): Promise<ThroughputResult> {
   return ensurePlanEngine(project).then(
     () => calculateThroughput(project),
     (error: unknown) => {

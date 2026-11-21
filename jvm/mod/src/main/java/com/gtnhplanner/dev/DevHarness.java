@@ -1232,7 +1232,10 @@ public final class DevHarness {
                     m.put("slots", names);
                     m.put("active", plan.getActiveIndex());
                     // The open plan's id, as a proposal names the plan it was made for (/gtnhplanner apply).
-                    m.put("activeId", com.gtnhplanner.data.flowchart.Plan.getActiveGraph().planId());
+                    m.put(
+                        "activeId",
+                        com.gtnhplanner.data.flowchart.Plan.getActiveGraph()
+                            .planId());
                     return m;
                 });
             case "/clearplan":

@@ -11,9 +11,8 @@ import org.junit.jupiter.api.Test;
 /** {@code /gtnhplanner}: only a known verb with one id of its own kind runs; everything else gets the usage line. */
 class PlannerVerbsTest {
 
-    private static final List<PlannerVerbs.Verb> VERBS = List.of(
-        new PlannerVerbs.Verb("open", 'd', id -> {}),
-        new PlannerVerbs.Verb("apply", 'p', id -> {}));
+    private static final List<PlannerVerbs.Verb> VERBS = List
+        .of(new PlannerVerbs.Verb("open", 'd', id -> {}), new PlannerVerbs.Verb("apply", 'p', id -> {}));
 
     private static PlannerVerbs.Call read(final String... args) {
         return PlannerVerbs.read(VERBS, args);
@@ -73,9 +72,13 @@ class PlannerVerbsTest {
 
     @Test
     void refusalLines() {
-        assertEquals("Nothing is stored under that id, or it has expired.", DeliveryText.refused(404, "Plan not found."));
+        assertEquals(
+            "Nothing is stored under that id, or it has expired.",
+            DeliveryText.refused(404, "Plan not found."));
         assertEquals("The planner site is busy. Try again in a minute.", DeliveryText.refused(429, "x"));
-        assertEquals("The planner site said no: the library answered 503", DeliveryText.refused(503, "the library answered 503"));
+        assertEquals(
+            "The planner site said no: the library answered 503",
+            DeliveryText.refused(503, "the library answered 503"));
         assertEquals("Opened Platline as a new plan.", DeliveryText.opened("Platline"));
     }
 }

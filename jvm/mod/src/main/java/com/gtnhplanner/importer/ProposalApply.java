@@ -65,27 +65,22 @@ public final class ProposalApply {
             final StringBuilder out = new StringBuilder(
                 parts.isEmpty() ? "Nothing was added to " + planName + "."
                     : "Added " + join(parts) + " to " + planName + ".");
-            if (cardsLeftOut > 0)
-                out.append(" ")
-                    .append(count(cardsLeftOut, "card"))
-                    .append(" could not be made in this game.");
-            if (wiresGone > 0)
-                out.append(" ")
-                    .append(count(wiresGone, "wire"))
-                    .append(" left out: a card it joins is gone.");
-            if (wiresNoPort > 0)
-                out.append(" ")
-                    .append(count(wiresNoPort, "wire"))
-                    .append(" left out: no port takes it.");
-            if (targetsKept > 0)
-                out.append(" ")
-                    .append(count(targetsKept, "target"))
-                    .append(" kept as you set ")
-                    .append(targetsKept == 1 ? "it." : "them.");
-            if (targetsNoPort > 0)
-                out.append(" ")
-                    .append(count(targetsNoPort, "target"))
-                    .append(" left out: its card is gone or has no such port.");
+            if (cardsLeftOut > 0) out.append(" ")
+                .append(count(cardsLeftOut, "card"))
+                .append(" could not be made in this game.");
+            if (wiresGone > 0) out.append(" ")
+                .append(count(wiresGone, "wire"))
+                .append(" left out: a card it joins is gone.");
+            if (wiresNoPort > 0) out.append(" ")
+                .append(count(wiresNoPort, "wire"))
+                .append(" left out: no port takes it.");
+            if (targetsKept > 0) out.append(" ")
+                .append(count(targetsKept, "target"))
+                .append(" kept as you set ")
+                .append(targetsKept == 1 ? "it." : "them.");
+            if (targetsNoPort > 0) out.append(" ")
+                .append(count(targetsNoPort, "target"))
+                .append(" left out: its card is gone or has no such port.");
             return out.toString();
         }
 
@@ -270,7 +265,8 @@ public final class ProposalApply {
      */
     public static Prepared prepare(final JsonObject proposal, final Function<String, FfConverter.Result> convert) {
         final String base = string(proposal, "basePlanId");
-        if (base == null || base.isEmpty() || !proposal.has("version")
+        if (base == null || base.isEmpty()
+            || !proposal.has("version")
             || proposal.get("version")
                 .getAsDouble() != 1)
             throw new FfImportException("That change could not be read.");

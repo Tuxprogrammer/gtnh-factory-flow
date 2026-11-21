@@ -190,7 +190,7 @@ public final class Deliveries {
     static void say(@Nullable final String text, final boolean problem) {
         final Minecraft mc = Minecraft.getMinecraft();
         if (mc.thePlayer == null || text == null) return;
-        mc.thePlayer.addChatMessage(
-            new ChatComponentText((problem ? EnumChatFormatting.RED : EnumChatFormatting.GRAY) + text));
+        mc.thePlayer
+            .addChatMessage(new ChatComponentText((problem ? EnumChatFormatting.RED : EnumChatFormatting.GRAY) + text));
     }
 }

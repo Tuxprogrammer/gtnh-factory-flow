@@ -29,11 +29,8 @@ import com.gtnhplanner.data.flowchart.UndoHistory;
  */
 class ProposalApplyTest {
 
-    private static final Set<String> BASE = Set.of(
-        "node-fish-catcher",
-        "node-fish-oil",
-        "node-methane-source",
-        "node-electrolyzer");
+    private static final Set<String> BASE = Set
+        .of("node-fish-catcher", "node-fish-oil", "node-methane-source", "node-electrolyzer");
 
     private record Board(Graph graph, Map<String, String> ids, FakeGame game) {}
 
@@ -46,8 +43,8 @@ class ProposalApplyTest {
         final JsonObject plan = demo();
         final JsonArray nodes = new JsonArray(), edges = new JsonArray();
         for (final JsonElement n : plan.getAsJsonArray("nodes")) if (BASE.contains(id(n))) nodes.add(n);
-        for (final JsonElement e : plan.getAsJsonArray("edges")) if (BASE.contains(str(e, "source"))
-            && BASE.contains(str(e, "target"))) edges.add(e);
+        for (final JsonElement e : plan.getAsJsonArray("edges"))
+            if (BASE.contains(str(e, "source")) && BASE.contains(str(e, "target"))) edges.add(e);
         plan.add("nodes", nodes);
         plan.add("edges", edges);
         plan.add("storages", new JsonArray());
@@ -88,11 +85,10 @@ class ProposalApplyTest {
             final JsonObject w = e.getAsJsonObject();
             if (BASE.contains(str(w, "source")) && BASE.contains(str(w, "target"))
                 || "demo-carbon-drawer".equals(str(w, "target"))) continue;
-            for (final String end : List.of("source", "target"))
-                if (BASE.contains(str(w, end))) w.addProperty(
-                    end,
-                    b.ids()
-                        .get(str(w, end)));
+            for (final String end : List.of("source", "target")) if (BASE.contains(str(w, end))) w.addProperty(
+                end,
+                b.ids()
+                    .get(str(w, end)));
             wires.add(w);
         }
         out.add("cards", cards);
@@ -116,8 +112,7 @@ class ProposalApplyTest {
         final Map<Uuid, int[]> before = new HashMap<>();
         for (final Node n : b.graph()
             .getNodes()) before.put(n.id, new int[] { n.x, n.y });
-        final Set<Uuid> edges = Set.copyOf(
-            b.graph().edges.keySet());
+        final Set<Uuid> edges = Set.copyOf(b.graph().edges.keySet());
         assertEquals(4, before.size());
         assertEquals(2, edges.size());
 
@@ -172,7 +167,8 @@ class ProposalApplyTest {
         }
         final Graph own = new Graph();
         for (final Node n : b.graph()
-            .getNodes()) if (!out.added()
+            .getNodes())
+            if (!out.added()
                 .contains(n.id)) own.addNode(n);
         assertFalse(ProposalApply.overlaps(only, 0, 0, own));
     }
@@ -244,24 +240,24 @@ class ProposalApplyTest {
         electrolyzer.targetOutputRates.put(hydrogen, 5d);
         final JsonArray targets = new JsonArray();
         targets.add(target("node-biodiesel", "output:fluid:biodiesel", 2));
-        targets.add(target(
-            b.ids()
-                .get("node-electrolyzer"),
-            "output:fluid:hydrogen",
-            9));
-        targets.add(target(
-            b.ids()
-                .get("node-electrolyzer"),
-            "output:item:carbon_dust",
-            1));
+        targets.add(
+            target(
+                b.ids()
+                    .get("node-electrolyzer"),
+                "output:fluid:hydrogen",
+                9));
+        targets.add(
+            target(
+                b.ids()
+                    .get("node-electrolyzer"),
+                "output:item:carbon_dust",
+                1));
         final ProposalApply.Outcome out = add(b, proposal(b, 3000, 0, targets));
         assertEquals(2, out.targets());
         assertEquals(1, out.targetsKept());
         assertEquals(5d, electrolyzer.targetOutputRates.get(hydrogen), "the player's own rate stays");
         assertEquals(2, electrolyzer.targetOutputRates.size());
-        assertEquals(
-            "Added 3 cards, 5 wires and 2 targets to Plan. 1 target kept as you set it.",
-            out.message("Plan"));
+        assertEquals("Added 3 cards, 5 wires and 2 targets to Plan. 1 target kept as you set it.", out.message("Plan"));
     }
 
     @Test

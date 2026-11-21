@@ -42,11 +42,21 @@ function lines(filePath) {
 function slot(entry, output) {
   return [
     entry.kind,
-    entry.id,
+    slotId(entry),
     entry.amount ?? "",
     output ? "" : entry.consumed === false ? "nc" : "",
     entry.chance ?? "",
   ].join("|");
+}
+
+// An ore dictionary cell that several names fit is named by one of them, and which one has changed between builds
+// (the export now takes the first by name; it used to take whichever the game registered first): the cell is the set
+// of names, whatever its id says.
+function slotId(entry) {
+  const names = Array.isArray(entry.oreDictionary) ? entry.oreDictionary : [];
+  return String(entry.id ?? "").startsWith("oredict:") && names.length > 1
+    ? `oredict:${[...names].sort().join("|")}`
+    : entry.id;
 }
 
 // GregTech maps by their game id, as it reads in the newest pack: GT++ merged

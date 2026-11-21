@@ -193,8 +193,8 @@
     },
     "data/crafting-records.json": {
       "area": "data",
-      "bytes": 395969,
-      "sha256": "5104146a5cc956c26f1ab44778f542f5b310cf57e58844b38d0acc238404db03"
+      "bytes": 269619,
+      "sha256": "fe4e22d9ac2d4b6925362ab5d6114448f731eb2b6d8b0e78432d68cc7131d926"
     },
     "data/gt-records.json": {
       "area": "data",

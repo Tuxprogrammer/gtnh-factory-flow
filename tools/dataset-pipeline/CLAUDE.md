@@ -34,13 +34,17 @@ Two exports of one pack write the same dataset, byte for byte, when both set
 `SOURCE_DATE_EPOCH` (the time they stamp), apart from what the game itself rolls anew each
 launch (listed below). The normalizer is a pure function of the raw export: its time is the
 export's, and its powers are the game's own products (`scripts/game-math.mjs`), never
-`Math.pow`, so Node 22 and 24 agree. The exporter never relies on hash order: furnace
-recipes, ore names, bee species and products, crop drops, soils and biomes, aspects, IC2 crop
-samples (seeded), GregTech recipe order (by content), hash-built slot lists and outputs, NBT
-text (keys in one order) are all sorted or pinned; joke item names are pinned
-(`StableNames`). Left to the game: Thaumcraft's generated aspects of some items (about 45),
-an EEC mob's size-dependent health, GregTech's choice of the shown item of one oredict
-assembly-line slot. A new rule that reads a game collection says what fixes its order.
+`Math.pow`, so Node 22 and 24 agree. The exporter never relies on hash order: furnace and
+crafting recipes, ore names, bee species and products, crop drops, soils and biomes,
+aspects, IC2 crop samples (seeded), GregTech recipe order (by content), hash-built slot
+lists and outputs, NBT text (keys in one order) are all sorted or pinned; joke item names
+are pinned (`StableNames`). Left to the game: Thaumcraft's generated aspects of some items
+(about 45 recipes), a few EEC mobs whose drops or health come from a live entity, the
+shown item of one assembly-line slot, a handful of Thaumcraft recipes whose list position
+moves (their raw ids; Thaumcraft keeps the game's order on purpose, because the served ids
+follow it), and icons drawn from animated textures (bytes and colour only). A new rule
+that reads a game collection says what fixes its order. `carry-recipe-ids.mjs` reads an
+ore dictionary cell as its set of names, so a cell keeps its id whichever name it shows.
 
 When an export only ADDS fields, graft them onto the published export
 (`~/graft-sparge.js`, matching recipes by content key) and confirm with a shard diff

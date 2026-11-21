@@ -393,34 +393,20 @@ public final class GtnhCalcOracleExporter {
                 if (rawRecipes == null) {
                     continue;
                 }
-                // Some of Thaumcraft's lists fill in hash order, new every run: each list's recipes are sorted by
-                // what they are, and the ids minted from their place follow that order.
-                List<Map<String, Object>> listed = new ArrayList<Map<String, Object>>();
+                // In the game's order, as before: Thaumcraft's lists keep their order run to run but for a handful of
+                // recipes, and the ids minted from it are the ones the served dataset holds, which a sort would lose
+                // for every recipe whose content changed since (the arcane grid fix).
+                int index = 0;
                 for (Object rawRecipe : rawRecipes) {
-                    Map<String, Object> recipe = thaumcraftRecipe(field.getName(), 0, rawRecipe);
+                    Map<String, Object> recipe = thaumcraftRecipe(field.getName(), index, rawRecipe);
                     if (recipe != null) {
                         Map<String, Object> neiLayout = neiLayoutsBySignature.get(thaumcraftRecipeSignature(recipe));
                         if (neiLayout == null) {
                             neiLayout = neiLayoutsBySignature.get(thaumcraftSimpleRecipeSignature(recipe));
                         }
                         putIfPresent(recipe, "neiLayout", neiLayout);
-                        listed.add(recipe);
+                        recipes.add(recipe);
                     }
-                }
-                final Map<Map<String, Object>, String> keys = new IdentityHashMap<Map<String, Object>, String>();
-                for (Map<String, Object> recipe : listed) {
-                    keys.put(recipe, recordKey(recipe));
-                }
-                Collections.sort(listed, new java.util.Comparator<Map<String, Object>>() {
-                    @Override
-                    public int compare(Map<String, Object> left, Map<String, Object> right) {
-                        return keys.get(left).compareTo(keys.get(right));
-                    }
-                });
-                int index = 0;
-                for (Map<String, Object> recipe : listed) {
-                    recipe.put("id", sha1("thaumcraft:" + field.getName() + ":" + index + ":" + recipe.get("className")).substring(0, 16));
-                    recipes.add(recipe);
                     index++;
                 }
             }

@@ -2,10 +2,10 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { beforeAll, expect, it } from 'vitest';
 import { calculateThroughput } from './throughput';
-import { initLpEngine } from './lp-engine';
+import { CORE_LOAD_MS, useCoreSolver } from '@/test-support/core-solve';
 import { normalizeLoadedProject } from '../model/project-normalize';
 
-beforeAll(async () => { expect(await initLpEngine()).toBe(true); });
+beforeAll(() => useCoreSolver(), CORE_LOAD_MS);
 
 it.each(['UV', 'UXV'] as const)('keeps the supplied reactor running through the full %s amperage range', tier => {
   const base = normalizeLoadedProject(JSON.parse(readFileSync(path.join(__dirname, '__fixtures__/high-amperage-reactor.json'), 'utf8')));

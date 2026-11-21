@@ -10,7 +10,7 @@ import { createNewProject } from "@/examples";
 import { parseFactoryProjectJson } from "@/lib/import-export/factory-json";
 import { normalizeLoadedProject } from "@/lib/model/project-normalize";
 import type { FactoryProject } from "@/lib/model/types";
-import { initLpEngine } from "@/lib/solver/lp-engine";
+import { CORE_LOAD_MS, useCoreSolver } from "@/test-support/core-solve";
 import { calculateThroughput } from "@/lib/solver/throughput";
 import { useFactoryStore } from "@/store/factory-store";
 
@@ -120,9 +120,7 @@ function sourceFiles(dir: string): string[] {
 }
 
 describe("no plan board reaches the old engines or the verdicts below the solve-mode line", () => {
-  beforeAll(async () => {
-    await initLpEngine();
-  });
+  beforeAll(() => useCoreSolver(), CORE_LOAD_MS);
 
   const all = plans();
 

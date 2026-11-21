@@ -23,7 +23,7 @@ export default defineConfig({
       "**/*.local.test.*",
       "src/lib/solver/plan/parity/up-to-export.test.ts",
       "src/lib/solver/plan/__fixtures__/website-cases.test.ts",
-      "src/lib/core/solve-shadow.test.ts",
+      "src/lib/core/solve-through-core.test.ts",
       "src/lib/core/solve-js.test.ts",
     ],
     setupFiles: [path.resolve(__dirname, "capture-setup.ts")],

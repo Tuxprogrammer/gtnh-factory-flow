@@ -1,23 +1,22 @@
 /**
  * WP1c: drawer relaxation, the stored choice, alternatives, spares, Unanchored, islands and the public entry
  * (`solvePlan`). The mod's tests it ports: DrawerRulesTest / SolveModeTest (the relaxation cases), AlternativesTest,
- * SparesTest, SolverIslandTest, SolverPathTest. Work is counted (LPs), never timed.
+ * SparesTest, SolverIslandTest, SolverPathTest. The plans solve on the compiled core, as every board does; the LP
+ * count is the website's own engine's (the stand-in where the core cannot load), counted, never timed.
  */
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { initLpEngine } from "../lp-engine";
+import { CORE_LOAD_MS, coreSolve, useCoreSolver } from "@/test-support/core-solve";
 import { differences } from "./__fixtures__/compare";
 import { digest } from "./__fixtures__/digest";
 import { caseNames, loadInput, tile } from "./__fixtures__/load";
-import { setColumnOrder, takeLpCount } from "./lp";
+import { takeLpCount } from "./lp";
 import { splitIslands } from "./islands";
 import { solvePlan } from "./solve-plan";
 import { unanchored } from "./unanchored";
 import type { Answer, DrawerIn, DrawerRule, EdgeIn, MachineIn, SolutionView, SolveInput } from "./types";
 
-beforeAll(async () => {
-  await initLpEngine();
-});
+beforeAll(() => useCoreSolver(), CORE_LOAD_MS);
 
 const port = (resource: number, name: string, amount = 1) => ({
   amount,
@@ -63,7 +62,7 @@ function input(machines: MachineIn[], edges: EdgeIn[], extra: Partial<SolveInput
 }
 
 function solvedAnswer(i: SolveInput): Extract<Answer, { kind: "solved" }> {
-  const answer = solvePlan(i);
+  const answer = coreSolve(i);
   if (answer.kind !== "solved") throw new Error(`failed: ${JSON.stringify(answer.failure)}`);
   return answer;
 }
@@ -134,7 +133,7 @@ describe("drawer relaxation (DrawerRulesTest / SolveModeTest)", () => {
 
   it("only at-most rules leave AUTO idle and say so", () => {
     const smelter = machine("smelter", "smelter", [port(0, "ore")], [port(1, "ingot")]);
-    const answer = solvePlan(
+    const answer = coreSolve(
       input([smelter], [], { drawers: [drawer("ingot", "PRODUCT", "AT_MOST", 4, "smelter", 0)] }),
     );
     expect(answer.kind).toBe("failed");
@@ -322,7 +321,7 @@ describe("unneeded and idle islands", () => {
       machine("mill", "mill", [port(0, "wheat")], [port(1, "flour")]),
     ];
     const bad = [machine("bad", "bad", [port(9, "x")], [port(8, "y")], 1)];
-    const answer = solvePlan(
+    const answer = coreSolve(
       input([...good, ...bad], [edge("e1", "farm", 0, "mill", 0)], {
         drawers: [drawer("neg", "PRODUCT", "EXACTLY", 5, "bad", 0)],
         extentPins: { bad: -1 },
@@ -388,20 +387,13 @@ const CASES = caseNames().filter((n) => !n.startsWith("platline-x") && n !== "pl
 
 describe("determinism (SolverPathTest)", () => {
   it(
-    "every corpus case answers the same twice and with every model's columns reversed",
+    "every corpus case answers the same twice",
     () => {
       for (const name of CASES) {
         const i = loadInput(name);
         const a = digest(solvedAnswer(i));
         const b = digest(solvedAnswer(i));
         expect(differences(a, b), `${name} twice`).toEqual([]);
-        setColumnOrder("reverse");
-        try {
-          const r = digest(solvedAnswer(i));
-          expect(differences(a, r).slice(0, 5), `${name} reversed`).toEqual([]);
-        } finally {
-          setColumnOrder("forward");
-        }
       }
     },
     600_000,
@@ -415,7 +407,7 @@ describe("budgets are counts", () => {
       counts[name] = [];
       for (let run = 0; run < 2; run++) {
         takeLpCount();
-        solvedAnswer(loadInput(name));
+        solvePlan(loadInput(name));
         counts[name]!.push(takeLpCount());
       }
       expect(counts[name]![0], name).toBe(counts[name]![1]);

@@ -147,6 +147,15 @@
         "website: src/components/flow/clean/card-shadow.test.ts"
       ],
       "generator": "node tools/audits/card-test-inputs/record.mjs (needs node tools/tokens/generate.mjs and node tools/web-core/gen-types.mjs first), then node tools/conformance/manifest.mjs --write"
+    },
+    "wire": {
+      "specifies": "The wire between the mod and the website: every request the mod makes and every answer it reads (rest.json, with shapes.json and the plans in plan.json), the live service handshake, close codes and conversations (live.json), and findings.json, where the two ends disagreed and what was decided. Both ends and the mod's dev stand-ins are run against it.",
+      "readers": [
+        "website: src/lib/server/wire-rest.test.ts, src/live/wire-live.test.ts (the real routes and the live service, in process)",
+        "website: src/test-support/wire-mocks.test.ts (the mod's dev stand-ins over HTTP and WebSocket), wire-shape.test.ts",
+        "mod: cloud/WireRestTest, cloud/WireLiveTest, cloud/wire/WireShapeTest"
+      ],
+      "generator": "hand-written"
     }
   },
   "files": {
@@ -169,6 +178,11 @@
       "area": "codec",
       "bytes": 5307,
       "sha256": "0f18b636403458b01ca667d2d7d92c6a18b867ab4a0845998c756ea76b0c9a68"
+    },
+    "codec/round-trip/display-cards.json": {
+      "area": "codec",
+      "bytes": 6616,
+      "sha256": "2e2a72fe3a476d4296831f8447686412bca1744524e6a9d1db75baefa1553148"
     },
     "codec/round-trip/website-only-things.json": {
       "area": "codec",
@@ -1202,8 +1216,8 @@
     },
     "view/card/cases.json": {
       "area": "view",
-      "bytes": 486628,
-      "sha256": "6f3e43eb7d52dfeba2d1d8947ea8075c9fee8a262567d9f3d7d82ced5b0b83b9"
+      "bytes": 489103,
+      "sha256": "52a75761a5d1c01786a7202c3da0b3793908755a37ad47753ba3162da59dff19"
     },
     "view/card/count.json": {
       "area": "view",
@@ -1257,8 +1271,33 @@
     },
     "view/records.json": {
       "area": "view",
-      "bytes": 23559,
-      "sha256": "9ba04903bbb1c5ad5b9471f958dbbccc09dbf1df949a49fa35fe5e76d41bdec0"
+      "bytes": 23758,
+      "sha256": "d9df3530171db6567262226c5c8a49c0eb2a3d05a90a13a75ccac0e82e5d94b7"
+    },
+    "wire/findings.json": {
+      "area": "wire",
+      "bytes": 5394,
+      "sha256": "31e5b3a01ddfbc85f74e4f43355862b66698166e5ceafbbba89e881cc7a630a3"
+    },
+    "wire/live.json": {
+      "area": "wire",
+      "bytes": 20500,
+      "sha256": "844c7916c3d4a5f0be1403e71345d26e409bfd3340b0aaccfb6f20418a2b19b3"
+    },
+    "wire/plan.json": {
+      "area": "wire",
+      "bytes": 847,
+      "sha256": "d894ca2dc94e4fe5dfbd2985bafb20b0355fb543fa560749224da1393da84e1f"
+    },
+    "wire/rest.json": {
+      "area": "wire",
+      "bytes": 62681,
+      "sha256": "893bbf59298c28a9c681d01bea6c117b0bbaa657edd7d5566a8792caab3cdf27"
+    },
+    "wire/shapes.json": {
+      "area": "wire",
+      "bytes": 8409,
+      "sha256": "4d302e9c657ea105b869a551ca5c5c601f4e9cdc2813de59c63d5b97c8ba3e17"
     }
   }
 }

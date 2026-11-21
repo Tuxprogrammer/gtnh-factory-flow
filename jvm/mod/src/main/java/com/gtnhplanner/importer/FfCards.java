@@ -46,7 +46,8 @@ public final class FfCards {
         public List<PortInfo> describe(final Node node, final boolean output) {
             return (output ? out : in).computeIfAbsent(node.id, k -> {
                 final List<PortInfo> infos = new ArrayList<>();
-                for (final Port<?> port : output ? node.outputs : node.inputs) infos.add(maker.describe(port));
+                for (final Port<?> port : output ? node.outputs : node.inputs)
+                    infos.add(node.shown != null ? ShownCards.describe(port) : maker.describe(port));
                 return infos;
             });
         }

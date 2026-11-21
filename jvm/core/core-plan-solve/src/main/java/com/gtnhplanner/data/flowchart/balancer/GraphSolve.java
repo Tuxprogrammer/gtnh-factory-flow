@@ -73,6 +73,10 @@ public final class GraphSolve {
                 machines.add(machineOf(node, ingredients, node.isMachineCountFixed()));
                 continue;
             }
+            if (outside(node)) {
+                machines.add(machineOf(node, ingredients, true));
+                continue;
+            }
             final PinRule rule = PinRule.of(node);
             final double count = node.machineConfig.machineCount();
             // An Up to count is a one-machine pool: the solver finds how many run, never above it (docs/design/up-to.md).
@@ -165,8 +169,19 @@ public final class GraphSolve {
         return out;
     }
 
+    /**
+     * Whether a card the board only shows ({@link Node#shown}) is outside the solve: switched off in its plan, or its
+     * recipe is one the website's machine maths could not run here. It stays in the input as a machine of none, its
+     * ports carrying nothing, so its wires carry nothing and the cards on them read it so, as the website's solve, which
+     * leaves such a card out.
+     */
+    private static boolean outside(final Node node) {
+        return node.shown != null && !node.shown.solved();
+    }
+
     private static Machine machineOf(final Node node, final Ingredients ingredients, final boolean exact) {
         final MachineConfig cfg = node.machineConfig;
+        if (node.shown != null) return shown(node, ingredients);
         final EffectResult effect = node.isPower() ? null : cfg.computeEffect(node.properties);
         final List<PortIn> inputs = new ArrayList<>(node.inputs.size());
         for (int i = 0; i < node.inputs.size(); i++) {
@@ -208,6 +223,37 @@ public final class GraphSolve {
             cfg.machineCount(),
             targets,
             properties,
+            inputTargets);
+    }
+
+    /**
+     * A card the board only shows: its ports carry a second's worth for one machine (the website's machine maths over
+     * the plan's record of its recipe, {@code core-codec DisplayCards}), so it runs one craft a second, as a generator
+     * does, drawing the maths' EU/t. Its count is the plan's: Exactly or Up to as set, else the solve's. Outside the
+     * solve ({@link #outside}) it is a machine of none: every port carries nothing and its count is held at nothing.
+     */
+    private static Machine shown(final Node node, final Ingredients ingredients) {
+        final boolean out = outside(node);
+        final List<PortIn> inputs = new ArrayList<>(node.inputs.size()), outputs = new ArrayList<>(node.outputs.size());
+        for (final Port<?> p : node.inputs) inputs.add(ingredients.portOf(p, out ? 0 : 1));
+        for (final Port<?> p : node.outputs) outputs.add(ingredients.portOf(p, out ? 0 : 1));
+        final Map<Integer, Double> targets = new LinkedHashMap<>(), inputTargets = new LinkedHashMap<>();
+        if (!out) {
+            targets.putAll(node.targetOutputRates);
+            inputTargets.putAll(node.targetInputRates);
+        }
+        return new Machine(
+            node.id,
+            node.machineName == null ? "" : node.machineName,
+            20,
+            out ? 0 : node.shown.euPerTick(),
+            1,
+            inputs,
+            outputs,
+            out || PinRule.of(node) == PinRule.EXACT,
+            out ? 0 : node.machineConfig.machineCount(),
+            targets,
+            new LinkedHashMap<>(),
             inputTargets);
     }
 

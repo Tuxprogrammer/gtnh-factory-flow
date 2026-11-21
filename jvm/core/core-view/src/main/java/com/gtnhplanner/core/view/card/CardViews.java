@@ -87,9 +87,11 @@ public final class CardViews {
             : null;
         final int nameStep = nameStep(name, tierLabel != null, ampsLabel != null, in.hasPicker(), measure, host);
 
-        // Count: what runs, big; what you set, small, under it (docs/up-to.md).
-        final CountView count = count(in.count(), in.count()
-            .rule() == PinRule.UP_TO ? in.upTo() : null, false, null, null);
+        // Count: what runs, big; what you set, small, under it (docs/up-to.md). A card the board only shows has the
+        // plan's count, set elsewhere.
+        final CountView count = readOnly(count(in.count(), in.count()
+            .rule() == PinRule.UP_TO ? in.upTo() : null, false, null, in.readOnly() != null ? t("read_only.count") : null),
+            in.readOnly());
         final CardInput.UpTo upTo = in.count()
             .rule() == PinRule.UP_TO ? in.upTo() : null;
 
@@ -116,8 +118,10 @@ public final class CardViews {
             for (final PortView p : inputs) keys.add(p.resourceKey());
             idle = idleTrade(in.leftovers(), in.nodeId(), keys);
         }
-        final FootView foot = foot(count.rule(), count.set(), upTo, inputs, outputs, in.cardNames(), loop, idle,
-            in.turbine(), in.powerTier(), dials, measure);
+        final FootView foot = in.readOnly() != null
+            ? readOnlyFoot(in.readOnly(), count.rule(), count.value(), count.set(), measure)
+            : foot(count.rule(), count.set(), upTo, inputs, outputs, in.cardNames(), loop, idle, in.turbine(),
+                in.powerTier(), dials, measure);
 
         String tierTitle = null;
         if (tierLabel != null) tierTitle = in.tierFixed() ? t("tier.fixed") : t("tier.title", tierLabel);
@@ -753,6 +757,49 @@ public final class CardViews {
             + RailMath.dialSuffix(dials.power(), tier);
     }
 
+    /** A card the board only shows: its count's rule has no menu and it asks for no count. */
+    private static CountView readOnly(final CountView c, @Nullable final CardInput.ReadOnly readOnly) {
+        if (readOnly == null) return c;
+        return new CountView(c.text(), c.unit(), c.value(), c.pinned(), c.rule(), c.ruleWord(), true, c.set(),
+            c.setText(), c.box(), false, c.zero(), c.title());
+    }
+
+    /**
+     * The foot of a card the board only shows: VIEW ONLY and why, in the plain tone, and that it is not solved when it
+     * is outside the solve; the longest line that fits.
+     */
+    public static FootView readOnlyFoot(final CardInput.ReadOnly readOnly, final PinRule rule, final double running,
+        @Nullable final Double set, final TextMeasure measure) {
+        final String word = t("read_only.word");
+        final String reason = "read_only." + readOnly.reason();
+        final List<String> lines = new ArrayList<>();
+        for (final String why : List.of(t(reason), t(reason + ".short")))
+            lines.add(readOnly.solved() ? why : t("read_only.unsolved", why));
+        lines.add(t(reason + ".short"));
+        final double room = FOOT_TEXT - label(measure, word) - FOOT_GAP;
+        return new FootView(
+            Tones.Role.PLAIN,
+            word,
+            fitLine(lines, room, measure),
+            "",
+            0,
+            null,
+            new FootFacts(
+                null,
+                null,
+                rule,
+                running,
+                set == null ? 0 : set,
+                null,
+                null,
+                List.of(),
+                List.of(),
+                List.of(),
+                null,
+                null,
+                null));
+    }
+
     /**
      * The bar along a card's foot, or nothing (the website's {@code buildFootView}): a turbine off its flow, an Up to
      * card with its read-out, an Exactly card with a forced input, or a card on Any that runs none because its input is
@@ -974,6 +1021,11 @@ public final class CardViews {
      */
     public static List<CardView.MenuRow> menu(final CardInput.Menu m) {
         final List<CardView.MenuRow> rows = new ArrayList<>();
+        // A card the board only shows can be deleted, nothing else: it is the other side's to change.
+        if (m.readOnly()) {
+            rows.add(new CardView.MenuRow("delete", t("menu.delete"), true));
+            return rows;
+        }
         rows.add(new CardView.MenuRow("clone", t("menu.clone"), false));
         final boolean open = !m.calm() && !m.locked();
         if (open && !m.ownsRecipe()) rows.add(new CardView.MenuRow("addRecipe", t("menu.add_recipe"), false));

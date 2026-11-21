@@ -48,6 +48,7 @@ export const OPEN_MENU: CardInputMenu = {
   holder: false,
   emptyCropFarm: false,
   tasks: false,
+  readOnly: false,
 };
 
 /** The board's dials as the card reads them now: the rate unit, the power key, average or peak draw. */
@@ -69,6 +70,8 @@ export function cardMenuFacts(
     holder: isCustomRateRecipe(recipe) || isFluidTankRecipe(recipe),
     emptyCropFarm: isCropFarmRecipe(recipe) && recipe.outputs.length === 0,
     tasks: board.tasks,
+    // Only the mod has cards it shows but cannot edit (a website card it cannot run); every website card is editable.
+    readOnly: false,
   };
 }
 

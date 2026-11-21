@@ -148,7 +148,17 @@ final class Fresh {
      */
     static Map<String, Thing> of(final Graph g, final CloudGame game, final Basis names, final Set<String> skip) {
         final Map<String, Thing> out = new LinkedHashMap<>();
+        // A display-only card (Node.shown) is no thing of the game's: the plan keeps it as it is, as anything the game
+        // has no place for. Wires and drawers on it are the game's, its end the plan's card and its ports named as
+        // the plan's recipe names them.
+        final Map<Port<?>, PlanExport.Res> shown = new java.util.HashMap<>();
+        for (final Node n : g.getNodes()) if (n.shown != null) shown.putAll(PlanExport.shownPorts(g, n));
+        final java.util.function.Function<Port<?>, PlanExport.Res> res = p -> {
+            final PlanExport.Res r = shown.get(p);
+            return r != null ? r : port(game, p);
+        };
         for (final Node n : g.getNodes()) {
+            if (n.shown != null) continue;
             final String gameKey = "node:" + n.id;
             if (names.isCarried(gameKey) || skip.contains(gameKey)) continue;
             final String id = names.id("node", n.id);
@@ -171,7 +181,7 @@ final class Fresh {
             final String in = pocket(g, names, d.getGroup());
             out.put(gameKey, new Thing("storages", id, gameKey, Canon.of(data), data, true, at[0], at[1], in, () -> {
                 final JsonObject site = withoutPlace(
-                    PlanExport.storage(d, PlanExport.linkResource(g, d, resource(d, game), p -> port(game, p))));
+                    PlanExport.storage(d, PlanExport.linkResource(g, d, resource(d, game), res)));
                 site.addProperty("id", id);
                 return new JsonObject[] { site };
             }));
@@ -186,7 +196,7 @@ final class Fresh {
                 final Node n = g.nodes.get(link.nodeId());
                 final String gameKey = linkKey(d, link, feeds);
                 if (n == null || skip.contains(gameKey) || unwritable(names, gameKey, n)) continue;
-                final String nodeId = names.id("node", n.id);
+                final String nodeId = n.shown != null ? n.shown.planId() : names.id("node", n.id);
                 final String id = linkId(drawerId, nodeId, link.portIndex(), feeds && d.isBuffer());
                 final JsonObject data = new JsonObject();
                 data.addProperty("port", link.portIndex());
@@ -196,7 +206,7 @@ final class Fresh {
                 out.put(gameKey, new Thing("edges", id, gameKey, Canon.of(data), data, false, 0, 0, () -> {
                     final String from = feeds ? drawerId : nodeId, to = feeds ? nodeId : drawerId;
                     final PlanExport.Res r = PlanExport
-                        .portResource(n, link.portIndex(), feeds, p -> port(game, p), resource(d, game));
+                        .portResource(n, link.portIndex(), feeds, res, resource(d, game));
                     return new JsonObject[] { PlanExport.edge(id, from, to, r, link.waypoints()) };
                 }));
             }
@@ -207,8 +217,9 @@ final class Fresh {
                 continue;
             final String gameKey = "edge:" + e.id;
             if (skip.contains(gameKey) || unwritable(names, gameKey, from) || unwritable(names, gameKey, to)) continue;
-            final String id = names.id("edge", e.id), source = names.id("node", from.id),
-                target = names.id("node", to.id);
+            final String id = names.id("edge", e.id),
+                source = from.shown != null ? from.shown.planId() : names.id("node", from.id),
+                target = to.shown != null ? to.shown.planId() : names.id("node", to.id);
             final Port<?> carried = from.outputs.get(e.sourceOutputIndex);
             final JsonObject data = new JsonObject();
             data.addProperty("srcOut", e.sourceOutputIndex);
@@ -230,7 +241,7 @@ final class Fresh {
                     false,
                     0,
                     0,
-                    () -> new JsonObject[] { PlanExport.edge(id, source, target, port(game, carried), stops) }));
+                    () -> new JsonObject[] { PlanExport.edge(id, source, target, res.apply(carried), stops) }));
         }
         for (final Note n : g.getNotes()) {
             final String gameKey = "note:" + n.getId();

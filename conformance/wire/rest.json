@@ -1,0 +1,3063 @@
+{
+ "$about": "Every request the mod makes of the website and every answer it reads, in order. A step is one request and one answer. Read README.md for the fields. Variables in braces ({ann.id}, {bob.id}, {carol.id}, {post.id}, {plan}, {emptyPlan}) are filled by each runner.",
+ "accounts": [
+  "ann",
+  "bob",
+  "carol",
+  "sam"
+ ],
+ "steps": [
+  {
+   "id": "register-ok",
+   "client": "CommunityApi.register",
+   "args": [
+    "newbie",
+    "secret1"
+   ],
+   "as": null,
+   "request": {
+    "method": "POST",
+    "path": "/api/community/auth/register",
+    "auth": "none",
+    "body": {
+     "username": "newbie",
+     "password": "secret1"
+    },
+    "bodyShape": {
+     "username": "string",
+     "password": "string"
+    },
+    "bodyExpect": {
+     "username": "newbie",
+     "password": "secret1"
+    }
+   },
+   "status": 201,
+   "shape": "$SignedInReply",
+   "example": {
+    "username": "newbie",
+    "isAdmin": false
+   },
+   "headers": {
+    "Set-Cookie": {
+     "example": "gtnh_session=11111111-1111-4111-8111-111111111111.4102444800000.c2ln; Path=/; Max-Age=2592000; HttpOnly; SameSite=Lax",
+     "re": "^gtnh_session=[^;]+"
+    }
+   },
+   "result": {
+    "ok": {
+     "username": "newbie",
+     "token": "11111111-1111-4111-8111-111111111111.4102444800000.c2ln"
+    }
+   }
+  },
+  {
+   "id": "register-taken",
+   "client": "CommunityApi.register",
+   "args": [
+    "newbie",
+    "secret1"
+   ],
+   "as": null,
+   "request": {
+    "method": "POST",
+    "path": "/api/community/auth/register",
+    "auth": "none",
+    "body": {
+     "username": "newbie",
+     "password": "secret1"
+    }
+   },
+   "status": 409,
+   "shape": "$Error",
+   "example": {
+    "error": "That username is taken."
+   },
+   "result": {
+    "refused": "That username is taken."
+   }
+  },
+  {
+   "id": "register-short-password",
+   "client": "CommunityApi.register",
+   "args": [
+    "other",
+    "abc"
+   ],
+   "as": null,
+   "request": {
+    "method": "POST",
+    "path": "/api/community/auth/register",
+    "auth": "none",
+    "body": {
+     "username": "other",
+     "password": "abc"
+    }
+   },
+   "status": 400,
+   "shape": "$Error",
+   "example": {
+    "error": "Password must be at least 6 characters."
+   },
+   "result": {
+    "refused": "Password must be at least 6 characters."
+   }
+  },
+  {
+   "id": "login-ok",
+   "client": "CommunityApi.signIn",
+   "args": [
+    "newbie",
+    "secret1"
+   ],
+   "as": null,
+   "request": {
+    "method": "POST",
+    "path": "/api/community/auth/login",
+    "auth": "none",
+    "body": {
+     "username": "newbie",
+     "password": "secret1"
+    },
+    "bodyShape": {
+     "username": "string",
+     "password": "string"
+    }
+   },
+   "status": 200,
+   "shape": "$SignedInReply",
+   "example": {
+    "username": "newbie",
+    "isAdmin": false
+   },
+   "headers": {
+    "Set-Cookie": {
+     "example": "gtnh_session=11111111-1111-4111-8111-111111111111.4102444800000.c2ln; Path=/; Max-Age=2592000; HttpOnly; SameSite=Lax",
+     "re": "^gtnh_session=[^;]+"
+    }
+   },
+   "result": {
+    "ok": {
+     "username": "newbie",
+     "token": "11111111-1111-4111-8111-111111111111.4102444800000.c2ln"
+    }
+   }
+  },
+  {
+   "id": "login-wrong-password",
+   "client": "CommunityApi.signIn",
+   "args": [
+    "newbie",
+    "nope"
+   ],
+   "as": null,
+   "request": {
+    "method": "POST",
+    "path": "/api/community/auth/login",
+    "auth": "none",
+    "body": {
+     "username": "newbie",
+     "password": "nope"
+    }
+   },
+   "status": 401,
+   "shape": "$Error",
+   "example": {
+    "error": "Wrong username or password."
+   },
+   "result": {
+    "refused": "Wrong username or password."
+   }
+  },
+  {
+   "id": "login-rate-limited",
+   "client": "CommunityApi.signIn",
+   "args": [
+    "newbie",
+    "nope"
+   ],
+   "as": null,
+   "request": {
+    "method": "POST",
+    "path": "/api/community/auth/login",
+    "auth": "none",
+    "body": {
+     "username": "newbie",
+     "password": "nope"
+    }
+   },
+   "status": 429,
+   "shape": "$Error",
+   "example": {
+    "error": "Too many attempts. Slow down."
+   },
+   "result": {
+    "refused": "Too many attempts. Slow down."
+   },
+   "server": {
+    "skip": "the limit is 20 attempts in 10 minutes from one address; the shape is the same as every other refusal"
+   }
+  },
+  {
+   "id": "login-no-cookie-in-reply",
+   "client": "CommunityApi.signIn",
+   "args": [
+    "newbie",
+    "secret1"
+   ],
+   "as": null,
+   "request": {
+    "method": "POST",
+    "path": "/api/community/auth/login",
+    "auth": "none",
+    "body": {
+     "username": "newbie",
+     "password": "secret1"
+    }
+   },
+   "status": 200,
+   "shape": "$SignedInReply",
+   "example": {
+    "username": "newbie",
+    "isAdmin": false
+   },
+   "result": {
+    "ioerror": true
+   },
+   "server": {
+    "skip": "the server always sets the cookie on a 200; the mod treats a 200 without one as a failure to sign in"
+   }
+  },
+  {
+   "id": "whois-signed-in",
+   "client": "CommunityApi.whoIs",
+   "args": [
+    "{ann.token}"
+   ],
+   "as": "ann",
+   "request": {
+    "method": "GET",
+    "path": "/api/community/auth/me",
+    "auth": "session"
+   },
+   "status": 200,
+   "shape": "$MeReply",
+   "example": {
+    "user": {
+     "username": "ann",
+     "isAdmin": false
+    }
+   },
+   "expect": {
+    "user.username": "ann"
+   },
+   "result": {
+    "ok": {
+     "username": "ann"
+    }
+   }
+  },
+  {
+   "id": "whois-signed-out",
+   "client": "CommunityApi.whoIs",
+   "args": [
+    "old"
+   ],
+   "as": null,
+   "request": {
+    "method": "GET",
+    "path": "/api/community/auth/me",
+    "auth": "session"
+   },
+   "status": 200,
+   "shape": "$MeReply",
+   "example": {
+    "user": null
+   },
+   "expect": {
+    "user": null
+   },
+   "result": {
+    "null": true
+   },
+   "note": "The mod sends its stored token; a server that no longer knows it answers 200 with a null user. The server run sends no cookie, which gets the same answer."
+  },
+  {
+   "id": "whois-lookup-failed",
+   "client": "CommunityApi.whoIs",
+   "args": [
+    "tok"
+   ],
+   "as": null,
+   "request": {
+    "method": "GET",
+    "path": "/api/community/auth/me",
+    "auth": "session"
+   },
+   "status": 503,
+   "shape": "$Error",
+   "example": {
+    "error": "Account lookup failed."
+   },
+   "result": {
+    "refused": "Account lookup failed."
+   },
+   "server": {
+    "skip": "needs the database to fail"
+   }
+  },
+  {
+   "id": "me-signed-in",
+   "client": "CloudApi.me",
+   "args": [
+    "{ann.token}"
+   ],
+   "as": "ann",
+   "request": {
+    "method": "GET",
+    "path": "/api/community/auth/me",
+    "auth": "session"
+   },
+   "status": 200,
+   "shape": "$MeReply",
+   "example": {
+    "user": {
+     "username": "ann",
+     "isAdmin": false
+    }
+   },
+   "expect": {
+    "user.username": "ann"
+   },
+   "result": {
+    "ok": {
+     "id": "{ann.id}",
+     "username": "ann"
+    }
+   },
+   "note": "The server names no id here; the account id is the first part of the session token, as Account.accountId reads it."
+  },
+  {
+   "id": "me-expired",
+   "client": "CloudApi.me",
+   "args": [
+    "old"
+   ],
+   "as": null,
+   "request": {
+    "method": "GET",
+    "path": "/api/community/auth/me",
+    "auth": "session"
+   },
+   "status": 401,
+   "shape": "$Error",
+   "example": {
+    "error": "Sign in."
+   },
+   "result": {
+    "null": true
+   },
+   "server": {
+    "skip": "the server never answers 401 here (a null user is its answer); the mod accepts a 401 as signed out for a proxy in front of it"
+   }
+  },
+  {
+   "id": "library-empty",
+   "client": "CloudApi.library",
+   "args": [
+    "{ann.token}",
+    "{ann.id}"
+   ],
+   "as": "ann",
+   "request": {
+    "method": "GET",
+    "path": "/api/library",
+    "auth": "session"
+   },
+   "status": 200,
+   "shape": "$LibraryReply",
+   "example": {
+    "designs": [],
+    "folders": [],
+    "shared": []
+   },
+   "expect": {
+    "designs": []
+   },
+   "result": {
+    "ok": {
+     "own": [],
+     "shared": []
+    }
+   }
+  },
+  {
+   "id": "library-signed-out",
+   "client": "CloudApi.library",
+   "args": [
+    "old",
+    "{ann.id}"
+   ],
+   "as": null,
+   "request": {
+    "method": "GET",
+    "path": "/api/library",
+    "auth": "session"
+   },
+   "status": 401,
+   "shape": "$Error",
+   "example": {
+    "error": "Sign in to sync your library."
+   },
+   "result": {
+    "refused": "Sign in to sync your library."
+   },
+   "note": "Run with no cookie on the server."
+  },
+  {
+   "id": "library-not-configured",
+   "client": "CloudApi.library",
+   "args": [
+    "{ann.id}.4102444800000.sig",
+    "{ann.id}"
+   ],
+   "as": null,
+   "request": {
+    "method": "GET",
+    "path": "/api/library",
+    "auth": "session"
+   },
+   "status": 503,
+   "shape": "$Error",
+   "example": {
+    "error": "Cloud storage is not configured."
+   },
+   "result": {
+    "refused": "Cloud storage is not configured."
+   },
+   "server": {
+    "skip": "needs a server without a database"
+   }
+  },
+  {
+   "id": "put-create",
+   "client": "CloudApi.put",
+   "args": [
+    "{ann.token}",
+    "design-0001",
+    null,
+    {
+     "name": "Smelter",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:05:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:05:00.000Z",
+     "plan": "{plan}"
+    }
+   ],
+   "as": "ann",
+   "request": {
+    "method": "PUT",
+    "path": "/api/library/designs/design-0001",
+    "auth": "session",
+    "body": {
+     "name": "Smelter",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "communityPlanId": null,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:05:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:05:00.000Z",
+     "plan": "{plan}"
+    },
+    "bodyShape": {
+     "name": "string",
+     "icon": "object|null",
+     "folderId": "string|null",
+     "closed": "boolean",
+     "favorite": "boolean",
+     "order": "integer|null",
+     "communityPlanId": "null",
+     "createdAt": "string",
+     "updatedAt": "string",
+     "planUpdatedAt": "string",
+     "plan?": "object"
+    },
+    "bodyExpect": {
+     "name": "Smelter",
+     "favorite": true,
+     "plan.schemaVersion": 1
+    }
+   },
+   "status": 200,
+   "shape": "$PutReply",
+   "example": {
+    "design": {
+     "id": "design-0001",
+     "name": "Smelter",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "communityPlanId": null,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:05:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:05:00.000Z",
+     "deletedAt": null
+    },
+    "behind": false
+   },
+   "expect": {
+    "behind": false,
+    "design.id": "design-0001",
+    "design.name": "Smelter"
+   },
+   "result": {
+    "ok": {
+     "behind": false,
+     "live": false,
+     "design.id": "design-0001",
+     "design.name": "Smelter"
+    }
+   }
+  },
+  {
+   "id": "put-new-without-plan",
+   "client": "CloudApi.put",
+   "args": [
+    "{ann.token}",
+    "design-0002",
+    null,
+    {
+     "name": "Second",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:05:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:05:00.000Z",
+     "plan": null
+    }
+   ],
+   "as": "ann",
+   "request": {
+    "method": "PUT",
+    "path": "/api/library/designs/design-0002",
+    "auth": "session",
+    "body": {
+     "name": "Second",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "communityPlanId": null,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:05:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:05:00.000Z"
+    },
+    "bodyShape": {
+     "name": "string",
+     "icon": "object|null",
+     "folderId": "string|null",
+     "closed": "boolean",
+     "favorite": "boolean",
+     "order": "integer|null",
+     "communityPlanId": "null",
+     "createdAt": "string",
+     "updatedAt": "string",
+     "planUpdatedAt": "string",
+     "plan?": "object"
+    }
+   },
+   "status": 400,
+   "shape": "$Error",
+   "example": {
+    "error": "A new design needs its plan."
+   },
+   "result": {
+    "refused": "A new design needs its plan."
+   }
+  },
+  {
+   "id": "put-bad-name",
+   "client": "CloudApi.put",
+   "args": [
+    "{ann.token}",
+    "design-0002",
+    null,
+    {
+     "name": "",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:05:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:05:00.000Z",
+     "plan": "{plan}"
+    }
+   ],
+   "as": "ann",
+   "request": {
+    "method": "PUT",
+    "path": "/api/library/designs/design-0002",
+    "auth": "session",
+    "body": {
+     "name": "",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "communityPlanId": null,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:05:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:05:00.000Z",
+     "plan": "{plan}"
+    }
+   },
+   "status": 400,
+   "shape": "$Error",
+   "example": {
+    "error": "Design names run 1 to 80 characters."
+   },
+   "result": {
+    "refused": "Design names run 1 to 80 characters."
+   }
+  },
+  {
+   "id": "put-signed-out",
+   "client": "CloudApi.put",
+   "args": [
+    "old",
+    "design-0001",
+    null,
+    {
+     "name": "Smelter",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:05:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:05:00.000Z",
+     "plan": "{plan}"
+    }
+   ],
+   "as": null,
+   "request": {
+    "method": "PUT",
+    "path": "/api/library/designs/design-0001",
+    "auth": "session",
+    "body": {
+     "name": "Smelter",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "communityPlanId": null,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:05:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:05:00.000Z",
+     "plan": "{plan}"
+    }
+   },
+   "status": 401,
+   "shape": "$Error",
+   "example": {
+    "error": "Sign in to sync your library."
+   },
+   "result": {
+    "refused": "Sign in to sync your library."
+   }
+  },
+  {
+   "id": "put-metadata-only",
+   "client": "CloudApi.put",
+   "args": [
+    "{ann.token}",
+    "design-0001",
+    null,
+    {
+     "name": "Smelter 2",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:10:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:10:00.000Z",
+     "plan": null
+    }
+   ],
+   "as": "ann",
+   "request": {
+    "method": "PUT",
+    "path": "/api/library/designs/design-0001",
+    "auth": "session",
+    "body": {
+     "name": "Smelter 2",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "communityPlanId": null,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:10:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:10:00.000Z"
+    },
+    "bodyShape": {
+     "name": "string",
+     "icon": "object|null",
+     "folderId": "string|null",
+     "closed": "boolean",
+     "favorite": "boolean",
+     "order": "integer|null",
+     "communityPlanId": "null",
+     "createdAt": "string",
+     "updatedAt": "string",
+     "planUpdatedAt": "string",
+     "plan?": "object"
+    }
+   },
+   "status": 200,
+   "shape": "$PutReply",
+   "example": {
+    "design": {
+     "id": "design-0001",
+     "name": "Smelter 2",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "communityPlanId": null,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:10:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:10:00.000Z",
+     "deletedAt": null
+    },
+    "behind": false
+   },
+   "expect": {
+    "behind": false,
+    "design.name": "Smelter 2"
+   },
+   "result": {
+    "ok": {
+     "behind": false,
+     "live": false,
+     "design.name": "Smelter 2"
+    }
+   }
+  },
+  {
+   "id": "put-behind",
+   "client": "CloudApi.put",
+   "args": [
+    "{ann.token}",
+    "design-0001",
+    null,
+    {
+     "name": "Old name",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:05:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:05:00.000Z",
+     "plan": null
+    }
+   ],
+   "as": "ann",
+   "request": {
+    "method": "PUT",
+    "path": "/api/library/designs/design-0001",
+    "auth": "session",
+    "body": {
+     "name": "Old name",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "communityPlanId": null,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:05:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:05:00.000Z"
+    }
+   },
+   "status": 200,
+   "shape": "$PutReply",
+   "example": {
+    "design": {
+     "id": "design-0001",
+     "name": "Smelter 2",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "communityPlanId": null,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:10:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:10:00.000Z",
+     "deletedAt": null
+    },
+    "behind": true
+   },
+   "expect": {
+    "behind": true,
+    "design.name": "Smelter 2"
+   },
+   "result": {
+    "ok": {
+     "behind": true,
+     "live": false,
+     "design.name": "Smelter 2"
+    }
+   }
+  },
+  {
+   "id": "get-design-owner",
+   "client": "CloudApi.plan",
+   "args": [
+    "{ann.token}",
+    "{ann.id}",
+    "design-0001"
+   ],
+   "as": "ann",
+   "request": {
+    "method": "GET",
+    "path": "/api/library/designs/design-0001?owner={ann.id}",
+    "auth": "session"
+   },
+   "status": 200,
+   "shape": "$DesignReply",
+   "example": {
+    "design": {
+     "id": "design-0001",
+     "name": "Smelter 2",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "communityPlanId": null,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:10:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:10:00.000Z",
+     "deletedAt": null
+    },
+    "plan": {
+     "schemaVersion": 1,
+     "id": "plan-1",
+     "name": "Pins",
+     "nodes": [
+      {
+       "id": "n1"
+      }
+     ]
+    },
+    "ownerId": "{ann.id}",
+    "role": "owner",
+    "seq": 0,
+    "live": false
+   },
+   "expect": {
+    "role": "owner",
+    "ownerId": "{ann.id}",
+    "live": false,
+    "plan.schemaVersion": 1
+   },
+   "result": {
+    "ok": {
+     "role": "owner",
+     "seq": 0,
+     "design.id": "design-0001",
+     "plan.schemaVersion": 1
+    }
+   }
+  },
+  {
+   "id": "get-design-missing",
+   "client": "CloudApi.plan",
+   "args": [
+    "{ann.token}",
+    "{ann.id}",
+    "design-9999"
+   ],
+   "as": "ann",
+   "request": {
+    "method": "GET",
+    "path": "/api/library/designs/design-9999?owner={ann.id}",
+    "auth": "session"
+   },
+   "status": 404,
+   "shape": "$Error",
+   "example": {
+    "error": "Design not found."
+   },
+   "result": {
+    "refused": "Design not found."
+   }
+  },
+  {
+   "id": "get-design-bad-owner",
+   "client": "CloudApi.plan",
+   "args": [
+    "{ann.token}",
+    "not-an-id",
+    "design-0001"
+   ],
+   "as": "ann",
+   "request": {
+    "method": "GET",
+    "path": "/api/library/designs/design-0001?owner=not-an-id",
+    "auth": "session"
+   },
+   "status": 400,
+   "shape": "$Error",
+   "example": {
+    "error": "Bad owner id."
+   },
+   "result": {
+    "refused": "Bad owner id."
+   }
+  },
+  {
+   "id": "get-design-signed-out",
+   "client": "CloudApi.plan",
+   "args": [
+    "old",
+    "{ann.id}",
+    "design-0001"
+   ],
+   "as": null,
+   "request": {
+    "method": "GET",
+    "path": "/api/library/designs/design-0001?owner={ann.id}",
+    "auth": "session"
+   },
+   "status": 401,
+   "shape": "$Error",
+   "example": {
+    "error": "Sign in to sync your library."
+   },
+   "result": {
+    "refused": "Sign in to sync your library."
+   }
+  },
+  {
+   "id": "library-with-design",
+   "client": "CloudApi.library",
+   "args": [
+    "{ann.token}",
+    "{ann.id}"
+   ],
+   "as": "ann",
+   "request": {
+    "method": "GET",
+    "path": "/api/library",
+    "auth": "session"
+   },
+   "status": 200,
+   "shape": "$LibraryReply",
+   "example": {
+    "designs": [
+     {
+      "id": "design-0001",
+      "name": "Smelter 2",
+      "icon": null,
+      "folderId": "folder-0001",
+      "closed": false,
+      "favorite": true,
+      "order": 3,
+      "communityPlanId": null,
+      "createdAt": "2026-10-14T10:00:00.000Z",
+      "updatedAt": "2026-10-14T10:10:00.000Z",
+      "planUpdatedAt": "2026-10-14T10:10:00.000Z",
+      "deletedAt": null,
+      "members": []
+     }
+    ],
+    "folders": [],
+    "shared": []
+   },
+   "expect": {
+    "designs.0.id": "design-0001",
+    "designs.0.members": []
+   },
+   "result": {
+    "ok": {
+     "own.0.id": "design-0001",
+     "own.0.name": "Smelter 2",
+     "own.0.ownerId": "{ann.id}",
+     "own.0.shared": false
+    }
+   }
+  },
+  {
+   "id": "member-add",
+   "client": "CloudApi.addMember",
+   "args": [
+    "{ann.token}",
+    "design-0001",
+    "{bob.id}",
+    null
+   ],
+   "as": "ann",
+   "request": {
+    "method": "PUT",
+    "path": "/api/library/designs/design-0001/members/{bob.id}",
+    "auth": "session",
+    "body": {}
+   },
+   "status": 200,
+   "shape": "$MembersChangedReply",
+   "example": {
+    "members": [
+     {
+      "id": "{bob.id}",
+      "username": "bob"
+     }
+    ]
+   },
+   "expect": {
+    "members.0.username": "bob"
+   },
+   "result": {
+    "ok": {}
+   }
+  },
+  {
+   "id": "member-add-not-owner",
+   "client": "CloudApi.addMember",
+   "args": [
+    "{bob.token}",
+    "design-0001",
+    "{carol.id}",
+    "{ann.id}"
+   ],
+   "as": "bob",
+   "request": {
+    "method": "PUT",
+    "path": "/api/library/designs/design-0001/members/{carol.id}?owner={ann.id}",
+    "auth": "session",
+    "body": {}
+   },
+   "status": 403,
+   "shape": "$Error",
+   "example": {
+    "error": "Only the plan's owner can share it."
+   },
+   "result": {
+    "refused": "Only the plan's owner can share it."
+   }
+  },
+  {
+   "id": "member-add-self",
+   "client": "CloudApi.addMember",
+   "args": [
+    "{ann.token}",
+    "design-0001",
+    "{ann.id}",
+    null
+   ],
+   "as": "ann",
+   "request": {
+    "method": "PUT",
+    "path": "/api/library/designs/design-0001/members/{ann.id}",
+    "auth": "session",
+    "body": {}
+   },
+   "status": 400,
+   "shape": "$Error",
+   "example": {
+    "error": "The plan is already yours."
+   },
+   "result": {
+    "refused": "The plan is already yours."
+   }
+  },
+  {
+   "id": "member-add-unknown",
+   "client": "CloudApi.addMember",
+   "args": [
+    "{ann.token}",
+    "design-0001",
+    "00000000-0000-4000-8000-000000000000",
+    null
+   ],
+   "as": "ann",
+   "request": {
+    "method": "PUT",
+    "path": "/api/library/designs/design-0001/members/00000000-0000-4000-8000-000000000000",
+    "auth": "session",
+    "body": {}
+   },
+   "status": 404,
+   "shape": "$Error",
+   "example": {
+    "error": "No such account."
+   },
+   "result": {
+    "refused": "No such account."
+   }
+  },
+  {
+   "id": "member-add-rate-limited",
+   "client": "CloudApi.addMember",
+   "args": [
+    "{ann.token}",
+    "design-0001",
+    "{carol.id}",
+    null
+   ],
+   "as": "ann",
+   "request": {
+    "method": "PUT",
+    "path": "/api/library/designs/design-0001/members/{carol.id}",
+    "auth": "session",
+    "body": {}
+   },
+   "status": 429,
+   "shape": "$Error",
+   "example": {
+    "error": "Sharing too fast. Try again later."
+   },
+   "result": {
+    "refused": "Sharing too fast. Try again later."
+   },
+   "server": {
+    "skip": "300 changes an hour; the refusal has the same shape as every other"
+   }
+  },
+  {
+   "id": "members-owner",
+   "client": "CloudApi.sharing",
+   "args": [
+    "{ann.token}",
+    "design-0001",
+    null
+   ],
+   "as": "ann",
+   "request": {
+    "method": "GET",
+    "path": "/api/library/designs/design-0001/members",
+    "auth": "session"
+   },
+   "status": 200,
+   "shape": "$MembersReply",
+   "example": {
+    "ownerId": "{ann.id}",
+    "ownerName": "ann",
+    "role": "owner",
+    "members": [
+     {
+      "id": "{bob.id}",
+      "username": "bob"
+     }
+    ]
+   },
+   "expect": {
+    "role": "owner",
+    "ownerName": "ann",
+    "members.0.id": "{bob.id}"
+   },
+   "result": {
+    "ok": {
+     "ownerId": "{ann.id}",
+     "ownerName": "ann",
+     "role": "owner",
+     "members.0.username": "bob"
+    }
+   }
+  },
+  {
+   "id": "members-list",
+   "client": "CloudApi.members",
+   "args": [
+    "{ann.token}",
+    "design-0001",
+    null
+   ],
+   "as": "ann",
+   "request": {
+    "method": "GET",
+    "path": "/api/library/designs/design-0001/members",
+    "auth": "session"
+   },
+   "status": 200,
+   "shape": "$MembersReply",
+   "example": {
+    "ownerId": "{ann.id}",
+    "ownerName": "ann",
+    "role": "owner",
+    "members": [
+     {
+      "id": "{bob.id}",
+      "username": "bob"
+     }
+    ]
+   },
+   "expect": {
+    "members.0.id": "{bob.id}"
+   },
+   "result": {
+    "ok": {
+     "members.0.id": "{bob.id}",
+     "members.0.username": "bob"
+    }
+   }
+  },
+  {
+   "id": "members-editor",
+   "client": "CloudApi.sharing",
+   "args": [
+    "{bob.token}",
+    "design-0001",
+    "{ann.id}"
+   ],
+   "as": "bob",
+   "request": {
+    "method": "GET",
+    "path": "/api/library/designs/design-0001/members?owner={ann.id}",
+    "auth": "session"
+   },
+   "status": 200,
+   "shape": "$MembersReply",
+   "example": {
+    "ownerId": "{ann.id}",
+    "ownerName": "ann",
+    "role": "editor",
+    "members": [
+     {
+      "id": "{bob.id}",
+      "username": "bob"
+     }
+    ]
+   },
+   "expect": {
+    "role": "editor",
+    "ownerId": "{ann.id}"
+   },
+   "result": {
+    "ok": {
+     "role": "editor",
+     "ownerId": "{ann.id}"
+    }
+   }
+  },
+  {
+   "id": "members-outsider",
+   "client": "CloudApi.members",
+   "args": [
+    "{carol.token}",
+    "design-0001",
+    "{ann.id}"
+   ],
+   "as": "carol",
+   "request": {
+    "method": "GET",
+    "path": "/api/library/designs/design-0001/members?owner={ann.id}",
+    "auth": "session"
+   },
+   "status": 404,
+   "shape": "$Error",
+   "example": {
+    "error": "Design not found."
+   },
+   "result": {
+    "refused": "Design not found."
+   }
+  },
+  {
+   "id": "get-design-editor",
+   "client": "CloudApi.plan",
+   "args": [
+    "{bob.token}",
+    "{ann.id}",
+    "design-0001"
+   ],
+   "as": "bob",
+   "request": {
+    "method": "GET",
+    "path": "/api/library/designs/design-0001?owner={ann.id}",
+    "auth": "session"
+   },
+   "status": 200,
+   "shape": "$DesignReply",
+   "example": {
+    "design": {
+     "id": "design-0001",
+     "name": "Smelter 2",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "communityPlanId": null,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:10:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:10:00.000Z",
+     "deletedAt": null
+    },
+    "plan": {
+     "schemaVersion": 1,
+     "id": "plan-1",
+     "name": "Pins",
+     "nodes": [
+      {
+       "id": "n1"
+      }
+     ]
+    },
+    "ownerId": "{ann.id}",
+    "role": "editor",
+    "seq": 0,
+    "live": false
+   },
+   "expect": {
+    "role": "editor",
+    "ownerId": "{ann.id}"
+   },
+   "result": {
+    "ok": {
+     "role": "editor",
+     "seq": 0
+    }
+   }
+  },
+  {
+   "id": "get-design-outsider",
+   "client": "CloudApi.plan",
+   "args": [
+    "{carol.token}",
+    "{ann.id}",
+    "design-0001"
+   ],
+   "as": "carol",
+   "request": {
+    "method": "GET",
+    "path": "/api/library/designs/design-0001?owner={ann.id}",
+    "auth": "session"
+   },
+   "status": 404,
+   "shape": "$Error",
+   "example": {
+    "error": "Design not found."
+   },
+   "result": {
+    "refused": "Design not found."
+   }
+  },
+  {
+   "id": "library-shared",
+   "client": "CloudApi.library",
+   "args": [
+    "{bob.token}",
+    "{bob.id}"
+   ],
+   "as": "bob",
+   "request": {
+    "method": "GET",
+    "path": "/api/library",
+    "auth": "session"
+   },
+   "status": 200,
+   "shape": "$LibraryReply",
+   "example": {
+    "designs": [],
+    "folders": [],
+    "shared": [
+     {
+      "ownerId": "{ann.id}",
+      "ownerName": "ann",
+      "id": "design-0001",
+      "name": "Smelter 2",
+      "icon": null,
+      "updatedAt": "2026-10-14T10:10:00.000Z",
+      "planUpdatedAt": "2026-10-14T10:10:00.000Z",
+      "members": [
+       {
+        "id": "{bob.id}",
+        "username": "bob"
+       }
+      ]
+     }
+    ]
+   },
+   "expect": {
+    "shared.0.ownerId": "{ann.id}",
+    "shared.0.id": "design-0001"
+   },
+   "result": {
+    "ok": {
+     "shared.0.ownerId": "{ann.id}",
+     "shared.0.ownerName": "ann",
+     "shared.0.id": "design-0001",
+     "shared.0.shared": true
+    }
+   }
+  },
+  {
+   "id": "put-as-member",
+   "client": "CloudApi.put",
+   "args": [
+    "{bob.token}",
+    "design-0001",
+    "{ann.id}",
+    {
+     "name": "Smelter 3",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:20:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:20:00.000Z",
+     "plan": "{plan}"
+    }
+   ],
+   "as": "bob",
+   "request": {
+    "method": "PUT",
+    "path": "/api/library/designs/design-0001?owner={ann.id}",
+    "auth": "session",
+    "body": {
+     "name": "Smelter 3",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "communityPlanId": null,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:20:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:20:00.000Z",
+     "plan": "{plan}"
+    },
+    "bodyShape": {
+     "name": "string",
+     "icon": "object|null",
+     "folderId": "string|null",
+     "closed": "boolean",
+     "favorite": "boolean",
+     "order": "integer|null",
+     "communityPlanId": "null",
+     "createdAt": "string",
+     "updatedAt": "string",
+     "planUpdatedAt": "string",
+     "plan?": "object"
+    }
+   },
+   "status": 200,
+   "shape": "$PutReply",
+   "example": {
+    "design": {
+     "id": "design-0001",
+     "name": "Smelter 3",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "communityPlanId": null,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:20:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:20:00.000Z",
+     "deletedAt": null
+    },
+    "behind": false
+   },
+   "expect": {
+    "behind": false,
+    "design.name": "Smelter 3"
+   },
+   "result": {
+    "ok": {
+     "behind": false,
+     "live": false,
+     "design.name": "Smelter 3"
+    }
+   },
+   "note": "A member's save changes the plan and its name; the folder, order and star stay the owner's, so the answer's other fields may differ from what was sent."
+  },
+  {
+   "id": "put-while-live",
+   "client": "CloudApi.put",
+   "args": [
+    "{ann.token}",
+    "design-0001",
+    null,
+    {
+     "name": "Smelter 4",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:30:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:30:00.000Z",
+     "plan": "{plan}"
+    }
+   ],
+   "as": "ann",
+   "request": {
+    "method": "PUT",
+    "path": "/api/library/designs/design-0001",
+    "auth": "session",
+    "body": {
+     "name": "Smelter 4",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "communityPlanId": null,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:30:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:30:00.000Z",
+     "plan": "{plan}"
+    },
+    "bodyShape": {
+     "name": "string",
+     "icon": "object|null",
+     "folderId": "string|null",
+     "closed": "boolean",
+     "favorite": "boolean",
+     "order": "integer|null",
+     "communityPlanId": "null",
+     "createdAt": "string",
+     "updatedAt": "string",
+     "planUpdatedAt": "string",
+     "plan?": "object"
+    }
+   },
+   "status": 409,
+   "shape": "$LiveRefusal",
+   "example": {
+    "error": "This plan is open live. Its edits go through the live connection.",
+    "live": true
+   },
+   "result": {
+    "ok": {
+     "live": true,
+     "behind": false
+    }
+   },
+   "before": [
+    "holdLease:design-0001"
+   ]
+  },
+  {
+   "id": "put-conflict-not-live",
+   "client": "CloudApi.put",
+   "args": [
+    "{ann.token}",
+    "design-0003",
+    null,
+    {
+     "name": "Third",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:30:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:30:00.000Z",
+     "plan": "{plan}"
+    }
+   ],
+   "as": "ann",
+   "request": {
+    "method": "PUT",
+    "path": "/api/library/designs/design-0003",
+    "auth": "session",
+    "body": {
+     "name": "Third",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "communityPlanId": null,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:30:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:30:00.000Z",
+     "plan": "{plan}"
+    }
+   },
+   "status": 409,
+   "shape": "$Error",
+   "example": {
+    "error": "Your plans are full (500 designs). Delete some first."
+   },
+   "result": {
+    "refused": "Your plans are full (500 designs). Delete some first."
+   },
+   "server": {
+    "skip": "needs 500 designs; a 409 without live:true is a refusal, not a live lease"
+   }
+  },
+  {
+   "id": "put-too-big",
+   "client": "CloudApi.put",
+   "args": [
+    "{ann.token}",
+    "design-0001",
+    null,
+    {
+     "name": "Smelter 4",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:30:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:30:00.000Z",
+     "plan": "{plan}"
+    }
+   ],
+   "as": "ann",
+   "request": {
+    "method": "PUT",
+    "path": "/api/library/designs/design-0001",
+    "auth": "session",
+    "body": {
+     "name": "Smelter 4",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "communityPlanId": null,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:30:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:30:00.000Z",
+     "plan": "{plan}"
+    }
+   },
+   "status": 413,
+   "shape": "$Error",
+   "example": {
+    "error": "This design is too large to sync."
+   },
+   "result": {
+    "refused": "This design is too large to sync."
+   },
+   "server": {
+    "skip": "needs a body over the upload limit"
+   }
+  },
+  {
+   "id": "member-leave",
+   "client": "CloudApi.removeMember",
+   "args": [
+    "{bob.token}",
+    "design-0001",
+    "{bob.id}",
+    "{ann.id}"
+   ],
+   "as": "bob",
+   "request": {
+    "method": "DELETE",
+    "path": "/api/library/designs/design-0001/members/{bob.id}?owner={ann.id}",
+    "auth": "session"
+   },
+   "status": 200,
+   "shape": "$MembersChangedReply",
+   "example": {
+    "members": []
+   },
+   "expect": {
+    "members": []
+   },
+   "result": {
+    "ok": {}
+   }
+  },
+  {
+   "id": "member-remove-by-other",
+   "client": "CloudApi.removeMember",
+   "args": [
+    "{carol.token}",
+    "design-0001",
+    "{bob.id}",
+    "{ann.id}"
+   ],
+   "as": "carol",
+   "request": {
+    "method": "DELETE",
+    "path": "/api/library/designs/design-0001/members/{bob.id}?owner={ann.id}",
+    "auth": "session"
+   },
+   "status": 403,
+   "shape": "$Error",
+   "example": {
+    "error": "Only the plan's owner can change who it is shared with."
+   },
+   "result": {
+    "refused": "Only the plan's owner can change who it is shared with."
+   }
+  },
+  {
+   "id": "member-re-add",
+   "client": "CloudApi.addMember",
+   "args": [
+    "{ann.token}",
+    "design-0001",
+    "{bob.id}",
+    null
+   ],
+   "as": "ann",
+   "request": {
+    "method": "PUT",
+    "path": "/api/library/designs/design-0001/members/{bob.id}",
+    "auth": "session",
+    "body": {}
+   },
+   "status": 200,
+   "shape": "$MembersChangedReply",
+   "example": {
+    "members": [
+     {
+      "id": "{bob.id}",
+      "username": "bob"
+     }
+    ]
+   },
+   "expect": {
+    "members.0.id": "{bob.id}"
+   },
+   "result": {
+    "ok": {}
+   }
+  },
+  {
+   "id": "member-remove-by-owner",
+   "client": "CloudApi.removeMember",
+   "args": [
+    "{ann.token}",
+    "design-0001",
+    "{bob.id}",
+    null
+   ],
+   "as": "ann",
+   "request": {
+    "method": "DELETE",
+    "path": "/api/library/designs/design-0001/members/{bob.id}",
+    "auth": "session"
+   },
+   "status": 200,
+   "shape": "$MembersChangedReply",
+   "example": {
+    "members": []
+   },
+   "expect": {
+    "members": []
+   },
+   "result": {
+    "ok": {}
+   }
+  },
+  {
+   "id": "search-ok",
+   "client": "CloudApi.search",
+   "args": [
+    "{ann.token}",
+    "bo"
+   ],
+   "as": "ann",
+   "request": {
+    "method": "GET",
+    "path": "/api/accounts/search?q=bo",
+    "auth": "session"
+   },
+   "status": 200,
+   "shape": "$AccountsReply",
+   "example": {
+    "accounts": [
+     {
+      "id": "{bob.id}",
+      "username": "bob"
+     }
+    ]
+   },
+   "expect": {
+    "accounts.0.username": "bob"
+   },
+   "result": {
+    "ok": {
+     "0.id": "{bob.id}",
+     "0.username": "bob"
+    }
+   }
+  },
+  {
+   "id": "search-signed-out",
+   "client": "CloudApi.search",
+   "args": [
+    "old",
+    "bo"
+   ],
+   "as": null,
+   "request": {
+    "method": "GET",
+    "path": "/api/accounts/search?q=bo",
+    "auth": "session"
+   },
+   "status": 401,
+   "shape": "$Error",
+   "example": {
+    "error": "Sign in to find accounts."
+   },
+   "result": {
+    "refused": "Sign in to find accounts."
+   }
+  },
+  {
+   "id": "search-rate-limited",
+   "client": "CloudApi.search",
+   "args": [
+    "{sam.token}",
+    "bo"
+   ],
+   "as": "sam",
+   "request": {
+    "method": "GET",
+    "path": "/api/accounts/search?q=bo",
+    "auth": "session"
+   },
+   "status": 429,
+   "shape": "$Error",
+   "example": {
+    "error": "Searching too fast. Try again in a moment."
+   },
+   "result": {
+    "refused": "Searching too fast. Try again in a moment."
+   },
+   "prime": 60
+  },
+  {
+   "id": "delete-design",
+   "client": "CloudApi.delete",
+   "args": [
+    "{ann.token}",
+    "design-0001"
+   ],
+   "as": "ann",
+   "request": {
+    "method": "DELETE",
+    "path": "/api/library/designs/design-0001",
+    "auth": "session"
+   },
+   "status": 200,
+   "shape": "$DeleteReply",
+   "example": {
+    "ok": true,
+    "deletedAt": "2026-10-14T10:40:00.000Z"
+   },
+   "expect": {
+    "ok": true
+   },
+   "result": {
+    "ok": {}
+   }
+  },
+  {
+   "id": "delete-design-signed-out",
+   "client": "CloudApi.delete",
+   "args": [
+    "old",
+    "design-0001"
+   ],
+   "as": null,
+   "request": {
+    "method": "DELETE",
+    "path": "/api/library/designs/design-0001",
+    "auth": "session"
+   },
+   "status": 401,
+   "shape": "$Error",
+   "example": {
+    "error": "Sign in to sync your library."
+   },
+   "result": {
+    "refused": "Sign in to sync your library."
+   }
+  },
+  {
+   "id": "get-design-tombstone",
+   "client": "CloudApi.plan",
+   "args": [
+    "{ann.token}",
+    "{ann.id}",
+    "design-0001"
+   ],
+   "as": "ann",
+   "request": {
+    "method": "GET",
+    "path": "/api/library/designs/design-0001?owner={ann.id}",
+    "auth": "session"
+   },
+   "status": 200,
+   "shape": "$DesignReply",
+   "example": {
+    "design": {
+     "id": "design-0001",
+     "name": "Smelter 3",
+     "icon": null,
+     "folderId": "folder-0001",
+     "closed": false,
+     "favorite": true,
+     "order": 3,
+     "communityPlanId": null,
+     "createdAt": "2026-10-14T10:00:00.000Z",
+     "updatedAt": "2026-10-14T10:20:00.000Z",
+     "planUpdatedAt": "2026-10-14T10:20:00.000Z",
+     "deletedAt": "2026-10-14T10:40:00.000Z"
+    },
+    "plan": {},
+    "ownerId": "{ann.id}",
+    "role": "owner",
+    "seq": 0,
+    "live": false
+   },
+   "expect": {
+    "role": "owner"
+   },
+   "result": {
+    "ok": {
+     "design.deletedAt": "2026-10-14T10:40:00.000Z"
+    }
+   }
+  },
+  {
+   "id": "community-post",
+   "client": "CommunityApi.post",
+   "args": [
+    "{ann.token}",
+    {
+     "name": "Steel line",
+     "description": "Makes steel.",
+     "icon": null,
+     "gameVersion": "2.9.0",
+     "deviceId": "gtnhplanner-11111111-1111-4111-8111-111111111111",
+     "plan": "{plan}"
+    }
+   ],
+   "as": "ann",
+   "request": {
+    "method": "POST",
+    "path": "/api/community/plans",
+    "auth": "session",
+    "body": {
+     "name": "Steel line",
+     "description": "Makes steel.",
+     "gameVersion": "2.9.0",
+     "datasetVersionId": "",
+     "deviceId": "gtnhplanner-11111111-1111-4111-8111-111111111111",
+     "plan": "{plan}"
+    },
+    "bodyShape": {
+     "name": "string",
+     "description": "string",
+     "gameVersion": "string",
+     "datasetVersionId": "string",
+     "deviceId": "string",
+     "icon?": "object",
+     "plan": "object"
+    },
+    "bodyExpect": {
+     "name": "Steel line",
+     "plan.schemaVersion": 1
+    }
+   },
+   "status": 201,
+   "shape": "$CommunityPostedReply",
+   "example": {
+    "id": "22222222-2222-4222-8222-222222222222"
+   },
+   "result": {
+    "ok": {
+     "id": "22222222-2222-4222-8222-222222222222"
+    }
+   },
+   "capture": {
+    "post.id": "id"
+   }
+  },
+  {
+   "id": "community-post-signed-out",
+   "client": "CommunityApi.post",
+   "args": [
+    "old",
+    {
+     "name": "Steel line",
+     "description": "Makes steel.",
+     "icon": null,
+     "gameVersion": "2.9.0",
+     "deviceId": "gtnhplanner-11111111-1111-4111-8111-111111111111",
+     "plan": "{plan}"
+    }
+   ],
+   "as": null,
+   "request": {
+    "method": "POST",
+    "path": "/api/community/plans",
+    "auth": "session",
+    "body": {
+     "name": "Steel line",
+     "description": "Makes steel.",
+     "gameVersion": "2.9.0",
+     "datasetVersionId": "",
+     "deviceId": "gtnhplanner-11111111-1111-4111-8111-111111111111",
+     "plan": "{plan}"
+    }
+   },
+   "status": 401,
+   "shape": "$Error",
+   "example": {
+    "error": "Sign in to share plans to the community."
+   },
+   "result": {
+    "refused": "Sign in to share plans to the community."
+   }
+  },
+  {
+   "id": "community-post-no-name",
+   "client": "CommunityApi.post",
+   "args": [
+    "{ann.token}",
+    {
+     "name": "",
+     "description": "Makes steel.",
+     "icon": null,
+     "gameVersion": "2.9.0",
+     "deviceId": "gtnhplanner-11111111-1111-4111-8111-111111111111",
+     "plan": "{plan}"
+    }
+   ],
+   "as": "ann",
+   "request": {
+    "method": "POST",
+    "path": "/api/community/plans",
+    "auth": "session",
+    "body": {
+     "name": "",
+     "description": "Makes steel.",
+     "gameVersion": "2.9.0",
+     "datasetVersionId": "",
+     "deviceId": "gtnhplanner-11111111-1111-4111-8111-111111111111",
+     "plan": "{plan}"
+    }
+   },
+   "status": 400,
+   "shape": "$Error",
+   "example": {
+    "error": "Plan name is required (max 80 chars)."
+   },
+   "result": {
+    "refused": "Plan name is required (max 80 chars)."
+   }
+  },
+  {
+   "id": "community-post-empty-plan",
+   "client": "CommunityApi.post",
+   "args": [
+    "{ann.token}",
+    {
+     "name": "Steel line",
+     "description": "Makes steel.",
+     "icon": null,
+     "gameVersion": "2.9.0",
+     "deviceId": "gtnhplanner-11111111-1111-4111-8111-111111111111",
+     "plan": "{emptyPlan}"
+    }
+   ],
+   "as": "ann",
+   "request": {
+    "method": "POST",
+    "path": "/api/community/plans",
+    "auth": "session",
+    "body": {
+     "name": "Steel line",
+     "description": "Makes steel.",
+     "gameVersion": "2.9.0",
+     "datasetVersionId": "",
+     "deviceId": "gtnhplanner-11111111-1111-4111-8111-111111111111",
+     "plan": "{emptyPlan}"
+    }
+   },
+   "status": 400,
+   "shape": "$Error",
+   "example": {
+    "error": "Refusing to share an empty plan."
+   },
+   "result": {
+    "refused": "Refusing to share an empty plan."
+   }
+  },
+  {
+   "id": "community-list",
+   "client": "CommunityApi.list",
+   "args": [
+    {
+     "search": "",
+     "sort": "new",
+     "maxTierIndex": -1,
+     "gameVersion": "",
+     "makes": [],
+     "mine": false
+    },
+    1,
+    20,
+    null
+   ],
+   "as": null,
+   "request": {
+    "method": "GET",
+    "path": "/api/community/plans?sort=new&page=1&pageSize=20",
+    "auth": "none"
+   },
+   "status": 200,
+   "shape": "$CommunityListReply",
+   "example": {
+    "plans": [
+     {
+      "id": "22222222-2222-4222-8222-222222222222",
+      "name": "Steel line",
+      "description": "Makes steel.",
+      "authorName": "ann",
+      "gameVersion": "2.9.0",
+      "datasetVersionId": "",
+      "tags": [],
+      "isPublic": true,
+      "needs": [],
+      "outputs": [],
+      "totalEuT": 0,
+      "machineCount": 1,
+      "nodeCount": 1,
+      "storageCount": 0,
+      "edgeCount": 0,
+      "highestTierIndex": 0,
+      "upvotes": 0,
+      "downvotes": 0,
+      "score": 0,
+      "downloads": 0,
+      "views": 0,
+      "createdAt": "2026-10-14T10:50:00.000Z",
+      "commentCount": 0,
+      "isMine": false
+     }
+    ],
+    "total": 1,
+    "page": 1,
+    "pageSize": 20,
+    "gameVersions": [
+     "2.9.0"
+    ]
+   },
+   "expect": {
+    "plans.0.name": "Steel line",
+    "total": 1,
+    "page": 1
+   },
+   "result": {
+    "ok": {
+     "total": 1,
+     "page": 1,
+     "setups.0.id": "22222222-2222-4222-8222-222222222222",
+     "setups.0.name": "Steel line",
+     "setups.0.authorName": "ann",
+     "setups.0.mine": false,
+     "gameVersions.0": "2.9.0"
+    }
+   }
+  },
+  {
+   "id": "community-list-filtered",
+   "client": "CommunityApi.list",
+   "args": [
+    {
+     "search": "steel",
+     "sort": "top",
+     "maxTierIndex": 3,
+     "gameVersion": "2.9.0",
+     "makes": [
+      "item:a",
+      "item:b"
+     ],
+     "mine": false
+    },
+    2,
+    10,
+    null
+   ],
+   "as": null,
+   "request": {
+    "method": "GET",
+    "path": "/api/community/plans?sort=top&page=2&pageSize=10&search=steel&maxTierIndex=3&gameVersion=2.9.0&makes=item%3Aa%2Citem%3Ab",
+    "auth": "none"
+   },
+   "status": 200,
+   "shape": "$CommunityListReply",
+   "example": {
+    "plans": [],
+    "total": 0,
+    "page": 2,
+    "pageSize": 10,
+    "gameVersions": []
+   },
+   "expect": {
+    "plans": [],
+    "page": 2
+   },
+   "result": {
+    "ok": {
+     "total": 0,
+     "page": 2
+    }
+   }
+  },
+  {
+   "id": "community-list-mine",
+   "client": "CommunityApi.list",
+   "args": [
+    {
+     "search": "",
+     "sort": "new",
+     "maxTierIndex": -1,
+     "gameVersion": "",
+     "makes": [],
+     "mine": true
+    },
+    1,
+    20,
+    "{ann.id}.4102444800000.sig"
+   ],
+   "as": "ann",
+   "request": {
+    "method": "GET",
+    "path": "/api/community/plans?sort=new&page=1&pageSize=20&mine=1",
+    "auth": "session"
+   },
+   "status": 200,
+   "shape": "$CommunityListReply",
+   "example": {
+    "plans": [],
+    "total": 0,
+    "page": 1,
+    "pageSize": 20,
+    "gameVersions": []
+   },
+   "expect": {
+    "plans": []
+   },
+   "serverExpect": {
+    "plans.0.isMine": true,
+    "plans.0.name": "Steel line"
+   },
+   "result": {
+    "ok": {
+     "total": 0
+    }
+   },
+   "note": "The example is empty so the Java run needs no setup; on the server the account's own post is listed and isMine is true on it."
+  },
+  {
+   "id": "community-list-mine-signed-out",
+   "client": "CommunityApi.list",
+   "args": [
+    {
+     "search": "",
+     "sort": "new",
+     "maxTierIndex": -1,
+     "gameVersion": "",
+     "makes": [],
+     "mine": true
+    },
+    1,
+    20,
+    "old"
+   ],
+   "as": null,
+   "request": {
+    "method": "GET",
+    "path": "/api/community/plans?sort=new&page=1&pageSize=20&mine=1",
+    "auth": "session"
+   },
+   "status": 200,
+   "shape": "$CommunityListReply",
+   "example": {
+    "plans": [],
+    "total": 0,
+    "page": 1,
+    "pageSize": 20,
+    "gameVersions": []
+   },
+   "expect": {
+    "plans": [],
+    "total": 0
+   },
+   "result": {
+    "ok": {
+     "total": 0
+    }
+   }
+  },
+  {
+   "id": "community-download",
+   "client": "CommunityApi.download",
+   "args": [
+    "{post.id}"
+   ],
+   "as": null,
+   "request": {
+    "method": "POST",
+    "path": "/api/community/plans/{post.id}/download",
+    "auth": "none"
+   },
+   "status": 200,
+   "shape": "$CommunityDownloadReply",
+   "example": {
+    "name": "Steel line",
+    "plan": {
+     "schemaVersion": 1,
+     "id": "plan-1",
+     "name": "Pins",
+     "nodes": [
+      {
+       "id": "n1"
+      }
+     ]
+    }
+   },
+   "expect": {
+    "name": "Steel line",
+    "plan.schemaVersion": 1
+   },
+   "result": {
+    "ok": {
+     "name": "Steel line"
+    }
+   },
+   "note": "The mod sends an empty body on this POST (Content-Length 0)."
+  },
+  {
+   "id": "community-download-missing",
+   "client": "CommunityApi.download",
+   "args": [
+    "33333333-3333-4333-8333-333333333333"
+   ],
+   "as": null,
+   "request": {
+    "method": "POST",
+    "path": "/api/community/plans/33333333-3333-4333-8333-333333333333/download",
+    "auth": "none"
+   },
+   "status": 404,
+   "shape": "$Error",
+   "example": {
+    "error": "Plan not found."
+   },
+   "result": {
+    "refused": "Plan not found."
+   }
+  },
+  {
+   "id": "community-update",
+   "client": "CommunityApi.update",
+   "args": [
+    "{ann.token}",
+    "{post.id}",
+    {
+     "name": "Steel line 2"
+    }
+   ],
+   "as": "ann",
+   "request": {
+    "method": "PUT",
+    "path": "/api/community/plans/{post.id}",
+    "auth": "session",
+    "body": {
+     "name": "Steel line 2"
+    },
+    "bodyShape": {
+     "name": "string"
+    },
+    "bodyExpect": {
+     "name": "Steel line 2"
+    }
+   },
+   "status": 200,
+   "shape": "$CommunityPostedReply",
+   "example": {
+    "id": "{post.id}"
+   },
+   "expect": {
+    "id": "{post.id}"
+   },
+   "result": {
+    "ok": {}
+   }
+  },
+  {
+   "id": "community-update-not-owner",
+   "client": "CommunityApi.update",
+   "args": [
+    "{bob.token}",
+    "{post.id}",
+    {
+     "name": "Mine now"
+    }
+   ],
+   "as": "bob",
+   "request": {
+    "method": "PUT",
+    "path": "/api/community/plans/{post.id}",
+    "auth": "session",
+    "body": {
+     "name": "Mine now"
+    }
+   },
+   "status": 403,
+   "shape": "$Error",
+   "example": {
+    "error": "You don't own this post."
+   },
+   "result": {
+    "refused": "You don't own this post."
+   }
+  },
+  {
+   "id": "community-update-signed-out",
+   "client": "CommunityApi.update",
+   "args": [
+    "old",
+    "{post.id}",
+    {
+     "name": "x"
+    }
+   ],
+   "as": null,
+   "request": {
+    "method": "PUT",
+    "path": "/api/community/plans/{post.id}",
+    "auth": "session",
+    "body": {
+     "name": "x"
+    }
+   },
+   "status": 401,
+   "shape": "$Error",
+   "example": {
+    "error": "Sign in to update your post."
+   },
+   "result": {
+    "refused": "Sign in to update your post."
+   }
+  },
+  {
+   "id": "community-delete-not-owner",
+   "client": "CommunityApi.delete",
+   "args": [
+    "{bob.token}",
+    "{post.id}"
+   ],
+   "as": "bob",
+   "request": {
+    "method": "DELETE",
+    "path": "/api/community/plans/{post.id}",
+    "auth": "session"
+   },
+   "status": 403,
+   "shape": "$Error",
+   "example": {
+    "error": "You don't own this post."
+   },
+   "result": {
+    "refused": "You don't own this post."
+   }
+  },
+  {
+   "id": "community-delete",
+   "client": "CommunityApi.delete",
+   "args": [
+    "{ann.token}",
+    "{post.id}"
+   ],
+   "as": "ann",
+   "request": {
+    "method": "DELETE",
+    "path": "/api/community/plans/{post.id}",
+    "auth": "session"
+   },
+   "status": 200,
+   "shape": "$Ok",
+   "example": {
+    "ok": true
+   },
+   "expect": {
+    "ok": true
+   },
+   "result": {
+    "ok": {}
+   }
+  },
+  {
+   "id": "community-delete-gone",
+   "client": "CommunityApi.delete",
+   "args": [
+    "{ann.token}",
+    "{post.id}"
+   ],
+   "as": "ann",
+   "request": {
+    "method": "DELETE",
+    "path": "/api/community/plans/{post.id}",
+    "auth": "session"
+   },
+   "status": 404,
+   "shape": "$Error",
+   "example": {
+    "error": "Plan not found."
+   },
+   "result": {
+    "refused": "Plan not found."
+   },
+   "note": "CommunityApi.Refused.postGone() is true for 404 and 403."
+  },
+  {
+   "id": "report-ok",
+   "client": "CommunityApi.report",
+   "args": [
+    {
+     "kind": "bug",
+     "title": "Board will not open",
+     "description": "It stays black.",
+     "deviceId": "gtnhplanner-11111111-1111-4111-8111-111111111111",
+     "versions": {
+      "mod": "0.9.0",
+      "pack": "2.9.0",
+      "java": "17.0.9",
+      "os": "Linux"
+     },
+     "plans": []
+    }
+   ],
+   "as": null,
+   "request": {
+    "method": "POST",
+    "path": "/api/feedback",
+    "auth": "none",
+    "body": {
+     "kind": "bug",
+     "title": "Board will not open",
+     "description": "It stays black.",
+     "deviceId": "gtnhplanner-11111111-1111-4111-8111-111111111111",
+     "versions": {
+      "mod": "0.9.0",
+      "pack": "2.9.0",
+      "java": "17.0.9",
+      "os": "Linux"
+     },
+     "plans": []
+    },
+    "bodyShape": {
+     "kind": "string",
+     "mood?": "string",
+     "title": "string",
+     "description": "string",
+     "deviceId": "string",
+     "versions": {
+      "mod": "string",
+      "pack": "string",
+      "java": "string",
+      "os": "string"
+     },
+     "plans": [
+      {
+       "name": "string",
+       "plan": "object"
+      }
+     ],
+     "crash?": "any",
+     "log?": "any",
+     "picture?": "string"
+    },
+    "bodyExpect": {
+     "kind": "bug",
+     "versions.mod": "0.9.0"
+    }
+   },
+   "status": 201,
+   "shape": "$FeedbackReply",
+   "example": {
+    "number": 42,
+    "url": "https://example.invalid/issues/42"
+   },
+   "result": {
+    "ok": {
+     "number": 42,
+     "url": "https://example.invalid/issues/42"
+    }
+   },
+   "server": {
+    "feedback": true
+   }
+  },
+  {
+   "id": "report-unreadable",
+   "client": "CommunityApi.report",
+   "args": [
+    {
+     "kind": "bug",
+     "title": "Board will not open",
+     "description": "It stays black.",
+     "deviceId": "x",
+     "versions": {
+      "mod": "0.9.0",
+      "pack": "2.9.0",
+      "java": "17.0.9",
+      "os": "Linux"
+     },
+     "plans": []
+    }
+   ],
+   "as": null,
+   "request": {
+    "method": "POST",
+    "path": "/api/feedback",
+    "auth": "none",
+    "body": {
+     "kind": "bug",
+     "title": "Board will not open",
+     "description": "It stays black.",
+     "deviceId": "x",
+     "versions": {
+      "mod": "0.9.0",
+      "pack": "2.9.0",
+      "java": "17.0.9",
+      "os": "Linux"
+     },
+     "plans": []
+    }
+   },
+   "status": 400,
+   "shape": "$Error",
+   "example": {
+    "error": "That report could not be read."
+   },
+   "result": {
+    "refused": "That report could not be read."
+   },
+   "server": {
+    "feedback": true
+   }
+  },
+  {
+   "id": "report-not-set-up",
+   "client": "CommunityApi.report",
+   "args": [
+    {
+     "kind": "bug",
+     "title": "Board will not open",
+     "description": "It stays black.",
+     "deviceId": "gtnhplanner-11111111-1111-4111-8111-111111111111",
+     "versions": {
+      "mod": "0.9.0",
+      "pack": "2.9.0",
+      "java": "17.0.9",
+      "os": "Linux"
+     },
+     "plans": []
+    }
+   ],
+   "as": null,
+   "request": {
+    "method": "POST",
+    "path": "/api/feedback",
+    "auth": "none",
+    "body": {
+     "kind": "bug",
+     "title": "Board will not open",
+     "description": "It stays black.",
+     "deviceId": "gtnhplanner-11111111-1111-4111-8111-111111111111",
+     "versions": {
+      "mod": "0.9.0",
+      "pack": "2.9.0",
+      "java": "17.0.9",
+      "os": "Linux"
+     },
+     "plans": []
+    }
+   },
+   "status": 503,
+   "shape": "$Error",
+   "example": {
+    "error": "Reports can't be sent yet."
+   },
+   "result": {
+    "refused": "Reports can't be sent yet."
+   },
+   "server": {
+    "skip": "needs a server with no GitHub token"
+   }
+  },
+  {
+   "id": "report-no-link",
+   "client": "CommunityApi.report",
+   "args": [
+    {
+     "kind": "bug",
+     "title": "Board will not open",
+     "description": "It stays black.",
+     "deviceId": "gtnhplanner-11111111-1111-4111-8111-111111111111",
+     "versions": {
+      "mod": "0.9.0",
+      "pack": "2.9.0",
+      "java": "17.0.9",
+      "os": "Linux"
+     },
+     "plans": []
+    }
+   ],
+   "as": null,
+   "request": {
+    "method": "POST",
+    "path": "/api/feedback",
+    "auth": "none",
+    "body": {
+     "kind": "bug",
+     "title": "Board will not open",
+     "description": "It stays black.",
+     "deviceId": "gtnhplanner-11111111-1111-4111-8111-111111111111",
+     "versions": {
+      "mod": "0.9.0",
+      "pack": "2.9.0",
+      "java": "17.0.9",
+      "os": "Linux"
+     },
+     "plans": []
+    }
+   },
+   "status": 201,
+   "shape": "$FeedbackReply",
+   "example": {
+    "number": 7,
+    "url": ""
+   },
+   "result": {
+    "ioerror": true
+   },
+   "server": {
+    "skip": "the server always sends a link; the mod treats a missing one as a failure"
+   }
+  },
+  {
+   "id": "datasets-manifest",
+   "client": "CommunityApi.icon",
+   "args": [
+    "item",
+    "item:minecraft:iron_ingot",
+    "Iron Ingot",
+    "2.9.0"
+   ],
+   "as": null,
+   "request": {
+    "method": "GET",
+    "path": "/datasets/gtnh/datasets.manifest.json",
+    "auth": "none"
+   },
+   "status": 200,
+   "shape": "$DatasetManifest",
+   "example": {
+    "versions": [
+     {
+      "id": "gtnh-2.9.0",
+      "gtnhVersion": "2.9.0"
+     }
+    ]
+   },
+   "expect": {
+    "versions.0.gtnhVersion": "2.9.0"
+   },
+   "serverExpect": {
+    "versions.0.gtnhVersion": "2.9.0"
+   },
+   "result": {
+    "ok": {
+     "kind": "item",
+     "resourceId": "item:minecraft:iron_ingot",
+     "displayName": "Iron Ingot",
+     "iconPath": "icons/iron.png"
+    }
+   },
+   "server": {
+    "dataset": true
+   },
+   "note": "A static file under public/, not a route. One call of the client makes both requests, this one then the next; the call's result is on this step. The server run reads the file from its own dataset folder and uses its first version with a gtnhVersion of 2.9.0 as {dataset.id}."
+  },
+  {
+   "id": "datasets-resources",
+   "client": "CommunityApi.icon",
+   "args": [
+    "item",
+    "item:minecraft:iron_ingot",
+    "Iron Ingot",
+    "2.9.0"
+   ],
+   "as": null,
+   "request": {
+    "method": "GET",
+    "path": "/api/datasets/{dataset.id}/resources?kind=item&limit=40&query=Iron+Ingot",
+    "auth": "none"
+   },
+   "status": 200,
+   "shape": "$DatasetResources",
+   "example": {
+    "resources": [
+     {
+      "id": "item:minecraft:iron_ingot",
+      "iconPath": "icons/iron.png"
+     }
+    ]
+   },
+   "expect": {
+    "resources.0.id": "item:minecraft:iron_ingot"
+   },
+   "serverExpect": {},
+   "joins": "datasets-manifest",
+   "result": {
+    "ok": {}
+   },
+   "server": {
+    "dataset": true
+   },
+   "note": "The server run checks status and shape only: its dataset is its own pack's."
+  },
+  {
+   "id": "live-health",
+   "client": "CloudApi.hasLive",
+   "args": [
+    "{ann.token}"
+   ],
+   "as": "ann",
+   "request": {
+    "method": "GET",
+    "path": "/live/health",
+    "auth": "session"
+   },
+   "status": 200,
+   "shape": "$LiveHealth",
+   "example": {
+    "ok": true,
+    "rooms": 0,
+    "connections": 0,
+    "flushBacklog": 0
+   },
+   "expect": {
+    "ok": true
+   },
+   "result": {
+    "ok": {
+     "live": true
+    }
+   }
+  },
+  {
+   "id": "live-health-missing",
+   "client": "CloudApi.hasLive",
+   "args": [
+    "{ann.id}.4102444800000.sig"
+   ],
+   "as": null,
+   "request": {
+    "method": "GET",
+    "path": "/live/health",
+    "auth": "session"
+   },
+   "status": 404,
+   "shape": "$Error",
+   "example": {
+    "error": "Not found."
+   },
+   "result": {
+    "ok": {
+     "live": false
+    }
+   },
+   "server": {
+    "skip": "answered by a site that has no live service (or a proxy); the mod reads 404, 502 and 503 as no service"
+   }
+  },
+  {
+   "id": "live-health-bad-gateway",
+   "client": "CloudApi.hasLive",
+   "args": [
+    "{ann.id}.4102444800000.sig"
+   ],
+   "as": null,
+   "request": {
+    "method": "GET",
+    "path": "/live/health",
+    "auth": "session"
+   },
+   "status": 502,
+   "shape": "$Error",
+   "example": {
+    "error": "Bad gateway."
+   },
+   "result": {
+    "ok": {
+     "live": false
+    }
+   },
+   "server": {
+    "skip": "a proxy's answer"
+   }
+  },
+  {
+   "id": "live-health-unavailable",
+   "client": "CloudApi.hasLive",
+   "args": [
+    "{ann.id}.4102444800000.sig"
+   ],
+   "as": null,
+   "request": {
+    "method": "GET",
+    "path": "/live/health",
+    "auth": "session"
+   },
+   "status": 503,
+   "shape": "$Error",
+   "example": {
+    "error": "Unavailable."
+   },
+   "result": {
+    "ok": {
+     "live": false
+    }
+   },
+   "server": {
+    "skip": "a proxy's answer"
+   }
+  },
+  {
+   "id": "live-nearby-ok",
+   "client": "CloudApi.nearby",
+   "args": [
+    "{ann.token}",
+    [
+     "Steve",
+     "Alex"
+    ]
+   ],
+   "as": "ann",
+   "request": {
+    "method": "GET",
+    "path": "/live/nearby?names=Steve%2CAlex",
+    "auth": "session"
+   },
+   "status": 200,
+   "shape": "$NearbyReply",
+   "example": {
+    "accounts": [
+     {
+      "id": "{bob.id}",
+      "username": "bob"
+     }
+    ]
+   },
+   "expect": {
+    "accounts.0.id": "{bob.id}"
+   },
+   "result": {
+    "ok": {
+     "0.id": "{bob.id}",
+     "0.username": "bob",
+     "0.mcName": ""
+    }
+   },
+   "before": [
+    "liveGame:ann:Alex:srv1",
+    "liveGame:bob:Steve:srv1"
+   ],
+   "note": "The service names the account only, never the Minecraft name (finding F4)."
+  },
+  {
+   "id": "live-nearby-signed-out",
+   "client": "CloudApi.nearby",
+   "args": [
+    "old",
+    [
+     "Steve"
+    ]
+   ],
+   "as": null,
+   "request": {
+    "method": "GET",
+    "path": "/live/nearby?names=Steve",
+    "auth": "session"
+   },
+   "status": 401,
+   "shape": "$Error",
+   "example": {
+    "error": "Sign in first."
+   },
+   "result": {
+    "refused": "Sign in first."
+   }
+  },
+  {
+   "id": "live-nearby-rate-limited",
+   "client": "CloudApi.nearby",
+   "args": [
+    "{sam.token}",
+    [
+     "Steve"
+    ]
+   ],
+   "as": "sam",
+   "request": {
+    "method": "GET",
+    "path": "/live/nearby?names=Steve",
+    "auth": "session"
+   },
+   "status": 429,
+   "shape": "$Error",
+   "example": {
+    "error": "Too many asks. Try again in a minute."
+   },
+   "result": {
+    "refused": "Too many asks. Try again in a minute."
+   },
+   "prime": 20
+  }
+ ]
+}

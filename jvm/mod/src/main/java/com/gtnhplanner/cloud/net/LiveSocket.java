@@ -87,7 +87,7 @@ public final class LiveSocket {
     public static final String AUTH = "auth";
 
     /** Close codes the live service uses besides the normal ones (see the live service's wire protocol). */
-    public static final int CLOSE_TOO_BIG = 1009, CLOSE_RESTART = 1012, CLOSE_LATER = 1013;
+    public static final int CLOSE_TOO_BIG = 1009, CLOSE_RESTART = 1012, CLOSE_LATER = 1013, CLOSE_AUTH = 4001;
 
     private static final java.util.regex.Pattern BAD_CLOSE = java.util.regex.Pattern
         .compile("Invalid close frame getStatus code: ([0-9]+)");
@@ -340,6 +340,13 @@ public final class LiveSocket {
     /** The connection of generation {@code gen} is gone (or never came): retry, or rest if it is not wanted. */
     private void lost(final int gen, final String why) {
         if (gen != generation) return;
+        if (wanted && closeCode == CLOSE_AUTH) {
+            // The service takes any upgrade, then says auth and closes 4001 for a session it does not know: the same
+            // refusal as a 401 at the upgrade, so no retrying with a token it will refuse again.
+            closeCode = 0;
+            refused(gen);
+            return;
+        }
         generation++;
         drop();
         if (!wanted) {

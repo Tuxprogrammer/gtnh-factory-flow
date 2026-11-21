@@ -215,6 +215,11 @@ public final class PlanExport {
         final Map<Uuid, JsonObject> hostNodes = new HashMap<>();
         final List<Runnable> later = new java.util.ArrayList<>();
         for (final Node n : g.getNodes()) {
+            // A display-only card goes back as the plan had it (the site, below); its ports name what its recipe does.
+            if (n.shown != null) {
+                res.putAll(shownPorts(g, n));
+                continue;
+            }
             final Card card = card(n, "gtnhplanner:" + n.id, world, world.machines(n));
             res.putAll(card.ports());
             recipes.add(card.recipe());
@@ -344,8 +349,45 @@ public final class PlanExport {
     public static JsonObject carried(final JsonObject p, final Graph g) {
         if (g.site.isEmpty()) return p;
         final Map<String, Object> tree = GsonTrees.map(p);
-        SiteCarry.writeBack(tree, g.site);
+        // Its display-only cards as the board has them: one deleted there is gone, one moved is where it stands.
+        SiteCarry.writeBack(tree, com.gtnhplanner.core.codec.DisplayCards.site(g, (n, card) -> place(g, n, card)));
         return GsonTrees.object(tree);
+    }
+
+    /** A moved display-only card's place, written into the plan's card as {@link #project} writes a card's. */
+    private static void place(final Graph g, final Node n, final Map<String, Object> card) {
+        final JsonObject o = new JsonObject();
+        o.add("position", position(n.x, n.y));
+        inGroup(g, o, n.group, n.x, n.y);
+        card.remove("pocketId");
+        card.putAll(GsonTrees.map(o));
+    }
+
+    /**
+     * What a display-only card's ports carry, as its plan's recipe names them (EU as EU), so a wire on it names the
+     * port
+     * the website's recipe has.
+     */
+    public static Map<Port<?>, Res> shownPorts(final Graph g, final Node n) {
+        final Map<Port<?>, Res> out = new HashMap<>();
+        for (final boolean output : new boolean[] { false, true }) {
+            final List<Port<?>> ports = output ? n.outputs : n.inputs;
+            for (int i = 0; i < ports.size(); i++) {
+                final Res r = shownPort(g, n, output, i);
+                if (r != null) out.put(ports.get(i), r);
+            }
+        }
+        return out;
+    }
+
+    /** One port of a display-only card as its plan's recipe names it; null for none. */
+    @Nullable
+    public static Res shownPort(final Graph g, final Node n, final boolean output, final int index) {
+        final Map<String, Object> slot = com.gtnhplanner.core.codec.DisplayCards.slot(g, n, output, index);
+        if (slot == null || !(slot.get("kind") instanceof final String kind)
+            || !(slot.get("id") instanceof final String id)) return null;
+        if ("power".equals(kind)) return EU;
+        return new Res(kind, id, slot.get("displayName") instanceof final String name ? name : id);
     }
 
     /** The website's caps ({@code plan.schema.json}): setting pins per plan, leftovers, bearers per leftover. */
@@ -450,7 +492,8 @@ public final class PlanExport {
     }
 
     /** The board's shared machines (machine groups drawn as one card): which card each recipe is, and its section. */
-    private record Sections(Map<Uuid, At> of, Map<Uuid, com.gtnhplanner.data.flowchart.MachineGroup> groups) {
+    private record Sections(Map<Uuid, At> of, Map<Uuid, com.gtnhplanner.data.flowchart.MachineGroup> groups,
+        Map<Uuid, String> shown) {
 
         record At(Uuid host, int section) {}
 
@@ -465,7 +508,10 @@ public final class PlanExport {
                 for (int i = 0; i < sections.size(); i++) of.putIfAbsent(sections.get(i), new At(sections.get(0), i));
                 groups.put(sections.get(0), m);
             }
-            return new Sections(of, groups);
+            // A display-only card is the plan's card it shows.
+            final Map<Uuid, String> shown = new HashMap<>();
+            for (final Node n : g.getNodes()) if (n.shown != null) shown.put(n.id, n.shown.planId());
+            return new Sections(of, groups, shown);
         }
 
         @Nullable
@@ -475,6 +521,8 @@ public final class PlanExport {
 
         /** The website card a board card is: its shared machine's first recipe's, else its own. */
         String card(final Uuid node) {
+            final String plan = shown.get(node);
+            if (plan != null) return plan;
             final At at = of.get(node);
             return (at == null ? node : at.host()).toString();
         }

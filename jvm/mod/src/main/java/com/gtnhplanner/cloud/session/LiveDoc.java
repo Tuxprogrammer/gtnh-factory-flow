@@ -384,7 +384,8 @@ public final class LiveDoc {
         final Graph g = read.graph();
         if (g.version() == synced) return false;
         final CloudPlans.Written w = CloudPlans.write(g, session.game(), read.plan(), read.basis());
-        final List<LiveOp> ops = CloudPlans.diff(read.plan(), w.plan());
+        // Never a wire to a card the live copy has lost (another player deleted it): the delete wins.
+        final List<LiveOp> ops = LiveOps.withoutDangling(state.view(), CloudPlans.diff(read.plan(), w.plan()));
         synced = g.version();
         final boolean caughtUp = !behind;
         final List<LiveState.Batch> batches = ops.isEmpty() ? List.of() : state.local(ops, maxOpBytes());
@@ -411,6 +412,7 @@ public final class LiveDoc {
     Graph catchUp() {
         if (!behind) return null;
         commit();
+        dropLostWires();
         final Graph old = read.graph();
         final CloudPlans.Read next = CloudPlans.read(state.view(), session.game(), read);
         next.graph()
@@ -424,6 +426,17 @@ public final class LiveDoc {
             .version();
         behind = false;
         return next.graph();
+    }
+
+    /**
+     * Deletes the wires that end at a card or drawer another player deleted, which a wire of this player's (sent before
+     * it heard of the delete, or waiting to go again over a snapshot) left in the plan: the delete wins, and no wire
+     * stays with nothing at its end. Sent after what is waiting, so the live copy ends clean.
+     */
+    private void dropLostWires() {
+        final List<LiveOp> lost = LiveOps.lostWires(read.plan(), state.view());
+        if (lost.isEmpty()) return;
+        for (final LiveState.Batch b : state.forget(lost, maxOpBytes())) keep(b);
     }
 
     @javax.annotation.Nullable

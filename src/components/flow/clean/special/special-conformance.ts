@@ -11,6 +11,7 @@ import { viewEnvelope } from "@/test-support/view-corpus";
 import {
   EU,
   MENU,
+  cardCases,
   NAME_STEP,
   chipJson,
   clean,
@@ -32,6 +33,23 @@ export interface SpecialInputJson {
     empty: boolean;
     dial?: { supply: boolean; perSecond: number; kind: string; showMode: boolean; showRate: boolean };
   };
+  generator?: {
+    name: string;
+    tier?: { label: string; fixed: boolean };
+    settings: Array<{
+      id: string;
+      label: string;
+      kind: "CHOICE" | "NUMBER" | "TOGGLE";
+      choice: string;
+      number: number;
+      unit?: string;
+      on: boolean;
+      enabled: boolean;
+      pinned: boolean;
+    }>;
+    readings: Array<{ label: string; value: string; pinned: boolean }>;
+    warnings: string[];
+  };
 }
 
 export interface SpecialCaseInput extends CardCaseInput {
@@ -49,7 +67,29 @@ const KIND_IN = {
 /** A case's special input as the website's facts. */
 export function caseSpecialFacts(input: SpecialCaseInput): SpecialFacts {
   const h = input.special.holder;
+  const g = input.special.generator;
   return {
+    ...(g
+      ? {
+          generator: {
+            name: g.name,
+            ...(g.tier ? { tier: { ...g.tier } } : {}),
+            settings: g.settings.map((x) => ({
+              id: x.id,
+              label: x.label,
+              kind: x.kind.toLowerCase() as "choice" | "number" | "toggle",
+              choice: x.choice,
+              number: x.number,
+              ...(x.unit !== undefined ? { unit: x.unit } : {}),
+              on: x.on,
+              enabled: x.enabled,
+              pinned: x.pinned,
+            })),
+            readings: g.readings.map((r) => ({ ...r })),
+            warnings: [...g.warnings],
+          },
+        }
+      : {}),
     kind: KIND_IN[input.special.kind],
     ...(h
       ? {
@@ -207,6 +247,100 @@ export function specialCases(): Array<{ name: string; input: SpecialCaseInput }>
   tank("fluid tank: Up to has no count", false, EU, (c) => {
     c.count = { rule: "UP_TO", pin: 2, needed: 1, nodeParallel: 1, customRate: false, unset: false };
   });
+
+  // Generators: the card's own rows (the card cases' generator), its settings and readings by the plan's pins.
+  const generatorCard = cardCases().find((c) => c.name === "generator: EU/t on the EU/t dial")!.input.card;
+  type Gen = NonNullable<SpecialInputJson["generator"]>;
+  type Setting = Gen["settings"][number];
+  const setting = (
+    id: string,
+    label: string,
+    kind: Setting["kind"],
+    value: string | number | boolean,
+    more: Partial<Setting> = {},
+  ): Setting => ({
+    id,
+    label,
+    kind,
+    choice: kind === "CHOICE" ? String(value) : "",
+    number: kind === "NUMBER" ? Number(value) : 0,
+    on: kind === "TOGGLE" ? value === true : false,
+    enabled: true,
+    pinned: false,
+    ...more,
+  });
+  const settings = (pinned: string[] = [], off: string[] = []): Setting[] =>
+    [
+      setting("fuel", "Fuel", "CHOICE", "Diesel"),
+      setting("efficiency", "Efficiency", "NUMBER", 95, { unit: "%" }),
+      setting("rotors", "Rotors", "NUMBER", 1250),
+      setting("overclock", "Overclock", "TOGGLE", false),
+      setting("boost", "Oxygen boost", "TOGGLE", true),
+      setting("flow", "Fuel flow", "NUMBER", 0.125, { unit: "L/s" }),
+    ].map((x) => ({ ...x, pinned: pinned.includes(x.id), enabled: !off.includes(x.id) }));
+  const readings = (pinned: string[] = []) =>
+    [
+      { label: "Efficiency", value: "95%" },
+      { label: "Fuel burned", value: "4 L/s" },
+      { label: "Lifespan", value: "1h 20m" },
+    ].map((r) => ({ ...r, pinned: pinned.includes(r.label) }));
+  const generator = (
+    name: string,
+    gen: Partial<Gen>,
+    d: Dials = EU,
+    edit: (card: CardInputJson) => void = () => undefined,
+  ) => {
+    const card = JSON.parse(JSON.stringify(generatorCard)) as CardInputJson;
+    edit(card);
+    out.push({
+      name,
+      input: {
+        dials: d,
+        card,
+        special: {
+          kind: "POWER",
+          generator: {
+            name: "Combustion Generator",
+            tier: { label: "LV", fixed: false },
+            settings: settings(),
+            readings: readings(),
+            warnings: [],
+            ...gen,
+          },
+        },
+      },
+    });
+  };
+  generator("generator: nothing pinned", {});
+  generator("generator: a choice, numbers with and without a unit, a switch", {
+    settings: settings(["fuel", "efficiency", "rotors", "overclock"]),
+  });
+  generator("generator: a pinned setting switched off by another is greyed", {
+    settings: settings(["fuel", "efficiency", "boost"], ["efficiency", "boost"]),
+  });
+  generator("generator: a fraction reads as JavaScript spells it", { settings: settings(["flow"]) });
+  generator("generator: pinned readings after the settings", {
+    settings: settings(["fuel"]),
+    readings: readings(["Fuel burned", "Lifespan"]),
+  });
+  generator("generator: a reading alone", { readings: readings(["Efficiency"]) });
+  generator("generator: every chip, over two rows", {
+    settings: settings(["fuel", "efficiency", "rotors", "overclock", "boost", "flow"]),
+    readings: readings(["Efficiency", "Fuel burned", "Lifespan"]),
+  });
+  generator("generator: a fixed tier unlocks", { tier: { label: "EV", fixed: true } });
+  generator("generator: no tier select", { name: "Solar Panel", tier: undefined });
+  generator("generator: a long name beside its tier", { name: "Large Gas Turbine (Huge Turbine Rotor)" });
+  generator("generator: its warnings", {
+    warnings: ["Piped fuel never burns here: only cells do.", "Needs a dynamo hatch of its tier."],
+  });
+  generator("generator: amps on the Amps dial", { settings: settings(["fuel"]) }, { ...EU, power: "amps" });
+  generator("generator: Exactly 2", {}, EU, (c) => {
+    c.count = { ...c.count, rule: "EXACT", pin: 2 };
+  });
+  generator("generator: nothing sets it", {}, EU, (c) => {
+    c.count = { ...c.count, unset: true };
+  });
   return out;
 }
 
@@ -252,6 +386,7 @@ export function specialPartsJson(parts: SpecialParts): unknown {
           clean({
             chip: chipJson(c.chip),
             edit: c.edit ? { text: c.edit.text, scale: c.edit.scale, notes: c.edit.notes } : undefined,
+            off: c.off === true,
           }),
         ),
         stripHeight: parts.stripHeight,

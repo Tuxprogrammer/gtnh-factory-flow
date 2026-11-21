@@ -451,6 +451,7 @@ public final class CommunityApi {
         c.setRequestProperty("Accept", "application/json");
         c.setRequestProperty("User-Agent", "GTNH Planner/" + Tags.VERSION + " (GT New Horizons planner mod)");
         if (token != null) c.setRequestProperty("Cookie", SESSION_COOKIE + "=" + token);
+        SiteHeader.addTo(url, c::setRequestProperty);
         final byte[] out = json == null ? new byte[0] : json.getBytes(StandardCharsets.UTF_8);
         if (json != null || "POST".equals(method)) {
             c.setDoOutput(true);
@@ -466,6 +467,8 @@ public final class CommunityApi {
             final InputStream in = status >= 400 ? c.getErrorStream() : c.getInputStream();
             final String body = in == null ? "" : read(in);
             if (status >= 400) throw new Refused(status, reason(status, body));
+            // Redirects are never followed (the site's header must not travel): one is a sign-in this client cannot do.
+            if (SiteHeader.redirect(status)) throw new Refused(status, SiteHeader.SIGN_IN);
             final List<String> cookies = new ArrayList<>();
             for (final java.util.Map.Entry<String, List<String>> h : c.getHeaderFields()
                 .entrySet()) {

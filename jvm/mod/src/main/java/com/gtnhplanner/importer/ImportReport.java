@@ -42,7 +42,7 @@ public final class ImportReport {
     }
 
     /** How many entries there are: a mark to come back to ({@link #shown}). */
-    int size() {
+    public int size() {
         return entries.size();
     }
 

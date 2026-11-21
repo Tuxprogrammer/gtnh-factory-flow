@@ -21,6 +21,8 @@ public final class ViewJs {
 
     private static final com.gtnhplanner.core.view.special.SpecialInput.Kind[] SPECIAL_INPUT_KIND = com.gtnhplanner.core.view.special.SpecialInput.Kind.values();
 
+    private static final com.gtnhplanner.core.view.special.SpecialInput.SettingKind[] SPECIAL_INPUT_SETTING_KIND = com.gtnhplanner.core.view.special.SpecialInput.SettingKind.values();
+
     private static final com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind[] UP_TO_LOOP_KIND = com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind.values();
 
     private static final com.gtnhplanner.data.flowchart.balancer.UpToReason[] UP_TO_REASON = com.gtnhplanner.data.flowchart.balancer.UpToReason.values();
@@ -384,8 +386,10 @@ public final class ViewJs {
     public static com.gtnhplanner.core.view.special.SpecialInput readSpecialInput(final JSObject o) {
         final int e0 = specialInputKind(o);
         final JSObject o1 = specialInputHolder(o);
+        final JSObject o2 = specialInputGenerator(o);
         return new com.gtnhplanner.core.view.special.SpecialInput(SPECIAL_INPUT_KIND[e0],
-            o1 == null ? null : readSpecialInputHolder(o1));
+            o1 == null ? null : readSpecialInputHolder(o1),
+            o2 == null ? null : readSpecialInputGenerator(o2));
     }
 
     /** A {@code SpecialInputCase} from the website's object (records.generated.ts {@code SpecialInputCase}). */
@@ -407,11 +411,75 @@ public final class ViewJs {
             specialInputDialShowRate(o));
     }
 
+    /** A {@code SpecialInputGenerator} from the website's object (records.generated.ts {@code SpecialInputGenerator}). */
+    public static com.gtnhplanner.core.view.special.SpecialInput.Generator readSpecialInputGenerator(final JSObject o) {
+        final JSObject o1 = specialInputGeneratorTier(o);
+        final JSObject a2 = specialInputGeneratorSettings(o);
+        final java.util.List<com.gtnhplanner.core.view.special.SpecialInput.Setting> c2;
+        if (a2 == null) c2 = new java.util.ArrayList<>();
+        else {
+            final int n2 = length(a2);
+            final java.util.List<com.gtnhplanner.core.view.special.SpecialInput.Setting> l2 = new java.util.ArrayList<>(n2);
+            for (int i = 0; i < n2; i++) l2.add(readSpecialInputSetting(atObject(a2, i)));
+            c2 = l2;
+        }
+        final JSObject a3 = specialInputGeneratorReadings(o);
+        final java.util.List<com.gtnhplanner.core.view.special.SpecialInput.Reading> c3;
+        if (a3 == null) c3 = new java.util.ArrayList<>();
+        else {
+            final int n3 = length(a3);
+            final java.util.List<com.gtnhplanner.core.view.special.SpecialInput.Reading> l3 = new java.util.ArrayList<>(n3);
+            for (int i = 0; i < n3; i++) l3.add(readSpecialInputReading(atObject(a3, i)));
+            c3 = l3;
+        }
+        final JSObject a4 = specialInputGeneratorWarnings(o);
+        final java.util.List<String> c4;
+        if (a4 == null) c4 = new java.util.ArrayList<>();
+        else {
+            final int n4 = length(a4);
+            final java.util.List<String> l4 = new java.util.ArrayList<>(n4);
+            for (int i = 0; i < n4; i++) l4.add(atString(a4, i));
+            c4 = l4;
+        }
+        return new com.gtnhplanner.core.view.special.SpecialInput.Generator(specialInputGeneratorName(o),
+            o1 == null ? null : readSpecialInputGeneratorTier(o1),
+            c2,
+            c3,
+            c4);
+    }
+
+    /** A {@code SpecialInputGeneratorTier} from the website's object (records.generated.ts {@code SpecialInputGeneratorTier}). */
+    public static com.gtnhplanner.core.view.special.SpecialInput.GeneratorTier readSpecialInputGeneratorTier(final JSObject o) {
+        return new com.gtnhplanner.core.view.special.SpecialInput.GeneratorTier(specialInputGeneratorTierLabel(o),
+            specialInputGeneratorTierFixed(o));
+    }
+
     /** A {@code SpecialInputHolder} from the website's object (records.generated.ts {@code SpecialInputHolder}). */
     public static com.gtnhplanner.core.view.special.SpecialInput.Holder readSpecialInputHolder(final JSObject o) {
         final JSObject o1 = specialInputHolderDial(o);
         return new com.gtnhplanner.core.view.special.SpecialInput.Holder(specialInputHolderEmpty(o),
             o1 == null ? null : readSpecialInputDial(o1));
+    }
+
+    /** A {@code SpecialInputReading} from the website's object (records.generated.ts {@code SpecialInputReading}). */
+    public static com.gtnhplanner.core.view.special.SpecialInput.Reading readSpecialInputReading(final JSObject o) {
+        return new com.gtnhplanner.core.view.special.SpecialInput.Reading(specialInputReadingLabel(o),
+            specialInputReadingValue(o),
+            specialInputReadingPinned(o));
+    }
+
+    /** A {@code SpecialInputSetting} from the website's object (records.generated.ts {@code SpecialInputSetting}). */
+    public static com.gtnhplanner.core.view.special.SpecialInput.Setting readSpecialInputSetting(final JSObject o) {
+        final int e2 = specialInputSettingKind(o);
+        return new com.gtnhplanner.core.view.special.SpecialInput.Setting(specialInputSettingId(o),
+            specialInputSettingLabel(o),
+            SPECIAL_INPUT_SETTING_KIND[e2],
+            specialInputSettingChoice(o),
+            specialInputSettingNumber(o),
+            specialInputSettingUnit(o),
+            specialInputSettingOn(o),
+            specialInputSettingEnabled(o),
+            specialInputSettingPinned(o));
     }
 
     /** A {@code CardGeometry} as the website's object (records.generated.ts {@code CardGeometry}). */
@@ -611,7 +679,7 @@ public final class ViewJs {
 
     /** A {@code SpecialViewChip} as the website's object (records.generated.ts {@code SpecialViewChip}). */
     public static JSObject js(final com.gtnhplanner.core.view.special.SpecialView.Chip v) {
-        return newSpecialViewChip(js(v.chip()), v.edit() == null ? null : js(v.edit()));
+        return newSpecialViewChip(js(v.chip()), v.edit() == null ? null : js(v.edit()), v.off());
     }
 
     /** A {@code SpecialViewEdit} as the website's object (records.generated.ts {@code SpecialViewEdit}). */
@@ -1119,6 +1187,9 @@ public final class ViewJs {
     @JSBody(params = "o", script = "return o.holder == null ? null : o.holder;")
     private static native JSObject specialInputHolder(JSObject o);
 
+    @JSBody(params = "o", script = "return o.generator == null ? null : o.generator;")
+    private static native JSObject specialInputGenerator(JSObject o);
+
     @JSBody(params = "o", script = "return o.dials == null ? {} : o.dials;")
     private static native JSObject specialInputCaseDials(JSObject o);
 
@@ -1143,11 +1214,68 @@ public final class ViewJs {
     @JSBody(params = "o", script = "return o.showRate === true;")
     private static native boolean specialInputDialShowRate(JSObject o);
 
+    @JSBody(params = "o", script = "return o.name == null ? \"\" : o.name;")
+    private static native String specialInputGeneratorName(JSObject o);
+
+    @JSBody(params = "o", script = "return o.tier == null ? null : o.tier;")
+    private static native JSObject specialInputGeneratorTier(JSObject o);
+
+    @JSBody(params = "o", script = "return o.settings == null ? null : o.settings;")
+    private static native JSObject specialInputGeneratorSettings(JSObject o);
+
+    @JSBody(params = "o", script = "return o.readings == null ? null : o.readings;")
+    private static native JSObject specialInputGeneratorReadings(JSObject o);
+
+    @JSBody(params = "o", script = "return o.warnings == null ? null : o.warnings;")
+    private static native JSObject specialInputGeneratorWarnings(JSObject o);
+
+    @JSBody(params = "o", script = "return o.label == null ? \"\" : o.label;")
+    private static native String specialInputGeneratorTierLabel(JSObject o);
+
+    @JSBody(params = "o", script = "return o.fixed === true;")
+    private static native boolean specialInputGeneratorTierFixed(JSObject o);
+
     @JSBody(params = "o", script = "return o.empty === true;")
     private static native boolean specialInputHolderEmpty(JSObject o);
 
     @JSBody(params = "o", script = "return o.dial == null ? null : o.dial;")
     private static native JSObject specialInputHolderDial(JSObject o);
+
+    @JSBody(params = "o", script = "return o.label == null ? \"\" : o.label;")
+    private static native String specialInputReadingLabel(JSObject o);
+
+    @JSBody(params = "o", script = "return o.value == null ? \"\" : o.value;")
+    private static native String specialInputReadingValue(JSObject o);
+
+    @JSBody(params = "o", script = "return o.pinned === true;")
+    private static native boolean specialInputReadingPinned(JSObject o);
+
+    @JSBody(params = "o", script = "return o.id == null ? \"\" : o.id;")
+    private static native String specialInputSettingId(JSObject o);
+
+    @JSBody(params = "o", script = "return o.label == null ? \"\" : o.label;")
+    private static native String specialInputSettingLabel(JSObject o);
+
+    @JSBody(params = "o", script = "var __t = {\"CHOICE\":0,\"NUMBER\":1,\"TOGGLE\":2}; var __k = o.kind; return __k == null ? -1 : __t.hasOwnProperty(__k) ? __t[__k] : 3;")
+    private static native int specialInputSettingKind(JSObject o);
+
+    @JSBody(params = "o", script = "return o.choice == null ? \"\" : o.choice;")
+    private static native String specialInputSettingChoice(JSObject o);
+
+    @JSBody(params = "o", script = "return o.number == null ? 0 : o.number;")
+    private static native double specialInputSettingNumber(JSObject o);
+
+    @JSBody(params = "o", script = "return o.unit == null ? null : o.unit;")
+    private static native String specialInputSettingUnit(JSObject o);
+
+    @JSBody(params = "o", script = "return o.on === true;")
+    private static native boolean specialInputSettingOn(JSObject o);
+
+    @JSBody(params = "o", script = "return o.enabled === true;")
+    private static native boolean specialInputSettingEnabled(JSObject o);
+
+    @JSBody(params = "o", script = "return o.pinned === true;")
+    private static native boolean specialInputSettingPinned(JSObject o);
 
     @JSBody(params = { "a", "x" }, script = "a.push(x);")
     private static native void pushObject(JSObject a, JSObject x);
@@ -1227,8 +1355,8 @@ public final class ViewJs {
     @JSBody(params = { "_kind", "_name", "_nameStep", "_nameTone", "_hasPicker", "_tier", "_amps", "_empty", "_sections", "_power", "_sockets", "_gauge", "_count", "_foot", "_chips", "_stripHeight", "_warnings", "_cannotRun", "_unset", "_pick", "_cropKey" }, script = "var __w = {}; __w.kind = _kind; __w.name = _name; __w.nameStep = _nameStep; __w.nameTone = _nameTone; __w.hasPicker = _hasPicker; if (_tier !== null) __w.tier = _tier; if (_amps !== null) __w.amps = _amps; __w.empty = _empty; __w.sections = _sections; if (_power !== null) __w.power = _power; if (_sockets !== null) __w.sockets = _sockets; __w.gauge = _gauge; if (_count !== null) __w.count = _count; if (_foot !== null) __w.foot = _foot; __w.chips = _chips; __w.stripHeight = _stripHeight; __w.warnings = _warnings; __w.cannotRun = _cannotRun; __w.unset = _unset; __w.pick = _pick; __w.cropKey = _cropKey; return __w;")
     private static native JSObject newSpecialView(String _kind, String _name, double _nameStep, String _nameTone, boolean _hasPicker, JSObject _tier, JSObject _amps, boolean _empty, JSObject _sections, JSObject _power, JSObject _sockets, boolean _gauge, JSObject _count, JSObject _foot, JSObject _chips, double _stripHeight, JSObject _warnings, boolean _cannotRun, boolean _unset, boolean _pick, boolean _cropKey);
 
-    @JSBody(params = { "_chip", "_edit" }, script = "var __w = {}; __w.chip = _chip; if (_edit !== null) __w.edit = _edit; return __w;")
-    private static native JSObject newSpecialViewChip(JSObject _chip, JSObject _edit);
+    @JSBody(params = { "_chip", "_edit", "_off" }, script = "var __w = {}; __w.chip = _chip; if (_edit !== null) __w.edit = _edit; __w.off = _off; return __w;")
+    private static native JSObject newSpecialViewChip(JSObject _chip, JSObject _edit, boolean _off);
 
     @JSBody(params = { "_text", "_scale", "_notes" }, script = "var __w = {}; __w.text = _text; __w.scale = _scale; __w.notes = _notes; return __w;")
     private static native JSObject newSpecialViewEdit(String _text, double _scale, JSObject _notes);

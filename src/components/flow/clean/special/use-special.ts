@@ -73,7 +73,6 @@ import { glanceBar } from "../glance";
 import {
   isTierSelect,
   powerSettingRows,
-  powerStripRows,
   powerTierChip,
   steppedPowerValue,
   type PowerSettingRow,
@@ -85,7 +84,12 @@ import {
   type SpecialView,
 } from "./special-model";
 import type { SheetRow } from "./SpecialSheets";
-import { specialViewFrom, type SpecialFacts } from "./special-parts";
+import {
+  READING_PIN,
+  specialViewFrom,
+  type GeneratorSettingFacts,
+  type SpecialFacts,
+} from "./special-parts";
 import { specialPartsOf } from "./special-view";
 import { CROP_MACHINES_ID, pinMachineKey, type NumberSetting } from "../menus/settings-model";
 
@@ -98,7 +102,8 @@ export interface SpecialActions extends CleanCardActions {
 
 /** The menus' inputs: the gear's rows, and the readings a generator keeps in it. */
 export interface SpecialContext extends CleanCardContext {
-  readings: Array<{ label: string; value: string }>;
+  /** A generator's readings, each pinned to the card or not (a pin shows it on the strip). */
+  readings: Array<{ label: string; value: string; pinned?: boolean; onPin?: () => void }>;
   /** The gear's sheet: the machine's own settings (shared machines, crops), or rows of the card's own. */
   sheet: { kind: "machine"; numbers?: NumberSetting[] } | { kind: "rows"; rows: SheetRow[]; foot?: string };
 }
@@ -395,6 +400,24 @@ function sectionPower(recipe: Recipe, node: FactoryNode) {
 
 // ---------------------------------------------------------------- generator
 
+/** A generator's setting row as the shared rules' facts (power-settings.ts reads the values). */
+export function generatorSettingFacts(row: PowerSettingRow, pinned: boolean): GeneratorSettingFacts {
+  const setting = row.setting;
+  // A number row reads "N unit", N the clamped value as String(n) spells it.
+  const number = setting.type === "number" ? Number(row.value.split(" ")[0]) : 0;
+  return {
+    id: row.id,
+    label: row.label,
+    kind: setting.type === "select" ? "choice" : setting.type,
+    choice: setting.type === "select" ? row.value : "",
+    number,
+    ...(setting.type === "number" && setting.unit ? { unit: setting.unit } : {}),
+    on: setting.type === "toggle" ? row.value === "On" : false,
+    enabled: row.enabled,
+    pinned,
+  };
+}
+
 export function usePowerCardModel(data: RecipeNodeData, selected: boolean): SpecialModel {
   const base = useCleanCardModel(data, selected);
   const { projectNode, recipe } = data;
@@ -409,24 +432,6 @@ export function usePowerCardModel(data: RecipeNodeData, selected: boolean): Spec
 
   const rows: PowerSettingRow[] = source ? powerSettingRows(source, values) : [];
   const tier = source ? powerTierChip(source, values) : undefined;
-  const stripRows = powerStripRows(rows, pins ?? []);
-  const strip = layoutStrip(
-    stripRows.map((row) => ({
-      id: row.id,
-      label: row.label,
-      value: row.value,
-      title: `${row.label}: ${row.value}`,
-    })),
-  );
-  const chips: SpecialChip[] = strip.chips.map((chip) => {
-    const row = stripRows.find((entry) => entry.id === chip.id)!;
-    return row.setting.type === "number"
-      ? {
-          ...chip,
-          edit: { text: row.value.split(" ")[0]!, commit: (text) => commitNumber(row, text) },
-        }
-      : chip;
-  });
   const commitNumber = (row: PowerSettingRow, text: string) => {
     if (isLocked() || row.setting.type !== "number") return;
     const parsed = Number(text.replace(/,/g, "").trim());
@@ -435,32 +440,29 @@ export function usePowerCardModel(data: RecipeNodeData, selected: boolean): Spec
     setPowerSetting(projectNode.id, row.id, String(value));
   };
 
-  const name = recipe.machineType || base.view.name;
+  // The generator's facts: every setting but the tier select (the head's chip), its readings, what the plan pins.
+  const pinned = new Set(pins ?? []);
+  const facts: SpecialFacts = {
+    kind: "power",
+    generator: {
+      name: recipe.machineType || base.view.name,
+      ...(tier ? { tier: { label: tier.label, fixed: tier.fixed } } : {}),
+      settings: rows
+        .filter((row) => !isTierSelect(row.setting))
+        .map((row) => generatorSettingFacts(row, pinned.has(row.id))),
+      readings: info.stats.map((stat) => ({
+        label: stat.label,
+        value: stat.value,
+        pinned: pinned.has(READING_PIN + stat.label),
+      })),
+      warnings: info.warnings ?? [],
+    },
+  };
+  const parts = specialPartsOf(base.facts, facts, base.view);
+
   const icon = getPowerMachineIcon(info.sourceId);
   const art = getPowerStructureArt(info.sourceId);
-  const needed = data.result?.theoreticalMachinesRequired ?? 0;
-  const plan = useFactoryStore.getState().lastResult?.plan;
-  const { count, unset } = countView(projectNode, needed, plan);
-  const draws = info.euPerTick < 0;
-  void draws;
-
-  const view: SpecialView = {
-    kind: "power",
-    nodeId: projectNode.id,
-    name,
-    nameSize: cardNameSize(name, { tier: Boolean(tier), amps: false, picker: false }),
-    nameTone: "power",
-    hasPicker: false,
-    tier: tier
-      ? {
-          label: tier.label,
-          fixed: tier.fixed,
-          title: tier.fixed
-            ? `Unlocks at ${tier.label}`
-            : `Tier ${tier.label}. Click up, right click down.`,
-        }
-      : undefined,
-    sections: [section0(base)],
+  const view: SpecialView = specialViewFrom(parts, base.view, {
     art,
     glanceArt: art ?? icon?.iconPath,
     icon: icon
@@ -471,18 +473,15 @@ export function usePowerCardModel(data: RecipeNodeData, selected: boolean): Spec
           dominantColor: icon.dominantColor,
         }
       : undefined,
-    count,
-    // The generator's rows and count are the plain card's: so is its bar.
-    foot: base.view.foot,
-    loop: base.view.loop,
-    glance: base.view.glance,
-    chips,
-    stripHeight: strip.height,
-    warnings: info.warnings ?? [],
-    selected,
-    cannotRun: false,
-    unset,
     handleIds: base.context.handleIds,
+    commit: (chipId, value) => {
+      const row = rows.find((entry) => entry.id === chipId);
+      if (row) commitNumber(row, String(value));
+    },
+  });
+  const togglePin = (id: string) => {
+    const now = pins ?? [];
+    setSettingPins(pinKey, now.includes(id) ? now.filter((entry) => entry !== id) : [...now, id]);
   };
 
   const actions: SpecialActions = {
@@ -507,7 +506,12 @@ export function usePowerCardModel(data: RecipeNodeData, selected: boolean): Spec
     ...base.context,
     machineHandlers: [],
     settings: [],
-    readings: info.stats,
+    readings: info.stats.map((stat) => ({
+      label: stat.label,
+      value: stat.value,
+      pinned: pinned.has(READING_PIN + stat.label),
+      onPin: () => togglePin(READING_PIN + stat.label),
+    })),
     sheet: {
       kind: "rows",
       foot: "Pinned settings show on the card. Click, right-click or scroll to change.",
@@ -525,15 +529,7 @@ export function usePowerCardModel(data: RecipeNodeData, selected: boolean): Spec
           flip: row.setting.type === "toggle" ? () => actions.stepChip(row.id, 1) : undefined,
           enabled: row.enabled,
           pinned: (pins ?? []).includes(row.id),
-          onPin: isTierSelect(row.setting)
-            ? undefined
-            : () => {
-                const now = pins ?? [];
-                setSettingPins(
-                  pinKey,
-                  now.includes(row.id) ? now.filter((id) => id !== row.id) : [...now, row.id],
-                );
-              },
+          onPin: isTierSelect(row.setting) ? undefined : () => togglePin(row.id),
           onPick: (key) => setPowerSetting(projectNode.id, row.id, key),
           onStep: (direction) => actions.stepChip(row.id, direction),
         }),

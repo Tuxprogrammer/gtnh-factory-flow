@@ -17,6 +17,7 @@ import javax.net.ssl.SSLParameters;
 
 import com.gtnhplanner.Tags;
 import com.gtnhplanner.core.base.Log;
+import com.gtnhplanner.library.SiteHeader;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -85,6 +86,13 @@ public final class LiveSocket {
 
     /** The reason a state carries when the service refused the session: nothing retries until {@link #start} again. */
     public static final String AUTH = "auth";
+
+    /**
+     * The reason a state carries when the upgrade was answered with a redirect, as a proxy in front of the site does to
+     * ask for a sign-in: the redirect is not followed (the site header must not leave the site) and, as it will not
+     * change by itself, nothing retries until {@link #start} again.
+     */
+    public static final String SIGN_IN = "sign-in";
 
     /** Close codes the live service uses besides the normal ones (see the live service's wire protocol). */
     public static final int CLOSE_TOO_BIG = 1009, CLOSE_RESTART = 1012, CLOSE_LATER = 1013, CLOSE_AUTH = 4001;
@@ -234,6 +242,13 @@ public final class LiveSocket {
         final DefaultHttpHeaders headers = new DefaultHttpHeaders();
         headers.add("Cookie", "gtnh_session=" + session);
         headers.add("User-Agent", "GTNH Planner/" + Tags.VERSION + " (GT New Horizons planner mod)");
+        try {
+            SiteHeader.addTo(uri.toString(), headers::add);
+        } catch (final RuntimeException e) {
+            // No message: whatever refused the header may have quoted it.
+            lost(gen, "the site header was not accepted");
+            return;
+        }
         final WebSocketClientHandshaker handshaker;
         try {
             handshaker = WebSocketClientHandshakerFactory
@@ -344,7 +359,7 @@ public final class LiveSocket {
             // The service takes any upgrade, then says auth and closes 4001 for a session it does not know: the same
             // refusal as a 401 at the upgrade, so no retrying with a token it will refuse again.
             closeCode = 0;
-            refused(gen);
+            refused(gen, AUTH);
             return;
         }
         generation++;
@@ -383,12 +398,12 @@ public final class LiveSocket {
     }
 
     /** The service said no to the session: no retrying with a token it will refuse again. */
-    private void refused(final int gen) {
+    private void refused(final int gen, final String reason) {
         if (gen != generation) return;
         generation++;
         wanted = false;
         drop();
-        setState(State.CLOSED, AUTH);
+        setState(State.CLOSED, reason);
     }
 
     private void drop() {
@@ -439,7 +454,11 @@ public final class LiveSocket {
                 final int status = r.getStatus()
                     .code();
                 if (status == 401 || status == 403) {
-                    refused(gen);
+                    refused(gen, AUTH);
+                    return;
+                }
+                if (SiteHeader.redirect(status)) {
+                    refused(gen, SIGN_IN);
                     return;
                 }
                 if (status == 429) {

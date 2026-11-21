@@ -184,11 +184,11 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
         model = next.get(0);
         foot = buildFoot(session.rateUnit());
         footUnit = session.rateUnit();
-        // A holder's strip is the shared rules' (its dial in the board's rate unit); any other card's, its pinned settings.
+        // A holder's and a generator's strip is the shared rules' (a dial in the board's rate unit, a generator's pinned
+        // settings and readings); any other card's, its pinned settings.
         // Its parts are made afresh: its pins may have changed, which its count's key does not hold.
         face = null;
-        final com.gtnhplanner.core.view.special.SpecialView sv = com.gtnhplanner.power.Holders.is(model.node) ? special()
-            : null;
+        final com.gtnhplanner.core.view.special.SpecialView sv = specialRules() ? special() : null;
         final CardLayout nextLayout = sv != null ? CardLayouts.of(next, SpecialInputs.controls(sv, model), foot != null)
             : CardLayouts.of(next, session.graph(), foot != null);
         layoutDials = CardInputs.dials(session);
@@ -237,7 +237,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
         if (layout != null && layout.pinsVersion != SettingPins.version()) refresh();
         // A holder's dial chips read the board's rate unit: laid out again when the dials turn.
         else if (layout != null && model != null
-            && com.gtnhplanner.power.Holders.is(model.node)
+            && specialRules()
             && !CardInputs.dials(session)
                 .equals(layoutDials))
             refresh();
@@ -313,7 +313,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
         view = sharedRules() ? view(rule, set, dials) : null;
         // A special card's own parts (the shared rules cover the holders so far), over its view.
         final com.gtnhplanner.core.view.special.SpecialInput specialIn = view == null ? null
-            : SpecialInputs.holder(model, session.graph());
+            : SpecialInputs.of(model, session.graph());
         special = specialIn == null ? null
             : com.gtnhplanner.core.view.special.SpecialViews.special(
                 specialIn,
@@ -349,14 +349,20 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
 
     /**
      * Whether the card is one the shared card rules draw (core-view CardViews, the website's clean card): one recipe,
-     * not a crop card, a generator or a card with no count, or a holder (a custom rate card, a fluid tank: its own
-     * parts
-     * from core-view SpecialViews). The others keep the mod's own rules for now.
+     * not a crop card or a card with no count, or a holder (a custom rate card, a fluid tank) or a generator, whose own
+     * parts come from core-view SpecialViews. The others keep the mod's own rules for now.
      */
     private boolean sharedRules() {
         if (model == null || shared() || crop()) return false;
-        if (com.gtnhplanner.power.Holders.is(model.node)) return true;
+        if (specialRules()) return true;
         return !countless() && !model.isPower();
+    }
+
+    /**
+     * Whether the card's own parts are the shared special rules' (core-view SpecialViews): a holder or a generator.
+     */
+    private boolean specialRules() {
+        return model != null && !shared() && (com.gtnhplanner.power.Holders.is(model.node) || model.isPower());
     }
 
     /** The card's view by the shared rules at {@code rule} and {@code set} (built when {@link #face()} is). */
@@ -1828,6 +1834,10 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
                 c.warn(),
                 reading,
                 !reading && c.enabled() && hot == i,
+                // A generator's pinned setting another setting makes moot stays on the strip, greyed.
+                !reading && !c.enabled()
+                    && c.key()
+                        .startsWith("power:"),
                 z);
         }
         for (int k = 0; k < layout.warningLines.size(); k++)

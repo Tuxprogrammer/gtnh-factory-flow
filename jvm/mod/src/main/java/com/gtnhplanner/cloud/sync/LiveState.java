@@ -213,6 +213,15 @@ public final class LiveState {
         return group(ops, maxBytes, false, true);
     }
 
+    /**
+     * An edit no one undoes: the clean-up of what another player's edit left behind (a wire to a card that is gone).
+     * One
+     * that is no earlier edit's to undo, and no redo is lost to it.
+     */
+    public List<Batch> forget(final List<LiveOp> ops, final int maxBytes) {
+        return group(ops, maxBytes, true, false);
+    }
+
     /** {@link #undo()} for edits made with {@link #local(List, int)}: the batches that undo the last one. */
     public List<Batch> undo(final int maxBytes) {
         if (undo.isEmpty()) return List.of();

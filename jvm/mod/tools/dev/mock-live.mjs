@@ -35,7 +35,7 @@ const colorFor = (id) => {
  * Wires cloud plans and the live service into the mock's server. {@code accounts} is the mock's: id and name of the
  * account a request is signed in as ({@code who(req)}), and every account by name ({@code all()}).
  */
-export function mockLive(server, { who, ids, users, stateFile }) {
+export function mockLive(server, { who, ids, users, stateFile, gate = () => true }) {
   const BOTS = [
     { name: "dee", mcName: "Dee_Mines", client: "game" },
     { name: "eve", mcName: "", client: "web" },
@@ -365,6 +365,11 @@ export function mockLive(server, { who, ids, users, stateFile }) {
   // The WebSocket itself: the handshake, then text frames both ways (a client's are masked; the server's are not).
   server.on("upgrade", (req, socket) => {
     const url = new URL(req.url, "http://localhost");
+    if (!gate(req)) {
+      // A guarding proxy sends a client without its header to a sign-in page, here as at any other route.
+      socket.end("HTTP/1.1 302 Found\r\nLocation: /sign-in\r\nContent-Length: 0\r\n\r\n");
+      return;
+    }
     const me = who(req);
     if (url.pathname !== "/live") {
       socket.end("HTTP/1.1 404 Not Found\r\n\r\n");

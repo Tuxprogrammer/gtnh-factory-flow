@@ -158,7 +158,10 @@ final class Fresh {
             return r != null ? r : port(game, p);
         };
         for (final Node n : g.getNodes()) {
-            if (n.shown != null) continue;
+            if (n.shown != null) {
+                shown(out, g, names, skip, n);
+                continue;
+            }
             final String gameKey = "node:" + n.id;
             if (names.isCarried(gameKey) || skip.contains(gameKey)) continue;
             final String id = names.id("node", n.id);
@@ -279,6 +282,38 @@ final class Fresh {
             task(out, "taskItems", "item:", i.id(), Tasks.toJson(Tasks.forPlan(Tasks.claimed(i, g.planId()))));
         for (final Tasks.Comment c : g.taskComments) task(out, "taskComments", "comment:", c.id(), Tasks.toJson(c));
         return out;
+    }
+
+    /** The state of a display-only card the plan has: it has no game data, so nothing of it ever differs. */
+    static final String SHOWN = "shown";
+
+    /**
+     * A display-only card the plan has, as a thing with no game data and a constant state: a write of the board then
+     * only moves it where it was moved, and its deletion is the card's deletion (its recipe and wires go as any card's
+     * do). One the plan does not have is not written: a plan new to the cloud brings its own
+     * ({@link PlanWrite}).
+     */
+    private static void shown(final Map<String, Thing> out, final Graph g, final Basis names, final Set<String> skip,
+        final Node n) {
+        final String gameKey = "node:" + n.id;
+        if (names.thingOf(gameKey) == null || skip.contains(gameKey)) return;
+        final String id = names.id("node", n.id);
+        final int[] at = inGroup(g, n.group, n.x, n.y);
+        final JsonObject site = new JsonObject();
+        site.addProperty("id", id);
+        out.put(
+            gameKey,
+            new Thing(
+                "nodes",
+                id,
+                gameKey,
+                SHOWN,
+                null,
+                true,
+                at[0],
+                at[1],
+                pocket(g, names, n.group),
+                () -> new JsonObject[] { site }));
     }
 
     /**

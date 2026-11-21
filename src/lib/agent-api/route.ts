@@ -44,7 +44,10 @@ export function agentPost<S extends z.ZodType>(
   route: string,
   schema: S,
   run: (body: z.infer<S>, context: AgentCallContext) => Promise<unknown>,
+  /** `maxBytes`: this route's body cap, when it is not the API's 64 KB (plans/import takes the player's plan). */
+  options: { maxBytes?: number } = {},
 ) {
+  const maxBytes = options.maxBytes ?? MAX_REQUEST_BYTES;
   return async function POST(request: Request): Promise<Response> {
     const started = performance.now();
     const denied = checkAgentAuth(request);
@@ -66,8 +69,8 @@ export function agentPost<S extends z.ZodType>(
     let raw: unknown;
     try {
       const text = await request.text();
-      if (Buffer.byteLength(text, "utf8") > MAX_REQUEST_BYTES) {
-        return fail("bad_request", `Request body is over ${MAX_REQUEST_BYTES / 1024} KB.`);
+      if (Buffer.byteLength(text, "utf8") > maxBytes) {
+        return fail("bad_request", `Request body is over ${maxBytes / 1024} KB.`);
       }
       raw = text.trim() ? JSON.parse(text) : {};
     } catch {

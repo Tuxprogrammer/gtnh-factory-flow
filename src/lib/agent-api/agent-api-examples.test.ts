@@ -11,6 +11,33 @@ import {
   resourcesSearchResponse,
 } from "./schemas";
 import { RESPONSE_AIM_BYTES } from "./size";
+import {
+  plansAddCardsRequest,
+  plansAddCardsResponse,
+  plansConnectRequest,
+  plansConnectResponse,
+  plansCreateRequest,
+  plansCreateResponse,
+  plansDisconnectRequest,
+  plansDisconnectResponse,
+  plansGetRequest,
+  plansGetResponse,
+  plansRemoveCardsRequest,
+  plansRemoveCardsResponse,
+  plansSetTargetsRequest,
+  plansSetTargetsResponse,
+  plansSolveRequest,
+  plansSolveResponse,
+} from "./plan-schemas";
+import { plansExpandInputsRequest, plansExpandInputsResponse } from "./expand-schemas";
+import {
+  plansDeliverRequest,
+  plansDeliverResponse,
+  plansDiffRequest,
+  plansDiffResponse,
+  plansImportRequest,
+  plansImportResponse,
+} from "./delivery-schemas";
 
 /**
  * The committed examples (docs/agent-api/examples) are what the assistant's tool server tests against, so each must
@@ -20,6 +47,18 @@ const SCHEMAS: Record<string, { request: z.ZodType; response: z.ZodType }> = {
   "resources/search": { request: resourcesSearchRequest, response: resourcesSearchResponse },
   "recipes/search": { request: recipesSearchRequest, response: recipesSearchResponse },
   "recipes/get": { request: recipesGetRequest, response: recipesGetResponse },
+  "plans/create": { request: plansCreateRequest, response: plansCreateResponse },
+  "plans/add-cards": { request: plansAddCardsRequest, response: plansAddCardsResponse },
+  "plans/remove-cards": { request: plansRemoveCardsRequest, response: plansRemoveCardsResponse },
+  "plans/set-targets": { request: plansSetTargetsRequest, response: plansSetTargetsResponse },
+  "plans/connect": { request: plansConnectRequest, response: plansConnectResponse },
+  "plans/disconnect": { request: plansDisconnectRequest, response: plansDisconnectResponse },
+  "plans/get": { request: plansGetRequest, response: plansGetResponse },
+  "plans/expand-inputs": { request: plansExpandInputsRequest, response: plansExpandInputsResponse },
+  "plans/solve": { request: plansSolveRequest, response: plansSolveResponse },
+  "plans/deliver": { request: plansDeliverRequest, response: plansDeliverResponse },
+  "plans/import": { request: plansImportRequest, response: plansImportResponse },
+  "plans/diff": { request: plansDiffRequest, response: plansDiffResponse },
 };
 
 const DIR = path.join(process.cwd(), "docs", "agent-api", "examples");

@@ -1,0 +1,47 @@
+{
+  "endpoint": "plans/import",
+  "request": {
+    "snapshot": {
+      "version": 1,
+      "plan": {
+        "id": "21cac124-0e86-4139-b108-9859d0529c11",
+        "name": "Titanium plates"
+      },
+      "cards": [
+        {
+          "id": "c1",
+          "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-metalbender:b1d532ae84169aed",
+          "machine": "industrial-bending-machine",
+          "tier": "LV",
+          "position": {
+            "x": 100,
+            "y": 100
+          }
+        }
+      ],
+      "drawers": [],
+      "wires": [],
+      "targets": [
+        {
+          "card": "c1",
+          "port": "output:item:gregtech%3Agt.metaitem.01%4017028",
+          "rate": 1
+        }
+      ]
+    },
+    "player": {
+      "name": "Steve",
+      "uuid": "00000000-0000-4000-8000-000000000000"
+    }
+  },
+  "status": 200,
+  "response": {
+    "dataset": "stable-2.9.0-tuxmine",
+    "planId": "x24adwxjfr5dsv458t6g",
+    "name": "Titanium plates",
+    "expiresAt": "2026-11-22T21:46:39.237Z",
+    "cardCount": 1,
+    "wireCount": 0,
+    "warnings": []
+  }
+}

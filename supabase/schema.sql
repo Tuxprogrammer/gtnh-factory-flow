@@ -284,3 +284,23 @@ alter table community_votes
 
 create unique index if not exists community_votes_one_per_account
   on community_votes (plan_id, user_id) where user_id is not null;
+
+-- Agent API deliveries and proposals (supabase/migrations/2026-11-21-agent-deliveries.sql, which explains it).
+create table if not exists agent_deliveries (
+  id text primary key check (id ~ '^[dp][a-hjkmnp-z2-9]{15}$'),
+  kind text not null check (kind in ('delivery', 'proposal')),
+  name text not null check (char_length(name) between 1 and 80),
+  payload jsonb not null,
+  base_plan_id text,
+  player_name text,
+  player_uuid text,
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null default now() + interval '30 days',
+  check ((kind = 'delivery') = (left(id, 1) = 'd')),
+  check (kind = 'delivery' or base_plan_id is not null)
+);
+
+create index if not exists agent_deliveries_kind_created_idx on agent_deliveries (kind, created_at desc);
+create index if not exists agent_deliveries_expires_idx on agent_deliveries (expires_at);
+
+alter table agent_deliveries enable row level security;

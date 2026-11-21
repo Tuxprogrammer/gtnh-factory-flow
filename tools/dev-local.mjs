@@ -121,9 +121,6 @@ async function stop(code = 0) {
 process.on("SIGINT", () => void stop(0));
 process.on("SIGTERM", () => void stop(0));
 
-// What `npm run dev` does first (its predev script).
-spawnSync(process.execPath, ["tools/copy-highs-wasm.mjs"], { cwd: root, stdio: "inherit" });
-
 start("local-db", [bin.tsx, "tools/local-db/serve.ts"], { LOCAL_DB_PORT: String(dbPort) });
 await waitFor(`${dbUrl}/rest/v1/community_users?select=id&limit=1`, "The local database");
 

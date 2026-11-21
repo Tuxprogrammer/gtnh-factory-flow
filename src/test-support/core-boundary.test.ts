@@ -11,11 +11,6 @@ import { applyAllowList, scanBoundary, type AllowedFile } from "./core-boundary"
  */
 const ALLOWED: AllowedFile[] = [
   {
-    file: "src/lib/solver/lp-engine.ts",
-    reason:
-      "Loads the HiGHS WebAssembly solver with fetch. Retires when solving goes through the shared core.",
-  },
-  {
     file: "src/lib/solver/plan/parity/scenario-kit.ts",
     leaf: true,
     reason:

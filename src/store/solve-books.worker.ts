@@ -1,24 +1,13 @@
 import { calculateThroughput } from "@/lib/solver";
-import { initLpEngine } from "@/lib/solver/lp-engine";
-import { warmSolveCore } from "@/lib/core/solve-adopt";
+import { solveEngine, warmSolveCore } from "@/lib/core/solve-adopt";
 import { settleSolveEngines } from "./solve-engines";
 import { attachClogLocks } from "@/components/flow/clog-lock";
 import type { FactoryProject } from "@/lib/model/types";
 import { setActiveGameRates, type ActiveGameRates } from "@/lib/model/game-rates";
 
-// The engines settle once, at Worker startup (solve-engines.ts): where the compiled core solves (WebAssembly GC or its
-// JavaScript build), every solve waits for it and HiGHS is never fetched; HiGHS loads only where the core will not solve
-// (a failed or hung load), and a solve never waits past the bounded waits there. The route serves HiGHS from the package in
-// any start mode; public/ (copied by predev and prebuild) is the fallback.
-const engineSettled = settleSolveEngines({
-  core: warmSolveCore,
-  highs: () =>
-    initLpEngine({
-      glueUrl: "/api/highs/highs.js",
-      wasmUrl: "/api/highs/highs.wasm",
-      fallback: { glueUrl: "/highs.js", wasmUrl: "/highs.wasm" },
-    }),
-});
+// The engine settles once, at Worker startup (solve-engines.ts): every solve waits for the compiled core (WebAssembly
+// GC or its JavaScript build), bounded; past the wait the website's own engine answers until the core arrives.
+const engineSettled = settleSolveEngines({ core: warmSolveCore });
 
 /**
  * The solver, off the main thread. One message in (a plan, the dataset's rates and the content key
@@ -44,7 +33,8 @@ self.onmessage = async (
     // The solve's own cost rides back so the router can learn whether this
     // board is one that must stay off the main thread - the diagnosis
     // counts, since a board slow only in its proof must stay here too.
-    self.postMessage({ key, result, solveMs: performance.now() - started });
+    // Which engine answered: the page says solving is degraded while it is not the core (solve-health.ts).
+    self.postMessage({ key, result, solveMs: performance.now() - started, engine: solveEngine() });
   } catch (error) {
     self.postMessage({ key, error: error instanceof Error ? error.message : String(error) });
   }

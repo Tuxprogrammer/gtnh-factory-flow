@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Puts the compiled core (jvm/web, built by TeaVM: WebAssembly GC and JavaScript) where Next serves it and the loader
 // (src/lib/core/loader.ts) reads it: public/core/{wasm-gc,js}/ plus public/core/manifest.json. Gitignored: the compiled
-// core is never committed. Runs as predev, prebuild, predev:local and in the vitest global setup, like
-// tools/copy-highs-wasm.mjs, and never needs a JDK unless asked to build:
+// core is never committed. Runs as predev, prebuild, predev:local and in the vitest global setup, and never needs a JDK
+// unless asked to build:
 //
 //   source, first that exists
 //     GTNH_CORE_DIR                      a finished build (a CI artifact, a build host's output): wasm-gc/ and js/ inside it

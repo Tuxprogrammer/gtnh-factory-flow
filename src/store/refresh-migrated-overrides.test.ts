@@ -11,7 +11,10 @@ const plate = {
   kind: "item" as const,
   id: "ore:plateAny",
   amount: 1,
-  alternatives: [{ id: "plate-iron" }, { id: "plate-steel" }],
+  alternatives: [
+    { kind: "item" as const, id: "plate-iron" },
+    { kind: "item" as const, id: "plate-steel" },
+  ],
 };
 const water = { kind: "fluid" as const, id: "water", amount: 1000 };
 const acid = { kind: "fluid" as const, id: "acid", amount: 500 };

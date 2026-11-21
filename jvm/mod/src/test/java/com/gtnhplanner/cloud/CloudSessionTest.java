@@ -46,6 +46,7 @@ import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Plan;
 import com.gtnhplanner.library.CommunityApi;
+import com.gtnhplanner.library.SiteHeader;
 import com.gtnhplanner.ui.live.Peers;
 import com.gtnhplanner.ui.live.PresenceOut;
 import com.sun.net.httpserver.HttpExchange;
@@ -73,6 +74,8 @@ class CloudSessionTest {
     /** Statuses the site answers the next PUTs with, in turn (none left: it accepts). */
     private final java.util.Queue<Integer> putStatuses = new java.util.concurrent.ConcurrentLinkedQueue<>();
     private volatile String refuseId = "";
+    /** A guarding proxy in front of the site: everything is answered with a redirect to its sign-in page. */
+    private volatile boolean guarded;
     private final List<String> putBodies = new CopyOnWriteArrayList<>();
     private CloudSession session;
     private final TestHost host = new TestHost();
@@ -175,6 +178,13 @@ class CloudSessionTest {
                 .readAllBytes(),
             StandardCharsets.UTF_8);
         calls.add(method + " " + path + (body.contains("\"plan\"") ? " with a plan" : ""));
+        if (guarded) {
+            ex.getResponseHeaders()
+                .add("Location", "/sign-in");
+            ex.sendResponseHeaders(302, -1);
+            ex.close();
+            return;
+        }
         String reply = "{}";
         int status = 200;
         if (path.equals("/api/library") && method.equals("GET")) {
@@ -724,6 +734,22 @@ class CloudSessionTest {
             host.notices.stream()
                 .noneMatch(n -> n.contains("could not be saved")),
             "no notice: " + host.notices);
+    }
+
+    @Test
+    void aSiteThatAsksForASignInIsToldPlainlyOnce() {
+        inAccount("d1", "glass");
+        guarded = true;
+        final Plan p = begin();
+        tickUntil("told", () -> host.notices.contains(SiteHeader.SIGN_IN));
+        ticks(100);
+        assertEquals(
+            1,
+            host.notices.stream()
+                .filter(n -> n.contains("sign-in"))
+                .count(),
+            host.notices.toString());
+        assertNotNull(p);
     }
 
     @Test

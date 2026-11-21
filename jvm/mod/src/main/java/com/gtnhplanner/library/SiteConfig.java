@@ -24,18 +24,24 @@ import com.gtnhplanner.core.base.Log;
  * offer. Empty: no update check.</li>
  * <li>{@value #SUPPORT_KEY}: a help or chat page the Feedback box links to. Empty: no link.</li>
  * <li>{@value #ORIGINS_KEY}: origins besides the site's own that may use "Open in the mod". Empty: none.</li>
+ * <li>{@value #HEADER_NAME_KEY} and {@value #HEADER_VALUE_KEY}: one extra header sent with every request to the site
+ * and the live service (and to no other host), for a site behind a proxy that guards it with a pre-shared header.
+ * Both empty: none. The value is a secret and is never logged or shown ({@link SiteHeader}).</li>
  * </ul>
  * A system property of the same purpose ({@code -Dgtnhplanner.library.url}, {@code .live.url}, {@code .update.url},
- * {@code .support.url}) wins over the file, for development and tests. A value that is not a web address of the right
+ * {@code .support.url}, {@code gtnhplanner.header.name}, {@code .header.value}) wins over the file, for development and
+ * tests. A value that is not a web address of the right
  * kind is ignored with a warning.
  */
 public final class SiteConfig {
 
     public static final String CATEGORY = "network";
     public static final String SITE_KEY = "siteUrl", LIVE_KEY = "liveUrl", UPDATE_KEY = "updateUrl",
-        SUPPORT_KEY = "supportUrl", ORIGINS_KEY = "websiteOrigins";
+        SUPPORT_KEY = "supportUrl", ORIGINS_KEY = "websiteOrigins", HEADER_NAME_KEY = "headerName",
+        HEADER_VALUE_KEY = "headerValue";
     public static final String SITE_PROPERTY = "gtnhplanner.library.url", LIVE_PROPERTY = "gtnhplanner.live.url",
-        UPDATE_PROPERTY = "gtnhplanner.update.url", SUPPORT_PROPERTY = "gtnhplanner.support.url";
+        UPDATE_PROPERTY = "gtnhplanner.update.url", SUPPORT_PROPERTY = "gtnhplanner.support.url",
+        HEADER_NAME_PROPERTY = "gtnhplanner.header.name", HEADER_VALUE_PROPERTY = "gtnhplanner.header.value";
 
     private static volatile String live = "", update = "", support = "";
     private static volatile List<String> origins = List.of();
@@ -45,11 +51,12 @@ public final class SiteConfig {
         live = address(System.getProperty(LIVE_PROPERTY), true);
         update = address(System.getProperty(UPDATE_PROPERTY), false);
         support = address(System.getProperty(SUPPORT_PROPERTY), false);
+        SiteHeader.use(System.getProperty(HEADER_NAME_PROPERTY), System.getProperty(HEADER_VALUE_PROPERTY));
     }
 
     private SiteConfig() {}
 
-    /** Where the five settings are read from: the config file in the game, a map in tests. Defaults are empty. */
+    /** Where the settings are read from: the config file in the game, a map in tests. Defaults are empty. */
     public interface Values {
 
         /** The text under {@code key} in {@value #CATEGORY}, written to the file with {@code comment} when absent. */
@@ -59,7 +66,7 @@ public final class SiteConfig {
         String[] list(String key, String comment);
     }
 
-    /** Reads the five settings out of the mod's config file; a system property already set is left as it is. */
+    /** Reads the settings out of the mod's config file; a system property already set is left as it is. */
     public static void read(final Configuration c) {
         read(new Values() {
 
@@ -110,6 +117,20 @@ public final class SiteConfig {
             if (!o.isEmpty()) list.add(originOf(o));
         }
         origins = List.copyOf(list);
+        // The value goes straight to SiteHeader, the only place it is held; nothing here logs or keeps it.
+        SiteHeader.use(
+            set(HEADER_NAME_PROPERTY) ? System.getProperty(HEADER_NAME_PROPERTY)
+                : v.text(
+                    HEADER_NAME_KEY,
+                    "The name of one extra header to send with every request to the website and its live service, and"
+                        + " to no other host, for a site behind a proxy that guards it with a pre-shared header (for"
+                        + " example X-Access-Key). Empty sends none. Cookie, Host, Content-Length and the other"
+                        + " headers the mod sets itself are not allowed."),
+            set(HEADER_VALUE_PROPERTY) ? System.getProperty(HEADER_VALUE_PROPERTY)
+                : v.text(
+                    HEADER_VALUE_KEY,
+                    "The value of that header: a secret the site's owner gives you. Both this and the name must be"
+                        + " set. It is never written to the log or shown in the game."));
     }
 
     private static boolean set(final String property) {
@@ -188,6 +209,13 @@ public final class SiteConfig {
 
     public static void useLive(@Nullable final String url) {
         live = address(url, true);
+    }
+
+    /**
+     * Sets the extra header (both empty: none); a value or name that is not usable turns it off, as the config does.
+     */
+    public static void useHeader(@Nullable final String name, @Nullable final String value) {
+        SiteHeader.use(name, value);
     }
 
     public static void useOrigins(final List<String> list) {

@@ -494,8 +494,9 @@ public final class BoardScreen extends ModularScreen {
      * library, or Update in library and Publish as new post for one posted: a copy for everyone, never the plan
      * itself), its website link and its plan code to the clipboard, a plan file the website
      * opens, the plan opened on the website in the browser, a line in the game's chat that opens it
-     * (client/ChatShare), its recipes in NEI's bookmarks (nei/PlanBookmarks), and a picture of it. The website's Share
-     * menu has the same rows, but for the bookmarks. Labels only, as narrow as
+     * (client/ChatShare), its recipes in NEI's bookmarks (nei/PlanBookmarks), AE2 patterns of its recipes
+     * (pattern/PatternThis.plan), and a picture of it. The website's Share
+     * menu has the same rows, but for the bookmarks and the patterns. Labels only, as narrow as
      * they are: each says what it does.
      */
     private static void openShare(final ModularPanel panel, final BoardSession session, final BoardCanvas canvas,
@@ -524,6 +525,15 @@ public final class BoardScreen extends ModularScreen {
         rows.add(com.gtnhplanner.ui.popup.PickList.Entry.of("Export plan file", session::exportPlanFile));
         rows.add(com.gtnhplanner.ui.popup.PickList.Entry.of("Bookmark recipes", () -> PlanBookmarks.recipes(session)));
         rows.add(com.gtnhplanner.ui.popup.PickList.Entry.of("Bookmark as chain", () -> PlanBookmarks.chain(session)));
+        // An AE2 pattern of every recipe from blanks in the inventory, as the card's "Pattern this" makes one.
+        if (com.gtnhplanner.pattern.PatternThis.offered()) rows.add(
+            new com.gtnhplanner.ui.popup.PickList.Entry(
+                null,
+                "Pattern the plan",
+                java.util.Objects.requireNonNullElse(com.gtnhplanner.pattern.PatternThis.unavailable(), ""),
+                Hyb.INK,
+                false,
+                () -> com.gtnhplanner.pattern.PatternThis.plan(session)));
         rows.add(
             com.gtnhplanner.ui.popup.PickList.Entry
                 .of("Screenshot...", () -> com.gtnhplanner.ui.popup.ScreenshotPanel.open(panel, session, canvas)));

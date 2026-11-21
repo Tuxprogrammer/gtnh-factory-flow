@@ -25,6 +25,7 @@ export const plansDeliverResponse = z
     id: z.string(),
     code: z.string(),
     url: z.string().optional(),
+    link: z.string().optional(),
     expiresAt: z.string(),
     cardCount: z.number().int(),
   })

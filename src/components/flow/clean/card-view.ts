@@ -77,7 +77,8 @@ function portView(p: CardViewPortView, nodeId: string, port: RailPort): CleanPor
   };
 }
 
-function chipView(c: CardViewChipView): CleanChipView {
+/** A chip of the core's view as the website's (a special card's strip reads them too). */
+export function chipView(c: CardViewChipView): CleanChipView {
   return {
     id: c.id,
     label: c.label,
@@ -95,7 +96,8 @@ function chipView(c: CardViewChipView): CleanChipView {
   };
 }
 
-function footView(f: CardViewFootView): CleanFootView {
+/** The core's foot bar as the website's. */
+export function footView(f: CardViewFootView): CleanFootView {
   const facts = f.facts;
   return {
     tone: tone(f.tone),
@@ -280,7 +282,8 @@ export function forgetCardViews(): void {
   waiting.clear();
 }
 
-function words(c: CoreExports): void {
+/** Hands the card's words to a loaded core, once per core (the special cards' path calls it too). */
+export function words(c: CoreExports): void {
   if (worded.has(c)) return;
   c.ViewExports.viewCardWords(JSON.stringify(CARD_WORDS));
   worded.add(c);

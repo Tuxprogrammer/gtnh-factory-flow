@@ -19,6 +19,8 @@ public final class ViewJs {
 
     private static final com.gtnhplanner.core.base.RateUnit[] RATE_UNIT = com.gtnhplanner.core.base.RateUnit.values();
 
+    private static final com.gtnhplanner.core.view.special.SpecialInput.Kind[] SPECIAL_INPUT_KIND = com.gtnhplanner.core.view.special.SpecialInput.Kind.values();
+
     private static final com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind[] UP_TO_LOOP_KIND = com.gtnhplanner.data.flowchart.balancer.UpToLoop.Kind.values();
 
     private static final com.gtnhplanner.data.flowchart.balancer.UpToReason[] UP_TO_REASON = com.gtnhplanner.data.flowchart.balancer.UpToReason.values();
@@ -92,6 +94,7 @@ public final class ViewJs {
             c24 = m24;
         }
         final JSObject o26 = cardInputMenu(o);
+        final JSObject o27 = cardInputReadOnly(o);
         return new com.gtnhplanner.core.view.card.CardInput(cardInputNodeId(o),
             cardInputName(o),
             cardInputHasPicker(o),
@@ -118,7 +121,8 @@ public final class ViewJs {
             o23 == null ? null : readCardInputTurbine(o23),
             c24,
             cardInputSelected(o),
-            readCardInputMenu(o26));
+            readCardInputMenu(o26),
+            o27 == null ? null : readCardInputReadOnly(o27));
     }
 
     /** A {@code CardInputBearer} from the website's object (records.generated.ts {@code CardInputBearer}). */
@@ -192,7 +196,8 @@ public final class ViewJs {
             cardInputMenuShared(o),
             cardInputMenuHolder(o),
             cardInputMenuEmptyCropFarm(o),
-            cardInputMenuTasks(o));
+            cardInputMenuTasks(o),
+            cardInputMenuReadOnly(o));
     }
 
     /** A {@code CardInputPort} from the website's object (records.generated.ts {@code CardInputPort}). */
@@ -229,6 +234,12 @@ public final class ViewJs {
     public static com.gtnhplanner.core.view.card.CardInput.Product readCardInputProduct(final JSObject o) {
         return new com.gtnhplanner.core.view.card.CardInput.Product(cardInputProductIcon(o),
             cardInputProductFluid(o));
+    }
+
+    /** A {@code CardInputReadOnly} from the website's object (records.generated.ts {@code CardInputReadOnly}). */
+    public static com.gtnhplanner.core.view.card.CardInput.ReadOnly readCardInputReadOnly(final JSObject o) {
+        return new com.gtnhplanner.core.view.card.CardInput.ReadOnly(cardInputReadOnlyReason(o),
+            cardInputReadOnlySolved(o));
     }
 
     /** A {@code CardInputSetting} from the website's object (records.generated.ts {@code CardInputSetting}). */
@@ -287,6 +298,120 @@ public final class ViewJs {
             c5,
             cardInputUpToWantsPresent(o) ? Double.valueOf(cardInputUpToWants(o)) : null,
             c7);
+    }
+
+    /** A {@code NodeRailsInput} from the website's object (records.generated.ts {@code NodeRailsInput}). */
+    public static com.gtnhplanner.core.view.rails.NodeRailsInput readNodeRailsInput(final JSObject o) {
+        final JSObject o7 = nodeRailsInputInputs(o);
+        final JSObject o8 = nodeRailsInputOutputs(o);
+        return new com.gtnhplanner.core.view.rails.NodeRailsInput(nodeRailsInputEnabled(o),
+            nodeRailsInputHasResult(o),
+            nodeRailsInputMissingRecipe(o),
+            nodeRailsInputSolveMode(o),
+            nodeRailsInputHasSlots(o),
+            nodeRailsInputUtilization(o),
+            nodeRailsInputEuT(o),
+            readNodeRailsInputSide(o7),
+            readNodeRailsInputSide(o8));
+    }
+
+    /** A {@code NodeRailsInputFlow} from the website's object (records.generated.ts {@code NodeRailsInputFlow}). */
+    public static com.gtnhplanner.core.view.rails.NodeRailsInput.Flow readNodeRailsInputFlow(final JSObject o) {
+        return new com.gtnhplanner.core.view.rails.NodeRailsInput.Flow(nodeRailsInputFlowKey(o),
+            nodeRailsInputFlowKind(o),
+            nodeRailsInputFlowResourceId(o),
+            nodeRailsInputFlowName(o),
+            nodeRailsInputFlowOreLabel(o),
+            nodeRailsInputFlowHandleId(o),
+            nodeRailsInputFlowAmountPerSecond(o));
+    }
+
+    /** A {@code NodeRailsInputSide} from the website's object (records.generated.ts {@code NodeRailsInputSide}). */
+    public static com.gtnhplanner.core.view.rails.NodeRailsInput.Side readNodeRailsInputSide(final JSObject o) {
+        final JSObject a0 = nodeRailsInputSideSlots(o);
+        final java.util.List<com.gtnhplanner.core.view.rails.NodeRailsInput.Slot> c0;
+        if (a0 == null) c0 = new java.util.ArrayList<>();
+        else {
+            final int n0 = length(a0);
+            final java.util.List<com.gtnhplanner.core.view.rails.NodeRailsInput.Slot> l0 = new java.util.ArrayList<>(n0);
+            for (int i = 0; i < n0; i++) l0.add(readNodeRailsInputSlot(atObject(a0, i)));
+            c0 = l0;
+        }
+        final JSObject a1 = nodeRailsInputSideFlows(o);
+        final java.util.List<com.gtnhplanner.core.view.rails.NodeRailsInput.Flow> c1;
+        if (a1 == null) c1 = new java.util.ArrayList<>();
+        else {
+            final int n1 = length(a1);
+            final java.util.List<com.gtnhplanner.core.view.rails.NodeRailsInput.Flow> l1 = new java.util.ArrayList<>(n1);
+            for (int i = 0; i < n1; i++) l1.add(readNodeRailsInputFlow(atObject(a1, i)));
+            c1 = l1;
+        }
+        final JSObject a2 = nodeRailsInputSideWires(o);
+        final java.util.List<com.gtnhplanner.core.view.rails.NodeRailsInput.Wire> c2;
+        if (a2 == null) c2 = new java.util.ArrayList<>();
+        else {
+            final int n2 = length(a2);
+            final java.util.List<com.gtnhplanner.core.view.rails.NodeRailsInput.Wire> l2 = new java.util.ArrayList<>(n2);
+            for (int i = 0; i < n2; i++) l2.add(readNodeRailsInputWire(atObject(a2, i)));
+            c2 = l2;
+        }
+        return new com.gtnhplanner.core.view.rails.NodeRailsInput.Side(c0,
+            c1,
+            c2);
+    }
+
+    /** A {@code NodeRailsInputSlot} from the website's object (records.generated.ts {@code NodeRailsInputSlot}). */
+    public static com.gtnhplanner.core.view.rails.NodeRailsInput.Slot readNodeRailsInputSlot(final JSObject o) {
+        return new com.gtnhplanner.core.view.rails.NodeRailsInput.Slot(nodeRailsInputSlotKey(o),
+            nodeRailsInputSlotKind(o),
+            nodeRailsInputSlotResourceId(o),
+            nodeRailsInputSlotName(o),
+            nodeRailsInputSlotOreLabel(o),
+            nodeRailsInputSlotHandleId(o),
+            nodeRailsInputSlotConsumed(o),
+            nodeRailsInputSlotChancePresent(o) ? Double.valueOf(nodeRailsInputSlotChance(o)) : null,
+            nodeRailsInputSlotConsumeChancePresent(o) ? Double.valueOf(nodeRailsInputSlotConsumeChance(o)) : null,
+            (int) nodeRailsInputSlotAlternatives(o));
+    }
+
+    /** A {@code NodeRailsInputWire} from the website's object (records.generated.ts {@code NodeRailsInputWire}). */
+    public static com.gtnhplanner.core.view.rails.NodeRailsInput.Wire readNodeRailsInputWire(final JSObject o) {
+        return new com.gtnhplanner.core.view.rails.NodeRailsInput.Wire(nodeRailsInputWireKey(o),
+            nodeRailsInputWireTransferredPerSecond(o));
+    }
+
+    /** A {@code SpecialInput} from the website's object (records.generated.ts {@code SpecialInput}). */
+    public static com.gtnhplanner.core.view.special.SpecialInput readSpecialInput(final JSObject o) {
+        final int e0 = specialInputKind(o);
+        final JSObject o1 = specialInputHolder(o);
+        return new com.gtnhplanner.core.view.special.SpecialInput(SPECIAL_INPUT_KIND[e0],
+            o1 == null ? null : readSpecialInputHolder(o1));
+    }
+
+    /** A {@code SpecialInputCase} from the website's object (records.generated.ts {@code SpecialInputCase}). */
+    public static com.gtnhplanner.core.view.special.SpecialInput.Case readSpecialInputCase(final JSObject o) {
+        final JSObject o0 = specialInputCaseDials(o);
+        final JSObject o1 = specialInputCaseCard(o);
+        final JSObject o2 = specialInputCaseSpecial(o);
+        return new com.gtnhplanner.core.view.special.SpecialInput.Case(readCardInputDials(o0),
+            readCardInput(o1),
+            readSpecialInput(o2));
+    }
+
+    /** A {@code SpecialInputDial} from the website's object (records.generated.ts {@code SpecialInputDial}). */
+    public static com.gtnhplanner.core.view.special.SpecialInput.Dial readSpecialInputDial(final JSObject o) {
+        return new com.gtnhplanner.core.view.special.SpecialInput.Dial(specialInputDialSupply(o),
+            specialInputDialPerSecond(o),
+            specialInputDialKind(o),
+            specialInputDialShowMode(o),
+            specialInputDialShowRate(o));
+    }
+
+    /** A {@code SpecialInputHolder} from the website's object (records.generated.ts {@code SpecialInputHolder}). */
+    public static com.gtnhplanner.core.view.special.SpecialInput.Holder readSpecialInputHolder(final JSObject o) {
+        final JSObject o1 = specialInputHolderDial(o);
+        return new com.gtnhplanner.core.view.special.SpecialInput.Holder(specialInputHolderEmpty(o),
+            o1 == null ? null : readSpecialInputDial(o1));
     }
 
     /** A {@code CardGeometry} as the website's object (records.generated.ts {@code CardGeometry}). */
@@ -424,6 +549,106 @@ public final class ViewJs {
         return newCardViewTierChip(v.label(), v.fixed(), v.title());
     }
 
+    /** A {@code NodeRailsView} as the website's object (records.generated.ts {@code NodeRailsView}). */
+    public static JSObject js(final com.gtnhplanner.core.view.rails.NodeRailsView v) {
+        final JSObject a3;
+        {
+            a3 = newArray();
+            for (final com.gtnhplanner.core.view.rails.NodeRailsView.Row x : v.inputs()) pushObject(a3, js(x));
+        }
+        final JSObject a4;
+        {
+            a4 = newArray();
+            for (final com.gtnhplanner.core.view.rails.NodeRailsView.Row x : v.outputs()) pushObject(a4, js(x));
+        }
+        return newNodeRailsView(v.verdict(), v.pct(), v.bare() == null ? null : js(v.bare()), a3, a4);
+    }
+
+    /** A {@code NodeRailsViewBare} as the website's object (records.generated.ts {@code NodeRailsViewBare}). */
+    public static JSObject js(final com.gtnhplanner.core.view.rails.NodeRailsView.Bare v) {
+        final JSObject a0;
+        {
+            a0 = newArray();
+            for (final com.gtnhplanner.core.view.rails.NodeRailsView.BareSlot x : v.inputs()) pushObject(a0, js(x));
+        }
+        final JSObject a1;
+        {
+            a1 = newArray();
+            for (final com.gtnhplanner.core.view.rails.NodeRailsView.BareSlot x : v.outputs()) pushObject(a1, js(x));
+        }
+        return newNodeRailsViewBare(a0, a1);
+    }
+
+    /** A {@code NodeRailsViewBareSlot} as the website's object (records.generated.ts {@code NodeRailsViewBareSlot}). */
+    public static JSObject js(final com.gtnhplanner.core.view.rails.NodeRailsView.BareSlot v) {
+        return newNodeRailsViewBareSlot(v.resourceKey(), v.kind(), v.displayName());
+    }
+
+    /** A {@code NodeRailsViewRow} as the website's object (records.generated.ts {@code NodeRailsViewRow}). */
+    public static JSObject js(final com.gtnhplanner.core.view.rails.NodeRailsView.Row v) {
+        return newNodeRailsViewRow(v.key(), v.handleId(), v.kind(), v.resourceId(), v.name(), v.slot() != null, v.slot() == null ? 0 : v.slot(), v.connected(), v.unsupplied(), v.boundaryFree(), v.currentPerSecond(), v.nameplatePerSecond(), v.tone(), v.shortBadge() != null, v.shortBadge() == null ? 0 : v.shortBadge(), v.showNameplate(), v.energyPerUnit() != null, v.energyPerUnit() == null ? 0 : v.energyPerUnit(), v.free(), v.chance() != null, v.chance() == null ? 0 : v.chance(), v.consumeChance() != null, v.consumeChance() == null ? 0 : v.consumeChance(), v.alternatives());
+    }
+
+    /** A {@code SpecialView} as the website's object (records.generated.ts {@code SpecialView}). */
+    public static JSObject js(final com.gtnhplanner.core.view.special.SpecialView v) {
+        final JSObject a8;
+        {
+            a8 = newArray();
+            for (final com.gtnhplanner.core.view.special.SpecialView.Section x : v.sections()) pushObject(a8, js(x));
+        }
+        final JSObject a14;
+        {
+            a14 = newArray();
+            for (final com.gtnhplanner.core.view.special.SpecialView.Chip x : v.chips()) pushObject(a14, js(x));
+        }
+        final JSObject a16;
+        {
+            a16 = newArray();
+            for (final String x : v.warnings()) pushString(a16, x.toString());
+        }
+        return newSpecialView(v.kind().name(), v.name(), v.nameStep(), v.nameTone().name(), v.hasPicker(), v.tier() == null ? null : js(v.tier()), v.amps() == null ? null : js(v.amps()), v.empty(), a8, v.power() == null ? null : js(v.power()), v.sockets() == null ? null : js(v.sockets()), v.gauge(), v.count() == null ? null : js(v.count()), v.foot() == null ? null : js(v.foot()), a14, v.stripHeight(), a16, v.cannotRun(), v.unset(), v.pick(), v.cropKey());
+    }
+
+    /** A {@code SpecialViewChip} as the website's object (records.generated.ts {@code SpecialViewChip}). */
+    public static JSObject js(final com.gtnhplanner.core.view.special.SpecialView.Chip v) {
+        return newSpecialViewChip(js(v.chip()), v.edit() == null ? null : js(v.edit()));
+    }
+
+    /** A {@code SpecialViewEdit} as the website's object (records.generated.ts {@code SpecialViewEdit}). */
+    public static JSObject js(final com.gtnhplanner.core.view.special.SpecialView.Edit v) {
+        final JSObject a2;
+        {
+            a2 = newArray();
+            for (final String x : v.notes()) pushString(a2, x.toString());
+        }
+        return newSpecialViewEdit(v.text(), v.scale(), a2);
+    }
+
+    /** A {@code SpecialViewRule} as the website's object (records.generated.ts {@code SpecialViewRule}). */
+    public static JSObject js(final com.gtnhplanner.core.view.special.SpecialView.Rule v) {
+        return newSpecialViewRule(v.pct(), v.word(), v.unused(), v.circuit() == null ? null : js(v.circuit()), v.canUp(), v.canDown());
+    }
+
+    /** A {@code SpecialViewSection} as the website's object (records.generated.ts {@code SpecialViewSection}). */
+    public static JSObject js(final com.gtnhplanner.core.view.special.SpecialView.Section v) {
+        final JSObject a1;
+        {
+            a1 = newArray();
+            for (final com.gtnhplanner.core.view.card.CardView.PortView x : v.inputs()) pushObject(a1, js(x));
+        }
+        final JSObject a2;
+        {
+            a2 = newArray();
+            for (final com.gtnhplanner.core.view.card.CardView.PortView x : v.outputs()) pushObject(a2, js(x));
+        }
+        return newSpecialViewSection(v.section(), a1, a2, v.rule() == null ? null : js(v.rule()));
+    }
+
+    /** A {@code SpecialViewSockets} as the website's object (records.generated.ts {@code SpecialViewSockets}). */
+    public static JSObject js(final com.gtnhplanner.core.view.special.SpecialView.Sockets v) {
+        return newSpecialViewSockets(v.take(), v.give(), v.takeHint(), v.giveHint());
+    }
+
     // region JavaScript
 
     @JSBody(params = "a", script = "return a.length;")
@@ -528,6 +753,9 @@ public final class ViewJs {
     @JSBody(params = "o", script = "return o.menu == null ? {} : o.menu;")
     private static native JSObject cardInputMenu(JSObject o);
 
+    @JSBody(params = "o", script = "return o.readOnly == null ? null : o.readOnly;")
+    private static native JSObject cardInputReadOnly(JSObject o);
+
     @JSBody(params = "o", script = "return o.nodeId == null ? null : o.nodeId;")
     private static native String cardInputBearerNodeId(JSObject o);
 
@@ -621,6 +849,9 @@ public final class ViewJs {
     @JSBody(params = "o", script = "return o.tasks === true;")
     private static native boolean cardInputMenuTasks(JSObject o);
 
+    @JSBody(params = "o", script = "return o.readOnly === true;")
+    private static native boolean cardInputMenuReadOnly(JSObject o);
+
     @JSBody(params = "o", script = "return o.key == null ? \"\" : o.key;")
     private static native String cardInputPortKey(JSObject o);
 
@@ -705,6 +936,12 @@ public final class ViewJs {
     @JSBody(params = "o", script = "return o.fluid === true;")
     private static native boolean cardInputProductFluid(JSObject o);
 
+    @JSBody(params = "o", script = "return o.reason == null ? \"\" : o.reason;")
+    private static native String cardInputReadOnlyReason(JSObject o);
+
+    @JSBody(params = "o", script = "return o.solved === true;")
+    private static native boolean cardInputReadOnlySolved(JSObject o);
+
     @JSBody(params = "o", script = "return o.id == null ? \"\" : o.id;")
     private static native String cardInputSettingId(JSObject o);
 
@@ -777,6 +1014,141 @@ public final class ViewJs {
     @JSBody(params = "o", script = "return o.upstream == null ? null : o.upstream;")
     private static native JSObject cardInputUpToUpstream(JSObject o);
 
+    @JSBody(params = "o", script = "return o.enabled === true;")
+    private static native boolean nodeRailsInputEnabled(JSObject o);
+
+    @JSBody(params = "o", script = "return o.hasResult === true;")
+    private static native boolean nodeRailsInputHasResult(JSObject o);
+
+    @JSBody(params = "o", script = "return o.missingRecipe === true;")
+    private static native boolean nodeRailsInputMissingRecipe(JSObject o);
+
+    @JSBody(params = "o", script = "return o.solveMode === true;")
+    private static native boolean nodeRailsInputSolveMode(JSObject o);
+
+    @JSBody(params = "o", script = "return o.hasSlots === true;")
+    private static native boolean nodeRailsInputHasSlots(JSObject o);
+
+    @JSBody(params = "o", script = "return o.utilization == null ? 0 : o.utilization;")
+    private static native double nodeRailsInputUtilization(JSObject o);
+
+    @JSBody(params = "o", script = "return o.euT == null ? 0 : o.euT;")
+    private static native double nodeRailsInputEuT(JSObject o);
+
+    @JSBody(params = "o", script = "return o.inputs == null ? {} : o.inputs;")
+    private static native JSObject nodeRailsInputInputs(JSObject o);
+
+    @JSBody(params = "o", script = "return o.outputs == null ? {} : o.outputs;")
+    private static native JSObject nodeRailsInputOutputs(JSObject o);
+
+    @JSBody(params = "o", script = "return o.key == null ? \"\" : o.key;")
+    private static native String nodeRailsInputFlowKey(JSObject o);
+
+    @JSBody(params = "o", script = "return o.kind == null ? \"\" : o.kind;")
+    private static native String nodeRailsInputFlowKind(JSObject o);
+
+    @JSBody(params = "o", script = "return o.resourceId == null ? \"\" : o.resourceId;")
+    private static native String nodeRailsInputFlowResourceId(JSObject o);
+
+    @JSBody(params = "o", script = "return o.name == null ? null : o.name;")
+    private static native String nodeRailsInputFlowName(JSObject o);
+
+    @JSBody(params = "o", script = "return o.oreLabel == null ? null : o.oreLabel;")
+    private static native String nodeRailsInputFlowOreLabel(JSObject o);
+
+    @JSBody(params = "o", script = "return o.handleId == null ? \"\" : o.handleId;")
+    private static native String nodeRailsInputFlowHandleId(JSObject o);
+
+    @JSBody(params = "o", script = "return o.amountPerSecond == null ? 0 : o.amountPerSecond;")
+    private static native double nodeRailsInputFlowAmountPerSecond(JSObject o);
+
+    @JSBody(params = "o", script = "return o.slots == null ? null : o.slots;")
+    private static native JSObject nodeRailsInputSideSlots(JSObject o);
+
+    @JSBody(params = "o", script = "return o.flows == null ? null : o.flows;")
+    private static native JSObject nodeRailsInputSideFlows(JSObject o);
+
+    @JSBody(params = "o", script = "return o.wires == null ? null : o.wires;")
+    private static native JSObject nodeRailsInputSideWires(JSObject o);
+
+    @JSBody(params = "o", script = "return o.key == null ? \"\" : o.key;")
+    private static native String nodeRailsInputSlotKey(JSObject o);
+
+    @JSBody(params = "o", script = "return o.kind == null ? \"\" : o.kind;")
+    private static native String nodeRailsInputSlotKind(JSObject o);
+
+    @JSBody(params = "o", script = "return o.resourceId == null ? \"\" : o.resourceId;")
+    private static native String nodeRailsInputSlotResourceId(JSObject o);
+
+    @JSBody(params = "o", script = "return o.name == null ? null : o.name;")
+    private static native String nodeRailsInputSlotName(JSObject o);
+
+    @JSBody(params = "o", script = "return o.oreLabel == null ? null : o.oreLabel;")
+    private static native String nodeRailsInputSlotOreLabel(JSObject o);
+
+    @JSBody(params = "o", script = "return o.handleId == null ? \"\" : o.handleId;")
+    private static native String nodeRailsInputSlotHandleId(JSObject o);
+
+    @JSBody(params = "o", script = "return o.consumed === true;")
+    private static native boolean nodeRailsInputSlotConsumed(JSObject o);
+
+    @JSBody(params = "o", script = "return o.chance == null ? 0 : o.chance;")
+    private static native double nodeRailsInputSlotChance(JSObject o);
+
+    @JSBody(params = "o", script = "return o.chance != null;")
+    private static native boolean nodeRailsInputSlotChancePresent(JSObject o);
+
+    @JSBody(params = "o", script = "return o.consumeChance == null ? 0 : o.consumeChance;")
+    private static native double nodeRailsInputSlotConsumeChance(JSObject o);
+
+    @JSBody(params = "o", script = "return o.consumeChance != null;")
+    private static native boolean nodeRailsInputSlotConsumeChancePresent(JSObject o);
+
+    @JSBody(params = "o", script = "return o.alternatives == null ? 0 : o.alternatives;")
+    private static native double nodeRailsInputSlotAlternatives(JSObject o);
+
+    @JSBody(params = "o", script = "return o.key == null ? \"\" : o.key;")
+    private static native String nodeRailsInputWireKey(JSObject o);
+
+    @JSBody(params = "o", script = "return o.transferredPerSecond == null ? 0 : o.transferredPerSecond;")
+    private static native double nodeRailsInputWireTransferredPerSecond(JSObject o);
+
+    @JSBody(params = "o", script = "var __t = {\"SHARED\":0,\"POWER\":1,\"CUSTOM_RATE\":2,\"TANK\":3,\"CROP\":4}; var __k = o.kind; return __k == null ? -1 : __t.hasOwnProperty(__k) ? __t[__k] : 5;")
+    private static native int specialInputKind(JSObject o);
+
+    @JSBody(params = "o", script = "return o.holder == null ? null : o.holder;")
+    private static native JSObject specialInputHolder(JSObject o);
+
+    @JSBody(params = "o", script = "return o.dials == null ? {} : o.dials;")
+    private static native JSObject specialInputCaseDials(JSObject o);
+
+    @JSBody(params = "o", script = "return o.card == null ? {} : o.card;")
+    private static native JSObject specialInputCaseCard(JSObject o);
+
+    @JSBody(params = "o", script = "return o.special == null ? {} : o.special;")
+    private static native JSObject specialInputCaseSpecial(JSObject o);
+
+    @JSBody(params = "o", script = "return o.supply === true;")
+    private static native boolean specialInputDialSupply(JSObject o);
+
+    @JSBody(params = "o", script = "return o.perSecond == null ? 0 : o.perSecond;")
+    private static native double specialInputDialPerSecond(JSObject o);
+
+    @JSBody(params = "o", script = "return o.kind == null ? \"\" : o.kind;")
+    private static native String specialInputDialKind(JSObject o);
+
+    @JSBody(params = "o", script = "return o.showMode === true;")
+    private static native boolean specialInputDialShowMode(JSObject o);
+
+    @JSBody(params = "o", script = "return o.showRate === true;")
+    private static native boolean specialInputDialShowRate(JSObject o);
+
+    @JSBody(params = "o", script = "return o.empty === true;")
+    private static native boolean specialInputHolderEmpty(JSObject o);
+
+    @JSBody(params = "o", script = "return o.dial == null ? null : o.dial;")
+    private static native JSObject specialInputHolderDial(JSObject o);
+
     @JSBody(params = { "a", "x" }, script = "a.push(x);")
     private static native void pushObject(JSObject a, JSObject x);
 
@@ -839,6 +1211,36 @@ public final class ViewJs {
 
     @JSBody(params = { "_label", "_fixed", "_title" }, script = "var __w = {}; __w.label = _label; __w.fixed = _fixed; __w.title = _title; return __w;")
     private static native JSObject newCardViewTierChip(String _label, boolean _fixed, String _title);
+
+    @JSBody(params = { "_verdict", "_pct", "_bare", "_inputs", "_outputs" }, script = "var __w = {}; __w.verdict = _verdict; __w.pct = _pct; if (_bare !== null) __w.bare = _bare; __w.inputs = _inputs; __w.outputs = _outputs; return __w;")
+    private static native JSObject newNodeRailsView(String _verdict, double _pct, JSObject _bare, JSObject _inputs, JSObject _outputs);
+
+    @JSBody(params = { "_inputs", "_outputs" }, script = "var __w = {}; __w.inputs = _inputs; __w.outputs = _outputs; return __w;")
+    private static native JSObject newNodeRailsViewBare(JSObject _inputs, JSObject _outputs);
+
+    @JSBody(params = { "_resourceKey", "_kind", "_displayName" }, script = "var __w = {}; __w.resourceKey = _resourceKey; __w.kind = _kind; __w.displayName = _displayName; return __w;")
+    private static native JSObject newNodeRailsViewBareSlot(String _resourceKey, String _kind, String _displayName);
+
+    @JSBody(params = { "_key", "_handleId", "_kind", "_resourceId", "_name", "_slotPresent", "_slot", "_connected", "_unsupplied", "_boundaryFree", "_currentPerSecond", "_nameplatePerSecond", "_tone", "_shortBadgePresent", "_shortBadge", "_showNameplate", "_energyPerUnitPresent", "_energyPerUnit", "_free", "_chancePresent", "_chance", "_consumeChancePresent", "_consumeChance", "_alternatives" }, script = "var __w = {}; __w.key = _key; __w.handleId = _handleId; __w.kind = _kind; __w.resourceId = _resourceId; __w.name = _name; if (_slotPresent) __w.slot = _slot; __w.connected = _connected; __w.unsupplied = _unsupplied; __w.boundaryFree = _boundaryFree; __w.currentPerSecond = _currentPerSecond; __w.nameplatePerSecond = _nameplatePerSecond; __w.tone = _tone; if (_shortBadgePresent) __w.shortBadge = _shortBadge; __w.showNameplate = _showNameplate; if (_energyPerUnitPresent) __w.energyPerUnit = _energyPerUnit; __w.free = _free; if (_chancePresent) __w.chance = _chance; if (_consumeChancePresent) __w.consumeChance = _consumeChance; __w.alternatives = _alternatives; return __w;")
+    private static native JSObject newNodeRailsViewRow(String _key, String _handleId, String _kind, String _resourceId, String _name, boolean _slotPresent, double _slot, boolean _connected, boolean _unsupplied, boolean _boundaryFree, double _currentPerSecond, double _nameplatePerSecond, String _tone, boolean _shortBadgePresent, double _shortBadge, boolean _showNameplate, boolean _energyPerUnitPresent, double _energyPerUnit, boolean _free, boolean _chancePresent, double _chance, boolean _consumeChancePresent, double _consumeChance, double _alternatives);
+
+    @JSBody(params = { "_kind", "_name", "_nameStep", "_nameTone", "_hasPicker", "_tier", "_amps", "_empty", "_sections", "_power", "_sockets", "_gauge", "_count", "_foot", "_chips", "_stripHeight", "_warnings", "_cannotRun", "_unset", "_pick", "_cropKey" }, script = "var __w = {}; __w.kind = _kind; __w.name = _name; __w.nameStep = _nameStep; __w.nameTone = _nameTone; __w.hasPicker = _hasPicker; if (_tier !== null) __w.tier = _tier; if (_amps !== null) __w.amps = _amps; __w.empty = _empty; __w.sections = _sections; if (_power !== null) __w.power = _power; if (_sockets !== null) __w.sockets = _sockets; __w.gauge = _gauge; if (_count !== null) __w.count = _count; if (_foot !== null) __w.foot = _foot; __w.chips = _chips; __w.stripHeight = _stripHeight; __w.warnings = _warnings; __w.cannotRun = _cannotRun; __w.unset = _unset; __w.pick = _pick; __w.cropKey = _cropKey; return __w;")
+    private static native JSObject newSpecialView(String _kind, String _name, double _nameStep, String _nameTone, boolean _hasPicker, JSObject _tier, JSObject _amps, boolean _empty, JSObject _sections, JSObject _power, JSObject _sockets, boolean _gauge, JSObject _count, JSObject _foot, JSObject _chips, double _stripHeight, JSObject _warnings, boolean _cannotRun, boolean _unset, boolean _pick, boolean _cropKey);
+
+    @JSBody(params = { "_chip", "_edit" }, script = "var __w = {}; __w.chip = _chip; if (_edit !== null) __w.edit = _edit; return __w;")
+    private static native JSObject newSpecialViewChip(JSObject _chip, JSObject _edit);
+
+    @JSBody(params = { "_text", "_scale", "_notes" }, script = "var __w = {}; __w.text = _text; __w.scale = _scale; __w.notes = _notes; return __w;")
+    private static native JSObject newSpecialViewEdit(String _text, double _scale, JSObject _notes);
+
+    @JSBody(params = { "_pct", "_word", "_unused", "_circuit", "_canUp", "_canDown" }, script = "var __w = {}; __w.pct = _pct; __w.word = _word; __w.unused = _unused; if (_circuit !== null) __w.circuit = _circuit; __w.canUp = _canUp; __w.canDown = _canDown; return __w;")
+    private static native JSObject newSpecialViewRule(String _pct, String _word, boolean _unused, JSObject _circuit, boolean _canUp, boolean _canDown);
+
+    @JSBody(params = { "_section", "_inputs", "_outputs", "_rule" }, script = "var __w = {}; __w.section = _section; __w.inputs = _inputs; __w.outputs = _outputs; if (_rule !== null) __w.rule = _rule; return __w;")
+    private static native JSObject newSpecialViewSection(double _section, JSObject _inputs, JSObject _outputs, JSObject _rule);
+
+    @JSBody(params = { "_take", "_give", "_takeHint", "_giveHint" }, script = "var __w = {}; __w.take = _take; __w.give = _give; __w.takeHint = _takeHint; __w.giveHint = _giveHint; return __w;")
+    private static native JSObject newSpecialViewSockets(String _take, String _give, String _takeHint, String _giveHint);
 
     // endregion
 }

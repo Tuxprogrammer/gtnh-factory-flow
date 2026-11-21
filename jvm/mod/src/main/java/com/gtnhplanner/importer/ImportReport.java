@@ -41,6 +41,35 @@ public final class ImportReport {
         entries.add(new Entry(kind, subject, message));
     }
 
+    /** How many entries there are: a mark to come back to ({@link #shown}). */
+    int size() {
+        return entries.size();
+    }
+
+    /**
+     * A card the import left out but shows as a display-only card after all: what the entries since {@code mark} said
+     * left it out now says it is shown ({@code line}), as one converted entry each; with none, one entry on
+     * {@code subject}.
+     */
+    void shown(final int mark, final String subject, final String line) {
+        boolean said = false;
+        for (int i = mark; i < entries.size(); i++) {
+            final Entry e = entries.get(i);
+            if (e.kind() != Kind.UNMATCHED && e.kind() != Kind.DROPPED) continue;
+            final String why = e.message()
+                .endsWith("; left out")
+                    ? e.message()
+                        .substring(
+                            0,
+                            e.message()
+                                .length() - "; left out".length())
+                    : e.message();
+            entries.set(i, new Entry(Kind.CONVERTED, e.subject(), why + "; " + line));
+            said = true;
+        }
+        if (!said) add(Kind.CONVERTED, subject, line);
+    }
+
     public List<Entry> entries() {
         return Collections.unmodifiableList(entries);
     }

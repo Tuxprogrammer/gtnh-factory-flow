@@ -111,6 +111,14 @@
       ],
       "generator": "goldens and buffer-drawers.json: ./gradlew :mod:test --tests '*SolverGoldenTest*' --tests '*BufferDrawerTest*' -PwriteGoldens (from jvm/); other inputs: the mod's /solvedump command"
     },
+    "solver/highs-differs": {
+      "specifies": "Islands of two generated stress boards (484 and 1,000 cards) where the website's engine on HiGHS answers otherwise than the shared core: points read to six digits, an equal split read as 6/6/0, dust that turns an Up to reason, and one island HiGHS cannot solve. cases.json.gz is {cases: [{name, input, answer}]} as solver/website: input in the mod's dump format, answer the core's digest, which both cores must give (1e-6, golden rules). The evidence for retiring HiGHS.",
+      "readers": [
+        "website: src/lib/solver/plan/__fixtures__/highs-differs.test.ts",
+        "jvm: core-solver solver/HighsDiffersTest"
+      ],
+      "generator": "scratch probe on the stress boards (tools/perf/stress.mjs output), not kept: the cases are the record"
+    },
     "solver/up-to": {
       "specifies": "Up to parity: each file is {name, input, answer}, a plan the website's engine solved, for the mod's engine to solve again and match by the golden rules. Hand-built Up to plans plus every corpus plan with each exact count turned Up to.",
       "readers": [
@@ -148,6 +156,15 @@
         "website: src/components/flow/clean/card-shadow.test.ts"
       ],
       "generator": "node tools/audits/card-test-inputs/record.mjs (needs node tools/tokens/generate.mjs and node tools/web-core/gen-types.mjs first), then node tools/conformance/manifest.mjs --write"
+    },
+    "wire": {
+      "specifies": "The wire between the mod and the website: every request the mod makes and every answer it reads (rest.json, with shapes.json and the plans in plan.json), the live service handshake, close codes and conversations (live.json), and findings.json, where the two ends disagreed and what was decided. Both ends and the mod's dev stand-ins are run against it.",
+      "readers": [
+        "website: src/lib/server/wire-rest.test.ts, src/live/wire-live.test.ts (the real routes and the live service, in process)",
+        "website: src/test-support/wire-mocks.test.ts (the mod's dev stand-ins over HTTP and WebSocket), wire-shape.test.ts",
+        "mod: cloud/WireRestTest, cloud/WireLiveTest, cloud/wire/WireShapeTest"
+      ],
+      "generator": "hand-written"
     }
   },
   "files": {
@@ -170,6 +187,11 @@
       "area": "codec",
       "bytes": 5307,
       "sha256": "0f18b636403458b01ca667d2d7d92c6a18b867ab4a0845998c756ea76b0c9a68"
+    },
+    "codec/round-trip/display-cards.json": {
+      "area": "codec",
+      "bytes": 6616,
+      "sha256": "2e2a72fe3a476d4296831f8447686412bca1744524e6a9d1db75baefa1553148"
     },
     "codec/round-trip/website-only-things.json": {
       "area": "codec",
@@ -826,6 +848,11 @@
       "bytes": 9752,
       "sha256": "7ffec210637a35bd04d1798aca7680a1e32fc2f9c921dcbcd4ad72a5a2a5ffcb"
     },
+    "solver/highs-differs/cases.json.gz": {
+      "area": "solver/highs-differs",
+      "bytes": 37261,
+      "sha256": "a6555b5f8fe326b766d7684e2adbe3611064c167ba678c3741163024065f5e58"
+    },
     "solver/up-to/alternatives-chosen.json": {
       "area": "solver/up-to",
       "bytes": 7181,
@@ -1208,13 +1235,18 @@
     },
     "view-inputs/card-website-test-inputs.jsonl.gz": {
       "area": "view-inputs",
-      "bytes": 210344,
-      "sha256": "f17937216f3b901971f16c51285d734dc825a6e50f140b41d08a75f5149eee30"
+      "bytes": 210825,
+      "sha256": "c827e0dd4a29926d40be5d244b5d65378c3ec08b7edb0d54b0f8c6c74e675fd3"
+    },
+    "view-inputs/special-website-test-inputs.jsonl.gz": {
+      "area": "view-inputs",
+      "bytes": 2500,
+      "sha256": "00411469fcfdb20ccf51f585f16abff65c3198d59a63a7bcccb68c378ee9885e"
     },
     "view/card/cases.json": {
       "area": "view",
-      "bytes": 486628,
-      "sha256": "6f3e43eb7d52dfeba2d1d8947ea8075c9fee8a262567d9f3d7d82ced5b0b83b9"
+      "bytes": 489067,
+      "sha256": "403eabeebce09839da72ac667c65fae24803294124a896fc697a15eefd973e8e"
     },
     "view/card/count.json": {
       "area": "view",
@@ -1261,10 +1293,45 @@
       "bytes": 50150,
       "sha256": "22971d9861d228fb888024f62a76afe3653573900fe503ae9cbeedd3ef15ee25"
     },
+    "view/rails/cases.json": {
+      "area": "view",
+      "bytes": 48397,
+      "sha256": "b764514290ce4640684b8f94d2850e4d50d01274715e44e1cdcdcf94cc9ba489"
+    },
     "view/records.json": {
       "area": "view",
-      "bytes": 21167,
-      "sha256": "0a819cbb2a629f2640fffef9b56f6e8b4b31b9b3c0f07d5ef849ee980f7f3654"
+      "bytes": 26315,
+      "sha256": "018b8bd608145e32f9300af4fd50cce6869b592db6e11f30fff87e06fca89ff2"
+    },
+    "view/special/cases.json": {
+      "area": "view",
+      "bytes": 61725,
+      "sha256": "8c95f7e9fbcffb870a9a660fea5f41f260f7f2c7cf8e8a18223f9c062d6100d7"
+    },
+    "wire/findings.json": {
+      "area": "wire",
+      "bytes": 5394,
+      "sha256": "31e5b3a01ddfbc85f74e4f43355862b66698166e5ceafbbba89e881cc7a630a3"
+    },
+    "wire/live.json": {
+      "area": "wire",
+      "bytes": 20500,
+      "sha256": "844c7916c3d4a5f0be1403e71345d26e409bfd3340b0aaccfb6f20418a2b19b3"
+    },
+    "wire/plan.json": {
+      "area": "wire",
+      "bytes": 847,
+      "sha256": "d894ca2dc94e4fe5dfbd2985bafb20b0355fb543fa560749224da1393da84e1f"
+    },
+    "wire/rest.json": {
+      "area": "wire",
+      "bytes": 62681,
+      "sha256": "893bbf59298c28a9c681d01bea6c117b0bbaa657edd7d5566a8792caab3cdf27"
+    },
+    "wire/shapes.json": {
+      "area": "wire",
+      "bytes": 8409,
+      "sha256": "4d302e9c657ea105b869a551ca5c5c601f4e9cdc2813de59c63d5b97c8ba3e17"
     }
   }
 }

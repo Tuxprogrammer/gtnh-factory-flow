@@ -347,7 +347,8 @@ public final class Serializer {
         if (!graph.spareShares.isEmpty()) root.add("spareShares", spareSharesToJson(graph));
 
         final JsonArray nodesArray = new JsonArray();
-        for (final Node node : graph.getNodes()) nodesArray.add(nodeToJson(node));
+        for (final Node node : graph.getNodes())
+            nodesArray.add(node.shown != null ? shownToJson(node) : nodeToJson(node));
         root.add("nodes", nodesArray);
 
         final JsonArray edgesArray = new JsonArray();
@@ -376,7 +377,9 @@ public final class Serializer {
         // The task board, as the shared plan spells it; absent when the plan has none.
         Tasks.write(graph, root, pictures);
         // What a website plan held that the board has no place for; written only when there is (older builds skip it).
-        if (!graph.site.isEmpty()) root.add("site", GsonTrees.json(graph.site));
+        // A display-only card deleted on the board is gone from it.
+        final Map<String, Object> site = com.gtnhplanner.core.codec.DisplayCards.site(graph, null);
+        if (!site.isEmpty()) root.add("site", GsonTrees.json(site));
 
         return root;
     }
@@ -405,8 +408,17 @@ public final class Serializer {
             root.get("panY")
                 .getAsFloat());
 
+        // Before the cards: a display-only card is made from the plan's own spelling of it, kept here.
+        if (root.has("site") && root.get("site")
+            .isJsonObject()) graph.site.putAll(GsonTrees.map(root.getAsJsonObject("site")));
+
         final JsonArray nodesArray = root.getAsJsonArray("nodes");
-        for (final JsonElement elem : nodesArray) graph.addNode(jsonToNode(elem.getAsJsonObject()));
+        for (final JsonElement elem : nodesArray) {
+            final JsonObject obj = elem.getAsJsonObject();
+            final Node node = obj.has("site") ? jsonToShown(obj, graph) : jsonToNode(obj);
+            if (node != null) graph.addNode(node);
+        }
+        showCarried(graph);
 
         final JsonArray edgesArray = root.getAsJsonArray("edges");
         final List<Edge> loadedEdges = new ArrayList<>(edgesArray.size());
@@ -450,8 +462,6 @@ public final class Serializer {
 
         // Absent from saves written before task boards existed; those load with none.
         Tasks.read(root, graph);
-        if (root.has("site") && root.get("site")
-            .isJsonObject()) graph.site.putAll(GsonTrees.map(root.getAsJsonObject("site")));
 
         if (root.has("boardGroups") && root.get("boardGroups")
             .isJsonArray()) {
@@ -556,6 +566,148 @@ public final class Serializer {
             obj.add("machineConfig", machineConfigToJson(node.machineConfig));
         }
         return obj;
+    }
+
+    /**
+     * A display-only card ({@link Node#shown}) as the save writes it: where it stands, which plan card it is (the
+     * plan's
+     * own spelling of it is in the save's {@code site}), why it is one and where it was first put, its group and the
+     * rates the plan pins on it. An older build reads it as a card whose recipe it cannot find.
+     */
+    @Nonnull
+    public static JsonObject shownToJson(final Node node) {
+        final JsonObject obj = new JsonObject();
+        obj.addProperty("id", node.id.toString());
+        obj.addProperty("x", node.x);
+        obj.addProperty("y", node.y);
+        obj.addProperty("machine", node.machineName);
+        obj.addProperty("site", node.shown.planId());
+        obj.addProperty(
+            "siteWhy",
+            node.shown.reason()
+                .word());
+        final JsonArray at = new JsonArray();
+        at.add(new com.google.gson.JsonPrimitive(node.shown.x()));
+        at.add(new com.google.gson.JsonPrimitive(node.shown.y()));
+        obj.add("siteAt", at);
+        if (node.shown.group() != null) obj.addProperty(
+            "siteIn",
+            node.shown.group()
+                .toString());
+        if (node.group != null) obj.addProperty("group", node.group.toString());
+        if (!node.targetOutputRates.isEmpty()) obj.add("targets", rates(node.targetOutputRates));
+        if (!node.targetInputRates.isEmpty()) obj.add("inputTargets", rates(node.targetInputRates));
+        return obj;
+    }
+
+    private static JsonObject rates(final Map<Integer, Double> rates) {
+        final JsonObject o = new JsonObject();
+        for (final Map.Entry<Integer, Double> t : rates.entrySet())
+            o.addProperty(String.valueOf(t.getKey()), t.getValue());
+        return o;
+    }
+
+    /**
+     * A display-only card as {@link #shownToJson} wrote it, made again from the plan's spelling of it in the graph's
+     * site (read first); null when the site no longer has that card.
+     */
+    @Nullable
+    static Node jsonToShown(final JsonObject obj, final Graph graph) {
+        final String planId = obj.get("site")
+            .getAsString();
+        final Map<String, Object> card = siteCard(graph, planId);
+        if (card == null) return null;
+        final Map<String, Object> recipe = com.gtnhplanner.core.codec.DisplayCards
+            .recipeOf(card, graph.site.get("recipes"));
+        com.gtnhplanner.core.model.Shown.Reason reason = com.gtnhplanner.core.model.Shown.Reason.of(
+            obj.has("siteWhy") ? obj.get("siteWhy")
+                .getAsString() : null);
+        if (reason == null) reason = com.gtnhplanner.importer.ShownCards.reason(card, recipe);
+        final int x = obj.get("x")
+            .getAsInt(),
+            y = obj.get("y")
+                .getAsInt();
+        final Node node = com.gtnhplanner.core.codec.DisplayCards.card(
+            card,
+            recipe,
+            reason,
+            Uuid.fromString(
+                obj.get("id")
+                    .getAsString()),
+            x,
+            y);
+        Uuid in = null;
+        try {
+            if (obj.has("group")) node.group = Uuid.fromString(
+                obj.get("group")
+                    .getAsString());
+            if (obj.has("siteIn")) in = Uuid.fromString(
+                obj.get("siteIn")
+                    .getAsString());
+        } catch (final RuntimeException ignored) {
+            // A malformed group leaves the card on the board.
+        }
+        int x0 = x, y0 = y;
+        if (obj.has("siteAt") && obj.get("siteAt")
+            .isJsonArray()
+            && obj.getAsJsonArray("siteAt")
+                .size() == 2) {
+            x0 = obj.getAsJsonArray("siteAt")
+                .get(0)
+                .getAsInt();
+            y0 = obj.getAsJsonArray("siteAt")
+                .get(1)
+                .getAsInt();
+        }
+        node.shown = node.shown.at(x0, y0, in);
+        if (node.shown.solved()) {
+            readRates(obj.get("inputTargets"), node.targetInputRates);
+            readRates(obj.get("targets"), node.targetOutputRates);
+        }
+        return node;
+    }
+
+    /**
+     * The site's cards that no card on the board shows (a save from before display-only cards kept them only in its
+     * site): each shown now, where the plan has it. A card already on the board is left as it is.
+     */
+    static void showCarried(final Graph graph) {
+        final java.util.Set<String> onBoard = new java.util.HashSet<>();
+        for (final Node n : graph.getNodes()) if (n.shown != null) onBoard.add(n.shown.planId());
+        for (final Map<String, Object> card : siteCards(graph)) {
+            final Object id = card.get("id");
+            if (!(id instanceof final String planId) || onBoard.contains(planId)) continue;
+            final Map<String, Object> recipe = com.gtnhplanner.core.codec.DisplayCards
+                .recipeOf(card, graph.site.get("recipes"));
+            final Map<?, ?> at = card.get("position") instanceof final Map<?, ?> m ? m : Map.of();
+            final int x = at.get("x") instanceof final Number n ? com.gtnhplanner.library.PlanExport.gameX(n.doubleValue())
+                : 0;
+            final int y = at.get("y") instanceof final Number n ? com.gtnhplanner.library.PlanExport.gameY(n.doubleValue())
+                : 0;
+            graph.addNode(
+                com.gtnhplanner.core.codec.DisplayCards.card(
+                    card,
+                    recipe,
+                    com.gtnhplanner.importer.ShownCards.reason(card, recipe),
+                    Uuid.randomUUID(),
+                    x,
+                    y));
+            onBoard.add(planId);
+        }
+    }
+
+    @Nullable
+    private static Map<String, Object> siteCard(final Graph graph, final String planId) {
+        for (final Map<String, Object> card : siteCards(graph)) if (planId.equals(card.get("id"))) return card;
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<Map<String, Object>> siteCards(final Graph graph) {
+        final List<Map<String, Object>> out = new ArrayList<>();
+        if (graph.site.get("nodes") instanceof final List<?> list)
+            for (final Object o : list) if (o instanceof Map) out.add((Map<String, Object>) o);
+        return out;
     }
 
     /**

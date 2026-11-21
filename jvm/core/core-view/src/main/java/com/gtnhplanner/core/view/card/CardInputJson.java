@@ -68,7 +68,13 @@ public final class CardInputJson {
             o.get("turbine") instanceof Map ? turbine(o.get("turbine")) : null,
             names,
             bool(o, "selected"),
-            menu(o.get("menu")));
+            menu(o.get("menu")),
+            o.get("readOnly") instanceof Map ? readOnly(o.get("readOnly")) : null);
+    }
+
+    private static CardInput.ReadOnly readOnly(final Object tree) {
+        final Map<String, Object> o = JsonTree.object(tree);
+        return new CardInput.ReadOnly(str(o, "reason"), bool(o, "solved"));
     }
 
     private static CardInput.PowerReport power(final Object tree) {
@@ -149,7 +155,7 @@ public final class CardInputJson {
     private static CardInput.Menu menu(@Nullable final Object tree) {
         final Map<String, Object> o = JsonTree.object(tree);
         return new CardInput.Menu(bool(o, "calm"), bool(o, "locked"), bool(o, "ownsRecipe"), bool(o, "shared"),
-            bool(o, "holder"), bool(o, "emptyCropFarm"), bool(o, "tasks"));
+            bool(o, "holder"), bool(o, "emptyCropFarm"), bool(o, "tasks"), bool(o, "readOnly"));
     }
 
     // ---- the convention's reads

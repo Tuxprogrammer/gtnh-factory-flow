@@ -232,6 +232,7 @@ public final class CardModel {
     public static CardModel of(final Node node, final Balancer.NodeBalance balance, final Wired wired,
         final Extra extra) {
         if (node.isPower()) return power(node, balance, wired, extra);
+        if (node.shown != null) return shown(node, balance, wired, extra);
         final MachineConfig cfg = node.machineConfig;
         final boolean gregtech = GT_PROFILE.equals(cfg.profileId);
         final EffectResult effect = cfg.computeEffect(node.properties);
@@ -339,6 +340,38 @@ public final class CardModel {
             null,
             0,
             new PowerView(source, model, stats),
+            null,
+            0,
+            false);
+    }
+
+    /**
+     * A card the board only shows ({@link Node#shown}): the plan's name and ports, no machine, tier or setting of the
+     * game's, one craft a second (its ports carry a second's worth for one machine) at the plan's draw.
+     */
+    private static CardModel shown(final Node node, final Balancer.NodeBalance balance, final Wired wired,
+        final Extra extra) {
+        return new CardModel(
+            node,
+            node.machineName,
+            Collections.emptyList(),
+            null,
+            false,
+            "",
+            1,
+            false,
+            0,
+            false,
+            1,
+            ports(node.inputs, false, balance, wired, extra),
+            ports(node.outputs, true, balance, wired, extra),
+            20,
+            Math.round(node.shown.euPerTick()),
+            balance == null ? 0 : balance.operations(),
+            node.isMachineCountFixed(),
+            null,
+            0,
+            null,
             null,
             0,
             false);

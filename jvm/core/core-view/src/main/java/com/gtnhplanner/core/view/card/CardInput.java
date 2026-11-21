@@ -49,6 +49,8 @@ import com.gtnhplanner.data.flowchart.balancer.UpToReason;
  * @param cardNames          names of the other cards the read-outs mention, by id
  * @param selected           the card is selected
  * @param menu               what the card's menu rows depend on
+ * @param readOnly           the card is one the board only shows, from the other side's plan, and why; null for every
+ *                           card of the board's own
  */
 public record CardInput(String nodeId, String name, boolean hasPicker, @Nullable String tier, boolean tierFixed,
     boolean hatchControl, @Nullable PowerReport power, @Nullable SteamReport steam, double parallel,
@@ -56,7 +58,14 @@ public record CardInput(String nodeId, String name, boolean hasPicker, @Nullable
     @Nullable Product product, @Nullable Circuit circuit, List<Port> inputs, List<Port> outputs, Count count,
     @Nullable String powerTier, @Nullable UpTo upTo, List<Forced> forced, @Nullable UpToLoop.Kind loop,
     List<Leftover> leftovers, @Nullable Turbine turbine, Map<String, String> cardNames, boolean selected,
-    Menu menu) {
+    Menu menu, @Nullable ReadOnly readOnly) {
+
+    /**
+     * A card the board only shows (the mod's display-only card: a website card it cannot run as its own): why
+     * ({@code off} switched off in the plan, {@code kind} a recipe kind the game has no page for, {@code missing} no such
+     * recipe in this game, {@code absent} no recipe in the plan), and whether it takes part in the solve.
+     */
+    public record ReadOnly(String reason, boolean solved) {}
 
     /**
      * The board's display dials: the rate unit, the power dial ({@code eu}, {@code amps} or a tier name) and whether
@@ -138,9 +147,9 @@ public record CardInput(String nodeId, String name, boolean hasPicker, @Nullable
 
     /**
      * The menu's facts: the board is calm or locked (read-only, checklist), the card's machine owns its recipe (it
-     * cannot share), the card is a shared machine, a holder (custom rate, fluid tank) or an empty crop farm, and task
-     * boards exist (live plans).
+     * cannot share), the card is a shared machine, a holder (custom rate, fluid tank) or an empty crop farm, task boards
+     * exist (live plans), and the card is one the board only shows ({@link ReadOnly}: it can only be deleted).
      */
     public record Menu(boolean calm, boolean locked, boolean ownsRecipe, boolean shared, boolean holder,
-        boolean emptyCropFarm, boolean tasks) {}
+        boolean emptyCropFarm, boolean tasks, boolean readOnly) {}
 }

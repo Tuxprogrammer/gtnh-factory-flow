@@ -1,0 +1,3109 @@
+{
+ "record": "special",
+ "set": "cases",
+ "measure": "six-px",
+ "cases": [
+  {
+   "name": "custom rate: empty, its two sockets and its dial",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Custom Rate",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [],
+     "outputs": [],
+     "count": {
+      "rule": "EXACT",
+      "pin": 1,
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": true,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "CUSTOM_RATE",
+     "holder": {
+      "empty": true,
+      "dial": {
+       "supply": true,
+       "perSecond": 1,
+       "kind": "item",
+       "showMode": true,
+       "showRate": true
+      }
+     }
+    }
+   },
+   "view": {
+    "kind": "CUSTOM_RATE",
+    "name": "Custom Rate",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": true,
+    "sections": [],
+    "sockets": {
+     "take": "DRAIN ANY",
+     "give": "SUPPLY ANY",
+     "takeHint": "takes an output",
+     "giveHint": "feeds an input"
+    },
+    "gauge": true,
+    "count": {
+     "text": "×1",
+     "value": 1,
+     "pinned": true,
+     "rule": "EXACT",
+     "ruleWord": "Exactly",
+     "ruleFixed": true,
+     "set": 1,
+     "setText": "1",
+     "box": "1",
+     "prompt": false,
+     "zero": false,
+     "title": "Runs at its dial."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "mode",
+       "label": "Mode",
+       "value": "Supply",
+       "reading": false,
+       "warn": false,
+       "title": "Which way the card faces.",
+       "x": 8,
+       "y": 10,
+       "width": 76
+      }
+     },
+     {
+      "chip": {
+       "id": "rate",
+       "label": "Rate (/s)",
+       "value": "1",
+       "reading": false,
+       "warn": false,
+       "title": "The rate it holds.",
+       "x": 88,
+       "y": 10,
+       "width": 76
+      },
+      "edit": {
+       "text": "1",
+       "scale": 1,
+       "notes": []
+      }
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "custom rate: empty, requesting",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Custom Rate",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [],
+     "outputs": [],
+     "count": {
+      "rule": "EXACT",
+      "pin": 1,
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": true,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "CUSTOM_RATE",
+     "holder": {
+      "empty": true,
+      "dial": {
+       "supply": false,
+       "perSecond": 1,
+       "kind": "item",
+       "showMode": true,
+       "showRate": true
+      }
+     }
+    }
+   },
+   "view": {
+    "kind": "CUSTOM_RATE",
+    "name": "Custom Rate",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": true,
+    "sections": [],
+    "sockets": {
+     "take": "DRAIN ANY",
+     "give": "SUPPLY ANY",
+     "takeHint": "takes an output",
+     "giveHint": "feeds an input"
+    },
+    "gauge": true,
+    "count": {
+     "text": "×1",
+     "value": 1,
+     "pinned": true,
+     "rule": "EXACT",
+     "ruleWord": "Exactly",
+     "ruleFixed": true,
+     "set": 1,
+     "setText": "1",
+     "box": "1",
+     "prompt": false,
+     "zero": false,
+     "title": "Runs at its dial."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "mode",
+       "label": "Mode",
+       "value": "Request",
+       "reading": false,
+       "warn": false,
+       "title": "Which way the card faces.",
+       "x": 8,
+       "y": 10,
+       "width": 82
+      }
+     },
+     {
+      "chip": {
+       "id": "rate",
+       "label": "Rate (/s)",
+       "value": "1",
+       "reading": false,
+       "warn": false,
+       "title": "The rate it holds.",
+       "x": 94,
+       "y": 10,
+       "width": 76
+      },
+      "edit": {
+       "text": "1",
+       "scale": 1,
+       "notes": []
+      }
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "custom rate: holding an item",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Custom Rate",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [],
+     "outputs": [
+      {
+       "key": "output:iron_ingot",
+       "handleId": "output:item:iron_ingot",
+       "output": true,
+       "name": "Iron Ingot",
+       "kind": "item",
+       "resourceId": "iron_ingot",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "EXACT",
+      "pin": 1,
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": true,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "CUSTOM_RATE",
+     "holder": {
+      "empty": false,
+      "dial": {
+       "supply": true,
+       "perSecond": 4,
+       "kind": "item",
+       "showMode": true,
+       "showRate": true
+      }
+     }
+    }
+   },
+   "view": {
+    "kind": "CUSTOM_RATE",
+    "name": "Custom Rate",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": false,
+    "sections": [],
+    "gauge": true,
+    "count": {
+     "text": "×1",
+     "value": 1,
+     "pinned": true,
+     "rule": "EXACT",
+     "ruleWord": "Exactly",
+     "ruleFixed": true,
+     "set": 1,
+     "setText": "1",
+     "box": "1",
+     "prompt": false,
+     "zero": false,
+     "title": "Runs at its dial."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "mode",
+       "label": "Mode",
+       "value": "Supply",
+       "reading": false,
+       "warn": false,
+       "title": "Which way the card faces.",
+       "x": 8,
+       "y": 10,
+       "width": 76
+      }
+     },
+     {
+      "chip": {
+       "id": "rate",
+       "label": "Rate (/s)",
+       "value": "4",
+       "reading": false,
+       "warn": false,
+       "title": "The rate it holds.",
+       "x": 88,
+       "y": 10,
+       "width": 76
+      },
+      "edit": {
+       "text": "4",
+       "scale": 1,
+       "notes": []
+      }
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "custom rate: an item per minute",
+   "input": {
+    "dials": {
+     "rate": "MINUTE",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Custom Rate",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [],
+     "outputs": [
+      {
+       "key": "output:iron_ingot",
+       "handleId": "output:item:iron_ingot",
+       "output": true,
+       "name": "Iron Ingot",
+       "kind": "item",
+       "resourceId": "iron_ingot",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "EXACT",
+      "pin": 1,
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": true,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "CUSTOM_RATE",
+     "holder": {
+      "empty": false,
+      "dial": {
+       "supply": true,
+       "perSecond": 4,
+       "kind": "item",
+       "showMode": true,
+       "showRate": true
+      }
+     }
+    }
+   },
+   "view": {
+    "kind": "CUSTOM_RATE",
+    "name": "Custom Rate",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": false,
+    "sections": [],
+    "gauge": true,
+    "count": {
+     "text": "×1",
+     "value": 1,
+     "pinned": true,
+     "rule": "EXACT",
+     "ruleWord": "Exactly",
+     "ruleFixed": true,
+     "set": 1,
+     "setText": "1",
+     "box": "1",
+     "prompt": false,
+     "zero": false,
+     "title": "Runs at its dial."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "mode",
+       "label": "Mode",
+       "value": "Supply",
+       "reading": false,
+       "warn": false,
+       "title": "Which way the card faces.",
+       "x": 8,
+       "y": 10,
+       "width": 76
+      }
+     },
+     {
+      "chip": {
+       "id": "rate",
+       "label": "Rate (/min)",
+       "value": "240",
+       "reading": false,
+       "warn": false,
+       "title": "The rate it holds.",
+       "x": 88,
+       "y": 10,
+       "width": 100
+      },
+      "edit": {
+       "text": "240",
+       "scale": 60,
+       "notes": []
+      }
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "custom rate: a third a second per tick",
+   "input": {
+    "dials": {
+     "rate": "TICK",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Custom Rate",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [],
+     "outputs": [
+      {
+       "key": "output:iron_ingot",
+       "handleId": "output:item:iron_ingot",
+       "output": true,
+       "name": "Iron Ingot",
+       "kind": "item",
+       "resourceId": "iron_ingot",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "EXACT",
+      "pin": 1,
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": true,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "CUSTOM_RATE",
+     "holder": {
+      "empty": false,
+      "dial": {
+       "supply": true,
+       "perSecond": 0.3333333333333333,
+       "kind": "item",
+       "showMode": true,
+       "showRate": true
+      }
+     }
+    }
+   },
+   "view": {
+    "kind": "CUSTOM_RATE",
+    "name": "Custom Rate",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": false,
+    "sections": [],
+    "gauge": true,
+    "count": {
+     "text": "×1",
+     "value": 1,
+     "pinned": true,
+     "rule": "EXACT",
+     "ruleWord": "Exactly",
+     "ruleFixed": true,
+     "set": 1,
+     "setText": "1",
+     "box": "1",
+     "prompt": false,
+     "zero": false,
+     "title": "Runs at its dial."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "mode",
+       "label": "Mode",
+       "value": "Supply",
+       "reading": false,
+       "warn": false,
+       "title": "Which way the card faces.",
+       "x": 8,
+       "y": 10,
+       "width": 76
+      }
+     },
+     {
+      "chip": {
+       "id": "rate",
+       "label": "Rate (/t)",
+       "value": "0.01665",
+       "reading": false,
+       "warn": false,
+       "title": "The rate it holds.",
+       "x": 88,
+       "y": 10,
+       "width": 112
+      },
+      "edit": {
+       "text": "0.01665",
+       "scale": 0.05,
+       "notes": []
+      }
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "custom rate: an item per hour",
+   "input": {
+    "dials": {
+     "rate": "HOUR",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Custom Rate",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [],
+     "outputs": [
+      {
+       "key": "output:iron_ingot",
+       "handleId": "output:item:iron_ingot",
+       "output": true,
+       "name": "Iron Ingot",
+       "kind": "item",
+       "resourceId": "iron_ingot",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "EXACT",
+      "pin": 1,
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": true,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "CUSTOM_RATE",
+     "holder": {
+      "empty": false,
+      "dial": {
+       "supply": true,
+       "perSecond": 12.5,
+       "kind": "item",
+       "showMode": true,
+       "showRate": true
+      }
+     }
+    }
+   },
+   "view": {
+    "kind": "CUSTOM_RATE",
+    "name": "Custom Rate",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": false,
+    "sections": [],
+    "gauge": true,
+    "count": {
+     "text": "×1",
+     "value": 1,
+     "pinned": true,
+     "rule": "EXACT",
+     "ruleWord": "Exactly",
+     "ruleFixed": true,
+     "set": 1,
+     "setText": "1",
+     "box": "1",
+     "prompt": false,
+     "zero": false,
+     "title": "Runs at its dial."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "mode",
+       "label": "Mode",
+       "value": "Supply",
+       "reading": false,
+       "warn": false,
+       "title": "Which way the card faces.",
+       "x": 8,
+       "y": 10,
+       "width": 76
+      }
+     },
+     {
+      "chip": {
+       "id": "rate",
+       "label": "Rate (/hr)",
+       "value": "45000",
+       "reading": false,
+       "warn": false,
+       "title": "The rate it holds.",
+       "x": 88,
+       "y": 10,
+       "width": 106
+      },
+      "edit": {
+       "text": "45000",
+       "scale": 3600,
+       "notes": []
+      }
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "custom rate: the energy reading dial",
+   "input": {
+    "dials": {
+     "rate": "EU",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Custom Rate",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [],
+     "outputs": [
+      {
+       "key": "output:iron_ingot",
+       "handleId": "output:item:iron_ingot",
+       "output": true,
+       "name": "Iron Ingot",
+       "kind": "item",
+       "resourceId": "iron_ingot",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "EXACT",
+      "pin": 1,
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": true,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "CUSTOM_RATE",
+     "holder": {
+      "empty": false,
+      "dial": {
+       "supply": true,
+       "perSecond": 4,
+       "kind": "item",
+       "showMode": true,
+       "showRate": true
+      }
+     }
+    }
+   },
+   "view": {
+    "kind": "CUSTOM_RATE",
+    "name": "Custom Rate",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": false,
+    "sections": [],
+    "gauge": true,
+    "count": {
+     "text": "×1",
+     "value": 1,
+     "pinned": true,
+     "rule": "EXACT",
+     "ruleWord": "Exactly",
+     "ruleFixed": true,
+     "set": 1,
+     "setText": "1",
+     "box": "1",
+     "prompt": false,
+     "zero": false,
+     "title": "Runs at its dial."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "mode",
+       "label": "Mode",
+       "value": "Supply",
+       "reading": false,
+       "warn": false,
+       "title": "Which way the card faces.",
+       "x": 8,
+       "y": 10,
+       "width": 76
+      }
+     },
+     {
+      "chip": {
+       "id": "rate",
+       "label": "Rate (/s)",
+       "value": "4",
+       "reading": false,
+       "warn": false,
+       "title": "The rate it holds.",
+       "x": 88,
+       "y": 10,
+       "width": 76
+      },
+      "edit": {
+       "text": "4",
+       "scale": 1,
+       "notes": []
+      }
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "custom rate: a fluid per minute",
+   "input": {
+    "dials": {
+     "rate": "MINUTE",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Custom Rate",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [],
+     "outputs": [
+      {
+       "key": "output:sulfuric_acid",
+       "handleId": "output:fluid:sulfuric_acid",
+       "output": true,
+       "name": "Sulfuric Acid",
+       "kind": "fluid",
+       "resourceId": "sulfuric_acid",
+       "perSecond": 720,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "EXACT",
+      "pin": 1,
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": true,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "CUSTOM_RATE",
+     "holder": {
+      "empty": false,
+      "dial": {
+       "supply": true,
+       "perSecond": 720,
+       "kind": "fluid",
+       "showMode": true,
+       "showRate": true
+      }
+     }
+    }
+   },
+   "view": {
+    "kind": "CUSTOM_RATE",
+    "name": "Custom Rate",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": false,
+    "sections": [],
+    "gauge": true,
+    "count": {
+     "text": "×1",
+     "value": 1,
+     "pinned": true,
+     "rule": "EXACT",
+     "ruleWord": "Exactly",
+     "ruleFixed": true,
+     "set": 1,
+     "setText": "1",
+     "box": "1",
+     "prompt": false,
+     "zero": false,
+     "title": "Runs at its dial."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "mode",
+       "label": "Mode",
+       "value": "Supply",
+       "reading": false,
+       "warn": false,
+       "title": "Which way the card faces.",
+       "x": 8,
+       "y": 10,
+       "width": 76
+      }
+     },
+     {
+      "chip": {
+       "id": "rate",
+       "label": "Rate (L/min)",
+       "value": "43200",
+       "reading": false,
+       "warn": false,
+       "title": "The rate it holds.",
+       "x": 88,
+       "y": 10,
+       "width": 118
+      },
+      "edit": {
+       "text": "43200",
+       "scale": 60,
+       "notes": []
+      }
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "custom rate: a fluid requested",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Custom Rate",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [
+      {
+       "key": "input:molten.tin",
+       "handleId": "input:fluid:molten.tin",
+       "output": false,
+       "name": "Molten Tin",
+       "kind": "fluid",
+       "resourceId": "molten.tin",
+       "perSecond": 144,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "outputs": [],
+     "count": {
+      "rule": "EXACT",
+      "pin": 1,
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": true,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "CUSTOM_RATE",
+     "holder": {
+      "empty": false,
+      "dial": {
+       "supply": false,
+       "perSecond": 144,
+       "kind": "fluid",
+       "showMode": true,
+       "showRate": true
+      }
+     }
+    }
+   },
+   "view": {
+    "kind": "CUSTOM_RATE",
+    "name": "Custom Rate",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": false,
+    "sections": [],
+    "gauge": true,
+    "count": {
+     "text": "×1",
+     "value": 1,
+     "pinned": true,
+     "rule": "EXACT",
+     "ruleWord": "Exactly",
+     "ruleFixed": true,
+     "set": 1,
+     "setText": "1",
+     "box": "1",
+     "prompt": false,
+     "zero": false,
+     "title": "Runs at its dial."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "mode",
+       "label": "Mode",
+       "value": "Request",
+       "reading": false,
+       "warn": false,
+       "title": "Which way the card faces.",
+       "x": 8,
+       "y": 10,
+       "width": 82
+      }
+     },
+     {
+      "chip": {
+       "id": "rate",
+       "label": "Rate (L/s)",
+       "value": "144",
+       "reading": false,
+       "warn": false,
+       "title": "The rate it holds.",
+       "x": 94,
+       "y": 10,
+       "width": 94
+      },
+      "edit": {
+       "text": "144",
+       "scale": 1,
+       "notes": []
+      }
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "custom rate: EU under the eu dial",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Custom Rate",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [],
+     "outputs": [
+      {
+       "key": "output:eu",
+       "handleId": "output:power:eu",
+       "output": true,
+       "name": "EU",
+       "kind": "power",
+       "resourceId": "eu",
+       "perSecond": 2560,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "EXACT",
+      "pin": 1,
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": true,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "CUSTOM_RATE",
+     "holder": {
+      "empty": false,
+      "dial": {
+       "supply": true,
+       "perSecond": 2560,
+       "kind": "power",
+       "showMode": true,
+       "showRate": true
+      }
+     }
+    }
+   },
+   "view": {
+    "kind": "CUSTOM_RATE",
+    "name": "Custom Rate",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": false,
+    "sections": [],
+    "gauge": true,
+    "count": {
+     "text": "×1",
+     "value": 1,
+     "pinned": true,
+     "rule": "EXACT",
+     "ruleWord": "Exactly",
+     "ruleFixed": true,
+     "set": 1,
+     "setText": "1",
+     "box": "1",
+     "prompt": false,
+     "zero": false,
+     "title": "Runs at its dial."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "mode",
+       "label": "Mode",
+       "value": "Supply",
+       "reading": false,
+       "warn": false,
+       "title": "Which way the card faces.",
+       "x": 8,
+       "y": 10,
+       "width": 76
+      }
+     },
+     {
+      "chip": {
+       "id": "rate",
+       "label": "Rate (EU/t)",
+       "value": "128",
+       "reading": false,
+       "warn": false,
+       "title": "The rate it holds.",
+       "x": 88,
+       "y": 10,
+       "width": 100
+      },
+      "edit": {
+       "text": "128",
+       "scale": 0.05,
+       "notes": []
+      }
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "custom rate: EU under the amps dial",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "amps",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Custom Rate",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [],
+     "outputs": [
+      {
+       "key": "output:eu",
+       "handleId": "output:power:eu",
+       "output": true,
+       "name": "EU",
+       "kind": "power",
+       "resourceId": "eu",
+       "perSecond": 2560,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "EXACT",
+      "pin": 1,
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": true,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "CUSTOM_RATE",
+     "holder": {
+      "empty": false,
+      "dial": {
+       "supply": true,
+       "perSecond": 2560,
+       "kind": "power",
+       "showMode": true,
+       "showRate": true
+      }
+     }
+    }
+   },
+   "view": {
+    "kind": "CUSTOM_RATE",
+    "name": "Custom Rate",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": false,
+    "sections": [],
+    "gauge": true,
+    "count": {
+     "text": "×1",
+     "value": 1,
+     "pinned": true,
+     "rule": "EXACT",
+     "ruleWord": "Exactly",
+     "ruleFixed": true,
+     "set": 1,
+     "setText": "1",
+     "box": "1",
+     "prompt": false,
+     "zero": false,
+     "title": "Runs at its dial."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "mode",
+       "label": "Mode",
+       "value": "Supply",
+       "reading": false,
+       "warn": false,
+       "title": "Which way the card faces.",
+       "x": 8,
+       "y": 10,
+       "width": 76
+      }
+     },
+     {
+      "chip": {
+       "id": "rate",
+       "label": "Rate (EU/t)",
+       "value": "128",
+       "reading": false,
+       "warn": false,
+       "title": "The rate it holds.",
+       "x": 88,
+       "y": 10,
+       "width": 100
+      },
+      "edit": {
+       "text": "128",
+       "scale": 0.05,
+       "notes": []
+      }
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "custom rate: EU under the HV dial",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "HV",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Custom Rate",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [],
+     "outputs": [
+      {
+       "key": "output:eu",
+       "handleId": "output:power:eu",
+       "output": true,
+       "name": "EU",
+       "kind": "power",
+       "resourceId": "eu",
+       "perSecond": 2560,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "EXACT",
+      "pin": 1,
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": true,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "CUSTOM_RATE",
+     "holder": {
+      "empty": false,
+      "dial": {
+       "supply": true,
+       "perSecond": 2560,
+       "kind": "power",
+       "showMode": true,
+       "showRate": true
+      }
+     }
+    }
+   },
+   "view": {
+    "kind": "CUSTOM_RATE",
+    "name": "Custom Rate",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": false,
+    "sections": [],
+    "gauge": true,
+    "count": {
+     "text": "×1",
+     "value": 1,
+     "pinned": true,
+     "rule": "EXACT",
+     "ruleWord": "Exactly",
+     "ruleFixed": true,
+     "set": 1,
+     "setText": "1",
+     "box": "1",
+     "prompt": false,
+     "zero": false,
+     "title": "Runs at its dial."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "mode",
+       "label": "Mode",
+       "value": "Supply",
+       "reading": false,
+       "warn": false,
+       "title": "Which way the card faces.",
+       "x": 8,
+       "y": 10,
+       "width": 76
+      }
+     },
+     {
+      "chip": {
+       "id": "rate",
+       "label": "Rate (A HV)",
+       "value": "0.25",
+       "reading": false,
+       "warn": false,
+       "title": "The rate it holds.",
+       "x": 88,
+       "y": 10,
+       "width": 106
+      },
+      "edit": {
+       "text": "0.25",
+       "scale": 0.00009765625,
+       "notes": []
+      }
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "custom rate: nothing a second",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Custom Rate",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [],
+     "outputs": [
+      {
+       "key": "output:iron_ingot",
+       "handleId": "output:item:iron_ingot",
+       "output": true,
+       "name": "Iron Ingot",
+       "kind": "item",
+       "resourceId": "iron_ingot",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "EXACT",
+      "pin": 1,
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": true,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "CUSTOM_RATE",
+     "holder": {
+      "empty": false,
+      "dial": {
+       "supply": true,
+       "perSecond": 0,
+       "kind": "item",
+       "showMode": true,
+       "showRate": true
+      }
+     }
+    }
+   },
+   "view": {
+    "kind": "CUSTOM_RATE",
+    "name": "Custom Rate",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": false,
+    "sections": [],
+    "gauge": true,
+    "count": {
+     "text": "×1",
+     "value": 1,
+     "pinned": true,
+     "rule": "EXACT",
+     "ruleWord": "Exactly",
+     "ruleFixed": true,
+     "set": 1,
+     "setText": "1",
+     "box": "1",
+     "prompt": false,
+     "zero": false,
+     "title": "Runs at its dial."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "mode",
+       "label": "Mode",
+       "value": "Supply",
+       "reading": false,
+       "warn": false,
+       "title": "Which way the card faces.",
+       "x": 8,
+       "y": 10,
+       "width": 76
+      }
+     },
+     {
+      "chip": {
+       "id": "rate",
+       "label": "Rate (/s)",
+       "value": "0",
+       "reading": false,
+       "warn": false,
+       "title": "The rate it holds.",
+       "x": 88,
+       "y": 10,
+       "width": 76
+      },
+      "edit": {
+       "text": "0",
+       "scale": 1,
+       "notes": []
+      }
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "custom rate: a rate past a thousandth",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Custom Rate",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [],
+     "outputs": [
+      {
+       "key": "output:iron_ingot",
+       "handleId": "output:item:iron_ingot",
+       "output": true,
+       "name": "Iron Ingot",
+       "kind": "item",
+       "resourceId": "iron_ingot",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "EXACT",
+      "pin": 1,
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": true,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "CUSTOM_RATE",
+     "holder": {
+      "empty": false,
+      "dial": {
+       "supply": true,
+       "perSecond": 0.12345678,
+       "kind": "item",
+       "showMode": true,
+       "showRate": true
+      }
+     }
+    }
+   },
+   "view": {
+    "kind": "CUSTOM_RATE",
+    "name": "Custom Rate",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": false,
+    "sections": [],
+    "gauge": true,
+    "count": {
+     "text": "×1",
+     "value": 1,
+     "pinned": true,
+     "rule": "EXACT",
+     "ruleWord": "Exactly",
+     "ruleFixed": true,
+     "set": 1,
+     "setText": "1",
+     "box": "1",
+     "prompt": false,
+     "zero": false,
+     "title": "Runs at its dial."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "mode",
+       "label": "Mode",
+       "value": "Supply",
+       "reading": false,
+       "warn": false,
+       "title": "Which way the card faces.",
+       "x": 8,
+       "y": 10,
+       "width": 76
+      }
+     },
+     {
+      "chip": {
+       "id": "rate",
+       "label": "Rate (/s)",
+       "value": "0.123",
+       "reading": false,
+       "warn": false,
+       "title": "The rate it holds.",
+       "x": 88,
+       "y": 10,
+       "width": 100
+      },
+      "edit": {
+       "text": "0.123",
+       "scale": 1,
+       "notes": []
+      }
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "custom rate: a large rate",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Custom Rate",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [],
+     "outputs": [
+      {
+       "key": "output:iron_ingot",
+       "handleId": "output:item:iron_ingot",
+       "output": true,
+       "name": "Iron Ingot",
+       "kind": "item",
+       "resourceId": "iron_ingot",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "EXACT",
+      "pin": 1,
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": true,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "CUSTOM_RATE",
+     "holder": {
+      "empty": false,
+      "dial": {
+       "supply": true,
+       "perSecond": 123456789,
+       "kind": "item",
+       "showMode": true,
+       "showRate": true
+      }
+     }
+    }
+   },
+   "view": {
+    "kind": "CUSTOM_RATE",
+    "name": "Custom Rate",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": false,
+    "sections": [],
+    "gauge": true,
+    "count": {
+     "text": "×1",
+     "value": 1,
+     "pinned": true,
+     "rule": "EXACT",
+     "ruleWord": "Exactly",
+     "ruleFixed": true,
+     "set": 1,
+     "setText": "1",
+     "box": "1",
+     "prompt": false,
+     "zero": false,
+     "title": "Runs at its dial."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "mode",
+       "label": "Mode",
+       "value": "Supply",
+       "reading": false,
+       "warn": false,
+       "title": "Which way the card faces.",
+       "x": 8,
+       "y": 10,
+       "width": 76
+      }
+     },
+     {
+      "chip": {
+       "id": "rate",
+       "label": "Rate (/s)",
+       "value": "123456789",
+       "reading": false,
+       "warn": false,
+       "title": "The rate it holds.",
+       "x": 88,
+       "y": 10,
+       "width": 124
+      },
+      "edit": {
+       "text": "123456789",
+       "scale": 1,
+       "notes": []
+      }
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "custom rate: its mode unpinned",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Custom Rate",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [],
+     "outputs": [
+      {
+       "key": "output:iron_ingot",
+       "handleId": "output:item:iron_ingot",
+       "output": true,
+       "name": "Iron Ingot",
+       "kind": "item",
+       "resourceId": "iron_ingot",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "EXACT",
+      "pin": 1,
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": true,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "CUSTOM_RATE",
+     "holder": {
+      "empty": false,
+      "dial": {
+       "supply": true,
+       "perSecond": 4,
+       "kind": "item",
+       "showMode": false,
+       "showRate": true
+      }
+     }
+    }
+   },
+   "view": {
+    "kind": "CUSTOM_RATE",
+    "name": "Custom Rate",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": false,
+    "sections": [],
+    "gauge": true,
+    "count": {
+     "text": "×1",
+     "value": 1,
+     "pinned": true,
+     "rule": "EXACT",
+     "ruleWord": "Exactly",
+     "ruleFixed": true,
+     "set": 1,
+     "setText": "1",
+     "box": "1",
+     "prompt": false,
+     "zero": false,
+     "title": "Runs at its dial."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "rate",
+       "label": "Rate (/s)",
+       "value": "4",
+       "reading": false,
+       "warn": false,
+       "title": "The rate it holds.",
+       "x": 8,
+       "y": 10,
+       "width": 76
+      },
+      "edit": {
+       "text": "4",
+       "scale": 1,
+       "notes": []
+      }
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "custom rate: its dial unpinned",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Custom Rate",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [],
+     "outputs": [
+      {
+       "key": "output:iron_ingot",
+       "handleId": "output:item:iron_ingot",
+       "output": true,
+       "name": "Iron Ingot",
+       "kind": "item",
+       "resourceId": "iron_ingot",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "EXACT",
+      "pin": 1,
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": true,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "CUSTOM_RATE",
+     "holder": {
+      "empty": false,
+      "dial": {
+       "supply": true,
+       "perSecond": 4,
+       "kind": "item",
+       "showMode": false,
+       "showRate": false
+      }
+     }
+    }
+   },
+   "view": {
+    "kind": "CUSTOM_RATE",
+    "name": "Custom Rate",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": false,
+    "sections": [],
+    "gauge": true,
+    "count": {
+     "text": "×1",
+     "value": 1,
+     "pinned": true,
+     "rule": "EXACT",
+     "ruleWord": "Exactly",
+     "ruleFixed": true,
+     "set": 1,
+     "setText": "1",
+     "box": "1",
+     "prompt": false,
+     "zero": false,
+     "title": "Runs at its dial."
+    },
+    "chips": [],
+    "stripHeight": 0,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "custom rate: nothing sets it",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Custom Rate",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [],
+     "outputs": [
+      {
+       "key": "output:iron_ingot",
+       "handleId": "output:item:iron_ingot",
+       "output": true,
+       "name": "Iron Ingot",
+       "kind": "item",
+       "resourceId": "iron_ingot",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "ANY",
+      "needed": 0,
+      "nodeParallel": 1,
+      "customRate": true,
+      "unset": true
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "CUSTOM_RATE",
+     "holder": {
+      "empty": false,
+      "dial": {
+       "supply": true,
+       "perSecond": 4,
+       "kind": "item",
+       "showMode": true,
+       "showRate": true
+      }
+     }
+    }
+   },
+   "view": {
+    "kind": "CUSTOM_RATE",
+    "name": "Custom Rate",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": false,
+    "sections": [],
+    "gauge": true,
+    "count": {
+     "text": "×0",
+     "value": 0,
+     "pinned": false,
+     "rule": "ANY",
+     "ruleWord": "Any",
+     "ruleFixed": true,
+     "setText": "",
+     "box": "Set",
+     "prompt": true,
+     "zero": true,
+     "title": "Runs at its dial."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "mode",
+       "label": "Mode",
+       "value": "Supply",
+       "reading": false,
+       "warn": false,
+       "title": "Which way the card faces.",
+       "x": 8,
+       "y": 10,
+       "width": 76
+      }
+     },
+     {
+      "chip": {
+       "id": "rate",
+       "label": "Rate (/s)",
+       "value": "4",
+       "reading": false,
+       "warn": false,
+       "title": "The rate it holds.",
+       "x": 88,
+       "y": 10,
+       "width": 76
+      },
+      "edit": {
+       "text": "4",
+       "scale": 1,
+       "notes": []
+      }
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": true,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "custom rate: fed by a forced input",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Custom Rate",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [
+      {
+       "key": "input:iron_ingot",
+       "handleId": "input:item:iron_ingot",
+       "output": false,
+       "name": "Iron Ingot",
+       "kind": "item",
+       "resourceId": "iron_ingot",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "outputs": [],
+     "count": {
+      "rule": "EXACT",
+      "pin": 1,
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": true,
+      "unset": false
+     },
+     "forced": [
+      {
+       "portKey": "h|i|input:item:iron_ingot",
+       "perSecond": 1.5
+      }
+     ],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "CUSTOM_RATE",
+     "holder": {
+      "empty": false,
+      "dial": {
+       "supply": false,
+       "perSecond": 4,
+       "kind": "item",
+       "showMode": true,
+       "showRate": true
+      }
+     }
+    }
+   },
+   "view": {
+    "kind": "CUSTOM_RATE",
+    "name": "Custom Rate",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": false,
+    "sections": [],
+    "gauge": true,
+    "count": {
+     "text": "×1",
+     "value": 1,
+     "pinned": true,
+     "rule": "EXACT",
+     "ruleWord": "Exactly",
+     "ruleFixed": true,
+     "set": 1,
+     "setText": "1",
+     "box": "1",
+     "prompt": false,
+     "zero": false,
+     "title": "Runs at its dial."
+    },
+    "foot": {
+     "tone": "FORCED",
+     "word": "FORCED IN",
+     "say": "1.5 /s of Iron Ingot to keep it running",
+     "frac": "",
+     "fill": 0,
+     "facts": {
+      "reason": "FORCED",
+      "rule": "EXACT",
+      "running": 1,
+      "capacity": 1,
+      "tied": [],
+      "upstream": [],
+      "forced": [
+       "1.5 /s Iron Ingot"
+      ]
+     }
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "mode",
+       "label": "Mode",
+       "value": "Request",
+       "reading": false,
+       "warn": false,
+       "title": "Which way the card faces.",
+       "x": 8,
+       "y": 10,
+       "width": 82
+      }
+     },
+     {
+      "chip": {
+       "id": "rate",
+       "label": "Rate (/s)",
+       "value": "4",
+       "reading": false,
+       "warn": false,
+       "title": "The rate it holds.",
+       "x": 94,
+       "y": 10,
+       "width": 76
+      },
+      "edit": {
+       "text": "4",
+       "scale": 1,
+       "notes": []
+      }
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "custom rate: empty with a forced input stays bare",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Custom Rate",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [],
+     "outputs": [],
+     "count": {
+      "rule": "EXACT",
+      "pin": 1,
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": true,
+      "unset": false
+     },
+     "forced": [
+      {
+       "portKey": "h|i|input:item:iron_ingot",
+       "perSecond": 1.5
+      }
+     ],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "CUSTOM_RATE",
+     "holder": {
+      "empty": true,
+      "dial": {
+       "supply": true,
+       "perSecond": 4,
+       "kind": "item",
+       "showMode": true,
+       "showRate": true
+      }
+     }
+    }
+   },
+   "view": {
+    "kind": "CUSTOM_RATE",
+    "name": "Custom Rate",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": true,
+    "sections": [],
+    "sockets": {
+     "take": "DRAIN ANY",
+     "give": "SUPPLY ANY",
+     "takeHint": "takes an output",
+     "giveHint": "feeds an input"
+    },
+    "gauge": true,
+    "count": {
+     "text": "×1",
+     "value": 1,
+     "pinned": true,
+     "rule": "EXACT",
+     "ruleWord": "Exactly",
+     "ruleFixed": true,
+     "set": 1,
+     "setText": "1",
+     "box": "1",
+     "prompt": false,
+     "zero": false,
+     "title": "Runs at its dial."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "mode",
+       "label": "Mode",
+       "value": "Supply",
+       "reading": false,
+       "warn": false,
+       "title": "Which way the card faces.",
+       "x": 8,
+       "y": 10,
+       "width": 76
+      }
+     },
+     {
+      "chip": {
+       "id": "rate",
+       "label": "Rate (/s)",
+       "value": "4",
+       "reading": false,
+       "warn": false,
+       "title": "The rate it holds.",
+       "x": 88,
+       "y": 10,
+       "width": 76
+      },
+      "edit": {
+       "text": "4",
+       "scale": 1,
+       "notes": []
+      }
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "custom rate: selected",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Custom Rate",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [],
+     "outputs": [
+      {
+       "key": "output:iron_ingot",
+       "handleId": "output:item:iron_ingot",
+       "output": true,
+       "name": "Iron Ingot",
+       "kind": "item",
+       "resourceId": "iron_ingot",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "EXACT",
+      "pin": 1,
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": true,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": true,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "CUSTOM_RATE",
+     "holder": {
+      "empty": false,
+      "dial": {
+       "supply": true,
+       "perSecond": 4,
+       "kind": "item",
+       "showMode": true,
+       "showRate": true
+      }
+     }
+    }
+   },
+   "view": {
+    "kind": "CUSTOM_RATE",
+    "name": "Custom Rate",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": false,
+    "sections": [],
+    "gauge": true,
+    "count": {
+     "text": "×1",
+     "value": 1,
+     "pinned": true,
+     "rule": "EXACT",
+     "ruleWord": "Exactly",
+     "ruleFixed": true,
+     "set": 1,
+     "setText": "1",
+     "box": "1",
+     "prompt": false,
+     "zero": false,
+     "title": "Runs at its dial."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "mode",
+       "label": "Mode",
+       "value": "Supply",
+       "reading": false,
+       "warn": false,
+       "title": "Which way the card faces.",
+       "x": 8,
+       "y": 10,
+       "width": 76
+      }
+     },
+     {
+      "chip": {
+       "id": "rate",
+       "label": "Rate (/s)",
+       "value": "4",
+       "reading": false,
+       "warn": false,
+       "title": "The rate it holds.",
+       "x": 88,
+       "y": 10,
+       "width": 76
+      },
+      "edit": {
+       "text": "4",
+       "scale": 1,
+       "notes": []
+      }
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "fluid tank: empty",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Fluid Tank",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [],
+     "outputs": [],
+     "count": {
+      "rule": "ANY",
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": false,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "TANK",
+     "holder": {
+      "empty": true
+     }
+    }
+   },
+   "view": {
+    "kind": "TANK",
+    "name": "Fluid Tank",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": true,
+    "sections": [],
+    "sockets": {
+     "take": "TAKE CELL/FLUID",
+     "give": "GIVE CELL/FLUID",
+     "takeHint": "takes an output",
+     "giveHint": "feeds an input"
+    },
+    "gauge": false,
+    "chips": [],
+    "stripHeight": 0,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "fluid tank: emptying cells",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Fluid Tank",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [
+      {
+       "key": "input:oxygen_cell",
+       "handleId": "input:item:oxygen_cell",
+       "output": false,
+       "name": "Oxygen Cell",
+       "kind": "item",
+       "resourceId": "oxygen_cell",
+       "perSecond": 2,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "outputs": [
+      {
+       "key": "output:oxygen",
+       "handleId": "output:fluid:oxygen",
+       "output": true,
+       "name": "Oxygen",
+       "kind": "fluid",
+       "resourceId": "oxygen",
+       "perSecond": 2000,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "ANY",
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": false,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "TANK",
+     "holder": {
+      "empty": false
+     }
+    }
+   },
+   "view": {
+    "kind": "TANK",
+    "name": "Fluid Tank",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": false,
+    "sections": [],
+    "gauge": false,
+    "chips": [],
+    "stripHeight": 0,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "fluid tank: per minute",
+   "input": {
+    "dials": {
+     "rate": "MINUTE",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Fluid Tank",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [
+      {
+       "key": "input:oxygen_cell",
+       "handleId": "input:item:oxygen_cell",
+       "output": false,
+       "name": "Oxygen Cell",
+       "kind": "item",
+       "resourceId": "oxygen_cell",
+       "perSecond": 2,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "outputs": [
+      {
+       "key": "output:oxygen",
+       "handleId": "output:fluid:oxygen",
+       "output": true,
+       "name": "Oxygen",
+       "kind": "fluid",
+       "resourceId": "oxygen",
+       "perSecond": 2000,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "ANY",
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": false,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "TANK",
+     "holder": {
+      "empty": false
+     }
+    }
+   },
+   "view": {
+    "kind": "TANK",
+    "name": "Fluid Tank",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": false,
+    "sections": [],
+    "gauge": false,
+    "chips": [],
+    "stripHeight": 0,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "fluid tank: Up to has no count",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "h",
+     "name": "Fluid Tank",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "inputs": [
+      {
+       "key": "input:oxygen_cell",
+       "handleId": "input:item:oxygen_cell",
+       "output": false,
+       "name": "Oxygen Cell",
+       "kind": "item",
+       "resourceId": "oxygen_cell",
+       "perSecond": 2,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "outputs": [
+      {
+       "key": "output:oxygen",
+       "handleId": "output:fluid:oxygen",
+       "output": true,
+       "name": "Oxygen",
+       "kind": "fluid",
+       "resourceId": "oxygen",
+       "perSecond": 2000,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "UP_TO",
+      "pin": 2,
+      "needed": 1,
+      "nodeParallel": 1,
+      "customRate": false,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": true,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     }
+    },
+    "special": {
+     "kind": "TANK",
+     "holder": {
+      "empty": false
+     }
+    }
+   },
+   "view": {
+    "kind": "TANK",
+    "name": "Fluid Tank",
+    "nameStep": 0,
+    "nameTone": "HOLDER",
+    "hasPicker": false,
+    "empty": false,
+    "sections": [],
+    "gauge": false,
+    "chips": [],
+    "stripHeight": 0,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  }
+ ]
+}

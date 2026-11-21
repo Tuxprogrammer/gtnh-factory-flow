@@ -184,7 +184,14 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
         model = next.get(0);
         foot = buildFoot(session.rateUnit());
         footUnit = session.rateUnit();
-        final CardLayout nextLayout = CardLayouts.of(next, session.graph(), foot != null);
+        // A holder's strip is the shared rules' (its dial in the board's rate unit); any other card's, its pinned settings.
+        // Its parts are made afresh: its pins may have changed, which its count's key does not hold.
+        face = null;
+        final com.gtnhplanner.core.view.special.SpecialView sv = com.gtnhplanner.power.Holders.is(model.node) ? special()
+            : null;
+        final CardLayout nextLayout = sv != null ? CardLayouts.of(next, SpecialInputs.controls(sv, model), foot != null)
+            : CardLayouts.of(next, session.graph(), foot != null);
+        layoutDials = CardInputs.dials(session);
         if (layout == null || layout.height != nextLayout.height || !nextLayout.sameRows(layout)) {
             layout = nextLayout;
             size(CardLayout.W, layout.height);
@@ -228,6 +235,12 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
         for (int s = 0; s < sections.size() && !changed; s++) changed = session.model(sections.get(s)) != models.get(s);
         if (changed || sections.isEmpty()) refresh();
         if (layout != null && layout.pinsVersion != SettingPins.version()) refresh();
+        // A holder's dial chips read the board's rate unit: laid out again when the dials turn.
+        else if (layout != null && model != null
+            && com.gtnhplanner.power.Holders.is(model.node)
+            && !CardInputs.dials(session)
+                .equals(layoutDials))
+            refresh();
     }
 
     /** The machines the card runs: all its recipes' together on a shared machine. */
@@ -298,6 +311,17 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
             set = pendingCount;
         }
         view = sharedRules() ? view(rule, set, dials) : null;
+        // A special card's own parts (the shared rules cover the holders so far), over its view.
+        final com.gtnhplanner.core.view.special.SpecialInput specialIn = view == null ? null
+            : SpecialInputs.holder(model, session.graph());
+        special = specialIn == null ? null
+            : com.gtnhplanner.core.view.special.SpecialViews.special(
+                specialIn,
+                viewInput,
+                view,
+                dials,
+                com.gtnhplanner.ui.theme.HybMeasure.INSTANCE,
+                com.gtnhplanner.core.view.card.CardViews.Host.MOD);
         final com.gtnhplanner.core.view.card.CardView v = view;
         if (v != null) {
             // The shared card's count: the rule word on every rule ("Any" too) and the set box ("Set" with none).
@@ -313,7 +337,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
                 "",
                 c.prompt(),
                 c.zero(),
-                c.ruleFixed() ? "Runs at its dial." : c.title());
+                c.title());
         } else face = CardFace.count(rule, set, machinesTotal(), readout, unset, crop(), ruleFixed());
         faceFor = model;
         facePending = pendingUnpin ? -1 : pendingCount;
@@ -325,14 +349,14 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
 
     /**
      * Whether the card is one the shared card rules draw (core-view CardViews, the website's clean card): one recipe,
-     * not a crop card, a holder, a generator or a card with no count. Those keep the mod's own rules for now.
+     * not a crop card, a generator or a card with no count, or a holder (a custom rate card, a fluid tank: its own
+     * parts
+     * from core-view SpecialViews). The others keep the mod's own rules for now.
      */
     private boolean sharedRules() {
-        return model != null && !shared()
-            && !crop()
-            && !countless()
-            && !model.isPower()
-            && !com.gtnhplanner.power.Holders.is(model.node);
+        if (model == null || shared() || crop()) return false;
+        if (com.gtnhplanner.power.Holders.is(model.node)) return true;
+        return !countless() && !model.isPower();
     }
 
     /** The card's view by the shared rules at {@code rule} and {@code set} (built when {@link #face()} is). */
@@ -349,6 +373,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
             tierFixed(),
             ruleFixed(),
             com.gtnhplanner.power.Holders.is(model.node));
+        viewInput = in;
         return com.gtnhplanner.core.view.card.CardViews.card(
             in,
             dials,
@@ -356,8 +381,20 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
             com.gtnhplanner.core.view.card.CardViews.Host.MOD);
     }
 
-    /** The card's view as last built by the shared rules (null on a card they skip). */
+    /** The card's view as last built by the shared rules (null on a card they skip), and its input. */
     private com.gtnhplanner.core.view.card.CardView view;
+    private com.gtnhplanner.core.view.card.CardInput viewInput;
+    /** A special card's own parts as last built by the shared rules (null on a card they do not cover). */
+    private com.gtnhplanner.core.view.special.SpecialView special;
+    /** The board's dials the layout's chips were laid out for. */
+    private com.gtnhplanner.core.view.card.CardInput.Dials layoutDials;
+
+    /** A special card's own parts as the card shows them now; null on a card the shared special rules skip. */
+    @javax.annotation.Nullable
+    private com.gtnhplanner.core.view.special.SpecialView special() {
+        face();
+        return special;
+    }
 
     /** The view as the card shows it now (its count as set or being typed); null on a card the shared rules skip. */
     @javax.annotation.Nullable
@@ -390,6 +427,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
      */
     private CardFace.Foot buildFoot(final Fmt.RateUnit unit) {
         if (model == null || countless()) return null;
+        if (model.node.shown != null) return readOnlyFoot();
         final List<CardFace.Forced> forced = new ArrayList<>();
         for (final CardModel m : models) for (final CardModel.PortView p : m.inputs) if (p.hasExtra() && !p.isPower())
             forced.add(new CardFace.Forced(p.name(), Fmt.rate(p.extra(), unit, p.isFluid())));
@@ -405,6 +443,32 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
             },
             Hyb::width,
             session.loopOf(nodeId));
+    }
+
+    /**
+     * A card the board only shows (a website card it cannot run): VIEW ONLY and why, by the shared card rules
+     * (core-view CardViews.readOnlyFoot).
+     */
+    private CardFace.Foot readOnlyFoot() {
+        final com.gtnhplanner.data.flowchart.PinRule rule = session.rule(model.node);
+        final double set = session.setCount(model.node);
+        final com.gtnhplanner.core.view.card.CardView.FootView v = com.gtnhplanner.core.view.card.CardViews
+            .readOnlyFoot(
+                CardInputs.readOnly(model.node),
+                rule,
+                machinesTotal(),
+                rule == com.gtnhplanner.data.flowchart.PinRule.ANY ? null : set,
+                com.gtnhplanner.ui.theme.HybMeasure.INSTANCE);
+        return new CardFace.Foot(
+            CardFace.Tone.PLAIN,
+            v.word(),
+            v.say(),
+            "",
+            0,
+            0,
+            0,
+            0,
+            new CardFace.Facts(null, false, machinesTotal(), set, null, null, List.of(), List.of(), List.of(), null));
     }
 
     /**
@@ -904,16 +968,17 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
                 && localY() < r[1] + r[3];
             Hyb.rect(r[0], r[1], r[2], r[3], inHand ? 0x30FFD257 : hot ? 0x26FFFFFF : 0x14FFFFFF);
             Hyb.dashed(r[0], r[1], r[2], r[3], inHand || hot ? Hyb.GOLD : 0xFF6A6D78);
-            // A fluid tank takes cells and fluids only.
-            final boolean tank = com.gtnhplanner.power.FluidTank.is(model.node);
-            final String label = tank ? supply ? "GIVE CELL/FLUID" : "TAKE CELL/FLUID"
-                : supply ? "SUPPLY ANY" : "DRAIN ANY";
+            // The words are the shared rules' (a fluid tank takes cells and fluids only).
+            final com.gtnhplanner.core.view.special.SpecialView.Sockets words = special() == null ? null
+                : special().sockets();
+            if (words == null) continue;
+            final String label = supply ? words.give() : words.take();
             Hyb.text(
                 label,
                 r[0] + (r[2] - Hyb.width(label)) / 2f,
                 r[1] + (r[3] - 8) / 2f,
                 inHand ? Hyb.GOLD : Hyb.MUTED);
-            final String hint = supply ? "feeds an input" : "takes an output";
+            final String hint = supply ? words.giveHint() : words.takeHint();
             Hyb.text(hint, r[0] + (r[2] - Hyb.width(hint)) / 2f, r[1] + r[3] + 6, 0xFF6A6D78);
         }
     }
@@ -1180,8 +1245,9 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
             : session.taskStatus(nodeId);
         if (task != null) com.gtnhplanner.ui.task.TaskLook
             .dot(BAR_X, y + (CHIP_H - 9) / 2f, 9, com.gtnhplanner.ui.task.TaskLook.colour(task));
+        final com.gtnhplanner.core.view.special.SpecialView sv = special();
         final float end = CardPaint.name(
-            headName(m),
+            sv != null ? sv.name() : headName(m),
             BAR_X + (task != null ? 14 : 0),
             barRight() - (menu ? 12 : 0),
             com.gtnhplanner.power.Holders.is(m.node) ? CUSTOM_RATE_INK : m.isPower() ? 0xFFFEF3C7 : Hyb.INK);
@@ -2015,6 +2081,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
         final java.util.Map<String, String> values = model.node.powerSettings;
         final com.gtnhplanner.power.PowerSetting setting = source == null ? null : source.setting(key.substring(6));
         if (setting == null || !PowerTiles.enabled(source, setting, values)) return;
+        if (setting == com.gtnhplanner.power.CustomRate.RATE_SETTING && rateBox(sx, sy)) return;
         switch (setting) {
             case com.gtnhplanner.power.PowerSetting.Toggle toggle -> changePower(setting.id(), toggle.value(values.get(setting.id())) ? "0" : "1");
             case com.gtnhplanner.power.PowerSetting.Select select -> {
@@ -2040,6 +2107,45 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
                 sx,
                 sy);
         }
+    }
+
+    /**
+     * A custom rate card's rate typed in the board's rate unit, as its chip shows it (the shared rules' edit: the text
+     * the box opens with and the scale to the stored rate, a second; EU a tick on a card holding EU). False when the
+     * card shows no rate chip.
+     */
+    private boolean rateBox(final int sx, final int sy) {
+        final com.gtnhplanner.core.view.special.SpecialView sv = special();
+        if (sv == null) return false;
+        for (final com.gtnhplanner.core.view.special.SpecialView.Chip chip : sv.chips()) {
+            final com.gtnhplanner.core.view.special.SpecialView.Edit edit = chip.edit();
+            if (edit == null || !"rate".equals(
+                chip.chip()
+                    .id()))
+                continue;
+            final boolean eu = com.gtnhplanner.power.Energy.KEY
+                .equals(com.gtnhplanner.power.CustomRate.resource(model.node));
+            final double max = com.gtnhplanner.power.CustomRate.RATE_SETTING.max() * (eu ? 20 : 1) * edit.scale();
+            Popup.open(
+                session.panel(),
+                NumberPopup.create(
+                    chip.chip()
+                        .label(),
+                    "0 to " + PowerTiles.plain(max),
+                    com.gtnhplanner.core.base.NumberText.parse(edit.text()),
+                    0,
+                    max,
+                    v -> {
+                        final double perSecond = Math.max(0, v) / edit.scale();
+                        changePower(
+                            com.gtnhplanner.power.CustomRate.RATE,
+                            PowerTiles.plain(eu ? perSecond / 20 : perSecond));
+                    }),
+                sx,
+                sy);
+            return true;
+        }
+        return false;
     }
 
     /** One step along a power setting; false when it is already at that end. */
@@ -2431,6 +2537,8 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
      */
     private Result act(final Part part, final int mouseButton, final float x, final float y) {
         final Node node = model.node;
+        // A card the board only shows (a website card it cannot run): every part is its body, its key its menu.
+        if (node.shown != null && part != Part.BODY && part != Part.ACTIONS) return act(Part.BODY, mouseButton, x, y);
         switch (part) {
             case ACTIONS -> {
                 if (mouseButton == 0) openActions();
@@ -2542,7 +2650,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
 
     @Override
     public boolean onMouseScroll(final UpOrDown direction, final int amount) {
-        if (model == null) return false;
+        if (model == null || model.node.shown != null) return false;
         // While a leftover is carried the wheel is the board's: how much is in hand.
         if (canvas() != null && canvas().carryingSpare()) return false;
         // With "Scroll changes values" off nothing here takes it: the board zooms.
@@ -2959,7 +3067,8 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
                 shared(),
                 com.gtnhplanner.power.Holders.is(node),
                 emptyCropFarm(),
-                true))) {
+                true,
+                node.shown != null))) {
             switch (row.id()) {
                 case "clone" -> {
                     rows.add(PickList.Entry.of(row.label(), () -> session.cloneNode(node)));
@@ -2984,7 +3093,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
                                 "Remove from the world",
                                 () -> com.gtnhplanner.ui.world.WorldLinks.clear(session.graph(), node)));
                     }
-                    rows.add(PickList.Entry.rule());
+                    if (!rows.isEmpty()) rows.add(PickList.Entry.rule());
                     rows.add(new PickList.Entry(null, row.label(), "", Hyb.RED_INK, false, () -> session.delete(node)));
                 }
                 default -> {}

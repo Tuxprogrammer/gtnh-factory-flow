@@ -264,15 +264,19 @@ public final class CloudApi {
 
     // region Calls
 
-    /** Who the session is. Null when the session has run out; throws when the site does not say which account. */
+    /**
+     * Who the session is. Null when the session has run out (the site answers 200 with no user; a proxy in front may
+     * answer 401). The site never says an account id: it is the session's first part, {@code <id>.<expires>.<hmac>}.
+     */
     @Nullable
     public static Account me(final String token) throws IOException {
         final Reply r = send("GET", CommunityApi.site() + "/api/community/auth/me", null, token, 401);
         if (r.status == 401) return null;
         final JsonElement user = json(r.body).get("user");
         if (user == null || !user.isJsonObject()) return null;
-        final String id = string(user.getAsJsonObject(), "id");
-        if (id.isBlank()) throw new IOException("the site did not say which account this is");
+        final int dot = token.indexOf('.');
+        final String id = dot > 0 ? token.substring(0, dot) : "";
+        if (id.isBlank()) throw new IOException("the session does not say which account this is");
         return new Account(id, string(user.getAsJsonObject(), "username"));
     }
 
@@ -531,7 +535,8 @@ public final class CloudApi {
             final byte[] out = json.getBytes(StandardCharsets.UTF_8);
             c.setDoOutput(true);
             c.setRequestProperty("Content-Type", "application/json");
-            c.setFixedLengthStreamingMode(out.length);
+            // No streaming mode: the JDK drops the body of a 401 answer to a streamed request, and the player would
+            // read "not signed in" instead of the site's own words.
             try (java.io.OutputStream o = c.getOutputStream()) {
                 o.write(out);
             }

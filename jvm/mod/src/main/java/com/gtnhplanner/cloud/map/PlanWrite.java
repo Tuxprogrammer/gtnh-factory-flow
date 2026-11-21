@@ -189,7 +189,11 @@ final class PlanWrite {
         for (final Map.Entry<String, JsonElement> e : base.entrySet())
             if (!LiveOps.isCollection(e.getKey())) out.add(e.getKey(), e.getValue());
         final Fresh.Meta now = Fresh.meta(graph, game, basis);
-        merge(out, basis.metaSite == null ? new JsonObject() : basis.metaSite, now.site());
+        final JsonObject was = basis.metaSite == null ? new JsonObject() : basis.metaSite;
+        merge(out, was, now.site());
+        // Setting pins and leftover splits by key: a machine's pins the board changed are the board's, the plan's for
+        // the rest (a machine it has no card of, the pins the website keeps) stay.
+        for (final String f : List.of("settingPins", "spareShares")) mergeKeys(out, was, now.site(), f);
         // The plan's game data as the plan had it while the board's did not change (none, on a plan the website made).
         final String state = Canon.of(now.game());
         if (!state.equals(basis.metaState)) {
@@ -344,6 +348,28 @@ final class PlanWrite {
         }
         for (final Map.Entry<String, JsonElement> e : was.entrySet())
             if (!now.has(e.getKey()) && !"id".equals(e.getKey())) target.remove(e.getKey());
+    }
+
+    /**
+     * One plan field that is an object by key ({@code field}), three ways into {@code target}: the plan's (the base's),
+     * with each key the board changed since {@code was} taken from {@code now} and each key it dropped gone.
+     */
+    private void mergeKeys(final JsonObject target, final JsonObject was, final JsonObject now, final String field) {
+        final JsonObject before = object(was, field), after = object(now, field);
+        if (LiveJson.equal(before, after)) return;
+        final JsonObject out = LiveJson.copy(object(base, field));
+        for (final Map.Entry<String, JsonElement> e : after.entrySet())
+            if (!LiveJson.equal(before.get(e.getKey()), e.getValue())) out.add(e.getKey(), LiveJson.copy(e.getValue()));
+        for (final Map.Entry<String, JsonElement> e : before.entrySet())
+            if (!after.has(e.getKey())) out.remove(e.getKey());
+        if (out.entrySet()
+            .isEmpty()) target.remove(field);
+        else target.add(field, out);
+    }
+
+    private static JsonObject object(final JsonObject o, final String field) {
+        final JsonElement e = o.get(field);
+        return e != null && e.isJsonObject() ? e.getAsJsonObject() : new JsonObject();
     }
 
     /**

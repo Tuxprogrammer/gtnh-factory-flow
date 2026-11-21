@@ -24,7 +24,7 @@ import javax.annotation.Nullable;
  * <li>{@code edges}: wires the board could not hold (between two drawers, a drawer wired the wrong way round, a loose
  * cell wire with no tank for it, a wire to a card left out), their ends renamed to what the board calls them.</li>
  * <li>{@code cards}, {@code drawers}: per board card and drawer, the fields of its card or drawer in the plan that the
- * board does not model (a colour tag, a crop farm's count, a byproduct drawer's label).</li>
+ * board does not model (a colour tag, a crop farm's count, a byproduct drawer's label, a buffer's drain setting).</li>
  * </ul>
  * {@link #writeBack} puts them into the plan the board writes: a field the board wrote stays the board's, the rest
  * comes back; a wire comes back only while both its ends are still in the plan.
@@ -35,11 +35,19 @@ public final class SiteCarry {
 
     /**
      * What the board made of a plan's things: board ids by plan id (a shared machine's card by its first recipe's), the
-     * wires it could not hold, and the plan's things it turned into something else (a buffer joined into wires), which
-     * neither go back out nor take their wires with them.
+     * wires it could not hold, the plan's things it turned into something else (a buffer joined into wires), which
+     * neither go back out nor take their wires with them, and the cards it only shows ({@link DisplayCards}): those
+     * are in {@code cards} under their own plan id, kept whole as they came, and the board holds their wires.
      */
     public record Placed(Map<String, String> cards, Map<String, String> storages, Set<String> droppedEdges,
-        Set<String> converted) {}
+        Set<String> converted, Set<String> shown) {
+
+        /** A board that shows no card of the plan's it cannot run. */
+        public Placed(final Map<String, String> cards, final Map<String, String> storages,
+            final Set<String> droppedEdges, final Set<String> converted) {
+            this(cards, storages, droppedEdges, converted, java.util.Collections.emptySet());
+        }
+    }
 
     /** The plan's own fields the board writes, and the old ones the import turned into board things. */
     private static final Set<String> PLAN_OWNED = Set.of(
@@ -141,6 +149,14 @@ public final class SiteCarry {
         for (final Map<String, Object> n : objects(plan.get("nodes"))) {
             final String id = str(n.get("id"));
             if (id == null) continue;
+            if (placed.shown()
+                .contains(id)) {
+                // A card the board only shows: kept whole, with its recipes; its wires are the board's.
+                nodes.add(n);
+                recipeIds.add(str(n.get("recipeId")));
+                for (final Map<String, Object> x : objects(n.get("extraRecipes"))) recipeIds.add(str(x.get("recipeId")));
+                continue;
+            }
             final String board = placed.cards()
                 .get(id);
             if (board == null && !placed.storages()
@@ -173,7 +189,9 @@ public final class SiteCarry {
                 continue;
             }
             final Map<String, Object> extra = extras(s, STORAGE_OWNED);
-            if ("byproduct".equals(s.get("drainMode"))) extra.put("drainMode", "byproduct");
+            // What it does once nothing draws from it: the board writes it only for a drain, so a buffer's or a source's
+            // setting (the website keeps one for when it becomes a drain) comes back as it came.
+            if (s.get("drainMode") != null) extra.put("drainMode", s.get("drainMode"));
             if (!extra.isEmpty()) drawers.put(board, extra);
         }
 
@@ -257,9 +275,11 @@ public final class SiteCarry {
             final Map<String, Object> extra = object(extras.get(str(t.get("id"))));
             for (final Map.Entry<String, Object> e : extra.entrySet()) {
                 if (storages && "drainMode".equals(e.getKey())) {
-                    // A byproduct drawer is a product with no rule to the board: the label comes back while it is one.
-                    if ("product".equals(t.get("drainMode")) && !t.containsKey("targetMode"))
-                        t.put("drainMode", e.getValue());
+                    // A drawer the board writes no drain setting for (a buffer, a source) gets the plan's back; a
+                    // byproduct drawer is a product with no rule to the board: the label comes back while it is one.
+                    final Object own = t.get("drainMode");
+                    if (own == null || "product".equals(own) && "byproduct".equals(e.getValue())
+                        && !t.containsKey("targetMode")) t.put("drainMode", e.getValue());
                     continue;
                 }
                 if (!t.containsKey(e.getKey())) t.put(e.getKey(), e.getValue());

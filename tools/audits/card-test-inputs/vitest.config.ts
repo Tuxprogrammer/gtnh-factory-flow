@@ -20,6 +20,8 @@ export default defineConfig({
       // The shadow replays what this records; the shared cases are their own corpus.
       "src/components/flow/clean/card-shadow.test.ts",
       "src/components/flow/clean/card-conformance.test.ts",
+      "src/components/flow/clean/special/special-view.test.ts",
+      "src/components/flow/clean/special/special-conformance.test.ts",
     ],
   },
 });

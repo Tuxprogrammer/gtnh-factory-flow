@@ -12,6 +12,7 @@ import com.gtnhplanner.core.base.JavaHashMap;
 import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.core.model.RecipeRef;
 import com.gtnhplanner.core.model.RecipeSource;
+import com.gtnhplanner.core.model.Shown;
 import com.gtnhplanner.data.MachineConfig;
 import com.gtnhplanner.data.MachineProfileRegistry;
 import com.gtnhplanner.data.properties.RecipeProperty;
@@ -57,6 +58,13 @@ public class Node implements PinRule.Card {
 
     public final MachineConfig machineConfig;
     public final Map<RecipeProperty<?>, Object> properties = new JavaHashMap<>();
+
+    /**
+     * Set on a card from the other side's plan that the board shows but cannot run as its own ({@link Shown}): its ports
+     * are the plan's record's and nothing reads them again; null on every card of the board's own.
+     */
+    @Nullable
+    public Shown shown;
 
     private boolean machineCountFixed;
 
@@ -171,6 +179,11 @@ public class Node implements PinRule.Card {
         machineConfig.seedRouteDefaults();
     }
 
+    /** Whether the card is one the board only shows ({@link #shown}): it can be moved, wired and deleted, not edited. */
+    public boolean isShown() {
+        return shown != null;
+    }
+
     /** Whether this is a non-recipe machine (a generator) rather than a recipe from NEI. */
     public boolean isPower() {
         return powerSource != null;
@@ -187,9 +200,10 @@ public class Node implements PinRule.Card {
 
     /**
      * Reads the card again: a power card from its source, a recipe card from its recipe ({@link RecipeSource}). A recipe
-     * the host cannot find leaves the card as it is.
+     * the host cannot find leaves the card as it is; a card the board only shows ({@link #shown}) is never read again.
      */
     public void refresh() {
+        if (shown != null) return;
         if (powerSource != null) {
             RecipeSource.get()
                 .readPower(this);

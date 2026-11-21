@@ -129,6 +129,7 @@ export interface CardInputJson {
     holder: boolean;
     emptyCropFarm: boolean;
     tasks: boolean;
+    readOnly: boolean;
   };
 }
 
@@ -174,7 +175,7 @@ const SULFUR = (perSecond = 6, extra: Partial<CardPortIn> = {}) =>
 const ACID = (perSecond = 720, extra: Partial<CardPortIn> = {}) =>
   port(true, "Sulfuric Acid", perSecond, { kind: "fluid", resourceId: "sulfuric_acid", ...extra });
 
-const MENU = {
+export const MENU = {
   calm: false,
   locked: false,
   ownsRecipe: false,
@@ -182,6 +183,7 @@ const MENU = {
   holder: false,
   emptyCropFarm: false,
   tasks: false,
+  readOnly: false,
 };
 
 /** A chemical reactor on HV, solved at 2.4 machines, nothing set. */
@@ -217,7 +219,7 @@ function base(): CardInputJson {
   };
 }
 
-const EU = { rate: "SECOND" as const, power: "eu", averageDraw: true };
+export const EU = { rate: "SECOND" as const, power: "eu", averageDraw: true };
 
 type Edit = (card: CardInputJson) => void;
 
@@ -748,10 +750,10 @@ export function caseFacts(input: CardCaseInput): CleanCardFacts {
 // region The view on the wire (jvm/core/core-view CardView)
 
 const upper = (tone: string | undefined) => tone?.toUpperCase();
-const NAME_STEP: Record<number, number> = { 10: 0, 9: 1, 8: 2 };
+export const NAME_STEP: Record<number, number> = { 10: 0, 9: 1, 8: 2 };
 
 /** Drops undefined keys, so a missing optional is a missing key (the wire has no nulls). */
-function clean<T extends object>(value: T): T {
+export function clean<T extends object>(value: T): T {
   return Object.fromEntries(Object.entries(value).filter(([, v]) => v !== undefined)) as T;
 }
 
@@ -780,7 +782,8 @@ function portJson(p: CleanPortView) {
   });
 }
 
-function footJson(f: CleanFootView) {
+/** The foot bar as the core's `FootView` writes it. */
+export function footJson(f: CleanFootView) {
   const { turbine } = f.facts;
   return clean({
     tone: upper(f.tone),
@@ -831,6 +834,42 @@ export function menuJson(m: CardInputJson["menu"]) {
   ];
 }
 
+/** The count as the core's `CountView` writes it. */
+export function countJson(count: CleanCardView["count"]) {
+  return clean({
+    text: count.text,
+    unit: count.unit,
+    value: count.value,
+    pinned: count.pinned,
+    rule: RULE_OUT[count.rule],
+    ruleWord: count.ruleWord,
+    ruleFixed: count.ruleFixed,
+    set: count.set,
+    setText: count.setText,
+    box: count.box,
+    prompt: count.prompt,
+    zero: count.zero,
+    title: count.title,
+  });
+}
+
+/** A chip as the core's `ChipView` writes it. */
+export function chipJson(chip: CleanCardView["chips"][number]) {
+  return clean({
+    id: chip.id,
+    label: chip.label,
+    value: chip.value,
+    icon: chip.icon,
+    reading: chip.reading === true,
+    powerCap: chip.powerCap,
+    warn: chip.warn === true,
+    title: chip.title,
+    x: chip.x,
+    y: chip.y,
+    width: chip.width,
+  });
+}
+
 /** The website's card as the core's `CardView` writes it: its JSON, key for key. */
 export function cardViewJson(view: CleanCardView, input: CardCaseInput): unknown {
   const count = view.count;
@@ -851,42 +890,14 @@ export function cardViewJson(view: CleanCardView, input: CardCaseInput): unknown
         glanceProduct: view.glanceProduct
           ? { icon: view.glanceProduct.image.replace(/^url\((.*)\)$/, "$1"), fluid: view.glanceProduct.fluid }
           : undefined,
-        count: clean({
-          text: count.text,
-          unit: count.unit,
-          value: count.value,
-          pinned: count.pinned,
-          rule: RULE_OUT[count.rule],
-          ruleWord: count.ruleWord,
-          ruleFixed: count.ruleFixed,
-          set: count.set,
-          setText: count.setText,
-          box: count.box,
-          prompt: count.prompt,
-          zero: count.zero,
-          title: count.title,
-        }),
+        count: countJson(count),
         foot: view.foot ? footJson(view.foot) : undefined,
         loop: view.loop ? LOOP_OUT[view.loop] : undefined,
         glance: view.glance ? { tone: upper(view.glance.tone), fill: view.glance.fill, word: view.glance.word } : undefined,
         circuit: view.circuit
           ? clean({ icon: view.circuit.resource?.iconPath, number: circuitNumber(view.circuit) })
           : undefined,
-        chips: view.chips.map((chip) =>
-          clean({
-            id: chip.id,
-            label: chip.label,
-            value: chip.value,
-            icon: chip.icon,
-            reading: chip.reading === true,
-            powerCap: chip.powerCap,
-            warn: chip.warn === true,
-            title: chip.title,
-            x: chip.x,
-            y: chip.y,
-            width: chip.width,
-          }),
-        ),
+        chips: view.chips.map(chipJson),
         stripHeight: view.stripHeight,
         selected: view.selected,
         cannotRun: view.cannotRun,

@@ -1286,6 +1286,11 @@ public final class DevHarness {
                     for (final com.gtnhplanner.data.flowchart.Graph g : plan.getGraphs()) names.add(g.getName());
                     m.put("slots", names);
                     m.put("active", plan.getActiveIndex());
+                    // The open plan's id, as a proposal names the plan it was made for (/gtnhplanner apply).
+                    m.put(
+                        "activeId",
+                        com.gtnhplanner.data.flowchart.Plan.getActiveGraph()
+                            .planId());
                     return m;
                 });
             case "/clearplan":

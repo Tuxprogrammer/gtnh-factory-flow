@@ -1,10 +1,10 @@
 /**
  * What a solve in the solve Worker waits for before it runs.
  *
- * Where the compiled core solves (WebAssembly GC, the solve area on: `src/lib/core/solve-adopt.ts`), every solve
- * waits for it, so a plan never shows HiGHS's numbers first and the core's after. HiGHS is fetched only when the core
- * will not solve here: no WebAssembly GC (the JavaScript build does not solve), the area off, a failed load, or a load
- * still going after `coreWaitMs` (the core still takes over once it arrives). Every wait is bounded, so a fetch that
+ * Where the compiled core solves (the solve area on: `src/lib/core/solve-adopt.ts`; WebAssembly GC or the JavaScript
+ * build), every solve waits for it, so a plan never shows HiGHS's numbers first and the core's after. HiGHS is fetched
+ * only when the core will not solve here: the area off, a failed load, or a load still going after `coreWaitMs` (the
+ * core still takes over once it arrives). Every wait is bounded, so a fetch that
  * never answers cannot hold a solve: past both waits the website's homegrown simplex answers.
  */
 export const CORE_WAIT_MS = 10_000;

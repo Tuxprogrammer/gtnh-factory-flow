@@ -6,9 +6,9 @@ import { attachClogLocks } from "@/components/flow/clog-lock";
 import type { FactoryProject } from "@/lib/model/types";
 import { setActiveGameRates, type ActiveGameRates } from "@/lib/model/game-rates";
 
-// The engines settle once, at Worker startup (solve-engines.ts): where the compiled core solves (WebAssembly GC), every
-// solve waits for it and HiGHS is never fetched; HiGHS loads only where the core will not solve (no WebAssembly GC, a
-// failed or hung load), and a solve never waits past the bounded waits there. The route serves HiGHS from the package in
+// The engines settle once, at Worker startup (solve-engines.ts): where the compiled core solves (WebAssembly GC or its
+// JavaScript build), every solve waits for it and HiGHS is never fetched; HiGHS loads only where the core will not solve
+// (a failed or hung load), and a solve never waits past the bounded waits there. The route serves HiGHS from the package in
 // any start mode; public/ (copied by predev and prebuild) is the fallback.
 const engineSettled = settleSolveEngines({
   core: warmSolveCore,

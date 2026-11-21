@@ -10,11 +10,11 @@
  * `SolverExports.solverSolveCached(input JSON)` answers the golden digest (`SolverCodec` in core-solver), which is turned
  * back into the website's `Answer` here.
  *
- * Which engine solves (`solveEngine`): the core when the solve area is adopted (`adopt.ts`), the solver module has
- * loaded, and it loaded on a target in `SOLVE_TARGETS` (WebAssembly GC). An engine without WebAssembly GC (the loader
- * would fall back to the JavaScript build, which is slower than the website's engine there) fetches no solver and keeps
- * the website's engine. When the load fails the website's engine answers too; the solve Worker waits for the load
- * (`src/store/solve-engines.ts`), and a main thread with no Worker uses the website's engine until it is done.
+ * Which engine solves (`solveEngine`): the core when the solve area is adopted (`adopt.ts`) and the solver module has
+ * loaded, on either target: WebAssembly GC, or the JavaScript build of the same sources where the engine has no
+ * WebAssembly GC (slower, the same answers). When the load fails the website's engine answers; the solve Worker waits
+ * for the load (`src/store/solve-engines.ts`), and a main thread with no Worker uses the website's engine until it is
+ * done.
  */
 import {
   setSolveCoreBridge,
@@ -42,15 +42,14 @@ import type {
 } from "@/lib/solver/plan/types";
 import { coreFor, isAdopted } from "./adopt";
 import type { CoreExports } from "./exports.generated";
-import { coreInfo, loadCore, wasmGcSupported, type CoreTarget, type LoadOptions } from "./loader";
+import { coreInfo, loadCore, type CoreTarget, type LoadOptions } from "./loader";
 
 /**
- * The targets the core solves on. WebAssembly GC: from an edit to the answer no slower than the website's engine on
- * any reference plan in a browser (10 to 1,000 cards; about half the time on a 484-card board), and the first solve
- * after a page load no later. The JavaScript build is slower than the website's engine on the first solve and on
- * small and mid-sized plans (about twice on a 33-card plan): the website's engine stays there.
+ * The targets the core solves on: both. WebAssembly GC is from an edit to the answer no slower than the website's
+ * engine on any reference plan in a browser. The JavaScript build (engines without WebAssembly GC) is about twice as
+ * slow on the heaviest plans but gives the same answers as every other player gets, so every engine solves on the core.
  */
-export const SOLVE_TARGETS: readonly CoreTarget[] = ["wasm-gc"];
+export const SOLVE_TARGETS: readonly CoreTarget[] = ["wasm-gc", "js"];
 
 /** The solver's module: the split build loads it alone, on first use, inside the solve Worker. */
 const SOLVER_LOAD: LoadOptions = { modules: ["solver"] };
@@ -67,20 +66,12 @@ export function solverTarget(): CoreTarget | null {
 }
 
 /**
- * Whether this engine can load the core on a target it solves on. Without WebAssembly GC the loader would fetch the
- * JavaScript build, which does not solve here: nothing is fetched at all.
- */
-function solvesHere(): boolean {
-  return SOLVE_TARGETS.includes("js") || wasmGcSupported();
-}
-
-/**
- * Starts loading the solver module when the solve area is adopted and this engine can run it on a solving target.
- * Resolves true when the core will solve, false when it will not (off, missing, failed, or a target not chosen); never
- * rejects. The solve Worker waits for it (bounded); elsewhere the website's engine answers until it is ready.
+ * Starts loading the solver module when the solve area is adopted. Resolves true when the core will solve, false when
+ * it will not (off, missing, failed); never rejects. The solve Worker waits for it (bounded); elsewhere the website's
+ * engine answers until it is ready.
  */
 export async function warmSolveCore(): Promise<boolean> {
-  if (!isAdopted("solve") || !solvesHere()) return false;
+  if (!isAdopted("solve")) return false;
   try {
     await loadCore(SOLVER_LOAD);
   } catch {
@@ -95,7 +86,7 @@ export function solveEngine(): "core" | "website" {
 }
 
 function coreEngine(): SolveCore | null {
-  if (!isAdopted("solve") || !solvesHere()) return null;
+  if (!isAdopted("solve")) return null;
   const core = coreFor("solve");
   if (!core) return null;
   const target = solverTarget();

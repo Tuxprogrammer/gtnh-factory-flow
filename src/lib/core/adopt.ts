@@ -23,7 +23,7 @@ export const ADOPT = {
   power: true,
   // layout: the wire router and Arrange (LayoutExports).
   layout: true,
-  // solve: the plan solve (SolverExports), in the solve Worker and the server's plan routes, on WebAssembly GC only
+  // solve: the plan solve (SolverExports), in the solve Worker and the server's plan routes, on both targets
   // (src/lib/core/solve-adopt.ts).
   solve: true,
   // card: the recipe card's view (ViewExports.viewCardJsKept) for a card whose input changed since its last view, on

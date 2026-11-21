@@ -39,8 +39,10 @@ export const expandCandidate = z
     usesByproducts: z.array(z.string()).optional(),
     /** Machines the solve needs for this card (fractional). */
     machines: z.number(),
-    /** EU the draft spends more per unit made (per L for a fluid), with this card added. */
+    /** EU the draft spends more per unit made (per L for a fluid), with this card added; steam at 2 L per EU. */
     euPerItem: z.number(),
+    /** Litres of steam a second the card burns at the solved count, for a steam machine. */
+    steamPerSecond: z.number().optional(),
     /** False when the trial solve could not use the card; it is ranked last. */
     works: z.boolean().optional(),
   })
@@ -57,6 +59,8 @@ export const expandedInput = z
     candidates: z.array(expandCandidate),
     /** Recipes left out: they take what they make, undo a card in the draft, are in it already, or cannot be built. */
     skipped: z.number().int().optional(),
+    /** Of `skipped`: recipes only steam or primitive machines run (constraints.steam allows them). */
+    steamOnly: z.number().int().positive().optional(),
     note: z.string().optional(),
   })
   .strict();

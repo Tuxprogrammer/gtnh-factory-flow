@@ -1,7 +1,7 @@
 {
   "endpoint": "plans/connect",
   "request": {
-    "planId": "xvw95tag7sybzuqd42ru",
+    "planId": "x7kzzpzr8k5q4me9hfvk",
     "from": {
       "cardId": "c2",
       "resource": {
@@ -18,7 +18,7 @@
   },
   "status": 200,
   "response": {
-    "planId": "xvw95tag7sybzuqd42ru",
+    "planId": "x7kzzpzr8k5q4me9hfvk",
     "wire": {
       "wireId": "w2",
       "from": "c2",

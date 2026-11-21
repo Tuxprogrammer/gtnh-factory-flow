@@ -5,6 +5,7 @@ import type { MachineTier, Recipe, ThroughputResult } from "@/lib/model/types";
 import type { RecipeSummary } from "@/lib/datasets/types";
 import { queryDatasetResources } from "@/lib/server/dataset-query";
 import { planCard } from "./cards";
+import { STEAM_LITRES_PER_EU, steamPerTick } from "./power-source";
 import { loadRecipe, resolveResource, withDataset, type ResolvedResource } from "./dataset";
 import { getDraft, type Draft } from "./drafts";
 import { AgentApiError } from "./errors";
@@ -127,7 +128,10 @@ function tierIndex(tier: string): number {
   return getVoltageTierIndex(tier as Exclude<MachineTier, "DEMO">);
 }
 
-/** The draft's constraints with the call's: the lower tier cap and heat, banned and free lists joined. */
+/**
+ * The draft's constraints with the call's: the lower tier cap and heat, banned and free lists joined; the call's
+ * `steam` when it gives one, else the draft's.
+ */
 export function mergeConstraints(
   draft: AgentConstraints | undefined,
   call: AgentConstraints | undefined,
@@ -148,6 +152,7 @@ export function mergeConstraints(
     ...(heat !== undefined ? { heat } : {}),
     ...((call.cleanroom ?? draft.cleanroom) !== undefined ? { cleanroom: call.cleanroom ?? draft.cleanroom } : {}),
     ...((call.lowgrav ?? draft.lowgrav) !== undefined ? { lowgrav: call.lowgrav ?? draft.lowgrav } : {}),
+    ...((call.steam ?? draft.steam) !== undefined ? { steam: call.steam ?? draft.steam } : {}),
   };
   const banned = union(draft.banned, call.banned);
   const free = union(draft.free, call.free);
@@ -263,8 +268,15 @@ async function tryCandidate(
   draft: Draft,
   recipe: Recipe,
   constraints: AgentConstraints | undefined,
-): Promise<{ result: ThroughputResult; cardId: string; machine: string; tier: string; project: Draft["project"] }> {
-  const planned = planCard(recipe, { recipeId: recipe.id }, constraints);
+): Promise<{
+  result: ThroughputResult;
+  cardId: string;
+  machine: string;
+  tier: string;
+  project: Draft["project"];
+  steamPerTick: number;
+}> {
+  const planned = planCard(recipe, { recipeId: recipe.id }, constraints, draft.cardTier);
   const cardId = `c${draft.nextCard}`;
   const known = draft.project.recipes.some((entry) => entry.id === recipe.id);
   const copy: Draft = {
@@ -282,7 +294,15 @@ async function tryCandidate(
   autoConnect(copy, [cardId]);
   applyTargets(copy);
   const result = await solveProject(copy.project);
-  return { result, cardId, machine: planned.handler.label, tier: String(planned.node.overclockTier), project: copy.project };
+  const node = copy.project.nodes.at(-1)!;
+  return {
+    result,
+    cardId,
+    machine: planned.handler.label,
+    tier: String(planned.node.overclockTier),
+    project: copy.project,
+    steamPerTick: steamPerTick(recipe, node),
+  };
 }
 
 interface Base {
@@ -311,7 +331,8 @@ async function expandOne(
     detail: false,
   });
   const material = materialPattern(materialOf(input.name));
-  let skipped = 0;
+  const steamOnly = search.steamOnly ?? 0;
+  let skipped = steamOnly;
   const picked: Recipe[] = [];
   const reactions = new Set<string>();
   for (const summary of search.results) {
@@ -365,7 +386,9 @@ async function expandOne(
     const usesByproducts = recipe.inputs
       .filter((entry) => entry.consumed !== false && base.byproducts.has(key(entry)))
       .map((entry) => nameOf(entry));
-    const euDelta = result.totalEuT - base.result.totalEuT;
+    // Steam cards draw no EU (the site bills litres instead): their steam counts at 2 L per EU so they compare fairly.
+    const steamPerSecond = run.steamPerTick * machines * 20;
+    const euDelta = result.totalEuT - base.result.totalEuT + (run.steamPerTick * machines) / STEAM_LITRES_PER_EU;
     const euPerItem = works ? (euDelta * 20) / covered : 0;
 
     const unit = input.kind === "fluid" ? "L" : "item";
@@ -380,6 +403,9 @@ async function expandOne(
           ? `${amount(made)}/s from ${amount(machines)} ${run.machine} at ${run.tier}, ${energy(euPerItem)} EU per ${unit}.`
           : `Supplies ${amount(covered)}/s by another route (the card makes ${amount(made)}/s) with ${amount(machines)} ${run.machine} at ${run.tier}, ${energy(euPerItem)} EU per ${unit}.`,
       ];
+      if (steamPerSecond > 0) {
+        parts.push(`Burns ${amount(steamPerSecond)} L/s of steam (counted at 2 L per EU).`);
+      }
       if (newRaws.length === 0) {
         parts.push("Needs nothing new from outside.");
       } else {
@@ -422,6 +448,7 @@ async function expandOne(
         ...(usesByproducts.length ? { usesByproducts } : {}),
         machines: figure(machines),
         euPerItem: figure(euPerItem),
+        ...(steamPerSecond > 0 ? { steamPerSecond: figure(steamPerSecond) } : {}),
         ...(works ? {} : { works: false }),
       },
       rank: [works ? 0 : 1, count(2), count(1), count(0), works ? euPerItem : 0, machines, order],
@@ -439,7 +466,9 @@ async function expandOne(
   const candidates = trials.slice(0, max).map((trial) => trial.candidate);
   const note =
     candidates.length === 0
-      ? search.results.length === 0
+      ? search.results.length === 0 && steamOnly > 0
+        ? `Only steam or primitive machines make it under these constraints (${steamOnly} recipes): set constraints.steam to see them, or treat it as raw (constraints.free).`
+        : search.results.length === 0
         ? "Nothing makes it under these constraints: treat it as raw (constraints.free) or relax tierCap or banned."
         : "Every recipe found was skipped (it takes what it makes, undoes a card, is in the draft or cannot be built)."
       : undefined;
@@ -454,6 +483,7 @@ async function expandOne(
       found: search.total,
       candidates,
       ...(skipped ? { skipped } : {}),
+      ...(steamOnly ? { steamOnly } : {}),
       ...(note ? { note } : {}),
     },
     trials: tried,

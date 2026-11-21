@@ -26,6 +26,7 @@ import {
   type plansSetTargetsRequest,
   type plansSetTargetsResponse,
 } from "./plan-schemas";
+import { TIER_NAMES } from "./schemas";
 import { autoConnect, connect, describeWire, disconnect } from "./wiring";
 
 /**
@@ -110,14 +111,19 @@ function prefixed(index: number, error: unknown): unknown {
 }
 
 export async function createPlan(body: z.infer<typeof plansCreateRequest>): Promise<z.infer<typeof plansCreateResponse>> {
+  const cap = body.constraints?.tierCap;
+  if (body.cardTier && cap && TIER_NAMES.indexOf(body.cardTier) > TIER_NAMES.indexOf(cap)) {
+    throw new AgentApiError("bad_request", `cardTier ${body.cardTier} is above the tierCap ${cap}.`);
+  }
   const dataset = await withDataset(() => agentDatasetVersion());
-  const draft = createDraft({ name: body.name, dataset, constraints: body.constraints });
+  const draft = createDraft({ name: body.name, dataset, constraints: body.constraints, cardTier: body.cardTier });
   return {
     dataset,
     planId: draft.id,
     name: draft.name,
     expiresAt: draftExpiresAt(draft),
     ...(draft.constraints ? { constraints: draft.constraints } : {}),
+    ...(draft.cardTier ? { cardTier: draft.cardTier } : {}),
   };
 }
 
@@ -141,7 +147,7 @@ export async function addCards(
       const recipe =
         loaded.get(request.recipeId) ?? (await withDataset(() => loadRecipe(draft.dataset, request.recipeId)));
       loaded.set(recipe.id, recipe);
-      planned.push(planCard(recipe, request, draft.constraints));
+      planned.push(planCard(recipe, request, draft.constraints, draft.cardTier));
     } catch (error) {
       throw prefixed(index, error);
     }
@@ -301,6 +307,7 @@ export async function getPlan(body: z.infer<typeof plansGetRequest>): Promise<z.
     name: draft.name,
     expiresAt: draftExpiresAt(draft),
     ...(draft.constraints ? { constraints: draft.constraints } : {}),
+    ...(draft.cardTier ? { cardTier: draft.cardTier } : {}),
     cardCount: draft.project.nodes.length,
     wireCount: draft.project.edges.length,
     ...(fields.has("targets") ? { targets: describeTargets(draft) } : {}),

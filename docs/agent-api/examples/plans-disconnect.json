@@ -1,7 +1,7 @@
 {
   "endpoint": "plans/disconnect",
   "request": {
-    "planId": "xvw95tag7sybzuqd42ru",
+    "planId": "x7kzzpzr8k5q4me9hfvk",
     "wireId": "w1",
     "player": {
       "name": "Steve"
@@ -9,7 +9,7 @@
   },
   "status": 200,
   "response": {
-    "planId": "xvw95tag7sybzuqd42ru",
+    "planId": "x7kzzpzr8k5q4me9hfvk",
     "removed": "w1"
   }
 }

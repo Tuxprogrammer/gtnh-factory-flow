@@ -1,7 +1,7 @@
 {
   "endpoint": "plans/solve",
   "request": {
-    "planId": "xgvwfpswhw7t4n7gau3g",
+    "planId": "xpb89ssr6kjcfq82e9af",
     "player": {
       "name": "Steve"
     }
@@ -9,7 +9,7 @@
   "status": 200,
   "response": {
     "dataset": "stable-2.9.0-tuxmine",
-    "planId": "xgvwfpswhw7t4n7gau3g",
+    "planId": "xpb89ssr6kjcfq82e9af",
     "solved": true,
     "targetsMet": true,
     "targets": [
@@ -63,7 +63,7 @@
         "perSecond": 6
       }
     ],
-    "euT": 552,
+    "euT": 960.6,
     "warnings": [],
     "cardColumns": [
       "cardId",
@@ -80,8 +80,8 @@
         "c1",
         "Vacuum Freezer: Titanium Ingot",
         "Vacuum Freezer",
-        "HV",
-        0.15,
+        "EV",
+        0.05,
         {
           "Hot Titanium Ingot": 1
         },
@@ -93,8 +93,8 @@
         "c2",
         "Blast Furnace: Hot Titanium Ingot",
         "Electric Blast Furnace",
-        "HV",
-        0.65,
+        "EV",
+        0.3,
         {
           "Magnesium Dust": 2,
           "Titaniumtetrachloride": 1000
@@ -107,9 +107,9 @@
       [
         "c3",
         "Simple Dust Washer: Magnesium Dust",
-        "Steam Purifier",
-        "ULV",
-        0.025,
+        "Ore Washing Plant",
+        "EV",
+        0.0003425,
         {
           "Impure Pile of Magnesium Dust": 2,
           "Water": 200
@@ -122,8 +122,8 @@
         "c4",
         "Chemical Reactor: Titaniumtetrachloride",
         "Chemical Reactor",
-        "HV",
-        0.35,
+        "EV",
+        0.15,
         {
           "Rutile Dust": 3,
           "Carbon Dust": 2,

@@ -40,6 +40,8 @@ export const constraintsSchema = z
     lowgrav: z.boolean().optional(),
     banned: z.array(idString).max(64).optional(),
     free: z.array(idString).max(64).optional(),
+    /** Steam and primitive machines may be chosen without being named (also when tierCap is ULV). Default false. */
+    steam: z.boolean().optional(),
   })
   .strict();
 export type AgentConstraints = z.infer<typeof constraintsSchema>;
@@ -143,6 +145,8 @@ export const recipesSearchResponse = z
     more: z.boolean(),
     truncated: z.boolean().optional(),
     notEnforced: z.array(z.string()).optional(),
+    /** Recipes left out because only steam or primitive machines run them (constraints.steam allows them). */
+    steamOnly: z.number().int().positive().optional(),
   })
   .strict();
 

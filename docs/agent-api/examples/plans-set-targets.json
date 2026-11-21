@@ -1,7 +1,7 @@
 {
   "endpoint": "plans/set-targets",
   "request": {
-    "planId": "xgvwfpswhw7t4n7gau3g",
+    "planId": "xpb89ssr6kjcfq82e9af",
     "targets": [
       {
         "resource": {
@@ -17,7 +17,7 @@
   },
   "status": 200,
   "response": {
-    "planId": "xgvwfpswhw7t4n7gau3g",
+    "planId": "xpb89ssr6kjcfq82e9af",
     "targets": [
       {
         "id": "gregtech:gt.metaitem.01@11028",

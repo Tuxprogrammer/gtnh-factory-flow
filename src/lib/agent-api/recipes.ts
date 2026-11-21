@@ -34,11 +34,71 @@ function sameResource(entry: { id: string; kind: string }, resource: ResolvedRes
   return entry.id === resource.id && entry.kind === resource.kind;
 }
 
+const FORM_PREFIX = /^(?:(?:small|tiny|impure|pure) pile of |crushed |purified |centrifuged |molten |hot )/i;
+const FORM_SUFFIX =
+  / (?:dust|ingot|plate|double plate|dense plate|nugget|rod|long rod|bolt|screw|ring|round|gear|small gear|foil|fine wire|wire|block|cell|gem|ore|frame box|spring|lens)$/i;
+
+/**
+ * The material a resource name stands for ("Titanium" for "Titanium Dust" or "Small Pile of Titanium Dust"), or
+ * undefined when the name has no form word to strip. Used to tell recycling apart: a recipe that makes Titanium Dust
+ * from a Titanium Ingot gives the material back rather than producing it.
+ */
+export function materialOf(name: string): string | undefined {
+  const stripped = name.replace(FORM_PREFIX, "").replace(FORM_SUFFIX, "").trim();
+  return stripped && stripped.length < name.length ? stripped.toLowerCase() : undefined;
+}
+
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Ore-processing forms: consuming one of them produces the material, it does not recycle it. */
+const ORE_FORM = /\b(?:ore|crushed|purified|centrifuged|impure|shard|raw|cluster)\b|^(?:ore|crushed|raw)[A-Z]/i;
+/** Recipe maps whose one-input recipes are the game's generated recycling of crafted parts. */
+const RECYCLING_MAPS = new Set(["macerator", "arc furnace", "pulverizer"]);
+
+/** Matches a material name as a word ("Titanium Ingot") or inside an ore dictionary name ("dustSmallTitanium"). */
+export function materialPattern(material: string | undefined): RegExp | undefined {
+  if (!material) {
+    return undefined;
+  }
+  const word = escapeRegExp(material);
+  const camel = escapeRegExp(material.replace(/(^|\s)\S/g, (letter) => letter.toUpperCase()).replace(/\s+/g, ""));
+  return new RegExp(`(?:^|[^A-Za-z])(?:${word})(?![a-z])|[a-z]${camel}(?![a-z])`, "i");
+}
+
+/**
+ * True when the recipe gives back material rather than producing it: a replicator; a recipe whose consumed inputs
+ * (tools aside) are all the same material in another form that is not an ore form (dust from an ingot, from tiny piles);
+ * or a one-input macerator, arc furnace or pulverizer recipe from something that is not ore (a crafted part).
+ */
+export function recycles(recipe: RecipeSummary, material: RegExp | undefined, makes: ResolvedResource): boolean {
+  const map = recipeMapOf(recipe).toLowerCase();
+  const consumed = recipe.inputs.filter(
+    (input) =>
+      input.consumed !== false &&
+      !(input.id === makes.id && input.kind === makes.kind) &&
+      !/craftingTool/i.test(input.displayName || input.id),
+  );
+  const names = consumed.map((input) => (input.displayName || input.id).replace(/^Ore Dictionary:\s*/i, ""));
+  if (map.includes("replicator") || names.some((name) => /uu-matter/i.test(name))) {
+    return true;
+  }
+  if (names.length === 0 || names.some((name) => ORE_FORM.test(name))) {
+    return false;
+  }
+  if (material && names.every((name) => material.test(name))) {
+    return true;
+  }
+  return names.length === 1 && RECYCLING_MAPS.has(map);
+}
+
 /**
  * The order results come out in (docs/agent-api.md, "Ranking"):
  * - makes: recipes whose first output is the resource at full chance (its main product) before recipes that make it
- *   second or by chance (byproducts); then fewer outputs (the resource is more of what the recipe is for); then the
- *   lower minimum tier; then fewer consumed inputs.
+ *   second or by chance (byproducts); then recipes that produce it before ones that recycle it
+ *   (`recycles`: dust from an ingot, a crafted part or a replicator); then fewer outputs (the resource is more of what
+ *   the recipe is for); then the lower minimum tier; then fewer consumed inputs.
  * - takes: recipes that consume the resource before ones that only hold it (a catalyst, a circuit, a mold); then the
  *   lower minimum tier; then fewer consumed inputs.
  * - text alone: recipes whose name holds every word first; then the lower minimum tier.
@@ -51,13 +111,15 @@ export function rankRecipes(
   text: string | undefined,
 ): RecipeSummary[] {
   const words = text ? text.toLowerCase().split(/\s+/).filter(Boolean) : [];
+  const makesMaterial = makes ? materialOf(makes.name) : undefined;
+  const material = materialPattern(makesMaterial);
   const keyed = recipes.map((recipe, order) => {
     const keys: number[] = [];
     if (makes) {
       const first = recipe.outputs[0];
       const main =
         first && sameResource(first, makes) && (first.chance === undefined || first.chance >= 1) ? 0 : 1;
-      keys.push(main, recipe.outputs.length);
+      keys.push(main, recycles(recipe, material, makes) ? 1 : 0, recipe.outputs.length);
     }
     if (takes) {
       const input = recipe.inputs.find((entry) => sameResource(entry, takes));
@@ -106,30 +168,48 @@ export async function searchRecipes(body: SearchRequest): Promise<SearchResponse
       maxTier: body.constraints?.tierCap ?? ("all" as const),
     };
 
-    const first = await queryDatasetRecipes(versionId, { ...base, allMaps: true, offset: 0, limit: WHOLE_WINDOW });
-    let candidates: RecipeSummary[] = first.recipes;
-    // Text alone keeps the first window: asking map by map would score the words once per map.
-    if (first.total > WHOLE_WINDOW && clauses.length > 0) {
-      const wantedMaps = body.machine
-        ? first.recipeMaps.filter((map) => map.toLowerCase() === body.machine!.toLowerCase())
-        : [];
-      const maps = (wantedMaps.length ? wantedMaps : first.recipeMaps)
-        .slice()
-        .sort((a, b) => (first.recipeMapCounts[b] ?? 0) - (first.recipeMapCounts[a] ?? 0))
-        .slice(0, MAX_MAPS);
-      const perMap = Math.min(40, Math.max(12, (body.offset + body.limit) * 2));
-      const pages = await Promise.all(
-        maps.map((recipeMap) =>
-          queryDatasetRecipes(versionId, { ...base, allMaps: false, recipeMap, offset: 0, limit: perMap }),
-        ),
-      );
-      const seen = new Set<string>();
-      candidates = [];
-      for (const page of pages) {
-        for (const recipe of page.recipes) {
-          if (!seen.has(recipe.id)) {
-            seen.add(recipe.id);
-            candidates.push(recipe);
+    const perMap = Math.min(40, Math.max(12, (body.offset + body.limit) * 2));
+    const whole = () => queryDatasetRecipes(versionId, { ...base, allMaps: true, offset: 0, limit: WHOLE_WINDOW });
+    let candidates: RecipeSummary[];
+    let total: number;
+    if (clauses.length === 0) {
+      // Text alone keeps the one window: asking map by map would score the words once per map.
+      const page = await whole();
+      candidates = page.recipes;
+      total = page.total;
+    } else {
+      // One map's page first: the site ranks only that map's recipes for it, and it carries every map's count. An
+      // all-maps page would rank every match once more before the map-by-map pages rank them again.
+      const probe = await queryDatasetRecipes(versionId, { ...base, allMaps: false, offset: 0, limit: perMap });
+      const mapCounts: Record<string, number> = probe.recipeMapCounts ?? {};
+      total = Object.values(mapCounts).reduce((sum, count) => sum + count, 0);
+      if (total <= WHOLE_WINDOW) {
+        const page = await whole();
+        candidates = page.recipes;
+        total = page.total;
+      } else {
+        const wantedMaps = body.machine
+          ? probe.recipeMaps.filter((map) => map.toLowerCase() === body.machine!.toLowerCase())
+          : [];
+        const maps = (wantedMaps.length ? wantedMaps : probe.recipeMaps)
+          .slice()
+          .sort((a, b) => (mapCounts[b] ?? 0) - (mapCounts[a] ?? 0))
+          .slice(0, MAX_MAPS);
+        const pages = await Promise.all(
+          maps.map((recipeMap) =>
+            recipeMap === probe.recipeMaps[0]
+              ? probe
+              : queryDatasetRecipes(versionId, { ...base, allMaps: false, recipeMap, offset: 0, limit: perMap }),
+          ),
+        );
+        const seen = new Set<string>();
+        candidates = [];
+        for (const page of pages) {
+          for (const recipe of page.recipes) {
+            if (!seen.has(recipe.id)) {
+              seen.add(recipe.id);
+              candidates.push(recipe);
+            }
           }
         }
       }
@@ -158,9 +238,9 @@ export async function searchRecipes(body: SearchRequest): Promise<SearchResponse
     return fitList(results, (items, truncated) => ({
       dataset: versionId,
       results: items,
-      total: first.total,
+      total,
       offset: body.offset,
-      more: body.offset + body.limit < ranked.length || first.total > candidates.length,
+      more: body.offset + body.limit < ranked.length || total > candidates.length,
       ...(truncated ? { truncated } : {}),
       ...(skipped ? { notEnforced: skipped } : {}),
     }));

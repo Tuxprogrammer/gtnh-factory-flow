@@ -1,0 +1,43 @@
+{
+  "endpoint": "resources/search",
+  "request": {
+    "text": "titanium dust",
+    "kind": "item",
+    "limit": 5,
+    "player": {
+      "name": "Steve"
+    }
+  },
+  "status": 200,
+  "response": {
+    "dataset": "stable-2.9.0-tuxmine",
+    "results": [
+      {
+        "id": "gregtech:gt.metaitem.01@2028",
+        "kind": "item",
+        "name": "Titanium Dust"
+      },
+      {
+        "id": "gregtech:gt.metaitem.01@2360",
+        "kind": "item",
+        "name": "Niobium-Titanium Dust"
+      },
+      {
+        "id": "gregtech:gt.metaitem.01@1028",
+        "kind": "item",
+        "name": "Small Pile of Titanium Dust"
+      },
+      {
+        "id": "miscutils:itemdustastraltitanium",
+        "kind": "item",
+        "name": "Astral Titanium Dust"
+      },
+      {
+        "id": "miscutils:itemdustblacktitanium",
+        "kind": "item",
+        "name": "Black Titanium Dust"
+      }
+    ],
+    "total": 23
+  }
+}

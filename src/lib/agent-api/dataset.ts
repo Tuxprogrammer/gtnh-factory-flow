@@ -68,14 +68,3 @@ export async function loadRecipe(versionId: string, recipeId: string) {
   }
   return recipe;
 }
-
-/**
- * Builds the lookups the agent API adds on top of the site's prewarm (the recipe id map that recipes/get reads), so
- * the first call after a start is not the one that pays for it. Called from instrumentation when the API is on.
- */
-export async function warmAgentApi(): Promise<void> {
-  const versionId = await getDefaultDatasetVersionId();
-  if (versionId) {
-    await getDatasetRecipe(versionId, "");
-  }
-}

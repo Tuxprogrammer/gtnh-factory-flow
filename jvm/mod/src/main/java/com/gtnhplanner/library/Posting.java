@@ -412,5 +412,18 @@ public final class Posting {
         public com.gtnhplanner.machines.Bees.Species bee(final Node node) {
             return com.gtnhplanner.machines.game.BeeCards.species(node);
         }
+
+        /**
+         * As the card names its machine (ui/card/CardModel): a crop's harvester, a bee's species, else its machine.
+         * The board keys a machine's setting pins by it, so a plan file and a shared plan read and write them alike.
+         */
+        @Override
+        public String pinName(final Node node) {
+            final com.gtnhplanner.machines.CropsNh.Setup crop = com.gtnhplanner.machines.game.CropCards.setup(node);
+            if (crop != null) return com.gtnhplanner.machines.game.CropCards.harvesterName(crop);
+            if (com.gtnhplanner.machines.game.BeeCards.setup(node) != null)
+                return com.gtnhplanner.machines.game.BeeCards.cardName(node);
+            return machine(node);
+        }
     }
 }

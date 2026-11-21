@@ -34,7 +34,11 @@ public final class FactoryFlowImport {
      * @throws FfImportException when the text is not a Factory Flow plan
      */
     public static FfConverter.Result importFromText(final String text) {
-        final FfConverter.Result result = FfImport.importFromText(text, new NeiRecipeIndex(), new GameNodeMaker());
+        final FfConverter.Result result = FfImport.importFromText(
+            text,
+            new NeiRecipeIndex(),
+            new GameNodeMaker(),
+            com.gtnhplanner.library.Posting.world(id -> 0d));
         // Cards here are sized differently: where they land on each other, the board pulls them apart once it knows
         // their sizes, solved (BoardCanvas).
         result.graph()

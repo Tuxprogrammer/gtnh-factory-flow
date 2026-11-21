@@ -51,7 +51,8 @@ class CropCardsStepTest {
         farm.put(CropsNh.FERTILIZER_UNITS, "1");
         final EffectResult effect = run(farm);
 
-        final double exact = CropsNh.harvestTicks(LAZULIA, CropsNh.REFERENCE) * CropsNh.durationMultiplier(LAZULIA, farm);
+        final double exact = CropsNh.harvestTicks(LAZULIA, CropsNh.REFERENCE)
+            * CropsNh.durationMultiplier(LAZULIA, farm);
         assertEquals(6400 / 4.5, exact, 1e-9);
         assertNotEquals(Math.rint(exact), exact);
         assertEquals(exact, effect.duration(), 0);

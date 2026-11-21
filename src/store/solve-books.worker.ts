@@ -1,36 +1,24 @@
 import { calculateThroughput } from "@/lib/solver";
 import { initLpEngine } from "@/lib/solver/lp-engine";
 import { warmSolveCore } from "@/lib/core/solve-adopt";
+import { settleSolveEngines } from "./solve-engines";
 import { attachClogLocks } from "@/components/flow/clog-lock";
 import type { FactoryProject } from "@/lib/model/types";
 import { setActiveGameRates, type ActiveGameRates } from "@/lib/model/game-rates";
 
-// HiGHS loads once at worker startup, and every solve waits for the load to
-// settle: a board routed here is slow by definition, so a one-time wasm
-// fetch is always the better trade than a minutes-long homegrown walk. A
-// failed load resolves too - solves then run on the homegrown simplex.
-// The route serves them from the package in any start mode; public/ (copied by predev and prebuild) is the fallback.
-const engineReady = initLpEngine({
-  glueUrl: "/api/highs/highs.js",
-  wasmUrl: "/api/highs/highs.wasm",
-  fallback: { glueUrl: "/highs.js", wasmUrl: "/highs.wasm" },
+// The engines settle once, at Worker startup (solve-engines.ts): where the compiled core solves (WebAssembly GC), every
+// solve waits for it and HiGHS is never fetched; HiGHS loads only where the core will not solve (no WebAssembly GC, a
+// failed or hung load), and a solve never waits past the bounded waits there. The route serves HiGHS from the package in
+// any start mode; public/ (copied by predev and prebuild) is the fallback.
+const engineSettled = settleSolveEngines({
+  core: warmSolveCore,
+  highs: () =>
+    initLpEngine({
+      glueUrl: "/api/highs/highs.js",
+      wasmUrl: "/api/highs/highs.wasm",
+      fallback: { glueUrl: "/highs.js", wasmUrl: "/highs.wasm" },
+    }),
 });
-
-/**
- * A HiGHS request that never answers (a stalled fetch) would hold every solve forever. Past this wait the solve runs
- * as after a failed load, on the homegrown simplex; HiGHS still takes over for later solves if it arrives.
- */
-const ENGINE_WAIT_MS = 20_000;
-const engineSettled = Promise.race([
-  engineReady,
-  new Promise<boolean>((resolve) => setTimeout(() => resolve(false), ENGINE_WAIT_MS)),
-]);
-
-// The compiled core's solver loads beside HiGHS (src/lib/core/solve-adopt.ts; nothing when the solve area is off) and
-// takes the plan solve from the first one after it is ready. No solve waits for it: until then, and when it fails,
-// HiGHS solves as before, so the first answer after a page load is never later than without the core. HiGHS stays
-// loaded for the clog-lock proof below and for every solve the core does not take.
-void warmSolveCore();
 
 /**
  * The solver, off the main thread. One message in (a plan, the dataset's rates and the content key
@@ -50,9 +38,8 @@ self.onmessage = async (
     setActiveGameRates(rates);
     const started = performance.now();
     const result = calculateThroughput(project);
-    // The clog-lock proof is a second LP over the same board, and on a plan
-    // with many stopped machines a harder one than the books: it runs here,
-    // on HiGHS, and rides back on the books so the main thread never runs it.
+    // The clog-lock proof is a second LP over the same board (old Build boards only: a plan reads none, see
+    // plan/one-mode-reach.test.ts): it runs here and rides back on the books so the main thread never runs it.
     attachClogLocks(project, result);
     // The solve's own cost rides back so the router can learn whether this
     // board is one that must stay off the main thread - the diagnosis

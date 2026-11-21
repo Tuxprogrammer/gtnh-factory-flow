@@ -104,8 +104,15 @@ public final class GtRecipeReader {
         // the Eye of Harmony's plasmas (EyeOfHarmonyRecipe builds them from a HashMap), and the products of GregTech's
         // copies of Forestry's centrifuge recipes (GTForestryCompat.transferCentrifugeRecipes walks Forestry's
         // product map), most likely first.
-        if (EYE_OF_HARMONY_MAP.equals(r.mapId)) Collections.sort(r.fluidOutputs, BY_ID);
+        if (EYE_OF_HARMONY_MAP.equals(r.mapId)) {
+            Collections.sort(r.fluidOutputs, BY_ID);
+            sortEyeOfHarmonyItems(r.itemOutputs, recipe.mSpecialItems);
+        }
         if (isForestryCentrifugeCopy(r.mapId, recipe)) Collections.sort(r.itemOutputs, BY_CHANCE_THEN_ID);
+        // The Crop Breeder's catalyst cells list blocks CropsNH keeps in hash sets (SubSoilRequirement's MetaSet), and
+        // GregTech shows the first: the cell's item is the first by id, the others follow by id.
+        if (CROP_BREEDER_MAP.equals(r.mapId))
+            for (int i = 0; i < r.itemInputs.size(); i++) r.itemInputs.set(i, firstById(r.itemInputs.get(i)));
         for (final Object value : iterable(recipe.mSpecialItems)) {
             if (!(value instanceof ItemStack)) continue;
             final Stack item = itemStack((ItemStack) value);
@@ -361,6 +368,59 @@ public final class GtRecipeReader {
     /** GregTech's centrifuge map and GT++'s multiblock centrifuge map, which holds the same recipes. */
     private static final String CENTRIFUGE_MAP = "gt.recipe.centrifuge",
         MULTI_CENTRIFUGE_MAP = "gt.recipe.multicentrifuge";
+
+    /** CropsNH's Crop Breeder map. */
+    private static final String CROP_BREEDER_MAP = "cropsnh.recipes.cropBreeder";
+
+    /**
+     * The Eye of Harmony's items in the game's own order, most made first (EyeOfHarmonyRecipe sorts them by amount),
+     * with equal amounts by id: the game leaves those in its TMap's hash order.
+     */
+    private static void sortEyeOfHarmonyItems(final List<Stack> outputs, final Object special) {
+        final Map<String, Long> made = new java.util.HashMap<String, Long>();
+        try {
+            for (final Object entry : iterable(
+                special.getClass()
+                    .getMethod("getOutputItems")
+                    .invoke(special))) {
+                final Object stack = entry.getClass()
+                    .getField("itemStack")
+                    .get(entry);
+                final Object size = entry.getClass()
+                    .getField("stackSize")
+                    .get(entry);
+                if (stack instanceof ItemStack && size instanceof Long) {
+                    final Stack read = itemStack((ItemStack) stack);
+                    if (read != null) made.put(read.id, (Long) size);
+                }
+            }
+        } catch (final Throwable ignored) {
+            // No amounts: the items go by id alone.
+        }
+        Collections.sort(outputs, new Comparator<Stack>() {
+
+            @Override
+            public int compare(final Stack left, final Stack right) {
+                final Long l = made.get(left.id), r = made.get(right.id);
+                final int byAmount = Long.compare(r == null ? 0L : r.longValue(), l == null ? 0L : l.longValue());
+                return byAmount != 0 ? byAmount : left.id.compareTo(right.id);
+            }
+        });
+    }
+
+    /** A cell with alternatives as its first alternative by id, the rest after it by id; else the cell itself. */
+    private static Stack firstById(final Stack cell) {
+        if (cell.alternatives == null || cell.alternatives.size() < 2) return cell;
+        final List<Stack> sorted = new ArrayList<Stack>(cell.alternatives);
+        Collections.sort(sorted, BY_ID);
+        final Stack first = selfCopy(sorted.get(0));
+        first.amount = cell.amount;
+        first.consumed = cell.consumed;
+        first.inputChance = cell.inputChance;
+        first.chance = cell.chance;
+        first.alternatives = sorted;
+        return first;
+    }
 
     /** The items Forestry's centrifuge takes, as registry name and damage; read once, null until then. */
     private java.util.Set<String> forestryCentrifugeInputs;

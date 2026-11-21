@@ -235,12 +235,13 @@ public final class GtnhCalcOracleExporter {
         List<Map<String, Object>> recipes = new ArrayList<Map<String, Object>>();
 
         try {
-            // The planner mod's own crafting reader (com.gtnhplanner.read.crafting), in CraftingManager's order.
-            int index = 0;
+            // The planner mod's own crafting reader (com.gtnhplanner.read.crafting). CraftingManager's order is not the
+            // same every run (some mods register from hash maps), so the recipes are sorted by what they are, and the
+            // ids minted from their place follow that order.
+            List<SortedCrafting> sorted = new ArrayList<SortedCrafting>();
             for (CraftingRecord read : new CraftingReader().readAll()) {
                 Map<String, Object> exported = map();
-                exported.put("id", sha1("crafting:" + index + ":" + read.className + ":"
-                    + CraftingReader.stackKey(read.output == null ? null : (ItemStack) read.output.host)).substring(0, 16));
+                exported.put("id", "");
                 exported.put("className", read.className);
                 exported.put("type", read.type);
                 exported.put("width", Integer.valueOf(read.width));
@@ -249,7 +250,20 @@ public final class GtnhCalcOracleExporter {
                 if (read.output != null) {
                     exported.put("output", GtRawRecipe.stack(read.output));
                 }
-                recipes.add(exported);
+                sorted.add(new SortedCrafting(read, exported, recordKey(exported)));
+            }
+            Collections.sort(sorted, new java.util.Comparator<SortedCrafting>() {
+                @Override
+                public int compare(SortedCrafting left, SortedCrafting right) {
+                    return left.key.compareTo(right.key);
+                }
+            });
+            int index = 0;
+            for (SortedCrafting entry : sorted) {
+                entry.exported.put("id", sha1("crafting:" + index + ":" + entry.read.className + ":"
+                    + CraftingReader.stackKey(entry.read.output == null ? null : (ItemStack) entry.read.output.host))
+                    .substring(0, 16));
+                recipes.add(entry.exported);
                 index++;
             }
             domain.put("recipes", recipes);
@@ -285,6 +299,19 @@ public final class GtnhCalcOracleExporter {
         }
 
         return domain;
+    }
+
+    /** A crafting record with what the export writes for it and that content as text, for a total order. */
+    private static final class SortedCrafting {
+        final CraftingRecord read;
+        final Map<String, Object> exported;
+        final String key;
+
+        SortedCrafting(CraftingRecord read, Map<String, Object> exported, String key) {
+            this.read = read;
+            this.exported = exported;
+            this.key = key;
+        }
     }
 
     /** A GregTech recipe with what the export writes for it and that content as text, for a total order. */
@@ -366,17 +393,34 @@ public final class GtnhCalcOracleExporter {
                 if (rawRecipes == null) {
                     continue;
                 }
-                int index = 0;
+                // Some of Thaumcraft's lists fill in hash order, new every run: each list's recipes are sorted by
+                // what they are, and the ids minted from their place follow that order.
+                List<Map<String, Object>> listed = new ArrayList<Map<String, Object>>();
                 for (Object rawRecipe : rawRecipes) {
-                    Map<String, Object> recipe = thaumcraftRecipe(field.getName(), index, rawRecipe);
+                    Map<String, Object> recipe = thaumcraftRecipe(field.getName(), 0, rawRecipe);
                     if (recipe != null) {
                         Map<String, Object> neiLayout = neiLayoutsBySignature.get(thaumcraftRecipeSignature(recipe));
                         if (neiLayout == null) {
                             neiLayout = neiLayoutsBySignature.get(thaumcraftSimpleRecipeSignature(recipe));
                         }
                         putIfPresent(recipe, "neiLayout", neiLayout);
-                        recipes.add(recipe);
+                        listed.add(recipe);
                     }
+                }
+                final Map<Map<String, Object>, String> keys = new IdentityHashMap<Map<String, Object>, String>();
+                for (Map<String, Object> recipe : listed) {
+                    keys.put(recipe, recordKey(recipe));
+                }
+                Collections.sort(listed, new java.util.Comparator<Map<String, Object>>() {
+                    @Override
+                    public int compare(Map<String, Object> left, Map<String, Object> right) {
+                        return keys.get(left).compareTo(keys.get(right));
+                    }
+                });
+                int index = 0;
+                for (Map<String, Object> recipe : listed) {
+                    recipe.put("id", sha1("thaumcraft:" + field.getName() + ":" + index + ":" + recipe.get("className")).substring(0, 16));
+                    recipes.add(recipe);
                     index++;
                 }
             }

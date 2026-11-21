@@ -12640,8 +12640,8 @@
       "kind": "oreDictionary",
       "names": [
        "coal",
-       "itemCoal",
-       "gemCoal"
+       "gemCoal",
+       "itemCoal"
       ],
       "slotIndex": 0
      },
@@ -12682,7 +12682,7 @@
       "modId": "minecraft"
      }
     ],
-    "itemCoal": [
+    "gemCoal": [
      {
       "kind": "item",
       "id": "minecraft:coal",
@@ -12693,7 +12693,7 @@
       "modId": "minecraft"
      }
     ],
-    "gemCoal": [
+    "itemCoal": [
      {
       "kind": "item",
       "id": "minecraft:coal",
@@ -12875,15 +12875,15 @@
       "kind": "item",
       "id": "oredict:coal",
       "amount": 1,
-      "displayName": "Ore Dictionary: coal, itemCoal, gemCoal",
+      "displayName": "Ore Dictionary: coal, gemCoal, itemCoal",
       "tooltip": [
-       "Ore dictionary: coal, itemCoal, gemCoal",
+       "Ore dictionary: coal, gemCoal, itemCoal",
        "Accepts: Coal, Coal, Coal"
       ],
       "oreDictionary": [
        "coal",
-       "itemCoal",
-       "gemCoal"
+       "gemCoal",
+       "itemCoal"
       ]
      },
      {
@@ -13044,8 +13044,8 @@
       "kind": "oreDictionary",
       "names": [
        "coal",
-       "itemCoal",
-       "gemCoal"
+       "gemCoal",
+       "itemCoal"
       ],
       "slotIndex": 0
      },
@@ -13086,7 +13086,7 @@
       "modId": "minecraft"
      }
     ],
-    "itemCoal": [
+    "gemCoal": [
      {
       "kind": "item",
       "id": "minecraft:coal",
@@ -13097,7 +13097,7 @@
       "modId": "minecraft"
      }
     ],
-    "gemCoal": [
+    "itemCoal": [
      {
       "kind": "item",
       "id": "minecraft:coal",
@@ -13279,15 +13279,15 @@
       "kind": "item",
       "id": "oredict:coal",
       "amount": 1,
-      "displayName": "Ore Dictionary: coal, itemCoal, gemCoal",
+      "displayName": "Ore Dictionary: coal, gemCoal, itemCoal",
       "tooltip": [
-       "Ore dictionary: coal, itemCoal, gemCoal",
+       "Ore dictionary: coal, gemCoal, itemCoal",
        "Accepts: Coal, Coal, Coal"
       ],
       "oreDictionary": [
        "coal",
-       "itemCoal",
-       "gemCoal"
+       "gemCoal",
+       "itemCoal"
       ]
      },
      {
@@ -13448,8 +13448,8 @@
       "kind": "oreDictionary",
       "names": [
        "charcoal",
-       "itemCharcoal",
-       "gemCharcoal"
+       "gemCharcoal",
+       "itemCharcoal"
       ],
       "slotIndex": 0
      },
@@ -13490,7 +13490,7 @@
       "modId": "minecraft"
      }
     ],
-    "itemCharcoal": [
+    "gemCharcoal": [
      {
       "kind": "item",
       "id": "minecraft:coal@1",
@@ -13501,7 +13501,7 @@
       "modId": "minecraft"
      }
     ],
-    "gemCharcoal": [
+    "itemCharcoal": [
      {
       "kind": "item",
       "id": "minecraft:coal@1",
@@ -13683,15 +13683,15 @@
       "kind": "item",
       "id": "oredict:charcoal",
       "amount": 1,
-      "displayName": "Ore Dictionary: charcoal, itemCharcoal, gemCharcoal",
+      "displayName": "Ore Dictionary: charcoal, gemCharcoal, itemCharcoal",
       "tooltip": [
-       "Ore dictionary: charcoal, itemCharcoal, gemCharcoal",
+       "Ore dictionary: charcoal, gemCharcoal, itemCharcoal",
        "Accepts: Charcoal, Charcoal, Charcoal"
       ],
       "oreDictionary": [
        "charcoal",
-       "itemCharcoal",
-       "gemCharcoal"
+       "gemCharcoal",
+       "itemCharcoal"
       ]
      },
      {

@@ -135,7 +135,10 @@ try {
   };
   // Each export's own: its ids, notes and provenance; the machines are the caller's (the curated table).
   const plain = (record) => {
-    const { id, notes, machineHandlers, ...rest } = record;
+    const rest = { ...record, source: { ...record.source } };
+    delete rest.id;
+    delete rest.notes;
+    delete rest.machineHandlers;
     delete rest.source.datasetVersionId;
     delete rest.source.rawRecipeId;
     delete rest.source.exporter;
@@ -158,12 +161,16 @@ try {
   });
 
   const crafting = pick(
-    (domain("crafting")?.recipes ?? []).filter((r) => !UNREADABLE_CRAFTING_CLASSES.has(r.className)),
+    (domain("crafting")?.recipes ?? []).filter(
+      (r) => !UNREADABLE_CRAFTING_CLASSES.has(r.className),
+    ),
     craftingTags,
   );
   const craftingCases = crafting.picked.map(({ recipe, tags }) => {
     const names = [
-      ...new Set((recipe.inputs ?? []).filter((c) => c.kind === "oreDictionary").flatMap((c) => c.names)),
+      ...new Set(
+        (recipe.inputs ?? []).filter((c) => c.kind === "oreDictionary").flatMap((c) => c.names),
+      ),
     ];
     const entries = Object.fromEntries(names.map((name) => [name, oreEntries[name] ?? []]));
     const out = normalize([

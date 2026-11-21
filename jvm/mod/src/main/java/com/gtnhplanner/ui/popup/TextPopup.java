@@ -54,7 +54,9 @@ public final class TextPopup {
         public com.cleanroommc.modularui.api.widget.Interactable.Result onKeyPressed(final char typedChar,
             final int keyCode) {
             // A number pad key often arrives with no character: type the one it prints.
-            return super.onKeyPressed(KeyText.forField(typedChar, keyCode), keyCode);
+            if (isFocused() && KeyText.typePad(handler, canScrollHorizontally(), typedChar, keyCode))
+                return com.cleanroommc.modularui.api.widget.Interactable.Result.SUCCESS;
+            return super.onKeyPressed(typedChar, keyCode);
         }
     }
 }

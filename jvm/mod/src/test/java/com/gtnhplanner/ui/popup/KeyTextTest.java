@@ -44,12 +44,15 @@ class KeyTextTest {
     }
 
     @Test
-    void aTextFieldGetsThePadKeysCharacterAndEveryOtherKeyAsItCame() {
-        assertEquals('4', KeyText.forField((char) 0, Keyboard.KEY_NUMPAD4));
-        assertEquals('.', KeyText.forField((char) 0, Keyboard.KEY_DECIMAL));
-        assertEquals('4', KeyText.forField('4', Keyboard.KEY_NUMPAD4));
-        assertEquals((char) 8, KeyText.forField((char) 8, Keyboard.KEY_BACK));
-        assertEquals((char) 1, KeyText.forField((char) 1, Keyboard.KEY_A));
-        assertEquals((char) 0, KeyText.forField((char) 0, Keyboard.KEY_RETURN));
+    void aTextFieldTypesOnlyAPadKeyThatCameWithNoCharacter() {
+        // ModularUI's field types nothing from a key event under lwjgl3ify, so the pad's no-character case is typed
+        // here; a key that came with its character is the field's own, so it is typed once, not twice.
+        assertEquals('4', KeyText.padOnly((char) 0, Keyboard.KEY_NUMPAD4));
+        assertEquals('.', KeyText.padOnly((char) 0, Keyboard.KEY_DECIMAL));
+        assertEquals('5', KeyText.padOnly((char) 0, Keyboard.KEY_NUMPAD5));
+        assertEquals(0, KeyText.padOnly('4', Keyboard.KEY_NUMPAD4));
+        assertEquals(0, KeyText.padOnly((char) 8, Keyboard.KEY_BACK));
+        assertEquals(0, KeyText.padOnly((char) 1, Keyboard.KEY_A));
+        assertEquals(0, KeyText.padOnly((char) 0, Keyboard.KEY_RETURN));
     }
 }

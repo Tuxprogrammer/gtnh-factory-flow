@@ -7,7 +7,7 @@ import type { CoreExports } from "@/lib/core/exports.generated";
 import { core, loadCore, resetCoreForTests, wasmGcSupported, type CoreTarget } from "@/lib/core/loader";
 import type { SpecialView as SpecialViewRecord } from "@/lib/core/records.generated";
 import { readViewCases } from "@/test-support/view-corpus";
-import { cardDials, cardInputOf } from "../card-input";
+import { WEB_CARD_MEASURE, cardDials, cardInputOf } from "../card-input";
 import { caseFacts, withCaseDials } from "../card-conformance";
 import {
   decodeLine,
@@ -17,9 +17,9 @@ import {
   withDials,
   type RecordedCard,
 } from "../card-shadow";
-import { CARD_TARGETS } from "../card-view";
+import { CARD_TARGETS, coreCardView, forgetCardViews } from "../card-view";
 import { cleanCardView } from "../clean-model";
-import { resetMeasuredFont } from "../text-measure";
+import { currentFontEpoch, resetMeasuredFont } from "../text-measure";
 import {
   caseSpecialFacts,
   specialPartsJson,
@@ -85,7 +85,7 @@ describe("special card switch", () => {
   });
 
   it("records holder cards from the plan fixtures and the tests: both holders, empty and holding", () => {
-    const lines = recorded();
+    const lines = recorded().filter((l) => l.special.holder);
     const kinds = new Set(lines.map((l) => `${l.special.kind}:${l.special.holder?.empty}`));
     expect([...kinds].sort()).toEqual([
       "custom-rate:false",
@@ -96,6 +96,17 @@ describe("special card switch", () => {
     expect(lines.length).toBeGreaterThanOrEqual(25);
   });
 
+  it("records generators: pinned settings and readings, a pinned setting switched off, a tier chip", () => {
+    const gens = recorded()
+      .map((l) => l.special.generator)
+      .filter((g) => g !== undefined);
+    expect(gens.length).toBeGreaterThanOrEqual(12);
+    expect(gens.some((g) => g.settings.some((x) => x.pinned && !x.enabled))).toBe(true);
+    expect(gens.some((g) => g.readings.some((r) => r.pinned))).toBe(true);
+    expect(gens.some((g) => g.settings.some((x) => x.pinned && x.kind === "number"))).toBe(true);
+    expect(gens.some((g) => g.tier)).toBe(true);
+  });
+
   it("draws with the website's rules while the area is off or the core is not there", () => {
     const line = recorded()[0]!;
     withAdopt({ card: false }, () => {
@@ -104,7 +115,7 @@ describe("special card switch", () => {
         withDials(line.dials, () => specialPartsOf(facts, line.special, cleanCardView(facts))),
       ).toEqual(websiteParts(line));
     });
-    expect(specialViewCounts()).toEqual({ core: 0, kept: 0, ts: 1, first: 0, filled: 0 });
+    expect(specialViewCounts()).toEqual({ core: 0, kept: 0, ts: 1, first: 0, filled: 0, held: 0 });
   });
 
   it("draws with the website's rules when the core fails on a card, and says so once", () => {
@@ -200,6 +211,38 @@ describe("special card switch", () => {
         // The card's dials are what the input carries.
         expect(cardDials(replayFacts(line).averageDraw)).toEqual(cardDials(line.facts.averageDraw));
       });
+
+      it("starts a changed special card from the card view the core made for it, with the same parts", () => {
+        forgetCardViews();
+        for (const line of recorded()) {
+          const facts = replayFacts(line);
+          const base = withDials(line.dials, () => coreCardView(core(), facts));
+          const got = withDials(line.dials, () =>
+            coreSpecialParts(core(), facts, line.special, { base, firstByRules: false }),
+          );
+          expect(got).toEqual(websiteParts(line));
+        }
+        const { core: called, held } = specialViewCounts();
+        expect(held).toBe(called);
+        expect(held).toBeGreaterThan(0);
+        // A card the core no longer holds (its ring moved on) is made again on the way, with the same parts.
+        const line = recorded().find((l) => l.special.generator)!;
+        const facts = replayFacts(line);
+        const base = withDials(line.dials, () => coreCardView(core(), facts));
+        for (let i = 0; i < 600; i++) {
+          core().ViewExports.viewCardJsKept(
+            { dials: cardDials(facts.averageDraw), card: withDials(line.dials, () => cardInputOf(facts)) },
+            WEB_CARD_MEASURE as unknown as Record<string, unknown>,
+            currentFontEpoch(),
+          );
+        }
+        forgetSpecialViews();
+        const again = withDials(line.dials, () =>
+          coreSpecialParts(core(), facts, line.special, { base, firstByRules: false }),
+        );
+        expect(again).toEqual(websiteParts(line));
+        expect(specialViewCounts()).toMatchObject({ core: 1, held: 0 });
+      }, 120_000);
 
       it.skipIf(!CARD_TARGETS.includes(target))(
         "is the switch's path when the area is on: a card's first parts by the website's rules, the core's from then on",

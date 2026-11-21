@@ -1211,13 +1211,13 @@
     },
     "view-inputs/card-website-test-inputs.jsonl.gz": {
       "area": "view-inputs",
-      "bytes": 210825,
-      "sha256": "c827e0dd4a29926d40be5d244b5d65378c3ec08b7edb0d54b0f8c6c74e675fd3"
+      "bytes": 217996,
+      "sha256": "697cff66ca3f44937186235a518db78bb0ca86109067ff4d867b7b0d56494729"
     },
     "view-inputs/special-website-test-inputs.jsonl.gz": {
       "area": "view-inputs",
-      "bytes": 2500,
-      "sha256": "00411469fcfdb20ccf51f585f16abff65c3198d59a63a7bcccb68c378ee9885e"
+      "bytes": 11878,
+      "sha256": "7a4b86a3e5314b260e9a2a123be77f4ddb07130738208c79b9611922e033ee3c"
     },
     "view/card/cases.json": {
       "area": "view",
@@ -1276,13 +1276,13 @@
     },
     "view/records.json": {
       "area": "view",
-      "bytes": 26315,
-      "sha256": "018b8bd608145e32f9300af4fd50cce6869b592db6e11f30fff87e06fca89ff2"
+      "bytes": 27400,
+      "sha256": "c4e40c9156762ceae0902bab0cad398f418bdb9634f0f9832a115d332ae84c26"
     },
     "view/special/cases.json": {
       "area": "view",
-      "bytes": 61725,
-      "sha256": "8c95f7e9fbcffb870a9a660fea5f41f260f7f2c7cf8e8a18223f9c062d6100d7"
+      "bytes": 127097,
+      "sha256": "40b5af0b1df5c6ab833faf33b87ac73650cdef80bfefe9b12b09227fb1b1aba8"
     },
     "wire/findings.json": {
       "area": "wire",

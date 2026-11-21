@@ -4,7 +4,7 @@
  * the hooks in use-special.ts read the facts, the shared cases (special-conformance.ts) and the shadow run these, and
  * `specialViewFrom` puts the parts and the card's view together as the `SpecialView` SpecialCard.tsx draws.
  *
- * Kinds here so far: the custom rate card and the fluid tank. A shared machine, a generator and a crop card build their
+ * Kinds here so far: the custom rate card, the fluid tank and the generator. A shared machine and a crop card build their
  * whole view in their hooks.
  */
 import { rateMultiplierForKind, rateSuffixForKind } from "@/lib/format/rate-unit";
@@ -42,10 +42,39 @@ export interface HolderFacts {
   dial?: DialFacts;
 }
 
+/**
+ * One of a generator's settings: how it is changed, its value (a select's option label, a number and its unit, a
+ * switch), whether the others leave it meaning anything, and whether the plan pins it to the card.
+ */
+export interface GeneratorSettingFacts {
+  id: string;
+  label: string;
+  kind: "choice" | "number" | "toggle";
+  choice: string;
+  number: number;
+  unit?: string;
+  on: boolean;
+  enabled: boolean;
+  pinned: boolean;
+}
+
+/**
+ * A generator's facts: its source's name, its tier select (none when it has none), every other setting in its source's
+ * order, its readings, its warnings.
+ */
+export interface GeneratorFacts {
+  name: string;
+  tier?: { label: string; fixed: boolean };
+  settings: GeneratorSettingFacts[];
+  readings: Array<{ label: string; value: string; pinned: boolean }>;
+  warnings: string[];
+}
+
 /** A special card's kind and its kind's facts (the core's `SpecialInput`). */
 export interface SpecialFacts {
   kind: SpecialKind;
   holder?: HolderFacts;
+  generator?: GeneratorFacts;
 }
 
 /** How a chip is typed into: the text it opens with, what a typed number is divided by to be stored, tip notes. */
@@ -73,7 +102,8 @@ export interface SpecialParts {
   gauge: boolean;
   count?: CleanCountView;
   foot?: CleanFootView;
-  chips: Array<{ chip: CleanChipView; edit?: ChipEdit }>;
+  /** `off`: a setting the card's other settings leave meaning nothing, greyed. */
+  chips: Array<{ chip: CleanChipView; edit?: ChipEdit; off?: boolean }>;
   stripHeight: number;
   warnings: string[];
   cannotRun: boolean;
@@ -84,7 +114,7 @@ export interface SpecialParts {
 
 /** Whether the shared rules draw this kind's own parts (the core's `SpecialViews.covers`). */
 export function coveredKind(kind: SpecialKind): boolean {
-  return kind === "custom-rate" || kind === "tank";
+  return kind === "custom-rate" || kind === "tank" || kind === "power";
 }
 
 /** A special card's own parts, from its card's view and its kind's facts. */
@@ -93,9 +123,84 @@ export function specialParts(base: CleanCardView, facts: SpecialFacts): SpecialP
     case "custom-rate":
     case "tank":
       return holderParts(base, facts);
+    case "power":
+      return generatorParts(base, facts);
     default:
       throw new Error(`no shared rules yet for a ${facts.kind} card`);
   }
+}
+
+/** A pinned reading's key in the plan's pins and its chip's id. */
+export const READING_PIN = "reading:";
+
+/** A generator's setting as its chip reads it: the option's label, "N unit", On or Off. */
+export function generatorSettingValue(s: GeneratorSettingFacts): string {
+  if (s.kind === "choice") return s.choice;
+  if (s.kind === "number") return `${s.number}${s.unit ? ` ${s.unit}` : ""}`;
+  return s.on ? "On" : "Off";
+}
+
+/**
+ * A generator: its source's name in amber, its tier select on the head's tier chip ("Unlocks at" when it has only the
+ * one), and on its strip the settings and readings the plan pins to the card, settings first, each in its source's
+ * order. A pinned setting the others leave meaning nothing stays on the strip, greyed (`off`). A number reads "N unit"
+ * and is typed into; the rows, count and bar are the card's own.
+ */
+function generatorParts(base: CleanCardView, facts: SpecialFacts): SpecialParts {
+  const g = facts.generator;
+  if (!g) throw new Error("a generator's card needs its generator's facts");
+  const settings = g.settings.filter((s) => s.pinned);
+  const laid = layoutStrip([
+    ...settings.map((s) => {
+      const value = generatorSettingValue(s);
+      return { id: s.id, label: s.label, value, title: `${s.label}: ${value}` };
+    }),
+    ...g.readings
+      .filter((r) => r.pinned)
+      .map((r) => ({
+        id: READING_PIN + r.label,
+        label: r.label,
+        value: r.value,
+        reading: true,
+        title: `${r.label}: ${r.value}`,
+      })),
+  ]);
+  const chips: SpecialParts["chips"] = laid.chips.map((chip, i) => {
+    const s = settings[i];
+    const off = s !== undefined && !s.enabled;
+    return {
+      chip,
+      ...(s && !off && s.kind === "number" ? { edit: { text: String(s.number), scale: 1, notes: [] } } : {}),
+      off,
+    };
+  });
+  const tier = g.tier;
+  return {
+    kind: facts.kind,
+    name: g.name,
+    nameSize: cardNameSize(g.name, { tier: Boolean(tier), amps: false, picker: false }),
+    nameTone: "power",
+    hasPicker: false,
+    tier: tier
+      ? {
+          label: tier.label,
+          fixed: tier.fixed,
+          title: tier.fixed ? `Unlocks at ${tier.label}` : `Tier ${tier.label}. Click up, right click down.`,
+        }
+      : undefined,
+    empty: false,
+    sections: [],
+    gauge: false,
+    count: base.count,
+    foot: base.foot,
+    chips,
+    stripHeight: laid.height,
+    warnings: g.warnings,
+    cannotRun: false,
+    unset: base.unset,
+    pick: false,
+    cropKey: false,
+  };
 }
 
 /**
@@ -141,7 +246,9 @@ function holderParts(base: CleanCardView, facts: SpecialFacts): SpecialParts {
     stripHeight = laid.height;
     for (const chip of laid.chips) {
       chips.push(
-        chip.id === "rate" ? { chip, edit: { text: shown, scale: multiplier, notes: [] } } : { chip },
+        chip.id === "rate"
+          ? { chip, edit: { text: shown, scale: multiplier, notes: [] }, off: false }
+          : { chip, off: false },
       );
     }
   }
@@ -194,10 +301,11 @@ export function specialViewFrom(
   base: CleanCardView,
   host: SpecialHost,
 ): SpecialView {
-  const chips: SpecialChip[] = parts.chips.map(({ chip, edit }) =>
+  const chips: SpecialChip[] = parts.chips.map(({ chip, edit, off }) =>
     edit
       ? {
           ...chip,
+          ...(off ? { off } : {}),
           edit: {
             text: edit.text,
             ...(edit.notes.length > 0 ? { notes: edit.notes } : {}),
@@ -207,7 +315,9 @@ export function specialViewFrom(
             },
           },
         }
-      : chip,
+      : off
+        ? { ...chip, off }
+        : chip,
   );
   const section0: SpecialSection = parts.empty
     ? { section: 0, inputs: [], outputs: [] }

@@ -986,6 +986,15 @@
   border-color: #6b2a2a;
   color: var(--cc-red);
 }
+/* A setting another setting turns off: shown greyed, as the settings sheet greys its row. */
+.cc-sc[data-off] {
+  opacity: 0.45;
+  cursor: default;
+}
+.cc-sc[data-off]:hover {
+  border-color: var(--cc-edge);
+  background-color: #2a2c31;
+}
 .cc-sc[data-reading] {
   padding: 0;
   border: 0;

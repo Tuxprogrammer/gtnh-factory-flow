@@ -20,7 +20,7 @@ import type {
   SpecialView as SpecialViewRecord,
 } from "@/lib/core/records.generated";
 import { WEB_CARD_MEASURE, cardDials, cardInputOf } from "../card-input";
-import { cardCore, chipView, footView, sameData, words } from "../card-view";
+import { cardCore, cardTicketOf, chipView, footView, sameData, words } from "../card-view";
 import type { CleanCardFacts, CleanCardView, CleanCountView } from "../clean-model";
 import { currentFontEpoch } from "../text-measure";
 import type { SpecialKind } from "./special-model";
@@ -47,6 +47,7 @@ const NAME_SIZE = [10, 9, 8];
 /** A special card's kind and facts as the core's `SpecialInput`. */
 export function specialInputOf(facts: SpecialFacts): SpecialInput {
   const h = facts.holder;
+  const g = facts.generator;
   return {
     kind: KIND_OUT[facts.kind],
     ...(h
@@ -67,8 +68,31 @@ export function specialInputOf(facts: SpecialFacts): SpecialInput {
           },
         }
       : {}),
+    ...(g
+      ? {
+          generator: {
+            name: g.name,
+            ...(g.tier ? { tier: { label: g.tier.label, fixed: g.tier.fixed } } : {}),
+            settings: g.settings.map((s) => ({
+              id: s.id,
+              label: s.label,
+              kind: SETTING_KIND_OUT[s.kind],
+              choice: s.choice,
+              number: s.number,
+              ...(s.unit !== undefined ? { unit: s.unit } : {}),
+              on: s.on,
+              enabled: s.enabled,
+              pinned: s.pinned,
+            })),
+            readings: g.readings.map((r) => ({ label: r.label, value: r.value, pinned: r.pinned })),
+            warnings: g.warnings,
+          },
+        }
+      : {}),
   };
 }
+
+const SETTING_KIND_OUT = { choice: "CHOICE", number: "NUMBER", toggle: "TOGGLE" } as const;
 
 /** The core's `SpecialView` as the website's parts: the same strings and numbers, names spelt as the website spells them. */
 export function partsOfRecord(v: SpecialViewRecord): SpecialParts {
@@ -123,6 +147,7 @@ export function partsOfRecord(v: SpecialViewRecord): SpecialParts {
     chips: v.chips.map((c) => ({
       chip: chipView(c.chip),
       ...(c.edit ? { edit: { text: c.edit.text, scale: c.edit.scale, notes: c.edit.notes } } : {}),
+      off: c.off,
     })),
     stripHeight: v.stripHeight,
     warnings: v.warnings,
@@ -131,6 +156,26 @@ export function partsOfRecord(v: SpecialViewRecord): SpecialParts {
     pick: v.pick,
     cropKey: v.cropKey,
   };
+}
+
+/**
+ * A special card's parts from the card view the core made last for it (`ticket`, from `cardTicketOf`): only the
+ * kind's facts cross, the card is neither read nor made again. Undefined when the core no longer holds that card.
+ */
+export function specialThroughHeld(
+  c: CoreExports,
+  ticket: number,
+  special: SpecialInput,
+  fontState: number,
+): SpecialViewRecord | undefined {
+  if (!c.ViewExports.viewCardHeld(ticket, fontState)) return undefined;
+  words(c);
+  return c.ViewExports.viewSpecialJsHeld(
+    ticket,
+    special as unknown as Record<string, unknown>,
+    WEB_CARD_MEASURE as unknown as Record<string, unknown>,
+    fontState,
+  ) as unknown as SpecialViewRecord;
 }
 
 /** A special card through the core `c`, its widths measured by `measure` and kept per `fontState`. */
@@ -162,11 +207,12 @@ interface Slot {
 const SLOTS_PER_CARD = 2;
 const CARDS_KEPT = 1024;
 const kept = new Map<string, Slot[]>();
-const counts = { core: 0, kept: 0, ts: 0, first: 0, filled: 0 };
+const counts = { core: 0, kept: 0, ts: 0, first: 0, filled: 0, held: 0 };
 
 /**
- * How many parts came from the core, from kept parts and from the website's rules, how many first parts the website's
- * rules drew while the core had none, and how many of those the core made in idle time; for tests and probes.
+ * How many parts came from the core (`held`: of those, how many started from the card view the core held), from kept
+ * parts and from the website's rules, how many first parts the website's rules drew while the core had none, and how
+ * many of those the core made in idle time; for tests and probes.
  */
 export function specialViewCounts(): Readonly<typeof counts> {
   return { ...counts };
@@ -181,17 +227,18 @@ export function forgetSpecialViews(): void {
 
 /**
  * A special card's own parts through the core `c`, kept per card: the switch's path, also for tests that hold it to
- * the website's rules.
+ * the website's rules. With `first`, the card's view: its parts start from the card the core made for it when the core
+ * still holds it, and (unless `firstByRules` is false) a card the core has never drawn is drawn by the rules first.
  */
 export function coreSpecialParts(
   c: CoreExports,
   cardFacts: CleanCardFacts,
   facts: SpecialFacts,
-  first?: { base: CleanCardView },
+  first?: { base: CleanCardView; firstByRules?: boolean },
 ): SpecialParts {
   const dials = cardDials(cardFacts.averageDraw);
   const epoch = currentFontEpoch();
-  if (first && !kept.has(cardFacts.projectNode.id)) {
+  if (first && first.firstByRules !== false && !kept.has(cardFacts.projectNode.id)) {
     // A card the core has never drawn: the website's rules draw it now, and the core makes its parts in idle time, so
     // opening a plan stays at the rules' cost (the recipe card's first view does the same, card-view.ts).
     counts.first++;
@@ -213,7 +260,11 @@ export function coreSpecialParts(
       return s.parts;
     }
   }
-  const parts = partsOfRecord(specialThroughCore(c, { dials, card, special }, epoch));
+  // From the card the core just made for this view when it still holds it, else the card made again on the way.
+  const ticket = first ? cardTicketOf(first.base) : undefined;
+  const fromHeld = ticket !== undefined ? specialThroughHeld(c, ticket, special, epoch) : undefined;
+  if (fromHeld) counts.held++;
+  const parts = partsOfRecord(fromHeld ?? specialThroughCore(c, { dials, card, special }, epoch));
   counts.core++;
   slots.unshift({ card, special, dials, epoch, parts });
   if (slots.length > SLOTS_PER_CARD) slots.length = SLOTS_PER_CARD;

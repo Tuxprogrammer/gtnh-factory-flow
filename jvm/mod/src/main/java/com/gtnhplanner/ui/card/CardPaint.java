@@ -745,9 +745,34 @@ public final class CardPaint {
      */
     public static void chip(final int x, final int y, final int w, final String label, final String value,
         @Nullable final ItemStack icon, final boolean warn, final boolean reading, final boolean hover, final float z) {
+        chip(x, y, w, label, value, icon, warn, reading, hover, false, z);
+    }
+
+    /** The grey of a setting another setting makes moot (the settings sheet's greyed row). */
+    private static final int OFF_INK = 0xFF5A5C65;
+
+    /**
+     * The same, {@code off}: a setting the card's other settings leave meaning nothing, greyed (its box at the strip's
+     * own colour, its words in the sheet's greyed ink).
+     */
+    public static void chip(final int x, final int y, final int w, final String label, final String value,
+        @Nullable final ItemStack icon, final boolean warn, final boolean reading, final boolean hover,
+        final boolean off, final float z) {
         if (!reading) {
             Hyb.rect(x, y, w, CardLayout.CHIP, warn ? 0xFF6B2A2A : hover ? 0xFF4A4D55 : EDGE);
             Hyb.rect(x + 1, y + 1, w - 2, CardLayout.CHIP - 2, hover ? 0xFF33363C : 0xFF2A2C31);
+        }
+        if (off) {
+            int tx = x + CardLayout.CHIP_PAD;
+            if (icon != null) {
+                Hyb.item(icon, tx, y + 2, 14, z);
+                GL11.glDisable(GL11.GL_LIGHTING);
+                GL11.glDisable(GL11.GL_DEPTH_TEST);
+                tx += 14 + 3;
+            }
+            Hyb.text(label, tx, y + 5, OFF_INK);
+            Hyb.text(value, tx + Hyb.width(label) + 4, y + 5, OFF_INK);
+            return;
         }
         int tx = x + CardLayout.CHIP_PAD;
         if (icon != null) {

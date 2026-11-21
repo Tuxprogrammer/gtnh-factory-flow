@@ -94,6 +94,7 @@ public final class ViewJs {
             c24 = m24;
         }
         final JSObject o26 = cardInputMenu(o);
+        final JSObject o27 = cardInputReadOnly(o);
         return new com.gtnhplanner.core.view.card.CardInput(cardInputNodeId(o),
             cardInputName(o),
             cardInputHasPicker(o),
@@ -120,7 +121,8 @@ public final class ViewJs {
             o23 == null ? null : readCardInputTurbine(o23),
             c24,
             cardInputSelected(o),
-            readCardInputMenu(o26));
+            readCardInputMenu(o26),
+            o27 == null ? null : readCardInputReadOnly(o27));
     }
 
     /** A {@code CardInputBearer} from the website's object (records.generated.ts {@code CardInputBearer}). */
@@ -194,7 +196,8 @@ public final class ViewJs {
             cardInputMenuShared(o),
             cardInputMenuHolder(o),
             cardInputMenuEmptyCropFarm(o),
-            cardInputMenuTasks(o));
+            cardInputMenuTasks(o),
+            cardInputMenuReadOnly(o));
     }
 
     /** A {@code CardInputPort} from the website's object (records.generated.ts {@code CardInputPort}). */
@@ -231,6 +234,12 @@ public final class ViewJs {
     public static com.gtnhplanner.core.view.card.CardInput.Product readCardInputProduct(final JSObject o) {
         return new com.gtnhplanner.core.view.card.CardInput.Product(cardInputProductIcon(o),
             cardInputProductFluid(o));
+    }
+
+    /** A {@code CardInputReadOnly} from the website's object (records.generated.ts {@code CardInputReadOnly}). */
+    public static com.gtnhplanner.core.view.card.CardInput.ReadOnly readCardInputReadOnly(final JSObject o) {
+        return new com.gtnhplanner.core.view.card.CardInput.ReadOnly(cardInputReadOnlyReason(o),
+            cardInputReadOnlySolved(o));
     }
 
     /** A {@code CardInputSetting} from the website's object (records.generated.ts {@code CardInputSetting}). */
@@ -744,6 +753,9 @@ public final class ViewJs {
     @JSBody(params = "o", script = "return o.menu == null ? {} : o.menu;")
     private static native JSObject cardInputMenu(JSObject o);
 
+    @JSBody(params = "o", script = "return o.readOnly == null ? null : o.readOnly;")
+    private static native JSObject cardInputReadOnly(JSObject o);
+
     @JSBody(params = "o", script = "return o.nodeId == null ? null : o.nodeId;")
     private static native String cardInputBearerNodeId(JSObject o);
 
@@ -837,6 +849,9 @@ public final class ViewJs {
     @JSBody(params = "o", script = "return o.tasks === true;")
     private static native boolean cardInputMenuTasks(JSObject o);
 
+    @JSBody(params = "o", script = "return o.readOnly === true;")
+    private static native boolean cardInputMenuReadOnly(JSObject o);
+
     @JSBody(params = "o", script = "return o.key == null ? \"\" : o.key;")
     private static native String cardInputPortKey(JSObject o);
 
@@ -920,6 +935,12 @@ public final class ViewJs {
 
     @JSBody(params = "o", script = "return o.fluid === true;")
     private static native boolean cardInputProductFluid(JSObject o);
+
+    @JSBody(params = "o", script = "return o.reason == null ? \"\" : o.reason;")
+    private static native String cardInputReadOnlyReason(JSObject o);
+
+    @JSBody(params = "o", script = "return o.solved === true;")
+    private static native boolean cardInputReadOnlySolved(JSObject o);
 
     @JSBody(params = "o", script = "return o.id == null ? \"\" : o.id;")
     private static native String cardInputSettingId(JSObject o);

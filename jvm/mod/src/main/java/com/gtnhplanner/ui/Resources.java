@@ -25,6 +25,9 @@ public final class Resources {
             .getName();
         if (value instanceof final ItemStack stack && stack.getItem() != null) return CardDefaults.itemKey(stack);
         if (value instanceof com.gtnhplanner.power.Energy) return com.gtnhplanner.power.Energy.KEY;
+        // A resource the game has no value for (a display-only card's): its key as the plan spells it.
+        if (value instanceof final com.gtnhplanner.core.model.SiteResource site) return site.key()
+            .toString();
         return "";
     }
 

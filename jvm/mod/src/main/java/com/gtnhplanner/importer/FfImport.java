@@ -26,7 +26,9 @@ public final class FfImport {
      */
     public static FfConverter.Result importFromText(final String text, final RecipeIndex index, final NodeMaker maker) {
         final com.google.gson.JsonObject root = FfPlanParser.root(FfPlanCode.toJson(text));
-        final FfConverter.Result result = FfConverter.convert(FfPlanParser.read(root), index, maker);
+        final java.util.Map<String, Object> tree = com.gtnhplanner.data.flowchart.GsonTrees.map(root);
+        // With the plan's tree: a card the board cannot run comes in as a display-only card.
+        final FfConverter.Result result = FfConverter.convert(FfPlanParser.read(root), index, maker, tree);
         // The rate unit it was shared in: the board opens it in that (the website's applyPlanView).
         result.graph()
             .viewWhenShown(PlanView.rateUnit(root));
@@ -40,9 +42,7 @@ public final class FfImport {
         // Its task board, as the plan spells it.
         com.gtnhplanner.data.flowchart.Tasks.read(root, result.graph());
         // What the board has no place for, kept to go back out with the plan (core-codec SiteCarry).
-        result.graph().site.putAll(
-            com.gtnhplanner.core.codec.SiteCarry
-                .carry(com.gtnhplanner.data.flowchart.GsonTrees.map(root), result.placed()));
+        result.graph().site.putAll(com.gtnhplanner.core.codec.SiteCarry.carry(tree, result.placed()));
         return result;
     }
 }

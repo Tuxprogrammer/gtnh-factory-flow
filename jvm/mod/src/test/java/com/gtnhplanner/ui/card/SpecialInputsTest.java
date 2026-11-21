@@ -149,6 +149,7 @@ class SpecialInputsTest {
             null,
             java.util.Map.of(),
             false,
-            new CardInput.Menu(false, false, false, false, true, false, false));
+            new CardInput.Menu(false, false, false, false, true, false, false, false),
+            null);
     }
 }

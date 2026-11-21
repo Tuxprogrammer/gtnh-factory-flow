@@ -178,6 +178,11 @@
       "bytes": 5307,
       "sha256": "0f18b636403458b01ca667d2d7d92c6a18b867ab4a0845998c756ea76b0c9a68"
     },
+    "codec/round-trip/display-cards.json": {
+      "area": "codec",
+      "bytes": 6616,
+      "sha256": "2e2a72fe3a476d4296831f8447686412bca1744524e6a9d1db75baefa1553148"
+    },
     "codec/round-trip/website-only-things.json": {
       "area": "codec",
       "bytes": 5341,
@@ -1220,8 +1225,8 @@
     },
     "view/card/cases.json": {
       "area": "view",
-      "bytes": 486592,
-      "sha256": "75f65a9ca3d9479d7e62eec8d914737fe48ae8f29873b3fa59c371e407637dbd"
+      "bytes": 489067,
+      "sha256": "403eabeebce09839da72ac667c65fae24803294124a896fc697a15eefd973e8e"
     },
     "view/card/count.json": {
       "area": "view",
@@ -1275,13 +1280,13 @@
     },
     "view/records.json": {
       "area": "view",
-      "bytes": 26116,
-      "sha256": "8139257065943c9abde0a64609d0baf51d76ca5fbc62ee7cb2e49d00f959dadf"
+      "bytes": 26315,
+      "sha256": "018b8bd608145e32f9300af4fd50cce6869b592db6e11f30fff87e06fca89ff2"
     },
     "view/special/cases.json": {
       "area": "view",
-      "bytes": 61100,
-      "sha256": "482fab41731b10b0d2f6897933781db4357bc4ecc21e09b796ec8c69b0573348"
+      "bytes": 61725,
+      "sha256": "8c95f7e9fbcffb870a9a660fea5f41f260f7f2c7cf8e8a18223f9c062d6100d7"
     }
   }
 }

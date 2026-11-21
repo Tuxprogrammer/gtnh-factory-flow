@@ -41,7 +41,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {
@@ -166,7 +167,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {
@@ -304,7 +306,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {
@@ -436,7 +439,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {
@@ -568,7 +572,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {
@@ -700,7 +705,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {
@@ -832,7 +838,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {
@@ -964,7 +971,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {
@@ -1096,7 +1104,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {
@@ -1228,7 +1237,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {
@@ -1360,7 +1370,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {
@@ -1492,7 +1503,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {
@@ -1624,7 +1636,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {
@@ -1756,7 +1769,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {
@@ -1888,7 +1902,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {
@@ -2020,7 +2035,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {
@@ -2139,7 +2155,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {
@@ -2238,7 +2255,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {
@@ -2374,7 +2392,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {
@@ -2516,7 +2535,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {
@@ -2654,7 +2674,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {
@@ -2772,7 +2793,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {
@@ -2869,7 +2891,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {
@@ -2960,7 +2983,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {
@@ -3052,7 +3076,8 @@
       "shared": false,
       "holder": true,
       "emptyCropFarm": false,
-      "tasks": false
+      "tasks": false,
+      "readOnly": false
      }
     },
     "special": {

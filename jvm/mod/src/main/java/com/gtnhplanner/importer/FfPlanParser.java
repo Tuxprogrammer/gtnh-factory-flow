@@ -264,7 +264,7 @@ public final class FfPlanParser {
     // region Entries
 
     @Nullable
-    private static FfRecipe recipe(final JsonObject r) {
+    static FfRecipe recipe(final JsonObject r) {
         final String id = str(r, "id");
         if (id == null) return null;
         final JsonObject meta = obj(r, "metadata");

@@ -22,7 +22,7 @@ import com.gtnhplanner.machines.web.Tiers;
  * {@link TextMeasure}. Both hosts' special cards are bound to the same cases ({@code conformance/view/special/}).
  *
  * <p>
- * Kinds translated so far: the custom rate card and the fluid tank. A shared machine, a generator and a crop card keep
+ * Kinds translated so far: the custom rate card, the fluid tank and the generator. A shared machine and a crop card keep
  * each host's own rules ({@link #covers}).
  */
 public final class SpecialViews {
@@ -38,7 +38,8 @@ public final class SpecialViews {
 
     /** Whether the shared rules draw this kind's own parts (else the host's own rules do, for now). */
     public static boolean covers(final SpecialInput.Kind kind) {
-        return kind == SpecialInput.Kind.CUSTOM_RATE || kind == SpecialInput.Kind.TANK;
+        return kind == SpecialInput.Kind.CUSTOM_RATE || kind == SpecialInput.Kind.TANK
+            || kind == SpecialInput.Kind.POWER;
     }
 
     /**
@@ -49,9 +50,99 @@ public final class SpecialViews {
         final CardInput.Dials dials, final TextMeasure measure, final CardViews.Host host) {
         return switch (in.kind()) {
             case CUSTOM_RATE, TANK -> holder(in, base, dials, measure, host);
+            case POWER -> generator(in, base, measure, host);
             default -> throw new IllegalArgumentException("no shared rules yet for a " + in.kind() + " card");
         };
     }
+
+    // region Generators
+
+    /**
+     * A generator: its source's name in amber, its tier select on the head's tier chip ("Unlocks at" when it has only
+     * the one), and on its strip the settings and readings the plan pins to the card, settings first, each in its
+     * source's order. A pinned setting the others leave meaning nothing stays on the strip, greyed ({@code off}). A
+     * number reads "N unit" and is typed into; the rows, count and bar are the card's own.
+     */
+    static SpecialView generator(final SpecialInput in, final CardView base, final TextMeasure measure,
+        final CardViews.Host host) {
+        final SpecialInput.Generator g = in.generator();
+        if (g == null) throw new IllegalArgumentException("a generator's card needs its generator's facts");
+        final List<CardViews.ChipSpec> specs = new ArrayList<>();
+        final List<SpecialInput.Setting> shown = new ArrayList<>();
+        for (final SpecialInput.Setting s : g.settings()) {
+            if (!s.pinned()) continue;
+            final String value = settingValue(s);
+            specs.add(
+                new CardViews.ChipSpec(s.id(), s.label(), value, null, false, null, false,
+                    t("chip.title", s.label(), value)));
+            shown.add(s);
+        }
+        for (final SpecialInput.Reading r : g.readings()) {
+            if (r.pinned()) specs.add(
+                new CardViews.ChipSpec(READING + r.label(), r.label(), r.value(), null, true, null, false,
+                    t("chip.title", r.label(), r.value())));
+        }
+        final CardViews.Strip strip = CardViews.layoutStrip(specs, measure, host);
+        final List<SpecialView.Chip> chips = new ArrayList<>();
+        for (int i = 0; i < strip.chips()
+            .size(); i++) {
+            final CardView.ChipView c = strip.chips()
+                .get(i);
+            final SpecialInput.Setting s = i < shown.size() ? shown.get(i) : null;
+            final boolean off = s != null && !s.enabled();
+            chips.add(
+                new SpecialView.Chip(
+                    c,
+                    s != null && !off && s.kind() == SpecialInput.SettingKind.NUMBER
+                        ? new SpecialView.Edit(NumberText.of(s.number()), 1, List.of())
+                        : null,
+                    off));
+        }
+        final SpecialInput.GeneratorTier tier = g.tier();
+        final String name = g.name();
+        final CardView.CountView count = base.count();
+        return new SpecialView(
+            in.kind(),
+            name,
+            CardViews.nameStep(name, tier != null, false, false, measure, host),
+            SpecialView.NameTone.POWER,
+            false,
+            tier == null ? null
+                : new CardView.TierChip(
+                    tier.label(),
+                    tier.fixed(),
+                    tier.fixed() ? t("generator.unlocks", tier.label()) : t("tier.title", tier.label())),
+            null,
+            false,
+            List.of(),
+            null,
+            null,
+            false,
+            count,
+            base.foot(),
+            chips,
+            strip.height(),
+            g.warnings(),
+            false,
+            base.unset(),
+            false,
+            false);
+    }
+
+    /** The key a pinned reading is kept under, and its chip's id: {@code reading:<its label>}. */
+    public static final String READING = "reading:";
+
+    /** A setting's value as its chip reads it: the option's label, "N unit", On or Off. */
+    public static String settingValue(final SpecialInput.Setting s) {
+        return switch (s.kind()) {
+            case CHOICE -> s.choice();
+            case NUMBER -> NumberText.of(s.number()) + (s.unit() == null || s.unit()
+                .isEmpty() ? "" : " " + s.unit());
+            case TOGGLE -> s.on() ? t("generator.on") : t("generator.off");
+        };
+    }
+
+    // endregion
 
     // region Holders
 
@@ -151,7 +242,8 @@ public final class SpecialViews {
      * plain card's ({@link CardGeometry}); a socket's in its middle.
      */
     public static CardGeometry webHolder(final SpecialView v, final CardView base) {
-        if (!covers(v.kind())) throw new IllegalArgumentException("not a holder: " + v.kind());
+        if (v.kind() != SpecialInput.Kind.CUSTOM_RATE && v.kind() != SpecialInput.Kind.TANK)
+            throw new IllegalArgumentException("not a holder: " + v.kind());
         final int head = CardGeometry.WEB_HEAD, row = CardGeometry.WEB_ROW;
         final List<CardGeometry.Anchor> anchors = new ArrayList<>();
         int in = 0, out = 0;

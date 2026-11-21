@@ -808,11 +808,14 @@ export function StripChip({
   nodeId,
   control,
   needK,
+  off,
   onStep,
   onOpen,
   wasClick,
 }: {
   chip: CleanChipView;
+  /** A setting the others leave meaning nothing (a generator's): greyed and inert. */
+  off?: boolean;
   nodeId: string;
   control?: SettingControl;
   needK?: number;
@@ -830,8 +833,17 @@ export function StripChip({
       data-label={chip.label}
       data-warn={chip.warn ? "" : undefined}
       data-reading={chip.reading ? "" : undefined}
+      data-off={off ? "" : undefined}
       data-menu-anchor=""
-      {...tipAttrs(stripTip(nodeId, chip, control, needK))}
+      {...tipAttrs(
+        off
+          ? {
+              ...stripTip(nodeId, chip, control, needK),
+              notes: [{ text: "Not used: another setting turns it off.", tone: "muted" as const }],
+              actions: [],
+            }
+          : stripTip(nodeId, chip, control, needK),
+      )}
       style={{
         left: chip.x,
         top: chip.y,
@@ -840,7 +852,7 @@ export function StripChip({
       }}
       onClick={(event) => {
         glyph(event);
-        if (!chip.reading && wasClick(event)) {
+        if (!chip.reading && !off && wasClick(event)) {
           if (control && control.options.length > 1) onOpen(chip.id, anchorOf(event.currentTarget));
           else onStep(chip.id, 1);
         }
@@ -848,10 +860,10 @@ export function StripChip({
       onContextMenu={(event) => {
         event.preventDefault();
         glyph(event);
-        if (!chip.reading) onStep(chip.id, -1);
+        if (!chip.reading && !off) onStep(chip.id, -1);
       }}
       onWheel={(event) => {
-        if (chip.reading || checklistLocked() || !wheelChangesValues()) return;
+        if (chip.reading || off || checklistLocked() || !wheelChangesValues()) return;
         event.stopPropagation();
         onStep(chip.id, event.deltaY < 0 ? 1 : -1);
       }}

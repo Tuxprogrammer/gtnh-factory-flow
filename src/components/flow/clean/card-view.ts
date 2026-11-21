@@ -222,6 +222,8 @@ interface Slot {
   dials: CardInputDials;
   epoch: number;
   view: CardView;
+  /** The core's ticket for the card it made this view of (`viewCardTicket`): a special card's parts start from it. */
+  ticket: number;
 }
 const SLOTS_PER_CARD = 2;
 /** Cards kept, least recently drawn dropped first: the largest boards hold a few thousand cards. */
@@ -233,7 +235,7 @@ function lookup(
   input: CardInput,
   dials: CardInputDials,
   epoch: number,
-): CardView | undefined {
+): Slot | undefined {
   const slots = kept.get(id);
   if (!slots) return undefined;
   for (let i = 0; i < slots.length; i++) {
@@ -243,7 +245,7 @@ function lookup(
     // Most recently drawn last in the map's order.
     kept.delete(id);
     kept.set(id, slots);
-    return s.view;
+    return s;
   }
   return undefined;
 }
@@ -294,11 +296,24 @@ function viewThroughCore(
   input: CardInput,
   dials: CardInputDials,
   epoch: number,
-): CardView {
+): Slot {
   words(c);
   const view = cardThroughCore(c.ViewExports, { dials, card: input }, WEB_CARD_MEASURE, epoch).view;
-  keep(input.nodeId, { input, dials, epoch, view });
-  return view;
+  const slot = { input, dials, epoch, view, ticket: c.ViewExports.viewCardTicket() };
+  keep(input.nodeId, slot);
+  return slot;
+}
+
+/** The core's ticket for the card view a `CleanCardView` was read from (none for one the builders drew). */
+const tickets = new WeakMap<CleanCardView, number>();
+
+/**
+ * The core's ticket for the card it made `view` from (`ViewExports.viewCardTicket`), while the core may still hold it:
+ * a special card's parts then start from that card instead of making it again (`viewSpecialJsHeld`). Undefined for a
+ * view the builders drew.
+ */
+export function cardTicketOf(view: CleanCardView): number | undefined {
+  return tickets.get(view);
 }
 
 /**
@@ -321,14 +336,16 @@ export function coreCardView(
     return cleanCardView(facts);
   }
   const input = cardInputOf(facts);
-  let view = lookup(input.nodeId, input, dials, epoch);
-  if (view) {
+  let slot = lookup(input.nodeId, input, dials, epoch);
+  if (slot) {
     counts.kept++;
   } else {
-    view = viewThroughCore(c, input, dials, epoch);
+    slot = viewThroughCore(c, input, dials, epoch);
     counts.core++;
   }
-  return cleanViewOf(view, facts);
+  const view = cleanViewOf(slot.view, facts);
+  tickets.set(view, slot.ticket);
+  return view;
 }
 
 /** Cards drawn first by the builders, waiting for the core to make their views (the latest input per card). */

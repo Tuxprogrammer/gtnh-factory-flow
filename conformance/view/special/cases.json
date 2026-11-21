@@ -100,7 +100,8 @@
        "x": 8,
        "y": 10,
        "width": 76
-      }
+      },
+      "off": false
      },
      {
       "chip": {
@@ -118,7 +119,8 @@
        "text": "1",
        "scale": 1,
        "notes": []
-      }
+      },
+      "off": false
      }
     ],
     "stripHeight": 40,
@@ -226,7 +228,8 @@
        "x": 8,
        "y": 10,
        "width": 82
-      }
+      },
+      "off": false
      },
      {
       "chip": {
@@ -244,7 +247,8 @@
        "text": "1",
        "scale": 1,
        "notes": []
-      }
+      },
+      "off": false
      }
     ],
     "stripHeight": 40,
@@ -359,7 +363,8 @@
        "x": 8,
        "y": 10,
        "width": 76
-      }
+      },
+      "off": false
      },
      {
       "chip": {
@@ -377,7 +382,8 @@
        "text": "4",
        "scale": 1,
        "notes": []
-      }
+      },
+      "off": false
      }
     ],
     "stripHeight": 40,
@@ -492,7 +498,8 @@
        "x": 8,
        "y": 10,
        "width": 76
-      }
+      },
+      "off": false
      },
      {
       "chip": {
@@ -510,7 +517,8 @@
        "text": "240",
        "scale": 60,
        "notes": []
-      }
+      },
+      "off": false
      }
     ],
     "stripHeight": 40,
@@ -625,7 +633,8 @@
        "x": 8,
        "y": 10,
        "width": 76
-      }
+      },
+      "off": false
      },
      {
       "chip": {
@@ -643,7 +652,8 @@
        "text": "0.01665",
        "scale": 0.05,
        "notes": []
-      }
+      },
+      "off": false
      }
     ],
     "stripHeight": 40,
@@ -758,7 +768,8 @@
        "x": 8,
        "y": 10,
        "width": 76
-      }
+      },
+      "off": false
      },
      {
       "chip": {
@@ -776,7 +787,8 @@
        "text": "45000",
        "scale": 3600,
        "notes": []
-      }
+      },
+      "off": false
      }
     ],
     "stripHeight": 40,
@@ -891,7 +903,8 @@
        "x": 8,
        "y": 10,
        "width": 76
-      }
+      },
+      "off": false
      },
      {
       "chip": {
@@ -909,7 +922,8 @@
        "text": "4",
        "scale": 1,
        "notes": []
-      }
+      },
+      "off": false
      }
     ],
     "stripHeight": 40,
@@ -1024,7 +1038,8 @@
        "x": 8,
        "y": 10,
        "width": 76
-      }
+      },
+      "off": false
      },
      {
       "chip": {
@@ -1042,7 +1057,8 @@
        "text": "43200",
        "scale": 60,
        "notes": []
-      }
+      },
+      "off": false
      }
     ],
     "stripHeight": 40,
@@ -1157,7 +1173,8 @@
        "x": 8,
        "y": 10,
        "width": 82
-      }
+      },
+      "off": false
      },
      {
       "chip": {
@@ -1175,7 +1192,8 @@
        "text": "144",
        "scale": 1,
        "notes": []
-      }
+      },
+      "off": false
      }
     ],
     "stripHeight": 40,
@@ -1290,7 +1308,8 @@
        "x": 8,
        "y": 10,
        "width": 76
-      }
+      },
+      "off": false
      },
      {
       "chip": {
@@ -1308,7 +1327,8 @@
        "text": "128",
        "scale": 0.05,
        "notes": []
-      }
+      },
+      "off": false
      }
     ],
     "stripHeight": 40,
@@ -1423,7 +1443,8 @@
        "x": 8,
        "y": 10,
        "width": 76
-      }
+      },
+      "off": false
      },
      {
       "chip": {
@@ -1441,7 +1462,8 @@
        "text": "128",
        "scale": 0.05,
        "notes": []
-      }
+      },
+      "off": false
      }
     ],
     "stripHeight": 40,
@@ -1556,7 +1578,8 @@
        "x": 8,
        "y": 10,
        "width": 76
-      }
+      },
+      "off": false
      },
      {
       "chip": {
@@ -1574,7 +1597,8 @@
        "text": "0.25",
        "scale": 0.00009765625,
        "notes": []
-      }
+      },
+      "off": false
      }
     ],
     "stripHeight": 40,
@@ -1689,7 +1713,8 @@
        "x": 8,
        "y": 10,
        "width": 76
-      }
+      },
+      "off": false
      },
      {
       "chip": {
@@ -1707,7 +1732,8 @@
        "text": "0",
        "scale": 1,
        "notes": []
-      }
+      },
+      "off": false
      }
     ],
     "stripHeight": 40,
@@ -1822,7 +1848,8 @@
        "x": 8,
        "y": 10,
        "width": 76
-      }
+      },
+      "off": false
      },
      {
       "chip": {
@@ -1840,7 +1867,8 @@
        "text": "0.123",
        "scale": 1,
        "notes": []
-      }
+      },
+      "off": false
      }
     ],
     "stripHeight": 40,
@@ -1955,7 +1983,8 @@
        "x": 8,
        "y": 10,
        "width": 76
-      }
+      },
+      "off": false
      },
      {
       "chip": {
@@ -1973,7 +2002,8 @@
        "text": "123456789",
        "scale": 1,
        "notes": []
-      }
+      },
+      "off": false
      }
     ],
     "stripHeight": 40,
@@ -2093,7 +2123,8 @@
        "text": "4",
        "scale": 1,
        "notes": []
-      }
+      },
+      "off": false
      }
     ],
     "stripHeight": 40,
@@ -2307,7 +2338,8 @@
        "x": 8,
        "y": 10,
        "width": 76
-      }
+      },
+      "off": false
      },
      {
       "chip": {
@@ -2325,7 +2357,8 @@
        "text": "4",
        "scale": 1,
        "notes": []
-      }
+      },
+      "off": false
      }
     ],
     "stripHeight": 40,
@@ -2463,7 +2496,8 @@
        "x": 8,
        "y": 10,
        "width": 82
-      }
+      },
+      "off": false
      },
      {
       "chip": {
@@ -2481,7 +2515,8 @@
        "text": "4",
        "scale": 1,
        "notes": []
-      }
+      },
+      "off": false
      }
     ],
     "stripHeight": 40,
@@ -2594,7 +2629,8 @@
        "x": 8,
        "y": 10,
        "width": 76
-      }
+      },
+      "off": false
      },
      {
       "chip": {
@@ -2612,7 +2648,8 @@
        "text": "4",
        "scale": 1,
        "notes": []
-      }
+      },
+      "off": false
      }
     ],
     "stripHeight": 40,
@@ -2727,7 +2764,8 @@
        "x": 8,
        "y": 10,
        "width": 76
-      }
+      },
+      "off": false
      },
      {
       "chip": {
@@ -2745,7 +2783,8 @@
        "text": "4",
        "scale": 1,
        "notes": []
-      }
+      },
+      "off": false
      }
     ],
     "stripHeight": 40,
@@ -3101,6 +3140,3122 @@
     "warnings": [],
     "cannotRun": false,
     "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "generator: nothing pinned",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "n",
+     "name": "Combustion Generator",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "glanceArt": "icons/chemical_reactor.png",
+     "inputs": [
+      {
+       "key": "input:diesel",
+       "handleId": "input:fluid:diesel",
+       "output": false,
+       "name": "Diesel",
+       "kind": "fluid",
+       "resourceId": "diesel",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "outputs": [
+      {
+       "key": "output:eu",
+       "handleId": "output:power:eu",
+       "output": true,
+       "name": "EU",
+       "kind": "power",
+       "resourceId": "eu",
+       "perSecond": 640,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "ANY",
+      "needed": 2.4,
+      "nodeParallel": 1,
+      "customRate": false,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": false,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     },
+     "powerTier": "LV"
+    },
+    "special": {
+     "kind": "POWER",
+     "generator": {
+      "name": "Combustion Generator",
+      "tier": {
+       "label": "LV",
+       "fixed": false
+      },
+      "settings": [
+       {
+        "id": "fuel",
+        "label": "Fuel",
+        "kind": "CHOICE",
+        "choice": "Diesel",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "efficiency",
+        "label": "Efficiency",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 95,
+        "on": false,
+        "enabled": true,
+        "pinned": false,
+        "unit": "%"
+       },
+       {
+        "id": "rotors",
+        "label": "Rotors",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 1250,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "overclock",
+        "label": "Overclock",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "boost",
+        "label": "Oxygen boost",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": true,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "flow",
+        "label": "Fuel flow",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 0.125,
+        "on": false,
+        "enabled": true,
+        "pinned": false,
+        "unit": "L/s"
+       }
+      ],
+      "readings": [
+       {
+        "label": "Efficiency",
+        "value": "95%",
+        "pinned": false
+       },
+       {
+        "label": "Fuel burned",
+        "value": "4 L/s",
+        "pinned": false
+       },
+       {
+        "label": "Lifespan",
+        "value": "1h 20m",
+        "pinned": false
+       }
+      ],
+      "warnings": []
+     }
+    }
+   },
+   "view": {
+    "kind": "POWER",
+    "name": "Combustion Generator",
+    "nameStep": 0,
+    "nameTone": "POWER",
+    "hasPicker": false,
+    "tier": {
+     "label": "LV",
+     "fixed": false,
+     "title": "Tier LV. Click up, right click down."
+    },
+    "empty": false,
+    "sections": [],
+    "gauge": false,
+    "count": {
+     "text": "×2.4",
+     "value": 2.4,
+     "pinned": false,
+     "rule": "ANY",
+     "ruleWord": "Any",
+     "ruleFixed": false,
+     "setText": "",
+     "box": "Set",
+     "prompt": false,
+     "zero": false,
+     "title": "How many of this machine the plan needs."
+    },
+    "chips": [],
+    "stripHeight": 0,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "generator: a choice, numbers with and without a unit, a switch",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "n",
+     "name": "Combustion Generator",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "glanceArt": "icons/chemical_reactor.png",
+     "inputs": [
+      {
+       "key": "input:diesel",
+       "handleId": "input:fluid:diesel",
+       "output": false,
+       "name": "Diesel",
+       "kind": "fluid",
+       "resourceId": "diesel",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "outputs": [
+      {
+       "key": "output:eu",
+       "handleId": "output:power:eu",
+       "output": true,
+       "name": "EU",
+       "kind": "power",
+       "resourceId": "eu",
+       "perSecond": 640,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "ANY",
+      "needed": 2.4,
+      "nodeParallel": 1,
+      "customRate": false,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": false,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     },
+     "powerTier": "LV"
+    },
+    "special": {
+     "kind": "POWER",
+     "generator": {
+      "name": "Combustion Generator",
+      "tier": {
+       "label": "LV",
+       "fixed": false
+      },
+      "settings": [
+       {
+        "id": "fuel",
+        "label": "Fuel",
+        "kind": "CHOICE",
+        "choice": "Diesel",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": true
+       },
+       {
+        "id": "efficiency",
+        "label": "Efficiency",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 95,
+        "on": false,
+        "enabled": true,
+        "pinned": true,
+        "unit": "%"
+       },
+       {
+        "id": "rotors",
+        "label": "Rotors",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 1250,
+        "on": false,
+        "enabled": true,
+        "pinned": true
+       },
+       {
+        "id": "overclock",
+        "label": "Overclock",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": true
+       },
+       {
+        "id": "boost",
+        "label": "Oxygen boost",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": true,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "flow",
+        "label": "Fuel flow",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 0.125,
+        "on": false,
+        "enabled": true,
+        "pinned": false,
+        "unit": "L/s"
+       }
+      ],
+      "readings": [
+       {
+        "label": "Efficiency",
+        "value": "95%",
+        "pinned": false
+       },
+       {
+        "label": "Fuel burned",
+        "value": "4 L/s",
+        "pinned": false
+       },
+       {
+        "label": "Lifespan",
+        "value": "1h 20m",
+        "pinned": false
+       }
+      ],
+      "warnings": []
+     }
+    }
+   },
+   "view": {
+    "kind": "POWER",
+    "name": "Combustion Generator",
+    "nameStep": 0,
+    "nameTone": "POWER",
+    "hasPicker": false,
+    "tier": {
+     "label": "LV",
+     "fixed": false,
+     "title": "Tier LV. Click up, right click down."
+    },
+    "empty": false,
+    "sections": [],
+    "gauge": false,
+    "count": {
+     "text": "×2.4",
+     "value": 2.4,
+     "pinned": false,
+     "rule": "ANY",
+     "ruleWord": "Any",
+     "ruleFixed": false,
+     "setText": "",
+     "box": "Set",
+     "prompt": false,
+     "zero": false,
+     "title": "How many of this machine the plan needs."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "fuel",
+       "label": "Fuel",
+       "value": "Diesel",
+       "reading": false,
+       "warn": false,
+       "title": "Fuel: Diesel",
+       "x": 8,
+       "y": 10,
+       "width": 76
+      },
+      "off": false
+     },
+     {
+      "chip": {
+       "id": "efficiency",
+       "label": "Efficiency",
+       "value": "95 %",
+       "reading": false,
+       "warn": false,
+       "title": "Efficiency: 95 %",
+       "x": 88,
+       "y": 10,
+       "width": 100
+      },
+      "edit": {
+       "text": "95",
+       "scale": 1,
+       "notes": []
+      },
+      "off": false
+     },
+     {
+      "chip": {
+       "id": "rotors",
+       "label": "Rotors",
+       "value": "1250",
+       "reading": false,
+       "warn": false,
+       "title": "Rotors: 1250",
+       "x": 192,
+       "y": 10,
+       "width": 76
+      },
+      "edit": {
+       "text": "1250",
+       "scale": 1,
+       "notes": []
+      },
+      "off": false
+     },
+     {
+      "chip": {
+       "id": "overclock",
+       "label": "Overclock",
+       "value": "Off",
+       "reading": false,
+       "warn": false,
+       "title": "Overclock: Off",
+       "x": 8,
+       "y": 30,
+       "width": 88
+      },
+      "off": false
+     }
+    ],
+    "stripHeight": 60,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "generator: a pinned setting switched off by another is greyed",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "n",
+     "name": "Combustion Generator",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "glanceArt": "icons/chemical_reactor.png",
+     "inputs": [
+      {
+       "key": "input:diesel",
+       "handleId": "input:fluid:diesel",
+       "output": false,
+       "name": "Diesel",
+       "kind": "fluid",
+       "resourceId": "diesel",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "outputs": [
+      {
+       "key": "output:eu",
+       "handleId": "output:power:eu",
+       "output": true,
+       "name": "EU",
+       "kind": "power",
+       "resourceId": "eu",
+       "perSecond": 640,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "ANY",
+      "needed": 2.4,
+      "nodeParallel": 1,
+      "customRate": false,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": false,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     },
+     "powerTier": "LV"
+    },
+    "special": {
+     "kind": "POWER",
+     "generator": {
+      "name": "Combustion Generator",
+      "tier": {
+       "label": "LV",
+       "fixed": false
+      },
+      "settings": [
+       {
+        "id": "fuel",
+        "label": "Fuel",
+        "kind": "CHOICE",
+        "choice": "Diesel",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": true
+       },
+       {
+        "id": "efficiency",
+        "label": "Efficiency",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 95,
+        "on": false,
+        "enabled": false,
+        "pinned": true,
+        "unit": "%"
+       },
+       {
+        "id": "rotors",
+        "label": "Rotors",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 1250,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "overclock",
+        "label": "Overclock",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "boost",
+        "label": "Oxygen boost",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": true,
+        "enabled": false,
+        "pinned": true
+       },
+       {
+        "id": "flow",
+        "label": "Fuel flow",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 0.125,
+        "on": false,
+        "enabled": true,
+        "pinned": false,
+        "unit": "L/s"
+       }
+      ],
+      "readings": [
+       {
+        "label": "Efficiency",
+        "value": "95%",
+        "pinned": false
+       },
+       {
+        "label": "Fuel burned",
+        "value": "4 L/s",
+        "pinned": false
+       },
+       {
+        "label": "Lifespan",
+        "value": "1h 20m",
+        "pinned": false
+       }
+      ],
+      "warnings": []
+     }
+    }
+   },
+   "view": {
+    "kind": "POWER",
+    "name": "Combustion Generator",
+    "nameStep": 0,
+    "nameTone": "POWER",
+    "hasPicker": false,
+    "tier": {
+     "label": "LV",
+     "fixed": false,
+     "title": "Tier LV. Click up, right click down."
+    },
+    "empty": false,
+    "sections": [],
+    "gauge": false,
+    "count": {
+     "text": "×2.4",
+     "value": 2.4,
+     "pinned": false,
+     "rule": "ANY",
+     "ruleWord": "Any",
+     "ruleFixed": false,
+     "setText": "",
+     "box": "Set",
+     "prompt": false,
+     "zero": false,
+     "title": "How many of this machine the plan needs."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "fuel",
+       "label": "Fuel",
+       "value": "Diesel",
+       "reading": false,
+       "warn": false,
+       "title": "Fuel: Diesel",
+       "x": 8,
+       "y": 10,
+       "width": 76
+      },
+      "off": false
+     },
+     {
+      "chip": {
+       "id": "efficiency",
+       "label": "Efficiency",
+       "value": "95 %",
+       "reading": false,
+       "warn": false,
+       "title": "Efficiency: 95 %",
+       "x": 88,
+       "y": 10,
+       "width": 100
+      },
+      "off": true
+     },
+     {
+      "chip": {
+       "id": "boost",
+       "label": "Oxygen boost",
+       "value": "On",
+       "reading": false,
+       "warn": false,
+       "title": "Oxygen boost: On",
+       "x": 192,
+       "y": 10,
+       "width": 100
+      },
+      "off": true
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "generator: a fraction reads as JavaScript spells it",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "n",
+     "name": "Combustion Generator",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "glanceArt": "icons/chemical_reactor.png",
+     "inputs": [
+      {
+       "key": "input:diesel",
+       "handleId": "input:fluid:diesel",
+       "output": false,
+       "name": "Diesel",
+       "kind": "fluid",
+       "resourceId": "diesel",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "outputs": [
+      {
+       "key": "output:eu",
+       "handleId": "output:power:eu",
+       "output": true,
+       "name": "EU",
+       "kind": "power",
+       "resourceId": "eu",
+       "perSecond": 640,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "ANY",
+      "needed": 2.4,
+      "nodeParallel": 1,
+      "customRate": false,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": false,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     },
+     "powerTier": "LV"
+    },
+    "special": {
+     "kind": "POWER",
+     "generator": {
+      "name": "Combustion Generator",
+      "tier": {
+       "label": "LV",
+       "fixed": false
+      },
+      "settings": [
+       {
+        "id": "fuel",
+        "label": "Fuel",
+        "kind": "CHOICE",
+        "choice": "Diesel",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "efficiency",
+        "label": "Efficiency",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 95,
+        "on": false,
+        "enabled": true,
+        "pinned": false,
+        "unit": "%"
+       },
+       {
+        "id": "rotors",
+        "label": "Rotors",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 1250,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "overclock",
+        "label": "Overclock",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "boost",
+        "label": "Oxygen boost",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": true,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "flow",
+        "label": "Fuel flow",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 0.125,
+        "on": false,
+        "enabled": true,
+        "pinned": true,
+        "unit": "L/s"
+       }
+      ],
+      "readings": [
+       {
+        "label": "Efficiency",
+        "value": "95%",
+        "pinned": false
+       },
+       {
+        "label": "Fuel burned",
+        "value": "4 L/s",
+        "pinned": false
+       },
+       {
+        "label": "Lifespan",
+        "value": "1h 20m",
+        "pinned": false
+       }
+      ],
+      "warnings": []
+     }
+    }
+   },
+   "view": {
+    "kind": "POWER",
+    "name": "Combustion Generator",
+    "nameStep": 0,
+    "nameTone": "POWER",
+    "hasPicker": false,
+    "tier": {
+     "label": "LV",
+     "fixed": false,
+     "title": "Tier LV. Click up, right click down."
+    },
+    "empty": false,
+    "sections": [],
+    "gauge": false,
+    "count": {
+     "text": "×2.4",
+     "value": 2.4,
+     "pinned": false,
+     "rule": "ANY",
+     "ruleWord": "Any",
+     "ruleFixed": false,
+     "setText": "",
+     "box": "Set",
+     "prompt": false,
+     "zero": false,
+     "title": "How many of this machine the plan needs."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "flow",
+       "label": "Fuel flow",
+       "value": "0.125 L/s",
+       "reading": false,
+       "warn": false,
+       "title": "Fuel flow: 0.125 L/s",
+       "x": 8,
+       "y": 10,
+       "width": 124
+      },
+      "edit": {
+       "text": "0.125",
+       "scale": 1,
+       "notes": []
+      },
+      "off": false
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "generator: pinned readings after the settings",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "n",
+     "name": "Combustion Generator",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "glanceArt": "icons/chemical_reactor.png",
+     "inputs": [
+      {
+       "key": "input:diesel",
+       "handleId": "input:fluid:diesel",
+       "output": false,
+       "name": "Diesel",
+       "kind": "fluid",
+       "resourceId": "diesel",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "outputs": [
+      {
+       "key": "output:eu",
+       "handleId": "output:power:eu",
+       "output": true,
+       "name": "EU",
+       "kind": "power",
+       "resourceId": "eu",
+       "perSecond": 640,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "ANY",
+      "needed": 2.4,
+      "nodeParallel": 1,
+      "customRate": false,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": false,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     },
+     "powerTier": "LV"
+    },
+    "special": {
+     "kind": "POWER",
+     "generator": {
+      "name": "Combustion Generator",
+      "tier": {
+       "label": "LV",
+       "fixed": false
+      },
+      "settings": [
+       {
+        "id": "fuel",
+        "label": "Fuel",
+        "kind": "CHOICE",
+        "choice": "Diesel",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": true
+       },
+       {
+        "id": "efficiency",
+        "label": "Efficiency",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 95,
+        "on": false,
+        "enabled": true,
+        "pinned": false,
+        "unit": "%"
+       },
+       {
+        "id": "rotors",
+        "label": "Rotors",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 1250,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "overclock",
+        "label": "Overclock",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "boost",
+        "label": "Oxygen boost",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": true,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "flow",
+        "label": "Fuel flow",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 0.125,
+        "on": false,
+        "enabled": true,
+        "pinned": false,
+        "unit": "L/s"
+       }
+      ],
+      "readings": [
+       {
+        "label": "Efficiency",
+        "value": "95%",
+        "pinned": false
+       },
+       {
+        "label": "Fuel burned",
+        "value": "4 L/s",
+        "pinned": true
+       },
+       {
+        "label": "Lifespan",
+        "value": "1h 20m",
+        "pinned": true
+       }
+      ],
+      "warnings": []
+     }
+    }
+   },
+   "view": {
+    "kind": "POWER",
+    "name": "Combustion Generator",
+    "nameStep": 0,
+    "nameTone": "POWER",
+    "hasPicker": false,
+    "tier": {
+     "label": "LV",
+     "fixed": false,
+     "title": "Tier LV. Click up, right click down."
+    },
+    "empty": false,
+    "sections": [],
+    "gauge": false,
+    "count": {
+     "text": "×2.4",
+     "value": 2.4,
+     "pinned": false,
+     "rule": "ANY",
+     "ruleWord": "Any",
+     "ruleFixed": false,
+     "setText": "",
+     "box": "Set",
+     "prompt": false,
+     "zero": false,
+     "title": "How many of this machine the plan needs."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "fuel",
+       "label": "Fuel",
+       "value": "Diesel",
+       "reading": false,
+       "warn": false,
+       "title": "Fuel: Diesel",
+       "x": 8,
+       "y": 10,
+       "width": 76
+      },
+      "off": false
+     },
+     {
+      "chip": {
+       "id": "reading:Fuel burned",
+       "label": "Fuel burned",
+       "value": "4 L/s",
+       "reading": true,
+       "warn": false,
+       "title": "Fuel burned: 4 L/s",
+       "x": 88,
+       "y": 10,
+       "width": 100
+      },
+      "off": false
+     },
+     {
+      "chip": {
+       "id": "reading:Lifespan",
+       "label": "Lifespan",
+       "value": "1h 20m",
+       "reading": true,
+       "warn": false,
+       "title": "Lifespan: 1h 20m",
+       "x": 192,
+       "y": 10,
+       "width": 88
+      },
+      "off": false
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "generator: a reading alone",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "n",
+     "name": "Combustion Generator",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "glanceArt": "icons/chemical_reactor.png",
+     "inputs": [
+      {
+       "key": "input:diesel",
+       "handleId": "input:fluid:diesel",
+       "output": false,
+       "name": "Diesel",
+       "kind": "fluid",
+       "resourceId": "diesel",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "outputs": [
+      {
+       "key": "output:eu",
+       "handleId": "output:power:eu",
+       "output": true,
+       "name": "EU",
+       "kind": "power",
+       "resourceId": "eu",
+       "perSecond": 640,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "ANY",
+      "needed": 2.4,
+      "nodeParallel": 1,
+      "customRate": false,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": false,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     },
+     "powerTier": "LV"
+    },
+    "special": {
+     "kind": "POWER",
+     "generator": {
+      "name": "Combustion Generator",
+      "tier": {
+       "label": "LV",
+       "fixed": false
+      },
+      "settings": [
+       {
+        "id": "fuel",
+        "label": "Fuel",
+        "kind": "CHOICE",
+        "choice": "Diesel",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "efficiency",
+        "label": "Efficiency",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 95,
+        "on": false,
+        "enabled": true,
+        "pinned": false,
+        "unit": "%"
+       },
+       {
+        "id": "rotors",
+        "label": "Rotors",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 1250,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "overclock",
+        "label": "Overclock",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "boost",
+        "label": "Oxygen boost",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": true,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "flow",
+        "label": "Fuel flow",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 0.125,
+        "on": false,
+        "enabled": true,
+        "pinned": false,
+        "unit": "L/s"
+       }
+      ],
+      "readings": [
+       {
+        "label": "Efficiency",
+        "value": "95%",
+        "pinned": true
+       },
+       {
+        "label": "Fuel burned",
+        "value": "4 L/s",
+        "pinned": false
+       },
+       {
+        "label": "Lifespan",
+        "value": "1h 20m",
+        "pinned": false
+       }
+      ],
+      "warnings": []
+     }
+    }
+   },
+   "view": {
+    "kind": "POWER",
+    "name": "Combustion Generator",
+    "nameStep": 0,
+    "nameTone": "POWER",
+    "hasPicker": false,
+    "tier": {
+     "label": "LV",
+     "fixed": false,
+     "title": "Tier LV. Click up, right click down."
+    },
+    "empty": false,
+    "sections": [],
+    "gauge": false,
+    "count": {
+     "text": "×2.4",
+     "value": 2.4,
+     "pinned": false,
+     "rule": "ANY",
+     "ruleWord": "Any",
+     "ruleFixed": false,
+     "setText": "",
+     "box": "Set",
+     "prompt": false,
+     "zero": false,
+     "title": "How many of this machine the plan needs."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "reading:Efficiency",
+       "label": "Efficiency",
+       "value": "95%",
+       "reading": true,
+       "warn": false,
+       "title": "Efficiency: 95%",
+       "x": 8,
+       "y": 10,
+       "width": 82
+      },
+      "off": false
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "generator: every chip, over two rows",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "n",
+     "name": "Combustion Generator",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "glanceArt": "icons/chemical_reactor.png",
+     "inputs": [
+      {
+       "key": "input:diesel",
+       "handleId": "input:fluid:diesel",
+       "output": false,
+       "name": "Diesel",
+       "kind": "fluid",
+       "resourceId": "diesel",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "outputs": [
+      {
+       "key": "output:eu",
+       "handleId": "output:power:eu",
+       "output": true,
+       "name": "EU",
+       "kind": "power",
+       "resourceId": "eu",
+       "perSecond": 640,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "ANY",
+      "needed": 2.4,
+      "nodeParallel": 1,
+      "customRate": false,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": false,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     },
+     "powerTier": "LV"
+    },
+    "special": {
+     "kind": "POWER",
+     "generator": {
+      "name": "Combustion Generator",
+      "tier": {
+       "label": "LV",
+       "fixed": false
+      },
+      "settings": [
+       {
+        "id": "fuel",
+        "label": "Fuel",
+        "kind": "CHOICE",
+        "choice": "Diesel",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": true
+       },
+       {
+        "id": "efficiency",
+        "label": "Efficiency",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 95,
+        "on": false,
+        "enabled": true,
+        "pinned": true,
+        "unit": "%"
+       },
+       {
+        "id": "rotors",
+        "label": "Rotors",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 1250,
+        "on": false,
+        "enabled": true,
+        "pinned": true
+       },
+       {
+        "id": "overclock",
+        "label": "Overclock",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": true
+       },
+       {
+        "id": "boost",
+        "label": "Oxygen boost",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": true,
+        "enabled": true,
+        "pinned": true
+       },
+       {
+        "id": "flow",
+        "label": "Fuel flow",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 0.125,
+        "on": false,
+        "enabled": true,
+        "pinned": true,
+        "unit": "L/s"
+       }
+      ],
+      "readings": [
+       {
+        "label": "Efficiency",
+        "value": "95%",
+        "pinned": true
+       },
+       {
+        "label": "Fuel burned",
+        "value": "4 L/s",
+        "pinned": true
+       },
+       {
+        "label": "Lifespan",
+        "value": "1h 20m",
+        "pinned": true
+       }
+      ],
+      "warnings": []
+     }
+    }
+   },
+   "view": {
+    "kind": "POWER",
+    "name": "Combustion Generator",
+    "nameStep": 0,
+    "nameTone": "POWER",
+    "hasPicker": false,
+    "tier": {
+     "label": "LV",
+     "fixed": false,
+     "title": "Tier LV. Click up, right click down."
+    },
+    "empty": false,
+    "sections": [],
+    "gauge": false,
+    "count": {
+     "text": "×2.4",
+     "value": 2.4,
+     "pinned": false,
+     "rule": "ANY",
+     "ruleWord": "Any",
+     "ruleFixed": false,
+     "setText": "",
+     "box": "Set",
+     "prompt": false,
+     "zero": false,
+     "title": "How many of this machine the plan needs."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "fuel",
+       "label": "Fuel",
+       "value": "Diesel",
+       "reading": false,
+       "warn": false,
+       "title": "Fuel: Diesel",
+       "x": 8,
+       "y": 10,
+       "width": 76
+      },
+      "off": false
+     },
+     {
+      "chip": {
+       "id": "efficiency",
+       "label": "Efficiency",
+       "value": "95 %",
+       "reading": false,
+       "warn": false,
+       "title": "Efficiency: 95 %",
+       "x": 88,
+       "y": 10,
+       "width": 100
+      },
+      "edit": {
+       "text": "95",
+       "scale": 1,
+       "notes": []
+      },
+      "off": false
+     },
+     {
+      "chip": {
+       "id": "rotors",
+       "label": "Rotors",
+       "value": "1250",
+       "reading": false,
+       "warn": false,
+       "title": "Rotors: 1250",
+       "x": 192,
+       "y": 10,
+       "width": 76
+      },
+      "edit": {
+       "text": "1250",
+       "scale": 1,
+       "notes": []
+      },
+      "off": false
+     },
+     {
+      "chip": {
+       "id": "overclock",
+       "label": "Overclock",
+       "value": "Off",
+       "reading": false,
+       "warn": false,
+       "title": "Overclock: Off",
+       "x": 8,
+       "y": 30,
+       "width": 88
+      },
+      "off": false
+     },
+     {
+      "chip": {
+       "id": "boost",
+       "label": "Oxygen boost",
+       "value": "On",
+       "reading": false,
+       "warn": false,
+       "title": "Oxygen boost: On",
+       "x": 100,
+       "y": 30,
+       "width": 100
+      },
+      "off": false
+     },
+     {
+      "chip": {
+       "id": "flow",
+       "label": "Fuel flow",
+       "value": "0.125 L/s",
+       "reading": false,
+       "warn": false,
+       "title": "Fuel flow: 0.125 L/s",
+       "x": 8,
+       "y": 50,
+       "width": 124
+      },
+      "edit": {
+       "text": "0.125",
+       "scale": 1,
+       "notes": []
+      },
+      "off": false
+     },
+     {
+      "chip": {
+       "id": "reading:Efficiency",
+       "label": "Efficiency",
+       "value": "95%",
+       "reading": true,
+       "warn": false,
+       "title": "Efficiency: 95%",
+       "x": 136,
+       "y": 50,
+       "width": 82
+      },
+      "off": false
+     },
+     {
+      "chip": {
+       "id": "reading:Fuel burned",
+       "label": "Fuel burned",
+       "value": "4 L/s",
+       "reading": true,
+       "warn": false,
+       "title": "Fuel burned: 4 L/s",
+       "x": 8,
+       "y": 70,
+       "width": 100
+      },
+      "off": false
+     },
+     {
+      "chip": {
+       "id": "reading:Lifespan",
+       "label": "Lifespan",
+       "value": "1h 20m",
+       "reading": true,
+       "warn": false,
+       "title": "Lifespan: 1h 20m",
+       "x": 112,
+       "y": 70,
+       "width": 88
+      },
+      "off": false
+     }
+    ],
+    "stripHeight": 100,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "generator: a fixed tier unlocks",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "n",
+     "name": "Combustion Generator",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "glanceArt": "icons/chemical_reactor.png",
+     "inputs": [
+      {
+       "key": "input:diesel",
+       "handleId": "input:fluid:diesel",
+       "output": false,
+       "name": "Diesel",
+       "kind": "fluid",
+       "resourceId": "diesel",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "outputs": [
+      {
+       "key": "output:eu",
+       "handleId": "output:power:eu",
+       "output": true,
+       "name": "EU",
+       "kind": "power",
+       "resourceId": "eu",
+       "perSecond": 640,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "ANY",
+      "needed": 2.4,
+      "nodeParallel": 1,
+      "customRate": false,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": false,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     },
+     "powerTier": "LV"
+    },
+    "special": {
+     "kind": "POWER",
+     "generator": {
+      "name": "Combustion Generator",
+      "tier": {
+       "label": "EV",
+       "fixed": true
+      },
+      "settings": [
+       {
+        "id": "fuel",
+        "label": "Fuel",
+        "kind": "CHOICE",
+        "choice": "Diesel",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "efficiency",
+        "label": "Efficiency",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 95,
+        "on": false,
+        "enabled": true,
+        "pinned": false,
+        "unit": "%"
+       },
+       {
+        "id": "rotors",
+        "label": "Rotors",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 1250,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "overclock",
+        "label": "Overclock",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "boost",
+        "label": "Oxygen boost",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": true,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "flow",
+        "label": "Fuel flow",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 0.125,
+        "on": false,
+        "enabled": true,
+        "pinned": false,
+        "unit": "L/s"
+       }
+      ],
+      "readings": [
+       {
+        "label": "Efficiency",
+        "value": "95%",
+        "pinned": false
+       },
+       {
+        "label": "Fuel burned",
+        "value": "4 L/s",
+        "pinned": false
+       },
+       {
+        "label": "Lifespan",
+        "value": "1h 20m",
+        "pinned": false
+       }
+      ],
+      "warnings": []
+     }
+    }
+   },
+   "view": {
+    "kind": "POWER",
+    "name": "Combustion Generator",
+    "nameStep": 0,
+    "nameTone": "POWER",
+    "hasPicker": false,
+    "tier": {
+     "label": "EV",
+     "fixed": true,
+     "title": "Unlocks at EV"
+    },
+    "empty": false,
+    "sections": [],
+    "gauge": false,
+    "count": {
+     "text": "×2.4",
+     "value": 2.4,
+     "pinned": false,
+     "rule": "ANY",
+     "ruleWord": "Any",
+     "ruleFixed": false,
+     "setText": "",
+     "box": "Set",
+     "prompt": false,
+     "zero": false,
+     "title": "How many of this machine the plan needs."
+    },
+    "chips": [],
+    "stripHeight": 0,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "generator: no tier select",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "n",
+     "name": "Combustion Generator",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "glanceArt": "icons/chemical_reactor.png",
+     "inputs": [
+      {
+       "key": "input:diesel",
+       "handleId": "input:fluid:diesel",
+       "output": false,
+       "name": "Diesel",
+       "kind": "fluid",
+       "resourceId": "diesel",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "outputs": [
+      {
+       "key": "output:eu",
+       "handleId": "output:power:eu",
+       "output": true,
+       "name": "EU",
+       "kind": "power",
+       "resourceId": "eu",
+       "perSecond": 640,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "ANY",
+      "needed": 2.4,
+      "nodeParallel": 1,
+      "customRate": false,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": false,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     },
+     "powerTier": "LV"
+    },
+    "special": {
+     "kind": "POWER",
+     "generator": {
+      "name": "Solar Panel",
+      "settings": [
+       {
+        "id": "fuel",
+        "label": "Fuel",
+        "kind": "CHOICE",
+        "choice": "Diesel",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "efficiency",
+        "label": "Efficiency",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 95,
+        "on": false,
+        "enabled": true,
+        "pinned": false,
+        "unit": "%"
+       },
+       {
+        "id": "rotors",
+        "label": "Rotors",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 1250,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "overclock",
+        "label": "Overclock",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "boost",
+        "label": "Oxygen boost",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": true,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "flow",
+        "label": "Fuel flow",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 0.125,
+        "on": false,
+        "enabled": true,
+        "pinned": false,
+        "unit": "L/s"
+       }
+      ],
+      "readings": [
+       {
+        "label": "Efficiency",
+        "value": "95%",
+        "pinned": false
+       },
+       {
+        "label": "Fuel burned",
+        "value": "4 L/s",
+        "pinned": false
+       },
+       {
+        "label": "Lifespan",
+        "value": "1h 20m",
+        "pinned": false
+       }
+      ],
+      "warnings": []
+     }
+    }
+   },
+   "view": {
+    "kind": "POWER",
+    "name": "Solar Panel",
+    "nameStep": 0,
+    "nameTone": "POWER",
+    "hasPicker": false,
+    "empty": false,
+    "sections": [],
+    "gauge": false,
+    "count": {
+     "text": "×2.4",
+     "value": 2.4,
+     "pinned": false,
+     "rule": "ANY",
+     "ruleWord": "Any",
+     "ruleFixed": false,
+     "setText": "",
+     "box": "Set",
+     "prompt": false,
+     "zero": false,
+     "title": "How many of this machine the plan needs."
+    },
+    "chips": [],
+    "stripHeight": 0,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "generator: a long name beside its tier",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "n",
+     "name": "Combustion Generator",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "glanceArt": "icons/chemical_reactor.png",
+     "inputs": [
+      {
+       "key": "input:diesel",
+       "handleId": "input:fluid:diesel",
+       "output": false,
+       "name": "Diesel",
+       "kind": "fluid",
+       "resourceId": "diesel",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "outputs": [
+      {
+       "key": "output:eu",
+       "handleId": "output:power:eu",
+       "output": true,
+       "name": "EU",
+       "kind": "power",
+       "resourceId": "eu",
+       "perSecond": 640,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "ANY",
+      "needed": 2.4,
+      "nodeParallel": 1,
+      "customRate": false,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": false,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     },
+     "powerTier": "LV"
+    },
+    "special": {
+     "kind": "POWER",
+     "generator": {
+      "name": "Large Gas Turbine (Huge Turbine Rotor)",
+      "tier": {
+       "label": "LV",
+       "fixed": false
+      },
+      "settings": [
+       {
+        "id": "fuel",
+        "label": "Fuel",
+        "kind": "CHOICE",
+        "choice": "Diesel",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "efficiency",
+        "label": "Efficiency",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 95,
+        "on": false,
+        "enabled": true,
+        "pinned": false,
+        "unit": "%"
+       },
+       {
+        "id": "rotors",
+        "label": "Rotors",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 1250,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "overclock",
+        "label": "Overclock",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "boost",
+        "label": "Oxygen boost",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": true,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "flow",
+        "label": "Fuel flow",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 0.125,
+        "on": false,
+        "enabled": true,
+        "pinned": false,
+        "unit": "L/s"
+       }
+      ],
+      "readings": [
+       {
+        "label": "Efficiency",
+        "value": "95%",
+        "pinned": false
+       },
+       {
+        "label": "Fuel burned",
+        "value": "4 L/s",
+        "pinned": false
+       },
+       {
+        "label": "Lifespan",
+        "value": "1h 20m",
+        "pinned": false
+       }
+      ],
+      "warnings": []
+     }
+    }
+   },
+   "view": {
+    "kind": "POWER",
+    "name": "Large Gas Turbine (Huge Turbine Rotor)",
+    "nameStep": 2,
+    "nameTone": "POWER",
+    "hasPicker": false,
+    "tier": {
+     "label": "LV",
+     "fixed": false,
+     "title": "Tier LV. Click up, right click down."
+    },
+    "empty": false,
+    "sections": [],
+    "gauge": false,
+    "count": {
+     "text": "×2.4",
+     "value": 2.4,
+     "pinned": false,
+     "rule": "ANY",
+     "ruleWord": "Any",
+     "ruleFixed": false,
+     "setText": "",
+     "box": "Set",
+     "prompt": false,
+     "zero": false,
+     "title": "How many of this machine the plan needs."
+    },
+    "chips": [],
+    "stripHeight": 0,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "generator: its warnings",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "n",
+     "name": "Combustion Generator",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "glanceArt": "icons/chemical_reactor.png",
+     "inputs": [
+      {
+       "key": "input:diesel",
+       "handleId": "input:fluid:diesel",
+       "output": false,
+       "name": "Diesel",
+       "kind": "fluid",
+       "resourceId": "diesel",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "outputs": [
+      {
+       "key": "output:eu",
+       "handleId": "output:power:eu",
+       "output": true,
+       "name": "EU",
+       "kind": "power",
+       "resourceId": "eu",
+       "perSecond": 640,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "ANY",
+      "needed": 2.4,
+      "nodeParallel": 1,
+      "customRate": false,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": false,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     },
+     "powerTier": "LV"
+    },
+    "special": {
+     "kind": "POWER",
+     "generator": {
+      "name": "Combustion Generator",
+      "tier": {
+       "label": "LV",
+       "fixed": false
+      },
+      "settings": [
+       {
+        "id": "fuel",
+        "label": "Fuel",
+        "kind": "CHOICE",
+        "choice": "Diesel",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "efficiency",
+        "label": "Efficiency",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 95,
+        "on": false,
+        "enabled": true,
+        "pinned": false,
+        "unit": "%"
+       },
+       {
+        "id": "rotors",
+        "label": "Rotors",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 1250,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "overclock",
+        "label": "Overclock",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "boost",
+        "label": "Oxygen boost",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": true,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "flow",
+        "label": "Fuel flow",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 0.125,
+        "on": false,
+        "enabled": true,
+        "pinned": false,
+        "unit": "L/s"
+       }
+      ],
+      "readings": [
+       {
+        "label": "Efficiency",
+        "value": "95%",
+        "pinned": false
+       },
+       {
+        "label": "Fuel burned",
+        "value": "4 L/s",
+        "pinned": false
+       },
+       {
+        "label": "Lifespan",
+        "value": "1h 20m",
+        "pinned": false
+       }
+      ],
+      "warnings": [
+       "Piped fuel never burns here: only cells do.",
+       "Needs a dynamo hatch of its tier."
+      ]
+     }
+    }
+   },
+   "view": {
+    "kind": "POWER",
+    "name": "Combustion Generator",
+    "nameStep": 0,
+    "nameTone": "POWER",
+    "hasPicker": false,
+    "tier": {
+     "label": "LV",
+     "fixed": false,
+     "title": "Tier LV. Click up, right click down."
+    },
+    "empty": false,
+    "sections": [],
+    "gauge": false,
+    "count": {
+     "text": "×2.4",
+     "value": 2.4,
+     "pinned": false,
+     "rule": "ANY",
+     "ruleWord": "Any",
+     "ruleFixed": false,
+     "setText": "",
+     "box": "Set",
+     "prompt": false,
+     "zero": false,
+     "title": "How many of this machine the plan needs."
+    },
+    "chips": [],
+    "stripHeight": 0,
+    "warnings": [
+     "Piped fuel never burns here: only cells do.",
+     "Needs a dynamo hatch of its tier."
+    ],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "generator: amps on the Amps dial",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "amps",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "n",
+     "name": "Combustion Generator",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "glanceArt": "icons/chemical_reactor.png",
+     "inputs": [
+      {
+       "key": "input:diesel",
+       "handleId": "input:fluid:diesel",
+       "output": false,
+       "name": "Diesel",
+       "kind": "fluid",
+       "resourceId": "diesel",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "outputs": [
+      {
+       "key": "output:eu",
+       "handleId": "output:power:eu",
+       "output": true,
+       "name": "EU",
+       "kind": "power",
+       "resourceId": "eu",
+       "perSecond": 640,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "ANY",
+      "needed": 2.4,
+      "nodeParallel": 1,
+      "customRate": false,
+      "unset": false
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": false,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     },
+     "powerTier": "LV"
+    },
+    "special": {
+     "kind": "POWER",
+     "generator": {
+      "name": "Combustion Generator",
+      "tier": {
+       "label": "LV",
+       "fixed": false
+      },
+      "settings": [
+       {
+        "id": "fuel",
+        "label": "Fuel",
+        "kind": "CHOICE",
+        "choice": "Diesel",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": true
+       },
+       {
+        "id": "efficiency",
+        "label": "Efficiency",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 95,
+        "on": false,
+        "enabled": true,
+        "pinned": false,
+        "unit": "%"
+       },
+       {
+        "id": "rotors",
+        "label": "Rotors",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 1250,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "overclock",
+        "label": "Overclock",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "boost",
+        "label": "Oxygen boost",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": true,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "flow",
+        "label": "Fuel flow",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 0.125,
+        "on": false,
+        "enabled": true,
+        "pinned": false,
+        "unit": "L/s"
+       }
+      ],
+      "readings": [
+       {
+        "label": "Efficiency",
+        "value": "95%",
+        "pinned": false
+       },
+       {
+        "label": "Fuel burned",
+        "value": "4 L/s",
+        "pinned": false
+       },
+       {
+        "label": "Lifespan",
+        "value": "1h 20m",
+        "pinned": false
+       }
+      ],
+      "warnings": []
+     }
+    }
+   },
+   "view": {
+    "kind": "POWER",
+    "name": "Combustion Generator",
+    "nameStep": 0,
+    "nameTone": "POWER",
+    "hasPicker": false,
+    "tier": {
+     "label": "LV",
+     "fixed": false,
+     "title": "Tier LV. Click up, right click down."
+    },
+    "empty": false,
+    "sections": [],
+    "gauge": false,
+    "count": {
+     "text": "×2.4",
+     "value": 2.4,
+     "pinned": false,
+     "rule": "ANY",
+     "ruleWord": "Any",
+     "ruleFixed": false,
+     "setText": "",
+     "box": "Set",
+     "prompt": false,
+     "zero": false,
+     "title": "How many of this machine the plan needs."
+    },
+    "chips": [
+     {
+      "chip": {
+       "id": "fuel",
+       "label": "Fuel",
+       "value": "Diesel",
+       "reading": false,
+       "warn": false,
+       "title": "Fuel: Diesel",
+       "x": 8,
+       "y": 10,
+       "width": 76
+      },
+      "off": false
+     }
+    ],
+    "stripHeight": 40,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "generator: Exactly 2",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "n",
+     "name": "Combustion Generator",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "glanceArt": "icons/chemical_reactor.png",
+     "inputs": [
+      {
+       "key": "input:diesel",
+       "handleId": "input:fluid:diesel",
+       "output": false,
+       "name": "Diesel",
+       "kind": "fluid",
+       "resourceId": "diesel",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "outputs": [
+      {
+       "key": "output:eu",
+       "handleId": "output:power:eu",
+       "output": true,
+       "name": "EU",
+       "kind": "power",
+       "resourceId": "eu",
+       "perSecond": 640,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "EXACT",
+      "needed": 2.4,
+      "nodeParallel": 1,
+      "customRate": false,
+      "unset": false,
+      "pin": 2
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": false,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     },
+     "powerTier": "LV"
+    },
+    "special": {
+     "kind": "POWER",
+     "generator": {
+      "name": "Combustion Generator",
+      "tier": {
+       "label": "LV",
+       "fixed": false
+      },
+      "settings": [
+       {
+        "id": "fuel",
+        "label": "Fuel",
+        "kind": "CHOICE",
+        "choice": "Diesel",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "efficiency",
+        "label": "Efficiency",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 95,
+        "on": false,
+        "enabled": true,
+        "pinned": false,
+        "unit": "%"
+       },
+       {
+        "id": "rotors",
+        "label": "Rotors",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 1250,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "overclock",
+        "label": "Overclock",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "boost",
+        "label": "Oxygen boost",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": true,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "flow",
+        "label": "Fuel flow",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 0.125,
+        "on": false,
+        "enabled": true,
+        "pinned": false,
+        "unit": "L/s"
+       }
+      ],
+      "readings": [
+       {
+        "label": "Efficiency",
+        "value": "95%",
+        "pinned": false
+       },
+       {
+        "label": "Fuel burned",
+        "value": "4 L/s",
+        "pinned": false
+       },
+       {
+        "label": "Lifespan",
+        "value": "1h 20m",
+        "pinned": false
+       }
+      ],
+      "warnings": []
+     }
+    }
+   },
+   "view": {
+    "kind": "POWER",
+    "name": "Combustion Generator",
+    "nameStep": 0,
+    "nameTone": "POWER",
+    "hasPicker": false,
+    "tier": {
+     "label": "LV",
+     "fixed": false,
+     "title": "Tier LV. Click up, right click down."
+    },
+    "empty": false,
+    "sections": [],
+    "gauge": false,
+    "count": {
+     "text": "×2",
+     "value": 2,
+     "pinned": true,
+     "rule": "EXACT",
+     "ruleWord": "Exactly",
+     "ruleFixed": false,
+     "set": 2,
+     "setText": "2",
+     "box": "2",
+     "prompt": false,
+     "zero": false,
+     "title": "Runs exactly this many. A gap shows as a forced flow."
+    },
+    "chips": [],
+    "stripHeight": 0,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": false,
+    "pick": false,
+    "cropKey": false
+   }
+  },
+  {
+   "name": "generator: nothing sets it",
+   "input": {
+    "dials": {
+     "rate": "SECOND",
+     "power": "eu",
+     "averageDraw": true
+    },
+    "card": {
+     "nodeId": "n",
+     "name": "Combustion Generator",
+     "hasPicker": false,
+     "tierFixed": false,
+     "hatchControl": false,
+     "parallel": 1,
+     "structuralParallel": 1,
+     "pinned": [],
+     "glanceArt": "icons/chemical_reactor.png",
+     "inputs": [
+      {
+       "key": "input:diesel",
+       "handleId": "input:fluid:diesel",
+       "output": false,
+       "name": "Diesel",
+       "kind": "fluid",
+       "resourceId": "diesel",
+       "perSecond": 4,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "outputs": [
+      {
+       "key": "output:eu",
+       "handleId": "output:power:eu",
+       "output": true,
+       "name": "EU",
+       "kind": "power",
+       "resourceId": "eu",
+       "perSecond": 640,
+       "wired": true,
+       "alternatives": 1,
+       "free": false
+      }
+     ],
+     "count": {
+      "rule": "ANY",
+      "needed": 2.4,
+      "nodeParallel": 1,
+      "customRate": false,
+      "unset": true
+     },
+     "forced": [],
+     "leftovers": [],
+     "cardNames": {},
+     "selected": false,
+     "menu": {
+      "calm": false,
+      "locked": false,
+      "ownsRecipe": false,
+      "shared": false,
+      "holder": false,
+      "emptyCropFarm": false,
+      "tasks": false,
+      "readOnly": false
+     },
+     "powerTier": "LV"
+    },
+    "special": {
+     "kind": "POWER",
+     "generator": {
+      "name": "Combustion Generator",
+      "tier": {
+       "label": "LV",
+       "fixed": false
+      },
+      "settings": [
+       {
+        "id": "fuel",
+        "label": "Fuel",
+        "kind": "CHOICE",
+        "choice": "Diesel",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "efficiency",
+        "label": "Efficiency",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 95,
+        "on": false,
+        "enabled": true,
+        "pinned": false,
+        "unit": "%"
+       },
+       {
+        "id": "rotors",
+        "label": "Rotors",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 1250,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "overclock",
+        "label": "Overclock",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": false,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "boost",
+        "label": "Oxygen boost",
+        "kind": "TOGGLE",
+        "choice": "",
+        "number": 0,
+        "on": true,
+        "enabled": true,
+        "pinned": false
+       },
+       {
+        "id": "flow",
+        "label": "Fuel flow",
+        "kind": "NUMBER",
+        "choice": "",
+        "number": 0.125,
+        "on": false,
+        "enabled": true,
+        "pinned": false,
+        "unit": "L/s"
+       }
+      ],
+      "readings": [
+       {
+        "label": "Efficiency",
+        "value": "95%",
+        "pinned": false
+       },
+       {
+        "label": "Fuel burned",
+        "value": "4 L/s",
+        "pinned": false
+       },
+       {
+        "label": "Lifespan",
+        "value": "1h 20m",
+        "pinned": false
+       }
+      ],
+      "warnings": []
+     }
+    }
+   },
+   "view": {
+    "kind": "POWER",
+    "name": "Combustion Generator",
+    "nameStep": 0,
+    "nameTone": "POWER",
+    "hasPicker": false,
+    "tier": {
+     "label": "LV",
+     "fixed": false,
+     "title": "Tier LV. Click up, right click down."
+    },
+    "empty": false,
+    "sections": [],
+    "gauge": false,
+    "count": {
+     "text": "×2.4",
+     "value": 2.4,
+     "pinned": false,
+     "rule": "ANY",
+     "ruleWord": "Any",
+     "ruleFixed": false,
+     "setText": "",
+     "box": "Set",
+     "prompt": true,
+     "zero": false,
+     "title": "How many of this machine the plan needs."
+    },
+    "chips": [],
+    "stripHeight": 0,
+    "warnings": [],
+    "cannotRun": false,
+    "unset": true,
     "pick": false,
     "cropKey": false
    }

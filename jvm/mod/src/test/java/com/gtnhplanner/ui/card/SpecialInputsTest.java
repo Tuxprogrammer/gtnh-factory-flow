@@ -120,6 +120,131 @@ class SpecialInputsTest {
                 .scale());
     }
 
+    /** A generator at its defaults: a power card on its source. */
+    private static CardModel generator(final String sourceId) {
+        com.gtnhplanner.harness.GtnhFlowLoader.ensureDefaultMachineProfile();
+        final Node n = new Node(Uuid.randomUUID(), 0, 0);
+        n.powerSource = sourceId;
+        final com.gtnhplanner.power.PowerSource source = com.gtnhplanner.power.PowerRegistry.get(sourceId);
+        n.machineName = source.name();
+        // Its model's readings and warnings, without the flows (a test has no fluids to name them by).
+        final com.gtnhplanner.power.PowerModel model = source.compute(n.powerSettings);
+        n.powerModel = new com.gtnhplanner.power.PowerModel(
+            model.euPerTick(),
+            List.of(),
+            List.of(),
+            model.stats(),
+            model.warnings());
+        return CardModel.of(n, null, (output, index) -> true);
+    }
+
+    @Test
+    void aGeneratorIsItsSettingsAndReadingsAsThePlanPinsThem() {
+        final CardModel m = generator("large-rocket-engine");
+        assertNull(SpecialInputs.holder(m, new Graph()));
+        final String reading = m.core.power()
+            .stats()
+            .get(0)
+            .label();
+        final Graph plan = new Graph();
+        plan.settingPins.put(
+            "power:large-rocket-engine",
+            new java.util.ArrayList<>(List.of("power:throttle", "reading:" + reading)));
+        final SpecialInput in = SpecialInputs.of(m, plan);
+        assertEquals(SpecialInput.Kind.POWER, in.kind());
+        final SpecialInput.Generator g = in.generator();
+        assertEquals("Large Rocket Engine", g.name());
+        assertNull(g.tier(), "no tier select: no tier chip");
+        assertEquals(
+            new SpecialInput.Setting(
+                "throttle",
+                "Fuel rate",
+                SpecialInput.SettingKind.NUMBER,
+                "",
+                500,
+                "L/s",
+                false,
+                true,
+                true),
+            g.settings()
+                .get(1));
+        assertTrue(
+            g.readings()
+                .get(0)
+                .pinned());
+
+        // The strip: the number reads "N unit" under its plain label, the reading after it, each the card's control.
+        final CardInput.Dials dials = new CardInput.Dials(RateUnit.SECOND, "eu", true);
+        final CardView base = CardViews.card(card(), dials, SIX, CardViews.Host.MOD);
+        final SpecialView v = SpecialViews.special(in, card(), base, dials, SIX, CardViews.Host.MOD);
+        final List<SettingControls.Control> chips = SpecialInputs.controls(v, m);
+        assertEquals(2, chips.size());
+        assertEquals(
+            "power:throttle",
+            chips.get(0)
+                .key());
+        assertEquals(
+            "Fuel rate",
+            chips.get(0)
+                .label());
+        assertEquals(
+            "500 L/s",
+            chips.get(0)
+                .value());
+        assertEquals(
+            "reading:" + reading,
+            chips.get(1)
+                .key());
+        assertEquals(
+            SettingControls.Type.READING,
+            chips.get(1)
+                .type());
+    }
+
+    @Test
+    void aGeneratorsPinnedSettingSwitchedOffIsGreyedNotHidden() {
+        final CardModel m = generator("large-rocket-engine");
+        final SpecialInput in = SpecialInputs.of(m, new Graph());
+        // Plant a pinned setting the others switch off: it stays on the strip, off and not typed into.
+        final SpecialInput.Setting throttle = in.generator()
+            .settings()
+            .get(1);
+        final SpecialInput off = new SpecialInput(
+            SpecialInput.Kind.POWER,
+            null,
+            new SpecialInput.Generator(
+                "Large Rocket Engine",
+                null,
+                List.of(
+                    new SpecialInput.Setting(
+                        throttle.id(),
+                        throttle.label(),
+                        throttle.kind(),
+                        throttle.choice(),
+                        throttle.number(),
+                        throttle.unit(),
+                        throttle.on(),
+                        false,
+                        true)),
+                List.of(),
+                List.of()));
+        final CardInput.Dials dials = new CardInput.Dials(RateUnit.SECOND, "eu", true);
+        final CardView base = CardViews.card(card(), dials, SIX, CardViews.Host.MOD);
+        final SpecialView v = SpecialViews.special(off, card(), base, dials, SIX, CardViews.Host.MOD);
+        assertTrue(
+            v.chips()
+                .get(0)
+                .off());
+        assertNull(
+            v.chips()
+                .get(0)
+                .edit());
+        assertTrue(
+            !SpecialInputs.controls(v, m)
+                .get(0)
+                .enabled());
+    }
+
     /** A custom rate card's facts as the card view takes them: no rows, Exactly one. */
     private static CardInput card() {
         return new CardInput(

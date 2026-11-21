@@ -283,6 +283,7 @@ function SpecialChipView({
         nodeId={nodeId}
         control={control}
         needK={needK}
+        off={chip.off}
         onStep={onStep}
         onOpen={onOpen}
         wasClick={wasClick}

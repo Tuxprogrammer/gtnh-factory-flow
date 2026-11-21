@@ -496,7 +496,7 @@ class CloudBoardsTest {
                 .toString(),
             "the website's words: " + pins);
         assertEquals(
-            "[\"fuel\"]",
+            "[\"fuel\",\"reading:output\"]",
             pins.get("power:steam-boiler")
                 .toString());
         assertFalse(
@@ -506,7 +506,7 @@ class CloudBoardsTest {
         // The website takes the coil off and pins a machine the board has no card of.
         final JsonObject edited = new JsonObject();
         edited.add(handler, new JsonParser().parse("[\"circuit\"]"));
-        edited.add("power:steam-boiler", new JsonParser().parse("[\"fuel\"]"));
+        edited.add("power:steam-boiler", new JsonParser().parse("[\"fuel\",\"reading:output\"]"));
         edited.add("handler:elsewhere", new JsonParser().parse("[\"mode\"]"));
         final JsonObject f = new JsonObject();
         f.add("settingPins", edited);

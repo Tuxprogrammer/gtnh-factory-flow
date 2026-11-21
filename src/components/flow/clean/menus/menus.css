@@ -218,6 +218,18 @@
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
+/* A reading that can be pinned to the card: its pin before the label, as a setting row's. */
+.cs-f[data-pin] {
+  grid-template-columns: 20px 81px minmax(0, 1fr) auto;
+  padding-left: 8px;
+  align-items: center;
+}
+.cs-f[data-pin] .cs-pin {
+  height: 20px;
+}
+.cs-f:hover .cs-pin {
+  color: #a3a3a3;
+}
 .cs-f:nth-child(even) {
   background: rgba(255, 255, 255, 0.03);
 }

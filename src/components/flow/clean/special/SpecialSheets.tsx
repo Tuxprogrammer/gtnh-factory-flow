@@ -9,7 +9,7 @@ import { OptionListMenu } from "../menus/OptionListMenu";
  * The gear sheet of the cards whose settings are not a machine's controls (a generator's knobs, the custom rate's
  * dial). The same menu portal and the same rows as the machine settings sheet (`menus/SettingsSheet`): a Settings
  * column, each setting a row with its pin, name and well, and beside it the readings the card keeps (a generator's
- * efficiency, its flow, its lifespans).
+ * efficiency, its flow, its lifespans), each with a pin that shows it on the card's strip.
  */
 export interface SheetRow {
   id: string;
@@ -50,7 +50,7 @@ export function SpecialSheet({
 }: {
   anchor: MenuAnchor;
   rows: SheetRow[];
-  readings: Array<{ label: string; value: string }>;
+  readings: Array<{ label: string; value: string; pinned?: boolean; onPin?: () => void }>;
   locked: boolean;
   foot?: string;
   onClose: () => void;
@@ -174,7 +174,29 @@ export function SpecialSheet({
               <div className="cs-col" style={{ flex: "1 1 auto" }}>
                 <div className="cs-title">Working</div>
                 {readings.map((reading) => (
-                  <div key={reading.label} className="cs-f">
+                  <div
+                    key={reading.label}
+                    className="cs-f"
+                    data-pin={reading.onPin ? "" : undefined}
+                  >
+                    {reading.onPin ? (
+                      <button
+                        type="button"
+                        className="cs-pin"
+                        data-on={reading.pinned ? "" : undefined}
+                        aria-pressed={reading.pinned === true}
+                        aria-label={
+                          reading.pinned
+                            ? `Unpin ${reading.label} from the card`
+                            : `Pin ${reading.label} to the card`
+                        }
+                        onClick={() => {
+                          if (!locked) reading.onPin?.();
+                        }}
+                      >
+                        <PinGlyph />
+                      </button>
+                    ) : null}
                     <span className="cs-f-label">{reading.label}</span>
                     <span className="cs-f-math" />
                     <span className="cs-f-result">{reading.value}</span>

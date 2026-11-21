@@ -134,10 +134,11 @@ public final class PlanPins {
     /**
      * The website's setting pins onto the board ({@code site}), what only the board spells kept from the game's data
      * ({@code had}): a pin key the website cannot spell, and on a machine both have the settings the website has no
-     * word for.
+     * word for. The one reader of a plan's pins: a shared plan (PlanRead) and a plan file, paste or download
+     * (importer/FfImport, with {@code had} empty) both read them here.
      */
-    static void readPins(@Nullable final JsonElement site, final Map<String, List<String>> had, final Graph g,
-        final CloudGame game) {
+    public static void readPins(@Nullable final JsonElement site, final Map<String, List<String>> had, final Graph g,
+        final PlanExport.World game) {
         final Map<String, List<String>> pins = new LinkedHashMap<>();
         if (site != null && site.isJsonObject()) for (final Map.Entry<String, JsonElement> e : site.getAsJsonObject()
             .entrySet()) {
@@ -175,7 +176,7 @@ public final class PlanPins {
     }
 
     /** The board's keys for a website pin key: a power source as itself, a handler id by its cards' machine names. */
-    private static List<String> boardMachines(final Graph g, final CloudGame game, final String key) {
+    private static List<String> boardMachines(final Graph g, final PlanExport.World game, final String key) {
         final Set<String> out = new LinkedHashSet<>();
         if (key.startsWith(POWER)) out.add(key);
         else for (final Node n : g.getNodes()) {

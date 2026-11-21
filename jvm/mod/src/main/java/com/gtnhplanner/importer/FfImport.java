@@ -25,6 +25,18 @@ public final class FfImport {
      * @throws FfImportException when the text is not a plan
      */
     public static FfConverter.Result importFromText(final String text, final RecipeIndex index, final NodeMaker maker) {
+        return importFromText(text, index, maker, null);
+    }
+
+    /**
+     * Reads and converts a plan, its setting pins read onto the board with the export's names for its machines
+     * ({@code world}, as a shared plan reads them: cloud/map/PlanPins). With no {@code world} the pins only ride along
+     * in what the board keeps for the plan.
+     *
+     * @throws FfImportException when the text is not a plan
+     */
+    public static FfConverter.Result importFromText(final String text, final RecipeIndex index, final NodeMaker maker,
+        @javax.annotation.Nullable final com.gtnhplanner.library.PlanExport.World world) {
         final com.google.gson.JsonObject root = FfPlanParser.root(FfPlanCode.toJson(text));
         final java.util.Map<String, Object> tree = com.gtnhplanner.data.flowchart.GsonTrees.map(root);
         // With the plan's tree: a card the board cannot run comes in as a display-only card.
@@ -42,7 +54,18 @@ public final class FfImport {
         // Its task board, as the plan spells it.
         com.gtnhplanner.data.flowchart.Tasks.read(root, result.graph());
         // What the board has no place for, kept to go back out with the plan (core-codec SiteCarry).
-        result.graph().site.putAll(com.gtnhplanner.core.codec.SiteCarry.carry(tree, result.placed()));
+        final java.util.Map<String, Object> site = com.gtnhplanner.core.codec.SiteCarry.carry(tree, result.placed());
+        if (world != null) {
+            // Its setting pins on the board, read as a shared plan's are: the board writes them all back (a machine
+            // with no card here as site:<key>), so the plan's own copy is not kept beside them.
+            com.gtnhplanner.cloud.map.PlanPins
+                .readPins(root.get("settingPins"), java.util.Map.of(), result.graph(), world);
+            if (site.get("plan") instanceof final java.util.Map<?, ?> own) {
+                own.remove("settingPins");
+                if (own.isEmpty()) site.remove("plan");
+            }
+        }
+        result.graph().site.putAll(site);
         return result;
     }
 }

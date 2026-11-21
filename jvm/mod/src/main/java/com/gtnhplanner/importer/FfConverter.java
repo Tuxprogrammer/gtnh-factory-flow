@@ -510,7 +510,15 @@ public final class FfConverter {
                         : recipe.inputs()
                             .getFirst();
             if (slot == null) {
-                report.add(Kind.DROPPED, name, "it holds no resource; left out");
+                // One holding nothing yet: the empty card it is, at its dial, taking what is wired to it.
+                final Node node = FfCards.emptyCustomRate(ctx, card, px(card.x()), py(card.y()));
+                if (node == null) {
+                    report.add(Kind.DROPPED, name, "it holds no resource; left out");
+                    return;
+                }
+                graph.addNode(node);
+                placed.computeIfAbsent(card.id(), k -> new HashMap<>())
+                    .put(0, new Placed(node, card, recipe, Map.of(), 0, name));
                 return;
             }
             customRates.put(card.id(), new CustomRate(card, slot, supply));

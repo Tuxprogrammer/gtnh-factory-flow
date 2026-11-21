@@ -296,6 +296,18 @@ public final class FfCards {
         final List<FfSlot> side = takesFluid ? recipe.outputs() : recipe.inputs();
         FfSlot cell = null;
         for (final FfSlot s : side) if ("item".equals(s.kind()) && cell == null) cell = s;
+        if (cell == null && recipe.inputs()
+            .isEmpty()
+            && recipe.outputs()
+                .isEmpty()) {
+            // A tank holding nothing yet: the empty one, taking the cell or fluid wired to it.
+            final Node empty = ctx.maker()
+                .makePower(com.gtnhplanner.power.FluidTank.ID, com.gtnhplanner.power.FluidTank.fresh());
+            if (empty == null) return null;
+            empty.x = x;
+            empty.y = y;
+            return empty;
+        }
         if (cell == null) return null;
         final Node node = ctx.maker()
             .makeTank(!takesFluid, cell.id());
@@ -360,6 +372,30 @@ public final class FfCards {
             }
         }
         return ports.find(node, output, kind, want);
+    }
+
+    /**
+     * A custom rate card holding nothing yet, at the plan's dial (its rate a second and which way it runs; the
+     * website's default where the plan has none) and count, as {@code FfConverter.makeCustomRate} sets a held one's.
+     * Null when the maker builds none.
+     */
+    @Nullable
+    public static Node emptyCustomRate(final Context ctx, final FfNode card, final int x, final int y) {
+        final boolean supply = !com.gtnhplanner.power.CustomRate.REQUEST.equals(card.customRateMode());
+        final double perSecond = card.customRatePerSecond() != null ? card.customRatePerSecond() : 1;
+        final Map<String, String> settings = customRateSettings(supply, perSecond, null);
+        settings.remove(com.gtnhplanner.power.CustomRate.RESOURCE);
+        final Node node = ctx.maker()
+            .makePower(com.gtnhplanner.power.CustomRate.ID, settings);
+        if (node == null) return null;
+        node.x = x;
+        node.y = y;
+        final Double count = ctx.solveMode() ? card.solvePin() : Double.valueOf(card.machineCount());
+        if (count != null && count > 0) {
+            node.machineConfig.setMachineCount((int) Math.max(1, Math.round(count)));
+            node.setMachineCountFixed(true);
+        }
+        return node;
     }
 
     /**

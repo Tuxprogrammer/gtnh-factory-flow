@@ -249,6 +249,15 @@ describe("plans/deliver and GET /api/deliveries/{id}", () => {
     const planId = await draftWith(["r-dust"]);
     const delivered = await call(deliverPost, { planId, player: PLAYER }, plansDeliverResponse);
     expect(delivered.url).toBe(`https://planner.test/#p=${delivered.code}`);
+    expect(delivered.link).toBe(`https://planner.test/#d=${delivered.id}`);
+    expect(delivered.link).toMatch(/^https:\/\/planner\.test\/#d=d[a-hjkmnp-z2-9]{15}$/);
+  });
+
+  it("gives no link and no url without the site's address", async () => {
+    const planId = await draftWith(["r-dust"]);
+    const delivered = await call(deliverPost, { planId, player: PLAYER }, plansDeliverResponse);
+    expect(delivered.url).toBeUndefined();
+    expect(delivered.link).toBeUndefined();
   });
 
   it("never serves the player's name or uuid, and stores them for audit", async () => {

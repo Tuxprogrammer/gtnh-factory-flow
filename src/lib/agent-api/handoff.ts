@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { z } from "zod";
 import { makeResourceHandleId, parseResourceHandleId } from "@/components/flow/resource-handles";
+import { deliveryLink } from "@/lib/import-export/delivery-link";
 import { decodePlanCode, encodePlanCode, planCodeLink } from "@/lib/import-export/plan-code";
 import { normalizeProjectFuelProfiles } from "@/lib/model/fuels";
 import { makeResourceKey } from "@/lib/model/resources";
@@ -68,7 +69,7 @@ export async function deliverPlan(
     name: stored.name,
     id: stored.id,
     code,
-    ...(site ? { url: planCodeLink(code, site) } : {}),
+    ...(site ? { url: planCodeLink(code, site), link: deliveryLink(stored.id, site) } : {}),
     expiresAt: stored.expiresAt,
     cardCount: plan.nodes.length,
   };

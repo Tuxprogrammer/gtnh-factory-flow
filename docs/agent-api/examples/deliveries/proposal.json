@@ -1,0 +1,417 @@
+{
+  "endpoint": "GET /api/deliveries/{id}",
+  "id": "pt6ztd2jjkz5p79t",
+  "status": 200,
+  "response": {
+    "id": "pt6ztd2jjkz5p79t",
+    "name": "Titanium plates",
+    "createdAt": "2026-11-21T21:46:39.410Z",
+    "expiresAt": "2026-12-21T21:46:39.410Z",
+    "kind": "proposal",
+    "basePlanId": "21cac124-0e86-4139-b108-9859d0529c11",
+    "proposal": {
+      "cards": [
+        {
+          "id": "c2",
+          "enabled": true,
+          "parallel": 1,
+          "position": {
+            "x": 700,
+            "y": 100
+          },
+          "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-metalbender:b7e01db18a7b9200",
+          "machineCount": 1,
+          "overclockTier": "LV",
+          "machineHandlerId": "industrial-bending-machine",
+          "recipeInputOverrides": {
+            "0": {
+              "id": "gregtech:gt.metaitem.01@17028",
+              "kind": "item",
+              "modId": "gregtech",
+              "amount": 1,
+              "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/titanium_plate-017b34f32e31.png",
+              "displayName": "Titanium Plate",
+              "dominantColor": "#af80bf"
+            }
+          }
+        }
+      ],
+      "wires": [
+        {
+          "id": "w1",
+          "label": "Titanium Plate",
+          "source": "c1",
+          "target": "c2",
+          "resourceId": "gregtech:gt.metaitem.01@17028",
+          "resourceKind": "item",
+          "sourceHandle": "output:item:gregtech%3Agt.metaitem.01%4017028:0",
+          "targetHandle": "input:item:gregtech%3Agt.metaitem.01%4017028:0"
+        }
+      ],
+      "drawers": [],
+      "recipes": [
+        {
+          "id": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-metalbender:b7e01db18a7b9200",
+          "eut": 24,
+          "nei": {
+            "additionalInfo": [
+              "Special value: 0"
+            ]
+          },
+          "kind": "gregtech_machine",
+          "name": "Bending Machine: Titanium Foil",
+          "notes": "Exported by the GTNH calculation oracle from gregtech.api.recipe.RecipeMap.",
+          "inputs": [
+            {
+              "id": "gregtech:gt.metaitem.01@17028",
+              "kind": "item",
+              "modId": "gregtech",
+              "amount": 1,
+              "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/titanium_plate-017b34f32e31.png",
+              "displayName": "Titanium Plate",
+              "dominantColor": "#af80bf"
+            },
+            {
+              "id": "gregtech:gt.integrated_circuit@1",
+              "kind": "item",
+              "modId": "gregtech",
+              "amount": 1,
+              "consumed": false,
+              "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/programmed_circuit_1-2742d10d1001.png",
+              "displayName": "Programmed Circuit 1",
+              "dominantColor": "#9fa58e"
+            }
+          ],
+          "source": {
+            "exporter": "gtnh-oracle",
+            "recipeMap": "Bending Machine",
+            "rawRecipeId": "gt.recipe.metalbender:b7e01db18a7b9200",
+            "datasetVersionId": "stable-2.9.0-tuxmine"
+          },
+          "outputs": [
+            {
+              "id": "gregtech:gt.metaitem.01@29028",
+              "kind": "item",
+              "modId": "gregtech",
+              "amount": 4,
+              "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/titanium_foil-0f0ac8fd83fb.png",
+              "displayName": "Titanium Foil",
+              "dominantColor": "#a87ab7"
+            }
+          ],
+          "category": "gregtech",
+          "metadata": {
+            "recipeMapId": "gt.recipe.metalbender",
+            "specialValue": 0
+          },
+          "machineType": "Bending Machine",
+          "minimumTier": "LV",
+          "specialValue": 0,
+          "durationTicks": 1,
+          "machineHandlers": [
+            {
+              "id": "bending-machine",
+              "kind": "single",
+              "label": "Bending Machine",
+              "machineType": "Bending Machine",
+              "maximumTier": "UMV",
+              "minimumTier": "LV",
+              "availableTiers": [
+                "LV",
+                "MV",
+                "HV",
+                "EV",
+                "IV",
+                "LuV",
+                "ZPM",
+                "UV",
+                "UHV",
+                "UEV",
+                "UIV",
+                "UMV"
+              ]
+            },
+            {
+              "id": "industrial-bending-machine",
+              "kind": "multiblock",
+              "label": "Industrial Bending Machine",
+              "machineType": "Industrial Bending Machine",
+              "minimumTier": "LV",
+              "durationTicks": 1,
+              "machineConfigControls": [
+                {
+                  "id": "voltageParallel",
+                  "label": "Parallels per Tier",
+                  "tiers": [
+                    {
+                      "key": "per-tier-6",
+                      "label": "6 per Voltage Tier",
+                      "resource": {
+                        "id": "factoryflow:machine_config/per_tier_6",
+                        "kind": "item",
+                        "amount": 1,
+                        "tooltip": [
+                          "Imported from machine catalyst tooltip"
+                        ],
+                        "consumed": false,
+                        "displayName": "6 Parallels per Voltage Tier"
+                      },
+                      "parallelPerVoltageTier": 6
+                    }
+                  ],
+                  "defaultKey": "per-tier-6",
+                  "minimumKey": "per-tier-6"
+                }
+              ]
+            }
+          ],
+          "programmedCircuit": "1",
+          "runtimeCalculation": {
+            "status": "computed",
+            "strict": true,
+            "variants": [
+              {
+                "id": "tier-lv",
+                "eut": 24,
+                "label": "LV",
+                "inputs": [],
+                "outputs": [
+                  {
+                    "id": "gregtech:gt.metaitem.01@29028",
+                    "kind": "item",
+                    "amount": 4
+                  }
+                ],
+                "parallel": 1,
+                "durationTicks": 1,
+                "overclockTier": "LV"
+              },
+              {
+                "id": "tier-mv",
+                "eut": 96,
+                "label": "MV",
+                "inputs": [],
+                "outputs": [
+                  {
+                    "id": "gregtech:gt.metaitem.01@29028",
+                    "kind": "item",
+                    "amount": 4
+                  }
+                ],
+                "parallel": 1,
+                "durationTicks": 1,
+                "overclockTier": "MV"
+              },
+              {
+                "id": "tier-hv",
+                "eut": 384,
+                "label": "HV",
+                "inputs": [],
+                "outputs": [
+                  {
+                    "id": "gregtech:gt.metaitem.01@29028",
+                    "kind": "item",
+                    "amount": 4
+                  }
+                ],
+                "parallel": 1,
+                "durationTicks": 1,
+                "overclockTier": "HV"
+              },
+              {
+                "id": "tier-ev",
+                "eut": 1536,
+                "label": "EV",
+                "inputs": [],
+                "outputs": [
+                  {
+                    "id": "gregtech:gt.metaitem.01@29028",
+                    "kind": "item",
+                    "amount": 4
+                  }
+                ],
+                "parallel": 1,
+                "durationTicks": 1,
+                "overclockTier": "EV"
+              },
+              {
+                "id": "tier-iv",
+                "eut": 6144,
+                "label": "IV",
+                "inputs": [],
+                "outputs": [
+                  {
+                    "id": "gregtech:gt.metaitem.01@29028",
+                    "kind": "item",
+                    "amount": 4
+                  }
+                ],
+                "parallel": 1,
+                "durationTicks": 1,
+                "overclockTier": "IV"
+              },
+              {
+                "id": "tier-luv",
+                "eut": 24576,
+                "label": "LuV",
+                "inputs": [],
+                "outputs": [
+                  {
+                    "id": "gregtech:gt.metaitem.01@29028",
+                    "kind": "item",
+                    "amount": 4
+                  }
+                ],
+                "parallel": 1,
+                "durationTicks": 1,
+                "overclockTier": "LuV"
+              },
+              {
+                "id": "tier-zpm",
+                "eut": 98304,
+                "label": "ZPM",
+                "inputs": [],
+                "outputs": [
+                  {
+                    "id": "gregtech:gt.metaitem.01@29028",
+                    "kind": "item",
+                    "amount": 4
+                  }
+                ],
+                "parallel": 1,
+                "durationTicks": 1,
+                "overclockTier": "ZPM"
+              },
+              {
+                "id": "tier-uv",
+                "eut": 393216,
+                "label": "UV",
+                "inputs": [],
+                "outputs": [
+                  {
+                    "id": "gregtech:gt.metaitem.01@29028",
+                    "kind": "item",
+                    "amount": 4
+                  }
+                ],
+                "parallel": 1,
+                "durationTicks": 1,
+                "overclockTier": "UV"
+              },
+              {
+                "id": "tier-uhv",
+                "eut": 1572864,
+                "label": "UHV",
+                "inputs": [],
+                "outputs": [
+                  {
+                    "id": "gregtech:gt.metaitem.01@29028",
+                    "kind": "item",
+                    "amount": 4
+                  }
+                ],
+                "parallel": 1,
+                "durationTicks": 1,
+                "overclockTier": "UHV"
+              },
+              {
+                "id": "tier-uev",
+                "eut": 6291456,
+                "label": "UEV",
+                "inputs": [],
+                "outputs": [
+                  {
+                    "id": "gregtech:gt.metaitem.01@29028",
+                    "kind": "item",
+                    "amount": 4
+                  }
+                ],
+                "parallel": 1,
+                "durationTicks": 1,
+                "overclockTier": "UEV"
+              },
+              {
+                "id": "tier-uiv",
+                "eut": 25165824,
+                "label": "UIV",
+                "inputs": [],
+                "outputs": [
+                  {
+                    "id": "gregtech:gt.metaitem.01@29028",
+                    "kind": "item",
+                    "amount": 4
+                  }
+                ],
+                "parallel": 1,
+                "durationTicks": 1,
+                "overclockTier": "UIV"
+              },
+              {
+                "id": "tier-umv",
+                "eut": 100663296,
+                "label": "UMV",
+                "inputs": [],
+                "outputs": [
+                  {
+                    "id": "gregtech:gt.metaitem.01@29028",
+                    "kind": "item",
+                    "amount": 4
+                  }
+                ],
+                "parallel": 1,
+                "durationTicks": 1,
+                "overclockTier": "UMV"
+              },
+              {
+                "id": "tier-uxv",
+                "eut": 402653184,
+                "label": "UXV",
+                "inputs": [],
+                "outputs": [
+                  {
+                    "id": "gregtech:gt.metaitem.01@29028",
+                    "kind": "item",
+                    "amount": 4
+                  }
+                ],
+                "parallel": 1,
+                "durationTicks": 1,
+                "overclockTier": "UXV"
+              },
+              {
+                "id": "tier-max",
+                "eut": 6917529027641082000,
+                "label": "MAX",
+                "inputs": [],
+                "outputs": [
+                  {
+                    "id": "gregtech:gt.metaitem.01@29028",
+                    "kind": "item",
+                    "amount": 4
+                  }
+                ],
+                "parallel": 1,
+                "durationTicks": 1,
+                "overclockTier": "MAX"
+              }
+            ],
+            "recipeMap": "Bending Machine",
+            "sourceKind": "gregtech-overclock-calculator",
+            "generatedAt": "2026-11-16T03:34:41.554Z",
+            "sourceClass": "gregtech.api.util.OverclockCalculator",
+            "oracleEligible": true
+          }
+        }
+      ],
+      "summary": {
+        "addedCards": 1,
+        "addedWires": 1,
+        "addedDrawers": 0,
+        "changedTargets": 0
+      },
+      "targets": [],
+      "version": 1,
+      "basePlanId": "21cac124-0e86-4139-b108-9859d0529c11"
+    }
+  }
+}

@@ -196,7 +196,7 @@ public final class GtnhCalcOracleExporter {
                 Collections.sort(sorted, new java.util.Comparator<SortedRecipe>() {
                     @Override
                     public int compare(SortedRecipe left, SortedRecipe right) {
-                        int outputCompare = firstOutputName(left.recipe).compareTo(firstOutputName(right.recipe));
+                        int outputCompare = firstOutputName(left.exported).compareTo(firstOutputName(right.exported));
                         if (outputCompare != 0) return outputCompare;
                         int eutCompare = Long.compare(left.recipe.mEUt, right.recipe.mEUt);
                         if (eutCompare != 0) return eutCompare;
@@ -2927,21 +2927,21 @@ public final class GtnhCalcOracleExporter {
         return item;
     }
 
-    private String firstOutputName(GTRecipe recipe) {
-        if (recipe.mOutputs != null) {
-            for (ItemStack output : recipe.mOutputs) {
-                String key = stackKey(output);
-                if (key.length() > 0) return key;
-            }
+    /**
+     * The first output as the export writes it (after the reader's own ordering): its registry name, damage and size,
+     * else the first fluid's name. GregTech's own first output is in hash order for some recipes.
+     */
+    @SuppressWarnings("unchecked")
+    private static String firstOutputName(Map<String, Object> exported) {
+        for (Object o : (List<Object>) exported.get("itemOutputs")) {
+            Map<String, Object> stack = (Map<String, Object>) o;
+            return stack.get("registryId") + "@" + stack.get("meta") + "x" + stack.get("amount");
         }
-        if (recipe.mFluidOutputs != null) {
-            for (FluidStack output : recipe.mFluidOutputs) {
-                if (output != null && output.getFluid() != null) return output.getFluid().getName();
-            }
+        for (Object o : (List<Object>) exported.get("fluidOutputs")) {
+            return String.valueOf(((Map<String, Object>) o).get("id"));
         }
         return "";
     }
-
 
     private String thaumcraftType(String className) {
         String lower = className.toLowerCase(Locale.ROOT);

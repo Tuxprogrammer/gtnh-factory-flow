@@ -17,12 +17,12 @@
       ]
     },
     "core-base": {
-      "specifies": "The kernel's value semantics: number-text/number-text-vectors.json is JavaScript's own answer (String(n), JSON.stringify, toFixed, Number(s), Math.round) for doubles given as 64-bit hex, which NumberText and JsMath must spell and read the same; uuid/uuid-vectors.json is java.util.UUID's answers (toString, hashCode, compareTo order, name-based ids, parsed spellings), which Uuid must reproduce. exact-math/exact-math-vectors.json is the JVM's StrictMath (fdlibm; Math for round, rint and ulp) on special and drawn arguments, as 64-bit patterns, which core-base's ExactMath must give bit for bit on the JVM and on both web targets.",
+      "specifies": "The kernel's value semantics: number-text/number-text-vectors.json is JavaScript's own answer (String(n), JSON.stringify, toFixed, Number(s), Math.round) for doubles given as 64-bit hex, which NumberText and JsMath must spell and read the same; uuid/uuid-vectors.json is java.util.UUID's answers (toString, hashCode, compareTo order, name-based ids, parsed spellings), which Uuid must reproduce. exact-math/exact-math-vectors.json is the JVM's StrictMath (fdlibm; Math for round, rint and ulp) on special and drawn arguments, as 64-bit patterns, which core-base's ExactMath must give bit for bit on the JVM and on both web targets. solved-number/solved-number-vectors.json is what SolvedNumber.clean (the solver's answers read as the small ratios they are within noise of) must give, as 64-bit patterns, on the JVM and on both web targets.",
       "readers": [
-        "mod: core-base NumberTextTest, UuidTest, ExactMathTest (jvm/core/core-base)",
+        "mod: core-base NumberTextTest, UuidTest, ExactMathTest, SolvedNumberTest (jvm/core/core-base)",
         "web: the Node runner that checks the compiled core against them (tools/web-core; exact-math.mjs for ExactMath)"
       ],
-      "generator": "number-text: node tools/conformance/core-base/gen-vectors.mjs; uuid: ./gradlew :core-base:test --tests '*UuidTest.writeVectors' -PwriteVectors (from jvm/); then node tools/conformance/manifest.mjs --write; exact-math: ./gradlew :core-base:test --tests '*ExactMathTest.writeVectors' -PwriteVectors (from jvm/; inputs from jvm/conformance-support MathCases)"
+      "generator": "number-text: node tools/conformance/core-base/gen-vectors.mjs; uuid: ./gradlew :core-base:test --tests '*UuidTest.writeVectors' -PwriteVectors (from jvm/); then node tools/conformance/manifest.mjs --write; exact-math: ./gradlew :core-base:test --tests '*ExactMathTest.writeVectors' -PwriteVectors (from jvm/; inputs from jvm/conformance-support MathCases); solved-number: by hand"
     },
     "data": {
       "specifies": "What the export run's GregTech reader writes and the dataset record made of it. gt-records.json: per case the raw export's recipe (raw.map, raw.recipe, as jvm/mod read/gt/GtRecipeReader read it in game and the exporter wrote it) and the record normalize-oracle-export.mjs makes of it (dataset; ids, notes, provenance and times left out). The mod's record of the same recipe (core-model GtDatasetRecipe) must equal it on every field Web.Recipe carries.",
@@ -200,6 +200,11 @@
       "area": "core-base",
       "bytes": 515066,
       "sha256": "bac64d56498eae52a4284cd1ca1732870ef74404a51b1ef7843d5c31f08569d6"
+    },
+    "core-base/solved-number/solved-number-vectors.json": {
+      "area": "core-base",
+      "bytes": 2721,
+      "sha256": "d77727f27770516d17d4fb73f2dd50eeba46be34344d86fd4bf8bf8793d1519a"
     },
     "core-base/uuid/uuid-vectors.json": {
       "area": "core-base",

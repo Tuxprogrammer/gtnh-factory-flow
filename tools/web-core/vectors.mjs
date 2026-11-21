@@ -3,7 +3,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { attempt, bitsOf } from "./compare.mjs";
+import { attempt, bitsOf, fromBits } from "./compare.mjs";
 
 const ROOT = fileURLToPath(new URL("../../", import.meta.url));
 
@@ -30,6 +30,26 @@ export function loadVectors() {
 }
 
 const hex16 = (s) => s.padStart(16, "0");
+
+/**
+ * conformance/core-base/solved-number/solved-number-vectors.json: SolvedNumber.clean bit for bit, through the core
+ * module (BaseExports) and the solver module (SolverJavaExports), where a solve's answer is cleaned.
+ */
+export function runSolvedNumber(api, tally) {
+  const file = path.join(ROOT, "conformance/core-base/solved-number/solved-number-vectors.json");
+  const rows = JSON.parse(readFileSync(file, "utf8")).rows;
+  const modules = [
+    ["core", api.BaseExports],
+    ["solver", api.SolverJavaExports],
+  ];
+  for (const [module, exports] of modules) {
+    for (const [x, answer, what] of rows) {
+      const got = exports.solvedNumberClean(fromBits(x));
+      const detail = () => `${x} (${what}): ${bitsOf(got)} (JVM ${answer})`;
+      tally.checkDouble(`solved-number/${module}`, got, answer, detail);
+    }
+  }
+}
 
 /** Run every vector. `tally` collects the results, grouped as "<file>/<kind>". */
 export function runVectors(api, v, tally) {

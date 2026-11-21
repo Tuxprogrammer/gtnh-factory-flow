@@ -22,7 +22,13 @@ import { jsSample, runSolver } from "./solver.mjs";
 import { runLayout, runPower } from "./goldens.mjs";
 import { runView } from "./view.mjs";
 import { checkJvmAgainstNode, readCases, runRandom } from "./random.mjs";
-import { loadVectors, runBuildProbes, runVectors, vectorFile } from "./vectors.mjs";
+import {
+  loadVectors,
+  runBuildProbes,
+  runSolvedNumber,
+  runVectors,
+  vectorFile,
+} from "./vectors.mjs";
 
 function args() {
   const out = { build: "jvm/web/build/generated/teavm", random: null, targets: ["wasm", "js"], solverJvm: null, solverReport: null, solverRuns: 1, solverOnly: null, bench: false, full: false, jvmNode: true };
@@ -76,6 +82,7 @@ for (const target of opts.targets) {
   if (!opts.solverOnly) {
     runBuildProbes(api, tally);
     runVectors(api, vectors, tally);
+    runSolvedNumber(api, tally);
     runFormat(api, tally);
     runExactMath(api, tally, cases, { every });
     if (opts.random) runRandom(api, cases, tally);

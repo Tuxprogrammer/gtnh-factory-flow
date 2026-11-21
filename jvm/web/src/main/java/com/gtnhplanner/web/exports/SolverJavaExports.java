@@ -26,6 +26,12 @@ public final class SolverJavaExports {
         return JavaProbe.roundHex(strict, x);
     }
 
+    /** SolvedNumber.clean compiled into the solver module, which is where a solve's answer is cleaned. */
+    @JSExport
+    public static double solvedNumberClean(final double x) {
+        return com.gtnhplanner.core.base.SolvedNumber.clean(x);
+    }
+
     /** Java's {@code -x}. */
     @JSExport
     public static double javaNegate(final double x) {

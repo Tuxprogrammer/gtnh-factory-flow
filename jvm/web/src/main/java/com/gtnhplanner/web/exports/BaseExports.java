@@ -135,6 +135,12 @@ public final class BaseExports {
         return GameMath.powInt(base, exp);
     }
 
+    /** core-base's SolvedNumber.clean: a solved value read as the small ratio it is within noise of. */
+    @JSExport
+    public static double solvedNumberClean(final double x) {
+        return com.gtnhplanner.core.base.SolvedNumber.clean(x);
+    }
+
     /**
      * core-base's ExactMath by name ({@code y} is read by pow, atan2 and hypot only); round's long answer comes from
      * {@link #exactMathRoundHex}. The conformance run holds both to the JVM's StrictMath.

@@ -42,4 +42,14 @@ class KeyTextTest {
         assertEquals(0, KeyText.typed((char) 0, Keyboard.KEY_NUMPADENTER));
         assertEquals(0, KeyText.typed((char) 0, 0));
     }
+
+    @Test
+    void aTextFieldGetsThePadKeysCharacterAndEveryOtherKeyAsItCame() {
+        assertEquals('4', KeyText.forField((char) 0, Keyboard.KEY_NUMPAD4));
+        assertEquals('.', KeyText.forField((char) 0, Keyboard.KEY_DECIMAL));
+        assertEquals('4', KeyText.forField('4', Keyboard.KEY_NUMPAD4));
+        assertEquals((char) 8, KeyText.forField((char) 8, Keyboard.KEY_BACK));
+        assertEquals((char) 1, KeyText.forField((char) 1, Keyboard.KEY_A));
+        assertEquals((char) 0, KeyText.forField((char) 0, Keyboard.KEY_RETURN));
+    }
 }

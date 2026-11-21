@@ -12,6 +12,15 @@ public final class KeyText {
     private KeyText() {}
 
     /**
+     * The character to hand a ModularUI text field for a key event: the pad key's own when the event carries none, else
+     * the event's as it came, so Backspace, the arrows and shortcuts reach the field unchanged.
+     */
+    public static char forField(final char typed, final int code) {
+        final char c = typed(typed, code);
+        return c != 0 ? c : typed;
+    }
+
+    /**
      * The character to type for a key event, or 0 for none. A real typed character wins, so a game that delivers both
      * the key code and the character (the pad with NumLock on) types once; only an event with no character, or a
      * control character, falls back to the pad key's own.

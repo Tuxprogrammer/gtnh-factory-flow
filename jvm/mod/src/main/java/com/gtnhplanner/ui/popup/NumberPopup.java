@@ -88,5 +88,12 @@ public final class NumberPopup {
             super.onFocus(context);
             handler.markAll();
         }
+
+        @Override
+        public com.cleanroommc.modularui.api.widget.Interactable.Result onKeyPressed(final char typedChar,
+            final int keyCode) {
+            // A number pad key often arrives with no character: type the one it prints.
+            return super.onKeyPressed(KeyText.forField(typedChar, keyCode), keyCode);
+        }
     }
 }

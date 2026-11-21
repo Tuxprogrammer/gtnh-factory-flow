@@ -47,6 +47,8 @@ final class DevMachineMath {
             final net.minecraft.item.ItemStack stack = WebCards.machineStack(node);
             c.put("machineName", stack == null ? null : stack.getDisplayName());
             c.put("machineType", recipe.machineType);
+            c.put("recipeTicks", recipe.durationTicks);
+            c.put("recipeEut", recipe.eut);
             c.put("handlers", handlerLabels(recipe));
             c.put("handlerId", web.machineHandlerId);
             final Map<String, Object> settings = new LinkedHashMap<>();
@@ -92,6 +94,14 @@ final class DevMachineMath {
                 m.put("stall", r.stall());
                 c.put("math", m);
             }
+            // What the solver is handed for one machine: ticks a craft, EU/t, crafts at once.
+            final com.gtnhplanner.data.effect.EffectResult e = node.machineConfig.computeEffect(node.properties);
+            final Map<String, Object> eff = new LinkedHashMap<>();
+            eff.put("duration", e.duration());
+            eff.put("energy", e.energy());
+            eff.put("throughputFactor", e.throughputFactor());
+            c.put("effect", eff);
+            c.put("settings", new LinkedHashMap<>(node.machineConfig.settings));
             cards.add(c);
         }
         final Map<String, Object> out = new LinkedHashMap<>();

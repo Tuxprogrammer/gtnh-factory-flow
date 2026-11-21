@@ -3023,7 +3023,7 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
             .row(
                 farm ? "Industrial Farms" : "Crop Managers",
                 "×" + com.gtnhplanner.machines.game.CropCards.harvesters(m.node, crops))
-            .row("Harvest every", Fmt.compact(m.durationTicks / 20.0) + " s")
+            .row("Harvest every", Fmt.compact(com.gtnhplanner.machines.game.CropCards.harvestSeconds(m.node)) + " s")
             .row("Draw", Fmt.power(com.gtnhplanner.machines.game.CropCards.drawEut(m.node, crops)) + " EU/t");
         if (machineChoices().size() > 1) tip.action(Tip.Input.LEFT, "Machines that harvest it")
             .action(Tip.Input.WHEEL, "Next machine");

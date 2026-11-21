@@ -29,6 +29,8 @@ public final class TestGame implements CloudGame {
     public String world = "";
     /** The website's machine (handler) id of each card; none unless a test names them. */
     public java.util.function.Function<Node, String> handlers = n -> null;
+    /** Which drawer keys the game has a name for; every one unless a test says (a website-only resource has none). */
+    public java.util.function.Predicate<String> names = key -> true;
 
     /** What NEI would read for each card: its ports and recipe numbers, by card id. */
     private final Map<Uuid, Node> nei = new HashMap<>();
@@ -78,6 +80,7 @@ public final class TestGame implements CloudGame {
     @Override
     @Nullable
     public PlanExport.Res resource(final String key) {
+        if (!names.test(key)) return null;
         if (key.startsWith("fluid:")) return new PlanExport.Res("fluid", key.substring(6), key.substring(6));
         if (!key.startsWith("item:")) return null;
         final String rest = key.substring(5);

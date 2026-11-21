@@ -250,8 +250,17 @@ public final class FfConverter {
             reportUnusedStorages();
             placeNotes();
             placeBoards();
-            // Where a display-only card stands once the plan is laid out: one never moved goes back as the plan has it.
-            for (final Node n : shown.values()) n.shown = n.shown.at(n.x, n.y, n.group);
+            // A display-only card goes back as the plan has it only while the board has it at the plan's own place (at
+            // the board's scale, as the export writes every card). The layout above moves the whole plan to the
+            // board's corner, so a card it moved goes out at its board place with the cards around it.
+            final Map<String, FfNode> cards = new HashMap<>();
+            for (final FfNode c : plan.nodes()) cards.putIfAbsent(c.id(), c);
+            for (final Map.Entry<String, Node> e : shown.entrySet()) {
+                final Node n = e.getValue();
+                final FfNode c = cards.get(e.getKey());
+                n.shown = c == null ? n.shown.at(n.x, n.y, n.group)
+                    : n.shown.at((int) Math.round(c.x() * SCALE_X), (int) Math.round(c.y() * SCALE_Y), n.group);
+            }
             if (lostWires > 0) report.add(
                 Kind.WIRE,
                 "Plan",

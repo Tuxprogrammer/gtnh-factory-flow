@@ -101,7 +101,12 @@ class PlanRoundTripTest {
      */
     static Trip trip(final String text, final String name, final Set<String> missing, final boolean routed)
         throws ReflectiveOperationException {
-        final TestGame game = routed(new TestGame(), routed);
+        return trip(routed(new TestGame(), routed), text, name, missing);
+    }
+
+    /** A plan in and out of {@code game}. */
+    static Trip trip(final TestGame game, final String text, final String name, final Set<String> missing)
+        throws ReflectiveOperationException {
         if (!missing.isEmpty()) {
             final Field f = FakeGame.class.getDeclaredField("missing");
             f.setAccessible(true);
@@ -326,6 +331,148 @@ class PlanRoundTripTest {
         assertTrue(plans >= 15, "plans: " + plans);
     }
 
+    /**
+     * A plan in and out of a game that has none of its recipes and no name for what its drawers hold, as the game has
+     * none for a demo plan's: every card is a website-only one.
+     */
+    private static Trip allShown(final String text, final String name) throws ReflectiveOperationException {
+        final TestGame game = new TestGame();
+        game.names = key -> false;
+        final Set<String> missing = new HashSet<>();
+        for (final Map<String, Object> r : objects(
+            PlanJson.parse(text)
+                .get("recipes")))
+            missing.add(String.valueOf(r.get("id")));
+        return trip(game, text, name, missing);
+    }
+
+    /** What a plan's wire end is on the board the export wrote: a card or drawer it made; null for neither. */
+    private static String boardEnd(final com.gtnhplanner.core.codec.SiteCarry.Placed placed, final String id) {
+        final String card = placed.cards()
+            .get(id);
+        return card != null ? card
+            : placed.storages()
+                .get(id);
+    }
+
+    /** The plan's wires the board holds, each missing from the export between the things its ends became. */
+    private static List<String> wiresLost(final Trip t, final String name) {
+        final List<String> lost = new ArrayList<>();
+        // A Pool plan's wires are the board's own: every maker of a resource to every user of it.
+        if (Boolean.TRUE.equals(
+            t.plan()
+                .get("poolMode")))
+            return lost;
+        final var placed = t.result()
+            .placed();
+        final Set<String> out = new HashSet<>();
+        for (final Map<String, Object> e : objects(
+            t.out()
+                .get("edges")))
+            out.add(e.get("source") + " > " + e.get("target"));
+        for (final Map<String, Object> e : objects(
+            t.plan()
+                .get("edges"))) {
+            final String id = String.valueOf(e.get("id")), source = String.valueOf(e.get("source")),
+                target = String.valueOf(e.get("target"));
+            if (placed.droppedEdges()
+                .contains(id)
+                || placed.converted()
+                    .contains(source)
+                || placed.converted()
+                    .contains(target))
+                continue;
+            final String from = boardEnd(placed, source), to = boardEnd(placed, target);
+            if (from != null && to != null && !out.contains(from + " > " + to)) lost.add(name + ": wire " + id);
+        }
+        return lost;
+    }
+
+    /**
+     * A drawer on a website-only card (the demo's byproduct drawer on its electrolyzer, which the game has no recipe
+     * for) stays on the board, wired, and goes back out with its wire, every field as it came.
+     */
+    @Test
+    void aDrawerOnAWebsiteOnlyCardGoesBackWithItsWire() throws IOException, ReflectiveOperationException {
+        final Trip t = allShown(Conformance.text("plans/website/biodiesel-demo.json"), "biodiesel-demo");
+        nothingLost(t, "biodiesel-demo");
+        final var placed = t.result()
+            .placed();
+        assertTrue(
+            placed.shown()
+                .contains("node-electrolyzer"),
+            "the electrolyzer is a website-only card");
+        final String drawer = placed.storages()
+            .get("demo-carbon-drawer");
+        assertNotNull(drawer, "the drawer is on the board");
+        assertEquals(
+            1,
+            t.board().drawers.get(com.gtnhplanner.core.base.Uuid.fromString(drawer))
+                .getLinks()
+                .size(),
+            "and wired to the card");
+        final Map<String, Object> in = byId(
+            t.plan()
+                .get("storages")).get("demo-carbon-drawer"),
+            out = byId(
+                t.out()
+                    .get("storages")).get(drawer);
+        assertNotNull(out, "the drawer goes out");
+        for (final Map.Entry<String, Object> e : in.entrySet())
+            if (!"id".equals(e.getKey()) && !"position".equals(e.getKey()))
+                assertEquals(Canon.of(e.getValue()), Canon.of(out.get(e.getKey())), "drawer field " + e.getKey());
+        // At its board place, moved as the card it hangs off.
+        final Map<String, double[]> was = places(t.plan()), now = places(t.out());
+        for (int i = 0; i < 2; i++) assertEquals(
+            Math.round(now.get("node-electrolyzer")[i] - was.get("node-electrolyzer")[i]),
+            Math.round(now.get(drawer)[i] - was.get("demo-carbon-drawer")[i]),
+            "the drawer moved as its card");
+        final Map<String, Object> wire = byId(
+            t.plan()
+                .get("edges")).get("edge-carbon-spare");
+        final List<Map<String, Object>> wires = new ArrayList<>();
+        for (final Map<String, Object> e : objects(
+            t.out()
+                .get("edges")))
+            if ("node-electrolyzer".equals(e.get("source")) && drawer.equals(e.get("target"))) wires.add(e);
+        assertEquals(1, wires.size(), "the wire goes out");
+        for (final String k : new String[] { "resourceKind", "resourceId" }) assertEquals(
+            wire.get(k),
+            wires.getFirst()
+                .get(k),
+            "wire " + k);
+    }
+
+    /**
+     * No website plan loses a drawer or a wire on the way in and out, whether the game runs its cards or has none of
+     * them (every card website-only, nothing its drawers hold named).
+     */
+    @Test
+    void noWebsitePlanLosesADrawerOrAWireEitherWay() throws IOException, ReflectiveOperationException {
+        final List<String> lost = new ArrayList<>();
+        int plans = 0;
+        for (final Path p : Conformance.list("plans/website")) {
+            final String text = new String(
+                java.nio.file.Files.readAllBytes(p),
+                java.nio.charset.StandardCharsets.UTF_8);
+            final String name = p.getFileName()
+                .toString();
+            for (final boolean shown : new boolean[] { false, true }) {
+                final String as = name + (shown ? " (all website-only)" : "");
+                final Trip t = shown ? allShown(text, as) : trip(text, as, Set.of());
+                try {
+                    nothingLost(t, as);
+                } catch (final AssertionError e) {
+                    lost.add(e.getMessage());
+                }
+                lost.addAll(wiresLost(t, as));
+            }
+            plans++;
+        }
+        assertTrue(plans >= 7, "plans: " + plans);
+        assertEquals(List.of(), lost);
+    }
+
     /** A board's shared machines and set counts, as a plan of it reads back. */
     private static List<String> shared(final Graph g) {
         final List<String> out = new ArrayList<>();
@@ -440,8 +587,11 @@ class PlanRoundTripTest {
             out = byId(
                 t.out()
                     .get("nodes"));
-        for (final String id : shown.keySet())
-            assertEquals(Canon.of(in.get(id)), Canon.of(out.get(id)), id + " goes back as it came");
+        // The import moved the plan to the board's corner: each goes out at its board place, as the cards around it.
+        for (final Map.Entry<String, Node> e : shown.entrySet()) assertEquals(
+            Canon.of(atBoardPlace(in.get(e.getKey()), e.getValue())),
+            Canon.of(out.get(e.getKey())),
+            e.getKey() + " goes back as it came, where the board has it");
         final Map<String, Map<String, Object>> recipesIn = byId(
             t.plan()
                 .get("recipes")),
@@ -500,8 +650,144 @@ class PlanRoundTripTest {
         assertFalse(byId(out.get("recipes")).containsKey("r-off"), "with its recipe");
         for (final Map<String, Object> e : objects(out.get("edges")))
             assertFalse("n-off".equals(e.get("source")) || "n-off".equals(e.get("target")), "and its wires");
-        for (final String id : new String[] { "n-infusion", "n-gone", "n-norecipe" })
-            assertEquals(Canon.of(in.get(id)), Canon.of(nodes.get(id)), id + " untouched");
+        for (final String id : new String[] { "n-infusion", "n-gone", "n-norecipe" }) assertEquals(
+            Canon.of(atBoardPlace(in.get(id), shown.get(id))),
+            Canon.of(nodes.get(id)),
+            id + " untouched but for the import's shift");
+    }
+
+    /** A plan card as it came, at the board card's place (the export writes every card where the board has it). */
+    private static Map<String, Object> atBoardPlace(final Map<String, Object> card, final Node n) {
+        final Map<String, Object> out = new LinkedHashMap<>(card);
+        out.put("position", PlanJson.parse("{\"x\":" + n.x + ",\"y\":" + n.y + "}"));
+        return out;
+    }
+
+    /**
+     * A file import moves the whole plan to the board's corner; written back with nothing moved, every card (the
+     * game's and the display-only ones), drawer, note, group and wire bend keeps its offset to every other.
+     */
+    @Test
+    void anImportedPlanGoesBackWithEverythingWhereItWasToEverythingElse()
+        throws IOException, ReflectiveOperationException {
+        final Map<String, Object> plan = PlanJson.parse(Conformance.text(DISPLAY));
+        // Off the board's corner, with a group holding a display-only card and a drawer, a note and a bent wire.
+        for (final String c : new String[] { "nodes", "storages" })
+            for (final Map<String, Object> o : objects(plan.get(c))) shift(o, -300, 160);
+        plan.put(
+            "pockets",
+            List.of(
+                PlanJson.parse(
+                    "{\"id\":\"pk\",\"name\":\"Kept\",\"position\":{\"x\":1300,\"y\":160},\"expanded\":true,"
+                        + "\"size\":{\"width\":800,\"height\":600}}")));
+        for (final Map<String, Object> o : objects(plan.get("nodes"))) if ("n-norecipe".equals(o.get("id"))) {
+            o.put("pocketId", "pk");
+            o.put("position", PlanJson.parse("{\"x\":40,\"y\":40}"));
+        }
+        for (final Map<String, Object> o : objects(plan.get("storages"))) if ("s-bolt".equals(o.get("id"))) {
+            o.put("pocketId", "pk");
+            o.put("position", PlanJson.parse("{\"x\":440,\"y\":40}"));
+        }
+        plan.put(
+            "annotations",
+            List.of(
+                PlanJson.parse(
+                    "{\"id\":\"a-note\",\"kind\":\"text\",\"text\":\"Here\",\"position\":{\"x\":-200,"
+                        + "\"y\":900},\"size\":{\"width\":200,\"height\":100}}")));
+        for (final Map<String, Object> e : objects(plan.get("edges")))
+            if ("n-plate".equals(e.get("source"))) e.put("waypoints", List.of(PlanJson.parse("{\"x\":0,\"y\":300}")));
+        final Trip t = trip(PlanJson.write(plan), "shifted", Set.of("r-gone"), true);
+
+        final var placed = t.result()
+            .placed();
+        final Map<String, double[]> was = places(t.plan()), now = places(t.out());
+        final Map<String, String> as = new LinkedHashMap<>();
+        for (final String id : was.keySet()) as.put(id, id);
+        as.putAll(placed.cards());
+        as.putAll(placed.storages());
+        for (final Map<String, Object> pk : objects(
+            t.out()
+                .get("pockets")))
+            if ("Kept".equals(pk.get("name"))) as.put("pocket:pk", "pocket:" + pk.get("id"));
+        for (final Map<String, Object> a : objects(
+            t.out()
+                .get("annotations")))
+            if ("Here".equals(a.get("text"))) as.put("note:a-note", "note:" + a.get("id"));
+        for (final Map<String, Object> e : objects(
+            t.out()
+                .get("edges")))
+            if (placed.cards()
+                .get("n-plate")
+                .equals(e.get("source"))) as.put("bend:n-plate", "bend:" + e.get("source"));
+        final Map<String, String> moved = new LinkedHashMap<>();
+        for (final Map.Entry<String, double[]> e : was.entrySet()) {
+            final double[] a = e.getValue(), b = now.get(as.get(e.getKey()));
+            assertNotNull(b, e.getKey() + " is written back");
+            moved.put(e.getKey(), Math.round(b[0] - a[0]) + "," + Math.round(b[1] - a[1]));
+        }
+        assertEquals(
+            moved.size(),
+            moved.values()
+                .stream()
+                .filter(
+                    v -> v.equals(
+                        moved.values()
+                            .iterator()
+                            .next()))
+                .count(),
+            "everything moved alike: " + moved);
+    }
+
+    private static void shift(final Map<String, Object> o, final double dx, final double dy) {
+        final Map<String, Object> p = object(o.get("position"));
+        o.put(
+            "position",
+            PlanJson.parse(
+                "{\"x\":" + Math.round(((Number) p.get("x")).doubleValue() + dx)
+                    + ",\"y\":"
+                    + Math.round(((Number) p.get("y")).doubleValue() + dy)
+                    + "}"));
+    }
+
+    /**
+     * Where each thing of a plan stands on its board, groups flattened: cards and drawers by id, groups as
+     * {@code pocket:<id>}, notes as {@code note:<id>}, a wire's first bend as {@code bend:<source>}.
+     */
+    private static Map<String, double[]> places(final Map<String, Object> plan) {
+        final Map<String, Map<String, Object>> pockets = byId(plan.get("pockets"));
+        final Map<String, double[]> out = new LinkedHashMap<>();
+        for (final String c : new String[] { "nodes", "storages" })
+            for (final Map<String, Object> o : objects(plan.get(c)))
+                out.put(String.valueOf(o.get("id")), at(o, pockets));
+        for (final Map.Entry<String, Map<String, Object>> p : pockets.entrySet())
+            out.put("pocket:" + p.getKey(), at(p.getValue(), pockets));
+        for (final Map<String, Object> a : objects(plan.get("annotations")))
+            out.put("note:" + a.get("id"), at(a, pockets));
+        for (final Map<String, Object> e : objects(plan.get("edges"))) {
+            final List<Map<String, Object>> bends = objects(e.get("waypoints"));
+            if (!bends.isEmpty()) out.put(
+                "bend:" + e.get("source"),
+                new double[] { ((Number) bends.get(0)
+                    .get("x")).doubleValue(),
+                    ((Number) bends.get(0)
+                        .get("y")).doubleValue() });
+        }
+        return out;
+    }
+
+    /** A thing's place on the board: its position plus the corners of the groups it sits in. */
+    private static double[] at(final Map<String, Object> o, final Map<String, Map<String, Object>> pockets) {
+        final Map<String, Object> p = object(o.get("position"));
+        final double[] xy = { ((Number) p.get("x")).doubleValue(), ((Number) p.get("y")).doubleValue() };
+        Object in = o.get(o.containsKey("parentPocketId") ? "parentPocketId" : "pocketId");
+        for (int depth = 0; in != null && pockets.containsKey(in) && depth < 16; depth++) {
+            final Map<String, Object> pk = pockets.get(in);
+            final Map<String, Object> q = object(pk.get("position"));
+            xy[0] += ((Number) q.get("x")).doubleValue();
+            xy[1] += ((Number) q.get("y")).doubleValue();
+            in = pk.get("parentPocketId");
+        }
+        return xy;
     }
 
     /** A board with display-only cards saves and reads back with them where they stand, their wires on them. */

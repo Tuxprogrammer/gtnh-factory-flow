@@ -252,10 +252,22 @@ public final class PlanExport {
                     to.id));
         }
         for (final Drawer d : g.getDrawers()) {
-            final Res own = resource(d, world);
-            if (own == null) continue;
             final boolean source = d.getKind()
                 .linksInputs();
+            // A drawer of something the game has no name for (one wired to website-only cards) is named as the port it
+            // is wired to names it, so it and its wires still go out.
+            Res own = resource(d, world);
+            for (final Drawer.Held held : d.held()) {
+                if (own != null) break;
+                final Node n = g.nodes.get(
+                    held.link()
+                        .nodeId());
+                final List<Port<?>> ports = n == null ? List.of() : held.input() ? n.inputs : n.outputs;
+                final int at = held.link()
+                    .portIndex();
+                if (at >= 0 && at < ports.size()) own = res.get(ports.get(at));
+            }
+            if (own == null) continue;
             // A drawer's wires name its resource as the port each lands on does (the recipe's own spelling), so the
             // website finds the port; the drawer itself as its first port names it.
             final Res r = linkResource(g, d, own, res::get);

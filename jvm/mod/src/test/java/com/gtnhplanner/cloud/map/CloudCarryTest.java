@@ -304,8 +304,25 @@ class CloudCarryTest {
         final JsonObject source = new com.google.gson.JsonParser().parse(text)
             .getAsJsonObject();
         final Map<String, JsonObject> in = byId(source, "nodes"), up = byId(first.plan(), "nodes");
-        for (final String id : new String[] { "n-vein", "n-infusion", "n-off", "n-gone", "n-norecipe" })
-            assertEquals(in.get(id), up.get(id), id + " goes up as it came");
+        // As they came, at the board's place: the file import moved the whole plan to the board's corner.
+        for (final String id : new String[] { "n-vein", "n-infusion", "n-off", "n-gone", "n-norecipe" }) {
+            final JsonObject was = LiveJson.copy(in.get(id));
+            was.add(
+                "position",
+                up.get(id)
+                    .get("position"));
+            assertEquals(was, up.get(id), id + " goes up as it came");
+            assertEquals(
+                in.get(id)
+                    .getAsJsonObject("position")
+                    .get("x")
+                    .getAsInt() + 40,
+                up.get(id)
+                    .getAsJsonObject("position")
+                    .get("x")
+                    .getAsInt(),
+                id + " moved with the board");
+        }
         assertEquals(List.of(), unresolved(first.plan()), "every wire names a port its card's recipe has");
         assertTrue(
             first.plan()
@@ -329,7 +346,7 @@ class CloudCarryTest {
                 .toString(),
             "the board's pins are written: " + pins);
         for (final String id : new String[] { "n-vein", "n-off" })
-            assertEquals(in.get(id), byId(later, "nodes").get(id), id + " untouched by a later save");
+            assertEquals(up.get(id), byId(later, "nodes").get(id), id + " untouched by a later save");
     }
 
     // endregion

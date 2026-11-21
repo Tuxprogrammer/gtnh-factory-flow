@@ -29,6 +29,7 @@ import {
   plansSolveRequest,
   plansSolveResponse,
 } from "./plan-schemas";
+import { plansExpandInputsRequest, plansExpandInputsResponse } from "./expand-schemas";
 import {
   plansDeliverRequest,
   plansDeliverResponse,
@@ -53,6 +54,7 @@ const SCHEMAS: Record<string, { request: z.ZodType; response: z.ZodType }> = {
   "plans/connect": { request: plansConnectRequest, response: plansConnectResponse },
   "plans/disconnect": { request: plansDisconnectRequest, response: plansDisconnectResponse },
   "plans/get": { request: plansGetRequest, response: plansGetResponse },
+  "plans/expand-inputs": { request: plansExpandInputsRequest, response: plansExpandInputsResponse },
   "plans/solve": { request: plansSolveRequest, response: plansSolveResponse },
   "plans/deliver": { request: plansDeliverRequest, response: plansDeliverResponse },
   "plans/import": { request: plansImportRequest, response: plansImportResponse },

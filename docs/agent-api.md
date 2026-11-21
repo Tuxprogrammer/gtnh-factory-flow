@@ -5,9 +5,10 @@ own solver. It is meant for a tool server on the instance's internal network tha
 endpoints. Players never call it.
 
 Status: `resources/search`, `recipes/search`, `recipes/get` and the draft endpoints `plans/create`, `plans/add-cards`,
-`plans/remove-cards`, `plans/set-targets`, `plans/connect`, `plans/disconnect`, `plans/get` and `plans/solve` are built,
-and so are `plans/deliver`, `plans/import`, `plans/diff` and the read route `GET /api/deliveries/{id}`.
-Every other endpoint below is specified and marked **not yet built**; until it is, its path answers 404.
+`plans/remove-cards`, `plans/set-targets`, `plans/connect`, `plans/disconnect`, `plans/get`, `plans/solve` and
+`plans/expand-inputs` are built, and so are `plans/deliver`, `plans/import`, `plans/diff` and the read route
+`GET /api/deliveries/{id}`.
+Every endpoint of v1 is built.
 
 Code: `src/app/api/agent/v1/**` (routes) and `src/lib/agent-api/**` (logic, request and response schemas in
 `schemas.ts`). Examples: `docs/agent-api/examples/*.json`, one real request and response per built endpoint, checked
@@ -67,8 +68,8 @@ message is for people and may change.
 
 ## Constraints
 
-Accepted by `recipes/search` and `plans/create` (a draft keeps its constraints; `plans/solve` takes none of its own),
-and by `plans/expand-inputs` once built:
+Accepted by `recipes/search`, `plans/create` (a draft keeps its constraints; `plans/solve` takes none of its own) and
+`plans/expand-inputs` (joined with the draft's; see its section):
 
 ```json
 { "tierCap": "HV", "heat": 4500, "cleanroom": false, "lowgrav": false, "banned": ["..."], "free": ["..."] }
@@ -205,7 +206,7 @@ Every change validates the whole request first: a refused request leaves the dra
 | `plans/get`           | `{planId, fields?, cardIds?, player?}`                               | the draft's cards, wires and targets, compact         | yes   |
 | `plans/solve`         | `{planId, fields?, player?}`                                         | summary first, then one row per card                  | yes   |
 | `plans/import`        | `{snapshot, player?}`: the player's open plan as a slim snapshot (body up to 512 KB) | `{dataset, planId, name, expiresAt, cardCount, wireCount, warnings}` | yes |
-| `plans/expand-inputs` | `{planId, resources?, constraints?, max?}` (max 3)                   | for each unsupplied input, up to `max` recipes ranked by the solver, each with a one-line reason (EU per item, machines needed, new raws it introduces) | no |
+| `plans/expand-inputs` | `{planId, resources?, constraints?, max?}` (max 3)                   | for each unsupplied input, up to `max` recipes ranked by trying each in the solver, each with a one-line reason (EU per item, machines needed, new raws it introduces) | yes |
 | `plans/diff`          | `{planId, player?}` of an imported draft                             | `{proposalId, basePlanId, expiresAt, summary, text}`: what the draft adds to the imported plan, stored as a proposal | yes |
 | `plans/deliver`       | `{planId, player: {name, uuid}}`                                     | `{name, id, code, url?, expiresAt, cardCount}`        | yes   |
 
@@ -312,6 +313,106 @@ first solve of a 60-card draft after the server starts, 20 to 50 ms after; a 60-
   `solved` and `targetsMet` are always there. An answer over 12 KB drops card rows from its end and says
   `truncated: true`.
 - The solve reads no dataset and no account: the draft's recipes were copied into it when the cards were added.
+
+### plans/expand-inputs
+
+What could make each input the draft still needs, ranked by trying each recipe in the draft. This is where the
+assistant chooses the next cards, so every candidate says what it costs and what it brings in.
+
+Request: `{planId, resources?, constraints?, max?, player?}`
+
+- `resources`: only these inputs, in this order (up to 16). Default: every unsupplied input of the draft's solve,
+  largest rate first. A named resource the draft does not need from outside is answered with no candidates and a
+  `note`.
+- `constraints`: joined with the draft's for this call only: the lower `tierCap` and `heat`, `banned` and `free`
+  lists together. The draft keeps its own.
+- `max`: candidates per input, 1 to 3, default 3.
+- A draft with no target needs nothing, so it is `bad_request`.
+
+Response:
+
+```
+{dataset, planId,
+ inputs: [{id, kind, name, perSecond, raw?, found, skipped?, note?,
+           candidates: [{recipeId, name, machine, tier, euT, seconds, inputs, outputs,
+                         reason, newRaws: [{id, kind, name, perSecond}], usesByproducts?, machines, euPerItem, works?}]}],
+ accepted: [{id, kind, name, perSecond}],
+ more, remaining?: [{id, kind, name}], notEnforced?, truncated?}
+```
+
+- `accepted`: unsupplied inputs the constraints mark `free` (matched by id or name, without case). They are raw on
+  purpose and never expanded.
+- `raw: true`: the input is itself raw to a player (see Rawness below); fine to leave unsupplied or add to `free`.
+- `found`: recipes the search found that make it, before constraints. `skipped`: recipes left out (below).
+- A candidate: the recipe in the compact form of `recipes/search` (`euT` and `seconds` are the recipe's own), the
+  `machine` and `tier` `plans/add-cards` would give it under the joined constraints, and what the trial measured:
+  `machines` the solve needs of it, `euPerItem` (the draft's added EU per unit of the input it supplies, per L for a
+  fluid), `newRaws` (inputs the draft did not need before and would need from outside with it, per second, largest
+  first), `usesByproducts` (inputs it takes that the draft already makes and nothing uses: a good sign).
+  `works: false` marks a candidate the solve could not use (it fails, or supplies none of the input); it is ranked
+  last.
+- `reason`: one plain sentence or a few: rate, machines, tier and EU per unit; each new input with its rawness; the
+  draft's spare byproducts it uses; spare byproducts it leaves; other unsupplied inputs it also supplies; how much of
+  the need it covers when not all; and "recycling" when it gives back material made elsewhere.
+- Adding a candidate: `plans/add-cards` with its `recipeId`. Auto-connect wires it as the trial did.
+
+Where candidates come from: the `recipes/search` `makes` search (its ranking: main product before byproduct,
+producing before giving back), the first 12, filtered by the joined constraints as search filters them (`tierCap`,
+`heat`, `banned`; `cleanroom` and `lowgrav` are listed in `notEnforced` when given). Skipped before trying, and
+counted in `skipped`:
+
+- a recipe that takes what it makes (a loop);
+- a recipe that takes the same stuff in another container or state ("Chlorine Cell" or "Chlorine Plasma" for
+  Chlorine): a canner or freezer, not a source;
+- a recipe that undoes the draft's work: it takes a main product the draft makes from the input, or the same material
+  in a form that is not ore (macerating the ingot back to the dust the furnace card smelts; titanium dust to make the
+  titanium tetrachloride a titanium furnace takes). One that takes only a byproduct is kept: it is a use for it;
+- a recipe already a card in the draft, and the same reaction on another machine at the same power and time
+  (Chemical Reactor and Large Chemical Reactor), tried once;
+- a recipe `plans/add-cards` would refuse (nothing runs it under the tier cap).
+
+Trying a candidate: the card is added to a copy of the draft, wired by Auto-connect, targets re-seated, and the copy
+is solved on the site's plan solver. The draft itself is never changed. At most 6 candidates are tried per input and
+36 per call.
+
+Ranking, lowest first, compared in order:
+
+1. candidates that work before ones that do not;
+2. fewer new inputs that are made (they need recipes of their own, crafting tools too);
+3. fewer new inputs that are nearly raw (a step of ore processing of a material with an ore block, a plain dust of a
+   material with no ore block);
+4. fewer new inputs that are raw;
+5. less EU per unit;
+6. fewer machines;
+7. the search's own order.
+
+Rawness of a resource, by name and the dataset's ore blocks:
+
+- raw: water, air and its gases (oxygen, nitrogen, argon, helium, neon, carbon dioxide), steam, lava, stone, sand,
+  gravel, dirt, clay, ice, netherrack, end stone, logs and wood; an ore block in any stone, or a raw ore; a dust of a
+  material that has an ore block ("Rutile Dust": Rutile Ore); an item mined under its own name ("Salt": Salt Ore); a
+  `free` resource;
+- nearly raw: crushed, purified, centrifuged or refined ore, impure or purified piles, shards, of a material with an
+  ore block; a dust of a material with none;
+- made: everything else.
+
+Paging and limits: at most 6 inputs a call; inputs past them, past the trial budget, or past 3.5 s are listed in
+`remaining` with `more: true`; ask again with `resources` set to them. An answer over 12 KB moves whole inputs from its
+end to `remaining`. On the build box with the pack dataset: a draft with 9 unsupplied inputs answers in two pages of
+5 and 4 inputs, 11.4 KB and 10.1 KB; the first call after a start takes about 2 s a page, then 0.2 to 0.9 s.
+
+Known limits, honestly:
+
+- The dataset has no world generation. GregTech makes ore blocks for materials that never spawn, so "Titanium Dust"
+  and "Magnesium Dust" read as raw (Titanium Ore and Magnesium Ore exist as blocks) whether or not the pack spawns
+  them. An assistant that knows the pack's veins should judge `raw` itself.
+- Spare byproducts are named in `reason` but do not change the rank: for Chlorine the terlinguaite electrolysis
+  (an ore dust, 0.08 EU per L) ranks before salt (0.15 EU per L) though it leaves twice as much Mercury as Chlorine.
+- Steam machines show 0 EU per unit; the steam they burn is not counted.
+- Only the search's first 12 recipes are looked at, after its own ranking; a good recipe further down its list is not
+  tried.
+
+Example: `docs/agent-api/examples/plans-expand-inputs.json` (the titanium tetrachloride furnace line, first call).
 
 ### plans/deliver
 

@@ -40,6 +40,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "4.7.0-tux.3",
+    date: "2026-11-21",
+    headline: "Rounding fixes and game-exact coil discounts",
+    notes: [
+      "Figures that sit exactly on a rounding half print as they should again: for example 0.63 A where 0.62 A showed, and a count of 152.5 as 153.",
+      "Very large EU/t totals on the Industrial Coke Oven, Mega Oil Cracker, Mega Alloy Blast Smelter, Large Fluid Extractor and Large Thermal Refinery match the game to the last unit.",
+      "The Get the mod button and the Help menu's Download the mod row show only when this site has a mod download set up.",
+    ],
+  },
+  {
     version: "4.7.0-tux.2",
     date: "2026-11-20",
     headline: "Power numbers from the game, and one solver for every browser",

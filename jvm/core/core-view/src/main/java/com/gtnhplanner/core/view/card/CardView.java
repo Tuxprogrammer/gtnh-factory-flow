@@ -129,8 +129,8 @@ public record CardView(String nodeId, String name, int nameStep, boolean hasPick
                 .num("value", v.amps.value)
                 .bool("editable", v.amps.editable)
                 .end());
-        j.list("inputs", v.inputs, CardView::port);
-        j.list("outputs", v.outputs, CardView::port);
+        j.list("inputs", v.inputs, CardView::writePort);
+        j.list("outputs", v.outputs, CardView::writePort);
         if (v.power != null) j.field(
             "power",
             x -> x.begin()
@@ -148,8 +148,8 @@ public record CardView(String nodeId, String name, int nameStep, boolean hasPick
                 .str("icon", v.glanceProduct.icon())
                 .bool("fluid", v.glanceProduct.fluid())
                 .end());
-        j.field("count", x -> count(x, v.count));
-        if (v.foot != null) j.field("foot", x -> foot(x, v.foot));
+        j.field("count", x -> writeCount(x, v.count));
+        if (v.foot != null) j.field("foot", x -> writeFoot(x, v.foot));
         if (v.loop != null) j.str("loop", v.loop.name());
         if (v.glance != null) j.field(
             "glance",
@@ -164,7 +164,7 @@ public record CardView(String nodeId, String name, int nameStep, boolean hasPick
                 .opt("icon", v.circuit.icon())
                 .opt("number", v.circuit.number())
                 .end());
-        j.list("chips", v.chips, CardView::chip)
+        j.list("chips", v.chips, CardView::writeChip)
             .num("stripHeight", v.stripHeight)
             .bool("selected", v.selected)
             .bool("cannotRun", v.cannotRun)
@@ -181,7 +181,8 @@ public record CardView(String nodeId, String name, int nameStep, boolean hasPick
         j.end();
     }
 
-    private static void port(final Json j, final PortView p) {
+    /** One port row's JSON (a special card's sections write theirs the same way). */
+    public static void writePort(final Json j, final PortView p) {
         j.begin()
             .str("key", p.key)
             .str("handleId", p.handleId)
@@ -211,7 +212,8 @@ public record CardView(String nodeId, String name, int nameStep, boolean hasPick
         j.end();
     }
 
-    private static void chip(final Json j, final ChipView c) {
+    /** One chip's JSON. */
+    public static void writeChip(final Json j, final ChipView c) {
         j.begin()
             .str("id", c.id)
             .str("label", c.label)
@@ -232,7 +234,8 @@ public record CardView(String nodeId, String name, int nameStep, boolean hasPick
             .end();
     }
 
-    private static void count(final Json j, final CountView c) {
+    /** The count's JSON. */
+    public static void writeCount(final Json j, final CountView c) {
         j.begin()
             .str("text", c.text)
             .opt("unit", c.unit)
@@ -250,7 +253,8 @@ public record CardView(String nodeId, String name, int nameStep, boolean hasPick
             .end();
     }
 
-    private static void foot(final Json j, final FootView f) {
+    /** The foot bar's JSON. */
+    public static void writeFoot(final Json j, final FootView f) {
         j.begin()
             .str("tone", f.tone.name())
             .str("word", f.word)

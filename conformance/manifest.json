@@ -1224,13 +1224,18 @@
     },
     "view-inputs/card-website-test-inputs.jsonl.gz": {
       "area": "view-inputs",
-      "bytes": 210344,
-      "sha256": "f17937216f3b901971f16c51285d734dc825a6e50f140b41d08a75f5149eee30"
+      "bytes": 210825,
+      "sha256": "c827e0dd4a29926d40be5d244b5d65378c3ec08b7edb0d54b0f8c6c74e675fd3"
+    },
+    "view-inputs/special-website-test-inputs.jsonl.gz": {
+      "area": "view-inputs",
+      "bytes": 2500,
+      "sha256": "00411469fcfdb20ccf51f585f16abff65c3198d59a63a7bcccb68c378ee9885e"
     },
     "view/card/cases.json": {
       "area": "view",
-      "bytes": 489103,
-      "sha256": "52a75761a5d1c01786a7202c3da0b3793908755a37ad47753ba3162da59dff19"
+      "bytes": 489067,
+      "sha256": "403eabeebce09839da72ac667c65fae24803294124a896fc697a15eefd973e8e"
     },
     "view/card/count.json": {
       "area": "view",
@@ -1284,8 +1289,13 @@
     },
     "view/records.json": {
       "area": "view",
-      "bytes": 23758,
-      "sha256": "d9df3530171db6567262226c5c8a49c0eb2a3d05a90a13a75ccac0e82e5d94b7"
+      "bytes": 26315,
+      "sha256": "018b8bd608145e32f9300af4fd50cce6869b592db6e11f30fff87e06fca89ff2"
+    },
+    "view/special/cases.json": {
+      "area": "view",
+      "bytes": 61725,
+      "sha256": "8c95f7e9fbcffb870a9a660fea5f41f260f7f2c7cf8e8a18223f9c062d6100d7"
     },
     "wire/findings.json": {
       "area": "wire",

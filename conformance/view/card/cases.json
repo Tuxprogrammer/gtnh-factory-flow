@@ -2176,7 +2176,7 @@
      "box": "3",
      "prompt": false,
      "zero": false,
-     "title": "Runs exactly this many. A gap shows as a forced flow."
+     "title": "Runs at its dial."
     },
     "chips": [],
     "stripHeight": 0,

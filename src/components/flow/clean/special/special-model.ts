@@ -58,6 +58,9 @@ export interface SpecialSockets {
   /** The words in the two dashed boxes. */
   take: string;
   give: string;
+  /** The hint under each box. */
+  takeHint: string;
+  giveHint: string;
   takeHandle: string;
   giveHandle: string;
 }

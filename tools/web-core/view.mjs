@@ -135,4 +135,34 @@ export function runView(api, tally) {
       () => `${c.name}: geometry ${JSON.stringify(g)}`,
     );
   }
+  runSpecial(v, tally);
+}
+
+/**
+ * Every shared special card case (conformance/view/special/cases.json), group "view/special": the website's path,
+ * objects in and out (viewSpecialJsSix), text for text the stored parts, as SpecialCasesTest compares on the JVM.
+ */
+function runSpecial(v, tally) {
+  const corpus = JSON.parse(
+    readFileSync(path.join(ROOT, "conformance/view/special/cases.json"), "utf8"),
+  );
+  tally.check(
+    "view/special-measure",
+    corpus.measure === "six-px",
+    () => `special/cases.json is measured ${corpus.measure}`,
+  );
+  for (const c of corpus.cases) {
+    let js;
+    try {
+      js = v.viewSpecialJsSix(c.input);
+    } catch (e) {
+      tally.check("view/special", false, () => `${c.name}: the core threw ${String(e).slice(0, 200)}`);
+      continue;
+    }
+    tally.check(
+      "view/special",
+      JSON.stringify(js) === JSON.stringify(c.view),
+      () => `${c.name}: ${firstDifference(c.view, js, "special")}`,
+    );
+  }
 }

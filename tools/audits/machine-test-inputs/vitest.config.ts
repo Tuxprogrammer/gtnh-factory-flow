@@ -11,7 +11,7 @@ export default defineConfig({
     environment: "node",
     include: [
       "src/lib/machines/**/*.test.ts",
-      "src/lib/solver/{overclock,machine-effects,power-report,power-budget,hatch-input,heat-gate,high-amperage,subtick-power-cap,game-rates,bee-game-maths}.test.ts",
+      "src/lib/solver/{overclock,machine-effects,power-report,power-budget,hatch-input,heat-gate,high-amperage,subtick-power-cap,under-one-tick,game-rates,bee-game-maths}.test.ts",
       "src/lib/model/{recipe-rules,recipe-input-overrides,input-chance,tiers,machine-list,bee-housings}.test.ts",
     ],
     exclude: ["**/node_modules/**", "**/*.local.test.*"],

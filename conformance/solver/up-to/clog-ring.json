@@ -123,8 +123,8 @@
     "8ddfd6e7-a6c1-3148-9cbd-b3ce31358783": 0
    },
    "edgeFlowsPerSecond": {
-    "de09bd25-06b6-3cdf-b673-fead9256f3d7": 0,
-    "8bc59312-b08c-3569-b325-3f8837690776": 0
+    "8bc59312-b08c-3569-b325-3f8837690776": 0,
+    "de09bd25-06b6-3cdf-b673-fead9256f3d7": 0
    },
    "gatedSources": [],
    "gatedSinks": [],

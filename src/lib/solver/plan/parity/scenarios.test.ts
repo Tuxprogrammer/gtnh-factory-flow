@@ -1,6 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { readConformanceJson } from "@/test-support/conformance";
-import { initLpEngine } from "../../lp-engine";
+import { CORE_LOAD_MS, useCoreSolver } from "@/test-support/core-solve";
 import { calculateThroughput } from "../../throughput";
 import { getSolveCore, setSolveCore } from "../adapter/engine";
 import type { Answer, MachineIn, SolveInput } from "../types";
@@ -108,9 +108,7 @@ const close = (a: number, b: number) =>
 const closeF = (a: number, b: number) =>
   Math.abs(a - b) <= 1e-5 * Math.max(1, Math.abs(a), Math.abs(b));
 
-beforeAll(async () => {
-  await initLpEngine();
-});
+beforeAll(() => useCoreSolver(), CORE_LOAD_MS);
 afterEach(() => setSolveCore(undefined));
 
 interface Run {

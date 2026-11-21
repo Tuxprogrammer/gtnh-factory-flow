@@ -3,13 +3,12 @@
 //   conformance/solver/corpus/inputs/*.json     31 plans, each with its golden under corpus/goldens (the mod's answers)
 //   platline-x4, platline-x10                   the platline tiled 4 and 10 times (the inputs are built here as the mod's
 //                                               SolverCorpus.tile does); x10 only with `bench`
-//   conformance/solver/up-to/*.json             74 plans, each with the website's answer
-//   conformance/solver/website/cases.json.gz    223 inputs the website's own tests and reference plans solve, each with the
-//                                               website's answer (WebsiteCasesTest): 219 equal by the rule below, 3 listed as
-//                                               differing and 1 as equal within the LP's tolerance, each with its reason
+//   conformance/solver/up-to/*.json             74 plans, each with the compiled core's answer
+//   conformance/solver/website/cases.json.gz    the inputs the website's own tests and reference plans solve, each with the
+//                                               compiled core's answer (WebsiteCasesTest), all equal by the rule below
 // The rule, from SolverCorpus.differences: the same keys, the same array lengths and order, and numbers equal when
-// p == q or |p - q| <= 1e-6 * max(1, |p|, |q|). Three Up to plans are held to the part of the answer the JVM test holds
-// them to (UpToParityTest.WITHIN_TOLERANCE). With `jvmDir` (digests the JVM's DigestDump wrote) each answer must also
+// p == q or |p - q| <= 1e-6 * max(1, |p|, |q|). A plan listed WITHIN_TOLERANCE would be held to the read-outs and
+// counts only; none is, since every recorded answer is the core's. With `jvmDir` (digests the JVM's DigestDump wrote) each answer must also
 // be the JVM's own, every number equal: the kernel gives the same bits on the JVM and both web targets (core-base
 // ExactMath and JavaHashMap, the build plugin), so any drift at all is a regression. `drift` is reported to say how far.
 import { createHash } from "node:crypto";
@@ -23,22 +22,12 @@ const ROOT = fileURLToPath(new URL("../../", import.meta.url));
 const solverDir = (rel) => path.join(ROOT, "conformance", "solver", rel);
 const readJson = (file) => JSON.parse(readFileSync(file, "utf8"));
 
-/** Plans the website's engine and the mod's answer alike only to within the LP's tolerance (UpToParityTest). */
-const WITHIN_TOLERANCE = new Set(["mv-every-count-up-to.json", "idle-noise.json", "idle-noise-beside-a-lone-card.json"]);
+/** Up to plans answered alike only to within the LP's tolerance, with why: none (the answers are the core's). */
+const WITHIN_TOLERANCE = new Set([]);
 
-/**
- * Website cases the two engines answer differently (WebsiteCasesTest.DIFFERS): the website's HiGHS missed a held row by about
- * 1e-7 and its least flow found no point, so it ran again with every hold loosened by 1e-6; ojAlgo keeps the rows to 1e-12 and
- * the core's answer is the exact one. A listed case that agrees fails, so the list never outlives its reason.
- */
-const OIL_LINE = "src/lib/solver/plan/loosened-holds.test.ts > held levels read off a slightly inexact point never fail the plan > ";
-const WEBSITE_DIFFERS = new Set([
-  `${OIL_LINE}Up to 0.31 solves at the 0.3 machines it needs (forward columns) #3`,
-  `${OIL_LINE}Up to 0.5 solves at the 0.3 machines it needs (forward columns) #2`,
-  `${OIL_LINE}Up to 1 solves at the 0.3 machines it needs (forward columns) #1`,
-]);
-/** Website cases equal only to within the LP's own tolerance (WebsiteCasesTest.WITHIN_TOLERANCE): read-outs and counts. */
-const WEBSITE_WITHIN_TOLERANCE = new Set([`${OIL_LINE}Up to 2 solves at the 0.3 machines it needs (forward columns) #4`]);
+/** Website cases listed as differing, or equal only within the LP's tolerance: none (the answers are the core's). */
+const WEBSITE_DIFFERS = new Set([]);
+const WEBSITE_WITHIN_TOLERANCE = new Set([]);
 
 export const TILES = { "platline-x4": 4, "platline-x10": 10 };
 

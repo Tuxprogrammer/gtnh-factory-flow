@@ -557,7 +557,7 @@ public final class CardViews {
             pinned ? setText : t("count.set"),
             unset,
             readout != null ? readout.reached() <= NOTHING : !pinned && c.needed() <= NOTHING,
-            title != null ? title : switch (rule) {
+            title != null ? title : c.customRate() ? t("count.title.dial") : switch (rule) {
                 case UP_TO -> t("count.title.up_to");
                 case EXACT -> t("count.title.exact");
                 case ANY -> t("count.title.any");

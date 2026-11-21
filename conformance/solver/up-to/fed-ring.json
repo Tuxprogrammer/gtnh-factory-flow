@@ -137,13 +137,13 @@
   "solution": {
    "extentsPerSecond": {
     "1ef7e05d-0185-3c30-9e1a-18b7fbe4fa14": 0.5,
-    "a7bd54bb-3b14-3f83-9deb-4b090030e405": 0.5,
-    "99d6ec62-8d75-3f75-8e1a-d814f1872251": 1
+    "99d6ec62-8d75-3f75-8e1a-d814f1872251": 1,
+    "a7bd54bb-3b14-3f83-9deb-4b090030e405": 0.5
    },
    "machineCounts": {
     "1ef7e05d-0185-3c30-9e1a-18b7fbe4fa14": 0.5,
-    "a7bd54bb-3b14-3f83-9deb-4b090030e405": 0.5,
-    "99d6ec62-8d75-3f75-8e1a-d814f1872251": 1
+    "99d6ec62-8d75-3f75-8e1a-d814f1872251": 1,
+    "a7bd54bb-3b14-3f83-9deb-4b090030e405": 0.5
    },
    "edgeFlowsPerSecond": {
     "11d7f354-05de-30d2-8e66-a4bbc95371b4": 0.5,

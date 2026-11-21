@@ -2,8 +2,8 @@
  * A small, dense, two-phase simplex solver: maximize c.x subject to equality
  * and less-or-equal rows, x >= 0. Boards are a few hundred variables, so a
  * dense tableau is enough; pivots are deterministic (see `runSimplex`). This is
- * the synchronous engine for the main thread, SSR and tests; lp-engine.ts
- * swaps in HiGHS behind the same interface where it is loaded.
+ * the engine of the website's own solvers (the plan solve's stand-in where
+ * the compiled core cannot load, and the old Build, Solve and Pool engines).
  */
 
 export interface LinearProgram {
@@ -13,43 +13,17 @@ export interface LinearProgram {
   equalities: Array<{ coefficients: Map<number, number>; rhs: number }>;
   /** Inequality rows: coefficients.x <= rhs. */
   upperBounds: Array<{ coefficients: Map<number, number>; rhs: number }>;
-  /**
-   * Columns that must take whole values (x >= 0). Only the HiGHS engine can
-   * solve these; the homegrown simplex throws `IntegerVariablesUnsupportedError`.
-   */
-  integers?: number[];
-  /** Columns restricted to 0 or 1. Same engine rule as `integers`. */
-  binaries?: number[];
-}
-
-/** Thrown by the homegrown simplex when handed integer columns it cannot honour. */
-export class IntegerVariablesUnsupportedError extends Error {
-  constructor() {
-    super(
-      "This linear program has integer variables, which need the HiGHS engine; the homegrown simplex cannot solve them. Load HiGHS with initLpEngine() first.",
-    );
-    this.name = "IntegerVariablesUnsupportedError";
-  }
 }
 
 export interface LpSolution {
   status: "optimal" | "infeasible" | "unbounded";
   x: number[];
   objective: number;
-  /**
-   * HiGHS only, when asked for (`LpSolveOptions.rowDuals`): the dual of each row of the program as given, equalities
-   * then upper bounds, 0 for a row the engine did not write. Sign and scale are the engine's own (rows are
-   * equilibrated): only whether a dual is zero is meant to be read.
-   */
-  rowDuals?: number[];
 }
 
 const EPS = 1e-9;
 
 export function solveLp(lp: LinearProgram): LpSolution {
-  if ((lp.integers?.length ?? 0) > 0 || (lp.binaries?.length ?? 0) > 0) {
-    throw new IntegerVariablesUnsupportedError();
-  }
   // A tableau walk through tiny pivots can leave float wreckage large enough
   // to hand back an "optimal" point that violates the model's own equalities.
   // Every answer is therefore verified against the ORIGINAL rows; a corrupt

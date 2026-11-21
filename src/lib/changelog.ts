@@ -40,6 +40,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "4.7.0-tux.4",
+    date: "2026-11-22",
+    headline: "Game-exact fast recipes, and plans from the server's assistant",
+    notes: [
+      "Very short recipes in multiblocks run at the game's rate: a recipe that takes half a tick or less gets the extra parallels the game gives it, so fewer machines are needed.",
+      "A plan opened from a code or link made on another dataset keeps each input pick on the right input, so its wires and drawers land where they should.",
+      "The server's assistant can design a plan for you and hand you a short link that opens it here as a new design.",
+    ],
+  },
+  {
     version: "4.7.0-tux.3",
     date: "2026-11-21",
     headline: "Rounding fixes and game-exact coil discounts",

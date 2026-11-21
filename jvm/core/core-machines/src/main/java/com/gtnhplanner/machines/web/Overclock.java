@@ -108,7 +108,9 @@ public final class Overclock {
             * durationMultiplier;
         final double duration = capBankedParallels(
             behaviour != null && behaviour.quantiseDuration != null ? behaviour.quantiseDuration.applyAsDouble(raw)
-                : quantiseDurationToTicks(raw, subTickCapable),
+                : subTickCapable && raw > 0 && raw <= 1
+                    ? 1 / underOneTick(rule, effective.durationTicks * durationMultiplier, steps, perfectSteps)
+                    : quantiseDurationToTicks(raw, subTickCapable),
             parallels,
             machinePower,
             Math.ceil(Math.abs(effective.eut) * eutMultiplier * heatDiscount));
@@ -150,13 +152,27 @@ public final class Overclock {
 
     /**
      * quantiseDurationToTicks: GT truncates above one tick; below it a multiblock banks the rest as parallels
-     * (calculateMultiplierUnderOneTick, ceil(1 / duration)), so the duration rounds down to 1/n; a singleblock sits at
-     * one tick.
+     * (ceil(1 / duration), so the duration rounds down to 1/n; the generic path asks {@link #underOneTick} instead,
+     * which is the game's own count); a singleblock sits at one tick.
      */
     public static double quantiseDurationToTicks(final double durationTicks, final boolean subTickCapable) {
         if (!Double.isFinite(durationTicks) || durationTicks <= 0) return 1;
         if (durationTicks > 1) return Math.floor(durationTicks);
         return subTickCapable ? 1 / Math.ceil(1 / durationTicks) : 1;
+    }
+
+    /**
+     * underOneTick: the game's parallel multiplier for a multiblock run its overclocks take under one tick
+     * ({@link UnderOneTick}), so the run lasts 1 / multiplier ticks. A rule with perfect steps and then normal ones is a
+     * heat-overclocking machine (its perfect steps are the heat overclocks); a rule with perfect steps only overclocks
+     * by its own factor; everything else halves the duration per step.
+     */
+    static double underOneTick(final MachineTable.Rule rule, final double duration, final double steps,
+        final double perfectSteps) {
+        final boolean heat = rule.maxPerfect() > 0 && rule.maxNormal() > 0;
+        final boolean perfectOnly = rule.maxPerfect() > 0 && rule.maxNormal() == 0;
+        return UnderOneTick
+            .multiplier(duration, clampInt(steps), heat ? clampInt(perfectSteps) : 0, perfectOnly ? rule.multiplier() : 2);
     }
 
     /**

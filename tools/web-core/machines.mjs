@@ -220,8 +220,27 @@ export function runCokeOvenDiscount(api, tally) {
   tally.check("machines/coke-oven-discount", euPerTick === t.euPerTick, () => `total ${euPerTick} EU/t (game ${t.euPerTick})`);
 }
 
+/**
+ * conformance/machines/subtick-parallels.json: the game's OverclockCalculator.calculateMultiplierUnderOneTick on very
+ * short recipes, from the JVM. core-machines' UnderOneTick (MachinesExports) on every multiblock case, exactly.
+ */
+export function runSubTickParallels(api, tally) {
+  const golden = JSON.parse(readFileSync(path.join(ROOT, "conformance/machines/subtick-parallels.json"), "utf8"));
+  for (const c of golden.cases) {
+    if (!c.in.multiblock || c.game.status !== "ok") continue;
+    const got = api.MachinesExports.machinesUnderOneTick(
+      c.tail.duration,
+      c.tail.overclocks,
+      c.tail.heatOverclocksAvailable,
+      c.in.durationDecreasePerOC,
+    );
+    tally.check("machines/subtick-parallels", got === c.game.multiplier, () => `${c.name}: ${got} (game ${c.game.multiplier})`);
+  }
+}
+
 export function runMachines(api, tally, { every = 1 } = {}) {
   runCokeOvenDiscount(api, tally);
+  runSubTickParallels(api, tally);
   runMachineGoldens(api, tally, { every });
   runBeeGoldens(api, tally, { every });
   runCropGoldens(api, tally, { every });

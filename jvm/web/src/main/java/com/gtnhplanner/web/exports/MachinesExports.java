@@ -10,6 +10,7 @@ import com.gtnhplanner.machines.CropReadout;
 import com.gtnhplanner.machines.web.MachineControls;
 import com.gtnhplanner.machines.web.MachineReadout;
 import com.gtnhplanner.machines.web.MachineTable;
+import com.gtnhplanner.machines.web.UnderOneTick;
 
 /**
  * core-machines for JavaScript: the machine table's maths over a recipe on a node, a bee card and a crop card, each as
@@ -122,5 +123,16 @@ public final class MachinesExports {
                 null,
                 null),
             1);
+    }
+
+    /**
+     * The game's parallel multiplier for a multiblock run its overclocks take under one tick
+     * ({@code OverclockCalculator.calculateMultiplierUnderOneTick}): the conformance run holds it to the game's own
+     * answers (subtick-parallels.json).
+     */
+    @JSExport
+    public static double machinesUnderOneTick(final double duration, final int overclocks,
+        final int heatOverclocksAvailable, final double durationDecreasePerOC) {
+        return UnderOneTick.multiplier(duration, overclocks, heatOverclocksAvailable, durationDecreasePerOC);
     }
 }

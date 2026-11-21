@@ -208,7 +208,7 @@ Every change validates the whole request first: a refused request leaves the dra
 | `plans/import`        | `{snapshot, player?}`: the player's open plan as a slim snapshot (body up to 512 KB) | `{dataset, planId, name, expiresAt, cardCount, wireCount, warnings}` | yes |
 | `plans/expand-inputs` | `{planId, resources?, constraints?, max?}` (max 3)                   | for each unsupplied input, up to `max` recipes ranked by trying each in the solver, each with a one-line reason (EU per item, machines needed, new raws it introduces) | yes |
 | `plans/diff`          | `{planId, player?}` of an imported draft                             | `{proposalId, basePlanId, expiresAt, summary, text}`: what the draft adds to the imported plan, stored as a proposal | yes |
-| `plans/deliver`       | `{planId, player: {name, uuid}}`                                     | `{name, id, code, url?, expiresAt, cardCount}`        | yes   |
+| `plans/deliver`       | `{planId, player: {name, uuid}}`                                     | `{name, id, code, url?, link?, expiresAt, cardCount}`  | yes   |
 
 Examples, one real call each against the pack dataset (a titanium line): `docs/agent-api/examples/plans-*.json`.
 
@@ -422,14 +422,18 @@ writes to an existing design or library entry and is not a community post.
 Request: `{planId, player: {name, uuid}}` (both required: the player it is for, kept with the entry for audit and never
 served).
 
-Response: `{name, id, code, url?, expiresAt, cardCount}`.
+Response: `{name, id, code, url?, link?, expiresAt, cardCount}`.
 
 - `id`: `d` and 15 characters (see the read route). The player opens it in game with `/gtnhplanner open <id>`; the
   site and the game read it from `GET /api/deliveries/{id}`. Kept 30 days.
 - `code`: the plan code the site's own Copy plan code makes (`gtnh1.` and the plan, deflated, URL-safe base64); paste it
   into the planner's Paste a copied plan. It runs to thousands of characters: the id is what travels in chat.
 - `url`: the site's link that opens the code (`<site>/#p=<code>`), only when the server knows its address
-  (`NEXT_PUBLIC_SITE_URL`). Nothing is published to open it.
+  (`NEXT_PUBLIC_SITE_URL`). Nothing is published to open it. Kilobytes long.
+- `link`: the short form, `<site>/#d=<id>`, under the same condition. The site reads the delivery through
+  `GET /api/deliveries/{id}` and opens it as a NEW plan, as it does a `#p=` code; the id is checked against
+  `^d[a-hjkmnp-z2-9]{15}$` first (a proposal id is not opened this way). An unknown or expired id shows a short
+  message, and the address is cleared so a reload does not try again.
 - The stored plan is the draft as the site's own code reads it back: plan mode, a new plan id, the draft's name, the
   full dataset recipe bodies of every card. Opened, it lands as a new design like any pasted plan.
 - At most 100 deliveries a day (UTC), counted in the database: `rate_limited`. A draft with no cards is `bad_request`.

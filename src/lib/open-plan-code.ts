@@ -1,6 +1,8 @@
 "use client";
 
 import { decodePlanCode, readPlanCodeFromHash } from "@/lib/import-export/plan-code";
+import { fetchDeliveredPlan, readDeliveryKeyFromHash } from "@/lib/import-export/delivery-link";
+import type { FactoryProject } from "@/lib/model/types";
 import { applyPlanView } from "@/lib/plan-view";
 import { looksLikePlanJson, openPlanJsonText } from "@/lib/import-export/open-plan-file";
 import { useDesignStore } from "@/store/design-store";
@@ -16,7 +18,10 @@ export async function openPlanCode(text: string): Promise<void> {
     await openPlanJsonText(text);
     return;
   }
-  const project = await decodePlanCode(text);
+  await openDecodedPlan(await decodePlanCode(text));
+}
+
+async function openDecodedPlan(project: FactoryProject): Promise<void> {
   await useDesignStore.getState().importProjectAsDesign(project, project.name);
   applyPlanView(project.view);
 }
@@ -34,6 +39,14 @@ let arrivalPlanCode: string | undefined = (() => {
   }
 })();
 
+let arrivalDeliveryId: string | undefined = (() => {
+  try {
+    return readDeliveryKeyFromHash(window.location.hash);
+  } catch {
+    return undefined;
+  }
+})();
+
 /**
  * Open the code in the address (the one this load arrived with, or one a hash
  * change just brought), then remove it from the address so a reload does not
@@ -41,15 +54,22 @@ let arrivalPlanCode: string | undefined = (() => {
  */
 export async function openPlanCodeFromAddress(): Promise<void> {
   const code = arrivalPlanCode ?? readPlanCodeFromHash(window.location.hash);
+  // A delivered plan's short link (#d=<id>) opens the same way, read from the delivery route.
+  const deliveryId = arrivalDeliveryId ?? readDeliveryKeyFromHash(window.location.hash);
   arrivalPlanCode = undefined;
-  if (!code) {
+  arrivalDeliveryId = undefined;
+  if (!code && deliveryId === undefined) {
     return;
   }
-  if (readPlanCodeFromHash(window.location.hash)) {
+  if (readPlanCodeFromHash(window.location.hash) || readDeliveryKeyFromHash(window.location.hash) !== undefined) {
     window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
   }
   try {
-    await openPlanCode(code);
+    if (code) {
+      await openPlanCode(code);
+    } else {
+      await openDecodedPlan(await fetchDeliveredPlan(deliveryId ?? ""));
+    }
   } catch (error) {
     window.alert(error instanceof Error ? error.message : "That plan link could not be opened.");
   }

@@ -42,4 +42,17 @@ class KeyTextTest {
         assertEquals(0, KeyText.typed((char) 0, Keyboard.KEY_NUMPADENTER));
         assertEquals(0, KeyText.typed((char) 0, 0));
     }
+
+    @Test
+    void aTextFieldTypesOnlyAPadKeyThatCameWithNoCharacter() {
+        // ModularUI's field types nothing from a key event under lwjgl3ify, so the pad's no-character case is typed
+        // here; a key that came with its character is the field's own, so it is typed once, not twice.
+        assertEquals('4', KeyText.padOnly((char) 0, Keyboard.KEY_NUMPAD4));
+        assertEquals('.', KeyText.padOnly((char) 0, Keyboard.KEY_DECIMAL));
+        assertEquals('5', KeyText.padOnly((char) 0, Keyboard.KEY_NUMPAD5));
+        assertEquals(0, KeyText.padOnly('4', Keyboard.KEY_NUMPAD4));
+        assertEquals(0, KeyText.padOnly((char) 8, Keyboard.KEY_BACK));
+        assertEquals(0, KeyText.padOnly((char) 1, Keyboard.KEY_A));
+        assertEquals(0, KeyText.padOnly((char) 0, Keyboard.KEY_RETURN));
+    }
 }

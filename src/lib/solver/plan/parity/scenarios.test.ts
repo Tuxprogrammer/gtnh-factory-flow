@@ -1,14 +1,14 @@
-import { readFileSync } from "node:fs";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { initLpEngine } from "../../lp-engine";
+import { readConformanceJson } from "@/test-support/conformance";
+import { CORE_LOAD_MS, useCoreSolver } from "@/test-support/core-solve";
 import { calculateThroughput } from "../../throughput";
 import { getSolveCore, setSolveCore } from "../adapter/engine";
 import type { Answer, MachineIn, SolveInput } from "../types";
 import { buildScenario, readBoard, uuid, type Placement, type Scenario } from "./scenario-kit";
 
 /**
- * S1: the website's answers are the mod's, on real board states. Each scenario in `scenarios.json` is built on both
- * sides; the mod's SolveInput, answer and board readouts (`fixtures/mod-answers.json`, written by the mod's own
+ * S1: the website's answers are the mod's, on real board states. Each scenario in `conformance/board/scenarios.json` is built on both
+ * sides; the mod's SolveInput, answer and board readouts (`conformance/board/mod-answers.json`, written by the mod's own
  * Balancer, Unanchored and board code through a throwaway JUnit) are compared with the website's adapter input, its
  * solver's answer and what its board shows (card counts, set-count prompts, port rows, forced rows, drawers, rail).
  */
@@ -96,12 +96,10 @@ interface ModScenario {
   };
 }
 
-const spec = JSON.parse(readFileSync(new URL("./scenarios.json", import.meta.url), "utf8")) as {
+const spec = readConformanceJson("board", "scenarios.json") as {
   scenarios: Scenario[];
 };
-const mod = JSON.parse(
-  readFileSync(new URL("./fixtures/mod-answers.json", import.meta.url), "utf8"),
-) as Record<string, ModScenario>;
+const mod = readConformanceJson("board", "mod-answers.json") as Record<string, ModScenario>;
 
 const TOL = 1e-6;
 const close = (a: number, b: number) =>
@@ -110,9 +108,7 @@ const close = (a: number, b: number) =>
 const closeF = (a: number, b: number) =>
   Math.abs(a - b) <= 1e-5 * Math.max(1, Math.abs(a), Math.abs(b));
 
-beforeAll(async () => {
-  await initLpEngine();
-});
+beforeAll(() => useCoreSolver(), CORE_LOAD_MS);
 afterEach(() => setSolveCore(undefined));
 
 interface Run {

@@ -19,6 +19,16 @@ import type {
   ThroughputResult,
 } from "@/lib/model/types";
 import {
+  railFromInput,
+  RAIL_CORE_EPS,
+  keptAmount,
+  type CoreLine,
+  type RailInDrawer,
+  type RailInFlow,
+  type RailInPort,
+  type RailInput,
+} from "./rail-core";
+import {
   canonicalizeResourceHandleId,
   makeResourceHandleId,
   parseResourceHandleId,
@@ -33,7 +43,7 @@ import {
  */
 
 /** Below this a rate (per second) is solver noise, not a flow worth a line. */
-export const RAIL_EPS = 1e-6;
+export const RAIL_EPS = RAIL_CORE_EPS;
 
 export type RailSide = "inputs" | "outputs" | "internal";
 
@@ -222,23 +232,21 @@ function wiredPorts(project: FactoryProject): Set<string> {
   return wired;
 }
 
-function addTo<T>(map: Map<string, T[]>, key: string, value: T): void {
-  const list = map.get(key);
-  if (list) list.push(value);
-  else map.set(key, [value]);
+/** What the rail is worked out from: the plan and its answer as plain records (`rail-core.ts`). */
+export interface RailSource {
+  input: RailInput;
+  /** The cards' machines, in the order the input lists them (a fluid tank left out). */
+  machines: RailMachine[];
+  lookup: Map<string, RailResource>;
+  aliases: Map<string, string>;
 }
 
-interface Look {
-  kind: ResourceKind;
-  id: string;
-  label: string;
-}
-
-export function buildRailModel(
+/** Reads a plan and its answer into the records the rail is worked out from. The view settings are the caller's. */
+export function railSource(
   project: FactoryProject,
-  result: ThroughputResult | undefined,
-): RailModel {
-  if (!result) return EMPTY_RAIL;
+  result: ThroughputResult,
+  view: RailInput["view"] = { filter: "", peak: true, power: "eu" },
+): RailSource {
   const recipes = new Map(project.recipes.map((recipe) => [recipe.id, recipe]));
   const nodesById = new Map(project.nodes.map((node) => [node.id, node]));
   const lookup = buildResourceLookup(project);
@@ -247,28 +255,34 @@ export function buildRailModel(
   const roles = getStorageRoles(project);
 
   const machineEntries = buildMachineList(project, result);
-  const machines: RailMachine[] = machineEntries
+  const isTank = (entry: MachineListEntry) =>
     // A fluid tank is free and instant: no machine to build (the mod lists none for it).
-    .filter((entry) => !isFluidTankRecipe(recipes.get(nodesById.get(entry.nodeId)?.recipeId ?? "")))
-    .map((entry) => {
-      const node = nodesById.get(entry.nodeId);
-      const rule = node ? pinRuleOf(node) : "any";
-      const pin = node?.solvePin;
-      const pinned = rule !== "any" && pin !== undefined && pin > 0;
-      const upTo = rule === "upTo" ? result.plan?.upTo?.[entry.nodeId] : undefined;
-      // An Up to card lists what runs, not what is set.
-      // A crop card's solved units are seeds: the line counts the harvesters they fill.
-      const count = upTo ? machinesFromUnits(entry, Math.max(0, upTo.reached)) : entry.count;
-      return {
-        ...entry,
-        count,
-        pinned,
-        rule,
-        ...(pinned ? { pin: machinesFromUnits(entry, pin) } : {}),
-        ...(upTo ? { upTo } : {}),
-        madeTier: powerCardTier(recipes.get(node?.recipeId ?? "")),
-      };
-    });
+    isFluidTankRecipe(recipes.get(nodesById.get(entry.nodeId)?.recipeId ?? ""));
+  const machineOf = (entry: MachineListEntry): RailMachine => {
+    const node = nodesById.get(entry.nodeId);
+    const rule = node ? pinRuleOf(node) : "any";
+    const pin = node?.solvePin;
+    const pinned = rule !== "any" && pin !== undefined && pin > 0;
+    const upTo = rule === "upTo" ? result.plan?.upTo?.[entry.nodeId] : undefined;
+    // An Up to card lists what runs, not what is set.
+    // A crop card's solved units are seeds: the line counts the harvesters they fill.
+    const count = upTo ? machinesFromUnits(entry, Math.max(0, upTo.reached)) : entry.count;
+    return {
+      ...entry,
+      count,
+      pinned,
+      rule,
+      ...(pinned ? { pin: machinesFromUnits(entry, pin) } : {}),
+      ...(upTo ? { upTo } : {}),
+      madeTier: powerCardTier(recipes.get(node?.recipeId ?? "")),
+    };
+  };
+  const all = machineEntries.map((entry) => ({
+    entry,
+    tank: isTank(entry),
+    rail: machineOf(entry),
+  }));
+  const machines = all.filter((m) => !m.tank).map((m) => m.rail);
   const machineName = new Map(machineEntries.map((entry) => [entry.nodeId, entry.label]));
   const nameOf = (cardId: string): string => {
     const known = machineName.get(cardId);
@@ -277,79 +291,58 @@ export function buildRailModel(
     return recipe?.machineType ?? cardId;
   };
 
-  // Flow: what every card makes and uses, by canonical resource.
-  const made = new Map<string, number>();
-  const used = new Map<string, number>();
-  const looks = new Map<string, Look>();
-  const pinsByLine = new Map<string, RailPin[]>();
-  const openByLine = new Map<string, RailOpenPort[]>();
   // A failed solve (nothing set, nothing to calculate) leaves each card's nominal single craft in its result: those
   // are not flows of the plan, so nothing is counted until the plan has an answer.
   const answered = result.plan?.failure === undefined;
+  const flows: RailInFlow[] = [];
+  const names: Record<string, string> = {};
+  const named = (kind: ResourceKind, id: string) => {
+    const name = oredictName(project, kind, id);
+    if (name !== undefined) names[`${kind}:${id}`] = name;
+  };
   for (const node of Object.values(result.nodes)) {
     if (!node.enabled) continue;
     const { cardId } = splitResultNodeId(node.nodeId);
     const projectNode = nodesById.get(cardId);
     const recipe = recipes.get(node.recipeId);
     if (!projectNode || isCustomRateRecipe(recipe)) continue;
-    // A machine at zero keeps its nameplate rates in the result (its port rows are built from them) but makes and uses
-    // nothing: the mod sums solved flows only. Its ports are still listed, at 0, so they can be set from here.
-    const flowing = answered && (node.theoreticalMachinesRequired ?? 0) > 1e-9;
-    const running = flowing ? Math.min(1, Math.max(0, node.utilization ?? 1)) : 0;
+    const ports: RailInPort[] = [];
     for (const side of ["output", "input"] as const) {
-      const flows = side === "output" ? node.outputs : node.inputs;
-      for (const flow of Object.values(flows)) {
-        const key = canonicalOf(aliases, flow.key);
-        const bucket = side === "output" ? made : used;
-        bucket.set(key, (bucket.get(key) ?? 0) + flow.amountPerSecond * running);
-        if (!looks.has(key) || (side === "output" && flow.key === key)) {
-          looks.set(key, {
-            kind: flow.kind,
-            id: flow.resourceId,
-            label: flow.displayName ?? lookup.get(flow.key)?.displayName ?? flow.resourceId,
-          });
-        }
-        const output = side === "output";
+      const sideFlows = side === "output" ? node.outputs : node.inputs;
+      for (const flow of Object.values(sideFlows)) {
         const handle = flowHandle(node.nodeId, side, flow.kind, flow.resourceId);
-        if (wired.has(`${cardId}|${handle}`)) continue;
-        const lineKey = `${output ? "o" : "i"}|${key}`;
-        const pinned = projectNode.portRates?.[handle];
-        if (pinned !== undefined && pinned > 0) {
-          addTo(pinsByLine, lineKey, {
-            type: "port",
-            nodeId: cardId,
-            handle,
-            output,
-            ratePerSecond: pinned,
-            machine: nameOf(cardId),
-          });
-        }
-        addTo(openByLine, lineKey, {
-          nodeId: cardId,
+        const set = projectNode.portRates?.[handle];
+        named(flow.kind, flow.resourceId);
+        ports.push({
+          output: side === "output",
+          key: flow.key,
+          kind: flow.kind,
+          id: flow.resourceId,
+          label: flow.displayName ?? lookup.get(flow.key)?.displayName ?? flow.resourceId,
+          perSecond: flow.amountPerSecond,
           handle,
-          output,
-          perSecond: flow.amountPerSecond * running,
-          machine: nameOf(cardId),
+          wired: wired.has(`${cardId}|${handle}`),
+          set: set !== undefined && set > 0 ? set : 0,
         });
       }
     }
+    flows.push({
+      card: cardId,
+      machine: nameOf(cardId),
+      ...(node.theoreticalMachinesRequired !== undefined
+        ? { machines: node.theoreticalMachinesRequired }
+        : {}),
+      ...(node.utilization !== undefined ? { utilization: node.utilization } : {}),
+      ports,
+    });
   }
 
-  // What trash voids leaves the plan without being one of its outputs.
-  const trashed = new Map<string, number>();
-  const sourceDrawers = new Map<string, RailDrawer[]>();
-  const productDrawers = new Map<string, RailDrawer[]>();
+  const drawers: RailInDrawer[] = [];
   const unmetIds = result.plan?.unmetDrawers ?? [];
   for (const storage of project.storages ?? []) {
     const role = roles.get(storage.id) ?? "idle";
-    const key = canonicalOf(aliases, makeResourceKey(storage.kind, storage.resourceId));
-    if (role === "trash") {
-      const eaten = result.storages[storage.id]?.producedPerSecond ?? 0;
-      trashed.set(key, (trashed.get(key) ?? 0) + Math.max(0, eaten));
+    if (role !== "trash" && role !== "source" && role !== "product" && role !== "byproduct")
       continue;
-    }
-    if (role !== "source" && role !== "product" && role !== "byproduct") continue;
-    const source = role === "source";
     // Nothing typed and no rule picked: Any (the legacy default for an input would read "exactly").
     const rule: TargetMode =
       role === "byproduct" ||
@@ -357,104 +350,132 @@ export function buildRailModel(
         ? "ignore"
         : storageTargetMode(storage, role);
     const set = role !== "byproduct" && hasStorageTarget(storage, role);
-    addTo(source ? sourceDrawers : productDrawers, key, {
-      type: "drawer",
+    named(storage.kind, storage.resourceId);
+    drawers.push({
       id: storage.id,
-      source,
+      kind: storage.kind,
+      resourceId: storage.resourceId,
+      label:
+        storage.displayName ??
+        lookup.get(`${storage.kind}:${storage.resourceId}`)?.displayName ??
+        storage.resourceId,
       role,
       rule,
-      ratePerSecond: set ? Math.abs(storage.targetPerSecond ?? 0) : 0,
       set,
+      rate: set ? Math.abs(storage.targetPerSecond ?? 0) : 0,
       unmet: unmetIds.includes(storage.id),
+      eaten: result.storages[storage.id]?.producedPerSecond ?? 0,
     });
-    if (!looks.has(key)) {
-      looks.set(key, {
-        kind: storage.kind,
-        id: storage.resourceId,
-        label:
-          storage.displayName ??
-          lookup.get(`${storage.kind}:${storage.resourceId}`)?.displayName ??
-          storage.resourceId,
-      });
-    }
   }
 
-  const line = (key: string, amount: number, side: "i" | "o" | "x"): RailLine => {
-    const look: Look = looks.get(key) ?? {
-      kind: key.split(":")[0] as ResourceKind,
-      id: key.slice(key.indexOf(":") + 1),
-      label: key,
-    };
-    const resource = lookup.get(`${look.kind}:${look.id}`) ?? {
-      kind: look.kind,
-      id: look.id,
-      displayName: look.label,
-    };
-    const named = oredictName(project, look.kind, look.id);
-    const label = named ?? look.label;
-    return {
-      key,
-      kind: look.kind,
-      resourceId: look.id,
-      label,
-      amount,
-      energy: look.kind === "power",
-      resource: { ...resource, displayName: named ?? resource.displayName ?? look.label },
-      drawers:
-        side === "i"
-          ? (sourceDrawers.get(key) ?? [])
-          : side === "o"
-            ? (productDrawers.get(key) ?? [])
-            : [],
-      pins: side === "x" ? [] : (pinsByLine.get(`${side}|${key}`) ?? []),
-      open: side === "x" ? [] : (openByLine.get(`${side}|${key}`) ?? []),
-    };
+  const input: RailInput = {
+    answered,
+    aliases: Object.fromEntries(aliases),
+    flows,
+    drawers,
+    machines: all.map(({ entry, tank, rail }) => ({
+      nodeId: entry.nodeId,
+      label: entry.label,
+      count: rail.count,
+      tank,
+      pinned: rail.pinned,
+      rule: rail.rule,
+      ...(rail.pin !== undefined ? { pin: rail.pin } : {}),
+      ...(rail.upTo
+        ? {
+            upTo: {
+              ...(rail.upTo.reason ? { reason: rail.upTo.reason } : {}),
+              reached: rail.upTo.reached,
+              capacity: rail.upTo.capacity,
+            },
+          }
+        : {}),
+      ...(entry.tier !== undefined ? { tier: entry.tier } : {}),
+      ...(entry.amps !== undefined ? { amps: entry.amps } : {}),
+      multiblock: entry.isMultiblock,
+      ...(rail.madeTier !== undefined ? { madeTier: rail.madeTier } : {}),
+      state: entry.state,
+      ...(entry.euT !== undefined ? { euT: entry.euT } : {}),
+      ...(entry.avgEuT !== undefined ? { avgEuT: entry.avgEuT } : {}),
+      ...(entry.steamLs !== undefined ? { steamLs: entry.steamLs } : {}),
+      ...(entry.avgSteamLs !== undefined ? { avgSteamLs: entry.avgSteamLs } : {}),
+      ...(entry.madeEuT !== undefined ? { madeEuT: entry.madeEuT } : {}),
+      ...(entry.avgMadeEuT !== undefined ? { avgMadeEuT: entry.avgMadeEuT } : {}),
+    })),
+    names,
+    spares: [],
+    cards: project.nodes.map((node) => node.id),
+    wires: project.edges.map((edge) => ({ from: edge.source, to: edge.target })),
+    view,
   };
+  return { input, machines, lookup, aliases };
+}
 
-  const inputs: RailLine[] = [];
-  const outputs: RailLine[] = [];
-  const internal: RailLine[] = [];
-  for (const key of new Set([...made.keys(), ...used.keys()])) {
-    const m = made.get(key) ?? 0;
-    const u = used.get(key) ?? 0;
-    const leaves = m - u - (trashed.get(key) ?? 0);
-    if (u - m > RAIL_EPS) inputs.push(line(key, u - m, "i"));
-    if (leaves > RAIL_EPS) outputs.push(line(key, leaves, "o"));
-    if (Math.min(m, u) > RAIL_EPS) internal.push(line(key, Math.min(m, u), "x"));
-  }
-  // Biggest first; equal amounts keep the order the plan met them in (the sort is stable), as the mod lists them.
-  const byAmount = (a: RailLine, b: RailLine) => b.amount - a.amount;
-  inputs.sort(byAmount);
-  outputs.sort(byAmount);
-  internal.sort(byAmount);
-  // A resource a card's unwired port takes or makes stays listed at 0, so it can be set from here.
-  for (const [lineKey] of openByLine) {
-    const key = lineKey.slice(2);
-    const list = lineKey.startsWith("o|") ? outputs : inputs;
-    if (!list.some((l) => l.key === key))
-      list.push(line(key, 0, lineKey.startsWith("o|") ? "o" : "i"));
-  }
-  // A resource with a drawer stays listed at 0, so its rule and rate can be set from here.
-  for (const key of sourceDrawers.keys()) {
-    if (!inputs.some((l) => l.key === key)) inputs.push(line(key, 0, "i"));
-  }
-  for (const key of productDrawers.keys()) {
-    if (!outputs.some((l) => l.key === key)) outputs.push(line(key, 0, "o"));
-  }
-
-  const sum = (pick: (entry: MachineListEntry) => number | undefined) =>
-    machineEntries.reduce((total, entry) => total + (pick(entry) ?? 0), 0);
-  const power = {
-    peak: { used: sum((e) => e.euT), made: sum((e) => e.madeEuT), steam: sum((e) => e.steamLs) },
-    average: {
-      used: sum((e) => e.avgEuT),
-      made: sum((e) => e.avgMadeEuT),
-      steam: sum((e) => e.avgSteamLs),
+/** A pure line as the board's own: its resource (icon, colour) looked up again, its setters typed. */
+function lineOf(
+  core: CoreLine,
+  names: Record<string, string>,
+  lookup: Map<string, RailResource>,
+): RailLine {
+  const kind = core.kind as ResourceKind;
+  const resource = lookup.get(`${kind}:${core.id}`) ?? {
+    kind,
+    id: core.id,
+    displayName: core.label,
+  };
+  return {
+    key: core.key,
+    kind,
+    resourceId: core.id,
+    label: core.label,
+    amount: core.amount,
+    energy: core.energy,
+    resource: {
+      ...resource,
+      displayName: names[`${kind}:${core.id}`] ?? resource.displayName ?? core.label,
     },
-    hasMade: machineEntries.some((e) => e.madeEuT !== undefined),
+    drawers: core.drawers.map(
+      (d): RailDrawer => ({
+        type: "drawer",
+        id: d.id,
+        source: d.source,
+        role: d.role as StorageRole,
+        rule: d.rule as TargetMode,
+        ratePerSecond: d.rate,
+        set: d.set,
+        unmet: d.unmet,
+      }),
+    ),
+    pins: core.pins.map(
+      (p): RailPin => ({
+        type: "port",
+        nodeId: p.nodeId,
+        handle: p.handle,
+        output: p.output,
+        ratePerSecond: p.rate,
+        machine: p.machine,
+      }),
+    ),
+    open: core.open.map((o) => ({ ...o })),
   };
-  const wholeMachines = machines.reduce((total, e) => total + Math.ceil(e.count - 1e-9), 0);
-  return { inputs, outputs, internal, machines, wholeMachines, power, aliases };
+}
+
+export function buildRailModel(
+  project: FactoryProject,
+  result: ThroughputResult | undefined,
+): RailModel {
+  if (!result) return EMPTY_RAIL;
+  const { input, machines, lookup, aliases } = railSource(project, result);
+  const core = railFromInput(input);
+  return {
+    inputs: core.inputs.map((l) => lineOf(l, input.names, lookup)),
+    outputs: core.outputs.map((l) => lineOf(l, input.names, lookup)),
+    internal: core.internal.map((l) => lineOf(l, input.names, lookup)),
+    machines,
+    wholeMachines: core.wholeMachines,
+    power: { peak: core.peak, average: core.average, hasMade: core.hasMade },
+    aliases,
+  };
 }
 
 /** A section's lines: what the plan's spares carry is theirs, so a line left with nothing but that is not listed. */
@@ -465,18 +486,8 @@ export function visibleLines(
 ): Array<{ line: RailLine; amount: number }> {
   const out: Array<{ line: RailLine; amount: number }> = [];
   for (const line of lines) {
-    if (side === "internal") {
-      out.push({ line, amount: line.amount });
-      continue;
-    }
-    const left = Math.max(0, line.amount - (spared.get(line.key) ?? 0));
-    if (
-      left <= Math.max(RAIL_EPS, line.amount * 1e-4) &&
-      line.drawers.length === 0 &&
-      line.pins.length === 0
-    )
-      continue;
-    out.push({ line, amount: left });
+    const amount = keptAmount(line, side === "internal", spared);
+    if (amount !== undefined) out.push({ line, amount });
   }
   return out;
 }

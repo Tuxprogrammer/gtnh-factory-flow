@@ -1,11 +1,10 @@
 /**
  * The LP layer of the plan solver (spec-solver 3.3): a small model builder (columns with bounds and a cost, rows with
- * bounds), the base model every stage starts from, and the one place a model runs. A point is believed only after the
- * independent conservation check; an infeasible or non-conserving answer is retried under other HiGHS settings before
- * it is believed (spec 7.3).
+ * bounds), the base model every stage starts from, and the one place a model runs, on the homegrown simplex (this
+ * engine is the stand-in where the compiled core cannot load). A point is believed only after the independent
+ * conservation check (spec 7.3).
  */
-import { solveLpAuto } from "../lp-engine";
-import type { LinearProgram } from "../simplex";
+import { solveLp, type LinearProgram } from "../simplex";
 import { note, type SolveContext, type StageOutcome } from "./context";
 import { TICKS_PER_SECOND } from "./model";
 import type { Note } from "./types";
@@ -258,25 +257,6 @@ export type SolveResult =
   | { ok: true; point: StageOutcome; x: number[] }
   | { ok: false; rejection: Note };
 
-/**
- * HiGHS settings tried in turn; the first conserving answer wins. "No solution" is believed once two of them say so
- * (the Java believes it when its two simplex set-ups agree); the third is for answers that are wrong, not absent.
- */
-const OPINIONS: Array<Record<string, number | string | boolean>> = [
-  {},
-  { presolve: "off" },
-  {
-    presolve: "off",
-    solver: "simplex",
-    simplex_strategy: 4,
-    primal_feasibility_tolerance: 1e-9,
-    dual_feasibility_tolerance: 1e-9,
-  },
-];
-
-/** Settings that must say "no solution" before it is believed. */
-const VERDICTS_NEEDED = 2;
-
 let columnOrder: "forward" | "reverse" = "forward";
 let lpCount = 0;
 let lpHook: ((label: string) => void) | null = null;
@@ -367,10 +347,7 @@ export function lower(lp: ModelLp): Lowered {
   return { program, colOf, fixed, infeasible };
 }
 
-/**
- * Runs a model under each HiGHS setting until one returns a point that passes the independent check. `label` names
- * the stage in the rejection.
- */
+/** Runs a model and believes its point only when it passes the independent check. `label` names the stage. */
 export function runModel(ctx: SolveContext, lp: ModelLp, label: string): SolveResult {
   lpHook?.(label);
   lpCount++;
@@ -379,64 +356,30 @@ export function runModel(ctx: SolveContext, lp: ModelLp, label: string): SolveRe
     ctx.rejection = note("SOLVER_UNSATISFIABLE", "infeasible");
     return { ok: false, rejection: ctx.rejection };
   }
-  let last: Note = note("SOLVER_UNSATISFIABLE", "infeasible");
-  let verdicts = 0;
-  for (const opinion of OPINIONS) {
-    let solution;
-    try {
-      solution = solveLpAuto(lowered.program, { highsOptions: opinion, exactPrimal: true });
-    } catch (error) {
-      last = note("SOLVER_UNSATISFIABLE", error instanceof Error ? error.message : String(error));
-      continue;
-    }
-    if (solution.status !== "optimal") {
-      last = note("SOLVER_UNSATISFIABLE", solution.status);
-      if (++verdicts >= VERDICTS_NEEDED) break;
-      continue;
-    }
-    // `+ 0` turns a negative zero into a zero
-    const x = lp.lo.map((_, c) => {
-      const k = lowered.colOf[c]!;
-      return (k < 0 ? lowered.fixed[c]! : (solution.x[k] ?? 0)) + 0;
-    });
-    const extents = x.slice(0, lp.nMachines);
-    const flows = x.slice(lp.nMachines, lp.nMachines + lp.nEdges);
-    const externals = x.slice(lp.nMachines + lp.nEdges, lp.nMachines + lp.nEdges + lp.nPorts);
-    for (const { col, port } of lp.fed) externals[port] = externals[port]! + x[col]!;
-    const residual = ctx.validate(extents, flows, externals);
-    if (residual !== null) {
-      last = note("SOLVER_NOT_CONSERVING", residual);
-      continue;
-    }
-    return { ok: true, point: ctx.outcome(extents, flows, externals), x };
-  }
-  ctx.rejection = last;
-  return { ok: false, rejection: last };
-}
-
-/**
- * One run of a model the check does not apply to (a relaxation that is allowed to break rows), under the first HiGHS
- * setting only, with the dual of every row. Returns null when there is no HiGHS or no optimum: the caller then rules
- * nothing out. Counted like any LP.
- */
-export function runRelaxation(
-  lp: ModelLp,
-  label: string,
-): { lowered: Lowered; x: number[]; objective: number; rowDuals: number[] } | null {
-  lpHook?.(label);
-  lpCount++;
-  const lowered = lower(lp);
-  if (lowered.infeasible) return null;
   let solution;
   try {
-    solution = solveLpAuto(lowered.program, { rowDuals: true });
-  } catch {
-    return null;
+    solution = solveLp(lowered.program);
+  } catch (error) {
+    ctx.rejection = note("SOLVER_UNSATISFIABLE", error instanceof Error ? error.message : String(error));
+    return { ok: false, rejection: ctx.rejection };
   }
-  if (solution.status !== "optimal" || !solution.rowDuals) return null;
+  if (solution.status !== "optimal") {
+    ctx.rejection = note("SOLVER_UNSATISFIABLE", solution.status);
+    return { ok: false, rejection: ctx.rejection };
+  }
+  // `+ 0` turns a negative zero into a zero
   const x = lp.lo.map((_, c) => {
     const k = lowered.colOf[c]!;
     return (k < 0 ? lowered.fixed[c]! : (solution.x[k] ?? 0)) + 0;
   });
-  return { lowered, x, objective: solution.objective, rowDuals: solution.rowDuals };
+  const extents = x.slice(0, lp.nMachines);
+  const flows = x.slice(lp.nMachines, lp.nMachines + lp.nEdges);
+  const externals = x.slice(lp.nMachines + lp.nEdges, lp.nMachines + lp.nEdges + lp.nPorts);
+  for (const { col, port } of lp.fed) externals[port] = externals[port]! + x[col]!;
+  const residual = ctx.validate(extents, flows, externals);
+  if (residual !== null) {
+    ctx.rejection = note("SOLVER_NOT_CONSERVING", residual);
+    return { ok: false, rejection: ctx.rejection };
+  }
+  return { ok: true, point: ctx.outcome(extents, flows, externals), x };
 }

@@ -506,28 +506,23 @@
   left: 16px;
 }
 
-/* ---- A buffer: no rule, so no rule key or rate box; its row centres in the body ------------------------------------ */
-
-/* A buffer passes what its users take and asks for nothing, so the row has the body to itself: the icon and the
-   words (figure over name, 23 px) centre on the body's middle (abs 27.5). */
-.cd[data-kind="buffer"] .cd-icon {
-  top: 11px;
-}
-.cd[data-kind="buffer"] .cd-num {
-  top: 9px;
-}
-.cd[data-kind="buffer"] .cd-name {
-  top: 22px;
-}
+/* A buffer carries a rule key and a rate box like a product, so its row sits where a product's does. */
 
 /* Its spill: what its makers force out beyond what its users take, on a Forced tile (the card's flat tint, edge and
    colours of an output's) down the drawer's left, its figure over "Forced out". The drawer is a cell wider while it has
-   one (136): the tile takes the left column, centred with the row and clear of the delete key; the words move right of
+   one (166, so the rule row fits right of the tile): the tile takes the left column, centred with the row and clear of the delete key; the words move right of
    it, 4 px apart, their right edge 4 px short of the icon. Wires dock on the grown edge (its measured size, as a
    card's). */
 .cd-wrap[data-spill],
 .cd[data-spill] {
-  width: 136px;
+  width: 166px;
+}
+/* A buffer's rule row (key and rate box) sits right of the tile, level with the words, so the tile never covers it. */
+.cd[data-spill] .cd-key {
+  left: 54px;
+}
+.cd[data-spill] .cd-box {
+  left: 66px;
 }
 .cd[data-spill] .cd-num,
 .cd[data-spill] .cd-name {
@@ -577,7 +572,10 @@
   letter-spacing: -0.3px;
   color: var(--cc-muted);
 }
-.cd-forced-name {
+/* The name is the tile's own ::after, not an element: a buffer with a rule, its figure and this tile stays inside the
+   drawer's element budget (CleanDrawer.test.tsx). */
+.cd-forced::after {
+  content: "Forced out";
   font-size: 7px;
   line-height: 9px;
   letter-spacing: -0.3px;

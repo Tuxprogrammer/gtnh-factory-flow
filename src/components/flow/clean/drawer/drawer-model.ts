@@ -1,8 +1,8 @@
 import type { FactoryStorage, StorageThroughputResult } from "@/lib/model/types";
-import { formatCompact, formatPowerValue } from "@/lib/model";
+import { formatCompact, formatPowerValue } from "@/lib/format/numbers";
 import type { StorageRole } from "@/lib/model/storage-role";
 import { storageTargetMode, type TargetMode } from "@/lib/model/storage-target";
-import { rateMultiplierForKind, rateSuffixForKind } from "@/lib/model/rate-unit";
+import { rateMultiplierForKind, rateSuffixForKind } from "@/lib/format/rate-unit";
 import { RULE_MARK, RULE_NAME, trimFlow } from "../../rate-rule";
 import type { DrawerKind } from "../tokens";
 import { mcTextWidth, measureRowFigure, measureRowName } from "../text-measure";
@@ -128,7 +128,22 @@ export interface DrawerViewInput {
   linked: boolean;
   /** What the makers of a buffer force out beyond what its users take, per second (the plan's `spills`, summed). */
   spill?: number;
+  /** The widths the fit rules ask; the shared cases run them with the fixed six-pixel measure. */
+  measure?: DrawerMeasure;
 }
+
+/** How wide the drawer's words are drawn: the row's figure and unit, a name (small or not), and the game font. */
+export interface DrawerMeasure {
+  figure(number: string, unit: string): number;
+  name(label: string, small: boolean): number;
+  game(label: string): number;
+}
+
+const CLEAN_MEASURE: DrawerMeasure = {
+  figure: measureRowFigure,
+  name: measureRowName,
+  game: mcTextWidth,
+};
 
 const KIND_NAME: Record<DrawerKind, string> = {
   source: "Source",
@@ -143,6 +158,19 @@ export function bufferThroughput(result: Pick<StorageThroughputResult, "produced
 }
 
 function ruleMeaning(kind: DrawerKind, rule: TargetMode): string {
+  // A buffer's rule holds what passes through it (the mod's words).
+  if (kind === "buffer") {
+    switch (rule) {
+      case "ignore":
+        return "No target: the plan passes whatever its users take.";
+      case "at-least":
+        return "The plan passes at least the rate through it.";
+      case "exact":
+        return "The plan passes exactly the rate through it.";
+      case "at-most":
+        return "The plan passes no more than the rate through it.";
+    }
+  }
   const flow = kind === "source" ? "draws from it" : "puts in it";
   switch (rule) {
     case "ignore":
@@ -158,14 +186,15 @@ function ruleMeaning(kind: DrawerKind, rule: TargetMode): string {
 
 export function buildDrawerView(input: DrawerViewInput): CleanDrawerView {
   const { storage, role, label, result, unanchored, unmet, linked, spill } = input;
+  const measure = input.measure ?? CLEAN_MEASURE;
   const kind = drawerKindFor(role, storage);
   const resourceKind = storage.kind;
   // A buffer's net is zero (in equals out): its figure is what passes through.
   const net = kind === "buffer" ? bufferThroughput(result) : Math.abs(result?.netPerSecond ?? 0);
   const { number, unit } = formatRateParts(net, resourceKind);
   const zero = !(net > 0.000005);
-  // A buffer has no rule: it passes what its users take. Trash has its key but no rate.
-  const hasRule = kind !== "trash" && kind !== "buffer";
+  // Trash has its key but no rate. A buffer carries a rule like a product (Any by default).
+  const hasRule = kind !== "trash";
   const target = storage.targetPerSecond;
   // A byproduct is a product with no rule: whatever its stored rule, it reads as Any until it is made a product.
   const inert = role === "byproduct" || role === "trash";
@@ -264,10 +293,10 @@ export function buildDrawerView(input: DrawerViewInput): CleanDrawerView {
     number,
     unit,
     zero,
-    numberSmall: measureRowFigure(number, unit) > (spilling ? SPILL_WORDS : WORDS),
+    numberSmall: measure.figure(number, unit) > (spilling ? SPILL_WORDS : WORDS),
     // The mod's rule, as the card's (CardPaint.words).
-    nameSmall: mcTextWidth(label) > 71,
-    nameClipped: measureRowName(label, mcTextWidth(label) > 71) > (spilling ? SPILL_WORDS : NAME_BOX),
+    nameSmall: measure.game(label) > 71,
+    nameClipped: measure.name(label, measure.game(label) > 71) > (spilling ? SPILL_WORDS : NAME_BOX),
     hasRule,
     rule,
     ruleMark: kind === "trash" ? "×" : RULE_MARK[rule],

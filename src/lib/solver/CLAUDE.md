@@ -23,13 +23,23 @@ nowhere or goes nowhere except through a source, a drawer or trash. Longer versi
   (capability, clog names, "one wire fixes it"). If an LP fails, the old books stand; a
   solve failure degrades, never crashes. Balance dust snaps at 1e-5 relative
   (`balances.ts`).
-- Engines: `lp-engine.ts` uses HiGHS (WASM) when loaded, else the homegrown simplex
-  (`simplex.ts`). Big or slow boards solve in a worker (`src/store/solve-books.ts`);
-  nothing that size may run on the main thread.
+- Engines: every plan solves on the compiled core (below). The website's own solvers (the plan solve's stand-in, the
+  old Build, Solve and Pool engines) run on the homegrown simplex (`simplex.ts`); there is no other LP engine. Big or
+  slow boards solve in a worker (`src/store/solve-books.ts`); nothing that size may run on the main thread.
+- The plan solve's engine is `getSolveCore()` (`plan/adapter/engine.ts`), the one seam. In the solve Worker and the
+  server's plan routes, and on a main thread with no Worker (`solve-books.ts` imports it on the first solve there),
+  `src/lib/core/solve-adopt.ts` puts the compiled core behind it (`ADOPT.solve`, WebAssembly GC
+  or its JavaScript build, same answers): the input goes over as JSON (`SolverExports.solverSolveCached`, island cache in the module), the golden digest
+  comes back as the website's `Answer`; ids the website mints are renamed to UUIDs in the solve's own order and named
+  back. In the Worker every solve waits for the core (`src/store/solve-engines.ts`, bounded), so a plan never shows the
+  stand-in's numbers first; the TypeScript solver answers only where the core does not: a failed or hung load (the page
+  then says solving is degraded: `src/store/solve-health.ts`, `SolveDegradedNotice`), and a main thread with no Worker
+  until the core has loaded. The
+  server's plan routes solve on the core only (`src/lib/server/plan-engine.ts`): without it they answer 503, and
+  `npm run build` fails without a core (`prebuild`: `tools/copy-core.mjs --required`). The path through the core is held by `src/lib/core/solve-through-core.test.ts` (every recorded
+  input, also with the website's kind of ids, and the Worker's books for every reference plan).
 - Plan solver dust (`plan/validate.ts` `dustScales`) is judged per network, never over the whole point: a
   reactor's billions of EU a second must not zero a 0.03/s item wire (the answer then fails its own check).
-- HiGHS misses rows by about 1e-7 on its own scaling, so values held from one stage's point can leave a later stage
-  nothing: least flow retries once with the holds `loosened`. Exam: `plan/loosened-holds.test.ts`.
 - Node rates in results are FULL SPEED; actual = nameplate x `min(1, max(0, utilization))`.
 - The plan adapter reads per-craft amounts from the nameplate loop (`PlanUnit.perCraft`): a card with no count has
   zero flows, and the bare recipe would drop machine effects (a TGS's tier and tools). Exam: `adapter/per-craft.test.ts`.
@@ -86,6 +96,14 @@ nowhere or goes nowhere except through a source, a drawer or trash. Longer versi
 The verdict and ring-diagnosis code lives in `src/components/flow/` (`node-verdict.ts`,
 `death-spiral.ts`, `clog-lock.ts`, `bare-slots.ts`).
 
+No plan board reaches the old engines: a plan-mode project always carries `solveMode`, so the
+ring proofs return nothing, `deriveNodeVerdict` stops at its solve-mode line (off, no recipe,
+unwired, balanced, demand set), and the Worker's `attachClogLocks` runs no LP.
+`plan/one-mode-reach.test.ts` pins this on every reference plan. The blueprint stats
+(`lib/blueprints/io-stats.ts`) still solve a payload as a Build plan, and the Inspector's selection
+flow runs on the main thread's homegrown simplex, but no player reaches either: nothing opens the
+blueprint save dialog, and plan boards show the overview, not the Inspector.
+
 - Shared machines: `expandSharedMachines` stands each extra section up as a hidden node;
   the ONLY coupling is a time row (`listSharedMachineGroups`): sections' acts sum to at
   most one. A section held by that row reads BUSY (`findBusySharer`).
@@ -111,3 +129,11 @@ The verdict and ring-diagnosis code lives in `src/components/flow/` (`node-verdi
 
 `overclock.ts` and `hatch-input.ts` live here; the rules are in
 `src/lib/machines/CLAUDE.md`. Steam litres: `getNodeSteamReport` in `power-report.ts`.
+
+## What lives elsewhere
+
+Number and rate display (`formatCompact`, `formatRate`, the rate-unit and power-display
+dials, `setting-memory`) is in `src/lib/format`, not here. This directory, `solver`,
+`machines` and `power` are the code the shared Java core replaces: they import no React,
+DOM, storage, Next, Zustand or `src/lib/format`. `src/test-support/core-boundary.test.ts`
+enforces it over the real import graph.

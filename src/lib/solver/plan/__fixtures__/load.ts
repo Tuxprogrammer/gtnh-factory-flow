@@ -1,7 +1,7 @@
 /**
  * Corpus loader for the plan-mode solver tests (spec-solver.md section 6).
  *
- * Reads `corpus/inputs/<name>.json` (the mod's `SolveInputJson` dumps) into a `SolveInput`, `corpus/goldens/<name>.json`
+ * Reads `conformance/solver/corpus/inputs/<name>.json` (the mod's `SolveInputJson` dumps) into a `SolveInput`, `conformance/solver/corpus/goldens/<name>.json`
  * into a digest, and builds the two tiled cases (`platline-x4`, `platline-x10`) the way the mod's `SolverCorpus.tile`
  * does. Node-only (uses fs and crypto); never import this from app code.
  */
@@ -9,9 +9,11 @@ import { createHash } from "node:crypto";
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 
+import { conformancePath } from "@/test-support/conformance";
+
 import type { DrawerIn, EdgeIn, Id, MachineIn, PoolIn, PortIn, SolveInput } from "./types-local";
 
-const CORPUS_DIR = path.join(__dirname, "corpus");
+const CORPUS_DIR = conformancePath("solver", "corpus");
 
 /** The 14 plans dumped from the game. */
 export const PLAN_NAMES = [

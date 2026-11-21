@@ -1,0 +1,612 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "solution": {
+      "$ref": "#/$defs/DigestSolution"
+    },
+    "alternatives": {
+      "$ref": "#/$defs/DigestAlternatives"
+    }
+  },
+  "required": [
+    "solution",
+    "alternatives"
+  ],
+  "$defs": {
+    "DigestSolution": {
+      "type": "object",
+      "properties": {
+        "extentsPerSecond": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "machineCounts": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "edgeFlowsPerSecond": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "gatedSources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DigestExternal"
+          }
+        },
+        "gatedSinks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DigestExternal"
+          }
+        },
+        "terminalInputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DigestExternal"
+          }
+        },
+        "terminalOutputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DigestExternal"
+          }
+        },
+        "unneeded": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "openGates": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "externalQuantity": {
+          "type": "number"
+        },
+        "totalInternalFlow": {
+          "type": "number"
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Note"
+          }
+        },
+        "key": {
+          "$ref": "#/$defs/DigestKey"
+        },
+        "drawers": {
+          "$ref": "#/$defs/DigestDrawers"
+        },
+        "spares": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DigestLeftover"
+          }
+        },
+        "upTo": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DigestUpTo"
+          }
+        },
+        "upToLoops": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DigestUpToLoop"
+          }
+        }
+      },
+      "required": [
+        "extentsPerSecond",
+        "machineCounts",
+        "edgeFlowsPerSecond",
+        "gatedSources",
+        "gatedSinks",
+        "terminalInputs",
+        "terminalOutputs",
+        "openGates",
+        "externalQuantity",
+        "totalInternalFlow",
+        "notes",
+        "key",
+        "drawers",
+        "spares"
+      ]
+    },
+    "DigestExternal": {
+      "type": "object",
+      "properties": {
+        "port": {
+          "$ref": "#/$defs/DigestPort"
+        },
+        "ratePerSecond": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "port",
+        "ratePerSecond"
+      ]
+    },
+    "DigestPort": {
+      "type": "object",
+      "properties": {
+        "nodeId": {
+          "type": "string"
+        },
+        "portIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "input": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "nodeId",
+        "portIndex",
+        "input"
+      ]
+    },
+    "Note": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "$ref": "#/$defs/SolverMessage"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "$ref": "#/$defs/Note"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/Note"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "message",
+        "args"
+      ]
+    },
+    "SolverMessage": {
+      "type": "string",
+      "enum": [
+        "NO_PIN",
+        "EMPTY_GRAPH",
+        "BALANCE_FAILED",
+        "STAGE_FAILED",
+        "VALIDATION_FAILED",
+        "PIN_CONFLICT",
+        "PIN_DROPPED",
+        "PIN_COUNT",
+        "PIN_TARGET",
+        "PIN_EXTENT",
+        "PIN_UP_TO",
+        "SOLVER_UNSATISFIABLE",
+        "SOLVER_BUDGET",
+        "SOLVER_NOT_CONSERVING",
+        "OVERSHOOTS_TARGET",
+        "DRAWER_NOT_CONNECTED",
+        "DRAWER_WIRED_IGNORED",
+        "DRAWER_ONLY_UPPER_BOUNDS",
+        "DRAWER_UNMET",
+        "DRAWER_PORT_TAKEN",
+        "DRAWER_LIMITED_BY",
+        "RULE_ANY",
+        "RULE_AT_LEAST",
+        "RULE_EXACTLY",
+        "RULE_AT_MOST",
+        "LIMIT_PIN",
+        "LIMIT_DRAWER",
+        "LIMIT_GROUP",
+        "WIRING_IMPORT",
+        "WIRING_UNLINKED",
+        "CHOICE_NO_LONGER_FITS",
+        "CHOICE_NEEDS_MORE_GATES",
+        "SHOWING_CLOSEST",
+        "STOPPED_EARLY"
+      ]
+    },
+    "DigestKey": {
+      "type": "object",
+      "properties": {
+        "gateAnchors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DigestPort"
+          }
+        }
+      },
+      "required": [
+        "gateAnchors"
+      ]
+    },
+    "DigestDrawers": {
+      "type": "object",
+      "properties": {
+        "rates": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "unmet": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "shortfalls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DigestShortfall"
+          }
+        },
+        "ports": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/DigestExternal"
+            }
+          }
+        },
+        "banked": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "spills": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/DigestExternal"
+            }
+          }
+        }
+      },
+      "required": [
+        "rates",
+        "unmet",
+        "shortfalls",
+        "ports"
+      ]
+    },
+    "DigestShortfall": {
+      "type": "object",
+      "properties": {
+        "drawer": {
+          "type": "string"
+        },
+        "rule": {
+          "$ref": "#/$defs/DrawerRule"
+        },
+        "target": {
+          "type": "number"
+        },
+        "reachable": {
+          "type": "number"
+        },
+        "limitingNodes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "limitingDrawers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "limitingGroups": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "drawer",
+        "rule",
+        "target",
+        "reachable",
+        "limitingNodes",
+        "limitingDrawers",
+        "limitingGroups"
+      ]
+    },
+    "DrawerRule": {
+      "type": "string",
+      "enum": [
+        "ANY",
+        "AT_LEAST",
+        "EXACTLY",
+        "AT_MOST"
+      ]
+    },
+    "DigestLeftover": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "importing": {
+          "type": "boolean"
+        },
+        "bearers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "anchor": {
+                "$ref": "#/$defs/DigestPort"
+              },
+              "flows": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/DigestExternal"
+                }
+              },
+              "max": {
+                "type": "number"
+              },
+              "share": {
+                "type": "number"
+              },
+              "solverPick": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "anchor",
+              "flows",
+              "max",
+              "share",
+              "solverPick"
+            ]
+          }
+        },
+        "custom": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "key",
+        "importing",
+        "bearers",
+        "custom"
+      ]
+    },
+    "DigestUpTo": {
+      "type": "object",
+      "properties": {
+        "node": {
+          "type": "string"
+        },
+        "machines": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "capacity": {
+          "type": "number"
+        },
+        "reached": {
+          "type": "number"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "FULL",
+                "BOTTLENECK",
+                "STARVED",
+                "CLOGGED",
+                "UNUSED",
+                "LIMITED"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "port": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DigestPort"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tied": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DigestPort"
+          }
+        },
+        "wants": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "upstream": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "node",
+        "machines",
+        "capacity",
+        "reached",
+        "reason",
+        "port",
+        "tied",
+        "wants",
+        "upstream"
+      ]
+    },
+    "DigestUpToLoop": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "DEAD_LOOP",
+            "CLOG_LOCK"
+          ]
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DigestPort"
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "nodes",
+        "ports"
+      ]
+    },
+    "DigestAlternatives": {
+      "type": "object",
+      "properties": {
+        "chosen": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DigestKey"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "$ref": "#/$defs/DigestKey"
+              },
+              "replaces": {
+                "$ref": "#/$defs/DigestPort"
+              },
+              "opens": {
+                "$ref": "#/$defs/DigestPort"
+              },
+              "externals": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/DigestExternal"
+                }
+              },
+              "rank": {
+                "type": "string",
+                "enum": [
+                  "DEFAULT",
+                  "EQUALLY_VALID",
+                  "BUYS_MORE",
+                  "SELLS_MORE",
+                  "MOVES_MORE",
+                  "MOVES_LESS"
+                ]
+              }
+            },
+            "required": [
+              "key",
+              "replaces",
+              "opens",
+              "externals",
+              "rank"
+            ]
+          }
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Note"
+          }
+        }
+      },
+      "required": [
+        "chosen",
+        "options",
+        "complete",
+        "notes"
+      ]
+    }
+  },
+  "title": "Solver answer as both engines digest it"
+}

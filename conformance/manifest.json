@@ -1,0 +1,1313 @@
+{
+  "version": 1,
+  "areas": {
+    "board": {
+      "specifies": "S1 board parity: scenarios.json lists board states built on both sides; mod-answers.json is what the mod's own code made of each (its SolveInput, answer and board readouts), which the website must reproduce.",
+      "readers": [
+        "website: src/lib/solver/plan/parity/scenarios.test.ts"
+      ],
+      "generator": "mod-answers.json: tools/parity/s1/README.md (S1ParityTest, a throwaway JUnit run in a mod checkout)"
+    },
+    "codec": {
+      "specifies": "The plan codec (core-codec): canon.json is the canonical spelling and 16-hex SHA-256 sum of JSON values that core-codec's Canon and the mod's cloud-map Canon must give alike (written from the mod's Canon); plan-text.json is what JSON.stringify(JSON.parse(text)) writes for hand-made cases and the SHA-256 of every committed plan written compact, which core-codec's PlanJson must match (written by the website test).",
+      "readers": [
+        "mod: cloud/map/CodecParityTest (Canon against the cloud map's; writes canon.json with -PwriteVectors)",
+        "core-codec: CodecTest (Canon, Sha256, PlanJson)",
+        "website: src/test-support/codec-conformance.test.ts (writes plan-text.json with GTNH_WRITE_GOLDEN=1; checks every wire of plans/mod/export-* names a port its card's recipe has)"
+      ]
+    },
+    "core-base": {
+      "specifies": "The kernel's value semantics: number-text/number-text-vectors.json is JavaScript's own answer (String(n), JSON.stringify, toFixed, Number(s), Math.round) for doubles given as 64-bit hex, which NumberText and JsMath must spell and read the same; uuid/uuid-vectors.json is java.util.UUID's answers (toString, hashCode, compareTo order, name-based ids, parsed spellings), which Uuid must reproduce. exact-math/exact-math-vectors.json is the JVM's StrictMath (fdlibm; Math for round, rint and ulp) on special and drawn arguments, as 64-bit patterns, which core-base's ExactMath must give bit for bit on the JVM and on both web targets.",
+      "readers": [
+        "mod: core-base NumberTextTest, UuidTest, ExactMathTest (jvm/core/core-base)",
+        "web: the Node runner that checks the compiled core against them (tools/web-core; exact-math.mjs for ExactMath)"
+      ],
+      "generator": "number-text: node tools/conformance/core-base/gen-vectors.mjs; uuid: ./gradlew :core-base:test --tests '*UuidTest.writeVectors' -PwriteVectors (from jvm/); then node tools/conformance/manifest.mjs --write; exact-math: ./gradlew :core-base:test --tests '*ExactMathTest.writeVectors' -PwriteVectors (from jvm/; inputs from jvm/conformance-support MathCases)"
+    },
+    "data": {
+      "specifies": "What the export run's GregTech reader writes and the dataset record made of it. gt-records.json: per case the raw export's recipe (raw.map, raw.recipe, as jvm/mod read/gt/GtRecipeReader read it in game and the exporter wrote it) and the record normalize-oracle-export.mjs makes of it (dataset; ids, notes, provenance and times left out). The mod's record of the same recipe (core-model GtDatasetRecipe) must equal it on every field Web.Recipe carries.",
+      "readers": [
+        "core-model: core/model/read/GtDatasetRecipeTest"
+      ],
+      "generator": "node --max-old-space-size=12000 tools/conformance/data/gt-record-cases.mjs <a full raw export's oracle-export.json> conformance/data/gt-records.json (an export run in a scratch directory; the raw export is never committed)"
+    },
+    "format": {
+      "specifies": "How the two sides spell numbers: values.json is the shared input list; website-out.json, mod-out.json and mod-recipe-overlay-out.json are what each side's formatters return for it (the website's compact, brief, power, rate, machine-count, percent and multiplier formatters; the mod's Fmt and the recipe overlay's GuiHelper formatters); COMPARISON.md is the generated table of where they differ. The sides are not required to agree: the table is the work order for the view item.",
+      "readers": [
+        "website: src/test-support/format-conformance.test.ts, tools/conformance/format/compare.test.mjs",
+        "mod: core-view com.gtnhplanner.ui.FmtConformanceTest; mod RecipeOverlayFormatTest"
+      ],
+      "generator": "website-out.json: GTNH_WRITE_GOLDEN=1 vitest run src/test-support/format-conformance.test.ts; mod-out.json: ./gradlew :core-view:test --tests '*FmtConformanceTest*' -PwriteVectors; mod-recipe-overlay-out.json: ./gradlew :mod:test --tests '*RecipeOverlayFormatTest*' -PwriteVectors; COMPARISON.md: node tools/conformance/format/compare.mjs; then node tools/conformance/manifest.mjs --write"
+    },
+    "layout": {
+      "specifies": "The wire router: every router call the website's router tests make (router-tests.json: solves with boards in and routes out, IncrementalRouter step sequences, cardRimDocks vectors, and boards with open groups routed with the default dials so the costs of crossing and leaving a group are pinned) and the reference boards (boards.json.gz: the layout benchmark's plans as boxes and wires, each routed fresh, its busiest box dragged three beats and dropped), all answered by the website's TypeScript router; the Java router (core-layout) must give the same routes and search work to the bit; and the arrange (arrange.json.gz: every arrange call the website's arrange tests make, and the reference boards up to 80 wires arranged with the router judge, stage by stage and whole, answered by the website's Arrange, plus the optimiser's searches, free placements and proxy scores as it calls them); the Java Arrange (core-layout) must give the same positions, islands and steering stops to the bit. js-sort.json pins JavaScript's Array.prototype.sort as V8 runs it (consistent orders, equal keys and comparators that are no order at all, written by Node); core-layout's JsSort, through which every list sort of the router and the Arrange goes, must give the same order. tie-board.json.gz is a website board (a grid of 484 cards, 200 wires) whose dock order ties in cycles; the website routes it through the TypeScript and the compiled core on both targets and requires the same routes.",
+      "readers": [
+        "jvm: core-layout com.gtnhplanner.core.layout.RouterConformanceTest",
+        "jvm: core-layout com.gtnhplanner.core.layout.arrange.ArrangeConformanceTest",
+        "jvm: core-layout com.gtnhplanner.core.layout.arrange.ArrangePartsConformanceTest",
+        "jvm: core-layout com.gtnhplanner.core.layout.JsSortTest",
+        "vitest: src/components/flow/layout-core.test.ts"
+      ],
+      "generator": "node tools/conformance/layout/generate.mjs [--boards jvm/mod/build/bench/versus/boards] ; node tools/conformance/layout/js-sort.mjs"
+    },
+    "live": {
+      "specifies": "The live-plan op engine: every rule of put, patch, del, meta, apply, diff and invert as a vector (plan, ops, expected result), run by both engines.",
+      "readers": [
+        "website: src/lib/live/ops.test.ts",
+        "mod: cloud/sync/LiveVectorsTest"
+      ],
+      "generator": "hand-written"
+    },
+    "machines": {
+      "specifies": "Machine maths as the website computes it: machine-goldens (recipes through the machine table, overclocks, parallels, power), bee-goldens (the bee card's multipliers and handler stats), crop-goldens (CropsNh), reference-coefficients (the machine table against ShadowTheAge's reference calculator), and website-test-inputs (every recipe and node the website's machine tests hand the maths, for the TypeScript-against-core shadow). Gzip files are one JSON object per line.",
+      "readers": [
+        "mod: machines/web/MachineGoldensTest, machines/BeesGoldensTest, machines/CropsNhGoldensTest, machines/web/MachineTableTest",
+        "website: src/lib/machines/machine-table.test.ts (reference-coefficients.json)",
+        "website: src/lib/core/machines-shadow.test.ts (machine-goldens and website-test-inputs through the TypeScript and the compiled core)"
+      ],
+      "generator": "machine-goldens: npx tsx tools/audits/export-mod-machine-goldens.ts --out conformance/machines/machine-goldens.jsonl.gz --dataset stable-2.9.0-tuxmine --rates recipeDurationDivisor=64,beesYield=4,ic2CropsYield=4 (the instance's dataset, checksumSha256 7c6fbe83d7be4863518e88c615b0299033d7a4b6c4e32bb497225979ac35b3c2, at its pack's GTNHRates config); crop-goldens: npx tsx tools/audits/export-mod-crop-goldens.ts --out conformance/machines/crop-goldens.jsonl.gz --dataset stable-2.9.0-tuxmine (same dataset); bee-goldens: BEE_GOLDENS_OUT=$PWD/conformance/machines/bee-goldens.jsonl.gz node node_modules/vitest/vitest.mjs run --config jvm/mod/tools/dev/bees/vitest.bees.config.mjs; reference-coefficients: see src/lib/machines/CLAUDE.md; website-test-inputs: node tools/audits/machine-test-inputs/record.mjs"
+    },
+    "model": {
+      "specifies": "The plan model's resource rules both sides hold: wiring.json, which wires a plan allows (a slot takes its own resource and what its recipe lists in its place, never an item that only shares an ore name with them).",
+      "readers": [
+        "website: src/lib/model/wiring-conformance.test.ts (resourceMatchesInput)",
+        "core-model: core/model/ResourcesTest (Wiring.accepts)"
+      ]
+    },
+    "pending": {
+      "specifies": "Files that disagree with a copy in the tree and wait for a decision. No suite reads them. Each subdirectory says in its README.md what it is and which file it would replace.",
+      "readers": []
+    },
+    "plans": {
+      "specifies": "Plan files (the project JSON) for the schema in schema/plan.schema.json: valid/ and invalid/ are small hand-made plans the schema must accept and refuse (the Zod schemas agree on every one); website/ is what the website's own writer makes of some of its plans; mod/ is what the mod's two writers make of some of its boards, cloud-* from the shared-plan mapper and export-* from the website export. Every plan is read by both sides.",
+      "readers": [
+        "website: src/test-support/plan-fixtures.test.ts (Zod and the real importer)",
+        "mod: cloud/map/PlanSchemaTest (JSON Schema validation, and mod/ is regenerated and compared)"
+      ],
+      "generator": "website/: GTNH_WRITE_PLANS=1 npx vitest run plan-fixtures; mod/: ./gradlew :mod:test --tests '*PlanSchemaTest*' -PwritePlans (from jvm/); valid/ and invalid/ are hand-written; then node tools/conformance/manifest.mjs --write"
+    },
+    "power": {
+      "specifies": "The power sources as the website computes them: every source with its settings and option labels, its model (EU/t, flows with their alternatives, stats, warnings, the Amps tier) at its defaults and with each setting moved alone, the turbine flow check at several flow shares, and the voltage-tier boundaries. website-test-inputs.jsonl.gz is every (source, stored settings) pair the website's own power tests build a settings reader for, deduplicated: inputs only, for the shadow to replay through both paths. rocket-exact.json is the Large Rocket Engine to the last bit as the JVM computes it (fuel, fuel rate, boost, EU/t and air bits), for a target whose cube root differs in the last bit. The goldens and inputs files are one JSON object per line, gzip.",
+      "readers": [
+        "website: src/lib/power/power-goldens.test.ts, src/lib/power/power-core.test.ts",
+        "core-power: power/PowerGoldensTest, power/RocketExactTest"
+      ],
+      "generator": "npx tsx tools/audits/export-mod-power-goldens.ts --out conformance/power/power-goldens.jsonl.gz (records in src/lib/power/golden-records.ts), then node tools/conformance/manifest.mjs --write; website-test-inputs: npx vitest run src/lib/power/power-inputs.local.test.ts --config vitest.local.config.ts (needs node tools/tokens/generate.mjs first), then node tools/conformance/manifest.mjs --write; rocket-exact: ./gradlew :core-power:test --tests '*RocketExactTest*' -PwriteVectors (from jvm/), then node tools/conformance/manifest.mjs --write"
+    },
+    "schema": {
+      "specifies": "JSON Schema (draft 2020-12) for the data that crosses between the website and the mod: plan.schema.json (the plan file), board-selection.schema.json (a blueprint payload), dataset.schema.json and dataset-manifest.schema.json (the recipe dataset), solve-input.schema.json (the solver's input, as the corpus holds it) and solve-digest.schema.json (the solver's answer as both engines digest it, as the goldens and Up to plans hold it). Generated from the website's Zod schemas, which stay the source of truth; overlays add the limits Zod can only state as code. README.md in the directory says what the schema cannot express.",
+      "readers": [
+        "website: src/test-support/schema-drift.test.ts (the files are what tools/conformance/schema/build.ts generates today); solver-contract.test.ts (corpus, goldens, Up to plans and board scenarios through the Zod schemas)",
+        "mod: cloud/map/PlanSchemaTest (the mod's exported plans and every fixture plan validate against plan.schema.json); cloud/map/SolverSchemaTest (corpus inputs, goldens, Up to plans and board scenarios validate against the solver schemas)"
+      ],
+      "generator": "npx tsx tools/conformance/schema/write.ts (check with --check), which also rewrites this manifest"
+    },
+    "solver/corpus": {
+      "specifies": "The solver's whole answer on a plan. inputs/<case>.json is a SolveInput as the mod's SolveInputJson writes it; goldens/<case>.json is the digest of the answer both solvers must give, equal to 1e-6 relative. platline-x4 and platline-x10 have a golden only: their input is platline tiled 4 and 10 times. The 16 gtnh-flow-* inputs are dumps of yaml charts the mod loads itself.",
+      "readers": [
+        "website: src/lib/solver/plan/__fixtures__/{harness,golden}.test.ts, src/lib/solver/plan/adapter/parity.test.ts",
+        "mod: solver/SolverGoldenTest, solver/SolverCorpus (every solver test), solver/BufferDrawerTest, cloud/map/Boards, data/flowchart/balancer/AnswerAudit"
+      ],
+      "generator": "goldens and buffer-drawers.json: ./gradlew :mod:test --tests '*SolverGoldenTest*' --tests '*BufferDrawerTest*' -PwriteGoldens (from jvm/); other inputs: the mod's /solvedump command"
+    },
+    "solver/up-to": {
+      "specifies": "Up to parity: each file is {name, input, answer}, a plan with the compiled core's answer (the website's engine), for the mod's kernel to solve again and match by the golden rules. Hand-built Up to plans plus every corpus plan with each exact count turned Up to.",
+      "readers": [
+        "mod: solver/UpToParityTest, solver/SolverCorpus.upToCases"
+      ],
+      "generator": "UPTO_EXPORT_DIR=$PWD/conformance/solver/up-to npx vitest run up-to-export (website), then node tools/conformance/manifest.mjs --write"
+    },
+    "solver/website": {
+      "specifies": "The two solvers on the website's own cases: cases.json.gz holds {generator, cases:[{name, input, answer}]}, every distinct solve input the website's tests (its solver test scenarios, the board parity scenarios, every other test that solves a plan) and the reference plans hand the plan solver, minus those already in the corpus or the Up to plans, each with the compiled core's answer (the website's engine) as the golden digest (or {failed: message}). The Java kernel must give the same answer, equal to 1e-6 relative; no case is listed as differing.",
+      "readers": [
+        "website: src/lib/solver/plan/__fixtures__/website-cases.test.ts",
+        "jvm: core-solver com.gtnhplanner.solver.WebsiteCasesTest"
+      ],
+      "generator": "node tools/conformance/solver/generate.mjs (runs the website suite with tools/conformance/solver/capture-setup.ts recording, then export.capture.ts; rewrites the manifest)"
+    },
+    "tasks": {
+      "specifies": "Task order keys: orderBetween answers for pairs of keys, so both sides sort a task list the same way.",
+      "readers": [
+        "website: src/lib/tasks/order-key.test.ts",
+        "core-base: data/flowchart/OrderKeysTest"
+      ],
+      "generator": "website: src/lib/tasks/order-key.ts"
+    },
+    "view": {
+      "specifies": "The shared view model's records as an envelope per file (record, set, measure, cases or vectors; see view/README.md): rail/cases.json is plan read-outs (flows, drawers, machines, spares and the player's view) with the rail the website's code makes of each (sections, lines, setters, spares, machine groups, power totals and the dial); notices/cases.json is the solver's notes with the notice list made of them (id, severity, word key, arguments, focus); rail/math.json is the rate box, share and wheel arithmetic, the peak machine count and the power dial. Numbers are raw; each host spells them with its own formatter. Optional fields are absent, never null. Every file names the text measure it was computed with.",
+      "readers": [
+        "jvm: core-view com.gtnhplanner.core.view.rail.RailCasesTest, NoticeCasesTest, RailMathVectorsTest",
+        "website: src/components/flow/clean/rail/rail-conformance.test.ts, src/test-support/view-corpus.test.ts"
+      ],
+      "generator": "npx tsx tools/conformance/view/generate.ts, then node tools/conformance/manifest.mjs --write"
+    },
+    "view-inputs": {
+      "specifies": "Inputs only, for the card shadow to replay through both paths: card-website-test-inputs.jsonl.gz is every recipe card's facts (the node, recipe, its solve and read-outs cut to the card, rails, machine reports, pictures, pins) that useCleanCardModel hands cleanCardView in the website's own component tests and on the plan fixtures (conformance/plans, examples/) under three sets of dials and with every running card set to Up to, with the board's dials, deduplicated, one JSON object per line, gzip. The website's builders and the compiled core's CardViews must make the same view of each.",
+      "readers": [
+        "website: src/components/flow/clean/card-shadow.test.ts"
+      ],
+      "generator": "node tools/audits/card-test-inputs/record.mjs (needs node tools/tokens/generate.mjs and node tools/web-core/gen-types.mjs first), then node tools/conformance/manifest.mjs --write"
+    },
+    "wire": {
+      "specifies": "The wire between the mod and the website: every request the mod makes and every answer it reads (rest.json, with shapes.json and the plans in plan.json), the live service handshake, close codes and conversations (live.json), and findings.json, where the two ends disagreed and what was decided. Both ends and the mod's dev stand-ins are run against it.",
+      "readers": [
+        "website: src/lib/server/wire-rest.test.ts, src/live/wire-live.test.ts (the real routes and the live service, in process)",
+        "website: src/test-support/wire-mocks.test.ts (the mod's dev stand-ins over HTTP and WebSocket), wire-shape.test.ts",
+        "mod: cloud/WireRestTest, cloud/WireLiveTest, cloud/wire/WireShapeTest"
+      ],
+      "generator": "hand-written"
+    }
+  },
+  "files": {
+    "board/mod-answers.json": {
+      "area": "board",
+      "bytes": 158871,
+      "sha256": "5dd5d064b920d1ae45850719092fcc5a2fa980b602c19d7dcc82c00dbfd604a5"
+    },
+    "board/scenarios.json": {
+      "area": "board",
+      "bytes": 29350,
+      "sha256": "0fa167c57c6b686b695d8d6125f20fc04ee6a7ac8740e5fab34f9ae1550e1512"
+    },
+    "codec/canon.json": {
+      "area": "codec",
+      "bytes": 2720,
+      "sha256": "3307110eb157d9f575e33eae5ade161ed59e14713d3c6d2d6a696972c8b55a6c"
+    },
+    "codec/plan-text.json": {
+      "area": "codec",
+      "bytes": 5307,
+      "sha256": "0f18b636403458b01ca667d2d7d92c6a18b867ab4a0845998c756ea76b0c9a68"
+    },
+    "codec/round-trip/display-cards.json": {
+      "area": "codec",
+      "bytes": 6616,
+      "sha256": "2e2a72fe3a476d4296831f8447686412bca1744524e6a9d1db75baefa1553148"
+    },
+    "codec/round-trip/website-only-things.json": {
+      "area": "codec",
+      "bytes": 5341,
+      "sha256": "af62622e96b5eb662c9d9ff41e5f495234d768e001d7f112cfed5d3bcd4ff351"
+    },
+    "core-base/exact-math/exact-math-vectors.json": {
+      "area": "core-base",
+      "bytes": 715690,
+      "sha256": "92039c947a7d44548ea276c5a319869b0d1e39db99717c8f9e00be481d94db89"
+    },
+    "core-base/number-text/number-text-vectors.json": {
+      "area": "core-base",
+      "bytes": 515066,
+      "sha256": "bac64d56498eae52a4284cd1ca1732870ef74404a51b1ef7843d5c31f08569d6"
+    },
+    "core-base/uuid/uuid-vectors.json": {
+      "area": "core-base",
+      "bytes": 39121,
+      "sha256": "23347b689fcef8d736c3e56f37bad34af5fe7efbde19cee759cd43cf827f39da"
+    },
+    "data/gt-records.json": {
+      "area": "data",
+      "bytes": 1282508,
+      "sha256": "58b8238b44de3aaf744b0a1d953eb127c6b0aabcdf92aa31a880efcc73566252"
+    },
+    "format/COMPARISON.md": {
+      "area": "format",
+      "bytes": 15204,
+      "sha256": "e1d742e01eaeb7f7ed6ea14c1ed8256654ab99324ed681fd1212ed74e4a68a34"
+    },
+    "format/mod-out.json": {
+      "area": "format",
+      "bytes": 32483,
+      "sha256": "f8988aa98a61819a8d4aa1223934d2df53d61fe1a7ff518dfa3cfc01179092d7"
+    },
+    "format/mod-recipe-overlay-out.json": {
+      "area": "format",
+      "bytes": 921,
+      "sha256": "5ee271fb6e9fab09349e2c6f4dcd6c06d4614a8c96ee167d9ff9afaaa9e49d83"
+    },
+    "format/values.json": {
+      "area": "format",
+      "bytes": 12154,
+      "sha256": "be7073f8033e7c24bffe0141225ef007f70fc91145358260ad9ee5d137a90258"
+    },
+    "format/website-out.json": {
+      "area": "format",
+      "bytes": 33665,
+      "sha256": "b60c0ba6a3c3dad4366b6ffe8bc9794f07b39249cf9356a9b32d4fe9c09e7ac2"
+    },
+    "layout/arrange.json.gz": {
+      "area": "layout",
+      "bytes": 163879,
+      "sha256": "25c2d4c5422d5e476f42ff00d1a6aa4c7487eb4db31bae86c35ba6db620493a5"
+    },
+    "layout/boards.json.gz": {
+      "area": "layout",
+      "bytes": 355403,
+      "sha256": "df8629460a87d6e64533be8dbdd5af66aa0c50f1f901e2cad0acff53ee9296cd"
+    },
+    "layout/js-sort.json": {
+      "area": "layout",
+      "bytes": 540029,
+      "sha256": "dea1356ed128c5ab5854f04c26efd6e8c6247f4873bfe61628f9dc2efe54dc82"
+    },
+    "layout/router-tests.json": {
+      "area": "layout",
+      "bytes": 1901546,
+      "sha256": "160d6f17f33d16c707898a0bbc743be7e67a99b15b2c214f82367065a4441761"
+    },
+    "layout/tie-board.json.gz": {
+      "area": "layout",
+      "bytes": 36172,
+      "sha256": "3b40ff396076bab48dd61058a12759ef1b78021d5f4ddfc108485e240cf6c3ae"
+    },
+    "live/live-vectors.json": {
+      "area": "live",
+      "bytes": 45531,
+      "sha256": "d365c87418848d3970361d30bf733217cbba753496a7e6363de40d1faeb0320e"
+    },
+    "machines/bee-goldens.jsonl.gz": {
+      "area": "machines",
+      "bytes": 209660,
+      "sha256": "9737818794f8c1b8f65963fb13a52993c602e9fa3eeeed573896c2797397670f"
+    },
+    "machines/crop-goldens.jsonl.gz": {
+      "area": "machines",
+      "bytes": 544469,
+      "sha256": "1bfec7b9ea5aa2816f0838fcad973a0cdd7600bb0abac484644e0d49be3fb93a"
+    },
+    "machines/machine-goldens.jsonl.gz": {
+      "area": "machines",
+      "bytes": 2877971,
+      "sha256": "57b684e0e24eb2892f433ac7b3efad6e3446c76755329e2c1beab1c48ccd8ec7"
+    },
+    "machines/reference-coefficients.json": {
+      "area": "machines",
+      "bytes": 643054,
+      "sha256": "d32b2163d3f0c9cc69100c6e7a273dfe5cba8249cbea21e3e3bc062a0fe98ec6"
+    },
+    "machines/website-test-inputs.jsonl.gz": {
+      "area": "machines",
+      "bytes": 120878,
+      "sha256": "9264f9be65f716e43774850747604716dbc9b2733eb30e629cf246be89cc1678"
+    },
+    "model/wiring.json": {
+      "area": "model",
+      "bytes": 5513,
+      "sha256": "7d7a0579c86468b5878af00810433ce97c762a82d12d8b9e009295d6eea338a6"
+    },
+    "plans/invalid/fuel-profile-empty-id.json": {
+      "area": "plans",
+      "bytes": 234,
+      "sha256": "7a531cb9483412b51a901de30e8c62b63e3f43475a18d30d9776382a3d7eb67d"
+    },
+    "plans/invalid/fuel-profile-rate-zero.json": {
+      "area": "plans",
+      "bytes": 236,
+      "sha256": "27fcdcb2e1815da35282bbd684617ba871947c175327767bce5e905c7768c70c"
+    },
+    "plans/invalid/fuel-profile-without-a-rate.json": {
+      "area": "plans",
+      "bytes": 213,
+      "sha256": "14d5ae6435c0ee820a15ecd7755aed9f297abe68beb385595a7261f446be8cf4"
+    },
+    "plans/invalid/no-name.json": {
+      "area": "plans",
+      "bytes": 112,
+      "sha256": "9aee54797c6016ce00d8b7561c878052f5c82f51a0e6c2193c663d16c612561f"
+    },
+    "plans/invalid/node-without-position.json": {
+      "area": "plans",
+      "bytes": 285,
+      "sha256": "79e550a1508842f5f9ac6842b994e027db0cbe090c50228daf9fa1a843d56240"
+    },
+    "plans/invalid/nodes-not-a-list.json": {
+      "area": "plans",
+      "bytes": 131,
+      "sha256": "37dfa276d4e2409a8f312a9ef12ac333ccd114a1d8011b88e4d24918e862988a"
+    },
+    "plans/invalid/port-rates-257.json": {
+      "area": "plans",
+      "bytes": 6946,
+      "sha256": "c372833ce3f90076696a7eac778944dca8b4a73959c1215dffca09315b70ba37"
+    },
+    "plans/invalid/primary-view-unknown.json": {
+      "area": "plans",
+      "bytes": 160,
+      "sha256": "0c10016dc2079aee56c176b594643206402cc81659673bfe0a75148c08a52d00"
+    },
+    "plans/invalid/resource-kind-unknown.json": {
+      "area": "plans",
+      "bytes": 226,
+      "sha256": "50ce14a74e10d912dd3bb8c2cac2e55c373944a21476d7749a7f8f1e504a925f"
+    },
+    "plans/invalid/schema-version-2.json": {
+      "area": "plans",
+      "bytes": 131,
+      "sha256": "01e58da3e18e0d1738d1cb2b7287bb04a90248ce9cd70665852b374fa6f13d5b"
+    },
+    "plans/invalid/spare-share-above-one.json": {
+      "area": "plans",
+      "bytes": 197,
+      "sha256": "3928085b1b7567102b3cd8a4b83ee0ab7b44a343ef6732b5d215d6bf903253f7"
+    },
+    "plans/invalid/target-rate-zero.json": {
+      "area": "plans",
+      "bytes": 227,
+      "sha256": "1a2ac128c7a0216cca9c6865cce2abb954ce173fa65b9d25a818151021a763c0"
+    },
+    "plans/mod/cloud-corpus-benzene.json": {
+      "area": "plans",
+      "bytes": 14747,
+      "sha256": "55a6bd78c46e6bd3dbf0fcd99c8440578876d11dfc724273ee4723667f4cfda1"
+    },
+    "plans/mod/cloud-corpus-glass.json": {
+      "area": "plans",
+      "bytes": 34555,
+      "sha256": "d59aa69b2acccee5b724c2e92273253caf573387509f9c1418cecd7cddd88f6b"
+    },
+    "plans/mod/cloud-corpus-hv-diesel.json": {
+      "area": "plans",
+      "bytes": 34218,
+      "sha256": "e00dbfdffc5ac842d20aefa0a717b8e5c6503d8ede25d8fc306e13085da661b4"
+    },
+    "plans/mod/cloud-corpus-mv.json": {
+      "area": "plans",
+      "bytes": 131882,
+      "sha256": "f0d805109a91940bab84256ec2b0c8a1d922b0a82e467bc84cb86eb8e08993f4"
+    },
+    "plans/mod/cloud-corpus-single-card-v2.json": {
+      "area": "plans",
+      "bytes": 11212,
+      "sha256": "14f3d5ca253ae59e3c8824e7f82f7ab8c57cfae2d4eb551abeae4a20d77ae649"
+    },
+    "plans/mod/export-corpus-benzene.json": {
+      "area": "plans",
+      "bytes": 8586,
+      "sha256": "be6063ec4ced2f7f691d55b3e09ca357be71ec175e8e98a17a59ccce79975fef"
+    },
+    "plans/mod/export-corpus-glass.json": {
+      "area": "plans",
+      "bytes": 21180,
+      "sha256": "ca3ec61bc825b14b65a2336b7b6bc1af1e7cdf7e2bc92cd88418bd483b8ae80b"
+    },
+    "plans/mod/export-corpus-hv-diesel.json": {
+      "area": "plans",
+      "bytes": 20039,
+      "sha256": "0e881c73c0eb044afd47182c40b793951cf0b4fcff86e562cfb91b32da8bbe2d"
+    },
+    "plans/mod/export-corpus-mv.json": {
+      "area": "plans",
+      "bytes": 81500,
+      "sha256": "ae8275e36188a8667119a0f8a52ef8e3697cdb52e59a80ad7b13f8c4b8e65755"
+    },
+    "plans/mod/export-corpus-single-card-v2.json": {
+      "area": "plans",
+      "bytes": 6525,
+      "sha256": "04efe1520ec303a14ab35513f75821a98435a886b3fe932a79f4c96ed23a866d"
+    },
+    "plans/valid/empty.json": {
+      "area": "plans",
+      "bytes": 131,
+      "sha256": "0cfbdb40762d641dda3291ad3f0a6e682d8713ecbd1efc4057c3d100cc7bdf51"
+    },
+    "plans/valid/fuel-profile-per-bucket.json": {
+      "area": "plans",
+      "bytes": 489,
+      "sha256": "c3af8a5f93aea33105e5f7c84b94e1a9238b3eb5fc8f525e1636610c8c27dde0"
+    },
+    "plans/valid/port-rates-256.json": {
+      "area": "plans",
+      "bytes": 6920,
+      "sha256": "2ccb86f720a7c19cd0336dd81c16ce02964f94a58e934eebf8a6c4984f9654be"
+    },
+    "plans/valid/settings-and-pins.json": {
+      "area": "plans",
+      "bytes": 739,
+      "sha256": "c4d5de0b5b987495be558fd5b2f1d8d2c37f02c555e5cdd2cb37ecc5f565d698"
+    },
+    "plans/valid/unknown-keys.json": {
+      "area": "plans",
+      "bytes": 344,
+      "sha256": "017692cce3c70824e5d395cb717bea73555129029544c6bba4eddc0798267bd4"
+    },
+    "plans/website/biodiesel-demo.json": {
+      "area": "plans",
+      "bytes": 10030,
+      "sha256": "4c3f4aedd85026cad17aff8004180cbce6da5d3010e4b6200766cb47f334eec2"
+    },
+    "plans/website/high-amperage-reactor.json": {
+      "area": "plans",
+      "bytes": 15020,
+      "sha256": "b9255f4a1f0b3343808194847180aeb2bf9d5e1ff569fda2d91cec9537479bb7"
+    },
+    "plans/website/old-build.json": {
+      "area": "plans",
+      "bytes": 10010,
+      "sha256": "081f592f4ad40a1e90814abdbdad7def34cf03a1d7e88e2789329b69712b7e80"
+    },
+    "plans/website/old-pool.json": {
+      "area": "plans",
+      "bytes": 8158,
+      "sha256": "4d921b6dea8db92dd474f3b3036597890dbef9b46a9d4b3fbfa55027fdeb01f4"
+    },
+    "plans/website/old-solve.json": {
+      "area": "plans",
+      "bytes": 10020,
+      "sha256": "14143ea870ef64f81bfce569859e9b0fe00282e22c589f5ff0f2e31474599b04"
+    },
+    "plans/website/titanium-line-chembath-slim.json": {
+      "area": "plans",
+      "bytes": 200588,
+      "sha256": "9b490c2841d3c8d063bd1aeab6dc45ad6c1fbe5a6068e25b06cf58dc370e924c"
+    },
+    "plans/website/wooden-axe-categories.json": {
+      "area": "plans",
+      "bytes": 19895,
+      "sha256": "c72b45a8d789e732d174891ba4d0ebc41236ffb9b056452bda4437268467ac0c"
+    },
+    "power/power-goldens.jsonl.gz": {
+      "area": "power",
+      "bytes": 270219,
+      "sha256": "6300f95768499809d8eef71c3b06d17bd6cade86486f0dd1bc9466bf4bf5bdda"
+    },
+    "power/rocket-exact.json": {
+      "area": "power",
+      "bytes": 17050,
+      "sha256": "315f5133614560d27496cac0727e6f965893a3d2ac99b637b2f90c19cf88bfdf"
+    },
+    "power/website-test-inputs.jsonl.gz": {
+      "area": "power",
+      "bytes": 60891,
+      "sha256": "d862fa8e4adfb7f036691add5dc820a242097349418f01589d649849dd6ee041"
+    },
+    "schema/board-selection.schema.json": {
+      "area": "schema",
+      "bytes": 46493,
+      "sha256": "bcf0792d662a345ed4ff8cbaccb2d4a7946fda8bb42e5203365045b16491bc04"
+    },
+    "schema/dataset-manifest.schema.json": {
+      "area": "schema",
+      "bytes": 2726,
+      "sha256": "b192dcb482f93a4df317a2c2b9b78f2be1eb50f0118e9e3e7aa544dfe7b45dcf"
+    },
+    "schema/dataset.schema.json": {
+      "area": "schema",
+      "bytes": 40955,
+      "sha256": "164877833efb30ae5235f0cc4ddd2974b383b6afebe17d9aa6ef27e496a916a4"
+    },
+    "schema/plan.schema.json": {
+      "area": "schema",
+      "bytes": 60300,
+      "sha256": "5c3fac9a8598e4ddf1300e1f40f593d76825885d106c1e6ea10fa3e50aafa2bb"
+    },
+    "schema/solve-digest.schema.json": {
+      "area": "schema",
+      "bytes": 13139,
+      "sha256": "49b0b2b39c475e81e270fb71cc77b818724921b4925b49ab416dab2b75aa6577"
+    },
+    "schema/solve-input.schema.json": {
+      "area": "schema",
+      "bytes": 6531,
+      "sha256": "2fecabecbdfc7c3e47418f3df7e974c177efec2a08314ddd1c26447be6b4be16"
+    },
+    "solver/corpus/goldens/alumina-line-shared-reactor.json": {
+      "area": "solver/corpus",
+      "bytes": 30130,
+      "sha256": "f4aa80f927521473c4a4ee62417f0dc45fa2422f1738b53eddbf3ae5920fc8af"
+    },
+    "solver/corpus/goldens/benzene.json": {
+      "area": "solver/corpus",
+      "bytes": 1495,
+      "sha256": "ee01eeb5ee95e9c49c39ffd46af5f97e55ea8da7da3fa4b20d4692af9f70115e"
+    },
+    "solver/corpus/goldens/buffer-drawers.json": {
+      "area": "solver/corpus",
+      "bytes": 8004,
+      "sha256": "d7a3dd712d010bf98e2f0b9a039ad38703f544af750fbb81fd06a38b2d447a88"
+    },
+    "solver/corpus/goldens/full-platline.json": {
+      "area": "solver/corpus",
+      "bytes": 405667,
+      "sha256": "155ddd931644cf4ce9ecdc1e61fbd2c384797355afafccc3a44c58d2d67c484a"
+    },
+    "solver/corpus/goldens/glass.json": {
+      "area": "solver/corpus",
+      "bytes": 32686,
+      "sha256": "9cd3b794ccefeb4ab14dd687d49d3582c6d2299290e7d956606b5fb23da27bf4"
+    },
+    "solver/corpus/goldens/gtnh-flow-230_platline.json": {
+      "area": "solver/corpus",
+      "bytes": 23558,
+      "sha256": "c5604b52f6309bef30296c44affcfc0f00172a6f8d57901adedacc144921e1dc"
+    },
+    "solver/corpus/goldens/gtnh-flow-cetane.json": {
+      "area": "solver/corpus",
+      "bytes": 10529,
+      "sha256": "59b2c95b1e07cc771158cdc481ef14e33629bfcdc09278719568d6852fadfa73"
+    },
+    "solver/corpus/goldens/gtnh-flow-excess_choice.json": {
+      "area": "solver/corpus",
+      "bytes": 5203,
+      "sha256": "2370bbcdbe2c4982bfdf29d796876e4762253803e2c1614e4dadafbe7c9ef65f"
+    },
+    "solver/corpus/goldens/gtnh-flow-jet_fuel.json": {
+      "area": "solver/corpus",
+      "bytes": 16403,
+      "sha256": "c2ed81481b867f7b3f3678e92f6e384fddc41c81d670b1df0c75b9ad0caf1737"
+    },
+    "solver/corpus/goldens/gtnh-flow-light_fuel.json": {
+      "area": "solver/corpus",
+      "bytes": 2110,
+      "sha256": "24c609b7776b4352f81d0a72ed84478cc821cc8da4f9fb4fea7c11f1f2f506c9"
+    },
+    "solver/corpus/goldens/gtnh-flow-light_fuel_hydrogen_loop.json": {
+      "area": "solver/corpus",
+      "bytes": 1778,
+      "sha256": "fb2e5c43cd19f356acb0d2de97e43eac7343a270e37bcdc6bf7ce4ff6c79f1ad"
+    },
+    "solver/corpus/goldens/gtnh-flow-loopGraph.json": {
+      "area": "solver/corpus",
+      "bytes": 4858,
+      "sha256": "9f2b03317ee82f318c49c7a42369b23acf894d0f4798584235ffef0eedfd94e2"
+    },
+    "solver/corpus/goldens/gtnh-flow-microsheep.json": {
+      "area": "solver/corpus",
+      "bytes": 1269,
+      "sha256": "f1fbb7b37ba2ef3b0f323f2f0a6c5696ada078dfce887873b648c1fc97884050"
+    },
+    "solver/corpus/goldens/gtnh-flow-mk1.json": {
+      "area": "solver/corpus",
+      "bytes": 4701,
+      "sha256": "86af7a227260f748089c316c415aa45a8d143b2e665f705a6563ccac3a62aa50"
+    },
+    "solver/corpus/goldens/gtnh-flow-mk1_tiberium.json": {
+      "area": "solver/corpus",
+      "bytes": 2556,
+      "sha256": "8bc43b9d91897f2651d94e9a7f775bacc8486d49a24341ab5d1a684a947aaf97"
+    },
+    "solver/corpus/goldens/gtnh-flow-nanocircuits.json": {
+      "area": "solver/corpus",
+      "bytes": 143225,
+      "sha256": "2066f93a67fd8c74813e2abc65619faac75e9451ac8f96f2b03e199d425335b2"
+    },
+    "solver/corpus/goldens/gtnh-flow-palladium.json": {
+      "area": "solver/corpus",
+      "bytes": 2114,
+      "sha256": "74a9f55fab49665ad89c60dbfcedd265bbd9f485731a40b416f1eebf84b9e155"
+    },
+    "solver/corpus/goldens/gtnh-flow-palladium_line.json": {
+      "area": "solver/corpus",
+      "bytes": 59750,
+      "sha256": "c73d4c5d96af4748d378d67625e036b55a82d07a64b587f7edba187b52944ae0"
+    },
+    "solver/corpus/goldens/gtnh-flow-symmetric_choice.json": {
+      "area": "solver/corpus",
+      "bytes": 6212,
+      "sha256": "bf2f8a0a86ba47177313c3c513983b1f6f342aa6fea606c8ef0197fd8dffbe4c"
+    },
+    "solver/corpus/goldens/gtnh-flow-two_decisions.json": {
+      "area": "solver/corpus",
+      "bytes": 11763,
+      "sha256": "e7af1af4e1e554b253b8302d5f3a7073746002df16f55bbcff6e897ece6de0fa"
+    },
+    "solver/corpus/goldens/gtnh-flow-twoslack.json": {
+      "area": "solver/corpus",
+      "bytes": 4858,
+      "sha256": "c7dd7e282bb62cf30adfc3e33737311cf74eb0f03e667371528e927e9dbe01b8"
+    },
+    "solver/corpus/goldens/hv-diesel.json": {
+      "area": "solver/corpus",
+      "bytes": 13539,
+      "sha256": "5107be21a2ac012f864dea8a6be6144184ff9f91aeb1f3aa4d60adba93fc0b23"
+    },
+    "solver/corpus/goldens/mega-iv-nitrobenzene-power-plant.json": {
+      "area": "solver/corpus",
+      "bytes": 96256,
+      "sha256": "c70ab442b9551fbf34c48dd267854e5f3ee3f02aa3c4a668b3f1d0e72b22193e"
+    },
+    "solver/corpus/goldens/mv.json": {
+      "area": "solver/corpus",
+      "bytes": 211219,
+      "sha256": "bb8fb7203ffa84651db65fc4180ea684a49f1007d0ce83c29b785aef0cab1e0c"
+    },
+    "solver/corpus/goldens/oxygen-silicon-loop.json": {
+      "area": "solver/corpus",
+      "bytes": 6074,
+      "sha256": "81f8b24a0f5d14a8d4c23317d50e40c77eb32eb61e0f97e29ee5952310589833"
+    },
+    "solver/corpus/goldens/pa-cell-loop.json": {
+      "area": "solver/corpus",
+      "bytes": 27265,
+      "sha256": "ed50e45cc5090e2184b63f95118a767354502ec64605fed228bd4c2bf9135d2c"
+    },
+    "solver/corpus/goldens/platline-x10.json": {
+      "area": "solver/corpus",
+      "bytes": 5149268,
+      "sha256": "67520a1de60ab83970c3c665cd9b7419d0faabfa2109f017c9074e718389ba07"
+    },
+    "solver/corpus/goldens/platline-x4.json": {
+      "area": "solver/corpus",
+      "bytes": 2060505,
+      "sha256": "453bc07b2161fc78973f83c292ddd2c68b2a9cab4ff3f088edabc8684c3483f5"
+    },
+    "solver/corpus/goldens/platline.json": {
+      "area": "solver/corpus",
+      "bytes": 507478,
+      "sha256": "7253f76d57ab49ba0942498a5a7e3541b0f3d091d5065692a3c18bec72e2e445"
+    },
+    "solver/corpus/goldens/single-card-v2.json": {
+      "area": "solver/corpus",
+      "bytes": 1115,
+      "sha256": "ff8e41abba14acbdabe2a97336615432f64e95b4c74cfa235e739b348f876bd3"
+    },
+    "solver/corpus/goldens/sulfuric-acid.json": {
+      "area": "solver/corpus",
+      "bytes": 34891,
+      "sha256": "274f6925d5a305aba28af97b3bf11af2bdf9621dad9c32c1d2c67dc8b519c4e6"
+    },
+    "solver/corpus/goldens/titanium-line-chembath.json": {
+      "area": "solver/corpus",
+      "bytes": 50969,
+      "sha256": "cc4e59afd6340d950c5c94f58bdd7f6db050d63c8371a0a5fbe0ae406fb46657"
+    },
+    "solver/corpus/goldens/titanium-line-tour.json": {
+      "area": "solver/corpus",
+      "bytes": 27711,
+      "sha256": "dab6d80acba83d10083438a5db108608476de22452b0632bf5562e8c0ae39012"
+    },
+    "solver/corpus/inputs/alumina-line-shared-reactor.json": {
+      "area": "solver/corpus",
+      "bytes": 25341,
+      "sha256": "03935135be539b333022d54b234159f774d8cc0f99765485bae12bb7b9ac02b0"
+    },
+    "solver/corpus/inputs/benzene.json": {
+      "area": "solver/corpus",
+      "bytes": 1896,
+      "sha256": "cf7dfd096188322a8473ab20359625654f06229215c83a111db2f7b4f29ff767"
+    },
+    "solver/corpus/inputs/buffer-drawers.json": {
+      "area": "solver/corpus",
+      "bytes": 7635,
+      "sha256": "42609bf4fcf8a1a94a0a1e121051ac9ce34974ab960d0ab2a25dcecfd24b85a2"
+    },
+    "solver/corpus/inputs/full-platline.json": {
+      "area": "solver/corpus",
+      "bytes": 78646,
+      "sha256": "9c9e6a3cdc6881e466628cf9b41b4784dc5296337e0a1a6bac60095ebdf8ced6"
+    },
+    "solver/corpus/inputs/glass.json": {
+      "area": "solver/corpus",
+      "bytes": 10891,
+      "sha256": "a16a105b088725d36ad2beab5db1c2e3c2c5754fbac6c966e76eb89d76e3bded"
+    },
+    "solver/corpus/inputs/gtnh-flow-230_platline.json": {
+      "area": "solver/corpus",
+      "bytes": 37789,
+      "sha256": "3b9f1749b52404cc0c088034a468edff4478dd64e79259298b2de65d60470964"
+    },
+    "solver/corpus/inputs/gtnh-flow-cetane.json": {
+      "area": "solver/corpus",
+      "bytes": 11349,
+      "sha256": "8feee2c9657789e246a82791d82bd1e584efa98dca967358f8f247a7aa38b1dd"
+    },
+    "solver/corpus/inputs/gtnh-flow-excess_choice.json": {
+      "area": "solver/corpus",
+      "bytes": 3243,
+      "sha256": "ccbfe8c2fb83618ba54eee1c930eb6a5253ca569e6c4cfaaff513d8ad6c86c90"
+    },
+    "solver/corpus/inputs/gtnh-flow-jet_fuel.json": {
+      "area": "solver/corpus",
+      "bytes": 14254,
+      "sha256": "9cfe8d8ae2ba050da957f7ed19eef50748b3706875ac766e81e84b01d60ad68a"
+    },
+    "solver/corpus/inputs/gtnh-flow-light_fuel.json": {
+      "area": "solver/corpus",
+      "bytes": 3273,
+      "sha256": "a5a3e7ae24466f4f1456f4c7b566eaee1341be4f24b1f792093130742f8149a1"
+    },
+    "solver/corpus/inputs/gtnh-flow-light_fuel_hydrogen_loop.json": {
+      "area": "solver/corpus",
+      "bytes": 3512,
+      "sha256": "42bd2256d8cf4e34d2fcaaa771d8b2812bd7d3101b3c2172fb7c41363610b724"
+    },
+    "solver/corpus/inputs/gtnh-flow-loopGraph.json": {
+      "area": "solver/corpus",
+      "bytes": 2593,
+      "sha256": "3c5c1a21e076ba751710ee7bfcb1f9531aaf4c2841d014a7e1d9b10abfc0a2d0"
+    },
+    "solver/corpus/inputs/gtnh-flow-microsheep.json": {
+      "area": "solver/corpus",
+      "bytes": 1777,
+      "sha256": "aca9fa3ff365f0f54d98b3a0fd3ce1ac3ececa5a0f2e96b2822a97d8a0425d69"
+    },
+    "solver/corpus/inputs/gtnh-flow-mk1.json": {
+      "area": "solver/corpus",
+      "bytes": 2988,
+      "sha256": "3fbee8964b199e572544bf9618749eeaddaa70b1873ea9aee3aaee4a6c1dac8d"
+    },
+    "solver/corpus/inputs/gtnh-flow-mk1_tiberium.json": {
+      "area": "solver/corpus",
+      "bytes": 4088,
+      "sha256": "2551866192c1274bbd3c43877a183bdb2c382b3fdd349f8026c1ab353408e382"
+    },
+    "solver/corpus/inputs/gtnh-flow-nanocircuits.json": {
+      "area": "solver/corpus",
+      "bytes": 518601,
+      "sha256": "8edbbf8144db37668d7f44d3dea5673198a69178b0a5dd831c39dcd93984251b"
+    },
+    "solver/corpus/inputs/gtnh-flow-palladium.json": {
+      "area": "solver/corpus",
+      "bytes": 6035,
+      "sha256": "b9dc92f81f27a148b9e9c56efdafbf1aeb6bfa7469b40189221d3dfd654a27e8"
+    },
+    "solver/corpus/inputs/gtnh-flow-palladium_line.json": {
+      "area": "solver/corpus",
+      "bytes": 82744,
+      "sha256": "4eb08c6c794c506ac431b28d189b8738943607c9ba71d4e1bce67e92a5b70dde"
+    },
+    "solver/corpus/inputs/gtnh-flow-symmetric_choice.json": {
+      "area": "solver/corpus",
+      "bytes": 4576,
+      "sha256": "7f31e28697fce04f1e85f4b5314e027bc4d4b4261f994ea7f1549d15dc54b1eb"
+    },
+    "solver/corpus/inputs/gtnh-flow-two_decisions.json": {
+      "area": "solver/corpus",
+      "bytes": 9033,
+      "sha256": "4f94c01338d6a680e6abe4ee89d3de7687afe5c1239aa626edab13eba90c06a5"
+    },
+    "solver/corpus/inputs/gtnh-flow-twoslack.json": {
+      "area": "solver/corpus",
+      "bytes": 2593,
+      "sha256": "7cd4cef62981f343323915edc5fb11431ebecfcefe6dec4791255175a59c0d79"
+    },
+    "solver/corpus/inputs/hv-diesel.json": {
+      "area": "solver/corpus",
+      "bytes": 10429,
+      "sha256": "07d953bbbab6aa181056d9389ed90dcb00e915ac9f92150e68f3aaaf44cde7a3"
+    },
+    "solver/corpus/inputs/mega-iv-nitrobenzene-power-plant.json": {
+      "area": "solver/corpus",
+      "bytes": 34716,
+      "sha256": "f3d8d82cd9e6bf7472011c043946fe0e5cfe8070efccec031911ef8462472367"
+    },
+    "solver/corpus/inputs/mv.json": {
+      "area": "solver/corpus",
+      "bytes": 52738,
+      "sha256": "1fe3e0fb57bb5cf33209ea4e4d5f16536016aed3d1efa284a91db80aed618632"
+    },
+    "solver/corpus/inputs/oxygen-silicon-loop.json": {
+      "area": "solver/corpus",
+      "bytes": 4135,
+      "sha256": "a0029d65ec035a8d9b17fde538fe5eb2cac2689d0c54dab2799bbb6bff47f071"
+    },
+    "solver/corpus/inputs/pa-cell-loop.json": {
+      "area": "solver/corpus",
+      "bytes": 9347,
+      "sha256": "ea87d9c843284bbe9199209e88b9457e1ed8a802d5045bcc0cd45e72d79fcf8f"
+    },
+    "solver/corpus/inputs/platline.json": {
+      "area": "solver/corpus",
+      "bytes": 81690,
+      "sha256": "076dab3b3095a938a8cff60c3192e444a5e5f290fe91c433fd05a38f1e3040bd"
+    },
+    "solver/corpus/inputs/single-card-v2.json": {
+      "area": "solver/corpus",
+      "bytes": 823,
+      "sha256": "e8ce70d426fc65484aa7d15283e1ddcf398cc6d5a83d49fe4acbc813e4ba4750"
+    },
+    "solver/corpus/inputs/sulfuric-acid.json": {
+      "area": "solver/corpus",
+      "bytes": 14624,
+      "sha256": "6968b2586bc18ed085ebde8a40418764fcdc3d511d4a539071fed76a3945803c"
+    },
+    "solver/corpus/inputs/titanium-line-chembath.json": {
+      "area": "solver/corpus",
+      "bytes": 18742,
+      "sha256": "72409b0447fea8aab4321136094f1b8ca21038d4a5c1247dac067ecd897bda7a"
+    },
+    "solver/corpus/inputs/titanium-line-tour.json": {
+      "area": "solver/corpus",
+      "bytes": 9752,
+      "sha256": "7ffec210637a35bd04d1798aca7680a1e32fc2f9c921dcbcd4ad72a5a2a5ffcb"
+    },
+    "solver/up-to/alternatives-chosen.json": {
+      "area": "solver/up-to",
+      "bytes": 7181,
+      "sha256": "fb57650278ab3855a4ba72fcc9ac6a1bfa56894072cc86f8b888b84ad3a7379d"
+    },
+    "solver/up-to/alternatives.json": {
+      "area": "solver/up-to",
+      "bytes": 7999,
+      "sha256": "5d1d4b852b312944b71363d225f26ee04c4899c280e17fd5a52c9552666eb849"
+    },
+    "solver/up-to/alumina-line-shared-reactor-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 41398,
+      "sha256": "e42019f0e7c79b53991da8c04a5bfddd9b71c473e4620e687dd7cb2f1eaf12ae"
+    },
+    "solver/up-to/banked-any-taker.json": {
+      "area": "solver/up-to",
+      "bytes": 3423,
+      "sha256": "5a2782f8eda65b3041560794c913744d0871a9d627a75acfc4a9d393dbfd4e30"
+    },
+    "solver/up-to/banked-up-to-taker.json": {
+      "area": "solver/up-to",
+      "bytes": 5475,
+      "sha256": "214a5708011b89718d206d8026e8d6171296e0b1fd56c7df82c8f8fcc2e327f1"
+    },
+    "solver/up-to/benzene-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 3519,
+      "sha256": "fb3810fdaee2d18d1b7bcff19377edb592d623b1cad0f88cf2cb78a41b79e31c"
+    },
+    "solver/up-to/benzene.json": {
+      "area": "solver/up-to",
+      "bytes": 3817,
+      "sha256": "4de295d7e7810316fba80c92832ec9ef1afc19065618e5a951f69456505608dd"
+    },
+    "solver/up-to/buffer-any-taker.json": {
+      "area": "solver/up-to",
+      "bytes": 3990,
+      "sha256": "8917713829532e4380e562cf27abb29c9c54d03fe00e0bbd34cdd86ffb6c2157"
+    },
+    "solver/up-to/buffer-drawers-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 13573,
+      "sha256": "f574ba67547b38d04fbde13c27a727f894e46b3a3eb08f2dc9bb4d716ed3c144"
+    },
+    "solver/up-to/buffer-up-to-taker.json": {
+      "area": "solver/up-to",
+      "bytes": 4404,
+      "sha256": "cca127b0256410c8b42a6ab9a943e3802eed58b6a8f070731e949ddb7b4177fd"
+    },
+    "solver/up-to/buffer-with-a-rule.json": {
+      "area": "solver/up-to",
+      "bytes": 4323,
+      "sha256": "1fd22cb766b86a6d2a067f4ae3a500c3d86399ee9284985aee11f4ce48471c33"
+    },
+    "solver/up-to/capped-drawers.json": {
+      "area": "solver/up-to",
+      "bytes": 4400,
+      "sha256": "a62b6a23dd8fe5768f2a209b8060604d6685ad5edd9da0d69aaf72148bc53171"
+    },
+    "solver/up-to/chain-first-slower.json": {
+      "area": "solver/up-to",
+      "bytes": 3699,
+      "sha256": "cd6ac8b5881ea07f2eb72deb4bbceb216e406a79edbed7d6fb1c0ae2716111ab"
+    },
+    "solver/up-to/chain-of-three.json": {
+      "area": "solver/up-to",
+      "bytes": 5088,
+      "sha256": "40f25515ac20f84d835079ecdbca54ecf6e54293db599278fc0784c98c8ab584"
+    },
+    "solver/up-to/chain-second-slower.json": {
+      "area": "solver/up-to",
+      "bytes": 3647,
+      "sha256": "6c91c6f4ded393bd0f39da953237867cf3c21ccd7c32e2163b2e97cbc14801d8"
+    },
+    "solver/up-to/clog-ring.json": {
+      "area": "solver/up-to",
+      "bytes": 4250,
+      "sha256": "315c64bf1cdee36e792d4ced8321b4888b2004ee2967fee51cd73765b0d67a14"
+    },
+    "solver/up-to/dead-ring-of-one.json": {
+      "area": "solver/up-to",
+      "bytes": 2512,
+      "sha256": "49fe98ec0ee1771793dd7bdc2c4a754dcebbba1f50a5fb8ea45aec5c3632c9e7"
+    },
+    "solver/up-to/dead-ring-of-three.json": {
+      "area": "solver/up-to",
+      "bytes": 5740,
+      "sha256": "3e30bb57ab007414c972de2d35a8d4dbbecddbb98cd057003e54ea70d343f5a5"
+    },
+    "solver/up-to/dead-ring-of-two.json": {
+      "area": "solver/up-to",
+      "bytes": 4125,
+      "sha256": "9d01e131e0416980cafd75d8d59bdc34690127fa6ca298c4ad660c2d01e30ba6"
+    },
+    "solver/up-to/exact-consumer.json": {
+      "area": "solver/up-to",
+      "bytes": 4753,
+      "sha256": "cf42deab19f9741cae9c67d90b88c26c87254acabcb153133d9b1d99b34d7b77"
+    },
+    "solver/up-to/exact-producer.json": {
+      "area": "solver/up-to",
+      "bytes": 4760,
+      "sha256": "dec46acaaab2fb7047c48dd1f0b1a35701316579a87186813bee59b3041d5105"
+    },
+    "solver/up-to/fed-ring.json": {
+      "area": "solver/up-to",
+      "bytes": 4494,
+      "sha256": "d94b5bc44fe5ba4c8547c8f95ba5a9f0dc70d5a69361ba31e68e8999ee10eb01"
+    },
+    "solver/up-to/full-platline-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 103493,
+      "sha256": "00b932f5395e479964c90ae61da9c588a52d033a624670322a8f70e13eb72247"
+    },
+    "solver/up-to/glass-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 18455,
+      "sha256": "fe9dee58725cad3ee15c79095b091f8612aec8402a345d8a88ab73bb67f3d051"
+    },
+    "solver/up-to/gtnh-flow-230-platline-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 53475,
+      "sha256": "bd09f9b7eacd54356d61f489eceb91d2aaba96113c818e6019cf9d27154ac71d"
+    },
+    "solver/up-to/gtnh-flow-cetane-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 18895,
+      "sha256": "325d68935b89212e8f1ae4382bd40ec9db58ef3b0644f610232f1c0bb8ae9e28"
+    },
+    "solver/up-to/gtnh-flow-excess-choice-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 5724,
+      "sha256": "fef8daffc0cc4b728ae25a91e8d5b2bc82ffdb03d0f51f78cbd017a638a581ad"
+    },
+    "solver/up-to/gtnh-flow-jet-fuel-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 26480,
+      "sha256": "246a7f5fe03c13fb783a6a361febb9557babd212477fe5e83101f9235946f036"
+    },
+    "solver/up-to/gtnh-flow-light-fuel-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 5267,
+      "sha256": "68f935304c9de333cf47c251f0c613149220019a58c14353fc00deaa3900eaaa"
+    },
+    "solver/up-to/gtnh-flow-light-fuel-hydrogen-loop-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 5228,
+      "sha256": "e422d48b80ca6c5ab3f0e9717bb4b85e7e209478af472f2495c61d55feabb544"
+    },
+    "solver/up-to/gtnh-flow-loopgraph-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 3787,
+      "sha256": "d4f6de16044e5cd9f690cb0b2a54f1ad7a9df184da1eab25b11c83f56f9bee62"
+    },
+    "solver/up-to/gtnh-flow-microsheep-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 2778,
+      "sha256": "e7fe31d2753870a1a57ecac00644cd9df5b33134a0c6a592ee49d78393fc45ff"
+    },
+    "solver/up-to/gtnh-flow-mk1-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 6652,
+      "sha256": "4b8af790095543bcbed8066898c6d661935abe41cb18281434992d191e10ce53"
+    },
+    "solver/up-to/gtnh-flow-mk1-tiberium-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 6330,
+      "sha256": "00e450a4875eff319a1dafddc42d07218be552d6d016a6f4fcb3f63b11f9d852"
+    },
+    "solver/up-to/gtnh-flow-nanocircuits-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 583099,
+      "sha256": "0fa6cf3ba52b7e333a1e9d0399d931bf74cb2b6a409715566c67167fb9800533"
+    },
+    "solver/up-to/gtnh-flow-palladium-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 7392,
+      "sha256": "7a8f83c40547ef76a5d621057ea883515b0f5c15e3a918e197d2fcada527176d"
+    },
+    "solver/up-to/gtnh-flow-palladium-line-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 123589,
+      "sha256": "5569532c3a0cf31ed94ce29af3a86656b98b630bbd4fefd4424ddae522933261"
+    },
+    "solver/up-to/gtnh-flow-symmetric-choice-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 7335,
+      "sha256": "015a29eccd0b3bb76e9d6bb5f939befe891c611b542f50ec079a2e5152ab6b0a"
+    },
+    "solver/up-to/gtnh-flow-two-decisions-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 13847,
+      "sha256": "936d52fe9c5695274f8fc01e76294ceacfb57d56e3ed8b66d7180b2fdfc42ba9"
+    },
+    "solver/up-to/gtnh-flow-twoslack-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 3786,
+      "sha256": "3fe8569f55ee4049b8590efdf136f3884ae8452a53e93fab299383d98ba1e74a"
+    },
+    "solver/up-to/hv-diesel-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 17883,
+      "sha256": "03d3d9b7fac81e9880885aeacc83f594765c38a7ca31bf352ffde11a79a3461a"
+    },
+    "solver/up-to/idle-noise-beside-a-lone-card.json": {
+      "area": "solver/up-to",
+      "bytes": 60478,
+      "sha256": "77ef19e4dd57b99f8b143e987f7d2e0b741044667254c288d764d6d6aac5f30a"
+    },
+    "solver/up-to/idle-noise.json": {
+      "area": "solver/up-to",
+      "bytes": 58823,
+      "sha256": "bf4e2954368d240ae3b06e4c75c797234c09c4edd0538a453722b222a2bc667a"
+    },
+    "solver/up-to/mega-iv-nitrobenzene-power-plant-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 49921,
+      "sha256": "1d285fbaaf3294405bd1f81f5101fe3a280d4747724375ddd65aed756ce6c610"
+    },
+    "solver/up-to/mv-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 75659,
+      "sha256": "75ad96c41fd375991aa5c31e919bb0b880abf84c6a4f6ce748aa42d2b5833aab"
+    },
+    "solver/up-to/no-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 4559,
+      "sha256": "5a1d8bd2cc2f2c1733edab07bed6cd3597c2f5af3ae361645a9f173c02c72869"
+    },
+    "solver/up-to/nothing-takes.json": {
+      "area": "solver/up-to",
+      "bytes": 3853,
+      "sha256": "fec353f8bc6d95dd04db7b6250d55ded1813c24923f3ca46f0f8c88c44ff568b"
+    },
+    "solver/up-to/only-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 3119,
+      "sha256": "672018ac007f13d438a09e3f13bf1d20dc5f42fd37640088d2674896f1abaa4b"
+    },
+    "solver/up-to/oxygen-silicon-loop-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 6736,
+      "sha256": "42c4035ec72dd5537762e817bf857f499d3c556e71977029924d65fffa99894c"
+    },
+    "solver/up-to/pa-cell-loop-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 15972,
+      "sha256": "421df2b916133bfe413c12839d8547b5c7c41aa0b6988f1e802d1da4d91ca301"
+    },
+    "solver/up-to/pin-diagnosis.json": {
+      "area": "solver/up-to",
+      "bytes": 6903,
+      "sha256": "ec224c1f8fb6738866e6292fe4e1e1970d1a4914d9ab325535169c90d8fd9dc3"
+    },
+    "solver/up-to/platline-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 108973,
+      "sha256": "f927e63083c59b62b974fbed9c49163fe722a63ee0b879a2f409f22feea49407"
+    },
+    "solver/up-to/platline-x4-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 433387,
+      "sha256": "9dd0f8958613cf11952a4d2a1d6e2d575b540a2049f72e0ac43ec6ced43ca5b7"
+    },
+    "solver/up-to/read-out-budget.json": {
+      "area": "solver/up-to",
+      "bytes": 76145,
+      "sha256": "1e93d4b52ed552700325f636ab16273cf0ed3f181e84c75285f2b9b933182a7b"
+    },
+    "solver/up-to/shared-pool.json": {
+      "area": "solver/up-to",
+      "bytes": 3351,
+      "sha256": "3d6197893084fd8c04b818bfc00457eee4d54acaa33b731129f5dee84eadabe8"
+    },
+    "solver/up-to/shared-producer.json": {
+      "area": "solver/up-to",
+      "bytes": 4552,
+      "sha256": "865b69efe56866f4593832b4fb1f196ae34b17b0aa264591bb2ce753897c0367"
+    },
+    "solver/up-to/single-card-v2-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 2233,
+      "sha256": "b5c16f13255618a0ef348798b91aa8563e80e3a4821a5768c942f90ae679aded"
+    },
+    "solver/up-to/stage-a.json": {
+      "area": "solver/up-to",
+      "bytes": 4260,
+      "sha256": "59fc3d0db2add12e053455a7863d20be5eedf00b7add67a18442a01acebb5084"
+    },
+    "solver/up-to/starved-chain.json": {
+      "area": "solver/up-to",
+      "bytes": 4369,
+      "sha256": "b432b82fc2b5f639a706e4ecbd2c2760094013748c7b1aefbedd0fd5fa450f6e"
+    },
+    "solver/up-to/sulfuric-acid-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 19462,
+      "sha256": "a8fc7925a4ed2caa9e14e29dc0b58f428a9f4ed998477bb729b8e86dc4f5fda2"
+    },
+    "solver/up-to/titanium-line-chembath-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 25132,
+      "sha256": "cb98ed199c00b1664b6b645a2cfd4ac12e95dd81e5a288034c69f8cd23e82082"
+    },
+    "solver/up-to/titanium-line-tour-every-count-up-to.json": {
+      "area": "solver/up-to",
+      "bytes": 14835,
+      "sha256": "4922e5ec26bd2bfdb2433159ea25a72b4ff98f0a7b428f5eb187ad5ac6242ddb"
+    },
+    "solver/up-to/topped-loop-capped.json": {
+      "area": "solver/up-to",
+      "bytes": 5922,
+      "sha256": "ce031e86730e08780e0b642f3071d9e33dbe5d2af44ea3dfef2e049948bff2e2"
+    },
+    "solver/up-to/topped-loop-trading.json": {
+      "area": "solver/up-to",
+      "bytes": 10030,
+      "sha256": "9c17c80365419eadc28ebf2a742edfd21a9e15cfbae11daecd2403a47b4735e6"
+    },
+    "solver/up-to/topped-loop.json": {
+      "area": "solver/up-to",
+      "bytes": 5841,
+      "sha256": "cefe8dd053dbdc234652bedfc0aba59380be4338521c0e971aa5bb5fc1c42c5e"
+    },
+    "solver/up-to/two-full-outputs.json": {
+      "area": "solver/up-to",
+      "bytes": 3978,
+      "sha256": "bd20c1477425623941b78a700b16ce44477278ea3da66a819b2b7b27976800cb"
+    },
+    "solver/up-to/two-islands.json": {
+      "area": "solver/up-to",
+      "bytes": 6542,
+      "sha256": "cb110470efb925c4bf7744f1e4c7a1653a319d74730a14c8a62ab5950779d2e0"
+    },
+    "solver/up-to/two-producers.json": {
+      "area": "solver/up-to",
+      "bytes": 5305,
+      "sha256": "ff364bdabf3d7c134a0f1c2050d7228e8e92d8e9bce04cf8e119192168933bda"
+    },
+    "solver/up-to/two-rings.json": {
+      "area": "solver/up-to",
+      "bytes": 9043,
+      "sha256": "a93be420354751ce60985d0062f10f7ff6df5d70b8fc46b57f80676f348f2972"
+    },
+    "solver/up-to/two-short-inputs.json": {
+      "area": "solver/up-to",
+      "bytes": 3975,
+      "sha256": "ee568efb73482cacacef523b724cb076a28751cc794b82ac83724efb54f3cadd"
+    },
+    "solver/up-to/two-sided-output-tighter.json": {
+      "area": "solver/up-to",
+      "bytes": 4061,
+      "sha256": "16a5dfd960f200996ecadfd9c13a998a443956fac78684a7763706f73f154d7f"
+    },
+    "solver/up-to/two-sided-tied.json": {
+      "area": "solver/up-to",
+      "bytes": 3994,
+      "sha256": "83df7ffa0086daa40d7ebb88320d6d85ab639288398419e9f78de01040b91b82"
+    },
+    "solver/up-to/unreachable-drawer.json": {
+      "area": "solver/up-to",
+      "bytes": 4166,
+      "sha256": "0a08078381b2d6bb116c99a5ab093e3c6f795fd07096d2cb8918f3d46ee10890"
+    },
+    "solver/up-to/unwired.json": {
+      "area": "solver/up-to",
+      "bytes": 2185,
+      "sha256": "4e03697552999baecc21eb8820be0c1bc0c9d376d8a91716d3059d46ab42b8bf"
+    },
+    "solver/website/cases.json.gz": {
+      "area": "solver/website",
+      "bytes": 126213,
+      "sha256": "c7fb5d2ba9dd55bf1395b8d20b6f3505c8e5d0ab2066f4b28dcd2e35616afeaf"
+    },
+    "tasks/order-key-vectors.json": {
+      "area": "tasks",
+      "bytes": 6601,
+      "sha256": "dad06cb14862c075382f2b43fdffb9edfed3b8534cc221add8dbf7e3bf6a8664"
+    },
+    "view-inputs/card-website-test-inputs.jsonl.gz": {
+      "area": "view-inputs",
+      "bytes": 217996,
+      "sha256": "697cff66ca3f44937186235a518db78bb0ca86109067ff4d867b7b0d56494729"
+    },
+    "view-inputs/special-website-test-inputs.jsonl.gz": {
+      "area": "view-inputs",
+      "bytes": 11878,
+      "sha256": "7a4b86a3e5314b260e9a2a123be77f4ddb07130738208c79b9611922e033ee3c"
+    },
+    "view/card/cases.json": {
+      "area": "view",
+      "bytes": 489067,
+      "sha256": "403eabeebce09839da72ac667c65fae24803294124a896fc697a15eefd973e8e"
+    },
+    "view/card/count.json": {
+      "area": "view",
+      "bytes": 2974,
+      "sha256": "001810ce3f822f0a532d7fee95334bdbabf469d288d30dd9ece7838b038f74ea"
+    },
+    "view/drawer/cases.json": {
+      "area": "view",
+      "bytes": 140126,
+      "sha256": "410ba66170bc7e82dcfbed3a3e61a6e9539964894dc24b8910addca4b06a293a"
+    },
+    "view/group/cases.json": {
+      "area": "view",
+      "bytes": 16300,
+      "sha256": "5589c24af6f41a5ddcc3da29c9c253ca80662aa578c71f3eaa180f5188d134fe"
+    },
+    "view/minimap/cases.json": {
+      "area": "view",
+      "bytes": 19183,
+      "sha256": "25ed149d7f24291be7fbf30b073be760342eabca80997ab9b0472dfd9fbab2ad"
+    },
+    "view/note/look.json": {
+      "area": "view",
+      "bytes": 4891,
+      "sha256": "893ad1786a962fb0a433273d6088c970c436c554dfeed52f59cb3ee60f081020"
+    },
+    "view/note/menu.json": {
+      "area": "view",
+      "bytes": 830,
+      "sha256": "52c66c8da1096947f69e2390496b116adac67b4df601713f9b6e4af466802e6b"
+    },
+    "view/notices/cases.json": {
+      "area": "view",
+      "bytes": 34399,
+      "sha256": "9606d40b87918431085c3156f079bbab1aef50f08fcaf057629b7e54a9a6ad59"
+    },
+    "view/rail/cases.json": {
+      "area": "view",
+      "bytes": 536951,
+      "sha256": "2909fe9f9188bee9e7e6fd2552cfb2f6a617b6031ab9d0b646fcc8c336be92c4"
+    },
+    "view/rail/math.json": {
+      "area": "view",
+      "bytes": 50150,
+      "sha256": "22971d9861d228fb888024f62a76afe3653573900fe503ae9cbeedd3ef15ee25"
+    },
+    "view/rails/cases.json": {
+      "area": "view",
+      "bytes": 48397,
+      "sha256": "b764514290ce4640684b8f94d2850e4d50d01274715e44e1cdcdcf94cc9ba489"
+    },
+    "view/records.json": {
+      "area": "view",
+      "bytes": 27400,
+      "sha256": "c4e40c9156762ceae0902bab0cad398f418bdb9634f0f9832a115d332ae84c26"
+    },
+    "view/special/cases.json": {
+      "area": "view",
+      "bytes": 127097,
+      "sha256": "40b5af0b1df5c6ab833faf33b87ac73650cdef80bfefe9b12b09227fb1b1aba8"
+    },
+    "wire/findings.json": {
+      "area": "wire",
+      "bytes": 5394,
+      "sha256": "31e5b3a01ddfbc85f74e4f43355862b66698166e5ceafbbba89e881cc7a630a3"
+    },
+    "wire/live.json": {
+      "area": "wire",
+      "bytes": 20500,
+      "sha256": "844c7916c3d4a5f0be1403e71345d26e409bfd3340b0aaccfb6f20418a2b19b3"
+    },
+    "wire/plan.json": {
+      "area": "wire",
+      "bytes": 847,
+      "sha256": "d894ca2dc94e4fe5dfbd2985bafb20b0355fb543fa560749224da1393da84e1f"
+    },
+    "wire/rest.json": {
+      "area": "wire",
+      "bytes": 62681,
+      "sha256": "893bbf59298c28a9c681d01bea6c117b0bbaa657edd7d5566a8792caab3cdf27"
+    },
+    "wire/shapes.json": {
+      "area": "wire",
+      "bytes": 8409,
+      "sha256": "4d302e9c657ea105b869a551ca5c5c601f4e9cdc2813de59c63d5b97c8ba3e17"
+    }
+  }
+}

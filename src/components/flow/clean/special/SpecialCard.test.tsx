@@ -264,6 +264,8 @@ it("shows an empty holder as two dashed sockets whose handles take any resource"
     sockets: {
       take: "DRAIN ANY",
       give: "SUPPLY ANY",
+      takeHint: "takes an output",
+      giveHint: "feeds an input",
       takeHandle: "input:item:custom-any",
       giveHandle: "output:item:custom-any",
     },
@@ -293,7 +295,14 @@ it("gives a fluid tank no count", () => {
     sections: [{ section: 0, inputs: [], outputs: [] }],
     power: undefined,
     count: undefined,
-    sockets: { take: "TAKE CELL/FLUID", give: "GIVE CELL/FLUID", takeHandle: "i", giveHandle: "o" },
+    sockets: {
+      take: "TAKE CELL/FLUID",
+      give: "GIVE CELL/FLUID",
+      takeHint: "takes an output",
+      giveHint: "feeds an input",
+      takeHandle: "i",
+      giveHandle: "o",
+    },
   };
   const { container } = renderCard(view);
   expect(container.querySelector(".cc-count")).toBeNull();

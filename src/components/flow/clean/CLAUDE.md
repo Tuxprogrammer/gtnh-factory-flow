@@ -59,3 +59,26 @@ holder, a crop card. Bees, the Extreme Entity Crusher and every other machine ar
 - Plan-mode edits (`updateNode`) reach the solver seam, which throws until the plan solver lands.
 - Check by eye with `/dev/clean-card` (development only): it exposes `window.__ccStore` and
   `window.__ccMocks` (the mock results of `solver/plan/__fixtures__/mock-extras.ts`).
+- `minimap/`: `minimap-scene.ts` makes the scene (tiles, wires, bounds) the map and the Feedback picture draw. Which boxes
+  are tiles, their tint, a card's count, which wires are kept and their lifted colour are one rule with the core's
+  `MinimapBuilder` (the mod's map in the world draws from it): `minimap-conformance.test.ts` holds the website to
+  `conformance/view/minimap/cases.json`. A change to those rules changes the website, the core and the file together.
+  A tile's label, picture and rate text are the host's own and are not in the cases.
+- The recipe card is one rule with the core's `CardViews` (docs/view-card.md). `card-conformance.test.ts` holds
+  `cleanCardView` to `conformance/view/card/cases.json`; `card-shadow.test.ts` runs the compiled core
+  (`ViewExports`) beside it on those cases and on every card the website's tests and the plan fixtures draw
+  (`conformance/view-inputs/`, recorded by `tools/audits/card-test-inputs/record.mjs`: re-record after a change to
+  what a card's facts hold). `card-input.ts` writes the core's input from a card's facts. A change to a card rule
+  changes `clean-model.ts`, `CardViews` and the cases together.
+- A special card's own parts are one rule with the core's `SpecialViews` (docs/view-card.md, "Special cards"), so far
+  for the custom rate card and the fluid tank: `special/special-parts.ts` is the website's rules and puts the parts
+  together with the card's view; `special/special-view.ts` is their switch (the card's flag and targets, kept per card);
+  `special-conformance.test.ts` holds the rules to `conformance/view/special/cases.json`, `special-view.test.ts` the core
+  to the rules on those cases and on the recorded holder cards. A change to a holder's parts changes `special-parts.ts`,
+  `SpecialViews` and the cases together. The other kinds still build their whole view in `use-special.ts`.
+- `card-view.ts` is the switch (`ADOPT.card` in `src/lib/core/adopt.ts`): with the area on and the core loaded,
+  `useCleanCardModel`'s view is the core's `CardView` read back as a `CleanCardView` (`cleanViewOf`); otherwise, and
+  when the core fails on a card, `cleanCardView`. A card's last view is kept by its input, dials and font epoch
+  (`sameData`), so a remount or a render that changed nothing of it makes no call; a card's first view is the
+  builders' and the core makes it in idle time. `card-view.test.ts` holds the two equal on every recorded card. Never
+  add work per frame or over the board there: it runs once per card React renders.

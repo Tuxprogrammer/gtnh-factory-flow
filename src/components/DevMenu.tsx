@@ -60,6 +60,7 @@ import {
   undoRouterTuning,
   type RouterTuning,
 } from "./flow/router-tuning";
+import "./flow/router-tuning-browser";
 import { useFactoryStore } from "@/store/factory-store";
 import { readBoardGeometry, readBoardScore, type BoardScore } from "./flow/board-score";
 import { decodeLayout, encodeLayout } from "@/lib/board-layout-string";

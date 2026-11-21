@@ -1,0 +1,1184 @@
+{
+ "record": "minimap",
+ "set": "cases",
+ "measure": "none",
+ "cases": [
+  {
+   "name": "an empty plan has no tiles and no bounds",
+   "input": {
+    "name": "Plan",
+    "nodes": [],
+    "routes": []
+   },
+   "view": {
+    "name": "Plan",
+    "tiles": [],
+    "wires": []
+   }
+  },
+  {
+   "name": "a card carries its tag's colour and the count it shows",
+   "input": {
+    "name": "Plan",
+    "nodes": [
+     {
+      "id": "a",
+      "kind": "card",
+      "x": 0,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "hidden": false,
+      "selected": false,
+      "machines": 6,
+      "pinned": true,
+      "tag": "orange"
+     },
+     {
+      "id": "b",
+      "kind": "card",
+      "x": 400,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "hidden": false,
+      "selected": false,
+      "machines": 0,
+      "pinned": false
+     },
+     {
+      "id": "c",
+      "kind": "card",
+      "x": 800,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "hidden": false,
+      "selected": false,
+      "machines": 2.5,
+      "pinned": false,
+      "tag": "no-such-colour"
+     }
+    ],
+    "routes": []
+   },
+   "view": {
+    "name": "Plan",
+    "tiles": [
+     {
+      "id": "a",
+      "kind": "card",
+      "x": 0,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "tint": "#f9801d",
+      "machines": 6,
+      "pinned": true,
+      "zero": false,
+      "selected": false
+     },
+     {
+      "id": "b",
+      "kind": "card",
+      "x": 400,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "tint": "#8A93A6",
+      "machines": 0,
+      "pinned": false,
+      "zero": true,
+      "selected": false
+     },
+     {
+      "id": "c",
+      "kind": "card",
+      "x": 800,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "tint": "#8A93A6",
+      "machines": 2.5,
+      "pinned": false,
+      "zero": false,
+      "selected": false
+     }
+    ],
+    "wires": [],
+    "bounds": {
+     "x0": 0,
+     "y0": 0,
+     "x1": 1120,
+     "y1": 200
+    }
+   }
+  },
+  {
+   "name": "a count reads to two places below 100 and whole from 100",
+   "input": {
+    "name": "Plan",
+    "nodes": [
+     {
+      "id": "a",
+      "kind": "card",
+      "x": 0,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "hidden": false,
+      "selected": false,
+      "machines": 0.333333,
+      "pinned": false,
+      "tag": "lime"
+     },
+     {
+      "id": "b",
+      "kind": "card",
+      "x": 400,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "hidden": false,
+      "selected": false,
+      "machines": 99.999,
+      "pinned": false,
+      "tag": "lime"
+     },
+     {
+      "id": "c",
+      "kind": "card",
+      "x": 800,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "hidden": false,
+      "selected": false,
+      "machines": 100.4,
+      "pinned": false,
+      "tag": "lime"
+     },
+     {
+      "id": "d",
+      "kind": "card",
+      "x": 1200,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "hidden": false,
+      "selected": false,
+      "machines": 250.6,
+      "pinned": false,
+      "tag": "lime"
+     },
+     {
+      "id": "e",
+      "kind": "card",
+      "x": 1600,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "hidden": false,
+      "selected": false,
+      "machines": 1.005,
+      "pinned": false,
+      "tag": "lime"
+     }
+    ],
+    "routes": []
+   },
+   "view": {
+    "name": "Plan",
+    "tiles": [
+     {
+      "id": "a",
+      "kind": "card",
+      "x": 0,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "tint": "#80c71f",
+      "machines": 0.33,
+      "pinned": false,
+      "zero": false,
+      "selected": false
+     },
+     {
+      "id": "b",
+      "kind": "card",
+      "x": 400,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "tint": "#80c71f",
+      "machines": 100,
+      "pinned": false,
+      "zero": false,
+      "selected": false
+     },
+     {
+      "id": "c",
+      "kind": "card",
+      "x": 800,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "tint": "#80c71f",
+      "machines": 100,
+      "pinned": false,
+      "zero": false,
+      "selected": false
+     },
+     {
+      "id": "d",
+      "kind": "card",
+      "x": 1200,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "tint": "#80c71f",
+      "machines": 251,
+      "pinned": false,
+      "zero": false,
+      "selected": false
+     },
+     {
+      "id": "e",
+      "kind": "card",
+      "x": 1600,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "tint": "#80c71f",
+      "machines": 1,
+      "pinned": false,
+      "zero": false,
+      "selected": false
+     }
+    ],
+    "wires": [],
+    "bounds": {
+     "x0": 0,
+     "y0": 0,
+     "x1": 1920,
+     "y1": 200
+    }
+   }
+  },
+  {
+   "name": "a drawer takes its role's colour, and a plain one is a product",
+   "input": {
+    "name": "Plan",
+    "nodes": [
+     {
+      "id": "s",
+      "kind": "drawer",
+      "x": 0,
+      "y": 0,
+      "w": 136,
+      "h": 60,
+      "hidden": false,
+      "selected": false,
+      "machines": 0,
+      "pinned": false,
+      "role": "source"
+     },
+     {
+      "id": "p",
+      "kind": "drawer",
+      "x": 200,
+      "y": 0,
+      "w": 136,
+      "h": 60,
+      "hidden": false,
+      "selected": false,
+      "machines": 0,
+      "pinned": false,
+      "role": "product"
+     },
+     {
+      "id": "t",
+      "kind": "drawer",
+      "x": 400,
+      "y": 0,
+      "w": 136,
+      "h": 60,
+      "hidden": false,
+      "selected": false,
+      "machines": 0,
+      "pinned": false,
+      "role": "trash"
+     },
+     {
+      "id": "b",
+      "kind": "drawer",
+      "x": 600,
+      "y": 0,
+      "w": 136,
+      "h": 60,
+      "hidden": false,
+      "selected": false,
+      "machines": 0,
+      "pinned": false,
+      "role": "buffer"
+     },
+     {
+      "id": "d",
+      "kind": "drawer",
+      "x": 800,
+      "y": 0,
+      "w": 136,
+      "h": 60,
+      "hidden": false,
+      "selected": false,
+      "machines": 0,
+      "pinned": false
+     }
+    ],
+    "routes": []
+   },
+   "view": {
+    "name": "Plan",
+    "tiles": [
+     {
+      "id": "s",
+      "kind": "drawer",
+      "x": 0,
+      "y": 0,
+      "w": 136,
+      "h": 60,
+      "tint": "#78B6F4",
+      "drawer": "source",
+      "selected": false
+     },
+     {
+      "id": "p",
+      "kind": "drawer",
+      "x": 200,
+      "y": 0,
+      "w": 136,
+      "h": 60,
+      "tint": "#F59A5C",
+      "drawer": "product",
+      "selected": false
+     },
+     {
+      "id": "t",
+      "kind": "drawer",
+      "x": 400,
+      "y": 0,
+      "w": 136,
+      "h": 60,
+      "tint": "#8A93A6",
+      "drawer": "trash",
+      "selected": false
+     },
+     {
+      "id": "b",
+      "kind": "drawer",
+      "x": 600,
+      "y": 0,
+      "w": 136,
+      "h": 60,
+      "tint": "#2E9C8F",
+      "drawer": "buffer",
+      "selected": false
+     },
+     {
+      "id": "d",
+      "kind": "drawer",
+      "x": 800,
+      "y": 0,
+      "w": 136,
+      "h": 60,
+      "tint": "#F59A5C",
+      "drawer": "product",
+      "selected": false
+     }
+    ],
+    "wires": [],
+    "bounds": {
+     "x0": 0,
+     "y0": 0,
+     "x1": 936,
+     "y1": 60
+    }
+   }
+  },
+  {
+   "name": "a note is yellow without a tag, and grey for a tag nobody knows",
+   "input": {
+    "name": "Plan",
+    "nodes": [
+     {
+      "id": "a",
+      "kind": "note",
+      "x": 0,
+      "y": 0,
+      "w": 180,
+      "h": 120,
+      "hidden": false,
+      "selected": false,
+      "machines": 0,
+      "pinned": false
+     },
+     {
+      "id": "b",
+      "kind": "note",
+      "x": 300,
+      "y": 0,
+      "w": 180,
+      "h": 120,
+      "hidden": false,
+      "selected": false,
+      "machines": 0,
+      "pinned": false,
+      "tag": "pink"
+     },
+     {
+      "id": "c",
+      "kind": "note",
+      "x": 600,
+      "y": 0,
+      "w": 180,
+      "h": 120,
+      "hidden": false,
+      "selected": false,
+      "machines": 0,
+      "pinned": false,
+      "tag": "no-such-colour"
+     }
+    ],
+    "routes": []
+   },
+   "view": {
+    "name": "Plan",
+    "tiles": [
+     {
+      "id": "a",
+      "kind": "note",
+      "x": 0,
+      "y": 0,
+      "w": 180,
+      "h": 120,
+      "tint": "#fed83d",
+      "selected": false
+     },
+     {
+      "id": "b",
+      "kind": "note",
+      "x": 300,
+      "y": 0,
+      "w": 180,
+      "h": 120,
+      "tint": "#f38baa",
+      "selected": false
+     },
+     {
+      "id": "c",
+      "kind": "note",
+      "x": 600,
+      "y": 0,
+      "w": 180,
+      "h": 120,
+      "tint": "#8A93A6",
+      "selected": false
+     }
+    ],
+    "wires": [],
+    "bounds": {
+     "x0": 0,
+     "y0": 0,
+     "x1": 780,
+     "y1": 120
+    }
+   }
+  },
+  {
+   "name": "an open group and a collapsed one wear their colour",
+   "input": {
+    "name": "Plan",
+    "nodes": [
+     {
+      "id": "g1",
+      "kind": "board",
+      "x": 0,
+      "y": 0,
+      "w": 900,
+      "h": 500,
+      "hidden": false,
+      "selected": false,
+      "machines": 0,
+      "pinned": false,
+      "tint": "#3B82F6"
+     },
+     {
+      "id": "g2",
+      "kind": "group",
+      "x": 1000,
+      "y": 0,
+      "w": 320,
+      "h": 120,
+      "hidden": false,
+      "selected": false,
+      "machines": 0,
+      "pinned": false,
+      "tint": "#10B981"
+     },
+     {
+      "id": "g3",
+      "kind": "group",
+      "x": 1400,
+      "y": 0,
+      "w": 320,
+      "h": 120,
+      "hidden": false,
+      "selected": false,
+      "machines": 0,
+      "pinned": false
+     }
+    ],
+    "routes": []
+   },
+   "view": {
+    "name": "Plan",
+    "tiles": [
+     {
+      "id": "g1",
+      "kind": "board",
+      "x": 0,
+      "y": 0,
+      "w": 900,
+      "h": 500,
+      "tint": "#3B82F6",
+      "selected": false
+     },
+     {
+      "id": "g2",
+      "kind": "group",
+      "x": 1000,
+      "y": 0,
+      "w": 320,
+      "h": 120,
+      "tint": "#10B981",
+      "selected": false
+     },
+     {
+      "id": "g3",
+      "kind": "group",
+      "x": 1400,
+      "y": 0,
+      "w": 320,
+      "h": 120,
+      "tint": "#8A93A6",
+      "selected": false
+     }
+    ],
+    "wires": [],
+    "bounds": {
+     "x0": 0,
+     "y0": 0,
+     "x1": 1720,
+     "y1": 500
+    }
+   }
+  },
+  {
+   "name": "a hidden box and one with no size are no tiles, and a selected one says so",
+   "input": {
+    "name": "Plan",
+    "nodes": [
+     {
+      "id": "a",
+      "kind": "card",
+      "x": 0,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "hidden": false,
+      "selected": false,
+      "machines": 1,
+      "pinned": false
+     },
+     {
+      "id": "b",
+      "kind": "card",
+      "x": 400,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "hidden": true,
+      "selected": false,
+      "machines": 1,
+      "pinned": false
+     },
+     {
+      "id": "c",
+      "kind": "card",
+      "x": 800,
+      "y": 0,
+      "w": 0,
+      "h": 200,
+      "hidden": false,
+      "selected": false,
+      "machines": 1,
+      "pinned": false
+     },
+     {
+      "id": "d",
+      "kind": "drawer",
+      "x": 1200,
+      "y": 0,
+      "w": 136,
+      "h": 0,
+      "hidden": false,
+      "selected": false,
+      "machines": 0,
+      "pinned": false
+     },
+     {
+      "id": "e",
+      "kind": "card",
+      "x": 1600,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "hidden": false,
+      "selected": true,
+      "machines": 3,
+      "pinned": false
+     }
+    ],
+    "routes": []
+   },
+   "view": {
+    "name": "Plan",
+    "tiles": [
+     {
+      "id": "a",
+      "kind": "card",
+      "x": 0,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "tint": "#8A93A6",
+      "machines": 1,
+      "pinned": false,
+      "zero": false,
+      "selected": false
+     },
+     {
+      "id": "e",
+      "kind": "card",
+      "x": 1600,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "tint": "#8A93A6",
+      "machines": 3,
+      "pinned": false,
+      "zero": false,
+      "selected": true
+     }
+    ],
+    "wires": [],
+    "bounds": {
+     "x0": 0,
+     "y0": 0,
+     "x1": 1920,
+     "y1": 200
+    }
+   }
+  },
+  {
+   "name": "the bounds hold every tile and nothing hidden",
+   "input": {
+    "name": "Plan",
+    "nodes": [
+     {
+      "id": "a",
+      "kind": "card",
+      "x": -200,
+      "y": -50,
+      "w": 320,
+      "h": 200,
+      "hidden": false,
+      "selected": false,
+      "machines": 1,
+      "pinned": false
+     },
+     {
+      "id": "b",
+      "kind": "drawer",
+      "x": 700,
+      "y": 400,
+      "w": 136,
+      "h": 60,
+      "hidden": false,
+      "selected": false,
+      "machines": 0,
+      "pinned": false
+     },
+     {
+      "id": "z",
+      "kind": "card",
+      "x": 5000,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "hidden": true,
+      "selected": false,
+      "machines": 1,
+      "pinned": false
+     }
+    ],
+    "routes": []
+   },
+   "view": {
+    "name": "Plan",
+    "tiles": [
+     {
+      "id": "a",
+      "kind": "card",
+      "x": -200,
+      "y": -50,
+      "w": 320,
+      "h": 200,
+      "tint": "#8A93A6",
+      "machines": 1,
+      "pinned": false,
+      "zero": false,
+      "selected": false
+     },
+     {
+      "id": "b",
+      "kind": "drawer",
+      "x": 700,
+      "y": 400,
+      "w": 136,
+      "h": 60,
+      "tint": "#F59A5C",
+      "drawer": "product",
+      "selected": false
+     }
+    ],
+    "wires": [],
+    "bounds": {
+     "x0": -200,
+     "y0": -50,
+     "x1": 836,
+     "y1": 460
+    }
+   }
+  },
+  {
+   "name": "a wire is lifted a fifth towards white and keeps what it has",
+   "input": {
+    "name": "Plan",
+    "nodes": [
+     {
+      "id": "a",
+      "kind": "card",
+      "x": 0,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "hidden": false,
+      "selected": false,
+      "machines": 1,
+      "pinned": false
+     }
+    ],
+    "routes": [
+     {
+      "id": "w1",
+      "points": [
+       {
+        "x": 0,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 80
+       }
+      ],
+      "color": "#102030",
+      "flowing": true,
+      "hidden": false
+     },
+     {
+      "id": "w2",
+      "points": [
+       {
+        "x": 0,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 80
+       }
+      ],
+      "color": "#ffffff",
+      "flowing": true,
+      "hidden": false
+     },
+     {
+      "id": "w3",
+      "points": [
+       {
+        "x": 0,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 80
+       }
+      ],
+      "color": "#000000",
+      "flowing": false,
+      "hidden": false,
+      "width": 5
+     },
+     {
+      "id": "w4",
+      "points": [
+       {
+        "x": 0,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 80
+       }
+      ],
+      "color": "#F59A5C",
+      "flowing": true,
+      "hidden": false,
+      "width": 2.5
+     }
+    ]
+   },
+   "view": {
+    "name": "Plan",
+    "tiles": [
+     {
+      "id": "a",
+      "kind": "card",
+      "x": 0,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "tint": "#8A93A6",
+      "machines": 1,
+      "pinned": false,
+      "zero": false,
+      "selected": false
+     }
+    ],
+    "wires": [
+     {
+      "id": "w1",
+      "points": [
+       {
+        "x": 0,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 80
+       }
+      ],
+      "width": 3,
+      "color": "#404d59",
+      "flowing": true
+     },
+     {
+      "id": "w2",
+      "points": [
+       {
+        "x": 0,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 80
+       }
+      ],
+      "width": 3,
+      "color": "#ffffff",
+      "flowing": true
+     },
+     {
+      "id": "w3",
+      "points": [
+       {
+        "x": 0,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 80
+       }
+      ],
+      "width": 5,
+      "color": "#333333",
+      "flowing": false
+     },
+     {
+      "id": "w4",
+      "points": [
+       {
+        "x": 0,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 80
+       }
+      ],
+      "width": 2.5,
+      "color": "#f7ae7d",
+      "flowing": true
+     }
+    ],
+    "bounds": {
+     "x0": 0,
+     "y0": 0,
+     "x1": 320,
+     "y1": 200
+    }
+   }
+  },
+  {
+   "name": "a wire with no colour or a bad one is grey; a hidden one and a short one are left out",
+   "input": {
+    "name": "Plan",
+    "nodes": [
+     {
+      "id": "a",
+      "kind": "card",
+      "x": 0,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "hidden": false,
+      "selected": false,
+      "machines": 1,
+      "pinned": false
+     }
+    ],
+    "routes": [
+     {
+      "id": "w1",
+      "points": [
+       {
+        "x": 0,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 80
+       }
+      ],
+      "flowing": true,
+      "hidden": false
+     },
+     {
+      "id": "w2",
+      "points": [
+       {
+        "x": 0,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 80
+       }
+      ],
+      "color": "red",
+      "flowing": true,
+      "hidden": false
+     },
+     {
+      "id": "w3",
+      "points": [
+       {
+        "x": 0,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 80
+       }
+      ],
+      "color": "#12345",
+      "flowing": false,
+      "hidden": false
+     },
+     {
+      "id": "w4",
+      "points": [
+       {
+        "x": 0,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 80
+       }
+      ],
+      "color": "#102030",
+      "flowing": true,
+      "hidden": true
+     },
+     {
+      "id": "w5",
+      "points": [
+       {
+        "x": 5,
+        "y": 5
+       }
+      ],
+      "color": "#102030",
+      "flowing": true,
+      "hidden": false
+     }
+    ]
+   },
+   "view": {
+    "name": "Plan",
+    "tiles": [
+     {
+      "id": "a",
+      "kind": "card",
+      "x": 0,
+      "y": 0,
+      "w": 320,
+      "h": 200,
+      "tint": "#8A93A6",
+      "machines": 1,
+      "pinned": false,
+      "zero": false,
+      "selected": false
+     }
+    ],
+    "wires": [
+     {
+      "id": "w1",
+      "points": [
+       {
+        "x": 0,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 80
+       }
+      ],
+      "width": 3,
+      "color": "#9aa1b0",
+      "flowing": true
+     },
+     {
+      "id": "w2",
+      "points": [
+       {
+        "x": 0,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 80
+       }
+      ],
+      "width": 3,
+      "color": "#9aa1b0",
+      "flowing": true
+     },
+     {
+      "id": "w3",
+      "points": [
+       {
+        "x": 0,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 10
+       },
+       {
+        "x": 100,
+        "y": 80
+       }
+      ],
+      "width": 3,
+      "color": "#9aa1b0",
+      "flowing": false
+     }
+    ],
+    "bounds": {
+     "x0": 0,
+     "y0": 0,
+     "x1": 320,
+     "y1": 200
+    }
+   }
+  }
+ ]
+}

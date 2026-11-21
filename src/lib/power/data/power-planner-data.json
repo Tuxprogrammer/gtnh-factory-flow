@@ -97,6 +97,10 @@
    "euPerLiter": 232
   },
   {
+   "name": "EIO Rocket Fuel",
+   "euPerLiter": 250
+  },
+  {
    "name": "Butene",
    "euPerLiter": 256
   },
@@ -207,6 +211,10 @@
    "euPerLiter": 232
   },
   {
+   "name": "EIO Rocket Fuel",
+   "euPerLiter": 250
+  },
+  {
    "name": "Butene",
    "euPerLiter": 256
   },
@@ -290,6 +298,11 @@
    "eheMaxLps": 500
   },
   {
+   "name": "Selenium Plasma",
+   "euPerLiter": 80896,
+   "eheMaxLps": 500
+  },
+  {
    "name": "Helium Plasma",
    "euPerLiter": 81920,
    "eheMaxLps": 500
@@ -325,11 +338,6 @@
    "eheMaxLps": 2500
   },
   {
-   "name": "Creon Plasma",
-   "euPerLiter": 100352,
-   "eheMaxLps": 2500
-  },
-  {
    "name": "Awakened Draconium Plasma",
    "euPerLiter": 100352,
    "eheMaxLps": 2500
@@ -351,6 +359,11 @@
   },
   {
    "name": "Naquadria Plasma",
+   "euPerLiter": 100352,
+   "eheMaxLps": 2500
+  },
+  {
+   "name": "Technetium Plasma",
    "euPerLiter": 100352,
    "eheMaxLps": 2500
   },
@@ -470,11 +483,6 @@
    "eheMaxLps": 2500
   },
   {
-   "name": "Chrome Plasma",
-   "euPerLiter": 202342,
-   "eheMaxLps": 2500
-  },
-  {
    "name": "Manganese Plasma",
    "euPerLiter": 202752,
    "eheMaxLps": 2500
@@ -505,6 +513,11 @@
    "eheMaxLps": 2500
   },
   {
+   "name": "Polonium Plasma",
+   "euPerLiter": 214016,
+   "eheMaxLps": 2500
+  },
+  {
    "name": "Cobalt Plasma",
    "euPerLiter": 217497,
    "eheMaxLps": 2500
@@ -520,6 +533,11 @@
    "eheMaxLps": 2500
   },
   {
+   "name": "Francium Plasma",
+   "euPerLiter": 226304,
+   "eheMaxLps": 2500
+  },
+  {
    "name": "Gallium Plasma",
    "euPerLiter": 229376,
    "eheMaxLps": 2500
@@ -530,12 +548,37 @@
    "eheMaxLps": 2500
   },
   {
+   "name": "Radium Plasma",
+   "euPerLiter": 231424,
+   "eheMaxLps": 2500
+  },
+  {
+   "name": "Protactinium Plasma",
+   "euPerLiter": 236544,
+   "eheMaxLps": 2500
+  },
+  {
+   "name": "Uranium 232 Plasma",
+   "euPerLiter": 237568,
+   "eheMaxLps": 2500
+  },
+  {
+   "name": "Uranium 233 Plasma",
+   "euPerLiter": 238592,
+   "eheMaxLps": 2500
+  },
+  {
    "name": "Neptunium Plasma",
    "euPerLiter": 242688,
    "eheMaxLps": 2500
   },
   {
    "name": "Rubidium Plasma",
+   "euPerLiter": 243712,
+   "eheMaxLps": 2500
+  },
+  {
+   "name": "Plutonium-238 Plasma",
    "euPerLiter": 243712,
    "eheMaxLps": 2500
   },
@@ -617,11 +660,6 @@
   {
    "name": "Rhugnor Plasma",
    "euPerLiter": 333824,
-   "eheMaxLps": 10000
-  },
-  {
-   "name": "Naquadah Plasma",
-   "euPerLiter": 337920,
    "eheMaxLps": 10000
   },
   {
@@ -715,21 +753,6 @@
    "eheMaxLps": 10000
   },
   {
-   "name": "Osmium Plasma",
-   "euPerLiter": 393659,
-   "eheMaxLps": 10000
-  },
-  {
-   "name": "Iridium Plasma",
-   "euPerLiter": 397148,
-   "eheMaxLps": 10000
-  },
-  {
-   "name": "Platinum Plasma",
-   "euPerLiter": 399360,
-   "eheMaxLps": 10000
-  },
-  {
    "name": "Gold Plasma",
    "euPerLiter": 401408,
    "eheMaxLps": 10000
@@ -782,11 +805,6 @@
   {
    "name": "Hypogen Plasma",
    "euPerLiter": 502784,
-   "eheMaxLps": 25000
-  },
-  {
-   "name": "Plutonium-239 Plasma",
-   "euPerLiter": 503808,
    "eheMaxLps": 25000
   },
   {
@@ -1156,6 +1174,10 @@
   {
    "name": "Amount (UXV)",
    "tier": 12
+  },
+  {
+   "name": "Amount (MAX)",
+   "tier": 13
   }
  ],
  "ucfeFuels": [
@@ -1287,6 +1309,11 @@
   {
    "name": "Propane",
    "euPerLiter": 232,
+   "promoterCoefficient": 0.04
+  },
+  {
+   "name": "EIO Rocket Fuel",
+   "euPerLiter": 250,
    "promoterCoefficient": 0.04
   },
   {
@@ -2018,7 +2045,7 @@
  "htgrPebbles": [
   {
    "name": "Glowstone",
-   "base": 2,
+   "base": 0.65,
    "mult": 1.2,
    "exp": 1.1
   },
@@ -2042,7 +2069,7 @@
   },
   {
    "name": "Uranium-235",
-   "base": 1,
+   "base": 1.1,
    "mult": 1.1,
    "exp": 1.1
   },
@@ -2236,7 +2263,7 @@
    {
     "name": "Propane",
     "euPerLiter": 232,
-    "burnTime": 23.25
+    "burnTime": 23.2
    },
    {
     "name": "EIO Rocket Fuel",
@@ -2246,7 +2273,7 @@
    {
     "name": "Butene",
     "euPerLiter": 256,
-    "burnTime": 25.75
+    "burnTime": 25.7
    },
    {
     "name": "Phenol",
@@ -2256,7 +2283,7 @@
    {
     "name": "Butane",
     "euPerLiter": 296,
-    "burnTime": 29.85
+    "burnTime": 29.9
    },
    {
     "name": "Light Fuel",
@@ -2266,12 +2293,12 @@
    {
     "name": "LPG",
     "euPerLiter": 320,
-    "burnTime": 32.35
+    "burnTime": 32.3
    },
    {
     "name": "Bio Diesel",
     "euPerLiter": 320,
-    "burnTime": 32.35
+    "burnTime": 32.3
    },
    {
     "name": "Glycerol",
@@ -2291,7 +2318,7 @@
    {
     "name": "Butanol",
     "euPerLiter": 400,
-    "burnTime": 40.65
+    "burnTime": 40.7
    },
    {
     "name": "Heavy Fuel",
@@ -2326,17 +2353,17 @@
    {
     "name": "Naquadah Gas",
     "euPerLiter": 1024,
-    "burnTime": 106.55
+    "burnTime": 106.5
    },
    {
     "name": "Ethanol Gasoline",
     "euPerLiter": 1100,
-    "burnTime": 114.65
+    "burnTime": 114.6
    },
    {
     "name": "Nefarious Gas",
     "euPerLiter": 1200,
-    "burnTime": 125.35
+    "burnTime": 125.3
    },
    {
     "name": "Nitrobenzene",
@@ -2346,17 +2373,17 @@
    {
     "name": "Jet Fuel No.3",
     "euPerLiter": 1824,
-    "burnTime": 192.45
+    "burnTime": 192.4
    },
    {
     "name": "Jet Fuel A",
     "euPerLiter": 2248,
-    "burnTime": 238.35
+    "burnTime": 238.4
    },
    {
     "name": "High Octane Gasoline",
     "euPerLiter": 2500,
-    "burnTime": 265.75
+    "burnTime": 265.7
    }
   ],
   "bronzeSolid": [
@@ -2443,27 +2470,27 @@
    {
     "name": "Block of Coal Coke",
     "euPerItem": 32000,
-    "burnTime": 40
+    "burnTime": 40.7
    },
    {
     "name": "Solid Super Fuel",
     "euPerItem": 100000,
-    "burnTime": 125
+    "burnTime": 130.7
    },
    {
     "name": "Diamond",
     "euPerItem": 102400,
-    "burnTime": 128
+    "burnTime": 133.9
    },
    {
     "name": "Magic Solid Super Fuel",
     "euPerItem": 150000,
-    "burnTime": 187.5
+    "burnTime": 198
    },
    {
     "name": "Block of Diamond",
     "euPerItem": 1024000,
-    "burnTime": 1280
+    "burnTime": 1413
    }
   ],
   "steelLiquid": [
@@ -2650,7 +2677,7 @@
    {
     "name": "Butane",
     "euPerLiter": 296,
-    "burnTime": 14.9
+    "burnTime": 14.95
    },
    {
     "name": "Light Fuel",
@@ -2685,7 +2712,7 @@
    {
     "name": "Butanol",
     "euPerLiter": 400,
-    "burnTime": 20.3
+    "burnTime": 20.35
    },
    {
     "name": "Heavy Fuel",
@@ -2745,7 +2772,7 @@
    {
     "name": "Jet Fuel A",
     "euPerLiter": 2248,
-    "burnTime": 119.15
+    "burnTime": 119.2
    },
    {
     "name": "High Octane Gasoline",
@@ -2827,27 +2854,27 @@
    {
     "name": "Block of Coal Coke",
     "euPerItem": 32000,
-    "burnTime": 20
+    "burnTime": 20.35
    },
    {
     "name": "Solid Super Fuel",
     "euPerItem": 100000,
-    "burnTime": 62.5
+    "burnTime": 65.35
    },
    {
     "name": "Diamond",
     "euPerItem": 102400,
-    "burnTime": 64
+    "burnTime": 66.95
    },
    {
     "name": "Magic Solid Super Fuel",
     "euPerItem": 150000,
-    "burnTime": 93.75
+    "burnTime": 99
    },
    {
     "name": "Block of Diamond",
     "euPerItem": 1024000,
-    "burnTime": 640
+    "burnTime": 706.5
    }
   ],
   "titaniumLiquid": [
@@ -2869,7 +2896,7 @@
    {
     "name": "Ethanol Gasoline",
     "euPerLiter": 1100,
-    "burnTime": 17.2
+    "burnTime": 17.15
    },
    {
     "name": "Jet Fuel No.3",
@@ -2891,12 +2918,12 @@
    {
     "name": "Solid Super Fuel",
     "euPerItem": 100000,
-    "burnTime": 18.75
+    "burnTime": 19.6
    },
    {
     "name": "Magic Solid Super Fuel",
     "euPerItem": 150000,
-    "burnTime": 28.1
+    "burnTime": 29.7
    }
   ],
   "tungstensteelLiquid": [
@@ -2918,7 +2945,7 @@
    {
     "name": "Ethanol Gasoline",
     "euPerLiter": 1100,
-    "burnTime": 8.6
+    "burnTime": 8.55
    },
    {
     "name": "Jet Fuel No.3",
@@ -2940,12 +2967,12 @@
    {
     "name": "Solid Super Fuel",
     "euPerItem": 100000,
-    "burnTime": 9.35
+    "burnTime": 9.8
    },
    {
     "name": "Magic Solid Super Fuel",
     "euPerItem": 150000,
-    "burnTime": 14.05
+    "burnTime": 14.85
    }
   ]
  },
@@ -3067,7 +3094,7 @@
    "name": "Helium Plasma",
    "minMark": 1,
    "euPerLiter": 81920,
-   "startupEu": 40000000,
+   "startupEu": 60000000,
    "input1": "Deuterium",
    "ratio1": 1,
    "input2": "Helium-3",
@@ -3075,8 +3102,8 @@
    "eheMaxLps": 500,
    "decayOutput": "Helium",
    "outputLpsByMark": [
-    156,
-    313,
+    156.25,
+    312.5,
     625,
     10000,
     40000
@@ -3118,8 +3145,8 @@
     12,
     24,
     48,
-    768,
-    3072
+    960,
+    5760
    ],
    "drainEutByMark": [
     10240,
@@ -3147,7 +3174,7 @@
    "name": "Helium Plasma",
    "minMark": 1,
    "euPerLiter": 81920,
-   "startupEu": 60000000,
+   "startupEu": 40000000,
    "input1": "Deuterium",
    "ratio1": 1,
    "input2": "Tritium",
@@ -3155,18 +3182,18 @@
    "eheMaxLps": 500,
    "decayOutput": "Helium",
    "outputLpsByMark": [
-    156,
-    313,
+    156.25,
+    312.5,
     625,
     10000,
     40000
    ],
    "drainEutByMark": [
-    4096,
-    8192,
-    16384,
-    262144,
-    1048576
+    3840,
+    7680,
+    15360,
+    245760,
+    983040
    ],
    "compactOutputLpsByMark": [
     10000,
@@ -3176,11 +3203,11 @@
     12800000
    ],
    "compactDrainEutByMark": [
-    262144,
-    1048576,
-    3145728,
-    67108864,
-    335544320
+    245760,
+    983040,
+    2949120,
+    62914560,
+    314572800
    ]
   },
   {
@@ -3279,7 +3306,7 @@
     18,
     36,
     288,
-    1152
+    1440
    ],
    "drainEutByMark": [
     0,
@@ -3319,7 +3346,7 @@
     12,
     24,
     192,
-    768
+    960
    ],
    "drainEutByMark": [
     0,
@@ -3351,7 +3378,7 @@
    "input1": "Molten Copper",
    "ratio1": 1,
    "input2": "Tritium",
-   "ratio2": 3.472222222,
+   "ratio2": 3.4722222222222223,
    "eheMaxLps": 2500,
    "decayOutput": "Molten Zinc",
    "outputLpsByMark": [
@@ -3396,17 +3423,17 @@
    "decayOutput": "Nitrogen",
    "outputLpsByMark": [
     0,
-    156,
-    313,
-    2504,
-    10016
+    156.25,
+    312.5,
+    2500,
+    10000
    ],
    "drainEutByMark": [
     0,
-    16384,
-    32768,
-    262144,
-    1048576
+    15360,
+    30720,
+    245760,
+    983040
    ],
    "compactOutputLpsByMark": [
     0,
@@ -3417,10 +3444,10 @@
    ],
    "compactDrainEutByMark": [
     0,
-    1048576,
-    4194304,
-    50331648,
-    268435456
+    983040,
+    3932160,
+    47185920,
+    251658240
    ]
   },
   {
@@ -3471,7 +3498,7 @@
    "input1": "Molten Silver",
    "ratio1": 0.5,
    "input2": "Helium-3",
-   "ratio2": 1.302083333,
+   "ratio2": 1.3020833333333333,
    "eheMaxLps": 2500,
    "decayOutput": "Molten Tin",
    "outputLpsByMark": [
@@ -3658,9 +3685,9 @@
    "compactDrainEutByMark": [
     0,
     0,
-    3145728,
-    25165824,
-    150994944
+    6291456,
+    50331648,
+    301989888
    ]
   },
   {
@@ -3669,9 +3696,9 @@
    "euPerLiter": 206438,
    "startupEu": 360000000,
    "input1": "Molten Raw Silicon",
-   "ratio1": 0.1111111111,
+   "ratio1": 0.1111111111111111,
    "input2": "Molten Magnesium",
-   "ratio2": 0.1111111111,
+   "ratio2": 0.1111111111111111,
    "eheMaxLps": 2500,
    "decayOutput": "Molten Iron",
    "outputLpsByMark": [
@@ -3711,7 +3738,7 @@
    "input1": "Molten Iridium",
    "ratio1": 1,
    "input2": "Fluorine",
-   "ratio2": 3.472222222,
+   "ratio2": 3.4722222222222223,
    "eheMaxLps": 10000,
    "decayOutput": "Radon",
    "outputLpsByMark": [
@@ -3749,7 +3776,7 @@
    "euPerLiter": 213811,
    "startupEu": 480000000,
    "input1": "Molten Potassium",
-   "ratio1": 0.1111111111,
+   "ratio1": 0.1111111111111111,
    "input2": "Fluorine",
    "ratio2": 1,
    "eheMaxLps": 2500,
@@ -3791,7 +3818,7 @@
    "input1": "Molten Plutonium-241",
    "ratio1": 1,
    "input2": "Hydrogen",
-   "ratio2": 13.88888889,
+   "ratio2": 13.88888888888889,
    "eheMaxLps": 25000,
    "decayOutput": "Molten Americium",
    "outputLpsByMark": [
@@ -3918,8 +3945,8 @@
     0,
     0,
     0,
-    3.33,
-    13.3
+    3.3333333333333335,
+    13.333333333333334
    ],
    "drainEutByMark": [
     0,
@@ -3932,8 +3959,8 @@
     0,
     0,
     0,
-    213,
-    1704
+    213.33333333333334,
+    1706.6666666666667
    ],
    "compactDrainEutByMark": [
     0,
@@ -3958,8 +3985,8 @@
     0,
     0,
     0,
-    3.33,
-    13.3
+    3.3333333333333335,
+    13.333333333333334
    ],
    "drainEutByMark": [
     0,
@@ -3972,8 +3999,8 @@
     0,
     0,
     0,
-    213,
-    1704
+    213.33333333333334,
+    1706.6666666666667
    ],
    "compactDrainEutByMark": [
     0,
@@ -4235,7 +4262,7 @@
    "eheMaxLps": 0,
    "decayOutput": "None",
    "outputLpsByMark": [
-    313,
+    312.5,
     625,
     1250,
     20000,
@@ -4322,11 +4349,11 @@
     1280
    ],
    "drainEutByMark": [
-    16384,
-    32768,
-    65536,
-    1048576,
-    4194304
+    15360,
+    30720,
+    61440,
+    983040,
+    3932160
    ],
    "compactOutputLpsByMark": [
     320,
@@ -4336,11 +4363,11 @@
     409600
    ],
    "compactDrainEutByMark": [
-    1048576,
-    4194304,
-    12582912,
-    268435456,
-    1342177280
+    983040,
+    3932160,
+    11796480,
+    251658240,
+    1258291200
    ]
   },
   {
@@ -4362,11 +4389,11 @@
     1280
    ],
    "drainEutByMark": [
-    24578,
-    49156,
-    98312,
-    1572992,
-    6291968
+    24576,
+    49152,
+    98304,
+    1572864,
+    6291456
    ],
    "compactOutputLpsByMark": [
     320,
@@ -4416,11 +4443,11 @@
     102400
    ],
    "compactDrainEutByMark": [
-    1572864,
-    6291456,
-    18874368,
-    402653184,
-    2013265920
+    1572992,
+    6291968,
+    18875904,
+    402685952,
+    2013429760
    ]
   },
   {
@@ -4442,11 +4469,11 @@
     2560
    ],
    "drainEutByMark": [
-    24578,
-    49156,
-    98312,
-    1572992,
-    6291968
+    24576,
+    49152,
+    98304,
+    1572864,
+    6291456
    ],
    "compactOutputLpsByMark": [
     640,
@@ -4596,10 +4623,10 @@
    "decayOutput": "None",
    "outputLpsByMark": [
     0,
-    3.33,
-    6.67,
-    53.3,
-    213
+    3.3333333333333335,
+    6.666666666666667,
+    53.333333333333336,
+    320
    ],
    "drainEutByMark": [
     0,
@@ -4610,8 +4637,8 @@
    ],
    "compactOutputLpsByMark": [
     0,
-    213,
-    853,
+    213.33333333333334,
+    853.3333333333334,
     10240,
     81920
    ],
@@ -4638,8 +4665,8 @@
     0,
     5,
     10,
-    80,
-    320
+    100,
+    400
    ],
    "drainEutByMark": [
     0,
@@ -4678,8 +4705,8 @@
     0,
     20,
     40,
-    320,
-    1280
+    400,
+    1600
    ],
    "drainEutByMark": [
     0,
@@ -4709,9 +4736,9 @@
    "euPerLiter": 170393,
    "startupEu": 240000000,
    "input1": "Molten Aluminium",
-   "ratio1": 0.1111111111,
+   "ratio1": 0.1111111111111111,
    "input2": "Molten Lithium",
-   "ratio2": 0.1111111111,
+   "ratio2": 0.1111111111111111,
    "eheMaxLps": 0,
    "decayOutput": "None",
    "outputLpsByMark": [
@@ -4958,8 +4985,8 @@
     0,
     4,
     8,
-    64,
-    256
+    64.51612903225806,
+    285.7142857142857
    ],
    "drainEutByMark": [
     0,
@@ -4972,15 +4999,15 @@
     0,
     256,
     512,
-    8258,
-    54857
+    8258.064516129032,
+    54857.142857142855
    ],
    "compactDrainEutByMark": [
     0,
     1966080,
-    7864320,
-    94371840,
-    503316480
+    3932160,
+    62914560,
+    377487360
    ]
   },
   {
@@ -5159,7 +5186,7 @@
     0,
     120,
     480,
-    1920
+    2880
    ],
    "drainEutByMark": [
     0,
@@ -5191,7 +5218,7 @@
    "input1": "Molten Plutonium-241",
    "ratio1": 1,
    "input2": "Helium",
-   "ratio2": 6.944444444,
+   "ratio2": 6.944444444444445,
    "eheMaxLps": 0,
    "decayOutput": "None",
    "outputLpsByMark": [
@@ -5229,7 +5256,7 @@
    "euPerLiter": 0,
    "startupEu": 600000000,
    "input1": "Molten Californium",
-   "ratio1": 0.04444444444,
+   "ratio1": 0.044444444444444446,
    "input2": "Molten Calcium",
    "ratio2": 1,
    "eheMaxLps": 0,
@@ -5349,7 +5376,7 @@
    "euPerLiter": 0,
    "startupEu": 800000000,
    "input1": "Fluorine",
-   "ratio1": 3.472222222,
+   "ratio1": 3.4722222222222223,
    "input2": "Molten Selenium",
    "ratio2": 0.5,
    "eheMaxLps": 0,
@@ -5391,7 +5418,7 @@
    "input1": "Molten Manganese",
    "ratio1": 1,
    "input2": "Neon",
-   "ratio2": 3.472222222,
+   "ratio2": 3.4722222222222223,
    "eheMaxLps": 0,
    "decayOutput": "None",
    "outputLpsByMark": [
@@ -5471,7 +5498,7 @@
    "input1": "Molten Enriched Naquadah Alloy",
    "ratio1": 4,
    "input2": "Oganesson",
-   "ratio2": 6.944444444,
+   "ratio2": 6.944444444444445,
    "eheMaxLps": 0,
    "decayOutput": "None",
    "outputLpsByMark": [
@@ -5492,8 +5519,8 @@
     0,
     0,
     0,
-    76,
-    614
+    76.8,
+    614.4
    ],
    "compactDrainEutByMark": [
     0,
@@ -5518,8 +5545,8 @@
     0,
     0,
     0,
-    0.09,
-    0.35
+    0.087890625,
+    0.3515625
    ],
    "drainEutByMark": [
     0,
@@ -5532,7 +5559,7 @@
     0,
     0,
     0,
-    5.63,
+    5.625,
     45
    ],
    "compactDrainEutByMark": [
@@ -5558,7 +5585,7 @@
     0,
     0,
     0,
-    5.63,
+    5.625,
     22.5
    ],
    "drainEutByMark": [
@@ -5599,7 +5626,7 @@
     0,
     0,
     0,
-    230
+    230.4
    ],
    "drainEutByMark": [
     0,
@@ -5613,7 +5640,7 @@
     0,
     0,
     0,
-    29491
+    29491.2
    ],
    "compactDrainEutByMark": [
     0,
@@ -5631,7 +5658,7 @@
    "input1": "Copper Plasma",
    "ratio1": 1,
    "input2": "Oganesson",
-   "ratio2": 1.736111111,
+   "ratio2": 1.7361111111111112,
    "eheMaxLps": 0,
    "decayOutput": "None",
    "outputLpsByMark": [
@@ -5639,7 +5666,7 @@
     0,
     0,
     0,
-    115
+    115.2
    ],
    "drainEutByMark": [
     0,
@@ -5653,7 +5680,7 @@
     0,
     0,
     0,
-    7372
+    7372.8
    ],
    "compactDrainEutByMark": [
     0,
@@ -20690,7 +20717,7 @@
   },
   {
    "tier": "UMV",
-   "voltage": 134217718,
+   "voltage": 134217728,
    "ampLoss": 2048
   }
  ],

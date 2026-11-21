@@ -1,0 +1,264 @@
+# The trailer, a teaser then a tutorial, about a minute and a half: a finished plan shown off; two community plans
+# built again by the tour's cursor without NEI (no recipe pages flashing by), sped up, each followed by a slow tilted
+# pan over the finished plan (looking up and to the left); then the features one by one, from the tour played with no
+# notes of its own, a typed caption each; the minimap in its corner over a real world; the owner's own clip of laying a
+# plan out in the world; the name.
+# Cut to the approved café track (cafe.mjs, 112 BPM, a bar is 4b = 2.142857 s), lengthened for the ending by playing its
+# bars 24 to 33 twice: the band to 72b, the easy half to 192b, the end from 192b (bar 48).
+#   node tools/trailer/splice.mjs build/trailer/cafe-approved.wav build/trailer/cafe-long.wav 112 0-2,18-38,2-18,29-34,2-18,38-end
+#   java -Xmx10g tools/trailer/Trailer.java tools/trailer/trailer.shot [--stills | --every 1]
+#
+# Footage (run/client/recordings/, from the dev harness; see README.md): tour3 (call 'tutorial?quiet=1', 4K at GUI
+# scale 4), nitro3 and plat3 (call 'rebuild?file=...&nei=0', 4K), minimap4 (the minimap in its corner in a normal world, panned and zoomed;
+# filmed from a worktree at the last commit); the
+# pictures are plans' own (call planpicture): the tour's plan at the Arrange step, and the two finished rebuilds.
+
+size 1920 1080
+fps 60
+bpm 112
+duration 133.1
+source run/client/recordings/tour3-1080
+out build/trailer/trailer.mp4
+stilldir build/trailer/stills
+set audio build/trailer/cafe-long.wav
+set audiogain -3dB
+set audiofade 2.5
+# The encode on the graphics card (NVENC), the CPU left to rendering.
+set encoder nvenc
+
+title GTNH Planner
+subtitle Now in game.
+set wordscale 11
+set subscale 4
+set subgap 34
+set dotstep 40
+set dotsize 4
+set captionscale 4
+# Clear of the overview on the left.
+set captionx 232
+set typespeed 30
+set badgemarginx 360
+set badgemarginy 64
+
+# The picture as it is: no vignette, bloom, depth of field or grain.
+set vignette 0
+set bloom 0
+set grain 0
+set focusr 5
+set blendframes 0
+set dissolve 0.3
+key exposure 0 0
+key exposure 0.8 1
+
+# Shown off where nothing moves: the tour's tower and turbine, a steady pan across them.
+shot 0 8b showcase
+  source run/client/screenshots/Plan_2_2026-10-10_15.05.45.png
+  set linear 1
+  key zoom 0 1.02
+  key zoom 8b 1.06
+  key cx 0 0.555
+  key cx 8b 0.76
+  key cy 0 0.5
+  set dissolve 0
+end
+say 0.7 3.9 This is *GTNH Planner*.
+
+# The tutorial: the tour as it played, without its notes; waits between steps skipped.
+shot 8b 16b nei
+  remap 0 2.9
+  remap 2.2 5.7
+  remap 2.3 7.4
+  remap 8b 9.95
+  key zoom 0 1
+end
+say 8b+0.1 16b-0.35 Find a recipe in *NEI*, then hit the *plan button*.
+
+shot 16b 22b drawers
+  src 12.4 16.9
+  key zoom 0 1
+end
+say 16b+0.1 22b-0.35 Drag out its *inputs* and *outputs*.
+
+shot 22b 28b rate
+  remap 0 17.6
+  remap 1.2 18.8
+  remap 1.25 19.5
+  remap 6b 21.7
+  key zoom 0 1
+end
+say 22b+0.1 28b-0.35 Set a *rate*, and the rest works itself out.
+
+shot 28b 32b tier
+  src 22.3 24.6
+  key zoom 0 1
+end
+say 28b+0.1 32b-0.35 Set the *tier* and *amps*.
+
+shot 32b 40b clone
+  remap 0 29.3
+  remap 1.75 31.7
+  remap 1.8 32.7
+  remap 8b 35.5
+  key zoom 0 1
+end
+say 32b+0.1 40b-0.35 *Clone* a card, or run two recipes on *one machine*.
+
+shot 40b 48b fromnei
+  remap 0 47.4
+  remap 1.75 51.0
+  remap 1.8 52.45
+  remap 8b 57.25
+  key zoom 0 1
+end
+say 40b+0.1 48b-0.35 Drag things in from *NEI*, or press *R* or *U* on anything.
+
+shot 48b 54b leftovers
+  remap 0 58.0
+  remap 1.6 60.5
+  remap 1.65 61.5
+  remap 6b 62.6
+  key zoom 0 1
+end
+say 48b+0.1 54b-0.35 Leftovers can be *byproducts* or *trash*.
+
+shot 54b 66b power
+  remap 0 63.4
+  remap 0.6 64.2
+  remap 0.65 65.95
+  remap 12b 76.9
+  key zoom 0 1
+end
+say 54b+0.1 66b-0.35 Plan your *power* too.
+
+shot 66b 70b arrange
+  src 79.6 82.2
+  key zoom 0 1
+end
+say 66b+0.1 70b-0.35 *Arrange* tidies it up.
+
+shot 70b 80b notes
+  src 84.0 92.9
+  key zoom 0 1
+end
+say 70b+0.1 80b-0.35 Leave yourself *sticky notes*.
+
+# The library reloads as the tour types its search; this is the stretch its tiles all show, held.
+shot 80b 88b library
+  src 98.4 98.95
+  set blendframes 1
+  key zoom 0 1
+end
+say 80b+0.1 88b-0.35 Grab setups other players have *shared*.
+
+# A power plant from the library, built again by the cursor, the whole screen, sped up.
+shot 88b 108b nitro
+  source run/client/recordings/nitro3-1080
+  remap 0 3.0
+  remap 0.6 5.5
+  remap 9.9 153.0
+  remap 20b 157.4
+  set shutter 1
+  key zoom 0 1
+end
+say 88b+0.6 88b+5.2 Plan a whole *power plant*...
+badge 88b+0.2 108b-0.2 *14x* speed
+
+# The finished plant, tilted, looking up and to the left, a slow pan from its fuel to its turbines.
+shot 108b 116b nitropan
+  source run/client/screenshots/Plan_2_2026-10-10_16.44.22.png
+  set linear 1
+  key roll 0 -2.5
+  key yaw 0 8
+  key pitch 0 -6
+  key zoom 0 2.4
+  key zoom 8b 2.1
+  key cx 0 0.24
+  key cx 8b 0.74
+  key cy 0 0.27
+  key cy 8b 0.40
+end
+
+# The Platline, built again, the whole screen, sped up.
+shot 116b 144b platline
+  source run/client/recordings/plat3-1080
+  remap 0 3.0
+  remap 0.6 5.0
+  remap 14.2 353.0
+  remap 28b 356.0
+  set shutter 1
+  key zoom 0 1
+end
+say 116b+0.7 116b+4.6 ...or a whole *Platline*.
+badge 116b+0.3 144b-0.2 *24x* speed
+
+# The finished line, tilted the same way, a slow pan as it pulls back.
+shot 144b 152b platpan
+  source run/client/screenshots/Plan_2_2026-10-10_16.50.23.png
+  set linear 1
+  key roll 0 -2.5
+  key yaw 0 8
+  key pitch 0 -6
+  key zoom 0 1.75
+  key zoom 8b 1.4
+  key cx 0 0.28
+  key cx 8b 0.64
+  key cy 0 0.36
+  key cy 8b 0.40
+end
+say 144b+0.3 152b-0.4 Plan it all before you *build* it.
+
+# The world, the whole screen, then a move in toward the minimap in its corner (toward it, not onto it), held there
+# while it pans and zooms.
+shot 152b 172b minimap
+  source run/client/recordings/minimap4
+  src 0.4 11.1
+  key zoom 0 1
+  key zoom 1.6 1
+  key zoom 3.8 1.3
+  key cx 0 0.5
+  key cx 1.6 0.5
+  key cx 3.8 0.615
+  key cy 0 0.5
+  key cy 1.6 0.5
+  key cy 3.8 0.385
+end
+say 152b+2.4 162b-0.35 Your plan follows you on the *minimap*.
+say 162b+0.1 172b-0.35 Pan and zoom it while you play.
+
+# The owner's clip of laying a plan out in the world (no sound), all of it, sped up to sixteen bars.
+shot 172b 236b inworld
+  source run/client/recordings/inworld
+  src 0.1 49.2
+  set shutter 1
+  key zoom 0 1
+end
+say 172b+8.4 172b+13.5 You can also lay out a plan in the *world*.
+
+# The name, faded up from the clip, as the music ends.
+shot 236b 133.1 end
+  source run/client/recordings/inworld
+  src 49.2 49.3
+  key zoom 0 1
+  key endbg 0 0
+  key endbg 1.0 1
+  key endcard 0.6 0
+  key endcard 1.9 1
+  # The subtitle drops in on the beat a bar after the music's last hit.
+  key endsub 4b 0
+  key endsub 4b+0.16 1
+  key master 4.6 1
+  key master 6.4 0
+  set dissolve 0.6
+end
+
+still 2
+still 6
+still 30
+still 46
+still 49
+still 60
+still 80
+still 84
+still 95
+still 110
+still 128.5

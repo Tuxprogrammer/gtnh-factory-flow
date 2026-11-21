@@ -1,0 +1,286 @@
+#!/usr/bin/env bash
+# Drive the GTNH Planner dev client from a shell, headless-agent friendly. See docs/dev-harness.md.
+#
+#   tools/dev/mc.sh start [timeout_s]   build + launch the client, block until the test world is loaded
+#   tools/dev/mc.sh stop                kill the client (a graceful quit can hang on a confirm dialog)
+#   tools/dev/mc.sh restart             stop + start
+#   tools/dev/mc.sh status              harness status JSON (exit 1 if the client is not up)
+#   tools/dev/mc.sh shot [name.png] [x=..&y=..&w=..&h=..]   screenshot (optional GUI-coord crop), prints the path
+#   tools/dev/mc.sh call 'click?x=10&y=20'   any harness endpoint, prints the JSON reply
+#   tools/dev/mc.sh part 1 TIER [click|move|scroll] ['button=1']   act on card 1's tier chip (names from /board)
+#   tools/dev/mc.sh swap [--reopen]     recompile and hot-swap changed classes into the running client
+#                                       (exit 2: some changed classes weren't loaded yet, restart for those)
+#   tools/dev/mc.sh smoke               start, open the flowchart, screenshot, stop; non-zero on failure
+#   tools/dev/mc.sh idle [seconds]      exit 0 when the person is away from the game (unfocused, or no input for 30 s)
+#
+# Env: PLANNH_DEV_PORT (25599), PLANNH_RUN_TASK (runClient25), PLANNH_DEV_WIDTH/HEIGHT (1920x1080),
+#      PLANNH_DEV_GUI_SCALE (2), PLANNH_DEV_SOUND (master volume, 0.0 = muted),
+#      PLANNH_GTNH=1 (load GregTech and the pack's recipes; slow first start),
+#      PLANNH_BEES=1 with it (Forestry and NEI Addons too, for bee cards).
+#      PLANNH_CROPS=1 with it (CropsNH too, for crop cards); PLANNH_MOBS=1 with it (MobsInfo and EnderIO too, for the
+#      Extreme Entity Crusher's mobs). Either adds to any of the others, and to the world's name.
+#      PLANNH_QUESTS=1 with it (the quest book, BetterQuesting, with the full pack's quests when its Prism instance is here).
+set -uo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+PORT="${PLANNH_DEV_PORT:-25599}"
+BASE="http://127.0.0.1:$PORT"
+TASK="${PLANNH_RUN_TASK:-runClient25}"
+STATE="$ROOT/build/dev-client"
+LOG="$STATE/client.log"
+PIDFILE="$STATE/gradle.pid"
+CRASH_DIR="$ROOT/run/client/crash-reports"
+SHOT_DIR="$ROOT/run/client/screenshots"
+GAME_PIDFILE="$ROOT/run/client/plannh-dev.pid"
+WIDTH="${PLANNH_DEV_WIDTH:-1920}"
+HEIGHT="${PLANNH_DEV_HEIGHT:-1080}"
+GUI_SCALE="${PLANNH_DEV_GUI_SCALE:-2}"
+SOUND="${PLANNH_DEV_SOUND:-0.0}"
+HOTSWAP="${PLANNH_HOTSWAP:-1}"
+JDWP_PORT="${PLANNH_JDWP_PORT:-5005}"
+GTNH="${PLANNH_GTNH:-0}"
+SWAP_MANIFEST="$STATE/hotswap.sums"
+CLASSES="$ROOT/build/tmp/downgradeMainClasses/main"  # what the jar (and so the game) is built from
+JAVA="${JAVA_HOME:+$JAVA_HOME/bin/}java"  # any JDK 17+: runs tools/dev/Hotswap.java from source
+
+die() { echo "mc.sh: $*" >&2; exit 1; }
+
+call() {
+    # Synthetic input waits for the owner: held back unless they are away from the game (see idle), so a script
+    # never clicks under their hand. PLANNH_FORCE_INPUT=1 overrides.
+    case "${1%%\?*}" in
+        click | move | drag | key | type | scroll)
+            if [ "${PLANNH_FORCE_INPUT:-0}" != 1 ] && ! idle "${PLANNH_IDLE_SECONDS:-30}" >/dev/null 2>&1; then
+                die "the owner is using the game: $1 held back (PLANNH_FORCE_INPUT=1 overrides)"
+            fi
+            ;;
+    esac
+    curl -sS --max-time 45 "$BASE/$1"
+}
+
+is_up() { curl -s --max-time 2 "$BASE/status" >/dev/null 2>&1; }
+
+gradle_alive() { [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; }
+
+newest_crash() { ls -t "$CRASH_DIR"/crash-*.txt 2>/dev/null | head -1; }
+
+set_option() {
+    local file="$1" key="$2" value="$3"
+    if grep -q "^$key:" "$file"; then
+        sed -i "s|^$key:.*|$key:$value|" "$file"
+    else
+        echo "$key:$value" >>"$file"
+    fi
+}
+
+# Window size, GUI scale and sound live in options.txt, which must be set before the window exists.
+configure_client() {
+    local opts="$ROOT/run/client/options.txt"
+    mkdir -p "$(dirname "$opts")"
+    touch "$opts"
+    set_option "$opts" overrideWidth "$WIDTH"
+    set_option "$opts" overrideHeight "$HEIGHT"
+    set_option "$opts" guiScale "$GUI_SCALE"
+    set_option "$opts" fullscreen false
+    set_option "$opts" soundCategory_master "$SOUND"
+    # ModularUI2 turns its debug overlay on in every dev environment; players never see it.
+    local mui="$ROOT/run/client/config/modularui2.cfg"
+    [ -f "$mui" ] && sed -i 's/B:guiDebugMode=true/B:guiDebugMode=false/' "$mui"
+}
+
+# The full pack's quest database for the dev game's quest book, copied once from the RC-2 Prism instance (or from
+# PLANNH_QUESTS_FROM, a pack's config/betterquesting folder). Without it the book opens empty.
+copy_quests() {
+    local to="$ROOT/run/client/config/betterquesting"
+    [ -d "$to/DefaultQuests" ] && return 0
+    local from="${PLANNH_QUESTS_FROM:-${APPDATA:-}/PrismLauncher/instances/GTNH_2.9.0-RC-2_planner/.minecraft/config/betterquesting}"
+    if [ -d "$from/DefaultQuests" ]; then
+        mkdir -p "$to" && cp -r "$from/." "$to/" && echo "quests: copied the pack's quest book from $from"
+    else
+        echo "quests: no pack quest book at $from (set PLANNH_QUESTS_FROM); the book will be empty" >&2
+    fi
+}
+
+start() {
+    local timeout="${1:-600}"
+    is_up && die "a client is already answering on port $PORT (run: $0 stop)"
+    mkdir -p "$STATE"
+    local crash_before
+    crash_before="$(newest_crash)"
+    configure_client
+    rm -f "$GAME_PIDFILE"
+    # downgradeMainClasses is built alongside so the swap baseline matches the jar the game runs.
+    local run_args=(downgradeMainClasses "$TASK" --console=plain)
+    # The GTNH core mod pulls in GregTech and the pack's recipes: ~180 dependencies, a much slower start.
+    # Its own world too: a world saved with GregTech asks about missing blocks when opened without it.
+    if [ "$GTNH" = 1 ]; then
+        local world=plannh-dev-gtnh
+        run_args=(-PgtnhRecipes "${run_args[@]}")
+        if [ "${PLANNH_QUESTS:-0}" = 1 ]; then
+            # The quest book beside GregTech, for quests on tasks; its world loads the pack's quests (copied in once).
+            copy_quests
+            run_args=(-PquestsDev "${run_args[@]}")
+            world=plannh-dev-quests
+        elif [ "${PLANNH_BEES:-0}" = 1 ]; then
+            # Forestry and NEI Addons beside GregTech, for bee cards; a world of its own, as GregTech's has.
+            run_args=(-PbeesDev "${run_args[@]}")
+            world=plannh-dev-bees
+        fi
+        # CropsNH (crop cards), and MobsInfo with EnderIO (the Extreme Entity Crusher's mobs): either goes with any of
+        # the above, and names the world too, as a world saved with a mod asks about its blocks when opened without it.
+        if [ "${PLANNH_CROPS:-0}" = 1 ]; then
+            run_args=(-PcropsDev "${run_args[@]}")
+            world="$world-crops"
+        fi
+        if [ "${PLANNH_MOBS:-0}" = 1 ]; then
+            run_args=(-PmobsDev "${run_args[@]}")
+            world="$world-mobs"
+        fi
+        run_args+=("--mcJvmArgs=-Dgtnhplanner.dev.world=$world")
+    fi
+    # The harness listens where this script calls it (another game, the full pack's, may hold the default port).
+    [ "$PORT" != 25599 ] && run_args+=("--mcJvmArgs=-Dgtnhplanner.dev.port=$PORT")
+    # A local site from the first moment (the website's dev:local, or the mock). With none, the jar names no site and
+    # contacts nothing until `call library?url=` or the config sets one.
+    [ -n "${PLANNH_LIBRARY_URL:-}" ] && run_args+=("--mcJvmArgs=-Dgtnhplanner.library.url=$PLANNH_LIBRARY_URL")
+    # JetBrains Runtime + HotswapAgent + a JDWP port so `mc.sh swap` can push recompiled classes into the game.
+    [ "$HOTSWAP" = 1 ] && run_args+=(--hotswap
+        "--mcJvmArgs=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=127.0.0.1:$JDWP_PORT")
+    (cd "$ROOT" && exec nohup ../gradlew "${run_args[@]}" >"$LOG" 2>&1 </dev/null) &
+    disown
+    echo $! >"$PIDFILE"
+    echo "launching ($TASK), log: $LOG"
+    local deadline=$((SECONDS + timeout))
+    while true; do
+        if call status 2>/dev/null | grep -q '"ready": true'; then
+            echo "ready after $((SECONDS - deadline + timeout))s"
+            # Baseline for `swap`: hashes of the classes the game was launched with.
+            [ "$HOTSWAP" = 1 ] && "$JAVA" "$ROOT/tools/dev/Hotswap.java" baseline "$CLASSES" "$SWAP_MANIFEST"
+            return 0
+        fi
+        local crash
+        crash="$(newest_crash)"
+        if [ -n "$crash" ] && [ "$crash" != "$crash_before" ]; then
+            echo "client crashed: $crash" >&2
+            sed -n '1,40p' "$crash" >&2
+            stop >/dev/null 2>&1
+            return 1
+        fi
+        if ! gradle_alive; then
+            echo "gradle exited before the client was ready; tail of $LOG:" >&2
+            tail -40 "$LOG" >&2
+            return 1
+        fi
+        [ $SECONDS -ge $deadline ] && { echo "timed out after ${timeout}s" >&2; stop >/dev/null 2>&1; return 1; }
+        sleep 2
+    done
+}
+
+# Force-kills the game. A graceful quit can raise a "really close?" dialog (GTNH) that blocks the client until
+# someone clicks it; plans save on every edit and the dev worlds are disposable, so nothing is lost by killing.
+stop() {
+    if [ -f "$GAME_PIDFILE" ]; then
+        local pid
+        pid="$(cat "$GAME_PIDFILE")"
+        # Only a java process: after a crash the PID file is stale and the number may belong to something else.
+        if tasklist //FI "PID eq $pid" 2>/dev/null | grep -qi java; then
+            taskkill //PID "$pid" //F >/dev/null 2>&1 || kill -9 "$pid" 2>/dev/null
+        fi
+        rm -f "$GAME_PIDFILE"
+    fi
+    gradle_alive && kill "$(cat "$PIDFILE")" 2>/dev/null
+    for _ in $(seq 1 15); do
+        is_up || gradle_alive || break
+        sleep 1
+    done
+    rm -f "$PIDFILE"
+    is_up && die "something still answers on port $PORT"
+    echo "stopped"
+}
+
+shot() {
+    local name="${1:-shot-$(date +%Y%m%d-%H%M%S).png}"
+    local reply
+    reply="$(call "screenshot?name=$name${2:+&$2}")" || die "screenshot request failed"
+    echo "$reply" | grep -q '"ok": true' || die "screenshot failed: $reply"
+    echo "$SHOT_DIR/$name"
+}
+
+swap() {
+    is_up || die "no client running (run: $0 start)"
+    [ "$HOTSWAP" = 1 ] || die "hotswap is off (PLANNH_HOTSWAP=0)"
+    (cd "$ROOT" && ../gradlew downgradeMainClasses --console=plain -q >"$STATE/swap-build.log" 2>&1) ||
+        { grep -E "error:|.java:[0-9]+" "$STATE/swap-build.log" >&2; die "build failed, see $STATE/swap-build.log"; }
+    "$JAVA" "$ROOT/tools/dev/Hotswap.java" push "$CLASSES" "$SWAP_MANIFEST" "$JDWP_PORT"
+    local rc=$?
+    if [ "${1:-}" = "--reopen" ] && [ $rc -ne 1 ]; then
+        # Widgets are built when the screen opens, so construction changes need a fresh screen.
+        call close >/dev/null && call open >/dev/null && echo "reopened the flowchart"
+    fi
+    return $rc
+}
+
+smoke() {
+    start || return 1
+    # client.log is the run's full stdout (all mods), rewritten by every start.
+    local fail=0 game_log="$LOG"
+    call open | grep -q '"ok": true' || { echo "open failed" >&2; fail=1; }
+    sleep 1
+    call status | grep -q '"muiScreen": "com.gtnhplanner.ui.BoardScreen"' ||
+        { echo "flowchart screen not showing" >&2; fail=1; }
+    shot smoke-flowchart.png || fail=1
+    stop
+    # Exceptions from GTNH Planner code fail the run; other logged errors (other mods, layout warnings) are reported.
+    if grep -qE "^\s+at com.gtnhplanner" "$game_log"; then
+        echo "GTNH Planner exception logged:" >&2
+        grep -nE "Exception|^\s+at com.gtnhplanner" "$game_log" | head -20 >&2
+        fail=1
+    fi
+    local errors
+    errors="$(grep -E '/ERROR\]' "$game_log" | sed -E 's/^\[[0-9:]+\] //' | cut -c1-200 | sort | uniq -c | sort -rn | head -10)"
+    [ -n "$errors" ] && { echo "logged errors (not failing the run):"; echo "$errors"; }
+    [ $fail -eq 0 ] && echo "smoke OK" || echo "smoke FAILED" >&2
+    return $fail
+}
+
+# Acts on a card control by name, using /board for its GUI centre: part <card index> <PART> [click|move|scroll] [extra query].
+part() {
+    [ $# -ge 2 ] || die "usage: $0 part <card | dN for drawer N> <ACTIONS|MACHINE|AMPS|TIER|COIL|MACHINES|BODY|IN0|OUT0 | DELETE|CYCLE|RULE|RATE|BODY> [click|move|scroll] ['button=1&count=2' | 'amount=-1']"
+    local card="$1" name="$2" action="${3:-click}" extra="${4:-}" xy
+    xy="$(call board | node -e '
+        let s = ""; process.stdin.on("data", d => s += d).on("end", () => {
+            const b = JSON.parse(s), which = process.argv[1];
+            const c = which.startsWith("d") ? (b.drawers || [])[+which.slice(1)] : (b.cards || [])[+which];
+            const p = c && c.parts && c.parts[process.argv[2]];
+            if (!p) { console.error(b.error || "no such card or part"); process.exit(1); }
+            console.log("x=" + p.cx + "&y=" + p.cy);
+        });' "$card" "$name")" || die "part $card $name not found"
+    call "$action?$xy${extra:+&$extra}"
+}
+# Succeeds when the person is away from the game: its window is not focused, or nothing has come from their mouse
+# or keyboard for N seconds (default 30). Gate synthetic input and restarts on it.
+idle() {
+    local need="${1:-30}"
+    call status | node -e '
+        let s = ""; process.stdin.on("data", d => s += d).on("end", () => {
+            const st = JSON.parse(s), need = +process.argv[1];
+            const away = !st.windowActive || (st.idleSeconds ?? 0) >= need;
+            console.log(away ? "idle" : "busy: input " + st.idleSeconds + "s ago");
+            process.exit(away ? 0 : 1);
+        });' "$need"
+}
+cmd="${1:-}"
+shift || true
+case "$cmd" in
+    start) start "$@" ;;
+    stop) stop ;;
+    restart) stop; start "$@" ;;
+    status) call status || exit 1 ;;
+    shot) shot "$@" ;;
+    call) [ $# -ge 1 ] || die "usage: $0 call 'endpoint?args'"; call "$1" ;;
+    swap) swap "$@" ;;
+    smoke) smoke ;;
+    part) part "$@" ;;
+    idle) idle "$@" ;;
+    *) awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "$0"; exit 2 ;;
+esac

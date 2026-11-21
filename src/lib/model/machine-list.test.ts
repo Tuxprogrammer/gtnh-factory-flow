@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  buildMachineList,
-  formatMachineListCount,
-  machinesFromUnits,
-  unitsFromMachines,
-} from "./machine-list";
+import { buildMachineList, machinesFromUnits, unitsFromMachines } from "./machine-list";
 import { PROJECT_SCHEMA_VERSION, type FactoryProject, type Recipe } from "./types";
 import { calculateThroughput } from "@/lib/solver/throughput";
 import { closeBoundaries } from "@/lib/solver/close-boundaries";
@@ -122,8 +117,9 @@ describe("the machine list follows each board card", () => {
     result.nodes.n0!.theoreticalMachinesRequired = 0.25;
     result.nodes["n0#r1"]!.theoreticalMachinesRequired = 0.5;
     result.nodes.n0!.utilization = result.nodes["n0#r1"]!.utilization = 1;
+    // A shared pool bills whole machines at its hungriest recipe at peak: 1 x 24, not 0.75 x 24.
     expect(buildMachineList(p, result)).toEqual([
-      expect.objectContaining({ count: 0.75, euT: 18, avgEuT: 14 }),
+      expect.objectContaining({ count: 0.75, euT: 24, avgEuT: 14 }),
     ]);
   });
 
@@ -150,15 +146,9 @@ describe("the machine list follows each board card", () => {
     const steam = lines.find((entry) => entry.nodeId === "n1")!;
     expect(steam.count).toBe(0.125);
     expect(steam.steamLs).toBeGreaterThan(0);
-    expect(steam.avgSteamLs).toBe(steam.steamLs);
+    // Peak bills the whole machine that 0.125 of a machine needs; the average stays the solved fraction.
+    expect(steam.avgSteamLs).toBeCloseTo(steam.steamLs! * 0.125, 9);
     expect(steam.euT).toBeUndefined();
-  });
-
-  it("keeps fractional counts above 100 and never displays a positive sliver as zero", () => {
-    expect(formatMachineListCount(101.375)).toBe("101.375");
-    expect(formatMachineListCount(0.00001)).toBe("0.00001");
-    expect(formatMachineListCount(0.0000001)).toBe("<0.000001");
-    expect(formatMachineListCount(0)).toBe("0");
   });
 });
 
@@ -179,8 +169,26 @@ describe("power card tiers in the machine list", () => {
       recipes: [lhe, turbine],
       edges: [],
       nodes: [
-        { id: "lhe", recipeId: "r-lhe", machineCount: 100, parallel: 1, enabled: true, overclockTier: "EV", position: { x: 0, y: 0 }, machineConfigTiers: lheSettings },
-        { id: "turbine", recipeId: "r-turbine", machineCount: 1, parallel: 1, enabled: true, overclockTier: "EV", position: { x: 400, y: 0 }, machineConfigTiers: turbineSettings },
+        {
+          id: "lhe",
+          recipeId: "r-lhe",
+          machineCount: 100,
+          parallel: 1,
+          enabled: true,
+          overclockTier: "EV",
+          position: { x: 0, y: 0 },
+          machineConfigTiers: lheSettings,
+        },
+        {
+          id: "turbine",
+          recipeId: "r-turbine",
+          machineCount: 1,
+          parallel: 1,
+          enabled: true,
+          overclockTier: "EV",
+          position: { x: 400, y: 0 },
+          machineConfigTiers: turbineSettings,
+        },
       ],
     };
     const lines = buildMachineList(p, calculateThroughput(p));

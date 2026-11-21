@@ -1,0 +1,374 @@
+## Mod Settings
+
+## Settings
+## Settings - General
+gtnhplanner.settings.duration_ticks=Duration (ticks)
+gtnhplanner.settings.tick_modifier=Tick rate (%)
+gtnhplanner.settings.machines=Machines
+gtnhplanner.settings.energy_per_tick=Energy per tick
+gtnhplanner.settings.inputs_per_tick=Inputs per tick
+gtnhplanner.settings.burnable_override=Burnable override
+
+## Settings - GT
+gtnhplanner.settings.voltage=Tier
+gtnhplanner.settings.amp=Amps
+gtnhplanner.settings.speed=Speed (%)
+gtnhplanner.settings.parallels=Parallels
+gtnhplanner.settings.gt_multiblock=Multiblock
+gtnhplanner.settings.machine_heat=Coil heat (K)
+gtnhplanner.settings.recipe_heat=Recipe heat (K)
+gtnhplanner.settings.heat_discount_mult=Heat discount strength (%)
+gtnhplanner.settings.eut_discount=Power discount (%)
+gtnhplanner.settings.eut_increase_per_oc=Power per overclock (%)
+gtnhplanner.settings.duration_decrease_per_oc=Speed per overclock (%)
+gtnhplanner.settings.max_overclocks=Overclock limit
+gtnhplanner.settings.max_regular_oc=Regular overclock limit
+gtnhplanner.settings.max_tier_skips=Tier skip limit
+gtnhplanner.settings.fuel_efficiency=Fuel efficiency (%)
+gtnhplanner.settings.perfect_oc=Perfect overclocks
+gtnhplanner.settings.heat_oc=Heat overclocks
+gtnhplanner.settings.heat_discount=Heat discount
+gtnhplanner.settings.laser_oc=Laser overclocks
+gtnhplanner.settings.unlimited_skips=Unlimited tier skips
+gtnhplanner.settings.no_overclock=No overclocking
+gtnhplanner.settings.catalyst_astral_arrays=Astral arrays
+gtnhplanner.settings.catalyst_accel_card=Acceleration cards
+
+## Settings - Botania
+gtnhplanner.settings.mana_per_tick=Mana per tick
+
+## Settings - Thaumcraft (and friends)
+gtnhplanner.settings.vis_per_tick=Vis per tick
+
+## Settings - Forestry
+gtnhplanner.settings.forestry_rf_per_tick=RF per tick (Forestry)
+
+## Settings - BloodMagic
+gtnhplanner.settings.lp_per_tick=LP per tick
+
+## Settings - Cofh core
+gtnhplanner.settings.rf_per_tick=RF per tick
+
+## Settings - Steam
+gtnhplanner.settings.steam_eut_discount=Steam use (%)
+gtnhplanner.settings.steam_duration_modifier=Steam speed (%)
+
+## Properties
+## Properties - General
+gtnhplanner.properties.duration_ticks=Duration
+gtnhplanner.properties.num_components=Components
+
+## Properties - GT (and friends)
+gtnhplanner.properties.gt.special_value=Special Value
+gtnhplanner.properties.gt.bartworks.glass_tier=Glass Tier
+gtnhplanner.properties.gt.bartworks.sievert=Sievert
+gtnhplanner.properties.gt.bartworks.sievert_exact=Exact Sievert
+gtnhplanner.properties.gt.bartworks.mass=Mass
+gtnhplanner.properties.gt.total_eu=Total EU
+gtnhplanner.properties.gt.eu_per_tick=EU/t
+gtnhplanner.properties.gt.coil_heat=Coil Heat
+gtnhplanner.properties.gt.fusion_threshold=Fusion Threshold
+gtnhplanner.properties.gt.recipe_map=Recipe Map
+gtnhplanner.properties.gt.steam_eu_pert=Steam/t
+gtnhplanner.properties.gt.total_steam_eu=Total Steam
+
+## Properties - Avaritia
+gtnhplanner.properties.avaritia.compression_cost=Compression Cost
+
+## Properties - Botania
+gtnhplanner.properties.botania.mana_cost=Mana Cost
+
+## Properties - BloodMagic
+gtnhplanner.properties.bloodmagic.lp_amount=LP Cost
+gtnhplanner.properties.bloodmagic.lp_tier=LP Tier
+
+## Properties - Thaumcraft (and friends)
+gtnhplanner.properties.thaumcraft.vis_cost=Vis Cost
+gtnhplanner.properties.thaumcraft.instability=Instability
+gtnhplanner.properties.thaumcraft.total_vis=Total Vis
+gtnhplanner.properties.thaumcraft.research_key=Research Key
+gtnhplanner.properties.thaumcraft.num_components=Components
+
+## Properties - Forestry
+gtnhplanner.properties.forestry.processing_time=Processing Time
+
+## Properties - Cofh core
+gtnhplanner.properties.cofh.rf_total=RF Total
+gtnhplanner.properties.cofh.rf_per_t=RF/t
+
+## Properties - Ender IO
+gtnhplanner.properties.enderio.experience=Experience
+
+## Share messages
+
+## GUI
+## GUI - Groups
+gtnhplanner.gui.group.add_machine_group=Add Machine Group
+gtnhplanner.gui.group.machine_badge=[M]
+gtnhplanner.gui.group.machine_group_tooltip=Machine group: every recipe framed here runs on the same machine, so they share its settings and their machine counts add up
+gtnhplanner.gui.group.machine_capacity=Machines in this group; 0 for as many as it takes
+
+## GUI - Balancer
+gtnhplanner.gui.balancer_mode=Mode: %s
+gtnhplanner.gui.balancer_mode.none=Normal
+gtnhplanner.gui.balancer_mode.input=Fixed Machines (input%s)
+gtnhplanner.gui.balancer_mode.output=Fixed Machines (output%s)
+gtnhplanner.gui.balancer_mode.auto=Auto%s
+
+## GUI - Balancer messages
+## Failures
+gtnhplanner.solver.no_pin=Nothing is pinned - fix a machine count to ask for a balance
+gtnhplanner.solver.empty_graph=Empty graph
+gtnhplanner.solver.balance_failed=Balance failed: %s
+gtnhplanner.solver.validation_failed=Solution failed independent validation: %s
+## Wiring diagnostics
+gtnhplanner.solver.wiring_import='%s' imports %s externally, but is produced at '%s' - missing an edge?
+gtnhplanner.solver.wiring_unlinked='%s' sources %s externally, but an unlinked part of the chart produces it at '%s' - missing an edge?
+gtnhplanner.solver.overshoots_target='%s' overshoots its %s target: %s/s produced for a target of %s/s, because another output on the same machine asks for more
+## Alternatives search
+gtnhplanner.solver.showing_closest=Showing the closest %d of %d workable answers
+gtnhplanner.solver.stopped_early=Stopped after %d combinations, so there may be more than the ones listed (%d not tried)
+gtnhplanner.solver.choice_no_longer_fits=The saved excess choice no longer fits this chart - showing the solver's own answer
+gtnhplanner.solver.choice_needs_more_gates=The saved excess choice needs more gates than the solver's answer, so it was dropped
+## Pipeline diagnostics
+gtnhplanner.solver.pins_conflict=These pins cannot hold together, and dropping them makes the chart solvable: %s
+gtnhplanner.solver.pin_dropped='%s' (%s)
+gtnhplanner.solver.stage_failed=%s %s
+gtnhplanner.solver.machines_cannot_run=%d machines cannot run: %s
+gtnhplanner.solver.budget=Ran out of solve budget, solver state %s
+gtnhplanner.solver.unsatisfiable=Found no solution, solver state %s
+gtnhplanner.solver.no_solution=Found no solution
+gtnhplanner.solver.not_conserving=Returned a point that does not conserve: %s
+gtnhplanner.solver.negative_extent=Returned a negative extent %s
+gtnhplanner.solver.negative_flow=Returned a negative edge flow %s
+gtnhplanner.solver.inexact_residual=Returned an inexact port residual %s
+gtnhplanner.solver.under_supply=Returned a port that under-supplies: residual %s
+gtnhplanner.solver.solve_crashed=The solver stopped with an error: %s
+
+gtnhplanner.solver.drawer_unmet=%1$s can't be held at %2$s %3$s/s: the plan reaches %4$s/s
+gtnhplanner.solver.drawer_limited_by=%1$s is held back by %2$s
+gtnhplanner.solver.drawer_not_connected=%s asks for a rate but is linked to nothing that carries any
+gtnhplanner.solver.drawer_wired_ignored=%s is linked only to wired ports, which this balance mode does not count
+gtnhplanner.solver.drawer_only_upper_bounds=Drawers only set upper limits: set a product's rate, or pin a machine count, to give the plan a size
+gtnhplanner.solver.limit_pin='%s' (%s)
+gtnhplanner.solver.limit_drawer=%s
+gtnhplanner.solver.limit_group=a machine group of %s machines
+gtnhplanner.solver.rule_any=any
+gtnhplanner.solver.rule_at_least=at least
+gtnhplanner.solver.rule_exactly=exactly
+gtnhplanner.solver.rule_at_most=at most
+## Names
+gtnhplanner.solver.pin_extent=extent pin
+gtnhplanner.solver.pin_target=target rate
+gtnhplanner.solver.pin_count=fixed machine count
+gtnhplanner.solver.pin_up_to=up to machine count
+gtnhplanner.solver.pref_least_buying=buy as far upstream as it can
+gtnhplanner.solver.pref_least_selling=sell as far downstream as it can
+gtnhplanner.solver.pref_least_flow=least internal flow
+## Rank reasons
+gtnhplanner.solver.reason_equally_valid=equally valid
+gtnhplanner.solver.reason_buys_more=buys more or further down the line
+gtnhplanner.solver.reason_sells_more=sells more or earlier in the line
+gtnhplanner.solver.reason_moves_more=moves more material
+gtnhplanner.solver.reason_moves_less=moves less material
+## Boundary labels
+gtnhplanner.solver.boundary_excess=excess %s
+gtnhplanner.solver.boundary_add=add %s
+gtnhplanner.solver.boundary_flow=%s
+gtnhplanner.solver.boundary_nothing=nothing crosses the boundary
+
+## NEI config
+nei.options.gtnhplanner = "GTNH Planner";
+nei.options.gtnhplanner.item_columns=Item Columns
+nei.options.gtnhplanner.item_columns.tip=Number of columns in the NEI item panel (minimum: 6)
+nei.options.gtnhplanner.burnable_override=Show burnable setting
+nei.options.gtnhplanner.burnable_override.0=Off
+nei.options.gtnhplanner.burnable_override.1=On
+nei.options.gtnhplanner.burnable_override.tip=Hide/Show burnable setting override in recipe configs (may help if some items don't show when a recipes has multiple outputs)
+nei.options.keys.gtnhplanner=GTNH Planner
+nei.options.keys.gtnhplanner.undo=Undo
+nei.options.keys.gtnhplanner.redo=Redo
+nei.options.keys.gtnhplanner.redo_alt=Redo (alternate)
+
+## Summary panel
+gtnhplanner.summary.title.summary=Summary
+gtnhplanner.summary.title.outputs=Outputs
+gtnhplanner.summary.title.inputs=Inputs
+gtnhplanner.summary.title.choices=Choices
+gtnhplanner.summary.title.properties=Properties
+gtnhplanner.summary.title.machine_counts=Machine Counts
+gtnhplanner.summary.title.messages=Solver Messages
+gtnhplanner.summary.title.help=Help
+gtnhplanner.summary.mode.title=Summary mode
+gtnhplanner.summary.mode.switch_hint=Click to switch
+gtnhplanner.summary.mode.cycles=Cycles
+gtnhplanner.summary.mode.throughput=Throughput
+gtnhplanner.summary.mode.cycles.short=C
+gtnhplanner.summary.mode.throughput.short=T
+gtnhplanner.summary.rate.title=Throughput unit
+gtnhplanner.summary.rate.second=S
+gtnhplanner.summary.rate.minute=M
+gtnhplanner.summary.rate.hour=H
+gtnhplanner.summary.rate.day=D
+gtnhplanner.summary.rate.second.suffix=/s
+gtnhplanner.summary.rate.minute.suffix=/m
+gtnhplanner.summary.rate.hour.suffix=/h
+gtnhplanner.summary.rate.day.suffix=/d
+gtnhplanner.summary.totals.cycles=Ops: %s Time: %d t (%ss/cycle)
+gtnhplanner.summary.totals.throughput=Ops: %s Cycle: %ss
+gtnhplanner.summary.help.zoom=[Scroll] zoom
+gtnhplanner.summary.help.move=[LMB drag] move node
+gtnhplanner.summary.help.nei=[R/U] open NEI
+gtnhplanner.summary.help.add_recipe=[+ in NEI GUI] add recipe
+
+key.neiflowchart.open=Open the planner
+key.categories.neiflowchart=GTNH Planner
+key.gtnhplanner.minimap=Show or hide the minimap
+key.gtnhplanner.minimapZoomIn=Minimap: zoom in
+key.gtnhplanner.minimapZoomOut=Minimap: zoom out
+key.gtnhplanner.minimapUp=Minimap: pan up
+key.gtnhplanner.minimapDown=Minimap: pan down
+key.gtnhplanner.minimapLeft=Minimap: pan left
+key.gtnhplanner.minimapRight=Minimap: pan right
+key.gtnhplanner.minimapRecentre=Minimap: back to the board's view
+key.gtnhplanner.ar=Show or hide the plan over the world
+key.gtnhplanner.link=Place a plan card on the block you look at
+key.gtnhplanner.pinList=Show or hide the pin list
+key.gtnhplanner.taskShow=Change when task locations show
+key.gtnhplanner.rotate=Turn a machine (with sneak; alone while placing)
+key.gtnhplanner.pickUp=Pick up a placed machine (with sneak)
+key.gtnhplanner.remove=Remove a placed machine (with sneak)
+key.gtnhplanner.focus=Card when you look at a machine (with sneak)
+key.gtnhplanner.labels=Labels on machines (with sneak)
+gtnhplanner.notice.noPin=Nothing to calculate yet: set a rate on a drawer, or set a machine count
+gtnhplanner.notice.pinConflict=The pinned counts on %s can't all be met at once: unpin one
+gtnhplanner.notice.cannotRun=Some machines can't run with these rates and pinned counts
+gtnhplanner.notice.noWay=There's no way to meet all these rates and pinned counts: change a rate or unpin a count
+gtnhplanner.notice.failed=The planner couldn't solve this plan (the details are in the log)
+gtnhplanner.notice.wireNotTaken=A wire carries %s into a slot that takes %s and does not take it: it carries nothing. Wire what the slot lists
+gtnhplanner.notice.and=and
+gtnhplanner.notice.unwired=The %s drawer has a rate, but nothing is wired to it
+gtnhplanner.notice.ignored=The %s drawer's rate does nothing: the ports it's on are wired
+gtnhplanner.notice.choice=Your saved choice no longer fits this plan, so the planner's own answer is shown
+gtnhplanner.notice.overshoot=The %s makes %s of %s, more than its %s target, because another of its outputs needs more
+gtnhplanner.notice.unmet.short.supply=The %s supply gets %s of %s.%s
+gtnhplanner.notice.unmet.short.drawer=The %s drawer gets %s of %s.%s
+gtnhplanner.notice.unmet.over.supply=The %s supply allows at most %s, but the plan needs %s
+gtnhplanner.notice.unmet.over.drawer=The %s drawer allows at most %s, but the plan makes %s
+gtnhplanner.notice.unmet.under.supply=The %s supply should give %s, but the plan can only use %s
+gtnhplanner.notice.unmet.under.supplyExact=The %s supply should give exactly %s, but the plan can only use %s
+gtnhplanner.notice.unmet.under.drawer=The %s drawer wants %s, but the plan can only make %s
+gtnhplanner.notice.unmet.under.drawerExact=The %s drawer wants exactly %s, but the plan can only make %s
+gtnhplanner.notice.portTaken.supply=The %s supply should give %s, but the input takes from the other drawer wired to it
+gtnhplanner.notice.portTaken.supplyExact=The %s supply should give exactly %s, but the input takes from the other drawer wired to it
+gtnhplanner.notice.portTaken.drawer=The %s drawer wants %s, but the output goes to the other drawer wired to it
+gtnhplanner.notice.portTaken.drawerExact=The %s drawer wants exactly %s, but the output goes to the other drawer wired to it
+gtnhplanner.notice.holder.exact=The %s is set exactly.
+gtnhplanner.notice.holder.full=The %s is full.
+gtnhplanner.notice.holder.starved=The %s is starved.
+gtnhplanner.notice.holder.clogged=The %s is clogged.
+gtnhplanner.notice.holder.unused=The %s is unused.
+gtnhplanner.notice.holder.limited=The %s is limited.
+gtnhplanner.notice.holder.drawer=The %s drawer's rate holds it back.
+gtnhplanner.loop.dead.one=This machine starves itself in a downward spiral.
+gtnhplanner.loop.dead.many=These machines starve each other in a downward spiral.
+gtnhplanner.loop.clog.one=This machine clogs itself in a downward spiral.
+gtnhplanner.loop.clog.many=These machines clog each other in a downward spiral.
+gtnhplanner.loop.dead.tag=DEAD LOOP
+gtnhplanner.loop.clog.tag=CLOG LOCK
+gtnhplanner.rail.empty.inputs=Nothing missing.
+gtnhplanner.rail.empty.outputs=Nothing coming out yet.
+gtnhplanner.rail.empty.internal=Nothing internal.
+gtnhplanner.rail.empty.machines=No machines yet.
+gtnhplanner.rail.empty.matches=No matches.
+
+# The recipe card (core-view CardViews): its words, as the website's clean-model.ts prints them.
+gtnhplanner.card.chip.title=%s: %s
+gtnhplanner.card.tier.fixed=Fixed by the reactor mark
+gtnhplanner.card.tier.title=Tier %s. Click up, right click down.
+gtnhplanner.card.power.stalled=TIER!
+gtnhplanner.card.power.name=Power
+gtnhplanner.card.power.too_low=This machine's tier is too low to run the recipe.
+gtnhplanner.card.power.title=%s machine, %sA
+gtnhplanner.card.steam.hp=HP steam
+gtnhplanner.card.steam.name=Steam
+gtnhplanner.card.steam.title=Steam this machine burns
+gtnhplanner.card.port.chance=%s (%s chance)
+gtnhplanner.card.port.consume=%s (used up %s of runs)
+gtnhplanner.card.parallel.label=Parallel
+gtnhplanner.card.parallel.title=Operations at once. Set by the machine and its configuration.
+gtnhplanner.card.rule.any=Any
+gtnhplanner.card.rule.up_to=Up to
+gtnhplanner.card.rule.exact=Exactly
+gtnhplanner.card.count.set=Set
+gtnhplanner.card.count.title.up_to=Runs as many as the plan lets it. Never more than you set.
+gtnhplanner.card.count.title.exact=Runs exactly this many. A gap shows as a forced flow.
+gtnhplanner.card.count.title.any=How many of this machine the plan needs.
+gtnhplanner.card.count.title.dial=Runs at its dial.
+gtnhplanner.card.loop.dead=DEAD LOOP
+gtnhplanner.card.loop.clog=CLOG LOCK
+gtnhplanner.card.foot.a_card=a card
+gtnhplanner.card.foot.flow=FLOW
+gtnhplanner.card.foot.flow.many=%s at
+gtnhplanner.card.foot.flow.make=%s of optimal, make %s
+gtnhplanner.card.foot.flow.makes=%s of optimal, makes %s
+gtnhplanner.card.foot.flow.eu=%s of optimal, %s
+gtnhplanner.card.foot.flow.of=%s of optimal
+gtnhplanner.card.foot.full=nothing wants more
+gtnhplanner.card.foot.bottleneck=the line wants more
+gtnhplanner.card.foot.bottleneck.wants=the line wants %s
+gtnhplanner.card.foot.bottleneck.wants_short=wants %s
+gtnhplanner.card.foot.starved=short of an input
+gtnhplanner.card.foot.starved.of=short of %s
+gtnhplanner.card.foot.clogged=an output backs up
+gtnhplanner.card.foot.clogged.of=%s has nowhere to go
+gtnhplanner.card.foot.clogged.for=nowhere for %s
+gtnhplanner.card.foot.unused=nothing takes it
+gtnhplanner.card.foot.unused.of=nothing takes %s
+gtnhplanner.card.foot.limited=the plan holds it back
+gtnhplanner.card.foot.limited_short=held back
+gtnhplanner.card.foot.forced=FORCED IN
+gtnhplanner.card.foot.forced.keep_one=to keep it running
+gtnhplanner.card.foot.forced.keep_all=to keep all %s running
+gtnhplanner.card.foot.forced.of_keep=%s of %s %s
+gtnhplanner.card.foot.forced.of=%s of %s
+gtnhplanner.card.foot.forced.of_more=%s of %s and %s more
+gtnhplanner.card.foot.forced.more=%s and %s more
+gtnhplanner.card.foot.forced.inputs=%s inputs
+gtnhplanner.card.foot.idle=IDLE
+gtnhplanner.card.foot.idle.instead=%s is sent out instead
+gtnhplanner.card.foot.idle.sent=%s sent out
+gtnhplanner.card.foot.idle.its=its input is sent out
+gtnhplanner.card.menu.clone=Clone node
+gtnhplanner.card.menu.add_recipe=Add another recipe
+gtnhplanner.card.menu.replace=Replace the recipe
+gtnhplanner.card.menu.add_to_task=Add to a task
+gtnhplanner.card.menu.delete=Delete node
+gtnhplanner.card.read_only.word=VIEW ONLY
+gtnhplanner.card.read_only.off=switched off on the website
+gtnhplanner.card.read_only.off.short=switched off
+gtnhplanner.card.read_only.kind=a recipe only the website has
+gtnhplanner.card.read_only.kind.short=website recipe
+gtnhplanner.card.read_only.missing=this game has no such recipe
+gtnhplanner.card.read_only.missing.short=not in this game
+gtnhplanner.card.read_only.absent=the plan has no recipe for it
+gtnhplanner.card.read_only.absent.short=no recipe
+gtnhplanner.card.read_only.unsolved=%s, not solved
+gtnhplanner.card.read_only.count=From a website plan: change it on the website. Here it can only be moved or deleted.
+gtnhplanner.card.holder.custom_rate=Custom Rate
+gtnhplanner.card.holder.tank=Fluid Tank
+gtnhplanner.card.socket.drain=DRAIN ANY
+gtnhplanner.card.socket.supply=SUPPLY ANY
+gtnhplanner.card.socket.take_cell=TAKE CELL/FLUID
+gtnhplanner.card.socket.give_cell=GIVE CELL/FLUID
+gtnhplanner.card.socket.takes=takes an output
+gtnhplanner.card.socket.feeds=feeds an input
+gtnhplanner.card.dial.mode=Mode
+gtnhplanner.card.dial.mode.title=Which way the card faces.
+gtnhplanner.card.dial.supply=Supply
+gtnhplanner.card.dial.request=Request
+gtnhplanner.card.dial.rate=Rate (%s)
+gtnhplanner.card.dial.rate.title=The rate it holds.
+gtnhplanner.card.generator.unlocks=Unlocks at %s
+gtnhplanner.card.generator.on=On
+gtnhplanner.card.generator.off=Off

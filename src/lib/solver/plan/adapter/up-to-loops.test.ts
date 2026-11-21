@@ -4,13 +4,11 @@
  */
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { initLpEngine } from "../../lp-engine";
+import { CORE_LOAD_MS, useCoreSolver } from "@/test-support/core-solve";
 import { calculateThroughput } from "../../throughput";
 import { node, project, recipe, wire } from "./test-kit";
 
-beforeAll(async () => {
-  await initLpEngine();
-});
+beforeAll(() => useCoreSolver(), CORE_LOAD_MS);
 
 /** a (x -> y) and b (y -> half an x) in a ring, both Up to 1, nothing feeding it. */
 const ring = (fed: boolean) =>

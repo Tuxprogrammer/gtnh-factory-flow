@@ -8,7 +8,7 @@ import {
   resolveCoefficient,
   resolveOverclockSpec,
 } from "./machine-table";
-import referenceCoefficients from "./__fixtures__/reference-coefficients.json";
+import { readConformanceJson } from "@/test-support/conformance";
 import {
   buildMachineContext,
   getMachineDurationMultiplier,
@@ -21,6 +21,8 @@ import {
   getRecipeMachineConfigTierControls,
 } from "@/lib/model/recipe-rules";
 import type { MachineConfigControl, Recipe } from "@/lib/model/types";
+
+const referenceCoefficients = readConformanceJson("machines", "reference-coefficients.json");
 
 interface ReferenceSample {
   voltageTier: number;

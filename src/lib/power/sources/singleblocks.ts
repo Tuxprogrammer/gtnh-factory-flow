@@ -43,6 +43,8 @@ interface SingleblockSpec {
   capacity?: (gtTier: number) => number;
   /** The table's EU per L over the machine's own fuel map value. */
   fuelValueDivisor?: number;
+  /** EU it stores above its 512 floor, in amps of V (maxEUStore); 80 unless the class overrides it. */
+  bufferAmps?: number;
   /** Items getEmptyContainer hands back per item burned. */
   byproducts?: Record<string, { name: string; count: number }>;
   /**
@@ -51,6 +53,12 @@ interface SingleblockSpec {
    */
   sheetModel?: boolean;
 }
+
+/** What the game's Magic Energy Absorber really runs on, which the sheet's item list is not. */
+const MAGIC_ABSORBER_WARNING =
+  "The game's Magic Energy Absorber takes none of these items. " +
+  "It runs on a dragon egg above it, ender crystals, enchanted gear and books, and essentia. " +
+  "This card keeps the community sheet's numbers.";
 
 /** MTEBasicGenerator.getCapacity(). */
 const BASE_TANK_LITERS = 16_000;
@@ -138,6 +146,8 @@ const SPECS: SingleblockSpec[] = [
     fuels: powerPlannerData.rocketFuels,
     // MTERocketFuelGeneratorBase.getCapacity()
     capacity: () => 32_000,
+    // MTERocketFuelGeneratorBase.maxEUStore: V x 500.
+    bufferAmps: 500,
     // The table carries the Large Rocket Engine's figures, which triple the
     // fuel map value (MTELargeRocketEngine); MTERocketFuelGenerator burns
     // the map value itself (RecipeLoaderRocketFuels: 512 for RP-1).
@@ -250,6 +260,7 @@ function fluidModel(
   euPerLiter: number,
   tankLiters: number,
   stats: PowerStatLine[],
+  bufferEu = Infinity,
 ): PowerModel {
   if (!(euPerLiter > 0)) {
     return {
@@ -268,6 +279,14 @@ function fluidModel(
       inputs: [liters(fuelName, litersPerBurn * BURNS_PER_SECOND)],
       outputs: [],
       stats,
+      // MTEBasicGenerator.onPostTick burns whole litres only into free buffer room,
+      // which never reaches one litre's worth; filled cells skip that check.
+      warnings:
+        euPerLiter > bufferEu
+          ? [
+              `Piped fuel never burns: 1 L makes ${eu(euPerLiter)} EU, more than the ${eu(bufferEu)} EU it can store. It runs on cells.`,
+            ]
+          : undefined,
     };
   }
   const euPerTick = ((tankLiters * euPerLiter) / 10) * (voltage / packet);
@@ -414,6 +433,8 @@ function buildSingleblock(spec: SingleblockSpec): PowerSourceDefinition {
             stat("Fuel per hour", formatAmount(perHour)),
             stat("EU per item", formatAmount(euPerItem * efficiency)),
           ],
+          // MTEMagicalEnergyAbsorber.allowPutStack takes only enchanted gear and books, and its fuel map is null.
+          warnings: [MAGIC_ABSORBER_WARNING],
         };
       }
 
@@ -432,10 +453,15 @@ function buildSingleblock(spec: SingleblockSpec): PowerSourceDefinition {
 
       const fuelValue = (fuel.euPerLiter ?? 0) / (spec.fuelValueDivisor ?? 1);
       const euPerLiter = Math.floor((fuelValue * efficiencyPercent) / 100);
-      return fluidModel(fuel.name, voltage, ampLoss, euPerLiter, tankLiters, [
-        efficiencyStat,
-        stat("EU per L", formatAmount(euPerLiter)),
-      ]);
+      return fluidModel(
+        fuel.name,
+        voltage,
+        ampLoss,
+        euPerLiter,
+        tankLiters,
+        [efficiencyStat, stat("EU per L", formatAmount(euPerLiter))],
+        voltage * (spec.bufferAmps ?? 80),
+      );
     },
   };
 }

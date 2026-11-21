@@ -87,8 +87,37 @@ function cleanFace(): string {
   return family();
 }
 
+/**
+ * A fixed measure in place of the canvas and the glyph table: the shared view cases' "six-px" (every character six px,
+ * the row figure nine), which the core's card rules are held to with the same widths. Tests and the case generator only;
+ * the app never sets it.
+ */
+export interface FixedTextMeasure {
+  clean(text: string, size: number): number;
+  figure(number: string, unit: string): number;
+  name(name: string, small: boolean): number;
+  game(text: string): number;
+}
+
+let fixedMeasure: FixedTextMeasure | undefined;
+
+export function setFixedTextMeasure(measure: FixedTextMeasure | undefined): void {
+  fixedMeasure = measure;
+  // Every width may change: what was kept under the epoch (the card view's, the core's) is measured again.
+  fontEpoch += 1;
+}
+
+/** The shared cases' measure: six px a character in every style, nine for the row figure, one px before the unit. */
+export const SIX_PX_MEASURE: FixedTextMeasure = {
+  clean: (text) => 6 * text.length,
+  figure: (number, unit) => 9 * number.length + 1 + 6 * unit.length,
+  name: (name) => 6 * name.length,
+  game: (text) => 6 * text.length,
+};
+
 /** Width in CSS px of `text` at `size` px and `weight`, in the clean card's face. */
 export function measureClean(text: string, size: number, weight = 400): number {
+  if (fixedMeasure) return fixedMeasure.clean(text, size);
   const key = `c|${weight}|${size}|${text}`;
   const cached = widths.get(key);
   if (cached !== undefined) return cached;
@@ -122,10 +151,12 @@ function drawnWidth(text: string, type: { size: number; spacing: number }): numb
 }
 
 export function measureRowFigure(number: string, unit: string): number {
+  if (fixedMeasure) return fixedMeasure.figure(number, unit);
   return drawnWidth(number, ROW_TYPE.figure) + ROW_TYPE.unit.gap + drawnWidth(unit, ROW_TYPE.unit);
 }
 
 export function measureRowName(name: string, small: boolean): number {
+  if (fixedMeasure) return fixedMeasure.name(name, small);
   return drawnWidth(name, small ? ROW_TYPE.smallName : ROW_TYPE.name);
 }
 
@@ -157,6 +188,7 @@ const MC_NARROW: Record<string, number> = {
   "<": 5, ">": 5, "f": 5, "k": 5, "@": 7, "~": 7,
 };
 export function mcTextWidth(text: string): number {
+  if (fixedMeasure) return fixedMeasure.game(text);
   let width = 0;
   for (const ch of text) width += MC_NARROW[ch] ?? 6;
   return width;

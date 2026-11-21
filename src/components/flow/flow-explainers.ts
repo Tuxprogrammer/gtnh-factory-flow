@@ -1,5 +1,6 @@
 import type { FactoryProject, ThroughputResult } from "@/lib/model/types";
-import { formatCompact, formatPowerValue, formatNumberWithThousands, formatRate, makeResourceKey } from "@/lib/model";
+import { makeResourceKey } from "@/lib/model";
+import { formatCompact, formatPowerValue, formatNumberWithThousands, formatRate } from "@/lib/format/numbers";
 import {
   energyPerUnitDisplaySuffix,
   energyPerUnitDisplayValue,
@@ -8,7 +9,7 @@ import {
   rateSuffixForKind,
   rateUnitMultiplier,
   rateUnitPrecisionScale,
-} from "@/lib/model/rate-unit";
+} from "@/lib/format/rate-unit";
 import { describeStorage, getStorageRoles } from "@/lib/model/storage-role";
 import { parseResourceHandleId } from "./resource-handles";
 import {

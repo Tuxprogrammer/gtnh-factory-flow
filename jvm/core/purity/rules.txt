@@ -1,0 +1,251 @@
+# What core source (jvm/core/*/src/main) may not use. Read by PurityCheck.java; every :core-* module's `check` runs it.
+#
+#   rule <id> <reason>              one per rule: why the core may not use it (printed with every finding)
+#   <id> classpath <glob>           a dependency on the module's compile or runtime classpath ("group:name:version" or
+#                                   "project :name"); * matches anything
+#   <id> class <internal name>      any reference to the class (and its nested classes) in compiled code: calls, fields,
+#                                   types, casts, signatures; a name ending in / is a package and its sub-packages
+#   <id> member <glob>              a call or field use, matched as owner.name(descriptor)type, e.g.
+#                                   java/lang/Double.toString(D)Ljava/lang/String;  (* matches anything)
+#   <id> concat <descriptor>        a string concatenation (javac's invokedynamic) with an operand of this type
+#   <id> source <regex>             a match in the source text, comments and string literals removed
+#   <id> op <OPCODE>                a bytecode arithmetic or conversion instruction (D2F, FADD, DREM...), found in
+#                                   compiled code; what the source says does not matter, only what javac made of it
+#
+# An exception is a line in allow.txt beside this file: the file, the rule, and why, argued in the open.
+
+rule game The core is plain Java for both hosts: no game, Forge, FML, NEI, GregTech, ModularUI, LWJGL or mixin class, not even a same-name stand-in. The host reaches the game; the core gets a seam.
+game classpath net.minecraft*
+game classpath net.minecraftforge*
+game classpath cpw.mods*
+game classpath com.github.GTNewHorizons:*
+game classpath com.gtnewhorizons*
+game classpath codechicken*
+game classpath org.lwjgl*
+game classpath org.spongepowered*
+game classpath com.cleanroommc*
+game classpath project :mod
+game class net/minecraft/
+game class net/minecraftforge/
+game class cpw/mods/
+game class codechicken/
+game class gregtech/
+game class com/gtnewhorizons/
+game class com/cleanroommc/
+game class org/lwjgl/
+game class org/spongepowered/
+game class com/gtnhplanner/GtnhPlanner
+game class com/gtnhplanner/Config
+game class com/gtnhplanner/Tags
+
+rule reflection The web compile keeps no reflection metadata unless told to, obfuscates member names, and cannot load classes by name; Gson's reflective binding needs all three. Read and write JSON through the tree API.
+reflection class java/lang/reflect/
+reflection class java/util/ServiceLoader
+reflection member java/lang/Class.forName*
+reflection member java/lang/Class.getDeclared*
+reflection member java/lang/Class.getField*
+reflection member java/lang/Class.getMethod*
+reflection member java/lang/Class.getConstructor*
+reflection member java/lang/Class.newInstance*
+reflection member java/lang/Class.isRecord*
+reflection member java/lang/Class.getRecordComponents*
+reflection member java/lang/invoke/MethodHandles.lookup*
+reflection member java/lang/invoke/MethodHandles.privateLookupIn*
+reflection member com/google/gson/Gson.fromJson(*Ljava/lang/Class;*
+reflection member com/google/gson/Gson.fromJson(*Ljava/lang/reflect/Type;*
+reflection member com/google/gson/Gson.toJson(Ljava/lang/Object;*
+reflection member com/google/gson/Gson.toJsonTree(Ljava/lang/Object;*
+reflection class com/google/gson/reflect/
+
+rule threads The web runs the core on one thread: TeaVM cannot link executors, fork-join pools or blocking queues, and an answer must not depend on scheduling. A host that wants parallel work offers it through a seam with an in-order default.
+threads class java/lang/Thread
+threads class java/lang/ThreadGroup
+threads member java/lang/Runtime.availableProcessors*
+threads class java/util/Timer
+threads class java/util/concurrent/Executor
+threads class java/util/concurrent/ExecutorService
+threads class java/util/concurrent/Executors
+threads class java/util/concurrent/ScheduledExecutorService
+threads class java/util/concurrent/ThreadPoolExecutor
+threads class java/util/concurrent/ScheduledThreadPoolExecutor
+threads class java/util/concurrent/ThreadFactory
+threads class java/util/concurrent/ForkJoinPool
+threads class java/util/concurrent/ForkJoinTask
+threads class java/util/concurrent/RecursiveTask
+threads class java/util/concurrent/RecursiveAction
+threads class java/util/concurrent/Future
+threads class java/util/concurrent/FutureTask
+threads class java/util/concurrent/CompletableFuture
+threads class java/util/concurrent/CompletionService
+threads class java/util/concurrent/CountDownLatch
+threads class java/util/concurrent/CyclicBarrier
+threads class java/util/concurrent/Semaphore
+threads class java/util/concurrent/Phaser
+threads class java/util/concurrent/Exchanger
+threads class java/util/concurrent/BlockingQueue
+threads class java/util/concurrent/LinkedBlockingQueue
+threads class java/util/concurrent/LinkedBlockingDeque
+threads class java/util/concurrent/ArrayBlockingQueue
+threads class java/util/concurrent/PriorityBlockingQueue
+threads class java/util/concurrent/SynchronousQueue
+threads class java/util/concurrent/LinkedTransferQueue
+threads class java/util/concurrent/DelayQueue
+threads class java/util/concurrent/locks/
+threads class java/util/concurrent/atomic/LongAdder
+threads class java/util/concurrent/atomic/DoubleAdder
+threads class java/util/concurrent/atomic/AtomicIntegerArray
+threads member java/util/concurrent/ConcurrentHashMap.newKeySet*
+threads member *.parallelStream(*
+threads member java/util/stream/*.parallel(*
+
+rule net No sockets, URLs or HTTP in the core: transport is a host seam (the mod's HTTP and websocket, the website's fetch). URL encoding is text work the core does itself, the same on both sides.
+net class java/net/
+net class io/netty/
+
+rule filesystem No files in the core: the web has no file system, and where a host keeps plans is the host's business. The core reads and writes strings and bytes it is handed.
+filesystem class java/nio/file/
+filesystem class java/nio/channels/
+filesystem class java/io/File
+filesystem class java/io/FileInputStream
+filesystem class java/io/FileOutputStream
+filesystem class java/io/FileReader
+filesystem class java/io/FileWriter
+filesystem class java/io/RandomAccessFile
+
+rule awt No AWT, ImageIO or Swing: the web compile has none, and drawing is the host's.
+awt class java/awt/
+awt class javax/imageio/
+awt class javax/swing/
+
+rule zip No java.util.zip or jar: the web compile has no Deflater or Inflater, and their bytes are not specified to match another implementation's. Compression goes through a host seam or a core implementation of its own.
+zip class java/util/zip/
+zip class java/util/jar/
+
+rule security No java.security or javax.crypto: the web compile has no MessageDigest or SecureRandom. A digest the core needs is written in the core (as Uuid's MD5); randomness comes from the host.
+security class java/security/
+security class javax/crypto/
+
+rule string-format No String.format, printf or Formatter: the web compile's formatter is partial, and its numbers are spelled by the host's locale and float printer. Use NumberText for numbers and concatenation for the rest; words for players go through Text.
+string-format member java/lang/String.format(*
+string-format member java/lang/String.formatted(*
+string-format class java/util/Formatter
+string-format member java/io/PrintStream.printf(*
+string-format member java/io/PrintStream.format(*
+string-format member java/io/PrintWriter.printf(*
+string-format member java/io/PrintWriter.format(*
+
+rule java-text No java.text formats (DecimalFormat, NumberFormat, MessageFormat, SimpleDateFormat): they read the host's locale data, which the web compile mostly lacks, so the same number prints differently.
+java-text class java/text/
+
+rule float-text No double or float turned into text by the JDK (Double.toString, String.valueOf, StringBuilder.append, string concatenation, BigDecimal.valueOf): the JDK spells 1e10 as 1.0E10 where the website writes 10000000000, Java 8's spelling is not always the shortest, and the web compile spells numbers its own way. Use NumberText.of, json or fixed.
+float-text member java/lang/Double.toString(*
+float-text member java/lang/Float.toString(*
+float-text member java/lang/String.valueOf(D)*
+float-text member java/lang/String.valueOf(F)*
+float-text member java/lang/StringBuilder.append(D)*
+float-text member java/lang/StringBuilder.append(F)*
+float-text member java/lang/StringBuilder.insert(ID)*
+float-text member java/lang/StringBuilder.insert(IF)*
+float-text member java/lang/StringBuffer.append(D)*
+float-text member java/lang/StringBuffer.append(F)*
+float-text member java/math/BigDecimal.valueOf(D)*
+float-text concat D
+float-text concat F
+float-text concat Ljava/lang/Double;
+float-text concat Ljava/lang/Float;
+
+rule float-parse No text turned into a double or float by the JDK (Double.parseDouble, Double.valueOf, Float.parseFloat): the web compile's decimal reader is not shown to round every input correctly. Use NumberText.parse, which reads as JavaScript's Number does.
+float-parse member java/lang/Double.parseDouble(*
+float-parse member java/lang/Double.valueOf(Ljava/lang/String;)*
+float-parse member java/lang/Double.<init>(Ljava/lang/String;)*
+float-parse member java/lang/Float.parseFloat(*
+float-parse member java/lang/Float.valueOf(Ljava/lang/String;)*
+float-parse member java/lang/Float.<init>(Ljava/lang/String;)*
+
+rule uuid No java.util.UUID: the web compile replaces it with a string that hashes, compares and parses differently, which moves map order, sorts and ids. Use core-base's Uuid, the same as the JDK's on every target.
+uuid class java/util/UUID
+
+rule host-env No system properties or environment variables: the web has neither, and a setting the core reads comes through CoreSettings, where both hosts set it.
+host-env member java/lang/System.getProperty(*
+host-env member java/lang/System.getProperties(*
+host-env member java/lang/System.setProperty(*
+host-env member java/lang/System.getenv(*
+host-env member java/lang/Integer.getInteger(*
+host-env member java/lang/Long.getLong(*
+host-env member java/lang/Boolean.getBoolean(*
+
+rule default-locale No case change or format by the host's default locale (toLowerCase() and toUpperCase() without a Locale, Locale.getDefault): a Turkish locale lower-cases I to a dotless i, and the web compile's default is its own. Pass Locale.ROOT.
+default-locale member java/lang/String.toLowerCase()*
+default-locale member java/lang/String.toUpperCase()*
+default-locale member java/util/Locale.getDefault(*
+
+rule lombok No Lombok: it writes code the compiler sees and readers and a source-to-source web compile do not. Write the accessors, builders and constructors out.
+lombok classpath org.projectlombok:*
+lombok source \blombok\b
+
+rule log4j No log4j or other logging library: log through core-base's Log, which the host installs.
+log4j classpath org.apache.logging.log4j:*
+log4j class org/apache/logging/
+log4j class org/slf4j/
+
+rule float-narrow The web compile's JavaScript target does not narrow a float: a cast from double, float + - * / and an int or long converted to float all stay doubles there (0.1 stays 0.1, 16777217 stays exact), where the JVM and the WebAssembly target round to single precision; a float field, local, parameter, return, record component or boxed Float then carries the wrong number. Literals, float[] stores and Float.floatToIntBits narrow on every target. Round at the point of the narrowing through core-base's Float32Ops (of(double) for a cast, add, sub, mul and div for the four operations, of(int) and of(long) for a conversion), which narrows on every target; or keep the value a double.
+float-narrow op D2F
+float-narrow op I2F
+float-narrow op L2F
+float-narrow op FADD
+float-narrow op FSUB
+float-narrow op FMUL
+float-narrow op FDIV
+
+rule remainder The web compile's WebAssembly GC target computes % on a double or float as x - trunc(x / y) * y, which is not the exact remainder: 123456.789 % 0.001 gives 0 (the JVM and JavaScript give 1.7374062258324052e-12), 3.4028236e38 % 2 gives 3.4028236e38 (not 0), -0.1 % 0.1 gives 0 (not -0), and 0 % -0 gives 0 (not NaN). Use core-base's JsMath.rem, the exact remainder (fmod) on every target. An int or long % is exact everywhere and is not flagged.
+remainder op DREM
+remainder op FREM
+
+rule math-exact The JVM's Math replaces sin, cos, tan, log, log10, exp, pow (and on newer JDKs tanh and cbrt) with processor-specific code that can differ from StrictMath in the last place, so an answer would depend on the player's JDK and processor; the web compile's Math is the browser's (other algorithms: pow and exp a place off) or its own shortcuts (cbrt(262144) is 63.999999999999986, rint and round move halves the wrong way, rint(1e300) is garbage, tanh(800) is NaN, log10(1000) is 2.9999999999999996, log1p and expm1 lose small arguments). Call core-base's ExactMath, fdlibm in plain Java: StrictMath's bits on the JVM and on both web targets.
+math-exact member java/lang/Math.sin(*
+math-exact member java/lang/Math.cos(*
+math-exact member java/lang/Math.tan(*
+math-exact member java/lang/Math.asin(*
+math-exact member java/lang/Math.acos(*
+math-exact member java/lang/Math.atan(*
+math-exact member java/lang/Math.atan2(*
+math-exact member java/lang/Math.exp(*
+math-exact member java/lang/Math.log(*
+math-exact member java/lang/Math.log10(*
+math-exact member java/lang/Math.pow(*
+math-exact member java/lang/Math.cbrt(*
+math-exact member java/lang/Math.sinh(*
+math-exact member java/lang/Math.cosh(*
+math-exact member java/lang/Math.tanh(*
+math-exact member java/lang/Math.expm1(*
+math-exact member java/lang/Math.log1p(*
+math-exact member java/lang/Math.hypot(*
+math-exact member java/lang/Math.rint(*
+math-exact member java/lang/Math.round(D)*
+math-exact member java/lang/Math.toRadians(*
+math-exact member java/lang/Math.toDegrees(*
+math-exact member java/lang/Math.ulp(D)*
+math-exact member java/lang/StrictMath.*
+
+rule math-drift These java.lang.Math functions have no exact version in core-base and differ on the web compile: IEEEremainder (a different answer), scalb (overflows to Infinity early), the float overloads of round and ulp (the JavaScript target keeps a float a double), fma (absent). Write the arithmetic out, or add the function to ExactMath with its proof.
+math-drift member java/lang/Math.IEEEremainder(*
+math-drift member java/lang/Math.scalb(*
+math-drift member java/lang/Math.round(F)*
+math-drift member java/lang/Math.ulp(F)*
+math-drift member java/lang/Math.fma(*
+
+rule hash-order A hash collection whose iteration order can reach an output (a list, a sum of doubles, a first match, a tie-break, an id) gives the web another answer than the JVM: the web compile's HashMap and HashSet iterate in another order than the JDK's, IdentityHashMap goes by object identity, and Set.of, Map.of and the copyOf and Collectors forms iterate in an order the JDK salts at each start. Use core-base's JavaHashMap and JavaHashSet (the JDK's order on every target), a LinkedHashMap or LinkedHashSet where insertion order is what the code means, or a TreeMap. A use that only looks keys up or asks membership, or an empty or one-entry Map.of and Set.of, is fine: it goes in allow.txt with the number of uses and why order cannot reach an output.
+hash-order class java/util/HashMap
+hash-order class java/util/HashSet
+hash-order class java/util/IdentityHashMap
+hash-order class java/util/Hashtable
+hash-order member java/util/Map.of(*
+hash-order member java/util/Map.ofEntries(*
+hash-order member java/util/Map.copyOf(*
+hash-order member java/util/Set.of(*
+hash-order member java/util/Set.copyOf(*
+hash-order member java/util/stream/Collectors.toSet(*
+hash-order member java/util/stream/Collectors.toMap(*
+hash-order member java/util/stream/Collectors.groupingBy(*
+hash-order member java/util/stream/Collectors.toUnmodifiableSet(*
+hash-order member java/util/stream/Collectors.toUnmodifiableMap(*

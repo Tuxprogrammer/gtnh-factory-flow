@@ -8,6 +8,7 @@ import type {
   ResourceKind,
   ThroughputResult,
 } from "@/lib/model/types";
+import { sumGroup, type GroupMember, type GroupSumFlow } from "./group-sum";
 import { buildResourceLookup, splitResultNodeId, type RailResource } from "../rail/rail-model";
 
 /**
@@ -82,8 +83,7 @@ export function computeGroupSummaries(
       return owner !== undefined && family.has(owner);
     };
 
-    let machines = 0;
-    let euT = 0;
+    const members: GroupMember[] = [];
     for (const entry of entries) {
       if (!inside(entry.nodeId)) continue;
       const node = nodesById.get(entry.nodeId);
@@ -96,15 +96,18 @@ export function computeGroupSummaries(
       if (!pinned && !(entry.count > 1e-9)) continue;
       // A crop card's solved and set counts are seeds: the group builds the harvesters they fill.
       const seeds = running ?? (pinned ? pin : undefined);
-      machines += Math.ceil(
-        (seeds !== undefined ? machinesFromUnits(entry, seeds) : entry.count) - 1e-9,
-      );
-      euT += (peak ? entry.euT : entry.avgEuT) ?? 0;
+      members.push({
+        host: entry.nodeId,
+        builds: seeds !== undefined ? machinesFromUnits(entry, seeds) : entry.count,
+        euT: (peak ? entry.euT : entry.avgEuT) ?? 0,
+        flows: [],
+      });
     }
 
-    const net = new Map<
+    // What each flow is, as the first card to name it gave it.
+    const meta = new Map<
       string,
-      { kind: ResourceKind; resourceId: string; label?: string; value: number; order: number }
+      { kind: ResourceKind; resourceId: string; resource: RailResource; name: string }
     >();
     if (answered) {
       for (const node of Object.values(result!.nodes)) {
@@ -115,49 +118,48 @@ export function computeGroupSummaries(
         // A machine at zero keeps its nameplate rates (its port rows read them) but moves nothing.
         if (!((node.theoreticalMachinesRequired ?? 0) > 1e-9)) continue;
         const running = Math.min(1, Math.max(0, node.utilization ?? 1));
-        for (const [flows, sign] of [
+        const flows: GroupMember["flows"] = [];
+        for (const [list, sign] of [
           [node.inputs, 1],
           [node.outputs, -1],
         ] as const) {
-          for (const flow of Object.values(flows)) {
-            const entry = net.get(flow.key);
-            const amount = sign * flow.amountPerSecond * running;
-            if (entry) entry.value += amount;
-            else
-              net.set(flow.key, {
+          for (const flow of Object.values(list)) {
+            if (!meta.has(flow.key)) {
+              const known = lookup.get(flow.key);
+              const name = known?.displayName ?? flow.displayName ?? flow.resourceId;
+              meta.set(flow.key, {
                 kind: flow.kind,
                 resourceId: flow.resourceId,
-                label: flow.displayName,
-                value: amount,
-                order: net.size,
+                resource: { ...(known ?? { kind: flow.kind, id: flow.resourceId }), displayName: name },
+                name,
               });
+            }
+            flows.push({
+              key: flow.key,
+              name: meta.get(flow.key)!.name,
+              perSecond: sign * flow.amountPerSecond * running,
+            });
           }
         }
+        members.push({ host: cardId, builds: null, euT: 0, flows });
       }
     }
 
-    const inputs: GroupFlow[] = [];
-    const outputs: GroupFlow[] = [];
-    for (const [key, entry] of net) {
-      if (Math.abs(entry.value) <= EPS) continue;
-      const known = lookup.get(key);
-      const resource: RailResource = {
-        ...(known ?? { kind: entry.kind, id: entry.resourceId }),
-        displayName: known?.displayName ?? entry.label ?? entry.resourceId,
+    const sum = sumGroup(members);
+    const asFlow = (flow: GroupSumFlow): GroupFlow => {
+      const known = meta.get(flow.key)!;
+      return {
+        key: flow.key,
+        kind: known.kind,
+        resourceId: known.resourceId,
+        resource: known.resource,
+        perSecond: flow.perSecond,
       };
-      const flow = {
-        key,
-        kind: entry.kind,
-        resourceId: entry.resourceId,
-        resource,
-        perSecond: Math.abs(entry.value),
-      };
-      (entry.value > 0 ? inputs : outputs).push(flow);
-    }
-    // Busiest first; ties keep the order the members met them in (the sort is stable).
-    const busiest = (a: GroupFlow, b: GroupFlow) => b.perSecond - a.perSecond;
-    inputs.sort(busiest);
-    outputs.sort(busiest);
+    };
+    const machines = sum.machines;
+    const euT = sum.euT;
+    const inputs = sum.inputs.map(asFlow);
+    const outputs = sum.outputs.map(asFlow);
     out.set(pocketId, { machines, euT, inputs, outputs });
   }
   return out;

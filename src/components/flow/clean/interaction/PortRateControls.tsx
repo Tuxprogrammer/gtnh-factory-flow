@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type MouseEvent, type WheelEvent } from "react";
 import { startPromptClock } from "../../virtual/prompt-phase";
 import { formatSlotRateBare } from "../../flow-explainers";
-import { rateMultiplierForKind } from "@/lib/model/rate-unit";
+import { rateMultiplierForKind } from "@/lib/format/rate-unit";
 import { useFactoryStore } from "@/store/factory-store";
 import { formatAmountWithSuffix } from "../../rate-rule";
 import type { CleanPortView } from "../clean-model";

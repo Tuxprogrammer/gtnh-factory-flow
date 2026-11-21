@@ -1,15 +1,8 @@
 import { useMemo } from "react";
 import type { FactoryNode, Recipe } from "@/lib/model/types";
-import {
-  applyMachineHandlerToRecipe,
-  applyRecipeInputOverrides,
-  formatCompact,
-  isSteamMachineHandler,
-  getSelectedMachineHandler,
-} from "@/lib/model";
-import { getOverclockedRecipeStats } from "@/lib/solver/overclock";
-import { getNodePowerReport, getNodeSteamReport, hasPowerReport } from "@/lib/solver/power-report";
-import { getMachineParallelMultiplier } from "@/lib/solver/machine-effects";
+import { isSteamMachineHandler } from "@/lib/model";
+import { formatCompact } from "@/lib/format/numbers";
+import { cardMachineMath } from "@/lib/core/machines";
 import { PIN_RULE_LABEL } from "@/lib/model/pin-rule";
 import {
   formatSolvedMachines,
@@ -56,14 +49,13 @@ export function cardTipFacts(recipe: Recipe, node: FactoryNode): CardTipFacts {
 }
 
 function computeFacts(recipe: Recipe, node: FactoryNode): CardTipFacts {
-  const nodeRecipe = applyRecipeInputOverrides(recipe, node);
-  const effective = applyMachineHandlerToRecipe(nodeRecipe, node);
-  const steam =
-    isSteamMachineHandler(getSelectedMachineHandler(recipe, node)) || !(effective.eut > 0);
-  const stats = getOverclockedRecipeStats(nodeRecipe, node);
-  const power =
-    !steam && hasPowerReport(nodeRecipe, node) ? getNodePowerReport(nodeRecipe, node) : undefined;
-  const steamReport = steam ? getNodeSteamReport(nodeRecipe, node) : undefined;
+  // The card's one readout (lib/core/machines.ts): the figures its face and its card already computed.
+  const machine = cardMachineMath(recipe, node);
+  const effective = machine.effectiveRecipe;
+  const steam = isSteamMachineHandler(machine.handler) || !(effective.eut > 0);
+  const stats = machine.stats;
+  const power = !steam ? machine.powerReport : undefined;
+  const steamReport = steam ? machine.steamReport : undefined;
   return {
     steam: steamReport !== undefined,
     seconds: stats.durationTicks / 20,
@@ -71,7 +63,7 @@ function computeFacts(recipe: Recipe, node: FactoryNode): CardTipFacts {
       ? steamReport.drawSteamPerTick * 20
       : (power?.drawEuT ?? Math.abs(stats.eut)),
     parallels:
-      power?.parallels ?? steamReport?.parallels ?? getMachineParallelMultiplier(effective, node),
+      power?.parallels ?? steamReport?.parallels ?? machine.parallel,
     recipeTier: stats.minimumTier,
     shared: (node.extraRecipes?.length ?? 0) > 0,
     recipes: 1 + (node.extraRecipes?.length ?? 0),

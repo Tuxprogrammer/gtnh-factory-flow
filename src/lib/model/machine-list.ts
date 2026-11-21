@@ -1,8 +1,7 @@
 import type { FactoryProject, MachineTier, ThroughputResult } from "./types";
-import { getSelectedMachineHandler } from "./recipe-rules";
-import { applyRecipeInputOverrides } from "./recipe-input-overrides";
 import { isCustomRateRecipe } from "./custom-rate";
 import { pinRuleOf } from "./pin-rule";
+import { peakCount as peakCountOf } from "./peak-count";
 import { listNodeSections } from "./shared-machine";
 import { getVoltageTierIndex, isVoltageTierName } from "./tiers";
 import {
@@ -19,12 +18,8 @@ import {
   getCropsNhStats,
   isCropProductionRecipe,
 } from "./passive-production";
-import {
-  getNodePowerReport,
-  getNodeSteamReport,
-  hasPowerReport,
-  type NodePowerState,
-} from "@/lib/solver/power-report";
+import type { NodePowerState } from "@/lib/solver/power-report";
+import { cardMachineMath } from "@/lib/machines/card-readout";
 import { getEnergyHatchType } from "@/lib/machines/energy-hatches";
 
 type VoltageTier = Exclude<MachineTier, "DEMO">;
@@ -89,7 +84,7 @@ export function buildMachineList(
   for (const node of project.nodes) {
     const recipe = recipes.get(node.recipeId);
     if (!node.enabled || !recipe || isCustomRateRecipe(recipe)) continue;
-    const handler = getSelectedMachineHandler(recipe, node);
+    const handler = cardMachineMath(recipe, node).handler;
     const cropStats = getCropsNhStats(recipe);
     const crop = cropStats
       ? cropsNhHarvesterFromTiers(
@@ -103,14 +98,12 @@ export function buildMachineList(
 
     const sections = listNodeSections(node).map(({ node: view }) => {
       const raw = recipes.get(view.recipeId);
-      const effective = raw ? applyRecipeInputOverrides(raw, view) : undefined;
-      const steam = effective ? getNodeSteamReport(effective, view) : undefined;
+      // The card's one readout (lib/machines/card-readout.ts): an edit recomputes the edited card's figures only.
+      const machine = raw ? cardMachineMath(raw, view) : undefined;
+      const steam = machine?.steamReport;
       return {
         steam,
-        report:
-          effective && !steam && hasPowerReport(effective, view)
-            ? getNodePowerReport(effective, view)
-            : undefined,
+        report: machine && !steam ? machine.powerReport : undefined,
         required: nonnegative(result.nodes[view.id]?.theoreticalMachinesRequired ?? 0),
         usage: Math.min(1, nonnegative(result.nodes[view.id]?.utilization ?? 1)),
       };
@@ -129,11 +122,12 @@ export function buildMachineList(
     // Parallel processing affects draw, never the number of physical machines.
     const parallel = Math.max(1, node.parallel);
     const runningCount = solving || usage > 0 ? count : 0;
-    // Peak is every machine the card has drawing at once: a plain card's set count (Up to, Exactly) is those machines,
-    // as its power row bills it; the solved count is only what runs, which is the average. A crop card's pin is seeds,
-    // and a shared card's power row bills each recipe at its solved machines, so both keep the solved count.
-    const pinned = solving && !crop && sections.length === 1 && pinRuleOf(node, recipe) !== "any";
-    const peakCount = pinned ? Math.max(node.solvePin ?? 0, runningCount) : runningCount;
+    // Peak is every machine the card has drawing at once: a card's set count (Up to, Exactly) is those machines, as its
+    // power row bills it, and one with no count is the whole machines its solved fraction needs, a shared card's pool
+    // as one; the solved count is only what runs, which is the average. A crop card's pin is seeds, so it keeps the
+    // solved count.
+    const pinned = solving && !crop && pinRuleOf(node, recipe) !== "any";
+    const peakCount = peakCountOf(runningCount, pinned ? node.solvePin : undefined, !solving || !!crop);
     const report = sections[0]?.report;
     const steam = sections[0]?.steam;
     const peakDraw = Math.max(0, ...sections.map((part) => part.report?.drawEuT ?? 0));
@@ -219,11 +213,4 @@ export function buildMachineList(
     (a, b) =>
       a.tierIndex - b.tierIndex || (b.euT ?? 0) - (a.euT ?? 0) || a.label.localeCompare(b.label),
   );
-}
-
-/** Keep fractional answers at large counts too; never round up to a build. */
-export function formatMachineListCount(count: number): string {
-  return count > 0 && count < 0.000001
-    ? "<0.000001"
-    : count.toLocaleString("en-US", { maximumFractionDigits: 6 });
 }

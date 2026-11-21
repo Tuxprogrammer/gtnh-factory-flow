@@ -9,7 +9,7 @@ import { productionGroupDescendants, productionGroupTree } from "@/lib/model/pro
 import type { ProductionGroup, ResourceAmount } from "@/lib/model/types";
 import type { getPoolGroupResources } from "@/lib/solver/pool-mode";
 import { formatPoolRateBare as formatSlotRateBare, formatPoolSignedRate } from "./worksheet-format";
-import { rateSuffixForKind } from "@/lib/model/rate-unit";
+import { rateSuffixForKind } from "@/lib/format/rate-unit";
 import { useWorksheetPointerDrag } from "./worksheet-pointer-drag";
 
 export function ProductionGroupSelect({

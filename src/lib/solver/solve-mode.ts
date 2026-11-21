@@ -5,8 +5,7 @@ import { listSharedMachineGroups } from "@/lib/model/shared-machine";
 import { isPoolEdgeId } from "./pool-mode";
 import { collectTrashNodeIds } from "@/lib/model/trash";
 import { getCompatibleOutputFlow, getEdgeTargetDemandKey } from "./equilibrium";
-import { type LinearProgram, type LpSolution } from "./simplex";
-import { solveLpAuto } from "./lp-engine";
+import { solveLp, type LinearProgram, type LpSolution } from "./simplex";
 import { storageRatioEqualities } from "./storage-ratios";
 
 /**
@@ -82,7 +81,7 @@ export function solveSolveMode(
   /** Synthesized helper nodes (loose-cell-wire tanks) whose machine count is
    * headroom, not machinery: near-zero objective weight. */
   weightlessNodeIds?: ReadonlySet<string>,
-  solve: (lp: LinearProgram) => LpSolution = solveLpAuto,
+  solve: (lp: LinearProgram) => LpSolution = solveLp,
 ): SolveModeResult {
   const roles = getStorageRoles(project);
   const trashIds = collectTrashNodeIds(project);

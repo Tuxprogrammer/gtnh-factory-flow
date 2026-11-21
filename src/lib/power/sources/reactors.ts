@@ -216,6 +216,12 @@ const IC2_DESIGNS = [
   { key: "design-3", label: "Design 3 (1,340 L/s)", rate: 1340 },
 ];
 
+/**
+ * TileEntityNuclearReactorElectric.updateEntityServer runs once every getTickRate() = 20 ticks and moves at most
+ * the room in its 10,000 L output tank into hot coolant; any heat above that stays in the reactor.
+ */
+const IC2_MAX_COOLANT_PER_SECOND = 10_000;
+
 const ic2FluidReactor: PowerSourceDefinition = {
   id: "ic2-fluid-reactor",
   name: "Nuclear Reactor (fluid mode)",
@@ -235,7 +241,7 @@ const ic2FluidReactor: PowerSourceDefinition = {
       id: "customRate",
       label: "Hot coolant rate",
       min: 1,
-      max: 100_000,
+      max: IC2_MAX_COOLANT_PER_SECOND,
       step: 10,
       defaultValue: 1380,
       unit: "L/s",
@@ -554,18 +560,22 @@ const solarTower: PowerSourceDefinition = {
       })),
       defaultKey: "5",
     },
+    // MTESolarTower gains heat only while w.isDaytime() (halved in rain): the share of the time the heliostats are lit
+    // is the player's to set, as on the Solar Panel.
+    { type: "number", id: "duty", label: "Duty", min: 1, max: 100, step: 1, defaultValue: 100, unit: "%" },
   ],
   compute(read): PowerModel {
     const rings = Number(read.select("rings"));
     const entry = SOLAR_TOWER_RINGS.find((row) => row.rings === rings) ?? SOLAR_TOWER_RINGS[4];
     const heliostats = (28 + 8 * rings) * rings;
+    const hotSalt = entry.hotSalt * (read.number("duty") / 100);
     return {
       euPerTick: 0,
-      inputs: [liters("Cold Solar Salt", entry.hotSalt)],
-      outputs: [liters("Hot Solar Salt", entry.hotSalt)],
+      inputs: [liters("Cold Solar Salt", hotSalt)],
+      outputs: [liters("Hot Solar Salt", hotSalt)],
       stats: [
         stat("Heliostats", String(heliostats)),
-        stat("Hot salt", `${formatAmount(entry.hotSalt)} L/s`),
+        stat("Hot salt", `${formatAmount(hotSalt)} L/s`),
       ],
     };
   },

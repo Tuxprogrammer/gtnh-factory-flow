@@ -34,6 +34,14 @@
 /*.local.*
 !/vitest.local.config.ts
 
+# generated from jvm/core/core-view/tokens/tokens.json (tools/tokens/generate.mjs)
+/src/components/flow/clean/tokens.generated.ts
+/src/components/flow/clean/tokens.generated.css
+
+# generated from jvm/core/core-view/settings/*.json (tools/settings/generate.mjs)
+/src/lib/view-settings.generated.ts
+/src/lib/view-sounds.generated.ts
+
 # next.js
 /.next/
 /out/
@@ -63,9 +71,12 @@ dev-server*.log
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-public/highs.wasm
-public/highs.js
 tools/parity/out/
 
 # the live service bundle (npm run build:live)
 /dist-live/
+# the compiled core (tools/copy-core.mjs) and its generated declarations (tools/web-core/gen-types.mjs, gen-records.mjs)
+public/core/
+src/lib/core/exports.generated.ts
+src/lib/core/records.generated.ts
+src/lib/core/card-words.generated.ts

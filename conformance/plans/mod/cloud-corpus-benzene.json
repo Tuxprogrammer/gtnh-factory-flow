@@ -1,0 +1,637 @@
+{
+  "schemaVersion": 1,
+  "name": "benzene",
+  "description": "Made in the game",
+  "icon": {
+    "kind": "item",
+    "resourceId": "minecraft:iron_ingot",
+    "displayName": "minecraft:iron_ingot"
+  },
+  "solveMode": true,
+  "planMode": true,
+  "primaryView": "plan",
+  "metadata": {
+    "source": "GTNH Planner"
+  },
+  "gtnhplanner": {
+    "v": 1,
+    "game": {
+      "balanceMode": "AUTO",
+      "settingPins": {
+        "item:gregtech:gt.blockmachines:1000": [
+          "voltage",
+          "amp"
+        ]
+      },
+      "groups": [
+        {
+          "width": 700,
+          "height": 400,
+          "color": 2134075033,
+          "collapsed": false,
+          "clampNodes": false,
+          "coverChildren": false,
+          "children": {},
+          "nodeIds": [
+            "6bcdde86-54bd-44b7-935c-d857ee18e9a5"
+          ],
+          "id": "f1488c48-eaeb-3408-b7d2-9c15007fcdde",
+          "x": 5,
+          "y": 6,
+          "header": "Ore line",
+          "type": "group"
+        }
+      ],
+      "icon": "item:minecraft:iron_ingot:0"
+    },
+    "sum": "81a512ade358df27"
+  },
+  "id": "mod-corpus-benzene",
+  "nodes": [
+    {
+      "id": "6bcdde86-54bd-44b7-935c-d857ee18e9a5",
+      "recipeId": "gtnhplanner:6bcdde86-54bd-44b7-935c-d857ee18e9a5",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "machineConfigTiers": {
+        "circuit": "3"
+      },
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "portRates": {
+        "input:item:Hydrogen": 2.5
+      },
+      "position": {
+        "x": 1351,
+        "y": -368
+      },
+      "pocketId": "3fb52c77-71dc-3b2b-b7da-4ea802d9c5a9",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:1169",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputTargets": {
+            "0": 2.5
+          },
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "tick_modifier": 150,
+              "machine:circuit": "3"
+            }
+          },
+          "worlds": {
+            "": [
+              [
+                0,
+                100,
+                64,
+                -200,
+                2
+              ]
+            ]
+          }
+        },
+        "sum": "1d3fe9faba4df1b3"
+      }
+    }
+  ],
+  "storages": [
+    {
+      "id": "df46d804-c0fa-4b59-bf6c-742fc0d53161",
+      "kind": "item",
+      "resourceId": "Oxygen",
+      "displayName": "Oxygen",
+      "position": {
+        "x": 220,
+        "y": 324
+      },
+      "pocketId": "137ed548-f4a6-35cd-bfc9-488da178a695",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "SOURCE",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:oxygen:0",
+          "label": "Oxygen",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "a1bf48b821810009"
+      }
+    },
+    {
+      "id": "2e50eeda-7d71-44da-adde-0aadaf2a69ec",
+      "kind": "item",
+      "resourceId": "Distilled Water",
+      "displayName": "Distilled Water",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 110
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "PRODUCT",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:distilled water:0",
+          "label": "Distilled Water",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "8aaee086950f7e80"
+      }
+    },
+    {
+      "id": "781a9079-2392-4d4b-99d8-c00f100d928b",
+      "kind": "item",
+      "resourceId": "Hydrogen",
+      "displayName": "Hydrogen",
+      "position": {
+        "x": -303,
+        "y": 207
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "SOURCE",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:hydrogen:0",
+          "label": "Hydrogen",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "ff4152c6f426a175"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "df46d804-c0fa-4b59-bf6c-742fc0d53161:6bcdde86-54bd-44b7-935c-d857ee18e9a5:1",
+      "source": "df46d804-c0fa-4b59-bf6c-742fc0d53161",
+      "target": "6bcdde86-54bd-44b7-935c-d857ee18e9a5",
+      "sourceHandle": "output:item:Oxygen",
+      "targetHandle": "input:item:Oxygen",
+      "resourceKind": "item",
+      "resourceId": "Oxygen",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 1
+        },
+        "sum": "dfed98bd24e69a81"
+      }
+    },
+    {
+      "id": "2e50eeda-7d71-44da-adde-0aadaf2a69ec:6bcdde86-54bd-44b7-935c-d857ee18e9a5:0",
+      "source": "6bcdde86-54bd-44b7-935c-d857ee18e9a5",
+      "target": "2e50eeda-7d71-44da-adde-0aadaf2a69ec",
+      "sourceHandle": "output:item:Distilled%20Water",
+      "targetHandle": "input:item:Distilled%20Water",
+      "resourceKind": "item",
+      "resourceId": "Distilled Water",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 0
+        },
+        "sum": "5eb7231831aaca09"
+      }
+    },
+    {
+      "id": "781a9079-2392-4d4b-99d8-c00f100d928b:6bcdde86-54bd-44b7-935c-d857ee18e9a5:0",
+      "source": "781a9079-2392-4d4b-99d8-c00f100d928b",
+      "target": "6bcdde86-54bd-44b7-935c-d857ee18e9a5",
+      "sourceHandle": "output:item:Hydrogen",
+      "targetHandle": "input:item:Hydrogen",
+      "resourceKind": "item",
+      "resourceId": "Hydrogen",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 0
+        },
+        "sum": "49ed917b4ff841dc"
+      }
+    }
+  ],
+  "annotations": [
+    {
+      "id": "adaef16f-a0bc-3836-b117-fc26f195d020",
+      "kind": "image",
+      "text": "The finished line",
+      "size": {
+        "width": 160,
+        "height": 90
+      },
+      "imageUrl": "https://example.com/line.png",
+      "position": {
+        "x": 2011,
+        "y": 733
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [
+            "The finished line"
+          ],
+          "width": 160,
+          "height": 90,
+          "color": "",
+          "fontSize": 14,
+          "kind": "image",
+          "arrowWidth": 0,
+          "imageUrl": "https://example.com/line.png",
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "4c13a04f2941326e"
+      }
+    },
+    {
+      "id": "bb4ee3c4-a25c-3c87-98cc-b87dbb1d8e61",
+      "kind": "text",
+      "colorTag": "lime",
+      "text": "Feed it\nfrom the ME system",
+      "size": {
+        "width": 213,
+        "height": 131
+      },
+      "fontSize": 18,
+      "position": {
+        "x": 16,
+        "y": 122
+      },
+      "pocketId": "3fb52c77-71dc-3b2b-b7da-4ea802d9c5a9",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [
+            "Feed it",
+            "from the ME system"
+          ],
+          "width": 213,
+          "height": 131,
+          "color": "lime",
+          "fontSize": 18,
+          "arrowWidth": 0,
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "ae75ceceacf80591"
+      }
+    },
+    {
+      "id": "e66b7490-de22-37f8-bde4-55f0d44605a9",
+      "kind": "zone",
+      "colorTag": "lime",
+      "size": {
+        "width": 203,
+        "height": 117
+      },
+      "points": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 203,
+          "y": 13
+        },
+        {
+          "x": 97,
+          "y": 117
+        }
+      ],
+      "style": {
+        "marks": "hatch"
+      },
+      "position": {
+        "x": 1503,
+        "y": -91
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [],
+          "width": 203,
+          "height": 117,
+          "color": "lime",
+          "fontSize": 14,
+          "kind": "zone",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              203,
+              13
+            ],
+            [
+              97,
+              117
+            ]
+          ],
+          "arrowWidth": 0,
+          "marks": "hatch",
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "bd4d84ab85de1972"
+      }
+    },
+    {
+      "id": "f9f4c47c-1da0-3664-bcfa-be8dbd6f2ac6",
+      "kind": "arrow",
+      "colorTag": "magenta",
+      "size": {
+        "width": 163,
+        "height": 0
+      },
+      "arrowDirection": "up-left",
+      "arrowHeads": "both",
+      "arrowWidth": 4,
+      "position": {
+        "x": 60,
+        "y": 56
+      },
+      "pocketId": "3fb52c77-71dc-3b2b-b7da-4ea802d9c5a9",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [],
+          "width": 163,
+          "height": 0,
+          "color": "magenta",
+          "fontSize": 14,
+          "kind": "arrow",
+          "arrowDirection": "up-left",
+          "arrowHeads": "both",
+          "arrowWidth": 4,
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "f2e35452a0d0041d"
+      }
+    },
+    {
+      "id": "7a3a0561-74f8-3ac2-8989-2a3b74086692",
+      "kind": "box",
+      "colorTag": "orange",
+      "size": {
+        "width": 377,
+        "height": 151
+      },
+      "style": {
+        "border": "dashed",
+        "borderColor": "red",
+        "fillColor": "light_blue",
+        "fill": "solid",
+        "marks": "graph"
+      },
+      "position": {
+        "x": 112,
+        "y": 78
+      },
+      "pocketId": "137ed548-f4a6-35cd-bfc9-488da178a695",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [],
+          "width": 377,
+          "height": 151,
+          "color": "orange",
+          "fontSize": 14,
+          "kind": "box",
+          "arrowWidth": 0,
+          "border": "dashed",
+          "borderColor": "red",
+          "fillColor": "light_blue",
+          "fill": "solid",
+          "marks": "graph",
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "25abd43195ede2dc"
+      }
+    }
+  ],
+  "pockets": [
+    {
+      "id": "137ed548-f4a6-35cd-bfc9-488da178a695",
+      "name": "Ore line",
+      "colorTag": "orange",
+      "expanded": true,
+      "size": {
+        "width": 2741,
+        "height": 1307
+      },
+      "theme": "blueprint",
+      "pattern": "dots",
+      "position": {
+        "x": -523,
+        "y": -311
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "name": "Ore line",
+          "color": "orange",
+          "width": 2741,
+          "height": 1307,
+          "collapsed": false,
+          "theme": "blueprint",
+          "pattern": "dots"
+        },
+        "sum": "908ce894cb22469c"
+      }
+    },
+    {
+      "id": "3fb52c77-71dc-3b2b-b7da-4ea802d9c5a9",
+      "name": "Smelting",
+      "expanded": false,
+      "size": {
+        "width": 613,
+        "height": 421
+      },
+      "position": {
+        "x": 406,
+        "y": 112
+      },
+      "parentPocketId": "137ed548-f4a6-35cd-bfc9-488da178a695",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "ffId": "pocket-imported-smelting",
+          "name": "Smelting",
+          "width": 613,
+          "height": 421,
+          "collapsed": true
+        },
+        "sum": "7703f71c1affe133"
+      }
+    }
+  ],
+  "fuelProfiles": [],
+  "tasks": [
+    {
+      "id": "t1",
+      "title": "Build benzene",
+      "text": "Two lines first.",
+      "status": "doing",
+      "order": "a0",
+      "assignees": [
+        "11111111-1111-4111-8111-111111111111"
+      ],
+      "links": [
+        {
+          "plan": "11111111-1111-4111-8111-111111111111:plan",
+          "node": "6bcdde86-54bd-44b7-935c-d857ee18e9a5"
+        }
+      ],
+      "createdBy": "11111111-1111-4111-8111-111111111111",
+      "createdAt": "2026-10-14T10:00:00.000Z"
+    },
+    {
+      "id": "t1b",
+      "title": "Power benzene",
+      "status": "todo",
+      "order": "a1",
+      "blockedBy": [
+        "t1"
+      ]
+    }
+  ],
+  "taskItems": [
+    {
+      "id": "i1",
+      "taskId": "t1",
+      "text": "Place the machines",
+      "done": false,
+      "order": "a0",
+      "link": {
+        "plan": "11111111-1111-4111-8111-111111111111:plan",
+        "node": "6bcdde86-54bd-44b7-935c-d857ee18e9a5"
+      }
+    },
+    {
+      "id": "i2",
+      "taskId": "t1",
+      "kind": "location",
+      "text": "Ore field at 1 64 -2 in Overworld",
+      "done": true,
+      "order": "a1",
+      "place": {
+        "x": 1,
+        "y": 64,
+        "z": -2,
+        "dim": 0,
+        "dimName": "Overworld",
+        "world": "server:0123456789abcdef",
+        "label": "Ore field"
+      }
+    },
+    {
+      "id": "i3",
+      "taskId": "t1",
+      "kind": "picture",
+      "text": "Screenshot",
+      "done": false,
+      "order": "a2",
+      "picture": {
+        "thumb": "data:image/jpeg;base64,/9j/AA==",
+        "w": 1920,
+        "h": 1080,
+        "takenAt": "2026-10-15T09:00:00.000Z"
+      }
+    },
+    {
+      "id": "i4",
+      "taskId": "t1",
+      "kind": "quest",
+      "text": "Steam Age",
+      "done": false,
+      "order": "a3",
+      "quest": {
+        "id": "0f2a43a5-6c1e-4d7a-9b3b-6a8f3b0e2c11",
+        "name": "Steam Age",
+        "icon": "item:IC2:itemToolBronzePickaxe:0",
+        "line": "Tier 1 - Steam"
+      }
+    }
+  ],
+  "taskComments": [
+    {
+      "id": "c1",
+      "taskId": "t1",
+      "by": "11111111-1111-4111-8111-111111111111",
+      "byName": "ann",
+      "at": "2026-10-14T10:05:00Z",
+      "text": "On it"
+    }
+  ],
+  "recipes": [
+    {
+      "id": "gtnhplanner:6bcdde86-54bd-44b7-935c-d857ee18e9a5",
+      "name": "item|Distilled Water",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:1169",
+      "minimumTier": "LV",
+      "durationTicks": 1,
+      "eut": 7864320,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Hydrogen",
+          "displayName": "Hydrogen",
+          "amount": 16000
+        },
+        {
+          "kind": "item",
+          "id": "Oxygen",
+          "displayName": "Oxygen",
+          "amount": 8000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Distilled Water",
+          "displayName": "Distilled Water",
+          "amount": 8000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    }
+  ]
+}

@@ -1,11 +1,22 @@
-import { formatCompact } from "@/lib/model/resources";
+import { formatCompact } from "@/lib/format/numbers";
 import { getStorageRoles } from "@/lib/model/storage-role";
 import type { FactoryProject, ResourceKind, ThroughputResult } from "@/lib/model/types";
-import { rateMultiplierForKind, rateSuffixForKind } from "@/lib/model/rate-unit";
+import { rateMultiplierForKind, rateSuffixForKind } from "@/lib/format/rate-unit";
 import { pinRuleOf } from "@/lib/model/pin-rule";
-import { UP_TO_WORD } from "../up-to-reason";
-import { loopSentence, loopTag, loopTone, type LoopTone } from "../loops";
+import type { LoopTone } from "../loops";
 import type { Note, NoteArg, PlanNote, PlanShortfall } from "@/lib/solver/plan/types";
+import {
+  byUrgencyOf,
+  noticeList,
+  noticeTag,
+  rankOf,
+  noticeText,
+  type NoticeHolder,
+  type NoticeFailure,
+  type NoticeInput,
+  type NoticeLoop,
+  type NoticeNote,
+} from "./notice-core";
 import { splitResultNodeId } from "./rail-model";
 
 /**
@@ -34,15 +45,14 @@ export interface BoardNotice {
 
 /** Where a notice goes in the list, lowest first: a failed solve, then alarms, then warnings, then the rest. */
 export function noticeRank(notice: Pick<BoardNotice, "severity" | "tag">): number {
-  if (notice.severity === "error") return notice.tag ? 1 : 0;
-  return notice.severity === "warn" ? 2 : 3;
+  return rankOf(notice);
 }
 
 /** Most pressing first; notices of one rank keep their order. */
 export function byUrgency<T extends Pick<BoardNotice, "severity" | "tag">>(
   list: readonly T[],
 ): T[] {
-  return [...list].sort((a, b) => noticeRank(a) - noticeRank(b));
+  return byUrgencyOf(list);
 }
 
 function isNote(arg: NoteArg | undefined): arg is Note {
@@ -68,12 +78,6 @@ function contains(note: Note, ...kinds: string[]): boolean {
   });
 }
 
-function rate(perSecond: number, kind: ResourceKind): string {
-  const value = perSecond * rateMultiplierForKind(kind);
-  const suffix = rateSuffixForKind(kind);
-  return `${formatCompact(value)}${suffix.startsWith(" ") ? suffix : ` ${suffix}`}`;
-}
-
 const text = (arg: NoteArg | undefined): string =>
   typeof arg === "string" || typeof arg === "number" ? String(arg) : "";
 const num = (arg: NoteArg | undefined): number => (typeof arg === "number" ? arg : 0);
@@ -85,13 +89,13 @@ const RULE_BY_NOTE: Record<string, "at-least" | "exact" | "at-most" | "ignore"> 
   RULE_ANY: "ignore",
 };
 
-export function buildNotices(
+/** Reads the solver's notes into the records the list is worked out from (`notice-core.ts`). */
+export function noticeInput(
   project: FactoryProject,
   result: ThroughputResult | undefined,
-): BoardNotice[] {
+): NoticeInput | undefined {
   const extras = result?.plan;
-  if (!extras) return [];
-  const out: BoardNotice[] = [];
+  if (!extras) return undefined;
   const nodeIds = new Set(project.nodes.map((n) => n.id));
   const storages = project.storages ?? [];
   const known = new Set([...nodeIds, ...storages.map((s) => s.id)]);
@@ -109,22 +113,7 @@ export function buildNotices(
     return [...new Set(ids)];
   };
 
-  // The failure, as what the player can do about it.
-  const failure = extras.failure;
-  if (failure) {
-    if (failure.message === "NO_PIN") {
-      if (project.nodes.length > 0) {
-        out.push({
-          id: "no-pin",
-          severity: "info",
-          text: "Nothing to calculate yet: set a rate on a drawer, or pin a machine count",
-          focus: [],
-        });
-      }
-    } else if (failure.message !== "EMPTY_GRAPH") {
-      out.push(failureNotice(failure, idsIn));
-    }
-  }
+  const failure = extras.failure ? failureOf(extras.failure, idsIn) : undefined;
 
   const recipeOf = new Map(project.recipes.map((r) => [r.id, r]));
   const cardName = (id: string): string => {
@@ -132,141 +121,166 @@ export function buildNotices(
     return recipeOf.get(node?.recipeId ?? "")?.machineType ?? "machine";
   };
 
-  // Old Build's rings: a dead loop's cards starve each other, a clog lock's clog each other on a surplus. Alarms: tagged,
-  // in the ring's tone, blinking, right under a failed solve. Show me frames the ring's cards.
-  for (const loop of extras.loops ?? []) {
-    const cards = loop.cards.filter((id) => nodeIds.has(id));
-    if (cards.length === 0) continue;
-    out.push({
-      id: `loop:${loop.kind}:${cards.join(",")}`,
-      severity: "error",
-      tag: loopTag(loop),
-      loop: loopTone(loop),
-      text: loopSentence(loop, cards.length),
-      focus: cards,
-    });
-  }
+  // Old Build's rings: a dead loop's cards starve each other, a clog lock's clog each other on a surplus.
+  const loops: NoticeLoop[] = (extras.loops ?? []).map((loop) => ({
+    kind: loop.kind,
+    cards: loop.cards.filter((id) => nodeIds.has(id)),
+  }));
 
-  // The cards and drawers that hold a drawer's rate back, as short sentences.
-  const holdersOf = (s: PlanShortfall): string => {
-    const parts: string[] = [];
+  // The cards and drawers that hold a drawer's rate back.
+  const holdersOf = (s: PlanShortfall): NoticeHolder[] => {
+    const parts: NoticeHolder[] = [];
     for (const id of s.limitingCards) {
       const node = project.nodes.find((n) => n.id === id);
       const reason = extras.upTo?.[id]?.reason;
       const name = cardName(id);
-      if (node && pinRuleOf(node) === "exact") parts.push(`The ${name} is set exactly.`);
+      if (node && pinRuleOf(node) === "exact") parts.push({ kind: "exact", name });
       else if (reason && reason !== "FULL" && reason !== "BOTTLENECK")
-        parts.push(`The ${name} is ${UP_TO_WORD[reason].toLowerCase()}.`);
-      else parts.push(`The ${name} is full.`);
+        parts.push({ kind: reason.toLowerCase(), name });
+      else parts.push({ kind: "full", name });
     }
     for (const id of s.limitingDrawers) {
       const other = storages.find((o) => o.id === id);
-      parts.push(
-        `The ${other?.displayName ?? other?.resourceId ?? "other"} drawer's rate holds it back.`,
-      );
+      parts.push({ kind: "drawer", name: other?.displayName ?? other?.resourceId ?? "other" });
     }
-    return parts.length > 0 ? ` ${parts.join(" ")}` : "";
+    return parts;
   };
-  const holdingIds = (s: PlanShortfall): string[] => [...s.limitingCards, ...s.limitingDrawers];
 
-  // A drawer whose rule the answer does not keep: what it asks and what the plan does instead.
   const roles = getStorageRoles(project);
   const unmet = (extras.unmetDrawers ?? [])
     .map((id) => storages.find((s) => s.id === id))
     .filter((s): s is NonNullable<typeof s> => s !== undefined);
+  const blank = {
+    resource: "item",
+    supply: false,
+    exact: false,
+    asked: 0,
+    reached: 0,
+    made: 0,
+    target: 0,
+    hasShortfall: false,
+    holders: [] as NoticeHolder[],
+    subject: "",
+    focus: [] as string[],
+  };
+  const notes: NoticeNote[] = [];
   for (const note of extras.notes) {
-    if (note.message !== "DRAWER_UNMET") continue;
-    const label = text(note.args[0]);
-    const ruleNote = note.args[1];
-    const rule = isNote(ruleNote) ? RULE_BY_NOTE[ruleNote.message] : undefined;
-    const asked = num(note.args[2]);
-    const reached = num(note.args[3]);
-    const storage =
-      unmet.find((s) => (s.displayName ?? s.resourceId) === label) ??
-      unmet.find((s) => s.resourceId === label);
-    const supply = storage ? roles.get(storage.id) === "source" : false;
-    const kind: ResourceKind = storage?.kind ?? "item";
-    const who = `The ${label} ${supply ? "supply" : "drawer"}`;
-    const target = rate(asked, kind);
-    const reach = rate(reached, kind);
-    const shortfall = storage
-      ? extras.shortfalls?.find((s) => s.drawerId === storage.id && s.reachable < s.target)
-      : undefined;
-    const holders = shortfall ? holdersOf(shortfall) : "";
-    const sentence = shortfall
-      ? `The ${label} ${supply ? "supply" : "drawer"} gets ${reach} of ${target}.${holders}`
-      : reached > asked
-        ? `${who} allows at most ${target}, but the plan ${supply ? "needs" : "makes"} ${reach}`
-        : `${who} ${supply ? "should give" : "wants"} ${rule === "exact" ? "exactly " : ""}${target}, but the plan can only ${supply ? "use" : "make"} ${reach}`;
-    out.push({
-      id: `unmet:${storage?.id ?? label}`,
-      severity: "warn",
-      text: sentence,
-      focus: storage ? [storage.id, ...(shortfall ? holdingIds(shortfall) : [])] : [],
-    });
+    if (note.message === "DRAWER_UNMET") {
+      const label = text(note.args[0]);
+      const ruleNote = note.args[1];
+      const rule = isNote(ruleNote) ? RULE_BY_NOTE[ruleNote.message] : undefined;
+      const storage =
+        unmet.find((s) => (s.displayName ?? s.resourceId) === label) ??
+        unmet.find((s) => s.resourceId === label);
+      const shortfall = storage
+        ? extras.shortfalls?.find((s) => s.drawerId === storage.id && s.reachable < s.target)
+        : undefined;
+      notes.push({
+        ...blank,
+        type: "UNMET",
+        id: storage?.id ?? label,
+        label,
+        resource: storage?.kind ?? "item",
+        supply: storage ? roles.get(storage.id) === "source" : false,
+        exact: rule === "exact",
+        asked: num(note.args[2]),
+        reached: num(note.args[3]),
+        hasShortfall: shortfall !== undefined,
+        holders: shortfall ? holdersOf(shortfall) : [],
+        focus: storage
+          ? [
+              storage.id,
+              ...(shortfall ? [...shortfall.limitingCards, ...shortfall.limitingDrawers] : []),
+            ]
+          : [],
+      });
+    }
   }
-
   for (const note of extras.notes) {
     if (note.message === "OVERSHOOTS_TARGET") {
-      const kind: ResourceKind = "item";
-      const machine = text(note.args[0]);
-      out.push({
-        id: `overshoot:${text(note.args[4])}:${text(note.args[1])}`,
-        severity: "warn",
-        text: `The ${machine} makes ${rate(num(note.args[2]), kind)} of ${text(note.args[1])}, more than its ${rate(num(note.args[3]), kind)} target, because another of its outputs needs more`,
+      const label = text(note.args[1]);
+      const recipe = recipeOf.get(
+        project.nodes.find((n) => n.id === text(note.args[4]))?.recipeId ?? "",
+      );
+      const made = recipe?.outputs.find((o) => (o.displayName ?? o.id) === label);
+      notes.push({
+        ...blank,
+        type: "OVERSHOOT",
+        id: `${text(note.args[4])}:${label}`,
+        label,
+        resource: made?.kind ?? "item",
+        made: num(note.args[2]),
+        target: num(note.args[3]),
+        subject: text(note.args[0]),
         focus: idsIn(note),
       });
     } else if (note.message === "DRAWER_PORT_TAKEN") {
       const id = text(note.args[1]);
-      const supply = roles.get(id) === "source";
       const ruleNote = note.args[2];
-      const exact = isNote(ruleNote) && RULE_BY_NOTE[ruleNote.message] === "exact";
-      const kind: ResourceKind = storages.find((s) => s.id === id)?.kind ?? "item";
-      const asked = `${exact ? "exactly " : ""}${rate(num(note.args[3]), kind)}`;
-      out.push({
-        id: `unmet:${id}`,
-        severity: "warn",
-        text: supply
-          ? `The ${text(note.args[0])} supply should give ${asked}, but the input takes from the other drawer wired to it`
-          : `The ${text(note.args[0])} drawer wants ${asked}, but the output goes to the other drawer wired to it`,
+      notes.push({
+        ...blank,
+        type: "PORT_TAKEN",
+        id,
+        label: text(note.args[0]),
+        resource: storages.find((s) => s.id === id)?.kind ?? "item",
+        supply: roles.get(id) === "source",
+        exact: isNote(ruleNote) && RULE_BY_NOTE[ruleNote.message] === "exact",
+        asked: num(note.args[3]),
         focus: [id],
       });
     } else if (note.message === "DRAWER_NOT_CONNECTED") {
-      out.push({
-        id: `unwired:${text(note.args[1])}`,
-        severity: "warn",
-        text: `The ${text(note.args[0])} drawer has a rate, but nothing is wired to it`,
+      notes.push({
+        ...blank,
+        type: "NOT_CONNECTED",
+        id: text(note.args[1]),
+        label: text(note.args[0]),
         focus: idsIn(note),
       });
     } else if (note.message === "DRAWER_WIRED_IGNORED") {
-      out.push({
-        id: `ignored:${text(note.args[1])}`,
-        severity: "warn",
-        text: `The ${text(note.args[0])} drawer's rate does nothing: the ports it's on are wired`,
+      notes.push({
+        ...blank,
+        type: "WIRED_IGNORED",
+        id: text(note.args[1]),
+        label: text(note.args[0]),
         focus: idsIn(note),
       });
     } else if (
       note.message === "CHOICE_NO_LONGER_FITS" ||
       note.message === "CHOICE_NEEDS_MORE_GATES"
     ) {
-      out.push({
-        id: "choice",
-        severity: "warn",
-        text: "Your saved choice no longer fits this plan, so the planner's own answer is shown",
-        focus: [],
-      });
+      notes.push({ ...blank, type: "CHOICE", id: "", label: "" });
     }
   }
-  return dedupe(byUrgency(out));
+  return { failure, hasNodes: project.nodes.length > 0, loops, notes };
 }
 
-function dedupe(list: BoardNotice[]): BoardNotice[] {
-  const seen = new Set<string>();
-  return list.filter((n) => (seen.has(n.text) ? false : (seen.add(n.text), true)));
+/** The sentence a rate is spelled in: the board's number and its unit under the active dials. */
+function rate(perSecond: number, kind: string): string {
+  const k = kind as ResourceKind;
+  const value = perSecond * rateMultiplierForKind(k);
+  const suffix = rateSuffixForKind(k);
+  return `${formatCompact(value)}${suffix.startsWith(" ") ? suffix : ` ${suffix}`}`;
+}
+
+export function buildNotices(
+  project: FactoryProject,
+  result: ThroughputResult | undefined,
+): BoardNotice[] {
+  const input = noticeInput(project, result);
+  if (!input) return [];
+  return noticeList(input).map((n) => ({
+    id: n.id,
+    severity: n.severity,
+    text: noticeText(n, rate),
+    focus: n.focus,
+    ...(n.tag !== undefined ? { tag: noticeTag(n), loop: n.loop } : {}),
+  }));
 }
 
 /** A solve that found no answer, as what the player can do about it. */
-function failureNotice(note: Note, idsIn: (note: Note) => string[]): BoardNotice {
+function failureOf(note: Note, idsIn: (note: Note) => string[]): NoticeFailure {
+  if (note.message === "NO_PIN" || note.message === "EMPTY_GRAPH")
+    return { kind: note.message, names: [], focus: [] };
   const clashing: Note[] = [];
   collect(note, "PIN_DROPPED", clashing);
   if (clashing.length > 0) {
@@ -277,35 +291,10 @@ function failureNotice(note: Note, idsIn: (note: Note) => string[]): BoardNotice
       if (name && !names.includes(name)) names.push(name);
       ids.push(...idsIn(pin));
     }
-    return {
-      id: "pin-conflict",
-      severity: "error",
-      text: `The pinned counts on ${names.join(" and ")} can't all be met at once: unpin one`,
-      focus: [...new Set(ids)],
-    };
+    return { kind: "PIN_CONFLICT", names, focus: [...new Set(ids)] };
   }
-  if (contains(note, "MACHINES_CANNOT_RUN")) {
-    return {
-      id: "cannot-run",
-      severity: "error",
-      text: "Some machines can't run with these rates and pinned counts",
-      focus: [],
-    };
-  }
-  if (
-    contains(note, "SOLVER_UNSATISFIABLE", "SOLVER_NO_SOLUTION", "SOLVER_BUDGET", "STAGE_FAILED")
-  ) {
-    return {
-      id: "no-way",
-      severity: "error",
-      text: "There's no way to meet all these rates and pinned counts: change a rate or unpin a count",
-      focus: [],
-    };
-  }
-  return {
-    id: "failed",
-    severity: "error",
-    text: "The planner couldn't solve this plan: please report it with Feedback in the top bar",
-    focus: [],
-  };
+  if (contains(note, "MACHINES_CANNOT_RUN")) return { kind: "CANNOT_RUN", names: [], focus: [] };
+  if (contains(note, "SOLVER_UNSATISFIABLE", "SOLVER_NO_SOLUTION", "SOLVER_BUDGET", "STAGE_FAILED"))
+    return { kind: "NO_WAY", names: [], focus: [] };
+  return { kind: "FAILED", names: [], focus: [] };
 }

@@ -68,6 +68,21 @@ describe("the clean drawer", () => {
     expect(count).toBeLessThanOrEqual(BUDGET);
   });
 
+  it("keeps a buffer's rule, rate and forced-out tile inside the budget, once its icon has loaded", () => {
+    load(storage({ targetPerSecond: 20, targetMode: "at-least" }), {});
+    const last = useFactoryStore.getState().lastResult as unknown as { plan: object };
+    useFactoryStore.setState({
+      lastResult: { plan: { ...last.plan, spills: [{ drawerId: "s1", perSecond: 4 }] } } as never,
+    });
+    const { container } = renderDrawer(stored(), "buffer", 24);
+    const wrap = container.querySelector(".cd-wrap")!;
+    expect(wrap.querySelector(".cd-key")!.getAttribute("data-mark")).toBe("≥");
+    expect(wrap.querySelector(".cd-box")!.getAttribute("data-text")).toBe("20");
+    expect(wrap.querySelector(".cd-forced-num")).not.toBeNull();
+    wrap.querySelectorAll("img").forEach((img) => fireEvent.load(img));
+    expect(wrap.querySelectorAll("*").length).toBeLessThanOrEqual(BUDGET);
+  });
+
   it("wears the mod's kinds: blue source, orange product, steel trash", () => {
     load(storage());
     for (const [role, kind] of [

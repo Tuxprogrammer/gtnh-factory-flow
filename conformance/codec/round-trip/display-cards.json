@@ -1,0 +1,243 @@
+{
+  "schemaVersion": 1,
+  "id": "round-trip-display-cards",
+  "name": "Cards the mod shows but cannot run",
+  "solveMode": true,
+  "planMode": true,
+  "settingPins": {
+    "handler:elsewhere": ["mode"]
+  },
+  "recipes": [
+    {
+      "id": "r-plate",
+      "name": "Mixer: Plate",
+      "kind": "gregtech_machine",
+      "category": "gregtech",
+      "machineType": "Mixer",
+      "minimumTier": "LV",
+      "durationTicks": 20,
+      "eut": 8,
+      "inputs": [],
+      "outputs": [{ "kind": "item", "id": "plate", "amount": 1, "displayName": "Plate" }]
+    },
+    {
+      "id": "r-press",
+      "name": "Mixer: Gear",
+      "kind": "gregtech_machine",
+      "category": "gregtech",
+      "machineType": "Mixer",
+      "minimumTier": "LV",
+      "durationTicks": 20,
+      "eut": 8,
+      "inputs": [
+        { "kind": "item", "id": "plate", "amount": 1, "displayName": "Plate" },
+        { "kind": "item", "id": "gregtech:gt.blockores2@98", "amount": 1, "displayName": "Uranium 238 Ore" }
+      ],
+      "outputs": [{ "kind": "item", "id": "gear", "amount": 1, "displayName": "Gear" }]
+    },
+    {
+      "id": "r-vein",
+      "name": "Ore Vein: Uranium 238 & Plutonium 239",
+      "kind": "ore_vein",
+      "category": "ore-vein",
+      "machineType": "Ore Vein",
+      "minimumTier": "NONE",
+      "durationTicks": 1,
+      "eut": 0,
+      "inputs": [],
+      "outputs": [
+        { "kind": "item", "id": "gregtech:gt.blockores2@98", "amount": 1, "displayName": "Uranium 238 Ore" },
+        { "kind": "item", "id": "gregtech:gt.blockores2@100", "amount": 1, "displayName": "Plutonium 239 Ore" },
+        { "kind": "item", "id": "gregtech:gt.blockores2@96", "amount": 1, "displayName": "Thorium Ore" }
+      ],
+      "source": { "recipeMap": "Ore Vein", "rawRecipeId": "ore.mix.richnuclear" },
+      "metadata": { "veinId": "ore.mix.richnuclear", "veinWeight": 5 }
+    },
+    {
+      "id": "r-infusion",
+      "name": "Thaumcraft Infusion: Iron Capped Wooden Wand",
+      "kind": "gregtech_machine",
+      "category": "thaumcraft",
+      "machineType": "Thaumcraft Infusion",
+      "minimumTier": "NONE",
+      "durationTicks": 2050,
+      "eut": 0,
+      "inputs": [
+        { "kind": "item", "id": "thaumcraft:itemresource@3", "amount": 1, "displayName": "Quicksilver" },
+        { "kind": "aspect", "id": "thaumcraft:aspect:vitium", "amount": 48, "displayName": "Vitium" }
+      ],
+      "outputs": [{ "kind": "item", "id": "thaumcraft:wandcasting@2000", "amount": 1, "displayName": "Wand" }]
+    },
+    {
+      "id": "r-off",
+      "name": "Mixer: Bolt",
+      "kind": "gregtech_machine",
+      "category": "gregtech",
+      "machineType": "Mixer",
+      "minimumTier": "LV",
+      "durationTicks": 20,
+      "eut": 8,
+      "inputs": [],
+      "outputs": [{ "kind": "item", "id": "bolt", "amount": 1, "displayName": "Bolt" }]
+    },
+    {
+      "id": "r-gone",
+      "name": "Mixer: Rod",
+      "kind": "gregtech_machine",
+      "category": "gregtech",
+      "machineType": "Mixer",
+      "minimumTier": "LV",
+      "durationTicks": 20,
+      "eut": 8,
+      "inputs": [{ "kind": "item", "id": "gear", "amount": 1, "displayName": "Gear" }],
+      "outputs": [{ "kind": "item", "id": "rod", "amount": 1, "displayName": "Rod" }]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "n-plate",
+      "recipeId": "r-plate",
+      "machineCount": 1,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "position": { "x": 0, "y": 0 }
+    },
+    {
+      "id": "n-press",
+      "recipeId": "r-press",
+      "machineCount": 1,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "position": { "x": 400, "y": 0 }
+    },
+    {
+      "id": "n-vein",
+      "recipeId": "r-vein",
+      "machineCount": 1,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "position": { "x": 0, "y": 200 },
+      "solvePin": 2,
+      "solvePinExact": true,
+      "colorTag": "lime"
+    },
+    {
+      "id": "n-infusion",
+      "recipeId": "r-infusion",
+      "machineCount": 1,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "position": { "x": 0, "y": 400 }
+    },
+    {
+      "id": "n-off",
+      "recipeId": "r-off",
+      "machineCount": 3,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": false,
+      "position": { "x": 400, "y": 400 }
+    },
+    {
+      "id": "n-gone",
+      "recipeId": "r-gone",
+      "machineCount": 1,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "position": { "x": 800, "y": 0 }
+    },
+    {
+      "id": "n-norecipe",
+      "recipeId": "r-absent",
+      "machineCount": 1,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "position": { "x": 800, "y": 400 }
+    }
+  ],
+  "storages": [
+    {
+      "id": "s-buf",
+      "kind": "item",
+      "resourceId": "gear",
+      "displayName": "Gear",
+      "drainMode": "product",
+      "position": { "x": 600, "y": 0 }
+    },
+    {
+      "id": "s-rod",
+      "kind": "item",
+      "resourceId": "rod",
+      "displayName": "Rod",
+      "position": { "x": 1000, "y": 0 }
+    },
+    {
+      "id": "s-bolt",
+      "kind": "item",
+      "resourceId": "bolt",
+      "displayName": "Bolt",
+      "position": { "x": 600, "y": 400 }
+    }
+  ],
+  "annotations": [],
+  "pockets": [],
+  "edges": [
+    {
+      "id": "e-plate",
+      "source": "n-plate",
+      "target": "n-press",
+      "resourceKind": "item",
+      "resourceId": "plate",
+      "sourceHandle": "output:item:plate",
+      "targetHandle": "input:item:plate"
+    },
+    {
+      "id": "e-ore",
+      "source": "n-vein",
+      "target": "n-press",
+      "resourceKind": "item",
+      "resourceId": "gregtech:gt.blockores2@98",
+      "sourceHandle": "output:item:gregtech%3Agt.blockores2%4098",
+      "targetHandle": "input:item:gregtech%3Agt.blockores2%4098"
+    },
+    {
+      "id": "e-gear",
+      "source": "n-press",
+      "target": "s-buf",
+      "resourceKind": "item",
+      "resourceId": "gear",
+      "sourceHandle": "output:item:gear"
+    },
+    {
+      "id": "e-gear-out",
+      "source": "s-buf",
+      "target": "n-gone",
+      "resourceKind": "item",
+      "resourceId": "gear",
+      "targetHandle": "input:item:gear"
+    },
+    {
+      "id": "e-rod",
+      "source": "n-gone",
+      "target": "s-rod",
+      "resourceKind": "item",
+      "resourceId": "rod",
+      "sourceHandle": "output:item:rod"
+    },
+    {
+      "id": "e-bolt",
+      "source": "n-off",
+      "target": "s-bolt",
+      "resourceKind": "item",
+      "resourceId": "bolt",
+      "sourceHandle": "output:item:bolt"
+    }
+  ],
+  "fuelProfiles": []
+}

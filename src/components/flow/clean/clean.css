@@ -4,39 +4,13 @@
  * element rules (`button, input { font: inherit }`) and Tailwind's layers.
  * Everything hangs on data attributes: React rewrites className on the board.
  *
- * Tokens (mirrored in tokens.ts) are on :root so the drawers, the overview and
- * the card all read one palette.
+ * Tokens (generated from tokens.json into tokens.generated.css and tokens.generated.ts) are on :root so the drawers,
+ * the overview and the card all read one palette.
  */
+@import "./tokens.generated.css";
+
 :root,
 .cc {
-  --cc-surface: #23252a;
-  --cc-edge: #34363c;
-  --cc-hair: #2c2e34;
-  --cc-ink: #e8e9ee;
-  --cc-muted: #9a9ca4;
-  --cc-gold: #ffd257;
-  --cc-select: #22d3ee;
-  --cc-red: #e05252;
-  --cc-amber: #e0a63a;
-  --cc-ok: #5ee9b5;
-  --cc-source: #78b6f4;
-  --cc-product: #f59a5c;
-  --cc-trash: #8a93a6;
-  --cc-idle: #a8afbb;
-  --cc-accept: #4ade80;
-  --cc-wire-go: #22c55e;
-  --cc-wire-no: #ef4444;
-  --cc-key: #26282d;
-  --cc-key-hover: #2d2f35;
-  --cc-key-edge: #111317;
-  --cc-key-hi: #4a4c54;
-  --cc-key-lo: #17191d;
-  --cc-canvas: #141414;
-  --cc-canvas-dot: #26282d;
-  --cc-prompt-off: #6f737c;
-  --cc-pulse: 1.9s;
-  --cc-accept-pulse: 1.43s;
-  --cc-prompt: 1s;
   /* The app's font (Inter unless the setting says otherwise); sizes below are the mod's: x1.5 (12) figures, x1 (8)
      text, x0.75 (6) small. */
   --cc-font: var(--app-font);
@@ -72,22 +46,22 @@
 /* A problem card's frame in its reason's colour (data-tone, clean-model frameTone): the foot bar's tones, and the
    overview's (up-to-reason.ts UP_TO_COLOR). FULL, Any and no read-out keep the edge. */
 .cc-card[data-tone="bottleneck"] {
-  --cc-frame: #f06262;
+  --cc-frame: var(--cc-tone-bottleneck);
 }
 .cc-card[data-tone="starved"] {
-  --cc-frame: #e0a63a;
+  --cc-frame: var(--cc-tone-starved);
 }
 .cc-card[data-tone="clogged"] {
-  --cc-frame: #b49cf0;
+  --cc-frame: var(--cc-tone-clogged);
 }
 .cc-card[data-tone="unused"] {
-  --cc-frame: #8a8e97;
+  --cc-frame: var(--cc-tone-unused);
 }
 .cc-card[data-tone="limited"] {
-  --cc-frame: #f472b6;
+  --cc-frame: var(--cc-tone-limited);
 }
 .cc-card[data-tone="forced"] {
-  --cc-frame: #94c3f3;
+  --cc-frame: var(--cc-tone-forced);
 }
 
 /* A card in a dead loop or a clog lock (data-loop, PlanSolveExtras.loops): its outline, two pixels, pulses in the ring's
@@ -101,10 +75,10 @@
     6px 8px 7px rgba(0, 0, 0, 0.36);
 }
 .cc-card[data-loop="dead"] {
-  --cc-loop: #e0a63a;
+  --cc-loop: var(--cc-tone-starved);
 }
 .cc-card[data-loop="clog"] {
-  --cc-loop: #b49cf0;
+  --cc-loop: var(--cc-tone-clogged);
 }
 :root[data-cc-blink] .cc-card[data-loop] {
   --cc-frame: color-mix(in srgb, var(--cc-loop) 30%, var(--cc-edge));
@@ -115,10 +89,10 @@
   pointer-events: none;
 }
 .cc-loop-wire[data-loop="dead"] {
-  stroke: #e0a63a;
+  stroke: var(--cc-tone-starved);
 }
 .cc-loop-wire[data-loop="clog"] {
-  stroke: #b49cf0;
+  stroke: var(--cc-tone-clogged);
 }
 
 /* Selection and "cannot run" rings, outside the edge. */
@@ -351,10 +325,10 @@
  * A free end of the plan only changes the tile's colours, never its shape.
  */
 .cc-row {
-  --cc-tile: #2b2d33;
-  --cc-tile-edge: #121418;
-  --cc-tile-hi: #3b3e45;
-  --cc-tile-lo: #222428;
+  --cc-tile: var(--cc-set-tile-body);
+  --cc-tile-edge: var(--cc-set-tile-edge);
+  --cc-tile-hi: var(--cc-set-tile-hi);
+  --cc-tile-lo: var(--cc-set-tile-lo);
   position: relative;
   box-sizing: border-box;
   flex: none;
@@ -379,7 +353,7 @@
   align-items: flex-end;
 }
 .cc-row[data-port]:hover {
-  --cc-tile: #31343a;
+  --cc-tile: var(--cc-set-tile-hover);
 }
 /* An unwired port the plan runs through anyway is a free end of it: the tile of a source (blue, a tank) or a product
    (orange, a crate), a flat tint of it. */
@@ -387,21 +361,21 @@
   background: var(--cc-open-body);
 }
 .cc-row[data-open][data-side="input"] {
-  --cc-open-body: #292f38;
-  --cc-open-stripe: #2e3844;
-  --cc-tile-edge: #4f6986;
-  --cc-tile-hi: #3a4757;
-  --cc-tile-lo: #22272e;
+  --cc-open-body: var(--cc-set-in-body);
+  --cc-open-stripe: var(--cc-set-in-stripe);
+  --cc-tile-edge: var(--cc-set-in-edge);
+  --cc-tile-hi: var(--cc-set-in-hi);
+  --cc-tile-lo: var(--cc-set-in-lo);
 }
 .cc-row[data-open][data-side="output"] {
-  --cc-open-body: #322d2e;
-  --cc-open-stripe: #3e3431;
-  --cc-tile-edge: #815e49;
-  --cc-tile-hi: #4b3f39;
-  --cc-tile-lo: #2a2425;
+  --cc-open-body: var(--cc-set-out-body);
+  --cc-open-stripe: var(--cc-set-out-stripe);
+  --cc-tile-edge: var(--cc-set-out-edge);
+  --cc-tile-hi: var(--cc-set-out-hi);
+  --cc-tile-lo: var(--cc-set-out-lo);
 }
 .cc-row[data-open][data-side="input"] .cc-num {
-  color: #94c3f3;
+  color: var(--cc-tone-forced);
 }
 .cc-row[data-open][data-side="output"] .cc-num {
   color: #f2ae81;
@@ -612,21 +586,21 @@
   align-items: flex-end;
 }
 .cc-forced[data-kind="in"] {
-  --cc-forced-body: #292f38;
-  --cc-forced-stripe: #2e3844;
-  --cc-forced-edge: #4f6986;
-  --cc-forced-hi: #3a4757;
-  --cc-forced-lo: #22272e;
+  --cc-forced-body: var(--cc-set-in-body);
+  --cc-forced-stripe: var(--cc-set-in-stripe);
+  --cc-forced-edge: var(--cc-set-in-edge);
+  --cc-forced-hi: var(--cc-set-in-hi);
+  --cc-forced-lo: var(--cc-set-in-lo);
 }
 .cc-forced[data-kind="out"] {
-  --cc-forced-body: #322d2e;
-  --cc-forced-stripe: #3e3431;
-  --cc-forced-edge: #815e49;
-  --cc-forced-hi: #4b3f39;
-  --cc-forced-lo: #2a2425;
+  --cc-forced-body: var(--cc-set-out-body);
+  --cc-forced-stripe: var(--cc-set-out-stripe);
+  --cc-forced-edge: var(--cc-set-out-edge);
+  --cc-forced-hi: var(--cc-set-out-hi);
+  --cc-forced-lo: var(--cc-set-out-lo);
 }
 .cc-forced[data-kind="in"] .cc-num {
-  color: #94c3f3;
+  color: var(--cc-tone-forced);
 }
 .cc-forced[data-kind="out"] .cc-num {
   color: #f2ae81;
@@ -667,13 +641,13 @@
   color: var(--cc-why);
 }
 .cc-row[data-why="starved"] {
-  --cc-why: #e0a63a;
+  --cc-why: var(--cc-tone-starved);
 }
 .cc-row[data-why="clogged"] {
-  --cc-why: #b49cf0;
+  --cc-why: var(--cc-tone-clogged);
 }
 .cc-row[data-why="unused"] {
-  --cc-why: #8a8e97;
+  --cc-why: var(--cc-tone-unused);
 }
 
 /* ---- The machine's well ------------------------------------------------------ */
@@ -887,8 +861,8 @@
   --fill: 0px;
   --ghost-l: 0px;
   --ghost-w: 0px;
-  --cc-foot-fill: color-mix(in srgb, var(--tone) 30%, #17191d);
-  --cc-foot-ghost: color-mix(in srgb, var(--tone) 34%, #17191d);
+  --cc-foot-fill: color-mix(in srgb, var(--tone) 30%, var(--cc-set-foot-bg));
+  --cc-foot-ghost: color-mix(in srgb, var(--tone) 34%, var(--cc-set-foot-bg));
   position: relative;
   grid-column: 1 / -1;
   box-sizing: border-box;
@@ -905,9 +879,9 @@
   font-size: 8px;
   font-weight: 400;
   line-height: 10px;
-  color: #c8cad0;
+  color: var(--cc-set-foot-say);
   cursor: default;
-  background-color: #17191d;
+  background-color: var(--cc-set-foot-bg);
   background-image:
     linear-gradient(var(--tone), var(--tone)),
     repeating-linear-gradient(135deg, var(--cc-foot-ghost) 0 3px, transparent 3px 7px),
@@ -922,8 +896,8 @@
     var(--ghost-w) calc(100% - 4px),
     var(--fill) calc(100% - 4px);
   box-shadow:
-    inset 0 0 0 1px #0d0e11,
-    inset 1px 1px 0 1px #111215;
+    inset 0 0 0 1px var(--cc-set-foot-edge),
+    inset 1px 1px 0 1px var(--cc-set-foot-shade);
 }
 /* Where your count ends and the striped run-on starts: a line in the reason's colour. */
 .cc-foot[data-ghost] {
@@ -942,25 +916,25 @@
   color: var(--cc-ink);
 }
 .cc-foot[data-tone="full"] {
-  --tone: #5ee9b5;
+  --tone: var(--cc-tone-full);
 }
 .cc-foot[data-tone="bottleneck"] {
-  --tone: #f06262;
+  --tone: var(--cc-tone-bottleneck);
 }
 .cc-foot[data-tone="starved"] {
-  --tone: #e0a63a;
+  --tone: var(--cc-tone-starved);
 }
 .cc-foot[data-tone="clogged"] {
-  --tone: #b49cf0;
+  --tone: var(--cc-tone-clogged);
 }
 .cc-foot[data-tone="unused"] {
-  --tone: #8a8e97;
+  --tone: var(--cc-tone-unused);
 }
 .cc-foot[data-tone="limited"] {
-  --tone: #f472b6;
+  --tone: var(--cc-tone-limited);
 }
 .cc-foot[data-tone="forced"] {
-  --tone: #94c3f3;
+  --tone: var(--cc-tone-forced);
 }
 
 /* ---- Settings strip ------------------------------------------------------- */
@@ -1012,6 +986,15 @@
   border-color: #6b2a2a;
   color: var(--cc-red);
 }
+/* A setting another setting turns off: shown greyed, as the settings sheet greys its row. */
+.cc-sc[data-off] {
+  opacity: 0.45;
+  cursor: default;
+}
+.cc-sc[data-off]:hover {
+  border-color: var(--cc-edge);
+  background-color: #2a2c31;
+}
 .cc-sc[data-reading] {
   padding: 0;
   border: 0;
@@ -1054,8 +1037,8 @@
 .cc-glance[data-bar] {
   --glance-tone: var(--cc-muted);
   --glance-bar-h: 36px;
-  --glance-track: #17191d;
-  --glance-fill-ink: color-mix(in srgb, var(--glance-tone) 45%, #17191d);
+  --glance-track: var(--cc-set-foot-glance-track);
+  --glance-fill-ink: color-mix(in srgb, var(--glance-tone) 45%, var(--cc-set-foot-glance-track));
   /* The picture's widest: the card's 320 less 12 a side. With its width over height (--glance-art-ratio, glance.ts)
      it stays whole on a tall card (a shared machine's), as the mod fits it: sized by the height alone it ran to
      twice the card's width there and showed a blown-up middle. Centred in the room above the bar. */
@@ -1083,22 +1066,22 @@
   bottom: calc(var(--glance-bar-h) + 2px + 4px / var(--board-zoom, 1));
 }
 .cc-glance[data-tone="full"] {
-  --glance-tone: #5ee9b5;
+  --glance-tone: var(--cc-tone-full);
 }
 .cc-glance[data-tone="bottleneck"] {
-  --glance-tone: #f06262;
+  --glance-tone: var(--cc-tone-bottleneck);
 }
 .cc-glance[data-tone="starved"] {
-  --glance-tone: #e0a63a;
+  --glance-tone: var(--cc-tone-starved);
 }
 .cc-glance[data-tone="clogged"] {
-  --glance-tone: #b49cf0;
+  --glance-tone: var(--cc-tone-clogged);
 }
 .cc-glance[data-tone="unused"] {
-  --glance-tone: #8a8e97;
+  --glance-tone: var(--cc-tone-unused);
 }
 .cc-glance[data-tone="limited"] {
-  --glance-tone: #f472b6;
+  --glance-tone: var(--cc-tone-limited);
 }
 /* What the card makes (glance.ts `glanceProduct`): its first output's icon in the top-left corner, the first
    background layer of the same element, 120 card pixels like the bar's sizes, so a zoom re-lays nothing out and the

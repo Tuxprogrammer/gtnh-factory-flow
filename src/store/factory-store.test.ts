@@ -1129,6 +1129,19 @@ describe("factory resource links", () => {
     expect(after.recipes.find((recipe) => recipe.id === rekeyed.id)?.machineHandlers?.[0]?.maximumTier).toBe("HV");
   });
 
+  it("keeps a stored recipe object when the dataset's body is the same, and takes the body when it differs", () => {
+    const before = useFactoryStore.getState().project;
+    const stored = before.recipes.find((recipe) => recipe.id === "item-recipe") ?? before.recipes[0]!;
+    useFactoryStore.getState().refreshProjectRecipes([structuredClone(stored)]);
+    expect(useFactoryStore.getState().project.recipes.find((recipe) => recipe.id === stored.id)).toBe(stored);
+
+    const changed = { ...structuredClone(stored), durationTicks: stored.durationTicks + 1 };
+    useFactoryStore.getState().refreshProjectRecipes([changed]);
+    const after = useFactoryStore.getState().project.recipes.find((recipe) => recipe.id === stored.id)!;
+    expect(after).not.toBe(stored);
+    expect(after.durationTicks).toBe(stored.durationTicks + 1);
+  });
+
   it("keeps the machine a game recipe names when the dataset's body lacks it", () => {
     const before = useFactoryStore.getState().project;
     const original = before.recipes.find((recipe) => recipe.id === "item-recipe") ?? before.recipes[0]!;

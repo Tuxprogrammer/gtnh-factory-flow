@@ -1,0 +1,5167 @@
+{
+  "schemaVersion": 1,
+  "name": "mv",
+  "description": "Made in the game",
+  "icon": {
+    "kind": "item",
+    "resourceId": "minecraft:iron_ingot",
+    "displayName": "minecraft:iron_ingot"
+  },
+  "solveMode": true,
+  "planMode": true,
+  "primaryView": "plan",
+  "metadata": {
+    "source": "GTNH Planner"
+  },
+  "gtnhplanner": {
+    "v": 1,
+    "game": {
+      "balanceMode": "AUTO",
+      "settingPins": {
+        "item:gregtech:gt.blockmachines:1000": [
+          "voltage",
+          "amp"
+        ]
+      },
+      "groups": [
+        {
+          "width": 700,
+          "height": 400,
+          "color": 2134075033,
+          "collapsed": false,
+          "clampNodes": false,
+          "coverChildren": false,
+          "children": {},
+          "nodeIds": [
+            "87ccb716-efde-4642-b04f-89939f9d7423"
+          ],
+          "id": "b2afdb4f-4fae-3b10-983e-47cafb8913c7",
+          "x": 5,
+          "y": 6,
+          "header": "Ore line",
+          "type": "group"
+        }
+      ],
+      "icon": "item:minecraft:iron_ingot:0"
+    },
+    "sum": "81a512ade358df27"
+  },
+  "id": "mod-corpus-mv",
+  "nodes": [
+    {
+      "id": "87ccb716-efde-4642-b04f-89939f9d7423",
+      "recipeId": "gtnhplanner:87ccb716-efde-4642-b04f-89939f9d7423",
+      "machineCount": 4.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "machineConfigTiers": {
+        "circuit": "3"
+      },
+      "solvePin": 4.0,
+      "solvePinExact": true,
+      "portRates": {
+        "input:item:Charcoal": 2.5
+      },
+      "position": {
+        "x": 154,
+        "y": 240
+      },
+      "pocketId": "a583fad4-70b3-31e5-8fdb-3a4495680c1e",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:512",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 4,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputTargets": {
+            "0": 2.5
+          },
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 0.1
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "machines": 4,
+              "tick_modifier": 150,
+              "machine:circuit": "3"
+            }
+          },
+          "worlds": {
+            "": [
+              [
+                0,
+                100,
+                64,
+                -200,
+                2
+              ]
+            ]
+          }
+        },
+        "sum": "190f04f6ca628c7d"
+      }
+    },
+    {
+      "id": "88e0c186-56cc-459c-81c7-fe5d66cbfcd6",
+      "recipeId": "gtnhplanner:88e0c186-56cc-459c-81c7-fe5d66cbfcd6",
+      "machineCount": 20.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "position": {
+        "x": 398,
+        "y": 41
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "Fluid Tank",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 20,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "machines": 20
+            }
+          }
+        },
+        "sum": "c7189529b7cef17f"
+      }
+    },
+    {
+      "id": "9215fedb-1748-472a-bda3-d267b11bd4af",
+      "recipeId": "gtnhplanner:9215fedb-1748-472a-bda3-d267b11bd4af",
+      "machineCount": 20.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "position": {
+        "x": 759,
+        "y": 41
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "Fluid Tank",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 20,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "machines": 20
+            }
+          }
+        },
+        "sum": "ad9f38e3a9f5c8ef"
+      }
+    },
+    {
+      "id": "9ef7e919-d7f9-4531-ba18-7024e43e1399",
+      "recipeId": "gtnhplanner:9ef7e919-d7f9-4531-ba18-7024e43e1399",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1120,
+        "y": 41
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:423",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "3825b36ef59347c9"
+      }
+    },
+    {
+      "id": "a0ce7c79-6ba9-40df-8f16-de05c6355594",
+      "recipeId": "gtnhplanner:a0ce7c79-6ba9-40df-8f16-de05c6355594",
+      "machineCount": 4.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 4.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1481,
+        "y": 41
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:372",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 4,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "machines": 4
+            }
+          }
+        },
+        "sum": "d70037e5428632d7"
+      }
+    },
+    {
+      "id": "a7228e91-cc91-40e4-8296-2f9afa3d2768",
+      "recipeId": "gtnhplanner:a7228e91-cc91-40e4-8296-2f9afa3d2768",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1842,
+        "y": 41
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:231",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "091fe0eb0a8635d1"
+      }
+    },
+    {
+      "id": "b4c4be87-1a44-484c-999c-8e2b519f415e",
+      "recipeId": "gtnhplanner:b4c4be87-1a44-484c-999c-8e2b519f415e",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 37,
+        "y": 304
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:232",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "ef20ee7e99e4f243"
+      }
+    },
+    {
+      "id": "c902e1bc-a541-425e-83b1-4eb325bb5bf1",
+      "recipeId": "gtnhplanner:c902e1bc-a541-425e-83b1-4eb325bb5bf1",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 398,
+        "y": 304
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:421",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "73ee8f9e2509c745"
+      }
+    },
+    {
+      "id": "cf496d73-dcc7-4c41-b5a7-2b03507b025b",
+      "recipeId": "gtnhplanner:cf496d73-dcc7-4c41-b5a7-2b03507b025b",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 759,
+        "y": 304
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:421",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "019c5e831a2aea34"
+      }
+    },
+    {
+      "id": "e0d49633-b166-41fd-b6bc-699474ffddd9",
+      "recipeId": "gtnhplanner:e0d49633-b166-41fd-b6bc-699474ffddd9",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1120,
+        "y": 304
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:231",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "225962cfbbd093aa"
+      }
+    },
+    {
+      "id": "e2c76404-dc1f-4fde-bd40-3e63d0852962",
+      "recipeId": "gtnhplanner:e2c76404-dc1f-4fde-bd40-3e63d0852962",
+      "machineCount": 32.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 32.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1481,
+        "y": 304
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "Gas Turbine",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 32,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 0.8916324
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "machines": 32
+            }
+          }
+        },
+        "sum": "7237cf81a8b3e680"
+      }
+    },
+    {
+      "id": "f09fba72-dba6-463e-a511-5f16a8155801",
+      "recipeId": "gtnhplanner:f09fba72-dba6-463e-a511-5f16a8155801",
+      "machineCount": 8.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 8.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1842,
+        "y": 304
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:542",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 8,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "machines": 8
+            }
+          }
+        },
+        "sum": "ca8f66bc01feafc6"
+      }
+    },
+    {
+      "id": "f4a3a382-ffad-4ff7-a2de-dbbca247aa3b",
+      "recipeId": "gtnhplanner:f4a3a382-ffad-4ff7-a2de-dbbca247aa3b",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 37,
+        "y": 567
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:422",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "bdcf87a3ac691ac6"
+      }
+    },
+    {
+      "id": "ff654464-e1ab-4bf7-a9a2-cd82830446a3",
+      "recipeId": "gtnhplanner:ff654464-e1ab-4bf7-a9a2-cd82830446a3",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 398,
+        "y": 567
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:623",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "ba33d581eaf7a3f5"
+      }
+    },
+    {
+      "id": "047036af-1d7b-4bf0-93b5-c264256ead18",
+      "recipeId": "gtnhplanner:047036af-1d7b-4bf0-93b5-c264256ead18",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 759,
+        "y": 567
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:232",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "bc87f93f70aefc90"
+      }
+    },
+    {
+      "id": "07f84300-64b1-4d35-84e5-e19402ad6dab",
+      "recipeId": "gtnhplanner:07f84300-64b1-4d35-84e5-e19402ad6dab",
+      "machineCount": 10.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 10.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1120,
+        "y": 567
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:15546",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 10,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "machines": 10
+            }
+          }
+        },
+        "sum": "94c6f845df687dc6"
+      }
+    },
+    {
+      "id": "0aa114d4-02d2-4dfb-b93e-68cb25b10fbe",
+      "recipeId": "gtnhplanner:0aa114d4-02d2-4dfb-b93e-68cb25b10fbe",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1481,
+        "y": 567
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:421",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "962112006d5166a5"
+      }
+    },
+    {
+      "id": "0eb656ec-c8d6-4b11-962d-d8a74fab4ea2",
+      "recipeId": "gtnhplanner:0eb656ec-c8d6-4b11-962d-d8a74fab4ea2",
+      "machineCount": 8.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 8.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1842,
+        "y": 567
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:532",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 8,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "machines": 8
+            }
+          }
+        },
+        "sum": "d302cab99f19da57"
+      }
+    },
+    {
+      "id": "0ee804b0-4514-4d08-accb-6e4160804739",
+      "recipeId": "gtnhplanner:0ee804b0-4514-4d08-accb-6e4160804739",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 37,
+        "y": 830
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:421",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "aae87a1e8dc99813"
+      }
+    },
+    {
+      "id": "1b5c5b51-7abe-48d2-8ae7-a46789dd4e72",
+      "recipeId": "gtnhplanner:1b5c5b51-7abe-48d2-8ae7-a46789dd4e72",
+      "machineCount": 4.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 4.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 398,
+        "y": 830
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:362",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 4,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 0.96
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 0.90000004
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 0.45
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "machines": 4
+            }
+          }
+        },
+        "sum": "c068e9a36ce78784"
+      }
+    },
+    {
+      "id": "1f6af305-2fe9-4446-856b-a98267850602",
+      "recipeId": "gtnhplanner:1f6af305-2fe9-4446-856b-a98267850602",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 759,
+        "y": 830
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:421",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "9f04047c6430e2dd"
+      }
+    },
+    {
+      "id": "377a499f-2288-4981-997e-75aa8ba3d707",
+      "recipeId": "gtnhplanner:377a499f-2288-4981-997e-75aa8ba3d707",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1120,
+        "y": 830
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:1169",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "b456b6615bbad604"
+      }
+    },
+    {
+      "id": "3ba27523-3df4-48b0-9c34-6758946090ec",
+      "recipeId": "gtnhplanner:3ba27523-3df4-48b0-9c34-6758946090ec",
+      "machineCount": 12.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 12.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1481,
+        "y": 830
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "Gas Turbine",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 12,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 0.9984639
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "machines": 12
+            }
+          }
+        },
+        "sum": "0a7af45a08f20c62"
+      }
+    },
+    {
+      "id": "3c22b8b9-01e8-499d-a0f0-6cd9b4de462b",
+      "recipeId": "gtnhplanner:3c22b8b9-01e8-499d-a0f0-6cd9b4de462b",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1842,
+        "y": 830
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:231",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "1b7405e5f77311bd"
+      }
+    },
+    {
+      "id": "41ce918e-044a-4ea7-8d56-dbd55054050b",
+      "recipeId": "gtnhplanner:41ce918e-044a-4ea7-8d56-dbd55054050b",
+      "machineCount": 12.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 12.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 37,
+        "y": 1093
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:372",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 12,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "machines": 12
+            }
+          }
+        },
+        "sum": "f6b8246e0ade1080"
+      }
+    },
+    {
+      "id": "520a24dc-88b1-4083-a0c3-3313823c5619",
+      "recipeId": "gtnhplanner:520a24dc-88b1-4083-a0c3-3313823c5619",
+      "machineCount": 16.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 16.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 398,
+        "y": 1093
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "Large Combustion Engine",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 16,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 0.55888224
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "machines": 16
+            }
+          }
+        },
+        "sum": "9ae6f80d024df907"
+      }
+    },
+    {
+      "id": "61bb0c34-56bc-47e2-9126-6a8a3c9f0d4b",
+      "recipeId": "gtnhplanner:61bb0c34-56bc-47e2-9126-6a8a3c9f0d4b",
+      "machineCount": 24.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 24.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 759,
+        "y": 1093
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:372",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 24,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "machines": 24
+            }
+          }
+        },
+        "sum": "5fdd628fdb3dd127"
+      }
+    },
+    {
+      "id": "64194438-2957-4218-a0bf-3ba38a52ccdd",
+      "recipeId": "gtnhplanner:64194438-2957-4218-a0bf-3ba38a52ccdd",
+      "machineCount": 8.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 8.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1120,
+        "y": 1093
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:422",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 8,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "machines": 8
+            }
+          }
+        },
+        "sum": "2f11b2a536c16cad"
+      }
+    },
+    {
+      "id": "64d19cf9-c9f6-4ccb-a702-4a068612a0ca",
+      "recipeId": "gtnhplanner:64d19cf9-c9f6-4ccb-a702-4a068612a0ca",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1481,
+        "y": 1093
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:232",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "98eb597ac5324ce4"
+      }
+    },
+    {
+      "id": "65c7d501-36ec-4643-9216-81305b3edb5a",
+      "recipeId": "gtnhplanner:65c7d501-36ec-4643-9216-81305b3edb5a",
+      "machineCount": 4.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 4.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1842,
+        "y": 1093
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:422",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 4,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "machines": 4
+            }
+          }
+        },
+        "sum": "ff82789fd833d65c"
+      }
+    },
+    {
+      "id": "6ab1fe5e-3680-41b0-960c-619133a57b5a",
+      "recipeId": "gtnhplanner:6ab1fe5e-3680-41b0-960c-619133a57b5a",
+      "machineCount": 4.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 4.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 37,
+        "y": 1356
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:372",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 4,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "machines": 4
+            }
+          }
+        },
+        "sum": "d463f123d6f969ae"
+      }
+    },
+    {
+      "id": "747c0180-d902-44d4-a39c-9a80aefbf435",
+      "recipeId": "gtnhplanner:747c0180-d902-44d4-a39c-9a80aefbf435",
+      "machineCount": 1.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 1.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 398,
+        "y": 1356
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "Large Semifluid Burner",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 1,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 0.55888224
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ]
+        },
+        "sum": "9ede343db2ec3771"
+      }
+    },
+    {
+      "id": "789f1738-b577-4590-b789-0760d18c98fb",
+      "recipeId": "gtnhplanner:789f1738-b577-4590-b789-0760d18c98fb",
+      "machineCount": 2.0,
+      "parallel": 1,
+      "overclockTier": "LV",
+      "enabled": true,
+      "solvePin": 2.0,
+      "solvePinExact": true,
+      "position": {
+        "x": 1234,
+        "y": -567
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "machine": "item:gregtech:gt.blockmachines:422",
+          "handlerRecipeIndex": 0,
+          "extractorIndex": 0,
+          "machineCount": 2,
+          "machineCountFixed": true,
+          "machineCountExact": true,
+          "inputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            },
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "outputs": [
+            {
+              "type": "test_ingredient",
+              "chance": 1.0
+            }
+          ],
+          "machineConfig": {
+            "settings": {
+              "machines": 2
+            }
+          }
+        },
+        "sum": "f5b7f565bf68c067"
+      }
+    }
+  ],
+  "storages": [
+    {
+      "id": "8e08fcc8-8c04-4199-8172-6560352e0b02",
+      "kind": "item",
+      "resourceId": "Water",
+      "displayName": "Water",
+      "position": {
+        "x": 220,
+        "y": 324
+      },
+      "pocketId": "9da1139b-91eb-39d6-9d9b-a6e56591aa73",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "SOURCE",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:water:0",
+          "label": "Water",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "bc5870773d6ef19d"
+      }
+    },
+    {
+      "id": "9081a48e-40d5-4415-a6ec-fcac2e378c40",
+      "kind": "item",
+      "resourceId": "Carbon Dust",
+      "displayName": "Carbon Dust",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 110
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "PRODUCT",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:carbon dust:0",
+          "label": "Carbon Dust",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "5a3a2326e14095a2"
+      }
+    },
+    {
+      "id": "9d072769-0c05-443c-af65-1c5800da78a1",
+      "kind": "item",
+      "resourceId": "Empty Cell",
+      "displayName": "Empty Cell",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 207
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "PRODUCT",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:empty cell:0",
+          "label": "Empty Cell",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "458a9d9258f3a03f"
+      }
+    },
+    {
+      "id": "a42828eb-e1fb-44ee-859f-1e5f4a3aa2bc",
+      "kind": "item",
+      "resourceId": "Chlorine",
+      "displayName": "Chlorine",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 304
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "PRODUCT",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:chlorine:0",
+          "label": "Chlorine",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "57982c69fba064b4"
+      }
+    },
+    {
+      "id": "b1c09f98-ccdf-4ca4-8001-727627e07f39",
+      "kind": "item",
+      "resourceId": "Banded Iron Dust",
+      "displayName": "Banded Iron Dust",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 401
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "PRODUCT",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:banded iron dust:0",
+          "label": "Banded Iron Dust",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "60085a1a2c66bd15"
+      }
+    },
+    {
+      "id": "b4817ae6-7d71-4892-93ca-d1a3e566422a",
+      "kind": "item",
+      "resourceId": "Propene Cell",
+      "displayName": "Propene Cell",
+      "position": {
+        "x": -303,
+        "y": 498
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "SOURCE",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:propene cell:0",
+          "label": "Propene Cell",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "fc24a8c379ae9e79"
+      }
+    },
+    {
+      "id": "b670521f-5ec4-46d6-89df-68ecf07180f6",
+      "kind": "item",
+      "resourceId": "Phenol",
+      "displayName": "Phenol",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 595
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "PRODUCT",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:phenol:0",
+          "label": "Phenol",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "e1fadedfdd6e4783"
+      }
+    },
+    {
+      "id": "bc2370d4-a70f-4ec0-98ef-b5610bf391ee",
+      "kind": "item",
+      "resourceId": "Phosphorus Pentoxide Dust",
+      "displayName": "Phosphorus Pentoxide Dust",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 692
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "PRODUCT",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:phosphorus pentoxide dust:0",
+          "label": "Phosphorous Pentoxide Dust",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "c2c78c28b8a8ef95"
+      }
+    },
+    {
+      "id": "bd63e63c-60f4-4ee4-9f29-6f025b640a14",
+      "kind": "item",
+      "resourceId": "Phosphoric Acid Cell",
+      "displayName": "Phosphoric Acid Cell",
+      "position": {
+        "x": -303,
+        "y": 789
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "SOURCE",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:phosphoric acid cell:0",
+          "label": "Phosphoric Acid Cell",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "73d55e7df36d240e"
+      }
+    },
+    {
+      "id": "ccaaa14c-65d0-4546-900d-b18019c1d2c8",
+      "kind": "item",
+      "resourceId": "EU",
+      "displayName": "EU",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 886
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "PRODUCT",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:eu:0",
+          "label": "EU",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "75a21d9e83e8ca6e"
+      }
+    },
+    {
+      "id": "cd2ed24e-0ee5-4dae-ba9d-0196d8899475",
+      "kind": "item",
+      "resourceId": "Potassium Dust",
+      "displayName": "Potassium Dust",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 983
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "PRODUCT",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:potassium dust:0",
+          "label": "Potassium Dust",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "daa4c35b060f6753"
+      }
+    },
+    {
+      "id": "d9bfc31a-13ef-42bd-8c42-df0f46e4d2be",
+      "kind": "item",
+      "resourceId": "Lubricant",
+      "displayName": "Lubricant",
+      "position": {
+        "x": -303,
+        "y": 1080
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "SOURCE",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:lubricant:0",
+          "label": "Lubricant",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "fb227595beca62a0"
+      }
+    },
+    {
+      "id": "db2c6947-5070-43b0-8f8f-88c3b69056d6",
+      "kind": "item",
+      "resourceId": "Magnesia Dust",
+      "displayName": "Magnesia Dust",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 1177
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "PRODUCT",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:magnesia dust:0",
+          "label": "Magnesia Dust",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "8184487e26e4e167"
+      }
+    },
+    {
+      "id": "e011889e-05a9-441c-b759-18754c21eb2f",
+      "kind": "item",
+      "resourceId": "Oxygen",
+      "displayName": "Oxygen",
+      "position": {
+        "x": -303,
+        "y": 1274
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "SOURCE",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:oxygen:0",
+          "label": "Oxygen",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "bdf9643e96757957"
+      }
+    },
+    {
+      "id": "e7877c6b-9eb0-4170-ac4f-ced056b8e602",
+      "kind": "item",
+      "resourceId": "Oxygen",
+      "displayName": "Oxygen",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 1371
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "PRODUCT",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:oxygen:0",
+          "label": "Oxygen",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "1d5d2bf2b7f2cfe8"
+      }
+    },
+    {
+      "id": "38bf41a2-0ae6-474d-9014-adc5c10105a2",
+      "kind": "item",
+      "resourceId": "EU",
+      "displayName": "EU",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 1468
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "PRODUCT",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:eu:0",
+          "label": "EU",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "d94e67091daf7136"
+      }
+    },
+    {
+      "id": "3bbf82bd-3d61-4a3f-97f8-226263dca320",
+      "kind": "item",
+      "resourceId": "Soda Ash Dust",
+      "displayName": "Soda Ash Dust",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 1565
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "PRODUCT",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:soda ash dust:0",
+          "label": "Soda Ash Dust",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "aa7dac0f428fff57"
+      }
+    },
+    {
+      "id": "420fd9c2-3dd5-47d2-acfc-db620cab4aa2",
+      "kind": "item",
+      "resourceId": "Charcoal",
+      "displayName": "Charcoal",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 1662
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "PRODUCT",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:charcoal:0",
+          "label": "Charcoal",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "039ebd10db84c8ff"
+      }
+    },
+    {
+      "id": "461ca716-3064-4573-9b0b-00e9beafb8f7",
+      "kind": "item",
+      "resourceId": "Potash Dust",
+      "displayName": "Potash Dust",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 1759
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "PRODUCT",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:potash dust:0",
+          "label": "Potash Dust",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "15473366a528fa01"
+      }
+    },
+    {
+      "id": "5278afe1-bde5-4286-948f-a922be3b8020",
+      "kind": "item",
+      "resourceId": "Quicklime Dust",
+      "displayName": "Quicklime Dust",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 1856
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "PRODUCT",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:quicklime dust:0",
+          "label": "Quicklime Dust",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "d1af89ab03247302"
+      }
+    },
+    {
+      "id": "64f8ff03-878e-45cb-91a4-4713f23e18f9",
+      "kind": "item",
+      "resourceId": "EU",
+      "displayName": "EU",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 1953
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "PRODUCT",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:eu:0",
+          "label": "EU",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "d1859a531c0f1074"
+      }
+    },
+    {
+      "id": "6be66b93-bb6a-48bf-b55c-fd184c04bc37",
+      "kind": "item",
+      "resourceId": "Water",
+      "displayName": "Water",
+      "position": {
+        "x": -303,
+        "y": 2050
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "SOURCE",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:water:0",
+          "label": "Water",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "e93be8584affc1f2"
+      }
+    },
+    {
+      "id": "6bfcefcb-1926-41f9-8620-e3cf8d4cd6c6",
+      "kind": "item",
+      "resourceId": "Empty Cell",
+      "displayName": "Empty Cell",
+      "position": {
+        "x": -303,
+        "y": 2147
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "SOURCE",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:empty cell:0",
+          "label": "Empty Cell",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "b5800dfe06d47612"
+      }
+    },
+    {
+      "id": "75e1ffa1-87cd-4a8f-b1e4-18a73fa24a8a",
+      "kind": "item",
+      "resourceId": "Water",
+      "displayName": "Water",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 2244
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "PRODUCT",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:water:0",
+          "label": "Water",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "52844c4db673001b"
+      }
+    },
+    {
+      "id": "782ce3df-1194-4c02-8c68-b0897a11a4a8",
+      "kind": "item",
+      "resourceId": "EU",
+      "displayName": "EU",
+      "drainMode": "product",
+      "position": {
+        "x": -303,
+        "y": 2341
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "kind": "PRODUCT",
+          "rule": "ANY",
+          "rate": 0.0,
+          "resourceKey": "item:eu:0",
+          "label": "EU",
+          "header": "Drawer",
+          "type": "drawer"
+        },
+        "sum": "6e53b4ea306b73d9"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "8e08fcc8-8c04-4199-8172-6560352e0b02:f09fba72-dba6-463e-a511-5f16a8155801:1",
+      "source": "8e08fcc8-8c04-4199-8172-6560352e0b02",
+      "target": "f09fba72-dba6-463e-a511-5f16a8155801",
+      "sourceHandle": "output:item:Water",
+      "targetHandle": "input:item:Water",
+      "resourceKind": "item",
+      "resourceId": "Water",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 1
+        },
+        "sum": "2a3e68071cfbf5ae"
+      }
+    },
+    {
+      "id": "9081a48e-40d5-4415-a6ec-fcac2e378c40:41ce918e-044a-4ea7-8d56-dbd55054050b:0",
+      "source": "41ce918e-044a-4ea7-8d56-dbd55054050b",
+      "target": "9081a48e-40d5-4415-a6ec-fcac2e378c40",
+      "sourceHandle": "output:item:Carbon%20Dust",
+      "targetHandle": "input:item:Carbon%20Dust",
+      "resourceKind": "item",
+      "resourceId": "Carbon Dust",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 0
+        },
+        "sum": "097f0ebd4a028359"
+      }
+    },
+    {
+      "id": "9d072769-0c05-443c-af65-1c5800da78a1:c902e1bc-a541-425e-83b1-4eb325bb5bf1:0",
+      "source": "c902e1bc-a541-425e-83b1-4eb325bb5bf1",
+      "target": "9d072769-0c05-443c-af65-1c5800da78a1",
+      "sourceHandle": "output:item:Empty%20Cell",
+      "targetHandle": "input:item:Empty%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Empty Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 0
+        },
+        "sum": "6a98a471be2e9ecc"
+      }
+    },
+    {
+      "id": "a42828eb-e1fb-44ee-859f-1e5f4a3aa2bc:a0ce7c79-6ba9-40df-8f16-de05c6355594:1",
+      "source": "a0ce7c79-6ba9-40df-8f16-de05c6355594",
+      "target": "a42828eb-e1fb-44ee-859f-1e5f4a3aa2bc",
+      "sourceHandle": "output:item:Chlorine",
+      "targetHandle": "input:item:Chlorine",
+      "resourceKind": "item",
+      "resourceId": "Chlorine",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 1
+        },
+        "sum": "ceff6a8b3b096ca3"
+      }
+    },
+    {
+      "id": "a42828eb-e1fb-44ee-859f-1e5f4a3aa2bc:61bb0c34-56bc-47e2-9126-6a8a3c9f0d4b:1",
+      "source": "61bb0c34-56bc-47e2-9126-6a8a3c9f0d4b",
+      "target": "a42828eb-e1fb-44ee-859f-1e5f4a3aa2bc",
+      "sourceHandle": "output:item:Chlorine",
+      "targetHandle": "input:item:Chlorine",
+      "resourceKind": "item",
+      "resourceId": "Chlorine",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 1
+        },
+        "sum": "e940490507358743"
+      }
+    },
+    {
+      "id": "b1c09f98-ccdf-4ca4-8001-727627e07f39:1b5c5b51-7abe-48d2-8ae7-a46789dd4e72:5",
+      "source": "1b5c5b51-7abe-48d2-8ae7-a46789dd4e72",
+      "target": "b1c09f98-ccdf-4ca4-8001-727627e07f39",
+      "sourceHandle": "output:item:Banded%20Iron%20Dust",
+      "targetHandle": "input:item:Banded%20Iron%20Dust",
+      "resourceKind": "item",
+      "resourceId": "Banded Iron Dust",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 5
+        },
+        "sum": "19ff6e45a52fd143"
+      }
+    },
+    {
+      "id": "b4817ae6-7d71-4892-93ca-d1a3e566422a:c902e1bc-a541-425e-83b1-4eb325bb5bf1:0",
+      "source": "b4817ae6-7d71-4892-93ca-d1a3e566422a",
+      "target": "c902e1bc-a541-425e-83b1-4eb325bb5bf1",
+      "sourceHandle": "output:item:Propene%20Cell",
+      "targetHandle": "input:item:Propene%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Propene Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 0
+        },
+        "sum": "5c84f4aceb99793d"
+      }
+    },
+    {
+      "id": "b670521f-5ec4-46d6-89df-68ecf07180f6:a7228e91-cc91-40e4-8296-2f9afa3d2768:1",
+      "source": "a7228e91-cc91-40e4-8296-2f9afa3d2768",
+      "target": "b670521f-5ec4-46d6-89df-68ecf07180f6",
+      "sourceHandle": "output:item:Phenol",
+      "targetHandle": "input:item:Phenol",
+      "resourceKind": "item",
+      "resourceId": "Phenol",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 1
+        },
+        "sum": "b522bec9a188ccb5"
+      }
+    },
+    {
+      "id": "bc2370d4-a70f-4ec0-98ef-b5610bf391ee:1b5c5b51-7abe-48d2-8ae7-a46789dd4e72:3",
+      "source": "1b5c5b51-7abe-48d2-8ae7-a46789dd4e72",
+      "target": "bc2370d4-a70f-4ec0-98ef-b5610bf391ee",
+      "sourceHandle": "output:item:Phosphorus%20Pentoxide%20Dust",
+      "targetHandle": "input:item:Phosphorus%20Pentoxide%20Dust",
+      "resourceKind": "item",
+      "resourceId": "Phosphorus Pentoxide Dust",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 3
+        },
+        "sum": "4067331f6edb0889"
+      }
+    },
+    {
+      "id": "bd63e63c-60f4-4ee4-9f29-6f025b640a14:c902e1bc-a541-425e-83b1-4eb325bb5bf1:1",
+      "source": "bd63e63c-60f4-4ee4-9f29-6f025b640a14",
+      "target": "c902e1bc-a541-425e-83b1-4eb325bb5bf1",
+      "sourceHandle": "output:item:Phosphoric%20Acid%20Cell",
+      "targetHandle": "input:item:Phosphoric%20Acid%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Phosphoric Acid Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 1
+        },
+        "sum": "2526d72244c26266"
+      }
+    },
+    {
+      "id": "ccaaa14c-65d0-4546-900d-b18019c1d2c8:e2c76404-dc1f-4fde-bd40-3e63d0852962:0",
+      "source": "e2c76404-dc1f-4fde-bd40-3e63d0852962",
+      "target": "ccaaa14c-65d0-4546-900d-b18019c1d2c8",
+      "sourceHandle": "output:item:EU",
+      "targetHandle": "input:item:EU",
+      "resourceKind": "item",
+      "resourceId": "EU",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 0
+        },
+        "sum": "a2d08ca3cb1d8520"
+      }
+    },
+    {
+      "id": "cd2ed24e-0ee5-4dae-ba9d-0196d8899475:a0ce7c79-6ba9-40df-8f16-de05c6355594:0",
+      "source": "a0ce7c79-6ba9-40df-8f16-de05c6355594",
+      "target": "cd2ed24e-0ee5-4dae-ba9d-0196d8899475",
+      "sourceHandle": "output:item:Potassium%20Dust",
+      "targetHandle": "input:item:Potassium%20Dust",
+      "resourceKind": "item",
+      "resourceId": "Potassium Dust",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 0
+        },
+        "sum": "d93832d952116714"
+      }
+    },
+    {
+      "id": "cd2ed24e-0ee5-4dae-ba9d-0196d8899475:6ab1fe5e-3680-41b0-960c-619133a57b5a:0",
+      "source": "6ab1fe5e-3680-41b0-960c-619133a57b5a",
+      "target": "cd2ed24e-0ee5-4dae-ba9d-0196d8899475",
+      "sourceHandle": "output:item:Potassium%20Dust",
+      "targetHandle": "input:item:Potassium%20Dust",
+      "resourceKind": "item",
+      "resourceId": "Potassium Dust",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 0
+        },
+        "sum": "d07d4cdf9201627d"
+      }
+    },
+    {
+      "id": "d9bfc31a-13ef-42bd-8c42-df0f46e4d2be:520a24dc-88b1-4083-a0c3-3313823c5619:1",
+      "source": "d9bfc31a-13ef-42bd-8c42-df0f46e4d2be",
+      "target": "520a24dc-88b1-4083-a0c3-3313823c5619",
+      "sourceHandle": "output:item:Lubricant",
+      "targetHandle": "input:item:Lubricant",
+      "resourceKind": "item",
+      "resourceId": "Lubricant",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 1
+        },
+        "sum": "0793582eb7964a42"
+      }
+    },
+    {
+      "id": "d9bfc31a-13ef-42bd-8c42-df0f46e4d2be:747c0180-d902-44d4-a39c-9a80aefbf435:1",
+      "source": "d9bfc31a-13ef-42bd-8c42-df0f46e4d2be",
+      "target": "747c0180-d902-44d4-a39c-9a80aefbf435",
+      "sourceHandle": "output:item:Lubricant",
+      "targetHandle": "input:item:Lubricant",
+      "resourceKind": "item",
+      "resourceId": "Lubricant",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 1
+        },
+        "sum": "d9e74cdd6117af67"
+      }
+    },
+    {
+      "id": "db2c6947-5070-43b0-8f8f-88c3b69056d6:1b5c5b51-7abe-48d2-8ae7-a46789dd4e72:2",
+      "source": "1b5c5b51-7abe-48d2-8ae7-a46789dd4e72",
+      "target": "db2c6947-5070-43b0-8f8f-88c3b69056d6",
+      "sourceHandle": "output:item:Magnesia%20Dust",
+      "targetHandle": "input:item:Magnesia%20Dust",
+      "resourceKind": "item",
+      "resourceId": "Magnesia Dust",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 2
+        },
+        "sum": "514a61b507fc6b28"
+      }
+    },
+    {
+      "id": "e011889e-05a9-441c-b759-18754c21eb2f:747c0180-d902-44d4-a39c-9a80aefbf435:2",
+      "source": "e011889e-05a9-441c-b759-18754c21eb2f",
+      "target": "747c0180-d902-44d4-a39c-9a80aefbf435",
+      "sourceHandle": "output:item:Oxygen",
+      "targetHandle": "input:item:Oxygen",
+      "resourceKind": "item",
+      "resourceId": "Oxygen",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 2
+        },
+        "sum": "69a75bea7f932709"
+      }
+    },
+    {
+      "id": "e011889e-05a9-441c-b759-18754c21eb2f:520a24dc-88b1-4083-a0c3-3313823c5619:2",
+      "source": "e011889e-05a9-441c-b759-18754c21eb2f",
+      "target": "520a24dc-88b1-4083-a0c3-3313823c5619",
+      "sourceHandle": "output:item:Oxygen",
+      "targetHandle": "input:item:Oxygen",
+      "resourceKind": "item",
+      "resourceId": "Oxygen",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 2
+        },
+        "sum": "fcb1f6efcfc9bb6b"
+      }
+    },
+    {
+      "id": "e7877c6b-9eb0-4170-ac4f-ced056b8e602:88e0c186-56cc-459c-81c7-fe5d66cbfcd6:0",
+      "source": "88e0c186-56cc-459c-81c7-fe5d66cbfcd6",
+      "target": "e7877c6b-9eb0-4170-ac4f-ced056b8e602",
+      "sourceHandle": "output:item:Oxygen",
+      "targetHandle": "input:item:Oxygen",
+      "resourceKind": "item",
+      "resourceId": "Oxygen",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 0
+        },
+        "sum": "46c3692acbff2b4d"
+      }
+    },
+    {
+      "id": "38bf41a2-0ae6-474d-9014-adc5c10105a2:3ba27523-3df4-48b0-9c34-6758946090ec:0",
+      "source": "3ba27523-3df4-48b0-9c34-6758946090ec",
+      "target": "38bf41a2-0ae6-474d-9014-adc5c10105a2",
+      "sourceHandle": "output:item:EU",
+      "targetHandle": "input:item:EU",
+      "resourceKind": "item",
+      "resourceId": "EU",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 0
+        },
+        "sum": "e5f7137fbdb84c61"
+      }
+    },
+    {
+      "id": "3bbf82bd-3d61-4a3f-97f8-226263dca320:1b5c5b51-7abe-48d2-8ae7-a46789dd4e72:4",
+      "source": "1b5c5b51-7abe-48d2-8ae7-a46789dd4e72",
+      "target": "3bbf82bd-3d61-4a3f-97f8-226263dca320",
+      "sourceHandle": "output:item:Soda%20Ash%20Dust",
+      "targetHandle": "input:item:Soda%20Ash%20Dust",
+      "resourceKind": "item",
+      "resourceId": "Soda Ash Dust",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 4
+        },
+        "sum": "108878b8e6d83a11"
+      }
+    },
+    {
+      "id": "420fd9c2-3dd5-47d2-acfc-db620cab4aa2:07f84300-64b1-4d35-84e5-e19402ad6dab:0",
+      "source": "07f84300-64b1-4d35-84e5-e19402ad6dab",
+      "target": "420fd9c2-3dd5-47d2-acfc-db620cab4aa2",
+      "sourceHandle": "output:item:Charcoal",
+      "targetHandle": "input:item:Charcoal",
+      "resourceKind": "item",
+      "resourceId": "Charcoal",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 0
+        },
+        "sum": "1d50acf2f9e8c224"
+      }
+    },
+    {
+      "id": "461ca716-3064-4573-9b0b-00e9beafb8f7:1b5c5b51-7abe-48d2-8ae7-a46789dd4e72:1",
+      "source": "1b5c5b51-7abe-48d2-8ae7-a46789dd4e72",
+      "target": "461ca716-3064-4573-9b0b-00e9beafb8f7",
+      "sourceHandle": "output:item:Potash%20Dust",
+      "targetHandle": "input:item:Potash%20Dust",
+      "resourceKind": "item",
+      "resourceId": "Potash Dust",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 1
+        },
+        "sum": "693fcff1e26ac9b7"
+      }
+    },
+    {
+      "id": "5278afe1-bde5-4286-948f-a922be3b8020:1b5c5b51-7abe-48d2-8ae7-a46789dd4e72:0",
+      "source": "1b5c5b51-7abe-48d2-8ae7-a46789dd4e72",
+      "target": "5278afe1-bde5-4286-948f-a922be3b8020",
+      "sourceHandle": "output:item:Quicklime%20Dust",
+      "targetHandle": "input:item:Quicklime%20Dust",
+      "resourceKind": "item",
+      "resourceId": "Quicklime Dust",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 0
+        },
+        "sum": "3beb65023e989d7f"
+      }
+    },
+    {
+      "id": "64f8ff03-878e-45cb-91a4-4713f23e18f9:520a24dc-88b1-4083-a0c3-3313823c5619:0",
+      "source": "520a24dc-88b1-4083-a0c3-3313823c5619",
+      "target": "64f8ff03-878e-45cb-91a4-4713f23e18f9",
+      "sourceHandle": "output:item:EU",
+      "targetHandle": "input:item:EU",
+      "resourceKind": "item",
+      "resourceId": "EU",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 0
+        },
+        "sum": "491bd9b38cb4f1db"
+      }
+    },
+    {
+      "id": "6be66b93-bb6a-48bf-b55c-fd184c04bc37:0ee804b0-4514-4d08-accb-6e4160804739:2",
+      "source": "6be66b93-bb6a-48bf-b55c-fd184c04bc37",
+      "target": "0ee804b0-4514-4d08-accb-6e4160804739",
+      "sourceHandle": "output:item:Water",
+      "targetHandle": "input:item:Water",
+      "resourceKind": "item",
+      "resourceId": "Water",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 2
+        },
+        "sum": "6fd414a4d8cde499"
+      }
+    },
+    {
+      "id": "6bfcefcb-1926-41f9-8620-e3cf8d4cd6c6:b4c4be87-1a44-484c-999c-8e2b519f415e:0",
+      "source": "6bfcefcb-1926-41f9-8620-e3cf8d4cd6c6",
+      "target": "b4c4be87-1a44-484c-999c-8e2b519f415e",
+      "sourceHandle": "output:item:Empty%20Cell",
+      "targetHandle": "input:item:Empty%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Empty Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 0
+        },
+        "sum": "d73ac6a8914cdc4a"
+      }
+    },
+    {
+      "id": "75e1ffa1-87cd-4a8f-b1e4-18a73fa24a8a:41ce918e-044a-4ea7-8d56-dbd55054050b:2",
+      "source": "41ce918e-044a-4ea7-8d56-dbd55054050b",
+      "target": "75e1ffa1-87cd-4a8f-b1e4-18a73fa24a8a",
+      "sourceHandle": "output:item:Water",
+      "targetHandle": "input:item:Water",
+      "resourceKind": "item",
+      "resourceId": "Water",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 2
+        },
+        "sum": "bc14a6cf0e5a8576"
+      }
+    },
+    {
+      "id": "782ce3df-1194-4c02-8c68-b0897a11a4a8:747c0180-d902-44d4-a39c-9a80aefbf435:0",
+      "source": "747c0180-d902-44d4-a39c-9a80aefbf435",
+      "target": "782ce3df-1194-4c02-8c68-b0897a11a4a8",
+      "sourceHandle": "output:item:EU",
+      "targetHandle": "input:item:EU",
+      "resourceKind": "item",
+      "resourceId": "EU",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "port": 0
+        },
+        "sum": "a09e102b4675113e"
+      }
+    },
+    {
+      "id": "803d01cf-4203-420b-a3b1-0850e0dfafeb",
+      "source": "64d19cf9-c9f6-4ccb-a702-4a068612a0ca",
+      "target": "747c0180-d902-44d4-a39c-9a80aefbf435",
+      "sourceHandle": "output:item:Glycerol",
+      "targetHandle": "input:item:Glycerol",
+      "resourceKind": "item",
+      "resourceId": "Glycerol",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 1,
+          "dstIn": 0
+        },
+        "sum": "c111eba147bb0fe0"
+      }
+    },
+    {
+      "id": "8abe6c0f-a8f3-41bd-847a-b0c2d18c3178",
+      "source": "07f84300-64b1-4d35-84e5-e19402ad6dab",
+      "target": "87ccb716-efde-4642-b04f-89939f9d7423",
+      "sourceHandle": "output:item:Charcoal",
+      "targetHandle": "input:item:Charcoal",
+      "resourceKind": "item",
+      "resourceId": "Charcoal",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "8279ad295a58aabf"
+      }
+    },
+    {
+      "id": "948fc18f-8eac-4dba-9e05-17367b979cb6",
+      "source": "b4c4be87-1a44-484c-999c-8e2b519f415e",
+      "target": "789f1738-b577-4590-b789-0760d18c98fb",
+      "sourceHandle": "output:item:Carbon%20Monoxide%20Cell",
+      "targetHandle": "input:item:Carbon%20Monoxide%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Carbon Monoxide Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "b60b89e1dcd9ade0"
+      }
+    },
+    {
+      "id": "9c4abe28-eef4-4c5a-b764-5c7135d7eee3",
+      "source": "e0d49633-b166-41fd-b6bc-699474ffddd9",
+      "target": "9ef7e919-d7f9-4531-ba18-7024e43e1399",
+      "sourceHandle": "output:item:Nitrogen%20Cell",
+      "targetHandle": "input:item:Nitrogen%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Nitrogen Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "f43f1857765ef8a8"
+      }
+    },
+    {
+      "id": "9e90c111-e810-40cc-96bf-f8132032e18e",
+      "source": "07f84300-64b1-4d35-84e5-e19402ad6dab",
+      "target": "64194438-2957-4218-a0bf-3ba38a52ccdd",
+      "sourceHandle": "output:item:Charcoal",
+      "targetHandle": "input:item:Charcoal",
+      "resourceKind": "item",
+      "resourceId": "Charcoal",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "77a22446f6326c8d"
+      }
+    },
+    {
+      "id": "a08a4431-1ddf-49e3-bb49-e766d5cfbf16",
+      "source": "f4a3a382-ffad-4ff7-a2de-dbbca247aa3b",
+      "target": "377a499f-2288-4981-997e-75aa8ba3d707",
+      "sourceHandle": "output:item:Tetranitromethane",
+      "targetHandle": "input:item:Tetranitromethane",
+      "resourceKind": "item",
+      "resourceId": "Tetranitromethane",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 1,
+          "dstIn": 1
+        },
+        "sum": "ea10f10c64640a96"
+      }
+    },
+    {
+      "id": "a21c47a5-3509-4fb3-8d78-b200a2881a1e",
+      "source": "0aa114d4-02d2-4dfb-b93e-68cb25b10fbe",
+      "target": "3c22b8b9-01e8-499d-a0f0-6cd9b4de462b",
+      "sourceHandle": "output:item:Empty%20Cell",
+      "targetHandle": "input:item:Empty%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Empty Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "8c7671571dfc359a"
+      }
+    },
+    {
+      "id": "aaf20427-3908-4906-bcf4-6e5edaeb72ce",
+      "source": "1f6af305-2fe9-4446-856b-a98267850602",
+      "target": "ff654464-e1ab-4bf7-a9a2-cd82830446a3",
+      "sourceHandle": "output:item:Acetone",
+      "targetHandle": "input:item:Acetone",
+      "resourceKind": "item",
+      "resourceId": "Acetone",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 2,
+          "dstIn": 0
+        },
+        "sum": "64ad26f979f75339"
+      }
+    },
+    {
+      "id": "ad39d3a7-457d-47a7-a8fe-841d748dedd1",
+      "source": "0ee804b0-4514-4d08-accb-6e4160804739",
+      "target": "3c22b8b9-01e8-499d-a0f0-6cd9b4de462b",
+      "sourceHandle": "output:item:Empty%20Cell",
+      "targetHandle": "input:item:Empty%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Empty Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "1622c31168906282"
+      }
+    },
+    {
+      "id": "b2defed5-6f59-4014-ae62-3fe14f1009cf",
+      "source": "9215fedb-1748-472a-bda3-d267b11bd4af",
+      "target": "64194438-2957-4218-a0bf-3ba38a52ccdd",
+      "sourceHandle": "output:item:Oxygen",
+      "targetHandle": "input:item:Oxygen",
+      "resourceKind": "item",
+      "resourceId": "Oxygen",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 1
+        },
+        "sum": "ee3fb4a9e0c65ff6"
+      }
+    },
+    {
+      "id": "b4211f59-1c9b-4ba2-9eae-1fbe6cd31334",
+      "source": "6ab1fe5e-3680-41b0-960c-619133a57b5a",
+      "target": "88e0c186-56cc-459c-81c7-fe5d66cbfcd6",
+      "sourceHandle": "output:item:Oxygen%20Cell",
+      "targetHandle": "input:item:Oxygen%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Oxygen Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 1,
+          "dstIn": 0
+        },
+        "sum": "563da51b2f11b664"
+      }
+    },
+    {
+      "id": "b5da79e6-6149-42e1-821a-1259617f0142",
+      "source": "f09fba72-dba6-463e-a511-5f16a8155801",
+      "target": "65c7d501-36ec-4643-9216-81305b3edb5a",
+      "sourceHandle": "output:item:Sodium%20Hydroxide%20Dust",
+      "targetHandle": "input:item:Sodium%20Hydroxide%20Dust",
+      "resourceKind": "item",
+      "resourceId": "Sodium Hydroxide Dust",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "6a5b7c45d7de0ebe"
+      }
+    },
+    {
+      "id": "bb9166d7-3f27-4ba6-b182-40b92ce64909",
+      "source": "ff654464-e1ab-4bf7-a9a2-cd82830446a3",
+      "target": "047036af-1d7b-4bf0-93b5-c264256ead18",
+      "sourceHandle": "output:item:Ethenone",
+      "targetHandle": "input:item:Ethenone",
+      "resourceKind": "item",
+      "resourceId": "Ethenone",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 1
+        },
+        "sum": "b7024dfbc94b0352"
+      }
+    },
+    {
+      "id": "c024fac5-7ffa-43af-83c3-33dfd13b18fa",
+      "source": "88e0c186-56cc-459c-81c7-fe5d66cbfcd6",
+      "target": "6ab1fe5e-3680-41b0-960c-619133a57b5a",
+      "sourceHandle": "output:item:Empty%20Cell",
+      "targetHandle": "input:item:Empty%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Empty Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 1,
+          "dstIn": 1
+        },
+        "sum": "40eac435e271dd8e"
+      }
+    },
+    {
+      "id": "c0a6ec53-093a-43bf-af14-4a368afae6c9",
+      "source": "a7228e91-cc91-40e4-8296-2f9afa3d2768",
+      "target": "3c22b8b9-01e8-499d-a0f0-6cd9b4de462b",
+      "sourceHandle": "output:item:Empty%20Cell",
+      "targetHandle": "input:item:Empty%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Empty Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "651af8def14de9ba"
+      }
+    },
+    {
+      "id": "cbcb4756-6ab6-4cf8-b3de-c3fd20809c55",
+      "source": "0ee804b0-4514-4d08-accb-6e4160804739",
+      "target": "f4a3a382-ffad-4ff7-a2de-dbbca247aa3b",
+      "sourceHandle": "output:item:Nitric%20Acid",
+      "targetHandle": "input:item:Nitric%20Acid",
+      "resourceKind": "item",
+      "resourceId": "Nitric Acid",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 1,
+          "dstIn": 1
+        },
+        "sum": "d837ebdf5bb253eb"
+      }
+    },
+    {
+      "id": "d4a17c01-6881-41b3-984b-7f817c02157d",
+      "source": "64194438-2957-4218-a0bf-3ba38a52ccdd",
+      "target": "b4c4be87-1a44-484c-999c-8e2b519f415e",
+      "sourceHandle": "output:item:Carbon%20Monoxide",
+      "targetHandle": "input:item:Carbon%20Monoxide",
+      "resourceKind": "item",
+      "resourceId": "Carbon Monoxide",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 1,
+          "dstIn": 1
+        },
+        "sum": "35257e32d64ccbcd"
+      }
+    },
+    {
+      "id": "dc0cd775-c474-4be3-bc05-49811467096e",
+      "source": "07f84300-64b1-4d35-84e5-e19402ad6dab",
+      "target": "0eb656ec-c8d6-4b11-962d-d8a74fab4ea2",
+      "sourceHandle": "output:item:Wood%20Tar",
+      "targetHandle": "input:item:Wood%20Tar",
+      "resourceKind": "item",
+      "resourceId": "Wood Tar",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 1,
+          "dstIn": 0
+        },
+        "sum": "4cadd96af5bc2130"
+      }
+    },
+    {
+      "id": "dcf506af-df39-4f50-aa9f-16a38314bcdb",
+      "source": "64d19cf9-c9f6-4ccb-a702-4a068612a0ca",
+      "target": "b4c4be87-1a44-484c-999c-8e2b519f415e",
+      "sourceHandle": "output:item:Empty%20Cell",
+      "targetHandle": "input:item:Empty%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Empty Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "c4cd5e5c8bba7c63"
+      }
+    },
+    {
+      "id": "e3bfd034-2a9f-4a3c-8ae1-35a8199c68b9",
+      "source": "3c22b8b9-01e8-499d-a0f0-6cd9b4de462b",
+      "target": "1f6af305-2fe9-4446-856b-a98267850602",
+      "sourceHandle": "output:item:Oxygen%20Cell",
+      "targetHandle": "input:item:Oxygen%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Oxygen Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "230124c7be89d949"
+      }
+    },
+    {
+      "id": "e7d1533c-56e0-4140-a7c2-f3112ebce182",
+      "source": "65c7d501-36ec-4643-9216-81305b3edb5a",
+      "target": "64d19cf9-c9f6-4ccb-a702-4a068612a0ca",
+      "sourceHandle": "output:item:Glycerol%20Cell",
+      "targetHandle": "input:item:Glycerol%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Glycerol Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "4866ec7b0394110f"
+      }
+    },
+    {
+      "id": "f1c3b921-721d-4568-b857-656b6ffb0646",
+      "source": "64194438-2957-4218-a0bf-3ba38a52ccdd",
+      "target": "3ba27523-3df4-48b0-9c34-6758946090ec",
+      "sourceHandle": "output:item:Carbon%20Monoxide",
+      "targetHandle": "input:item:Carbon%20Monoxide",
+      "resourceKind": "item",
+      "resourceId": "Carbon Monoxide",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 1,
+          "dstIn": 0
+        },
+        "sum": "08b66d1be7089516"
+      }
+    },
+    {
+      "id": "f74f2f72-ce31-4871-a69a-8dd93813689d",
+      "source": "3c22b8b9-01e8-499d-a0f0-6cd9b4de462b",
+      "target": "cf496d73-dcc7-4c41-b5a7-2b03507b025b",
+      "sourceHandle": "output:item:Oxygen%20Cell",
+      "targetHandle": "input:item:Oxygen%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Oxygen Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "23a7da08b77962a3"
+      }
+    },
+    {
+      "id": "fb07945c-e863-465b-899a-ec234ae6daec",
+      "source": "87ccb716-efde-4642-b04f-89939f9d7423",
+      "target": "1b5c5b51-7abe-48d2-8ae7-a46789dd4e72",
+      "sourceHandle": "output:item:Ashes",
+      "targetHandle": "input:item:Ashes",
+      "resourceKind": "item",
+      "resourceId": "Ashes",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "1a1adbc287758066"
+      }
+    },
+    {
+      "id": "017ea97a-7aa0-450d-a334-61dae71f6985",
+      "source": "789f1738-b577-4590-b789-0760d18c98fb",
+      "target": "65c7d501-36ec-4643-9216-81305b3edb5a",
+      "sourceHandle": "output:item:Methanol%20Cell",
+      "targetHandle": "input:item:Methanol%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Methanol Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 1
+        },
+        "sum": "2f668f14753b9975"
+      }
+    },
+    {
+      "id": "0491404a-f14c-4586-8cd2-4fa4d0cd2633",
+      "source": "64194438-2957-4218-a0bf-3ba38a52ccdd",
+      "target": "1b5c5b51-7abe-48d2-8ae7-a46789dd4e72",
+      "sourceHandle": "output:item:Ashes",
+      "targetHandle": "input:item:Ashes",
+      "resourceKind": "item",
+      "resourceId": "Ashes",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "552db7946b8bfe23"
+      }
+    },
+    {
+      "id": "06eaff63-6653-4b03-b9af-8d0b31377573",
+      "source": "0eb656ec-c8d6-4b11-962d-d8a74fab4ea2",
+      "target": "e2c76404-dc1f-4fde-bd40-3e63d0852962",
+      "sourceHandle": "output:item:Benzene",
+      "targetHandle": "input:item:Benzene",
+      "resourceKind": "item",
+      "resourceId": "Benzene",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "f990afdbf3f5765f"
+      }
+    },
+    {
+      "id": "0794da85-4e3b-4364-bf72-c9aaf0ceccbc",
+      "source": "41ce918e-044a-4ea7-8d56-dbd55054050b",
+      "target": "9215fedb-1748-472a-bda3-d267b11bd4af",
+      "sourceHandle": "output:item:Oxygen%20Cell",
+      "targetHandle": "input:item:Oxygen%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Oxygen Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 1,
+          "dstIn": 0
+        },
+        "sum": "3721b59a571fa042"
+      }
+    },
+    {
+      "id": "1983888c-dc43-4c20-890b-168f59d1a989",
+      "source": "047036af-1d7b-4bf0-93b5-c264256ead18",
+      "target": "f4a3a382-ffad-4ff7-a2de-dbbca247aa3b",
+      "sourceHandle": "output:item:Ethenone%20Cell",
+      "targetHandle": "input:item:Ethenone%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Ethenone Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "6bf439780a8f35f9"
+      }
+    },
+    {
+      "id": "1e07f859-1201-417b-a877-f8d8b8adec56",
+      "source": "3c22b8b9-01e8-499d-a0f0-6cd9b4de462b",
+      "target": "0ee804b0-4514-4d08-accb-6e4160804739",
+      "sourceHandle": "output:item:Oxygen%20Cell",
+      "targetHandle": "input:item:Oxygen%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Oxygen Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 1
+        },
+        "sum": "05ce7948a1c3ea35"
+      }
+    },
+    {
+      "id": "1e2aa432-4c7f-4468-8481-b57f10f284d4",
+      "source": "9ef7e919-d7f9-4531-ba18-7024e43e1399",
+      "target": "0aa114d4-02d2-4dfb-b93e-68cb25b10fbe",
+      "sourceHandle": "output:item:Ammonia",
+      "targetHandle": "input:item:Ammonia",
+      "resourceKind": "item",
+      "resourceId": "Ammonia",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 1,
+          "dstIn": 1
+        },
+        "sum": "2e9f3aabc47c78d3"
+      }
+    },
+    {
+      "id": "22911a4a-cdd6-42f9-977f-d04451f8eb9e",
+      "source": "f09fba72-dba6-463e-a511-5f16a8155801",
+      "target": "9ef7e919-d7f9-4531-ba18-7024e43e1399",
+      "sourceHandle": "output:item:Hydrogen",
+      "targetHandle": "input:item:Hydrogen",
+      "resourceKind": "item",
+      "resourceId": "Hydrogen",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 1,
+          "dstIn": 1
+        },
+        "sum": "2c92dcda83d8d436"
+      }
+    },
+    {
+      "id": "24a536cb-2237-49b2-8537-fbe7825cb7e7",
+      "source": "6ab1fe5e-3680-41b0-960c-619133a57b5a",
+      "target": "07f84300-64b1-4d35-84e5-e19402ad6dab",
+      "sourceHandle": "output:item:Nitrogen",
+      "targetHandle": "input:item:Nitrogen",
+      "resourceKind": "item",
+      "resourceId": "Nitrogen",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 2,
+          "dstIn": 1
+        },
+        "sum": "aed38bac6aff6602"
+      }
+    },
+    {
+      "id": "255e9c20-edba-4d07-b44f-cdcffbc988ec",
+      "source": "f4a3a382-ffad-4ff7-a2de-dbbca247aa3b",
+      "target": "047036af-1d7b-4bf0-93b5-c264256ead18",
+      "sourceHandle": "output:item:Empty%20Cell",
+      "targetHandle": "input:item:Empty%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Empty Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "422bcf379eee4d41"
+      }
+    },
+    {
+      "id": "27a2eba8-7d94-4ac5-9d68-7306f49c483d",
+      "source": "87ccb716-efde-4642-b04f-89939f9d7423",
+      "target": "0eb656ec-c8d6-4b11-962d-d8a74fab4ea2",
+      "sourceHandle": "output:item:Wood%20Tar",
+      "targetHandle": "input:item:Wood%20Tar",
+      "resourceKind": "item",
+      "resourceId": "Wood Tar",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 1,
+          "dstIn": 0
+        },
+        "sum": "dc71a7c6b7e6097c"
+      }
+    },
+    {
+      "id": "288bdca0-e6e6-47f4-bde2-54f34ac7cf20",
+      "source": "377a499f-2288-4981-997e-75aa8ba3d707",
+      "target": "520a24dc-88b1-4083-a0c3-3313823c5619",
+      "sourceHandle": "output:item:Cetane-Boosted%20Diesel",
+      "targetHandle": "input:item:Cetane-Boosted%20Diesel",
+      "resourceKind": "item",
+      "resourceId": "Cetane-Boosted Diesel",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "627c300069079adb"
+      }
+    },
+    {
+      "id": "2898f05c-c23e-4334-b4eb-762e465f0748",
+      "source": "1f6af305-2fe9-4446-856b-a98267850602",
+      "target": "a7228e91-cc91-40e4-8296-2f9afa3d2768",
+      "sourceHandle": "output:item:Phenol%20Cell",
+      "targetHandle": "input:item:Phenol%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Phenol Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "d0f15a36003f87f9"
+      }
+    },
+    {
+      "id": "2b0ea97c-5751-4df7-a133-6a6ad1a2ea5a",
+      "source": "3c22b8b9-01e8-499d-a0f0-6cd9b4de462b",
+      "target": "0aa114d4-02d2-4dfb-b93e-68cb25b10fbe",
+      "sourceHandle": "output:item:Oxygen%20Cell",
+      "targetHandle": "input:item:Oxygen%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Oxygen Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "52eb5100b9547744"
+      }
+    },
+    {
+      "id": "2cd603b5-6605-4191-b594-992e1f213497",
+      "source": "9215fedb-1748-472a-bda3-d267b11bd4af",
+      "target": "41ce918e-044a-4ea7-8d56-dbd55054050b",
+      "sourceHandle": "output:item:Empty%20Cell",
+      "targetHandle": "input:item:Empty%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Empty Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 1,
+          "dstIn": 1
+        },
+        "sum": "f9a9c9deda5c5604"
+      }
+    },
+    {
+      "id": "3f0b3e5d-4f19-4f8d-9261-040adb282bec",
+      "source": "cf496d73-dcc7-4c41-b5a7-2b03507b025b",
+      "target": "0ee804b0-4514-4d08-accb-6e4160804739",
+      "sourceHandle": "output:item:Nitrogen%20Dioxide%20Cell",
+      "targetHandle": "input:item:Nitrogen%20Dioxide%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Nitrogen Dioxide Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "0dc675e7da85286c"
+      }
+    },
+    {
+      "id": "42e32e44-fe51-49b1-9874-8a09a509e95f",
+      "source": "6ab1fe5e-3680-41b0-960c-619133a57b5a",
+      "target": "e0d49633-b166-41fd-b6bc-699474ffddd9",
+      "sourceHandle": "output:item:Nitrogen",
+      "targetHandle": "input:item:Nitrogen",
+      "resourceKind": "item",
+      "resourceId": "Nitrogen",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 2,
+          "dstIn": 1
+        },
+        "sum": "96d2ad1ca280e852"
+      }
+    },
+    {
+      "id": "5110a3ed-f076-4fb3-8e43-b56ab6b12c10",
+      "source": "1f6af305-2fe9-4446-856b-a98267850602",
+      "target": "3c22b8b9-01e8-499d-a0f0-6cd9b4de462b",
+      "sourceHandle": "output:item:Empty%20Cell",
+      "targetHandle": "input:item:Empty%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Empty Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 1,
+          "dstIn": 0
+        },
+        "sum": "0d3c43e92a0a421b"
+      }
+    },
+    {
+      "id": "55a8c736-ba4e-4c35-bfe4-67bb684c0b88",
+      "source": "0eb656ec-c8d6-4b11-962d-d8a74fab4ea2",
+      "target": "c902e1bc-a541-425e-83b1-4eb325bb5bf1",
+      "sourceHandle": "output:item:Benzene",
+      "targetHandle": "input:item:Benzene",
+      "resourceKind": "item",
+      "resourceId": "Benzene",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 2
+        },
+        "sum": "a7cbb78fa4bb91ed"
+      }
+    },
+    {
+      "id": "5d88f0ab-e3c8-4c52-a579-8fc55ebf1d09",
+      "source": "9ef7e919-d7f9-4531-ba18-7024e43e1399",
+      "target": "e0d49633-b166-41fd-b6bc-699474ffddd9",
+      "sourceHandle": "output:item:Empty%20Cell",
+      "targetHandle": "input:item:Empty%20Cell",
+      "resourceKind": "item",
+      "resourceId": "Empty Cell",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "1672c33187b8d3de"
+      }
+    },
+    {
+      "id": "5d9d8913-8ba2-48d2-94a1-dd96255fe840",
+      "source": "65c7d501-36ec-4643-9216-81305b3edb5a",
+      "target": "377a499f-2288-4981-997e-75aa8ba3d707",
+      "sourceHandle": "output:item:Bio%20Diesel",
+      "targetHandle": "input:item:Bio%20Diesel",
+      "resourceKind": "item",
+      "resourceId": "Bio Diesel",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 1,
+          "dstIn": 0
+        },
+        "sum": "39ccc672b6a69b03"
+      }
+    },
+    {
+      "id": "60569b31-6aed-44fb-a205-767b7270c728",
+      "source": "61bb0c34-56bc-47e2-9126-6a8a3c9f0d4b",
+      "target": "f09fba72-dba6-463e-a511-5f16a8155801",
+      "sourceHandle": "output:item:Sodium%20Dust",
+      "targetHandle": "input:item:Sodium%20Dust",
+      "resourceKind": "item",
+      "resourceId": "Sodium Dust",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 0
+        },
+        "sum": "459c2f6a1322d248"
+      }
+    },
+    {
+      "id": "63cbe91a-f973-4eef-b8bb-15390d19e431",
+      "source": "9215fedb-1748-472a-bda3-d267b11bd4af",
+      "target": "3c22b8b9-01e8-499d-a0f0-6cd9b4de462b",
+      "sourceHandle": "output:item:Oxygen",
+      "targetHandle": "input:item:Oxygen",
+      "resourceKind": "item",
+      "resourceId": "Oxygen",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 0,
+          "dstIn": 1
+        },
+        "sum": "22ef04f2fc361e78"
+      }
+    },
+    {
+      "id": "79135b9c-e061-4767-a7d6-e733c44df4ec",
+      "source": "0aa114d4-02d2-4dfb-b93e-68cb25b10fbe",
+      "target": "cf496d73-dcc7-4c41-b5a7-2b03507b025b",
+      "sourceHandle": "output:item:Nitric%20Oxide",
+      "targetHandle": "input:item:Nitric%20Oxide",
+      "resourceKind": "item",
+      "resourceId": "Nitric Oxide",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 1,
+          "dstIn": 1
+        },
+        "sum": "3a5be6018458c9bf"
+      }
+    },
+    {
+      "id": "7a3d367b-7a89-4a7d-b126-6e7e8acc9792",
+      "source": "c902e1bc-a541-425e-83b1-4eb325bb5bf1",
+      "target": "1f6af305-2fe9-4446-856b-a98267850602",
+      "sourceHandle": "output:item:Isopropylbenzene",
+      "targetHandle": "input:item:Isopropylbenzene",
+      "resourceKind": "item",
+      "resourceId": "Isopropylbenzene",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 1,
+          "dstIn": 1
+        },
+        "sum": "9b5d0a4d8f03d8fb"
+      }
+    },
+    {
+      "id": "7d3a99b0-5db1-467b-8adb-9db3238ff78e",
+      "source": "f09fba72-dba6-463e-a511-5f16a8155801",
+      "target": "789f1738-b577-4590-b789-0760d18c98fb",
+      "sourceHandle": "output:item:Hydrogen",
+      "targetHandle": "input:item:Hydrogen",
+      "resourceKind": "item",
+      "resourceId": "Hydrogen",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "srcOut": 1,
+          "dstIn": 1
+        },
+        "sum": "1e9dd6999920a4a5"
+      }
+    }
+  ],
+  "annotations": [
+    {
+      "id": "c8ebacd5-ab3b-3fd0-a1d4-118490d49251",
+      "kind": "arrow",
+      "colorTag": "magenta",
+      "size": {
+        "width": 163,
+        "height": 0
+      },
+      "arrowDirection": "up-left",
+      "arrowHeads": "both",
+      "arrowWidth": 4,
+      "position": {
+        "x": 60,
+        "y": 56
+      },
+      "pocketId": "a583fad4-70b3-31e5-8fdb-3a4495680c1e",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [],
+          "width": 163,
+          "height": 0,
+          "color": "magenta",
+          "fontSize": 14,
+          "kind": "arrow",
+          "arrowDirection": "up-left",
+          "arrowHeads": "both",
+          "arrowWidth": 4,
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "0e5543f1fafbb7b0"
+      }
+    },
+    {
+      "id": "ca70efd8-5e85-350a-b0c6-b1e5905ee6d1",
+      "kind": "zone",
+      "colorTag": "lime",
+      "size": {
+        "width": 203,
+        "height": 117
+      },
+      "points": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 203,
+          "y": 13
+        },
+        {
+          "x": 97,
+          "y": 117
+        }
+      ],
+      "style": {
+        "marks": "hatch"
+      },
+      "position": {
+        "x": 1503,
+        "y": -91
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [],
+          "width": 203,
+          "height": 117,
+          "color": "lime",
+          "fontSize": 14,
+          "kind": "zone",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              203,
+              13
+            ],
+            [
+              97,
+              117
+            ]
+          ],
+          "arrowWidth": 0,
+          "marks": "hatch",
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "f1019235e8daa96b"
+      }
+    },
+    {
+      "id": "016826a6-94a3-3fb8-8bad-ee5a4dcc64bb",
+      "kind": "text",
+      "colorTag": "lime",
+      "text": "Feed it\nfrom the ME system",
+      "size": {
+        "width": 213,
+        "height": 131
+      },
+      "fontSize": 18,
+      "position": {
+        "x": 16,
+        "y": 122
+      },
+      "pocketId": "a583fad4-70b3-31e5-8fdb-3a4495680c1e",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [
+            "Feed it",
+            "from the ME system"
+          ],
+          "width": 213,
+          "height": 131,
+          "color": "lime",
+          "fontSize": 18,
+          "arrowWidth": 0,
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "ce8458bbfbf8dcd1"
+      }
+    },
+    {
+      "id": "2f0c85bc-2330-3b9f-ac0b-e936da03d7c4",
+      "kind": "box",
+      "colorTag": "orange",
+      "size": {
+        "width": 377,
+        "height": 151
+      },
+      "style": {
+        "border": "dashed",
+        "borderColor": "red",
+        "fillColor": "light_blue",
+        "fill": "solid",
+        "marks": "graph"
+      },
+      "position": {
+        "x": 112,
+        "y": 78
+      },
+      "pocketId": "9da1139b-91eb-39d6-9d9b-a6e56591aa73",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [],
+          "width": 377,
+          "height": 151,
+          "color": "orange",
+          "fontSize": 14,
+          "kind": "box",
+          "arrowWidth": 0,
+          "border": "dashed",
+          "borderColor": "red",
+          "fillColor": "light_blue",
+          "fill": "solid",
+          "marks": "graph",
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "55f018baecb9b833"
+      }
+    },
+    {
+      "id": "4f699623-1d3f-392e-b57f-33673775ffd0",
+      "kind": "image",
+      "text": "The finished line",
+      "size": {
+        "width": 160,
+        "height": 90
+      },
+      "imageUrl": "https://example.com/line.png",
+      "position": {
+        "x": 2011,
+        "y": 733
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "text": [
+            "The finished line"
+          ],
+          "width": 160,
+          "height": 90,
+          "color": "",
+          "fontSize": 14,
+          "kind": "image",
+          "arrowWidth": 0,
+          "imageUrl": "https://example.com/line.png",
+          "header": "Note",
+          "type": "note"
+        },
+        "sum": "30314bfb128e7146"
+      }
+    }
+  ],
+  "pockets": [
+    {
+      "id": "9da1139b-91eb-39d6-9d9b-a6e56591aa73",
+      "name": "Ore line",
+      "colorTag": "orange",
+      "expanded": true,
+      "size": {
+        "width": 2741,
+        "height": 1307
+      },
+      "theme": "blueprint",
+      "pattern": "dots",
+      "position": {
+        "x": -523,
+        "y": -311
+      },
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "name": "Ore line",
+          "color": "orange",
+          "width": 2741,
+          "height": 1307,
+          "collapsed": false,
+          "theme": "blueprint",
+          "pattern": "dots"
+        },
+        "sum": "74d6ae5f6fd77fd8"
+      }
+    },
+    {
+      "id": "a583fad4-70b3-31e5-8fdb-3a4495680c1e",
+      "name": "Smelting",
+      "expanded": false,
+      "size": {
+        "width": 613,
+        "height": 421
+      },
+      "position": {
+        "x": 406,
+        "y": 112
+      },
+      "parentPocketId": "9da1139b-91eb-39d6-9d9b-a6e56591aa73",
+      "gtnhplanner": {
+        "v": 1,
+        "game": {
+          "ffId": "pocket-imported-smelting",
+          "name": "Smelting",
+          "width": 613,
+          "height": 421,
+          "collapsed": true
+        },
+        "sum": "3b7787a389426bb7"
+      }
+    }
+  ],
+  "fuelProfiles": [],
+  "tasks": [
+    {
+      "id": "t1",
+      "title": "Build mv",
+      "text": "Two lines first.",
+      "status": "doing",
+      "order": "a0",
+      "assignees": [
+        "11111111-1111-4111-8111-111111111111"
+      ],
+      "links": [
+        {
+          "plan": "11111111-1111-4111-8111-111111111111:plan",
+          "node": "87ccb716-efde-4642-b04f-89939f9d7423"
+        }
+      ],
+      "createdBy": "11111111-1111-4111-8111-111111111111",
+      "createdAt": "2026-10-14T10:00:00.000Z"
+    },
+    {
+      "id": "t1b",
+      "title": "Power mv",
+      "status": "todo",
+      "order": "a1",
+      "blockedBy": [
+        "t1"
+      ]
+    }
+  ],
+  "taskItems": [
+    {
+      "id": "i1",
+      "taskId": "t1",
+      "text": "Place the machines",
+      "done": false,
+      "order": "a0",
+      "link": {
+        "plan": "11111111-1111-4111-8111-111111111111:plan",
+        "node": "87ccb716-efde-4642-b04f-89939f9d7423"
+      }
+    },
+    {
+      "id": "i2",
+      "taskId": "t1",
+      "kind": "location",
+      "text": "Ore field at 1 64 -2 in Overworld",
+      "done": true,
+      "order": "a1",
+      "place": {
+        "x": 1,
+        "y": 64,
+        "z": -2,
+        "dim": 0,
+        "dimName": "Overworld",
+        "world": "server:0123456789abcdef",
+        "label": "Ore field"
+      }
+    },
+    {
+      "id": "i3",
+      "taskId": "t1",
+      "kind": "picture",
+      "text": "Screenshot",
+      "done": false,
+      "order": "a2",
+      "picture": {
+        "thumb": "data:image/jpeg;base64,/9j/AA==",
+        "w": 1920,
+        "h": 1080,
+        "takenAt": "2026-10-15T09:00:00.000Z"
+      }
+    },
+    {
+      "id": "i4",
+      "taskId": "t1",
+      "kind": "quest",
+      "text": "Steam Age",
+      "done": false,
+      "order": "a3",
+      "quest": {
+        "id": "0f2a43a5-6c1e-4d7a-9b3b-6a8f3b0e2c11",
+        "name": "Steam Age",
+        "icon": "item:IC2:itemToolBronzePickaxe:0",
+        "line": "Tier 1 - Steam"
+      }
+    }
+  ],
+  "taskComments": [
+    {
+      "id": "c1",
+      "taskId": "t1",
+      "by": "11111111-1111-4111-8111-111111111111",
+      "byName": "ann",
+      "at": "2026-10-14T10:05:00Z",
+      "text": "On it"
+    }
+  ],
+  "recipes": [
+    {
+      "id": "gtnhplanner:87ccb716-efde-4642-b04f-89939f9d7423",
+      "name": "item|Ashes",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:512",
+      "minimumTier": "LV",
+      "durationTicks": 15,
+      "eut": 60,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Charcoal",
+          "displayName": "Charcoal",
+          "amount": 1
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Ashes",
+          "displayName": "Ashes",
+          "amount": 1,
+          "chance": 0.1
+        },
+        {
+          "kind": "item",
+          "id": "Wood Tar",
+          "displayName": "Wood Tar",
+          "amount": 100
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:88e0c186-56cc-459c-81c7-fe5d66cbfcd6",
+      "name": "item|Oxygen",
+      "kind": "gregtech_machine",
+      "machineType": "Fluid Tank",
+      "minimumTier": "LV",
+      "durationTicks": 20,
+      "eut": 0,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Oxygen Cell",
+          "displayName": "Oxygen Cell",
+          "amount": 1
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Oxygen",
+          "displayName": "Oxygen",
+          "amount": 1000
+        },
+        {
+          "kind": "item",
+          "id": "Empty Cell",
+          "displayName": "Empty Cell",
+          "amount": 1
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:9215fedb-1748-472a-bda3-d267b11bd4af",
+      "name": "item|Oxygen",
+      "kind": "gregtech_machine",
+      "machineType": "Fluid Tank",
+      "minimumTier": "LV",
+      "durationTicks": 20,
+      "eut": 0,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Oxygen Cell",
+          "displayName": "Oxygen Cell",
+          "amount": 1
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Oxygen",
+          "displayName": "Oxygen",
+          "amount": 1000
+        },
+        {
+          "kind": "item",
+          "id": "Empty Cell",
+          "displayName": "Empty Cell",
+          "amount": 1
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:9ef7e919-d7f9-4531-ba18-7024e43e1399",
+      "name": "item|Empty Cell",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:423",
+      "minimumTier": "LV",
+      "durationTicks": 320,
+      "eut": 384,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Nitrogen Cell",
+          "displayName": "Nitrogen Cell",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Hydrogen",
+          "displayName": "Hydrogen",
+          "amount": 3000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Empty Cell",
+          "displayName": "Empty Cell",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Ammonia",
+          "displayName": "Ammonia",
+          "amount": 1000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:a0ce7c79-6ba9-40df-8f16-de05c6355594",
+      "name": "item|Potassium Dust",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:372",
+      "minimumTier": "LV",
+      "durationTicks": 36,
+      "eut": 120,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Rock Salt",
+          "displayName": "Rock Salt",
+          "amount": 2
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Potassium Dust",
+          "displayName": "Potassium Dust",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Chlorine",
+          "displayName": "Chlorine",
+          "amount": 1000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:a7228e91-cc91-40e4-8296-2f9afa3d2768",
+      "name": "item|Empty Cell",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:231",
+      "minimumTier": "LV",
+      "durationTicks": 16,
+      "eut": 1,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Phenol Cell",
+          "displayName": "Phenol Cell",
+          "amount": 1
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Empty Cell",
+          "displayName": "Empty Cell",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Phenol",
+          "displayName": "Phenol",
+          "amount": 1000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:b4c4be87-1a44-484c-999c-8e2b519f415e",
+      "name": "item|Carbon Monoxide Cell",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:232",
+      "minimumTier": "LV",
+      "durationTicks": 8,
+      "eut": 4,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Empty Cell",
+          "displayName": "Empty Cell",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Carbon Monoxide",
+          "displayName": "Carbon Monoxide",
+          "amount": 1000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Carbon Monoxide Cell",
+          "displayName": "Carbon Monoxide Cell",
+          "amount": 1
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:c902e1bc-a541-425e-83b1-4eb325bb5bf1",
+      "name": "item|Empty Cell",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:421",
+      "minimumTier": "LV",
+      "durationTicks": 1920,
+      "eut": 30,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Propene Cell",
+          "displayName": "Propene Cell",
+          "amount": 8
+        },
+        {
+          "kind": "item",
+          "id": "Phosphoric Acid Cell",
+          "displayName": "Phosphoric Acid Cell",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Benzene",
+          "displayName": "Benzene",
+          "amount": 8000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Empty Cell",
+          "displayName": "Empty Cell",
+          "amount": 9
+        },
+        {
+          "kind": "item",
+          "id": "Isopropylbenzene",
+          "displayName": "Isopropylbenzene",
+          "amount": 8000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:cf496d73-dcc7-4c41-b5a7-2b03507b025b",
+      "name": "item|Nitrogen Dioxide Cell",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:421",
+      "minimumTier": "LV",
+      "durationTicks": 160,
+      "eut": 30,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Oxygen Cell",
+          "displayName": "Oxygen Cell",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Nitric Oxide",
+          "displayName": "Nitric Oxide",
+          "amount": 1000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Nitrogen Dioxide Cell",
+          "displayName": "Nitrogen Dioxide Cell",
+          "amount": 1
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:e0d49633-b166-41fd-b6bc-699474ffddd9",
+      "name": "item|Nitrogen Cell",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:231",
+      "minimumTier": "LV",
+      "durationTicks": 16,
+      "eut": 1,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Empty Cell",
+          "displayName": "Empty Cell",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Nitrogen",
+          "displayName": "Nitrogen",
+          "amount": 1000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Nitrogen Cell",
+          "displayName": "Nitrogen Cell",
+          "amount": 1
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:e2c76404-dc1f-4fde-bd40-3e63d0852962",
+      "name": "item|EU",
+      "kind": "gregtech_machine",
+      "machineType": "Gas Turbine",
+      "minimumTier": "LV",
+      "durationTicks": 20,
+      "eut": 0,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Benzene",
+          "displayName": "Benzene",
+          "amount": 9
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "EU",
+          "displayName": "EU",
+          "amount": 2560
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:f09fba72-dba6-463e-a511-5f16a8155801",
+      "name": "item|Sodium Hydroxide Dust",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:542",
+      "minimumTier": "LV",
+      "durationTicks": 50,
+      "eut": 16,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Sodium Dust",
+          "displayName": "Sodium Dust",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Water",
+          "displayName": "Water",
+          "amount": 1000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Sodium Hydroxide Dust",
+          "displayName": "Sodium Hydroxide Dust",
+          "amount": 3
+        },
+        {
+          "kind": "item",
+          "id": "Hydrogen",
+          "displayName": "Hydrogen",
+          "amount": 1000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:f4a3a382-ffad-4ff7-a2de-dbbca247aa3b",
+      "name": "item|Empty Cell",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:422",
+      "minimumTier": "LV",
+      "durationTicks": 480,
+      "eut": 120,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Ethenone Cell",
+          "displayName": "Ethenone Cell",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Nitric Acid",
+          "displayName": "Nitric Acid",
+          "amount": 8000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Empty Cell",
+          "displayName": "Empty Cell",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Tetranitromethane",
+          "displayName": "Tetranitromethane",
+          "amount": 2000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:ff654464-e1ab-4bf7-a9a2-cd82830446a3",
+      "name": "item|Ethenone",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:623",
+      "minimumTier": "LV",
+      "durationTicks": 160,
+      "eut": 160,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Acetone",
+          "displayName": "Acetone",
+          "amount": 1000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Ethenone",
+          "displayName": "Ethenone",
+          "amount": 1000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:047036af-1d7b-4bf0-93b5-c264256ead18",
+      "name": "item|Ethenone Cell",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:232",
+      "minimumTier": "LV",
+      "durationTicks": 8,
+      "eut": 4,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Empty Cell",
+          "displayName": "Empty Cell",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Ethenone",
+          "displayName": "Ethenone",
+          "amount": 1000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Ethenone Cell",
+          "displayName": "Ethenone Cell",
+          "amount": 1
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:07f84300-64b1-4d35-84e5-e19402ad6dab",
+      "name": "item|Charcoal",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:15546",
+      "minimumTier": "LV",
+      "durationTicks": 320,
+      "eut": 96,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Oak Wood",
+          "displayName": "Oak Wood",
+          "amount": 16
+        },
+        {
+          "kind": "item",
+          "id": "Nitrogen",
+          "displayName": "Nitrogen",
+          "amount": 1000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Charcoal",
+          "displayName": "Charcoal",
+          "amount": 20
+        },
+        {
+          "kind": "item",
+          "id": "Wood Tar",
+          "displayName": "Wood Tar",
+          "amount": 1500
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:0aa114d4-02d2-4dfb-b93e-68cb25b10fbe",
+      "name": "item|Empty Cell",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:421",
+      "minimumTier": "LV",
+      "durationTicks": 320,
+      "eut": 30,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Oxygen Cell",
+          "displayName": "Oxygen Cell",
+          "amount": 10
+        },
+        {
+          "kind": "item",
+          "id": "Ammonia",
+          "displayName": "Ammonia",
+          "amount": 4000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Empty Cell",
+          "displayName": "Empty Cell",
+          "amount": 10
+        },
+        {
+          "kind": "item",
+          "id": "Nitric Oxide",
+          "displayName": "Nitric Oxide",
+          "amount": 4000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:0eb656ec-c8d6-4b11-962d-d8a74fab4ea2",
+      "name": "item|Benzene",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:532",
+      "minimumTier": "LV",
+      "durationTicks": 8,
+      "eut": 64,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Wood Tar",
+          "displayName": "Wood Tar",
+          "amount": 100
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Benzene",
+          "displayName": "Benzene",
+          "amount": 40
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:0ee804b0-4514-4d08-accb-6e4160804739",
+      "name": "item|Empty Cell",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:421",
+      "minimumTier": "LV",
+      "durationTicks": 240,
+      "eut": 30,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Nitrogen Dioxide Cell",
+          "displayName": "Nitrogen Dioxide Cell",
+          "amount": 2
+        },
+        {
+          "kind": "item",
+          "id": "Oxygen Cell",
+          "displayName": "Oxygen Cell",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Water",
+          "displayName": "Water",
+          "amount": 1000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Empty Cell",
+          "displayName": "Empty Cell",
+          "amount": 3
+        },
+        {
+          "kind": "item",
+          "id": "Nitric Acid",
+          "displayName": "Nitric Acid",
+          "amount": 2000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:1b5c5b51-7abe-48d2-8ae7-a46789dd4e72",
+      "name": "item|Quicklime Dust",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:362",
+      "minimumTier": "LV",
+      "durationTicks": 3000,
+      "eut": 120,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Ashes",
+          "displayName": "Ashes",
+          "amount": 36
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Quicklime Dust",
+          "displayName": "Quicklime Dust",
+          "amount": 12,
+          "chance": 0.96
+        },
+        {
+          "kind": "item",
+          "id": "Potash Dust",
+          "displayName": "Potash Dust",
+          "amount": 6,
+          "chance": 0.90000004
+        },
+        {
+          "kind": "item",
+          "id": "Magnesia Dust",
+          "displayName": "Magnesia Dust",
+          "amount": 1,
+          "chance": 0.45
+        },
+        {
+          "kind": "item",
+          "id": "Phosphorus Pentoxide Dust",
+          "displayName": "Phosphorus Pentoxide Dust",
+          "amount": 2
+        },
+        {
+          "kind": "item",
+          "id": "Soda Ash Dust",
+          "displayName": "Soda Ash Dust",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Banded Iron Dust",
+          "displayName": "Banded Iron Dust",
+          "amount": 4
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:1f6af305-2fe9-4446-856b-a98267850602",
+      "name": "item|Phenol Cell",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:421",
+      "minimumTier": "LV",
+      "durationTicks": 160,
+      "eut": 30,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Oxygen Cell",
+          "displayName": "Oxygen Cell",
+          "amount": 2
+        },
+        {
+          "kind": "item",
+          "id": "Isopropylbenzene",
+          "displayName": "Isopropylbenzene",
+          "amount": 1000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Phenol Cell",
+          "displayName": "Phenol Cell",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Empty Cell",
+          "displayName": "Empty Cell",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Acetone",
+          "displayName": "Acetone",
+          "amount": 1000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:377a499f-2288-4981-997e-75aa8ba3d707",
+      "name": "item|Cetane-Boosted Diesel",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:1169",
+      "minimumTier": "LV",
+      "durationTicks": 120,
+      "eut": 480,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Bio Diesel",
+          "displayName": "Bio Diesel",
+          "amount": 10000
+        },
+        {
+          "kind": "item",
+          "id": "Tetranitromethane",
+          "displayName": "Tetranitromethane",
+          "amount": 400
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Cetane-Boosted Diesel",
+          "displayName": "Cetane-Boosted Diesel",
+          "amount": 9000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:3ba27523-3df4-48b0-9c34-6758946090ec",
+      "name": "item|EU",
+      "kind": "gregtech_machine",
+      "machineType": "Gas Turbine",
+      "minimumTier": "LV",
+      "durationTicks": 20,
+      "eut": 0,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Carbon Monoxide",
+          "displayName": "Carbon Monoxide",
+          "amount": 124
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "EU",
+          "displayName": "EU",
+          "amount": 2560
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:3c22b8b9-01e8-499d-a0f0-6cd9b4de462b",
+      "name": "item|Oxygen Cell",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:231",
+      "minimumTier": "LV",
+      "durationTicks": 16,
+      "eut": 1,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Empty Cell",
+          "displayName": "Empty Cell",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Oxygen",
+          "displayName": "Oxygen",
+          "amount": 1000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Oxygen Cell",
+          "displayName": "Oxygen Cell",
+          "amount": 1
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:41ce918e-044a-4ea7-8d56-dbd55054050b",
+      "name": "item|Carbon Dust",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:372",
+      "minimumTier": "LV",
+      "durationTicks": 448,
+      "eut": 60,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Sugar",
+          "displayName": "Sugar",
+          "amount": 32
+        },
+        {
+          "kind": "item",
+          "id": "Empty Cell",
+          "displayName": "Empty Cell",
+          "amount": 25
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Carbon Dust",
+          "displayName": "Carbon Dust",
+          "amount": 2
+        },
+        {
+          "kind": "item",
+          "id": "Oxygen Cell",
+          "displayName": "Oxygen Cell",
+          "amount": 25
+        },
+        {
+          "kind": "item",
+          "id": "Water",
+          "displayName": "Water",
+          "amount": 5000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:520a24dc-88b1-4083-a0c3-3313823c5619",
+      "name": "item|EU",
+      "kind": "gregtech_machine",
+      "machineType": "Large Combustion Engine",
+      "minimumTier": "LV",
+      "durationTicks": 20,
+      "eut": 0,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Cetane-Boosted Diesel",
+          "displayName": "Cetane-Boosted Diesel",
+          "amount": 80
+        },
+        {
+          "kind": "item",
+          "id": "Lubricant",
+          "displayName": "Lubricant",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Oxygen",
+          "displayName": "Oxygen",
+          "amount": 40
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "EU",
+          "displayName": "EU",
+          "amount": 122880
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:61bb0c34-56bc-47e2-9126-6a8a3c9f0d4b",
+      "name": "item|Sodium Dust",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:372",
+      "minimumTier": "LV",
+      "durationTicks": 160,
+      "eut": 120,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Salt",
+          "displayName": "Salt",
+          "amount": 2
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Sodium Dust",
+          "displayName": "Sodium Dust",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Chlorine",
+          "displayName": "Chlorine",
+          "amount": 1000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:64194438-2957-4218-a0bf-3ba38a52ccdd",
+      "name": "item|Ashes",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:422",
+      "minimumTier": "LV",
+      "durationTicks": 360,
+      "eut": 28,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Charcoal",
+          "displayName": "Charcoal",
+          "amount": 9
+        },
+        {
+          "kind": "item",
+          "id": "Oxygen",
+          "displayName": "Oxygen",
+          "amount": 9000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Ashes",
+          "displayName": "Ashes",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Carbon Monoxide",
+          "displayName": "Carbon Monoxide",
+          "amount": 9000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:64d19cf9-c9f6-4ccb-a702-4a068612a0ca",
+      "name": "item|Empty Cell",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:232",
+      "minimumTier": "LV",
+      "durationTicks": 8,
+      "eut": 4,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Glycerol Cell",
+          "displayName": "Glycerol Cell",
+          "amount": 1
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Empty Cell",
+          "displayName": "Empty Cell",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Glycerol",
+          "displayName": "Glycerol",
+          "amount": 1000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:65c7d501-36ec-4643-9216-81305b3edb5a",
+      "name": "item|Glycerol Cell",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:422",
+      "minimumTier": "LV",
+      "durationTicks": 2700,
+      "eut": 120,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Sodium Hydroxide Dust",
+          "displayName": "Sodium Hydroxide Dust",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Methanol Cell",
+          "displayName": "Methanol Cell",
+          "amount": 9
+        },
+        {
+          "kind": "item",
+          "id": "Seed Oil",
+          "displayName": "Seed Oil",
+          "amount": 54000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Glycerol Cell",
+          "displayName": "Glycerol Cell",
+          "amount": 9
+        },
+        {
+          "kind": "item",
+          "id": "Bio Diesel",
+          "displayName": "Bio Diesel",
+          "amount": 54000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:6ab1fe5e-3680-41b0-960c-619133a57b5a",
+      "name": "item|Potassium Dust",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:372",
+      "minimumTier": "LV",
+      "durationTicks": 100,
+      "eut": 60,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Saltpeter Dust",
+          "displayName": "Saltpeter Dust",
+          "amount": 5
+        },
+        {
+          "kind": "item",
+          "id": "Empty Cell",
+          "displayName": "Empty Cell",
+          "amount": 3
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Potassium Dust",
+          "displayName": "Potassium Dust",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Oxygen Cell",
+          "displayName": "Oxygen Cell",
+          "amount": 3
+        },
+        {
+          "kind": "item",
+          "id": "Nitrogen",
+          "displayName": "Nitrogen",
+          "amount": 1000
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:747c0180-d902-44d4-a39c-9a80aefbf435",
+      "name": "item|EU",
+      "kind": "gregtech_machine",
+      "machineType": "Large Semifluid Burner",
+      "minimumTier": "LV",
+      "durationTicks": 20,
+      "eut": 0,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Glycerol",
+          "displayName": "Glycerol",
+          "amount": 240
+        },
+        {
+          "kind": "item",
+          "id": "Lubricant",
+          "displayName": "Lubricant",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Oxygen",
+          "displayName": "Oxygen",
+          "amount": 80
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "EU",
+          "displayName": "EU",
+          "amount": 122880
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    },
+    {
+      "id": "gtnhplanner:789f1738-b577-4590-b789-0760d18c98fb",
+      "name": "item|Methanol Cell",
+      "kind": "gregtech_machine",
+      "machineType": "item:gregtech:gt.blockmachines:422",
+      "minimumTier": "LV",
+      "durationTicks": 120,
+      "eut": 96,
+      "inputs": [
+        {
+          "kind": "item",
+          "id": "Carbon Monoxide Cell",
+          "displayName": "Carbon Monoxide Cell",
+          "amount": 1
+        },
+        {
+          "kind": "item",
+          "id": "Hydrogen",
+          "displayName": "Hydrogen",
+          "amount": 4000
+        }
+      ],
+      "outputs": [
+        {
+          "kind": "item",
+          "id": "Methanol Cell",
+          "displayName": "Methanol Cell",
+          "amount": 1
+        }
+      ],
+      "source": {
+        "exporter": "unknown",
+        "sourceMod": "GTNH Planner"
+      }
+    }
+  ]
+}

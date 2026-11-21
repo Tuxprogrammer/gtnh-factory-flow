@@ -8,7 +8,7 @@
 import { findFuel, powerPlannerData, type PowerFuelEntry } from "../planner-data";
 import type { PowerModel, PowerSourceDefinition, PowerSetting } from "../types";
 import { formatAmount, items, liters, stat } from "./helpers";
-import { railcraftSteamSources } from "./railcraft";
+import { FURNACE_FUEL_EXTRAS, railcraftSteamSources, type FurnaceFuel } from "./railcraft";
 
 interface BoilerSpec {
   id: string;
@@ -159,7 +159,6 @@ interface SmallBoilerSpec {
   steamPerSecond: number;
   /** energyConsumption x 20 / (cooldownInterval + 1), from the machine's class. */
   energyPerSecond: number;
-  automatable: boolean;
 }
 
 const SMALL_BOILER_SPECS: SmallBoilerSpec[] = [
@@ -170,7 +169,6 @@ const SMALL_BOILER_SPECS: SmallBoilerSpec[] = [
     unlock: "ULV",
     steamPerSecond: 120,
     energyPerSecond: 20 / 46,
-    automatable: false,
   },
   // MTEBoilerSteel, in-game name "Large Coal Boiler": 300 L/s, consumption 2, interval 40.
   {
@@ -179,7 +177,6 @@ const SMALL_BOILER_SPECS: SmallBoilerSpec[] = [
     unlock: "LV",
     steamPerSecond: 300,
     energyPerSecond: 40 / 41,
-    automatable: false,
   },
 ];
 
@@ -221,10 +218,8 @@ function buildSmallBoiler(spec: SmallBoilerSpec): PowerSourceDefinition {
       // euPerItem in the solid table IS the furnace burn time in ticks.
       const energyPerItem = (fuel.euPerItem ?? 0) / 10;
       const secondsPerItem = energyPerItem / spec.energyPerSecond;
-      const warnings: string[] = [];
-      if (!spec.automatable) {
-        warnings.push("GTNH turns small boiler automation off. Fuel goes in by hand.");
-      }
+      // GTNH's allowSmallBoilerAutomation=false locks only the bucket and cell slots:
+      // MTEBoiler.allowPutStack lets hoppers and pipes fill the fuel slot either way.
       return {
         euPerTick: 0,
         inputs: [
@@ -236,7 +231,6 @@ function buildSmallBoiler(spec: SmallBoilerSpec): PowerSourceDefinition {
           stat("Steam", `${formatAmount(spec.steamPerSecond / 20)} L/t`),
           stat("One item burns", `${formatAmount(secondsPerItem)}s`),
         ],
-        warnings,
       };
     },
   };
@@ -260,6 +254,18 @@ const ADVANCED_BOILER_TIERS = [
   { key: "HV", label: "Advanced Boiler [HV] (2,250 L/s)", tier: 3 },
 ];
 
+/**
+ * Every item with a furnace burn time: the workbook's table at its own values (a blaze rod is 2400 here, Railcraft's
+ * 1000 applies only to its firebox) and the wood and dust fuels it lacks.
+ */
+const ADVANCED_BOILER_FUELS: FurnaceFuel[] = [
+  ...powerPlannerData.boilerFuels.bronzeSolid.map((entry: PowerFuelEntry) => ({
+    name: entry.name,
+    burnTicks: entry.euPerItem ?? 0,
+  })),
+  ...FURNACE_FUEL_EXTRAS,
+].sort((a, b) => a.burnTicks - b.burnTicks);
+
 const advancedBoiler: PowerSourceDefinition = {
   id: "advanced-boiler",
   name: "Advanced Boiler",
@@ -278,9 +284,9 @@ const advancedBoiler: PowerSourceDefinition = {
       type: "select",
       id: "solidFuel",
       label: "Fuel",
-      options: powerPlannerData.boilerFuels.bronzeSolid.map((entry) => ({
-        key: entry.name,
-        label: entry.name,
+      options: ADVANCED_BOILER_FUELS.map(({ name, label }) => ({
+        key: name,
+        label: label ?? name,
       })),
       defaultKey: "Coal",
     },
@@ -296,12 +302,17 @@ const advancedBoiler: PowerSourceDefinition = {
     const entry =
       ADVANCED_BOILER_TIERS.find((row) => row.key === read.select("tier")) ?? ADVANCED_BOILER_TIERS[0];
     const steamPerSecond = 750 * entry.tier;
-    const fuel = findFuel(powerPlannerData.boilerFuels.bronzeSolid, read.select("solidFuel"));
-    const secondsPerItem = advancedBoilerSecondsPerItem(fuel.euPerItem ?? 0);
+    const fuel =
+      ADVANCED_BOILER_FUELS.find((row) => row.name === read.select("solidFuel")) ??
+      ADVANCED_BOILER_FUELS[0];
+    const secondsPerItem = advancedBoilerSecondsPerItem(fuel.burnTicks);
     return {
       euPerTick: 0,
       inputs: [
-        items(fuel.name, secondsPerItem > 0 ? 1 / secondsPerItem : 0),
+        {
+          ...items(fuel.name, secondsPerItem > 0 ? 1 / secondsPerItem : 0),
+          ...(fuel.alternatives ? { alternatives: fuel.alternatives } : {}),
+        },
         liters(read.select("waterKind"), steamPerSecond / 160),
       ],
       outputs: [liters("Steam", steamPerSecond)],
@@ -393,12 +404,16 @@ const solarBoiler: PowerSourceDefinition = {
       defaultOn: false,
       enabledWhen: { settingId: "waterKind", equals: "Water" },
     },
+    // MTEBoilerSolar.updateFuel heats eight times faster by day than at night and not at all in a thunderstorm or
+    // under cover: the share of the time it runs at full output is the player's to set, as on the Solar Panel.
+    { type: "number", id: "duty", label: "Duty", min: 1, max: 100, step: 1, defaultValue: 100, unit: "%" },
   ],
   compute(read): PowerModel {
     const model =
       SOLAR_BOILER_MODELS.find((row) => row.key === read.select("model")) ?? SOLAR_BOILER_MODELS[0];
     const onWater = read.select("waterKind") === "Water";
-    const steamPerSecond = onWater && read.on("calcified") ? model.min : model.max;
+    const steamPerSecond =
+      (onWater && read.on("calcified") ? model.min : model.max) * (read.number("duty") / 100);
     const warnings: string[] = [];
     if (onWater) {
       const fallTicks = ((model.max - model.min) * SOLAR_CALCIFICATION_TICKS) / model.max;
@@ -438,6 +453,12 @@ const EXCHANGER_UNLOCK: Record<string, string> = {
 
 /** RecipesGregTech.thermalBoilerRecipes: lava makes plain Steam, the rest superheated. */
 const THERMAL_BOILER_PLAIN_STEAM = new Set(["Lava", "Pahoehoe Lava"]);
+
+/**
+ * Obsidian per 1000 L in RecipesGregTech.thermalBoilerRecipes (outputChances 1000 and 3700 of 10,000).
+ * MTEThermalBoiler keeps it without a Lava Filter and voids the recipes' other items.
+ */
+const THERMAL_BOILER_OBSIDIAN: Record<string, number | undefined> = { Lava: 0.1, "Pahoehoe Lava": 0.37 };
 
 function buildExchanger(entry: (typeof powerPlannerData.heatExchangers)[number]): PowerSourceDefinition {
   const isThermalBoiler = entry.name === "Thermal Boiler";
@@ -516,13 +537,19 @@ function buildExchanger(entry: (typeof powerPlannerData.heatExchangers)[number])
       const tier = isThermalBoiler ? 1 : read.number("tier");
       const intake = read.number("intake");
       const lowered = rule.threshold + (tier - 1) * rule.throttle;
-      const threshold = isExtreme ? Math.max(1, lowered) : lowered;
+      // MTEHeatExchanger keeps the threshold in an int field (superheated_threshold *=
+      // the coolant's multiplier truncates), so lava on an even circuit loses its half litre.
+      const threshold = isExtreme ? Math.max(1, lowered) : Math.trunc(lowered);
       const cap = capAtMax ? rule.max : threshold * 2;
       const used = Math.min(intake, cap);
       const overThreshold = used >= threshold;
       const ratio = overThreshold ? rule.overRatio : rule.underRatio;
       const efficiency = isThermalBoiler ? 1 : 1 - 0.015 * (tier - 1);
-      const steamPerSecond = used * ratio * efficiency;
+      // MTEExtremeHeatExchanger: mEUt = (int) (recipe EU/t x efficiency x used / max), and each
+      // tick turns whole 160 L lots of water into steam, so the steam is rounded down to 160 L a tick.
+      const steamPerSecond = isExtreme
+        ? Math.floor(Math.trunc(((rule.max * ratio) / 20) * efficiency * (used / rule.max)) / 160) * 160 * 20
+        : used * ratio * efficiency;
       const grade = isThermalBoiler
         ? THERMAL_BOILER_PLAIN_STEAM.has(fluidName)
           ? "Steam"
@@ -539,6 +566,10 @@ function buildExchanger(entry: (typeof powerPlannerData.heatExchangers)[number])
       const coldReturn = COLD_RETURN[fluidName];
       if (coldReturn) {
         outputs.push(liters(coldReturn, used));
+      }
+      const obsidian = isThermalBoiler ? THERMAL_BOILER_OBSIDIAN[fluidName] : undefined;
+      if (obsidian) {
+        outputs.push(items("Obsidian", (used / 1000) * obsidian));
       }
       const waterName = isThermalBoiler ? read.select("waterKind") : "Distilled Water";
       return {

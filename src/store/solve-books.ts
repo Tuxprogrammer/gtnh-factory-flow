@@ -1,6 +1,7 @@
 import { calculateThroughput } from "@/lib/solver";
 import type { FactoryProject, ThroughputResult } from "@/lib/model/types";
 import { getGameRates } from "@/lib/model/game-rates";
+import { setSolveDegraded } from "./solve-health";
 
 /**
  * The store's one door to the solver, sized to the board it is asked about.
@@ -25,7 +26,7 @@ import { getGameRates } from "@/lib/model/game-rates";
 /**
  * Nodes plus edges above which the solve leaves the main thread. Around this
  * size the homegrown simplex already takes 100ms+ per edit (the worker's
- * HiGHS stays under 50ms), and main-thread time grows roughly cubically.
+ * engine stays under 50ms), and main-thread time grows roughly cubically.
  */
 const SYNC_SOLVE_LIMIT = 120;
 
@@ -40,7 +41,7 @@ const SLOW_SOLVE_MS = 50;
  * SOLVE MODE is far heavier on the homegrown simplex: six dense solves over
  * every machine and wire at once, and pool mode (which rides on solve mode)
  * adds a pool drawer per resource. It can run several times slower than plan
- * mode there, while HiGHS (worker only) stays fast. Past this small size it
+ * mode there, while the worker's engine stays fast. Past this small size it
  * always goes to the worker rather than waiting for the slow-solve rule to
  * learn from a frozen tab.
  */
@@ -48,7 +49,7 @@ const SOLVE_MODE_SYNC_LIMIT = 40;
 
 /**
  * The last MAIN-THREAD solve's wall time, and the plan it was measured on.
- * Only a synchronous solve may write it: the worker runs HiGHS, roughly ten
+ * Only a synchronous solve may write it: the worker runs the compiled core, roughly ten
  * times faster than the main thread's simplex, so its timing says nothing
  * about how long the tab would freeze (letting it count would send a slow
  * plan back to the main thread). A slow plan therefore stays with the worker
@@ -104,9 +105,10 @@ export function solveBooks(project: FactoryProject): ThroughputResult {
     size > SYNC_SOLVE_LIMIT ||
     provenSlow ||
     ((project.solveMode === true || project.poolMode === true) && size > SOLVE_MODE_SYNC_LIMIT) ||
-    // Plan mode runs integer programs (HiGHS, which only the worker loads): the worker whenever there is one.
+    // A plan solves on the compiled core, which the worker loads: the worker whenever there is one.
     project.planMode === true;
   if (!expectSlow || !workerAvailable()) {
+    if (!workerAvailable()) requestMainThreadCore();
     const started = performance.now();
     const result = calculateThroughput(project);
     lastSolveDurationMs = performance.now() - started;
@@ -153,6 +155,24 @@ function workerAvailable(): boolean {
   return !workerBroken && typeof Worker !== "undefined";
 }
 
+let coreRequested = false;
+
+/**
+ * With no Worker every solve runs here, so the main thread asks for the compiled core the way the Worker does: the
+ * solve adoption (`@/lib/core/solve-adopt`) loads the solver module and installs the bridge the plan solve reads, and
+ * until it is ready the website's engine answers. Only in a browser (a server render and the test runner keep the
+ * website's engine), once, and only where a solve would otherwise run here: with a Worker the main thread never loads
+ * the solver, which the Worker owns.
+ */
+function requestMainThreadCore() {
+  if (coreRequested || typeof window === "undefined") return;
+  coreRequested = true;
+  import("@/lib/core/solve-adopt")
+    .then((m) => m.warmSolveCore())
+    .then((ready) => setSolveDegraded(!ready))
+    .catch(() => setSolveDegraded(true));
+}
+
 function scheduleSolve(request: SolveRequest) {
   if (inFlight) {
     // Only the newest waiting plan matters; intermediates were superseded.
@@ -179,9 +199,11 @@ function getWorker(): Worker {
         result?: ThroughputResult;
         error?: string;
         solveMs?: number;
+        engine?: "core" | "website";
       }>,
     ) => {
-      const { key, result, error } = event.data;
+      const { key, result, error, engine } = event.data;
+      if (engine) setSolveDegraded(engine !== "core");
       inFlight = undefined;
       if (result) {
         // `solveMs` is deliberately not read: see lastSolveDurationMs.

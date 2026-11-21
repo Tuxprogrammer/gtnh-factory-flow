@@ -5,8 +5,10 @@
 import type { ModelData } from "./model";
 
 export const NUMERICS = {
-  /** Relative: what a variable holds when the solver meant zero. */
+  /** Relative: what a variable holds when the solver meant zero (to its network's scale, `dustScales`). */
   dust: 1e-11,
+  /** The least a network's dust scale is, as a share of the whole point's (`dustScales`). */
+  networkFloor: 1e-2,
   /** Relative threshold for gate support. */
   zero: 1e-6,
   /** Conservation and drawer tolerance. */
@@ -62,6 +64,9 @@ export function solutionScale(
  * a value sits in, so one network's rates say nothing of another's noise: judged over the whole point, a reactor's
  * billions of EU a second made a real 0.03/s item flow read as dust. A machine takes its smallest network, so it reads
  * as dust only where every network it touches would; one with no connected port takes the whole point's scale. Pass null for parts the caller does not hold (externals alone).
+ * A network's scale is never below `networkFloor` of the whole point's: an engine without exact vertices (ojAlgo, the
+ * shared core's) rounds every value of a model to about 1e-14 of its largest, so a network carrying only that rounding
+ * is dust, while a real 0.03/s wire beside billions of EU a second stays.
  */
 export interface DustScales {
   ports: number[];
@@ -83,11 +88,12 @@ export function dustScales(
     const c = model.portComponent[p]!;
     network.set(c, Math.max(network.get(c) ?? 0, most));
   });
-  const ports = model.connectedPorts.map((_, p) =>
-    Math.max(network.get(model.portComponent[p]!)!, MIN_NORMAL),
-  );
   const whole =
     extents && flows ? solutionScale(model, extents, flows, externals) : scaleOf(externals);
+  const floor = Math.max(NUMERICS.networkFloor * whole, MIN_NORMAL);
+  const ports = model.connectedPorts.map((_, p) =>
+    Math.max(network.get(model.portComponent[p]!)!, floor),
+  );
   const machines = new Array<number>(model.machines.length).fill(Infinity);
   model.connectedPorts.forEach((port, p) => {
     machines[port.machine] = Math.min(machines[port.machine]!, ports[p]!);

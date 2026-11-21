@@ -1,7 +1,7 @@
 /**
- * The S1 parity scenarios (`scenarios.json`) as website plans, and the board's reading of a solved plan the way the
+ * The S1 parity scenarios (`conformance/board/scenarios.json`) as website plans, and the board's reading of a solved plan the way the
  * clean card, the drawers and the overview rail show it. The mod builds the same scenarios as its own graphs
- * (a throwaway JUnit, S1ParityTest) and records its answer and its board in `fixtures/mod-answers.json`.
+ * (a throwaway JUnit, S1ParityTest) and records its answer and its board in `conformance/board/mod-answers.json`.
  */
 import { buildRailPorts, deriveNodeVerdict } from "@/components/flow/node-verdict";
 import { buildRailModel } from "@/components/flow/clean/rail/rail-model";

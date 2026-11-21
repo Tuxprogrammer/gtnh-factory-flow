@@ -63,73 +63,14 @@ import { HatchPowerControls, PowerReadout, PowerControlsGuide } from "./HatchPow
 import { carryMachineVoltage } from "@/lib/solver/hatch-input";
 import { CardActionsMenu } from "./CardActionsMenu";
 import { getVoltageTierMaxEuT, isVoltageTierName } from "@/lib/model/tiers";
-import { describePowerWorking } from "@/lib/solver/power-working";
+import { describePowerWorking } from "@/lib/format/power-working";
 import { prefersCuratedMachineMath } from "@/lib/solver/runtime-calculation";
 import {
   applyMachineOutputMultipliers,
   getMachineParallelMultiplier,
 } from "@/lib/solver/machine-effects";
-import {
-  formatCompact,
-  formatPowerValue,
-  formatCompactStable,
-  formatRate,
-  applyMachineHandlerToRecipe,
-  GT_OVERCLOCK_TIERS,
-  getRecipeMachineHandlers,
-  getRecipeMachineConfigTierControls,
-  getRecipeCoilTierControl,
-  applyRecipeInputOverrides,
-  getRecipePowerTier,
-  getSelectedMachineHandler,
-  getCropsNhStats,
-  getVoltageTierIndex,
-  getRecipeMaximumVoltageTier,
-  getRecipeAvailableVoltageTiers,
-  getRunVoltageTier,
-  BEE_INDUSTRIAL_PRODUCTION_CONTROL_ID,
-  BEE_INDUSTRIAL_SPEED_CONTROL_ID,
-  CROP_GAIN_STAT_CONTROL_ID,
-  CROP_GROWTH_STAT_CONTROL_ID,
-  CROP_HARVESTER_INDUSTRIAL_FARM_ID,
-  CROP_IF_ENVIRONMENT_UNIT_CONTROL_ID,
-  CROP_IF_FERTILIZER_UNIT_CONTROL_ID,
-  CROP_IF_GROWTH_UNIT_CONTROL_ID,
-  CROP_IF_HARVEST_UNIT_CONTROL_ID,
-  CROP_IF_OVERCLOCK_CONTROL_ID,
-  CROP_MANAGER_TIER_CONTROL_ID,
-  CROP_SEED_BED_TIER_CONTROL_ID,
-  cropsNhCropsPerMachine,
-  cropsNhEnvironmentFromTiers,
-  cropsNhExpectedDrop,
-  cropsNhFarmEut,
-  cropsNhGrowthRate,
-  cropsNhGrowthSpeedMultiplier,
-  cropsNhHarvestRoundMultiplier,
-  cropsNhHarvestTicks,
-  cropsNhHarvesterMachineCount,
-  cropsNhNutrientScore,
-  type CropsNhStats,
-  cropsNhHarvesterEnvironment,
-  cropsNhHarvesterFromTiers,
-  cropsNhIsHandPicked,
-  cropsNhManagerEuPerHarvest,
-  cropsNhUnitSlotsUsed,
-  cropsNhUpgradeSlots,
-  isSteamMachineHandler,
-  isBeeFrameSlotControlId,
-  isBeeProductionConfigControl,
-  isBeeProductionRecipe,
-  isCropFarmRecipe,
-  isCropProductionConfigControl,
-  isCropProductionRecipe,
-  isControllerSlotInput,
-  isIndustrialApiaryMachineType,
-  makeResourceKey,
-  resourceMatchesInput,
-  resourceLabel,
-  type MachineConfigTierControl,
-} from "@/lib/model";
+import { applyMachineHandlerToRecipe, GT_OVERCLOCK_TIERS, getRecipeMachineHandlers, getRecipeMachineConfigTierControls, getRecipeCoilTierControl, applyRecipeInputOverrides, getRecipePowerTier, getSelectedMachineHandler, getCropsNhStats, getVoltageTierIndex, getRecipeMaximumVoltageTier, getRecipeAvailableVoltageTiers, getRunVoltageTier, BEE_INDUSTRIAL_PRODUCTION_CONTROL_ID, BEE_INDUSTRIAL_SPEED_CONTROL_ID, CROP_GAIN_STAT_CONTROL_ID, CROP_GROWTH_STAT_CONTROL_ID, CROP_HARVESTER_INDUSTRIAL_FARM_ID, CROP_IF_ENVIRONMENT_UNIT_CONTROL_ID, CROP_IF_FERTILIZER_UNIT_CONTROL_ID, CROP_IF_GROWTH_UNIT_CONTROL_ID, CROP_IF_HARVEST_UNIT_CONTROL_ID, CROP_IF_OVERCLOCK_CONTROL_ID, CROP_MANAGER_TIER_CONTROL_ID, CROP_SEED_BED_TIER_CONTROL_ID, cropsNhCropsPerMachine, cropsNhEnvironmentFromTiers, cropsNhExpectedDrop, cropsNhFarmEut, cropsNhGrowthRate, cropsNhGrowthSpeedMultiplier, cropsNhHarvestRoundMultiplier, cropsNhHarvestTicks, cropsNhHarvesterMachineCount, cropsNhNutrientScore, type CropsNhStats, cropsNhHarvesterEnvironment, cropsNhHarvesterFromTiers, cropsNhIsHandPicked, cropsNhManagerEuPerHarvest, cropsNhUnitSlotsUsed, cropsNhUpgradeSlots, isSteamMachineHandler, isBeeFrameSlotControlId, isBeeProductionConfigControl, isBeeProductionRecipe, isCropFarmRecipe, isCropProductionConfigControl, isCropProductionRecipe, isControllerSlotInput, isIndustrialApiaryMachineType, makeResourceKey, resourceMatchesInput, resourceLabel, type MachineConfigTierControl } from "@/lib/model";
+import { formatCompact, formatPowerValue, formatCompactStable, formatRate } from "@/lib/format/numbers";
 import {
   getSharedMachineHandlers,
   isSharedMachineNode,
@@ -149,7 +90,7 @@ import {
   rateSuffixForKind,
   rateUnitMultiplier,
   rateUnitPrecisionScale,
-} from "@/lib/model/rate-unit";
+} from "@/lib/format/rate-unit";
 import {
   getRecipeProgrammedCircuit,
   type RecipeProgrammedCircuit,

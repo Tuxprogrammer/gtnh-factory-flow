@@ -16,12 +16,10 @@ import {
 } from "@/lib/server/feedback";
 import { storeFeedbackFile } from "@/lib/server/feedback-files";
 import { claimIssue, feedbackGate, looksGenuine } from "@/lib/server/feedback-guard";
+import { siteUrl } from "@/lib/site-url";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-/** Where the issues are opened, and the site the links point at. */
-const SITE = "https://gtnhplanner.com";
 
 /** A refusal, counted towards the gate's flood pause. */
 function refuse(status: number, error: string): NextResponse {
@@ -73,26 +71,32 @@ export async function POST(request: Request) {
 
     const id = randomUUID();
     const links: FeedbackLinks = { plans: [] };
+    // The issue's links to a plan and its picture are addresses on this site. With no configured site there is
+    // none to write, so the issue names the plans and carries no attachments.
+    const site = siteUrl();
     for (let i = 0; i < report.plans.length; i++) {
       const { name, plan } = report.plans[i]!;
       let link: string | undefined;
-      try {
-        const candidate = planCodeLink(await encodePlanCode(plan), SITE);
-        link = linkFits(candidate) ? candidate : undefined;
-      } catch {
-        link = undefined;
+      let file: string | undefined;
+      if (site) {
+        try {
+          const candidate = planCodeLink(await encodePlanCode(plan), site);
+          link = linkFits(candidate) ? candidate : undefined;
+        } catch {
+          link = undefined;
+        }
+        file = await storeFeedbackFile(
+          site,
+          id,
+          `plan-${i + 1}.json`,
+          Buffer.from(planFile(plan)),
+          "application/json",
+        );
       }
-      const file = await storeFeedbackFile(
-        SITE,
-        id,
-        `plan-${i + 1}.json`,
-        Buffer.from(planFile(plan)),
-        "application/json",
-      );
       links.plans.push({ name, cards: plan.nodes.length, link, file });
     }
-    if (report.picture) {
-      links.picture = await storeFeedbackFile(SITE, id, "picture.png", report.picture, "image/png");
+    if (report.picture && site) {
+      links.picture = await storeFeedbackFile(site, id, "picture.png", report.picture, "image/png");
     }
 
     const { body, plansComment } = issueBody(report, links);

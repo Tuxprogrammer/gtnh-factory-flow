@@ -6,6 +6,7 @@ import { useDesignStore } from "@/store/design-store";
 import { writeWorkspaceView } from "@/lib/workspace-view";
 import { OPEN_FEEDBACK_EVENT } from "./chrome-events";
 import { ModBar } from "./ModBar";
+import { GITHUB_URL } from "@/components/HeaderLinks";
 import { useCommunityAuthStore } from "@/store/community-auth-store";
 import { openLibrary, readLibraryTabState } from "@/lib/library/library-tab";
 
@@ -230,12 +231,22 @@ describe("the mod's top bar", () => {
     expect(screen.getByText("Blue comes into the plan; orange leaves it")).toBeTruthy();
   });
 
+  it("the Help menu links this repository and, with no help page configured, no chat or tip jar", () => {
+    renderBar();
+    fireEvent.click(key("help"));
+    const rows = shareLabels();
+    expect(rows).toContain("Source on GitHub");
+    expect(rows).toContain("Download the mod");
+    expect(rows).not.toContain("Get help");
+    expect(rows.filter((label) => /discord|ko-fi|support/i.test(label ?? ""))).toEqual([]);
+  });
+
   it("the Help menu's Download the mod opens the mod's newest release", () => {
     const open = vi.spyOn(window, "open").mockImplementation(() => null);
     renderBar();
     fireEvent.click(key("help"));
     fireEvent.click(screen.getByText("Download the mod"));
-    expect(open).toHaveBeenCalledWith("https://github.com/jackwrichards/gtnh-planner-mod/releases/latest", "_blank", "noopener,noreferrer");
+    expect(open).toHaveBeenCalledWith(`${GITHUB_URL}/releases/latest`, "_blank", "noopener,noreferrer");
     open.mockRestore();
   });
 

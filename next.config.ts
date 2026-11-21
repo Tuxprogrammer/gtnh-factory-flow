@@ -1,4 +1,8 @@
+import { execFileSync } from "node:child_process";
 import type { NextConfig } from "next";
+
+// The shared view tokens are generated, not committed: make sure they exist for every way of starting next.
+execFileSync(process.execPath, ["tools/tokens/generate.mjs"], { cwd: process.cwd(), stdio: "inherit" });
 
 const datasetBackendUrl = process.env.GTNH_DATASET_BACKEND_URL?.replace(/\/+$/, "");
 
@@ -27,6 +31,26 @@ const nextConfig: NextConfig = {
           {
             key: "Cache-Control",
             value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        // The compiled core's files carry a hash of their content in the name (tools/copy-core.mjs), so one never changes
+        // under its name: a returning visitor downloads none of them. manifest.json is the one that names the current set.
+        source: "/core/:dir(wasm-gc|js)/:file",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        source: "/core/manifest.json",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-cache",
           },
         ],
       },

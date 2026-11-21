@@ -6,7 +6,8 @@ import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react
 import { isCompactViewport, useIsCompactViewport } from "@/lib/compact-view";
 import { usePlanLayout } from "@/components/use-plan-layout";
 import { leaveLibrary, openLibrary, useLibraryTab } from "@/lib/library/library-tab";
-import { isPowerDisplayUnit } from "@/lib/model/rate-unit";
+import { isPowerDisplayUnit } from "@/lib/format/rate-unit";
+import { VIEW_SETTINGS } from "@/lib/view-settings.generated";
 import { useWorkspaceView, writeWorkspaceView } from "@/lib/workspace-view";
 import { useFactoryStore } from "@/store/factory-store";
 import { useDesignStore } from "@/store/design-store";
@@ -123,7 +124,7 @@ export function ModBar({ onShare, onScreenshot, onSettings, onChangelog, onDevMe
   // The power unit comes back from storage (the old toolbar restored it; it is gone from plan boards).
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("gtnh-factory-flow.power-display-unit.v1");
+      const saved = localStorage.getItem(VIEW_SETTINGS.powerDisplay.key);
       // A tier saved by the older global unit becomes the mod's per-machine Amps.
       if (isPowerDisplayUnit(saved)) setPowerDisplayUnit(saved === "eu" ? "eu" : "amps");
     } catch {
@@ -371,7 +372,8 @@ function helpEntries({
     { label: unreadNotes ? "What's new *" : "What's new", detail: HelpLinks.version, onSelect: onChangelog },
     { label: "Download the mod", detail: "GTNH 2.9", onSelect: () => HelpLinks.open(HelpLinks.mod) },
     { label: "Source on GitHub", onSelect: () => HelpLinks.open(HelpLinks.github) },
-    { label: "Discord thread", onSelect: () => HelpLinks.open(HelpLinks.discord) },
-    { label: "Support on Ko-fi", onSelect: () => HelpLinks.open(HelpLinks.kofi) },
+    ...(HelpLinks.support
+      ? [{ label: "Get help", onSelect: () => HelpLinks.open(HelpLinks.support!) }]
+      : []),
   ];
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { VIEW_SETTINGS } from "@/lib/view-settings.generated";
 
 /**
  * The rail's own taste, kept per device (not part of any plan): whether it is
@@ -14,11 +15,11 @@ export interface RailView {
   folded: string[];
 }
 
-export const RAIL_VIEW_STORAGE_KEY = "gtnh-factory-flow-overview-rail";
+export const RAIL_VIEW_STORAGE_KEY: string = VIEW_SETTINGS.overviewOpen.key;
 
 /** The mod opens with INTERNAL folded: what a plan makes and uses itself is the section least looked at. */
-export const DEFAULT_FOLDED = ["INTERNAL"];
-export const DEFAULT_RAIL_VIEW: RailView = { open: true, folded: DEFAULT_FOLDED };
+export const DEFAULT_FOLDED: string[] = [...VIEW_SETTINGS.overviewFolded.default];
+export const DEFAULT_RAIL_VIEW: RailView = { open: VIEW_SETTINGS.overviewOpen.default, folded: DEFAULT_FOLDED };
 
 let current: RailView | undefined;
 const listeners = new Set<() => void>();

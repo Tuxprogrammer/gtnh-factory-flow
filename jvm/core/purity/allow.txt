@@ -1,0 +1,69 @@
+# Exceptions to rules.txt, each argued in the open. One per line:
+#
+#   <path> <rule> <why, in words>
+#
+# <path> is a source file relative to jvm/ (core/<module>/src/main/java/...); * matches within a name, ** across
+# directories. <rule> is a rule id from rules.txt, or * for every rule (only for a file still to be cut). The reason is
+# required. An entry that no longer matches any finding fails the check, so the list only shrinks as seams land.
+#
+# <rule>:N excuses exactly N findings in the file and no more (hash-order is written this way). A new use in a file
+# already listed is then open, and a count above the findings left fails too: lower it. Count what the check prints.
+
+# core-base: the places that are the answer to a rule.
+core/core-base/src/main/java/com/gtnhplanner/core/base/Float32Ops.java float-narrow the one place a float is narrowed: through the bit pattern, which rounds on every target
+
+# hash-order: every hash collection and Set.of, Map.of or copyOf the core makes, argued per file by the audit of what
+# iterates it. A line here counts the lines of the file that name one (a HashMap and a HashSet on one line are two).
+core/core-codec/src/main/java/com/gtnhplanner/core/codec/SiteCarry.java hash-order:7 the sets and maps are keyed by site and card ids and only read by get and contains; none is iterated
+core/core-layout/src/main/java/com/gtnhplanner/core/layout/GridEdgeRouter.java hash-order:9 the maps and sets are keyed by card, wire or port ids and are only read by get, containsKey and contains (the loops run over the input lists); no iteration of one reaches a result
+core/core-layout/src/main/java/com/gtnhplanner/core/layout/IncrementalRouter.java hash-order:1 the maps and sets are keyed by card, wire or port ids and are only read by get, containsKey and contains (the loops run over the input lists); no iteration of one reaches a result
+core/core-layout/src/main/java/com/gtnhplanner/core/layout/RouteJudge.java hash-order:6 the maps and sets are keyed by card, wire or port ids and are only read by get, containsKey and contains (the loops run over the input lists); no iteration of one reaches a result
+core/core-layout/src/main/java/com/gtnhplanner/core/layout/arrange/Air.java hash-order:1 the maps and sets are keyed by card, wire or port ids and are only read by get, containsKey and contains (the loops run over the input lists); no iteration of one reaches a result
+core/core-layout/src/main/java/com/gtnhplanner/core/layout/arrange/Arrange.java hash-order:10 the maps and sets are keyed by card, wire or port ids and are only read by get, containsKey and contains (the loops run over the input lists); no iteration of one reaches a result
+core/core-layout/src/main/java/com/gtnhplanner/core/layout/arrange/BoxJudge.java hash-order:2 the maps and sets are keyed by card, wire or port ids and are only read by get, containsKey and contains (the loops run over the input lists); no iteration of one reaches a result
+core/core-layout/src/main/java/com/gtnhplanner/core/layout/arrange/ColumnArrange.java hash-order:60 the maps and sets are keyed by card, wire or port ids and are only read by get, containsKey and contains (the loops run over the input lists); no iteration of one reaches a result
+core/core-layout/src/main/java/com/gtnhplanner/core/layout/arrange/FreeArrange.java hash-order:11 the maps and sets are keyed by card, wire or port ids and are only read by get, containsKey and contains (the loops run over the input lists); no iteration of one reaches a result
+core/core-layout/src/main/java/com/gtnhplanner/core/layout/arrange/Optimize.java hash-order:2 the maps and sets are keyed by card, wire or port ids and are only read by get, containsKey and contains (the loops run over the input lists); no iteration of one reaches a result
+core/core-machines/src/main/java/com/gtnhplanner/core/machines/OutputSlots.java hash-order:2 constant tables keyed by machine name, read by get
+core/core-machines/src/main/java/com/gtnhplanner/core/machines/SteamRecipeLimits.java hash-order:1 a constant set of machine names, asked contains
+core/core-machines/src/main/java/com/gtnhplanner/data/MachineProfileRegistry.java hash-order:1 profiles by id, read by get
+core/core-machines/src/main/java/com/gtnhplanner/data/effect/EffectComputer.java hash-order:2 the route defaults of a step chain: an empty default and a merged copy whose entries are put one by one under distinct keys, and only the mod's overclock step supplies any (the web has none)
+core/core-machines/src/main/java/com/gtnhplanner/machines/BeeReadout.java hash-order:1 the settings of one card, only read by key
+core/core-machines/src/main/java/com/gtnhplanner/machines/CropReadout.java hash-order:1 the settings of one card, only read by key
+core/core-machines/src/main/java/com/gtnhplanner/machines/CropsNh.java hash-order:1 the crop manager names by tier, read by get and getOrDefault
+core/core-machines/src/main/java/com/gtnhplanner/machines/MobDrops.java hash-order:2 two constant sets of modifier names, asked contains
+core/core-machines/src/main/java/com/gtnhplanner/machines/web/Fusion.java hash-order:2 machines and startup thresholds by name or recipe key, read by get
+core/core-machines/src/main/java/com/gtnhplanner/machines/web/HandlerData.java hash-order:3 maps and controls by id, read by get (warm-up reads the maps in any order and counts them), and a membership set
+core/core-machines/src/main/java/com/gtnhplanner/machines/web/MachineReadout.java hash-order:3 kept recipes, control tables and handlers by id, read by get
+core/core-machines/src/main/java/com/gtnhplanner/machines/web/MachineTable.java hash-order:1 behaviours by normalised name, put in table order and read by get
+core/core-machines/src/main/java/com/gtnhplanner/machines/web/RecipeRules.java hash-order:3 constant tables and sets of machine names, read by get and contains
+core/core-model/src/main/java/com/gtnhplanner/core/model/FluidContainers.java hash-order:1 a constant set, asked contains
+core/core-model/src/main/java/com/gtnhplanner/data/flowchart/Graph.java hash-order:4 id-keyed lookup tables, read by get and containsKey; the loops run over the graph's own ordered collections
+core/core-model/src/main/java/com/gtnhplanner/data/flowchart/Groups.java hash-order:3 id-keyed lookups and a membership set; the loops run over the graph's own ordered collections
+core/core-model/src/main/java/com/gtnhplanner/data/flowchart/TaskChain.java hash-order:6 id-keyed lookups and membership sets of one pass; the result is built by walking the ordered node list
+core/core-model/src/main/java/com/gtnhplanner/data/flowchart/TaskEdits.java hash-order:3 id-keyed lookups and membership sets; the edits are applied in the order of the ordered input
+core/core-model/src/main/java/com/gtnhplanner/data/provider/FreeInputs.java hash-order:1 a one-element constant set, asked contains
+core/core-plan-solve/src/main/java/com/gtnhplanner/data/flowchart/balancer/GraphSolve.java hash-order:5 id-keyed lookups and membership sets of one pass; results are built by walking the ordered input lists
+core/core-power/src/main/java/com/gtnhplanner/core/power/TurbineFlow.java hash-order:1 a copy of the stored settings that gets two more keys, then only read by key
+core/core-power/src/main/java/com/gtnhplanner/power/PowerSetting.java hash-order:2 the legacy-key table and its empty default, read by get
+core/core-power/src/main/java/com/gtnhplanner/power/SettingsReader.java hash-order:2 settings by id and the stored values, read by get
+core/core-power/src/main/java/com/gtnhplanner/power/sources/Endgame.java hash-order:1 constant tables keyed by fuel or fluid name, read by get, getOrDefault and contains
+core/core-power/src/main/java/com/gtnhplanner/power/sources/Singleblocks.java hash-order:2 constant tables keyed by fuel or fluid name, read by get, getOrDefault and contains
+core/core-power/src/main/java/com/gtnhplanner/power/sources/SteamMakers.java hash-order:4 constant tables keyed by fuel or fluid name, read by get, getOrDefault and contains
+core/core-power/src/main/java/com/gtnhplanner/power/sources/Turbines.java hash-order:1 constant tables keyed by fuel or fluid name, read by get, getOrDefault and contains
+core/core-solver/src/main/java/com/gtnhplanner/core/solver/SolverCodec.java hash-order:1 outside the kernel audit, which leaves the solver to its own guard (HashOrderTest); recorded so the rule sees these and a new one is open: empty and constant sets and maps, asked contains or passed on
+core/core-solver/src/main/java/com/gtnhplanner/data/flowchart/balancer/BalanceMode.java hash-order:4 outside the kernel audit, which leaves the solver to its own guard (HashOrderTest); recorded so the rule sees these and a new one is open: empty and constant sets and maps, asked contains or passed on
+core/core-solver/src/main/java/com/gtnhplanner/data/flowchart/balancer/Balancer.java hash-order:1 outside the kernel audit, which leaves the solver to its own guard (HashOrderTest); recorded so the rule sees these and a new one is open: empty and constant sets and maps, asked contains or passed on
+core/core-solver/src/main/java/com/gtnhplanner/data/flowchart/balancer/DrawerReadout.java hash-order:3 outside the kernel audit, which leaves the solver to its own guard (HashOrderTest); recorded so the rule sees these and a new one is open: empty and constant sets and maps, asked contains or passed on
+core/core-solver/src/main/java/com/gtnhplanner/data/flowchart/balancer/SolveContext.java hash-order:3 outside the kernel audit, which leaves the solver to its own guard (HashOrderTest); recorded so the rule sees these and a new one is open: empty and constant sets and maps, asked contains or passed on
+core/core-solver/src/main/java/com/gtnhplanner/data/flowchart/balancer/SolveInput.java hash-order:2 outside the kernel audit, which leaves the solver to its own guard (HashOrderTest); recorded so the rule sees these and a new one is open: empty and constant sets and maps, asked contains or passed on
+core/core-solver/src/main/java/com/gtnhplanner/data/flowchart/balancer/StageOutcome.java hash-order:1 outside the kernel audit, which leaves the solver to its own guard (HashOrderTest); recorded so the rule sees these and a new one is open: empty and constant sets and maps, asked contains or passed on
+core/core-solver/src/main/java/com/gtnhplanner/data/flowchart/balancer/stages/FastPathStage.java hash-order:4 outside the kernel audit, which leaves the solver to its own guard (HashOrderTest); recorded so the rule sees these and a new one is open: empty and constant sets and maps, asked contains or passed on
+core/core-solver/src/main/java/com/gtnhplanner/data/flowchart/balancer/stages/FlowMinStage.java hash-order:1 outside the kernel audit, which leaves the solver to its own guard (HashOrderTest); recorded so the rule sees these and a new one is open: empty and constant sets and maps, asked contains or passed on
+core/core-solver/src/main/java/com/gtnhplanner/dev/SolveInputJson.java hash-order:1 outside the kernel audit, which leaves the solver to its own guard (HashOrderTest); recorded so the rule sees these and a new one is open: empty and constant sets and maps, asked contains or passed on
+core/core-view/src/main/java/com/gtnhplanner/core/view/card/CardViews.java hash-order:2 a membership set of port keys and of lit rows, asked contains
+core/core-view/src/main/java/com/gtnhplanner/core/view/group/GroupBuilder.java hash-order:1 a membership set of hosts, asked add; the flows come out of an ordered map
+core/core-view/src/main/java/com/gtnhplanner/core/view/rail/Notices.java hash-order:1 a membership set that drops repeated notices, asked add; the notices keep their order
+core/core-view/src/main/java/com/gtnhplanner/core/view/rail/RailBuilder.java hash-order:6 lookups by resource or card id (looks, feeds, depth, spared), read by get; the lines come out of ordered lists
+core/core-view/src/main/java/com/gtnhplanner/ui/Loops.java hash-order:4 maps by card and wire id returned to the host and read by get, and membership sets; no loop runs over them
+core/core-view/src/main/java/com/gtnhplanner/ui/card/SettingControls.java hash-order:3 constant sets of setting keys, asked contains

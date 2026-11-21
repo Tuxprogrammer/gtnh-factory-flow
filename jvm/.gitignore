@@ -1,0 +1,4 @@
+# Build outputs of every project under jvm/ (the mod's own file covers its run and IDE folders).
+build/
+.gradle/
+.kotlin/

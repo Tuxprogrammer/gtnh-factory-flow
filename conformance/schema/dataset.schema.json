@@ -1,0 +1,1735 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "number",
+      "const": 1
+    },
+    "datasetVersionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "gtnhVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sourceInfo": {
+      "$ref": "#/$defs/DatasetSourceInfo"
+    },
+    "resources": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/DatasetResource"
+      }
+    },
+    "resourceIndex": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/DatasetResourceIndexEntry"
+      }
+    },
+    "recipes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Recipe"
+      }
+    },
+    "oreDictionary": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "recipeMaps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "recipeMapIcons": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RecipeMapIconEntry"
+      }
+    },
+    "machineHandlerIcons": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/MachineHandlerIconEntry"
+      }
+    },
+    "gameRates": {
+      "$ref": "#/$defs/GameRates"
+    },
+    "generatedAt": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "datasetVersionId",
+    "gtnhVersion",
+    "sourceInfo",
+    "recipes",
+    "oreDictionary",
+    "recipeMaps",
+    "generatedAt"
+  ],
+  "$defs": {
+    "DatasetSourceInfo": {
+      "type": "object",
+      "properties": {
+        "sourceId": {
+          "type": "string",
+          "enum": [
+            "nesql",
+            "recex",
+            "nerd",
+            "gtnh-oracle",
+            "unknown"
+          ]
+        },
+        "sourceVersion": {
+          "type": "string"
+        },
+        "generatedAt": {
+          "type": "string"
+        },
+        "gitCommit": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "sourceId",
+        "generatedAt"
+      ]
+    },
+    "DatasetResource": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "item",
+            "fluid",
+            "aspect"
+          ]
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "iconPath": {
+          "type": "string"
+        },
+        "iconAtlas": {
+          "$ref": "#/$defs/ResourceIconAtlasRef"
+        },
+        "dominantColor": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "modId": {
+          "type": "string"
+        },
+        "tooltip": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "oreDictionary": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "alternatives": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "item",
+                  "fluid",
+                  "aspect"
+                ]
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "displayName": {
+                "type": "string",
+                "minLength": 1
+              },
+              "iconPath": {
+                "type": "string"
+              },
+              "iconAtlas": {
+                "$ref": "#/$defs/ResourceIconAtlasRef"
+              },
+              "dominantColor": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "modId": {
+                "type": "string"
+              },
+              "tooltip": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "amount": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            },
+            "required": [
+              "kind",
+              "id"
+            ]
+          }
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "displayName"
+      ]
+    },
+    "ResourceIconAtlasRef": {
+      "type": "object",
+      "properties": {
+        "imagePath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "atlasWidth": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "atlasHeight": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "x": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "y": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "width": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "height": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "dominantColor": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        }
+      },
+      "required": [
+        "imagePath",
+        "atlasWidth",
+        "atlasHeight",
+        "x",
+        "y",
+        "width",
+        "height"
+      ]
+    },
+    "DatasetResourceIndexEntry": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "item",
+            "fluid",
+            "aspect"
+          ]
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "iconPath": {
+          "type": "string"
+        },
+        "iconAtlas": {
+          "$ref": "#/$defs/ResourceIconAtlasRef"
+        },
+        "dominantColor": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "recipeCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "oreDictionary": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "alternatives": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "item",
+                  "fluid",
+                  "aspect"
+                ]
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "displayName": {
+                "type": "string",
+                "minLength": 1
+              },
+              "iconPath": {
+                "type": "string"
+              },
+              "iconAtlas": {
+                "$ref": "#/$defs/ResourceIconAtlasRef"
+              },
+              "dominantColor": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "modId": {
+                "type": "string"
+              },
+              "tooltip": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "amount": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            },
+            "required": [
+              "kind",
+              "id"
+            ]
+          }
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "recipeCount"
+      ]
+    },
+    "Recipe": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "gregtech_machine",
+            "bee_produce",
+            "crop_produce",
+            "ore_vein",
+            "small_ore",
+            "underground_fluid",
+            "essentia_smelting",
+            "custom",
+            "unknown"
+          ]
+        },
+        "category": {
+          "type": "string",
+          "minLength": 1
+        },
+        "machineType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "minimumTier": {
+          "type": "string",
+          "minLength": 1
+        },
+        "maximumTier": {
+          "type": "string",
+          "minLength": 1
+        },
+        "availableTiers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "durationTicks": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "eut": {
+          "type": "number",
+          "minimum": 0
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RecipeInput"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RecipeOutput"
+          }
+        },
+        "programmedCircuit": {
+          "type": "string"
+        },
+        "specialValue": {
+          "type": "number"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "machineProfile": {
+          "$ref": "#/$defs/MachineProfile"
+        },
+        "machineHandlers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MachineHandler"
+          }
+        },
+        "machineConfigControls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MachineConfigControl"
+          }
+        },
+        "power": {
+          "type": "object",
+          "properties": {
+            "sourceId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "euPerTick": {
+              "type": "number"
+            },
+            "stats": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "label",
+                  "value"
+                ]
+              }
+            },
+            "warnings": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "sourceId",
+            "euPerTick",
+            "stats"
+          ]
+        },
+        "runtimeCalculation": {
+          "$ref": "#/$defs/RuntimeCalculation"
+        },
+        "isDemo": {
+          "type": "boolean"
+        },
+        "source": {
+          "type": "object",
+          "properties": {
+            "datasetVersionId": {
+              "type": "string"
+            },
+            "recipeMap": {
+              "type": "string"
+            },
+            "sourceMod": {
+              "type": "string"
+            },
+            "exporter": {
+              "type": "string",
+              "enum": [
+                "nesql",
+                "recex",
+                "nerd",
+                "gtnh-oracle",
+                "unknown"
+              ]
+            },
+            "rawRecipeId": {
+              "type": "string"
+            },
+            "sourceIdentifier": {
+              "type": "string"
+            }
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1
+          },
+          "additionalProperties": {},
+          "x-maxDepth": 63
+        },
+        "nei": {
+          "type": "object",
+          "properties": {
+            "iconPath": {
+              "type": "string"
+            },
+            "source": {
+              "type": "string"
+            },
+            "handlerClass": {
+              "type": "string"
+            },
+            "canvas": {
+              "type": "object",
+              "properties": {
+                "width": {
+                  "type": "number"
+                },
+                "height": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "width",
+                "height"
+              ]
+            },
+            "backgroundImage": {
+              "type": "string"
+            },
+            "itemInputGrid": {
+              "type": "object",
+              "properties": {
+                "width": {
+                  "type": "number"
+                },
+                "height": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "width",
+                "height"
+              ]
+            },
+            "itemOutputGrid": {
+              "type": "object",
+              "properties": {
+                "width": {
+                  "type": "number"
+                },
+                "height": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "width",
+                "height"
+              ]
+            },
+            "fluidInputGrid": {
+              "type": "object",
+              "properties": {
+                "width": {
+                  "type": "number"
+                },
+                "height": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "width",
+                "height"
+              ]
+            },
+            "fluidOutputGrid": {
+              "type": "object",
+              "properties": {
+                "width": {
+                  "type": "number"
+                },
+                "height": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "width",
+                "height"
+              ]
+            },
+            "slotCapacity": {
+              "type": "object",
+              "properties": {
+                "maxItemInputs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "maxItemOutputs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "maxFluidInputs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "maxFluidOutputs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              }
+            },
+            "slots": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "side": {
+                    "type": "string",
+                    "enum": [
+                      "input",
+                      "output"
+                    ]
+                  },
+                  "kind": {
+                    "$ref": "#/$defs/ResourceKind"
+                  },
+                  "slotIndex": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "x": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "y": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "side",
+                  "kind",
+                  "slotIndex",
+                  "x",
+                  "y"
+                ]
+              }
+            },
+            "progressBars": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "y": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "width": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "height": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "direction": {
+                    "type": "string",
+                    "enum": [
+                      "right",
+                      "up",
+                      "circular"
+                    ]
+                  },
+                  "texture": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "x",
+                  "y",
+                  "width",
+                  "height",
+                  "direction"
+                ]
+              }
+            },
+            "additionalInfo": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "requiresCleanroom": {
+              "type": "boolean"
+            },
+            "requiresLowGravity": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "machineType",
+        "minimumTier",
+        "durationTicks",
+        "eut",
+        "inputs",
+        "outputs"
+      ]
+    },
+    "RecipeInput": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/ResourceKind"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "amount": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "iconPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "iconAtlas": {
+          "$ref": "#/$defs/ResourceIconAtlasRef"
+        },
+        "dominantColor": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "modId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tooltip": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "neiSlot": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "y": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "x",
+            "y"
+          ]
+        },
+        "alternatives": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "$ref": "#/$defs/ResourceKind"
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "displayName": {
+                "type": "string",
+                "minLength": 1
+              },
+              "iconPath": {
+                "type": "string",
+                "minLength": 1
+              },
+              "iconAtlas": {
+                "$ref": "#/$defs/ResourceIconAtlasRef"
+              },
+              "dominantColor": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "modId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "tooltip": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "amount": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            },
+            "required": [
+              "kind",
+              "id"
+            ]
+          }
+        },
+        "optional": {
+          "type": "boolean"
+        },
+        "consumed": {
+          "type": "boolean"
+        },
+        "consumeChance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "amount"
+      ]
+    },
+    "ResourceKind": {
+      "type": "string",
+      "enum": [
+        "item",
+        "fluid",
+        "aspect",
+        "power"
+      ]
+    },
+    "RecipeOutput": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/ResourceKind"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "amount": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "iconPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "iconAtlas": {
+          "$ref": "#/$defs/ResourceIconAtlasRef"
+        },
+        "dominantColor": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "modId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tooltip": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "neiSlot": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "y": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "x",
+            "y"
+          ]
+        },
+        "alternatives": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "$ref": "#/$defs/ResourceKind"
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "displayName": {
+                "type": "string",
+                "minLength": 1
+              },
+              "iconPath": {
+                "type": "string",
+                "minLength": 1
+              },
+              "iconAtlas": {
+                "$ref": "#/$defs/ResourceIconAtlasRef"
+              },
+              "dominantColor": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "modId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "tooltip": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "amount": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            },
+            "required": [
+              "kind",
+              "id"
+            ]
+          }
+        },
+        "chance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "byproduct": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "amount"
+      ]
+    },
+    "MachineProfile": {
+      "type": "object",
+      "properties": {
+        "machineType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "minimumTier": {
+          "type": "string",
+          "minLength": 1
+        },
+        "maximumTier": {
+          "type": "string",
+          "minLength": 1
+        },
+        "availableTiers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "durationTicks": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "eut": {
+          "type": "number",
+          "minimum": 0
+        },
+        "maxParallel": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "eutLimit": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "perfectOverclock": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "machineType",
+        "minimumTier"
+      ]
+    },
+    "MachineHandler": {
+      "type": "object",
+      "properties": {
+        "machineType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "minimumTier": {
+          "type": "string",
+          "minLength": 1
+        },
+        "maximumTier": {
+          "type": "string",
+          "minLength": 1
+        },
+        "availableTiers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "durationTicks": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "eut": {
+          "type": "number",
+          "minimum": 0
+        },
+        "maxParallel": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "eutLimit": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "perfectOverclock": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "single",
+            "multiblock",
+            "crafting",
+            "automation"
+          ]
+        },
+        "machineConfigControls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MachineConfigControl"
+          }
+        }
+      },
+      "required": [
+        "machineType",
+        "minimumTier",
+        "id",
+        "label"
+      ]
+    },
+    "MachineConfigControl": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "minimumKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "defaultKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "numeric": {
+          "type": "object",
+          "properties": {
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            },
+            "step": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "required": [
+            "min"
+          ]
+        },
+        "minimumHeatFromSpecialValue": {
+          "type": "boolean"
+        },
+        "tiers": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "minLength": 1
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1
+              },
+              "heat": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              },
+              "durationMultiplier": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "eutMultiplier": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "outputMultiplier": {
+                "type": "number",
+                "minimum": 0
+              },
+              "parallelMultiplier": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "parallelPerVoltageTier": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "parallelVoltageBase": {
+                "type": "number",
+                "minimum": 0
+              },
+              "resource": {
+                "$ref": "#/$defs/ResourceAmount"
+              }
+            },
+            "required": [
+              "key",
+              "label",
+              "resource"
+            ]
+          }
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "minimumKey",
+        "tiers"
+      ]
+    },
+    "ResourceAmount": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/ResourceKind"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "amount": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "iconPath": {
+          "type": "string",
+          "minLength": 1
+        },
+        "iconAtlas": {
+          "$ref": "#/$defs/ResourceIconAtlasRef"
+        },
+        "dominantColor": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "modId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tooltip": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "neiSlot": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "y": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "x",
+            "y"
+          ]
+        },
+        "alternatives": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "$ref": "#/$defs/ResourceKind"
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "displayName": {
+                "type": "string",
+                "minLength": 1
+              },
+              "iconPath": {
+                "type": "string",
+                "minLength": 1
+              },
+              "iconAtlas": {
+                "$ref": "#/$defs/ResourceIconAtlasRef"
+              },
+              "dominantColor": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "modId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "tooltip": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "amount": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            },
+            "required": [
+              "kind",
+              "id"
+            ]
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "amount"
+      ]
+    },
+    "RuntimeCalculation": {
+      "type": "object",
+      "properties": {
+        "sourceKind": {
+          "type": "string",
+          "enum": [
+            "gregtech-processing-logic",
+            "gregtech-overclock-calculator",
+            "gregtech-recipe-baseline",
+            "thaumcraft-runtime",
+            "passive-bee",
+            "passive-crop",
+            "synthetic-passive-bootstrap"
+          ]
+        },
+        "sourceClass": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceVersion": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recipeMap": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "computed",
+            "partial",
+            "missing"
+          ]
+        },
+        "oracleEligible": {
+          "type": "boolean"
+        },
+        "strict": {
+          "type": "boolean"
+        },
+        "generatedAt": {
+          "type": "string"
+        },
+        "variants": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuntimeCalculationVariant"
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "sourceKind",
+        "status",
+        "oracleEligible",
+        "variants"
+      ]
+    },
+    "RuntimeCalculationVariant": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "machineHandlerId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "overclockTier": {
+          "type": "string",
+          "minLength": 1
+        },
+        "coilTier": {
+          "type": "string",
+          "minLength": 1
+        },
+        "machineConfigTiers": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "durationTicks": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "eut": {
+          "type": "number",
+          "minimum": 0
+        },
+        "parallel": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuntimeCalculationResource"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RuntimeCalculationResource"
+          }
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "durationTicks",
+        "eut"
+      ]
+    },
+    "RuntimeCalculationResource": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/ResourceKind"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "amount": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "chance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "amount"
+      ]
+    },
+    "RecipeMapIconEntry": {
+      "type": "object",
+      "properties": {
+        "recipeMap": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resource": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "item",
+                "fluid",
+                "aspect"
+              ]
+            },
+            "amount": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "displayName": {
+              "type": "string",
+              "minLength": 1
+            },
+            "iconPath": {
+              "type": "string"
+            },
+            "iconAtlas": {
+              "$ref": "#/$defs/ResourceIconAtlasRef"
+            },
+            "dominantColor": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "modId": {
+              "type": "string"
+            },
+            "tooltip": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "id",
+            "kind"
+          ]
+        }
+      },
+      "required": [
+        "recipeMap",
+        "resource"
+      ]
+    },
+    "MachineHandlerIconEntry": {
+      "type": "object",
+      "properties": {
+        "familyId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resource": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "item",
+                "fluid",
+                "aspect"
+              ]
+            },
+            "amount": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "displayName": {
+              "type": "string",
+              "minLength": 1
+            },
+            "iconPath": {
+              "type": "string"
+            },
+            "iconAtlas": {
+              "$ref": "#/$defs/ResourceIconAtlasRef"
+            },
+            "dominantColor": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "modId": {
+              "type": "string"
+            },
+            "tooltip": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "id",
+            "kind"
+          ]
+        },
+        "tiers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "tier": {
+                "type": "string",
+                "minLength": 1
+              },
+              "resource": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "item",
+                      "fluid",
+                      "aspect"
+                    ]
+                  },
+                  "amount": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "displayName": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "iconPath": {
+                    "type": "string"
+                  },
+                  "iconAtlas": {
+                    "$ref": "#/$defs/ResourceIconAtlasRef"
+                  },
+                  "dominantColor": {
+                    "type": "string",
+                    "pattern": "^#[0-9a-fA-F]{6}$"
+                  },
+                  "modId": {
+                    "type": "string"
+                  },
+                  "tooltip": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "id",
+                  "kind"
+                ]
+              }
+            },
+            "required": [
+              "tier",
+              "resource"
+            ]
+          }
+        }
+      },
+      "required": [
+        "familyId",
+        "resource"
+      ]
+    },
+    "GameRates": {
+      "type": "object",
+      "properties": {
+        "beesYield": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "ic2CropsYield": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "recipeDurationDivisor": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    }
+  },
+  "title": "Recipe dataset"
+}

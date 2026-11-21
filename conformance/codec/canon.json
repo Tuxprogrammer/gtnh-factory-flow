@@ -1,0 +1,71 @@
+{
+  "about": "Canon (core-codec) and the mod's cloud map Canon: the canonical spelling and 16-hex SHA-256 sum of each text. Written by CodecParityTest -PwriteVectors from the mod's Canon.",
+  "cases": [
+    {
+      "name": "object",
+      "text": "{\"b\":1,\"a\":[1.0,\"x\"],\"c\":{\"z\":null,\"y\":true}}",
+      "canon": "{\"a\":[1,\"x\"],\"b\":1,\"c\":{\"y\":true,\"z\":null}}",
+      "sum": "8543d63b6d107685"
+    },
+    {
+      "name": "numbers",
+      "text": "[0.1,1e-7,123456789012345678,1e15,999999999999999,1e21,-0,-0.0,0.001,0.0009999,1e7,9999999.5,1.5e300,5e-324,2.2250738585072014e-308,3.141592653589793,100.25,1.0E-5,12345678.9,-2.5,1e0,4e-3]",
+      "canon": "[0.1,1.0E-7,1.2345678901234568E17,1.0E15,999999999999999,1.0E21,0,0,0.001,9.999E-4,10000000,9999999.5,1.5E300,4.9E-324,2.2250738585072014E-308,3.141592653589793,100.25,1.0E-5,1.23456789E7,-2.5,1,0.004]",
+      "sum": "a4391821ac1ffe48"
+    },
+    {
+      "name": "strings",
+      "text": "[\"a\\\"b\\\\c\",\"\\t\\b\\n\\r\\f\",\"\\u0001\\u001f\",\"\\u2028\\u2029\",\"<>&='\",\"/\"]",
+      "canon": "[\"a\\\"b\\\\c\",\"\\t\\b\\n\\r\\f\",\"\\u0001\\u001f\",\"\\u2028\\u2029\",\"<>&='\",\"/\"]",
+      "sum": "9512e131045b8093"
+    },
+    {
+      "name": "unicode",
+      "text": "[\"\\u00e9\\u6f22\\ud83d\\ude00\"]",
+      "canon": "[\"é漢😀\"]",
+      "sum": "668327627d176f2a"
+    },
+    {
+      "name": "key order",
+      "text": "{\"B\":1,\"a\":2,\"_\":3,\"\\u00e9\":4,\"aa\":5,\"Z\":6,\"\":7}",
+      "canon": "{\"\":7,\"B\":1,\"Z\":6,\"_\":3,\"a\":2,\"aa\":5,\"é\":4}",
+      "sum": "95e0230c03280384"
+    },
+    {
+      "name": "empties",
+      "text": "{\"x\":[],\"y\":{},\"z\":[[[]]]}",
+      "canon": "{\"x\":[],\"y\":{},\"z\":[[[]]]}",
+      "sum": "4e3ef3debb498a79"
+    },
+    {
+      "name": "null",
+      "text": "null",
+      "canon": "null",
+      "sum": "74234e98afe7498f"
+    },
+    {
+      "name": "true",
+      "text": "true",
+      "canon": "true",
+      "sum": "b5bea41b6c623f7c"
+    },
+    {
+      "name": "string",
+      "text": "\"s\"",
+      "canon": "\"s\"",
+      "sum": "0f4657778ae14ff7"
+    },
+    {
+      "name": "whole",
+      "text": "42",
+      "canon": "42",
+      "sum": "73475cb40a568e8d"
+    },
+    {
+      "name": "a card",
+      "text": "{\"id\":\"6bcdde86-54bd-44b7-935c-d857ee18e9a5\",\"recipeId\":\"gtnhplanner:x\",\"machineCount\":1.0,\"solvePin\":2.5,\"position\":{\"x\":1351,\"y\":-368},\"portRates\":{\"input:item:Hydrogen\":2.5}}",
+      "canon": "{\"id\":\"6bcdde86-54bd-44b7-935c-d857ee18e9a5\",\"machineCount\":1,\"portRates\":{\"input:item:Hydrogen\":2.5},\"position\":{\"x\":1351,\"y\":-368},\"recipeId\":\"gtnhplanner:x\",\"solvePin\":2.5}",
+      "sum": "0ba87283d76e11e9"
+    }
+  ]
+}

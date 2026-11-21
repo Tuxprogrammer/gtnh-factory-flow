@@ -382,7 +382,8 @@ const SPECS: TurbineSpec[] = [
   {
     id: "large-hp-steam-turbine",
     name: "Large HP Steam Turbine",
-    unlock: "EV",
+    // Crafted from an IV hull and IV (circuitElite) circuits.
+    unlock: "IV",
     blurb: "SH steam in; exhausts plain steam.",
     turbineClass: "steam",
     xl: false,
@@ -449,7 +450,8 @@ const SPECS: TurbineSpec[] = [
   {
     id: "large-plasma-generator",
     name: "Large Plasma Generator",
-    unlock: "LuV",
+    // Crafted from a UV hull and ZPM (circuitUltimate) circuits.
+    unlock: "UV",
     blurb: "Plasma to EU and its cooled gas.",
     turbineClass: "plasma",
     xl: false,

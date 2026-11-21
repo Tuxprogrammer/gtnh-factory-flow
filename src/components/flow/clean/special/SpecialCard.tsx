@@ -217,10 +217,10 @@ function Sockets({ view }: { view: SpecialView }) {
   return (
     <>
       <div className="sp-sockets" data-side="input" style={{ gridRow: 2 }}>
-        {one("input", sockets.take, sockets.takeHandle, "takes an output")}
+        {one("input", sockets.take, sockets.takeHandle, sockets.takeHint)}
       </div>
       <div className="sp-sockets" data-side="output" style={{ gridRow: 2 }}>
-        {one("output", sockets.give, sockets.giveHandle, "feeds an input")}
+        {one("output", sockets.give, sockets.giveHandle, sockets.giveHint)}
       </div>
     </>
   );
@@ -283,6 +283,7 @@ function SpecialChipView({
         nodeId={nodeId}
         control={control}
         needK={needK}
+        off={chip.off}
         onStep={onStep}
         onOpen={onOpen}
         wasClick={wasClick}

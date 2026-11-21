@@ -1,0 +1,4 @@
+{
+  "about": "Differences between a compiled target and JavaScript or the JVM that are findings sent to the stream that owns the code, and not yet fixed there. Each is counted and printed as KNOWN, never hidden; the run fails if an entry stops matching (delete it with the fix) or if anything else differs. An entry names the finding, so nothing is listed without one.",
+  "known": []
+}

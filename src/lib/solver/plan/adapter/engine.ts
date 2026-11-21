@@ -19,10 +19,25 @@ export const islandCache: PieceCache = new IslandCache(64);
 
 const cached: SolveCore = (input) => solvePlan(input, planExtensions, islandCache);
 
+/** The website's own engine (TypeScript on its homegrown simplex), whatever else is installed. */
+export const typescriptSolveCore: SolveCore = cached;
+
+/**
+ * The compiled core's engine, asked on every solve (`src/lib/core/solve-adopt.ts` installs it in the threads that may
+ * load the solver: the solve Worker and the server's plan routes). It answers null while the core is off, loading,
+ * missing or on a target that is not chosen to solve, and the website's own engine solves. Plan code may not reach the
+ * loader, so this is the whole seam.
+ */
+let coreBridge: (() => SolveCore | null) | undefined;
+
+export function setSolveCoreBridge(next: (() => SolveCore | null) | undefined): void {
+  coreBridge = next;
+}
+
 export function setSolveCore(next: SolveCore | undefined): void {
   override = next;
 }
 
 export function getSolveCore(): SolveCore {
-  return override ?? cached;
+  return override ?? coreBridge?.() ?? cached;
 }

@@ -1,6 +1,6 @@
 /**
  * Railcraft's Water Tank and its steam boiler, from Railcraft's source at the
- * version GTNH 2.9 ships (GTNewHorizons/Railcraft tag 9.17.26; the mod's
+ * version GTNH 2.9 ships (GTNewHorizons/Railcraft tag 9.17.36; the mod's
  * research/railcraft-water-tank-and-boilers.md has the links). Both are
  * modelled at steady state: the tank as it fills, the boiler at full heat.
  */
@@ -116,16 +116,18 @@ const BOILER_PRESSURES = [
 const anyWood = (ids: string[], displayName: string) =>
   ids.map((id) => ({ kind: "item" as const, id: `${id}@32767`, displayName }));
 
-const BOILER_SOLIDS: Array<{
+export interface FurnaceFuel {
   name: string;
   label?: string;
   burnTicks: number;
   alternatives?: PowerFlowLine["alternatives"];
-}> = [
-  ...powerPlannerData.boilerFuels.bronzeSolid.map((entry: PowerFuelEntry) => ({
-    name: entry.name,
-    burnTicks: entry.name === "Blaze Rod" ? 1000 : (entry.euPerItem ?? 0),
-  })),
+}
+
+/**
+ * Furnace fuels the workbook's GT boiler table lacks, shared with the GT++ Advanced Boiler, which takes anything
+ * GameRegistry.getFuelValue prices.
+ */
+export const FURNACE_FUEL_EXTRAS: FurnaceFuel[] = [
   // Furnace fuels the workbook's GT boiler table lacks. TileEntityFurnace.getItemBurnTime: any wooden block 300, a
   // stick or sapling 100 (the pack's CustomFuels.xml changes none of them); GTProxy.getBurnTime's ore dictionary table:
   // dustCoal and dustCharcoal 1600, dustLignite 1200, dustWood 100. Any log or planks burn alike; oak is the port.
@@ -152,6 +154,14 @@ const BOILER_SOLIDS: Array<{
   { name: "Coal Dust", burnTicks: 1600 },
   { name: "Charcoal Dust", burnTicks: 1600 },
   { name: "Lignite Coal Dust", burnTicks: 1200 },
+];
+
+const BOILER_SOLIDS: FurnaceFuel[] = [
+  ...powerPlannerData.boilerFuels.bronzeSolid.map((entry: PowerFuelEntry) => ({
+    name: entry.name,
+    burnTicks: entry.name === "Blaze Rod" ? 1000 : (entry.euPerItem ?? 0),
+  })),
+  ...FURNACE_FUEL_EXTRAS,
 ].sort((a, b) => a.burnTicks - b.burnTicks);
 
 /**

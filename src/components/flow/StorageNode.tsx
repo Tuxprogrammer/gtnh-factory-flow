@@ -13,13 +13,14 @@ import type {
   StorageDrainMode,
   StorageThroughputResult,
 } from "@/lib/model/types";
-import { formatCompact, formatPowerValue, makeResourceKey } from "@/lib/model";
+import { makeResourceKey } from "@/lib/model";
+import { formatCompact, formatPowerValue } from "@/lib/format/numbers";
 import { effectiveBufferMode, isDrainRole, storageRoleFor, type StorageRole } from "@/lib/model/storage-role";
 import {
   rateMultiplierForKind,
   rateSuffixForKind,
   rateUnitPrecisionScale,
-} from "@/lib/model/rate-unit";
+} from "@/lib/format/rate-unit";
 import { FLUID_ICON_SCALE, fluidArtPixels, ResourceIcon } from "@/components/nei/ResourceIcon";
 import { NodeGlanceIcon } from "./NodeGlance";
 import { isWiringConnection } from "./connection-drag";

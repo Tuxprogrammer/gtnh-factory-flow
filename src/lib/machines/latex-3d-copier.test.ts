@@ -104,7 +104,8 @@ describe("L.A.T.E.X. and Industrial 3D Copying Machine under their map names", (
     expect(getMachineEutMultiplier(chisel, ev)).toBe(0.75);
     expect(getMachineStructuralParallels(chisel, ev)).toBe(64);
     // Four EV hatches sum to IV voltage (80 parallels at 11.25 EU/t, one
-    // overclock); the third-tick run and the overclock bank as 480 a tick.
-    expect(perSecond(chisel, hatches("EV", 4))).toBe(9600);
+    // overclock); the third-tick run and the overclock bank as 682 a tick (the
+    // game's under-one-tick rule), 682 x 20 = 13,640 a second.
+    expect(perSecond(chisel, hatches("EV", 4))).toBe(13640);
   });
 });

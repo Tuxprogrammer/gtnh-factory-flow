@@ -10,6 +10,7 @@ import {
 } from "@/lib/model/tiers";
 import { applyMachineHandlerToRecipe } from "@/lib/model/recipe-rules";
 import { getHeatOverclockStats } from "./heat";
+import { ruleMultiplierUnderOneTick } from "./under-one-tick";
 import { getEffectiveVoltageOrdinal, getNodePowerAmps, getNodeRunTier, isMultiblockRecipe } from "./power";
 import {
   buildMachineContext,
@@ -292,12 +293,22 @@ export function getOverclockedRecipeStats(
   const steps = perfectSteps + normalSteps;
   const quantise =
     getMachineBehaviour(effectiveRecipe.machineType)?.quantiseDuration ?? quantiseDurationToTicks;
+  const raw =
+    (effectiveRecipe.durationTicks / rule.multiplier ** perfectSteps / 2 ** normalSteps) *
+    durationMultiplier;
+  // Under one tick a multiblock runs the game's own multiplier on its parallels (under-one-tick.ts).
+  const genericSubTick =
+    subTickCapable && quantise === quantiseDurationToTicks && raw > 0 && raw <= 1;
   const durationTicks = capBankedParallels(
-    quantise(
-      (effectiveRecipe.durationTicks / rule.multiplier ** perfectSteps / 2 ** normalSteps) *
-        durationMultiplier,
-      subTickCapable,
-    ),
+    genericSubTick
+      ? 1 /
+          ruleMultiplierUnderOneTick(
+            rule,
+            effectiveRecipe.durationTicks * durationMultiplier,
+            steps,
+            perfectSteps,
+          )
+      : quantise(raw, subTickCapable),
     parallels,
     machinePower,
     Math.ceil(Math.abs(effectiveRecipe.eut) * eutMultiplier * heatDiscountMultiplier),
@@ -350,9 +361,11 @@ function ceilLog4(ratio: number): number {
  * Below one tick, a machine cannot run a recipe faster than the game's clock.
  * A multiblock spends the leftover on extra parallels instead: ParallelHelper
  * multiplies its parallels by `calculateMultiplierUnderOneTick`, which is
- * `ceil(1 / duration)`, so 0.625 ticks runs TWO recipes a tick (not 1.6) and
+ * about `ceil(1 / duration)`, so 0.625 ticks runs TWO recipes a tick (not 1.6) and
  * 0.156 runs seven. Rounding the duration DOWN to the nearest natural
  * fraction (1/2, 1/7) reproduces that once the parallels are multiplied in.
+ * The generic multiblock path asks the game's own count instead
+ * (`under-one-tick.ts`), which runs more on very short recipes.
  * A singleblock has no parallels to spend it on, so it sits at one tick and
  * the rest is simply lost.
  */

@@ -88,7 +88,7 @@ function run(recipe: Recipe, node: FactoryNode) {
 
 describe("parallels banked under one tick are capped by the power supply", () => {
   it("runs a speed-bonus machine at what its hatch pays for (Industrial Chisel, one EV hatch)", () => {
-    // P = 16 x 4 = 64, M = ceil(1 / (1/3)) = 3, cap = 2048 / ceil(11.25) = 170.
+    // P = 16 x 4 = 64, M = ceil(2 x 3) = 6 (the game's count, under-one-tick.ts), cap = 2048 / ceil(11.25) = 170.
     // EU/t stays the 64 parallels' 720: OverclockCalculator bills min(P, ran).
     expect(run(chisel, hatch("EV", 1))).toEqual({
       parallels: 64,
@@ -99,7 +99,7 @@ describe("parallels banked under one tick are capped by the power supply", () =>
   });
 
   it("holds a power-starved chisel to the parallels its hatch pays for, not three times that", () => {
-    // LV: 32 / 12 = 2 parallels, banked to 6 but capped at 2 a tick.
+    // LV: 32 / 12 = 2 parallels, banked to 12 but capped at 2 a tick.
     expect(run(chisel, hatch("LV", 1))).toMatchObject({ parallels: 2, perTick: 2, perSecond: 40 });
     // MV: the cap divides by the CEILED cost, 128 / 12 = 10 (not 128 / 11.25 = 11).
     expect(run(chisel, hatch("MV", 1))).toEqual({
@@ -110,12 +110,13 @@ describe("parallels banked under one tick are capped by the power supply", () =>
     });
   });
 
-  it("leaves a run the supply covers alone (Industrial Chisel, four EV hatches)", () => {
-    // P = 80 (summed IV voltage), one overclock, M = 6: 480 a tick under a cap of 682.
+  it("caps the game's own multiplier too (Industrial Chisel, four EV hatches)", () => {
+    // P = 80 (summed IV voltage), one overclock. A third of a tick before it, so the game counts one regular
+    // overclock as needed below zero: M = ceil(2^2 x 3) = 12, 960 a tick, capped at 8192 / 12 = 682.
     expect(run(chisel, hatch("EV", 4))).toMatchObject({
       parallels: 80,
-      perTick: 480,
-      perSecond: 9600,
+      perTick: 682,
+      perSecond: 13640,
     });
   });
 
@@ -140,7 +141,7 @@ describe("parallels banked under one tick are capped by the power supply", () =>
       describePowerWorking(chisel, node, budget).rows.find((row) => row.id === "time")?.supplied;
     // 64 parallels at 170 a tick: 64 / 170 = 0.376 ticks, not "1/3 t".
     expect(time(hatch("EV", 1), 2048)).toBe("0.38 t");
-    // Four EV hatches: one overclock past a third of a tick, six a tick.
-    expect(time(hatch("EV", 4), 8192)).toBe("1/6 t");
+    // Four EV hatches: 80 parallels at 682 a tick, 0.117 ticks.
+    expect(time(hatch("EV", 4), 8192)).toBe("0.12 t");
   });
 });

@@ -59,15 +59,17 @@
       "generator": "hand-written"
     },
     "machines": {
-      "specifies": "Machine maths as the website computes it: machine-goldens (recipes through the machine table, overclocks, parallels, power), bee-goldens (the bee card's multipliers and handler stats), crop-goldens (CropsNh), reference-coefficients (the machine table against ShadowTheAge's reference calculator), and website-test-inputs (every recipe and node the website's machine tests hand the maths, for the TypeScript-against-core shadow), and coke-oven-discount (GTUtility.powInt's doubles from the game's own method on the JVM: the coil discount at tiers 1 to 14, one huge total it changes, and powInt over the coil bases). Gzip files are one JSON object per line.",
+      "specifies": "Machine maths as the website computes it: machine-goldens (recipes through the machine table, overclocks, parallels, power), bee-goldens (the bee card's multipliers and handler stats), crop-goldens (CropsNh), reference-coefficients (the machine table against ShadowTheAge's reference calculator), and website-test-inputs (every recipe and node the website's machine tests hand the maths, for the TypeScript-against-core shadow), and coke-oven-discount (GTUtility.powInt's doubles from the game's own method on the JVM: the coil discount at tiers 1 to 14, one huge total it changes, and powInt over the coil bases), and subtick-parallels (the pack's own OverclockCalculator run on the JVM: the parallels it gives when a multiblock recipe is at or under half a tick). Gzip files are one JSON object per line.",
       "readers": [
         "mod: machines/web/MachineGoldensTest, machines/BeesGoldensTest, machines/CropsNhGoldensTest, machines/web/MachineTableTest",
         "website: src/lib/machines/machine-table.test.ts (reference-coefficients.json)",
         "website: src/lib/core/machines-shadow.test.ts (machine-goldens and website-test-inputs through the TypeScript and the compiled core)",
         "mod: core-base GameMathTest and machines/web/IndustrialCokeOvenTest (coke-oven-discount); web: tools/web-core/machines.mjs on both targets",
-        "website: src/lib/machines/coke-oven-discount.test.ts"
+        "website: src/lib/machines/coke-oven-discount.test.ts",
+        "mod: machines/web/UnderOneTickTest (subtick-parallels); web: tools/web-core/machines.mjs on both targets",
+        "website: src/lib/solver/under-one-tick.test.ts"
       ],
-      "generator": "machine-goldens: npx tsx tools/audits/export-mod-machine-goldens.ts --out conformance/machines/machine-goldens.jsonl.gz --dataset stable-2.9.0-tuxmine --rates recipeDurationDivisor=64,beesYield=4,ic2CropsYield=4 (the instance's dataset, checksumSha256 7c6fbe83d7be4863518e88c615b0299033d7a4b6c4e32bb497225979ac35b3c2, at its pack's GTNHRates config); crop-goldens: npx tsx tools/audits/export-mod-crop-goldens.ts --out conformance/machines/crop-goldens.jsonl.gz --dataset stable-2.9.0-tuxmine (same dataset); bee-goldens: BEE_GOLDENS_OUT=$PWD/conformance/machines/bee-goldens.jsonl.gz node node_modules/vitest/vitest.mjs run --config jvm/mod/tools/dev/bees/vitest.bees.config.mjs; reference-coefficients: see src/lib/machines/CLAUDE.md; website-test-inputs: node tools/audits/machine-test-inputs/record.mjs; coke-oven-discount: a scratch Java program holding GTUtility's powInt and powBySquaring (int exponent) verbatim, run on the JVM, printing the file (rows: coil tier, 64-bit pattern, decimal)"
+      "generator": "machine-goldens: npx tsx tools/audits/export-mod-machine-goldens.ts --out conformance/machines/machine-goldens.jsonl.gz --dataset stable-2.9.0-tuxmine --rates recipeDurationDivisor=64,beesYield=4,ic2CropsYield=4 (the instance's dataset, checksumSha256 7c6fbe83d7be4863518e88c615b0299033d7a4b6c4e32bb497225979ac35b3c2, at its pack's GTNHRates config); crop-goldens: npx tsx tools/audits/export-mod-crop-goldens.ts --out conformance/machines/crop-goldens.jsonl.gz --dataset stable-2.9.0-tuxmine (same dataset); bee-goldens: BEE_GOLDENS_OUT=$PWD/conformance/machines/bee-goldens.jsonl.gz node node_modules/vitest/vitest.mjs run --config jvm/mod/tools/dev/bees/vitest.bees.config.mjs; reference-coefficients: see src/lib/machines/CLAUDE.md; website-test-inputs: node tools/audits/machine-test-inputs/record.mjs; coke-oven-discount: a scratch Java program holding GTUtility's powInt and powBySquaring (int exponent) verbatim, run on the JVM, printing the file (rows: coil tier, 64-bit pattern, decimal); subtick-parallels: the pack's gregtech jar's OverclockCalculator.calculateMultiplierUnderOneTick run on the JVM over the listed cases (see the machines stream state note), printing the file"
     },
     "model": {
       "specifies": "The plan model's resource rules both sides hold: wiring.json, which wires a plan allows (a slot takes its own resource and what its recipe lists in its place, never an item that only shares an ore name with them).",
@@ -288,18 +290,23 @@
     },
     "machines/machine-goldens.jsonl.gz": {
       "area": "machines",
-      "bytes": 2878058,
-      "sha256": "f4a3e80d0c0a36d1cb5342ef856ee946bd1617e914217d26839f610d78c01287"
+      "bytes": 2879562,
+      "sha256": "e59b776e7d9ae227363ce59c3662c221eb447b0a6b3849c317d96d4be189557c"
     },
     "machines/reference-coefficients.json": {
       "area": "machines",
       "bytes": 643054,
       "sha256": "d32b2163d3f0c9cc69100c6e7a273dfe5cba8249cbea21e3e3bc062a0fe98ec6"
     },
+    "machines/subtick-parallels.json": {
+      "area": "machines",
+      "bytes": 36262,
+      "sha256": "a41669eadb069b4639c3f7346a9819b52a8fd2b902476ce362d1045d4bc51530"
+    },
     "machines/website-test-inputs.jsonl.gz": {
       "area": "machines",
-      "bytes": 120878,
-      "sha256": "9264f9be65f716e43774850747604716dbc9b2733eb30e629cf246be89cc1678"
+      "bytes": 121302,
+      "sha256": "062a7059a87f1bbf6afb198de19e933e5d20054c2b7a70069bc5f671b1b27444"
     },
     "model/wiring.json": {
       "area": "model",

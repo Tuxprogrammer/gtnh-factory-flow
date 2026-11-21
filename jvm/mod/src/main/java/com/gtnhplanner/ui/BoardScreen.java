@@ -17,6 +17,7 @@ import com.cleanroommc.modularui.widgets.ButtonWidget;
 import com.cleanroommc.modularui.widgets.layout.Flow;
 import com.gtnhplanner.GtnhPlanner;
 import com.gtnhplanner.nei.NEIPlanConfig;
+import com.gtnhplanner.nei.PlanBookmarks;
 import com.gtnhplanner.ui.canvas.BoardCanvas;
 import com.gtnhplanner.ui.card.CardModel;
 import com.gtnhplanner.ui.card.PortSlot;
@@ -493,7 +494,8 @@ public final class BoardScreen extends ModularScreen {
      * library, or Update in library and Publish as new post for one posted: a copy for everyone, never the plan
      * itself), its website link and its plan code to the clipboard, a plan file the website
      * opens, the plan opened on the website in the browser, a line in the game's chat that opens it
-     * (client/ChatShare), and a picture of it. The website's Share menu has the same rows. Labels only, as narrow as
+     * (client/ChatShare), its recipes in NEI's bookmarks (nei/PlanBookmarks), and a picture of it. The website's Share
+     * menu has the same rows, but for the bookmarks. Labels only, as narrow as
      * they are: each says what it does.
      */
     private static void openShare(final ModularPanel panel, final BoardSession session, final BoardCanvas canvas,
@@ -520,6 +522,8 @@ public final class BoardScreen extends ModularScreen {
         rows.add(com.gtnhplanner.ui.popup.PickList.Entry.of("Copy plan code", () -> session.copyPlan(slot)));
         rows.add(com.gtnhplanner.ui.popup.PickList.Entry.of("Share in game chat", () -> session.shareInChat(slot)));
         rows.add(com.gtnhplanner.ui.popup.PickList.Entry.of("Export plan file", session::exportPlanFile));
+        rows.add(com.gtnhplanner.ui.popup.PickList.Entry.of("Bookmark recipes", () -> PlanBookmarks.recipes(session)));
+        rows.add(com.gtnhplanner.ui.popup.PickList.Entry.of("Bookmark as chain", () -> PlanBookmarks.chain(session)));
         rows.add(
             com.gtnhplanner.ui.popup.PickList.Entry
                 .of("Screenshot...", () -> com.gtnhplanner.ui.popup.ScreenshotPanel.open(panel, session, canvas)));

@@ -47,6 +47,7 @@ import {
 import { convertLooseCellWires, hasLooseCellWires } from "@/lib/model/cell-wires";
 import type { PlanConversionNotice } from "@/lib/solver/plan/to-plan";
 import { planClipboard } from "@/lib/solver/plan/convert";
+import { rekeyInputOverrides } from "@/lib/import-export/migrated-input-overrides";
 import { playBoardSound, quietBoardSoundsFor, suppressBoardSound } from "@/lib/board-sounds";
 import { playEditSfx } from "@/lib/sound/sfx";
 import { GT_VOLTAGE_TIERS } from "@/lib/model/tiers";
@@ -1390,16 +1391,25 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
           const validMachineHandlerIds = new Set(
             (refreshedRecipe.machineHandlers ?? []).map((handler) => handler.id),
           );
+          // A migrated recipe may order its slots differently: slot picks move by resource, not slot number.
+          const migrated = refreshedRecipe.id !== node.recipeId;
           const nextRecipeInputOverrides = {
             ...contextualInputOverrides,
-            ...node.recipeInputOverrides,
+            ...(migrated
+              ? rekeyInputOverrides(node.recipeInputOverrides, refreshedRecipe)
+              : node.recipeInputOverrides),
           };
           // A shared machine's extra recipes follow a migration by id too.
           const extraRecipes = node.extraRecipes?.map((extra) => {
             const refreshedExtra = refreshedFor(extra.recipeId);
-            return refreshedExtra && refreshedExtra.id !== extra.recipeId
-              ? { ...extra, recipeId: refreshedExtra.id }
-              : extra;
+            if (!refreshedExtra || refreshedExtra.id === extra.recipeId) return extra;
+            const { recipeInputOverrides: extraOverrides, ...rest } = extra;
+            const rekeyed = rekeyInputOverrides(extraOverrides, refreshedExtra);
+            return {
+              ...rest,
+              recipeId: refreshedExtra.id,
+              ...(rekeyed ? { recipeInputOverrides: rekeyed } : {}),
+            };
           });
           const nextNode: FactoryNode = {
             ...node,
@@ -1410,6 +1420,9 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
               ? { recipeInputOverrides: nextRecipeInputOverrides }
               : {}),
           };
+          if (migrated && Object.keys(nextRecipeInputOverrides).length === 0) {
+            delete nextNode.recipeInputOverrides;
+          }
           return nextNode.machineHandlerId && !validMachineHandlerIds.has(nextNode.machineHandlerId)
             ? { ...nextNode, machineHandlerId: undefined }
             : nextNode;

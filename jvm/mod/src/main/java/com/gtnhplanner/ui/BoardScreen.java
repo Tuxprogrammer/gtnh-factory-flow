@@ -342,12 +342,12 @@ public final class BoardScreen extends ModularScreen {
         final RailHandle railHandle = new RailHandle(rail, picker::isEnabled);
         railHandle
             .left(
-                () -> rail.currentWidth() - RailHandle.INSIDE,
+                () -> RailHandle.leftOf(rail.currentWidth()),
                 com.cleanroommc.modularui.widget.sizer.Unit.Measure.PIXEL)
             .top(
                 () -> topBar.barHeight() + toolbar.barHeight(),
                 com.cleanroommc.modularui.widget.sizer.Unit.Measure.PIXEL)
-            .width(RailHandle.INSIDE + RailHandle.OUTSIDE)
+            .width(RailHandle.OUTSIDE)
             .bottom(0);
         panel.child(railHandle);
         parts.put("railHandle", railHandle);

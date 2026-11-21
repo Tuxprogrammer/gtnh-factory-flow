@@ -393,7 +393,8 @@ final class OverviewRail extends ParentWidget<OverviewRail>
             final int top = listY + barTrack * Math.max(0, Math.min(max, scroll)) / max;
             final boolean hot = draggingBar || hover != null && hover.kind() == Kind.SCROLLBAR;
             if (hot) Hyb.rect(w - BAR_W - 1, listY, BAR_W, visible, 0x40000000);
-            Hyb.rect(w - BAR_W, top, BAR_W - 2, thumb, hot ? Hyb.INK : 0xFF6A6C74);
+            final int[] tx = thumbX(w);
+            Hyb.rect(tx[0], top, tx[1] - tx[0], thumb, hot ? Hyb.INK : 0xFF6A6C74);
         }
         // Keep what is on screen of the list; the heading's fold key stays as it is.
         final List<Hit> moved = new ArrayList<>(hits.size());
@@ -406,7 +407,7 @@ final class OverviewRail extends ParentWidget<OverviewRail>
             moved.add(new Hit(hit.kind(), hit.x0(), Math.max(hit.y0(), listY), hit.x1(), hit.y1(), hit.data()));
         }
         // The scroll bar sits over the list's right edge, on top of everything there (hits are found first to last).
-        if (max > 0) moved.add(0, new Hit(Kind.SCROLLBAR, w - BAR_W - 2, listY, w, h, null));
+        if (max > 0) moved.add(0, new Hit(Kind.SCROLLBAR, scrollBarLeft(w), listY, w, h, null));
         hits.clear();
         hits.addAll(moved);
         lastHits.clear();
@@ -1279,6 +1280,16 @@ final class OverviewRail extends ParentWidget<OverviewRail>
     /** Dragging the thumb, and where on it it was taken. */
     private boolean draggingBar;
     private int barGrab;
+
+    /** Where the scroll bar starts taking presses, for an overview {@code w} wide: from here to its edge. */
+    static int scrollBarLeft(final int w) {
+        return w - BAR_W - 2;
+    }
+
+    /** The thumb's left and right as drawn, for an overview {@code w} wide. */
+    static int[] thumbX(final int w) {
+        return new int[] { w - BAR_W, w - 2 };
+    }
 
     /** Scrolls so the thumb's top is at {@code thumbTop} (rail-local). */
     private void scrollBarTo(final int thumbTop) {

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -26,6 +27,7 @@ import com.gtnhplanner.cloud.net.CloudApi;
 import com.gtnhplanner.cloud.net.LiveSocket;
 import com.gtnhplanner.core.base.Log;
 import com.gtnhplanner.library.CommunityApi;
+import com.gtnhplanner.library.Posting;
 import com.gtnhplanner.library.SiteConfig;
 import com.gtnhplanner.library.SiteHeader;
 import com.sun.net.httpserver.HttpExchange;
@@ -264,6 +266,20 @@ class SiteHeaderTest {
             }
         }
         assertTrue(reachedElsewhere.isEmpty(), "the redirect was followed: " + reachedElsewhere);
+    }
+
+    @Test
+    void makingAnAccountThroughARedirectSaysAccountsAreMadeOnTheWebsite() {
+        requires = VALUE;
+        SiteConfig.useHeader("", "");
+        final Exception e = assertThrows(java.io.IOException.class, () -> CommunityApi.register("ada", "pw"));
+        assertEquals("Create your account on the website, then sign in here.", Posting.creating(e));
+        assertEquals("Create your account on the website, then sign in here.", SiteHeader.CREATE_ACCOUNT);
+        // Signing in, and any other refusal of an account, keep their own words.
+        final Exception in = assertThrows(java.io.IOException.class, () -> CommunityApi.signIn("ada", "pw"));
+        assertEquals(SiteHeader.SIGN_IN, in.getMessage());
+        assertEquals("busy", Posting.creating(new java.io.IOException("busy")));
+        assertTrue(SiteHeader.CREATE_ACCOUNT.length() < 140 && !SiteHeader.CREATE_ACCOUNT.contains("—"));
     }
 
     @Test

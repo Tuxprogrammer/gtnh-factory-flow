@@ -1,5 +1,8 @@
 package com.gtnhplanner.ui.theme;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.item.ItemStack;
@@ -572,5 +575,23 @@ public final class Hyb {
         final int room = maxWidth - width(dots);
         if (room <= 0) return "";
         return font().trimStringToWidth(s, room) + dots;
+    }
+
+    /** Words onto at most two lines no wider than {@code maxWidth}; what does not fit the second is cut short. */
+    public static List<String> wrap(final String text, final int maxWidth) {
+        final List<String> lines = new ArrayList<>();
+        StringBuilder line = new StringBuilder();
+        for (final String word : text.split(" ")) {
+            final String next = line.length() == 0 ? word : line + " " + word;
+            if (width(next) <= maxWidth || line.length() == 0) line = new StringBuilder(next);
+            else {
+                lines.add(line.toString());
+                line = new StringBuilder(word);
+            }
+        }
+        lines.add(line.toString());
+        if (lines.size() > 2)
+            lines.set(1, fit(lines.get(1) + " " + String.join(" ", lines.subList(2, lines.size())), maxWidth));
+        return lines;
     }
 }

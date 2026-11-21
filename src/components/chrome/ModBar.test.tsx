@@ -6,7 +6,6 @@ import { useDesignStore } from "@/store/design-store";
 import { writeWorkspaceView } from "@/lib/workspace-view";
 import { OPEN_FEEDBACK_EVENT } from "./chrome-events";
 import { ModBar } from "./ModBar";
-import { GITHUB_URL } from "@/components/HeaderLinks";
 import { useCommunityAuthStore } from "@/store/community-auth-store";
 import { openLibrary, readLibraryTabState } from "@/lib/library/library-tab";
 
@@ -58,7 +57,10 @@ beforeEach(() => {
   writeWorkspaceView({ averageMachineDraw: true });
   useCommunityAuthStore.setState({ user: undefined, hasHydrated: true });
 });
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  vi.unstubAllEnvs();
+});
 
 describe("the mod's top bar", () => {
   it("every key is in the Tab order and Enter or Space presses it", () => {
@@ -231,22 +233,24 @@ describe("the mod's top bar", () => {
     expect(screen.getByText("Blue comes into the plan; orange leaves it")).toBeTruthy();
   });
 
-  it("the Help menu links this repository and, with no help page configured, no chat or tip jar", () => {
+  it("the Help menu links this repository and, with no help page or mod page configured, no chat, tip jar or download", () => {
+    vi.stubEnv("NEXT_PUBLIC_MOD_URL", "");
     renderBar();
     fireEvent.click(key("help"));
     const rows = shareLabels();
     expect(rows).toContain("Source on GitHub");
-    expect(rows).toContain("Download the mod");
+    expect(rows).not.toContain("Download the mod");
     expect(rows).not.toContain("Get help");
     expect(rows.filter((label) => /discord|ko-fi|support/i.test(label ?? ""))).toEqual([]);
   });
 
-  it("the Help menu's Download the mod opens the mod's newest release", () => {
+  it("the Help menu's Download the mod opens the page the build names", () => {
+    vi.stubEnv("NEXT_PUBLIC_MOD_URL", "https://mods.test/planner");
     const open = vi.spyOn(window, "open").mockImplementation(() => null);
     renderBar();
     fireEvent.click(key("help"));
     fireEvent.click(screen.getByText("Download the mod"));
-    expect(open).toHaveBeenCalledWith(`${GITHUB_URL}/releases/latest`, "_blank", "noopener,noreferrer");
+    expect(open).toHaveBeenCalledWith("https://mods.test/planner", "_blank", "noopener,noreferrer");
     open.mockRestore();
   });
 

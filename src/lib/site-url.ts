@@ -40,3 +40,11 @@ export function siteHost(): string | undefined {
 export function supportUrl(): string | undefined {
   return webAddress(process.env.NEXT_PUBLIC_SUPPORT_URL)?.href;
 }
+
+/**
+ * Where players download the in-game mod (`NEXT_PUBLIC_MOD_URL`, whole address kept), or undefined. Without one the
+ * mod announcement and the Help menu offer no download: nothing here names a release page of its own.
+ */
+export function modUrl(): string | undefined {
+  return webAddress(process.env.NEXT_PUBLIC_MOD_URL)?.href;
+}

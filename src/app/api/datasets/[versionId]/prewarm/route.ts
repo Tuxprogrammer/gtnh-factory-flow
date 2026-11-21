@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prewarmDatasetVersion } from "@/lib/server/dataset-query";
 import { getResourcePopularity } from "@/lib/server/resource-popularity";
+import { agentApiToken } from "@/lib/agent-api/auth";
+import { warmAgentApi } from "@/lib/agent-api/warm";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,6 +24,10 @@ export async function GET(
     // hold up the prewarm.
     getResourcePopularity();
     await prewarmDatasetVersion(versionId, { includeShards });
+    // The agent API's own lazy indexes, when it is on (instrumentation's prewarm does not reach route modules).
+    if (agentApiToken()) {
+      await warmAgentApi();
+    }
 
     return NextResponse.json(
       {

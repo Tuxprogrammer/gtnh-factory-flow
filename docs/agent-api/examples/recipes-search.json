@@ -1,0 +1,155 @@
+{
+  "endpoint": "recipes/search",
+  "request": {
+    "makes": "gregtech:gt.metaitem.01@2028",
+    "limit": 4,
+    "constraints": {
+      "tierCap": "HV",
+      "heat": 2000,
+      "cleanroom": true
+    },
+    "player": {
+      "name": "Steve"
+    }
+  },
+  "status": 200,
+  "response": {
+    "dataset": "stable-2.9.0-tuxmine",
+    "results": [
+      {
+        "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-cauldron:3a6e44b57ae2100a",
+        "name": "Cauldron: Titanium Dust",
+        "machine": "Cauldron",
+        "minTier": "ULV",
+        "euT": 0,
+        "seconds": 0.05,
+        "inputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@3028",
+            "kind": "item",
+            "name": "Impure Pile of Titanium Dust",
+            "amount": 1,
+            "consumed": true
+          },
+          {
+            "id": "water",
+            "kind": "fluid",
+            "name": "Water",
+            "amount": 333,
+            "consumed": true
+          }
+        ],
+        "outputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2028",
+            "kind": "item",
+            "name": "Titanium Dust",
+            "amount": 1
+          }
+        ]
+      },
+      {
+        "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-cauldron:e3b49a6dbaea5d85",
+        "name": "Cauldron: Titanium Dust",
+        "machine": "Cauldron",
+        "minTier": "ULV",
+        "euT": 0,
+        "seconds": 0.05,
+        "inputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@4028",
+            "kind": "item",
+            "name": "Purified Pile of Titanium Dust",
+            "amount": 1,
+            "consumed": true
+          },
+          {
+            "id": "water",
+            "kind": "fluid",
+            "name": "Water",
+            "amount": 333,
+            "consumed": true
+          }
+        ],
+        "outputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2028",
+            "kind": "item",
+            "name": "Titanium Dust",
+            "amount": 1
+          }
+        ]
+      },
+      {
+        "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-simplewasher:d366594b79603c27",
+        "name": "Simple Dust Washer: Titanium Dust",
+        "machine": "Steam Purifier",
+        "minTier": "ULV",
+        "euT": 7,
+        "seconds": 0.05,
+        "inputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@3028",
+            "kind": "item",
+            "name": "Impure Pile of Titanium Dust",
+            "amount": 1,
+            "consumed": true
+          },
+          {
+            "id": "water",
+            "kind": "fluid",
+            "name": "Water",
+            "amount": 100,
+            "consumed": true
+          }
+        ],
+        "outputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2028",
+            "kind": "item",
+            "name": "Titanium Dust",
+            "amount": 1
+          }
+        ]
+      },
+      {
+        "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-simplewasher:e7acdb046ca0aa58",
+        "name": "Simple Dust Washer: Titanium Dust",
+        "machine": "Steam Purifier",
+        "minTier": "ULV",
+        "euT": 7,
+        "seconds": 0.05,
+        "inputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@4028",
+            "kind": "item",
+            "name": "Purified Pile of Titanium Dust",
+            "amount": 1,
+            "consumed": true
+          },
+          {
+            "id": "water",
+            "kind": "fluid",
+            "name": "Water",
+            "amount": 100,
+            "consumed": true
+          }
+        ],
+        "outputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2028",
+            "kind": "item",
+            "name": "Titanium Dust",
+            "amount": 1
+          }
+        ]
+      }
+    ],
+    "total": 322,
+    "offset": 0,
+    "more": true,
+    "notEnforced": [
+      "cleanroom"
+    ]
+  }
+}

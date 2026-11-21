@@ -1,0 +1,577 @@
+{
+  "endpoint": "recipes/get",
+  "request": {
+    "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-blastfurnace:7a1ffb239a923cc2",
+    "player": {
+      "name": "Steve"
+    }
+  },
+  "status": 200,
+  "response": {
+    "dataset": "stable-2.9.0-tuxmine",
+    "recipe": {
+      "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-blastfurnace:7a1ffb239a923cc2",
+      "name": "Blast Furnace: Titanium Ingot",
+      "map": "Blast Furnace",
+      "minTier": "MV",
+      "euT": 120,
+      "seconds": 1.2,
+      "heat": 1500,
+      "inputs": [
+        {
+          "id": "galacticraftmars:item.itembasicasteroids@4",
+          "kind": "item",
+          "name": "Titanium Shard",
+          "amount": 2,
+          "consumed": true
+        }
+      ],
+      "outputs": [
+        {
+          "id": "gregtech:gt.metaitem.01@11028",
+          "kind": "item",
+          "name": "Titanium Ingot",
+          "amount": 1
+        }
+      ],
+      "machines": [
+        {
+          "id": "electric-blast-furnace",
+          "name": "Electric Blast Furnace",
+          "kind": "multiblock",
+          "minTier": "MV",
+          "euT": 120,
+          "seconds": 1.2,
+          "heatOverclock": true,
+          "dials": [
+            {
+              "id": "heatingCoil",
+              "label": "Heating Coil",
+              "min": "cupronickel",
+              "default": "cupronickel",
+              "options": [
+                {
+                  "key": "cupronickel",
+                  "label": "Cupronickel",
+                  "heat": 1801
+                },
+                {
+                  "key": "kanthal",
+                  "label": "Kanthal",
+                  "heat": 2701
+                },
+                {
+                  "key": "nichrome",
+                  "label": "Nichrome",
+                  "heat": 3601
+                },
+                {
+                  "key": "tpv",
+                  "label": "TPV-Alloy",
+                  "heat": 4501
+                },
+                {
+                  "key": "hss_g",
+                  "label": "HSS-G",
+                  "heat": 5401
+                },
+                {
+                  "key": "hss_s",
+                  "label": "HSS-S",
+                  "heat": 6301
+                },
+                {
+                  "key": "naquadah",
+                  "label": "Naquadah",
+                  "heat": 7201
+                },
+                {
+                  "key": "naquadah_alloy",
+                  "label": "Naquadah Alloy",
+                  "heat": 8101
+                },
+                {
+                  "key": "trinium",
+                  "label": "Trinium",
+                  "heat": 9001
+                },
+                {
+                  "key": "electrum_flux",
+                  "label": "Electrum Flux",
+                  "heat": 9901
+                },
+                {
+                  "key": "awakened_draconium",
+                  "label": "Awakened Draconium",
+                  "heat": 10801
+                },
+                {
+                  "key": "infinity",
+                  "label": "Infinity",
+                  "heat": 11701
+                },
+                {
+                  "key": "hypogen",
+                  "label": "Hypogen",
+                  "heat": 12601
+                },
+                {
+                  "key": "eternal",
+                  "label": "Eternal",
+                  "heat": 13501
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "exothermic-hearth",
+          "name": "Exothermic Hearth",
+          "kind": "multiblock",
+          "minTier": "MV",
+          "euT": 120,
+          "seconds": 1.2,
+          "parallels": 512,
+          "heatOverclock": true,
+          "dials": [
+            {
+              "id": "heatingCoil",
+              "label": "Heating Coil",
+              "min": "cupronickel",
+              "default": "cupronickel",
+              "options": [
+                {
+                  "key": "cupronickel",
+                  "label": "Cupronickel",
+                  "heat": 1801
+                },
+                {
+                  "key": "kanthal",
+                  "label": "Kanthal",
+                  "heat": 2701
+                },
+                {
+                  "key": "nichrome",
+                  "label": "Nichrome",
+                  "heat": 3601
+                },
+                {
+                  "key": "tpv",
+                  "label": "TPV-Alloy",
+                  "heat": 4501
+                },
+                {
+                  "key": "hss_g",
+                  "label": "HSS-G",
+                  "heat": 5401
+                },
+                {
+                  "key": "hss_s",
+                  "label": "HSS-S",
+                  "heat": 6301
+                },
+                {
+                  "key": "naquadah",
+                  "label": "Naquadah",
+                  "heat": 7201
+                },
+                {
+                  "key": "naquadah_alloy",
+                  "label": "Naquadah Alloy",
+                  "heat": 8101
+                },
+                {
+                  "key": "trinium",
+                  "label": "Trinium",
+                  "heat": 9001
+                },
+                {
+                  "key": "electrum_flux",
+                  "label": "Electrum Flux",
+                  "heat": 9901
+                },
+                {
+                  "key": "awakened_draconium",
+                  "label": "Awakened Draconium",
+                  "heat": 10801
+                },
+                {
+                  "key": "infinity",
+                  "label": "Infinity",
+                  "heat": 11701
+                },
+                {
+                  "key": "hypogen",
+                  "label": "Hypogen",
+                  "heat": 12601
+                },
+                {
+                  "key": "eternal",
+                  "label": "Eternal",
+                  "heat": 13501
+                }
+              ]
+            },
+            {
+              "id": "machineParallel",
+              "label": "Parallel",
+              "min": "fixed-256",
+              "default": "fixed-256",
+              "options": [
+                {
+                  "key": "fixed-256",
+                  "label": "256 Parallels",
+                  "parallels": 256
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "helioflare-power-forge",
+          "name": "Helioflare Power Forge",
+          "kind": "multiblock",
+          "minTier": "MV",
+          "euT": 120,
+          "seconds": 1.2,
+          "dials": [
+            {
+              "id": "heatingCoil",
+              "label": "Heating Coil",
+              "min": "cupronickel",
+              "default": "cupronickel",
+              "options": [
+                {
+                  "key": "cupronickel",
+                  "label": "Cupronickel",
+                  "heat": 1801
+                },
+                {
+                  "key": "kanthal",
+                  "label": "Kanthal",
+                  "heat": 2701
+                },
+                {
+                  "key": "nichrome",
+                  "label": "Nichrome",
+                  "heat": 3601
+                },
+                {
+                  "key": "tpv",
+                  "label": "TPV-Alloy",
+                  "heat": 4501
+                },
+                {
+                  "key": "hss_g",
+                  "label": "HSS-G",
+                  "heat": 5401
+                },
+                {
+                  "key": "hss_s",
+                  "label": "HSS-S",
+                  "heat": 6301
+                },
+                {
+                  "key": "naquadah",
+                  "label": "Naquadah",
+                  "heat": 7201
+                },
+                {
+                  "key": "naquadah_alloy",
+                  "label": "Naquadah Alloy",
+                  "heat": 8101
+                },
+                {
+                  "key": "trinium",
+                  "label": "Trinium",
+                  "heat": 9001
+                },
+                {
+                  "key": "electrum_flux",
+                  "label": "Electrum Flux",
+                  "heat": 9901
+                },
+                {
+                  "key": "awakened_draconium",
+                  "label": "Awakened Draconium",
+                  "heat": 10801
+                },
+                {
+                  "key": "infinity",
+                  "label": "Infinity",
+                  "heat": 11701
+                },
+                {
+                  "key": "hypogen",
+                  "label": "Hypogen",
+                  "heat": 12601
+                },
+                {
+                  "key": "eternal",
+                  "label": "Eternal",
+                  "heat": 13501
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "industrial-arc-furnace",
+          "name": "Industrial Arc Furnace",
+          "kind": "multiblock",
+          "minTier": "MV",
+          "euT": 120,
+          "seconds": 1.2,
+          "parallels": 4,
+          "dials": [
+            {
+              "id": "heatingCoil",
+              "label": "Heating Coil",
+              "min": "cupronickel",
+              "default": "cupronickel",
+              "options": [
+                {
+                  "key": "cupronickel",
+                  "label": "Cupronickel",
+                  "heat": 1801
+                },
+                {
+                  "key": "kanthal",
+                  "label": "Kanthal",
+                  "heat": 2701
+                },
+                {
+                  "key": "nichrome",
+                  "label": "Nichrome",
+                  "heat": 3601
+                },
+                {
+                  "key": "tpv",
+                  "label": "TPV-Alloy",
+                  "heat": 4501
+                },
+                {
+                  "key": "hss_g",
+                  "label": "HSS-G",
+                  "heat": 5401
+                },
+                {
+                  "key": "hss_s",
+                  "label": "HSS-S",
+                  "heat": 6301
+                },
+                {
+                  "key": "naquadah",
+                  "label": "Naquadah",
+                  "heat": 7201
+                },
+                {
+                  "key": "naquadah_alloy",
+                  "label": "Naquadah Alloy",
+                  "heat": 8101
+                },
+                {
+                  "key": "trinium",
+                  "label": "Trinium",
+                  "heat": 9001
+                },
+                {
+                  "key": "electrum_flux",
+                  "label": "Electrum Flux",
+                  "heat": 9901
+                },
+                {
+                  "key": "awakened_draconium",
+                  "label": "Awakened Draconium",
+                  "heat": 10801
+                },
+                {
+                  "key": "infinity",
+                  "label": "Infinity",
+                  "heat": 11701
+                },
+                {
+                  "key": "hypogen",
+                  "label": "Hypogen",
+                  "heat": 12601
+                },
+                {
+                  "key": "eternal",
+                  "label": "Eternal",
+                  "heat": 13501
+                }
+              ]
+            },
+            {
+              "id": "arcElectrode",
+              "label": "Electrode",
+              "min": "graphite",
+              "default": "graphite",
+              "options": [
+                {
+                  "key": "graphite",
+                  "label": "Graphite"
+                },
+                {
+                  "key": "tantalum",
+                  "label": "Tantalum"
+                },
+                {
+                  "key": "molybdenum",
+                  "label": "Molybdenum"
+                },
+                {
+                  "key": "tungsten",
+                  "label": "Tungsten"
+                },
+                {
+                  "key": "tungstensteel",
+                  "label": "Tungstensteel"
+                },
+                {
+                  "key": "graphene",
+                  "label": "Graphene"
+                },
+                {
+                  "key": "ybco",
+                  "label": "YBCO"
+                },
+                {
+                  "key": "netherite",
+                  "label": "Netherite"
+                },
+                {
+                  "key": "tritanium",
+                  "label": "Tritanium"
+                },
+                {
+                  "key": "infinity",
+                  "label": "Infinity"
+                },
+                {
+                  "key": "hypogen",
+                  "label": "Hypogen"
+                },
+                {
+                  "key": "neutronium-nanite",
+                  "label": "Neutronium Nanite"
+                },
+                {
+                  "key": "transcendent-nanite",
+                  "label": "Transcendent Nanite"
+                },
+                {
+                  "key": "universium-nanite",
+                  "label": "Universium Nanite"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "volcanus",
+          "name": "Volcanus",
+          "kind": "multiblock",
+          "minTier": "MV",
+          "euT": 120,
+          "seconds": 1.2,
+          "parallels": 8,
+          "heatOverclock": true,
+          "dials": [
+            {
+              "id": "heatingCoil",
+              "label": "Heating Coil",
+              "min": "cupronickel",
+              "default": "cupronickel",
+              "options": [
+                {
+                  "key": "cupronickel",
+                  "label": "Cupronickel",
+                  "heat": 1801
+                },
+                {
+                  "key": "kanthal",
+                  "label": "Kanthal",
+                  "heat": 2701
+                },
+                {
+                  "key": "nichrome",
+                  "label": "Nichrome",
+                  "heat": 3601
+                },
+                {
+                  "key": "tpv",
+                  "label": "TPV-Alloy",
+                  "heat": 4501
+                },
+                {
+                  "key": "hss_g",
+                  "label": "HSS-G",
+                  "heat": 5401
+                },
+                {
+                  "key": "hss_s",
+                  "label": "HSS-S",
+                  "heat": 6301
+                },
+                {
+                  "key": "naquadah",
+                  "label": "Naquadah",
+                  "heat": 7201
+                },
+                {
+                  "key": "naquadah_alloy",
+                  "label": "Naquadah Alloy",
+                  "heat": 8101
+                },
+                {
+                  "key": "trinium",
+                  "label": "Trinium",
+                  "heat": 9001
+                },
+                {
+                  "key": "electrum_flux",
+                  "label": "Electrum Flux",
+                  "heat": 9901
+                },
+                {
+                  "key": "awakened_draconium",
+                  "label": "Awakened Draconium",
+                  "heat": 10801
+                },
+                {
+                  "key": "infinity",
+                  "label": "Infinity",
+                  "heat": 11701
+                },
+                {
+                  "key": "hypogen",
+                  "label": "Hypogen",
+                  "heat": 12601
+                },
+                {
+                  "key": "eternal",
+                  "label": "Eternal",
+                  "heat": 13501
+                }
+              ]
+            },
+            {
+              "id": "machineParallel",
+              "label": "Parallel",
+              "min": "fixed-8",
+              "default": "fixed-8",
+              "options": [
+                {
+                  "key": "fixed-8",
+                  "label": "8 Parallels",
+                  "parallels": 8
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

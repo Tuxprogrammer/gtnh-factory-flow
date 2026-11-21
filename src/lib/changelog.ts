@@ -51,6 +51,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Every browser solves plans the same way, so a plan no longer shows one set of numbers and then another just after opening.",
       "A buffer drawer keeps the rule saved with it, and its row shows the rule and its rate.",
       "Generator, holder and shared machine cards name themselves at the same size as other cards.",
+      "On generator cards, readings from the gear sheet's Working column can be pinned to the strip, a pinned setting another setting turns off stays there greyed, and a negative number typed into a number chip is ignored.",
       "The header and help menu no longer link to the original project's Discord and Ko-fi.",
     ],
   },

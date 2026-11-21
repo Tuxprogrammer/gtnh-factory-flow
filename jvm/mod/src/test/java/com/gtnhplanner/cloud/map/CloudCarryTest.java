@@ -271,7 +271,9 @@ class CloudCarryTest {
             edges.add(e);
         cut.add("edges", edges);
         final CloudPlans.Read rc = CloudPlans.read(cut, in.game());
-        final CloudPlans.Written saved = CloudPlans.write(in.g(), in.game(), cut, rc.basis());
+        // The board is the one read from the plan before the delete: its ids are the cloud's, so its cards match the
+        // basis the cut plan was read as.
+        final CloudPlans.Written saved = CloudPlans.write(r.graph(), in.game(), cut, rc.basis());
         assertFalse(byId(saved.plan(), "nodes").containsKey("n-off"), "a deleted card stays deleted");
         assertTrue(byId(saved.plan(), "nodes").containsKey("n-gone"), "the rest stays");
         assertTrue(

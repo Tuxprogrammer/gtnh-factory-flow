@@ -242,6 +242,76 @@ public final class LiveOps {
 
     // endregion
 
+    // region Wires and what they end at
+
+    /** What a wire may end at: the ids of a plan's cards and drawers. */
+    public static Set<String> ends(final JsonObject plan) {
+        final Set<String> ids = new LinkedHashSet<>();
+        for (final String c : List.of("nodes", "storages")) for (final JsonElement thing : collection(plan, c)) {
+            final String id = LiveJson.idOf(thing);
+            if (id != null) ids.add(id);
+        }
+        return ids;
+    }
+
+    private static boolean isEnd(@Nullable final String c) {
+        return "nodes".equals(c) || "storages".equals(c);
+    }
+
+    @Nullable
+    private static String field(@Nullable final JsonObject o, final String name) {
+        final JsonElement e = o == null ? null : o.get(name);
+        return e != null && e.isJsonPrimitive()
+            && e.getAsJsonPrimitive()
+                .isString() ? e.getAsString() : null;
+    }
+
+    /**
+     * {@code ops} without the ones that would leave a wire ending at a card or drawer the plan does not have once they
+     * land: a put of a wire, or a patch that moves one of its ends, to something {@code plan} lacks and the ops do not
+     * add. The engine takes a put whole and never checks its ends, so a wire written against a card another player
+     * has since deleted would stay in the plan with nothing at its end.
+     */
+    public static List<LiveOp> withoutDangling(final JsonObject plan, final List<LiveOp> ops) {
+        final Set<String> ends = ends(plan);
+        for (final LiveOp op : ops) {
+            if (!isEnd(op.c()) || op.id() == null) continue;
+            if (op.o() == LiveOp.Kind.PUT) ends.add(op.id());
+            else if (op.o() == LiveOp.Kind.DEL) ends.remove(op.id());
+        }
+        final List<LiveOp> out = new ArrayList<>();
+        for (final LiveOp op : ops) {
+            if ("edges".equals(op.c()) && (op.o() == LiveOp.Kind.PUT || op.o() == LiveOp.Kind.PATCH)) {
+                final JsonObject o = op.o() == LiveOp.Kind.PUT ? op.v() : op.f();
+                final String source = field(o, "source"), target = field(o, "target");
+                if (source != null && !ends.contains(source) || target != null && !ends.contains(target)) continue;
+            }
+            out.add(op);
+        }
+        return out;
+    }
+
+    /**
+     * The deletes of the wires of {@code now} that end at a card or drawer {@code before} had and {@code now} has not:
+     * what another player's delete leaves behind when a wire of this player's lands after it. Only what just went is
+     * looked at; a wire a plan already held with a missing end is none of this player's business.
+     */
+    public static List<LiveOp> lostWires(final JsonObject before, final JsonObject now) {
+        final Set<String> had = ends(before), has = ends(now), gone = new LinkedHashSet<>(had);
+        gone.removeAll(has);
+        final List<LiveOp> out = new ArrayList<>();
+        if (gone.isEmpty()) return out;
+        for (final JsonElement thing : collection(now, "edges")) {
+            final String id = LiveJson.idOf(thing);
+            final JsonObject o = thing.getAsJsonObject();
+            if (id != null && (gone.contains(field(o, "source")) || gone.contains(field(o, "target"))))
+                out.add(LiveOp.del("edges", id));
+        }
+        return out;
+    }
+
+    // endregion
+
     // region Diffing
 
     /**

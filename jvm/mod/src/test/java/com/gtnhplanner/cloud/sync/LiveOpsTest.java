@@ -73,6 +73,53 @@ class LiveOpsTest {
                 .error());
     }
 
+    private static final String ENDS = "{\"nodes\":[{\"id\":\"a\"},{\"id\":\"b\"}],\"storages\":[{\"id\":\"s\"}],"
+        + "\"edges\":[{\"id\":\"e1\",\"source\":\"a\",\"target\":\"b\"}]}";
+
+    private static LiveOp putWire(final String id, final String source, final String target) {
+        return LiveOp.put(
+            "edges",
+            id,
+            json("{\"id\":\"" + id + "\",\"source\":\"" + source + "\",\"target\":\"" + target + "\"}"));
+    }
+
+    @Test
+    void aWireToAMissingEndIsNotSentButOneToACardTheSameBatchAddsIs() {
+        final JsonObject plan = json(ENDS);
+        final List<LiveOp> ops = List.of(
+            putWire("e2", "a", "gone"),
+            putWire("e3", "a", "s"),
+            LiveOp.patch("edges", "e1", json("{\"target\":\"gone\"}"), null),
+            LiveOp.patch("edges", "e1", json("{\"resourceId\":\"x\"}"), null),
+            LiveOp.put("nodes", "c", json("{\"id\":\"c\"}")),
+            putWire("e4", "c", "a"),
+            LiveOp.del("nodes", "b"),
+            putWire("e5", "a", "b"));
+        final List<String> kept = new ArrayList<>();
+        for (final LiveOp op : LiveOps.withoutDangling(plan, ops)) kept.add(op.o() + " " + op.c() + " " + op.id());
+        assertEquals(List.of("PUT edges e3", "PATCH edges e1", "PUT nodes c", "PUT edges e4", "DEL nodes b"), kept);
+    }
+
+    @Test
+    void theWiresOfACardAnotherPlayerDeletedAreFound() {
+        final JsonObject before = json(
+            "{\"nodes\":[{\"id\":\"a\"},{\"id\":\"b\"}],\"edges\":[{\"id\":\"e1\",\"source\":\"a\",\"target\":\"b\"}]}");
+        final JsonObject now = json(
+            "{\"nodes\":[{\"id\":\"a\"}],\"edges\":[{\"id\":\"e1\",\"source\":\"a\",\"target\":\"b\"},"
+                + "{\"id\":\"e2\",\"source\":\"a\",\"target\":\"a\"},{\"id\":\"e9\",\"source\":\"z\",\"target\":\"a\"}]}");
+        final List<LiveOp> lost = LiveOps.lostWires(before, now);
+        assertEquals(1, lost.size(), "only the wire to what just went: " + lost);
+        assertEquals(
+            "edges",
+            lost.get(0)
+                .c());
+        assertEquals(
+            "e1",
+            lost.get(0)
+                .id());
+        assertEquals(List.of(), LiveOps.lostWires(now, now));
+    }
+
     @Test
     void sharesWhatABatchDidNotTouch() {
         final JsonObject plan = json("{\"nodes\":[{\"id\":\"n1\",\"a\":1}],\"edges\":[{\"id\":\"e1\"}]}");

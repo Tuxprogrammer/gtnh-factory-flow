@@ -22,6 +22,7 @@ import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Group;
 import com.gtnhplanner.data.flowchart.Groups;
+import com.gtnhplanner.data.flowchart.GsonTrees;
 import com.gtnhplanner.data.flowchart.MachineGroup;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Note;
@@ -45,6 +46,7 @@ import com.gtnhplanner.importer.FfSettings;
 import com.gtnhplanner.importer.ImportReport;
 import com.gtnhplanner.importer.ImportReport.Kind;
 import com.gtnhplanner.importer.NodeMaker;
+import com.gtnhplanner.importer.ShownCards;
 import com.gtnhplanner.library.PlanExport;
 
 /**
@@ -432,6 +434,7 @@ final class PlanRead {
         // A recipe this game's NEI does not know by its id (another pack version) reads with no ports: the importer
         // may still find it by what the plan says of it.
         final boolean portless = own != null && !own.isPower() && own.inputs.isEmpty() && own.outputs.isEmpty();
+        final int mark = report.size();
         final Map<Integer, Section> made = own == null || portless ? importCard(card, recipe, id, uuid, x, y)
             : Map.of();
         if (own != null && made.isEmpty()) {
@@ -443,7 +446,10 @@ final class PlanRead {
             cards.put(id, sections);
             return;
         }
-        if (made.isEmpty()) return;
+        if (made.isEmpty()) {
+            show(json, card, recipe, id, uuid, x, y, group, mark);
+            return;
+        }
         final Node first = made.get(0)
             .node();
         if (ext != null) keepGameOnly(first, ext.game(), game);
@@ -469,6 +475,43 @@ final class PlanRead {
     }
 
     /**
+     * A card the game cannot run, shown as a view-only card at its place, as the file import shows one (the same maker:
+     * {@link ShownCards#show}). The board's {@link Graph#site} holds the plan's card and the recipe it runs, which its
+     * wires name their ports by and which go back out with it. Never taken over from the previous board: it is cheap,
+     * and the plan's card may have changed.
+     */
+    private void show(final JsonObject json, final FfNode card, @Nullable final FfRecipe recipe, final String id,
+        final Uuid uuid, final int x, final int y, @Nullable final Uuid group, final int mark) {
+        final Map<String, Object> own = GsonTrees.map(json);
+        final JsonObject recipeTree = recipeJson.get(card.recipeId());
+        final List<Object> recipeTrees = new ArrayList<>();
+        if (recipeTree != null) recipeTrees.add(GsonTrees.map(recipeTree));
+        final Node node = ShownCards.show(own, recipeTrees, card, recipe, uuid, x, y, ports, report, mark);
+        // Its group changes where the website's frame is measured from, so a card read inside one counts as moved when
+        // a file is written (which names groups as the file does), never kept as the plan spelled its place.
+        node.group = group;
+        graph.addNode(node);
+        siteList("nodes").add(own);
+        if (recipeTree != null) {
+            final List<Object> known = siteList("recipes");
+            if (known.stream()
+                .noneMatch(
+                    r -> r instanceof Map && card.recipeId()
+                        .equals(((Map<?, ?>) r).get("id"))))
+                known.add(recipeTrees.get(0));
+        }
+        basis.map("nodes", id, "node:" + uuid);
+        final Map<Integer, Section> sections = new HashMap<>();
+        sections.put(0, new Section(node, recipe, card.overrides()));
+        cards.put(id, sections);
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Object> siteList(final String key) {
+        return (List<Object>) graph.site.computeIfAbsent(key, k -> new ArrayList<Object>());
+    }
+
+    /**
      * The previous board's card for a card that is the previous plan's very object, its recipe too, and was one card
      * there (not a shared machine the website made); else null.
      */
@@ -490,7 +533,8 @@ final class PlanRead {
             || previous.basis()
                 .isCarried(gameKey))
             return null;
-        return previous.graph().nodes.get(uuid);
+        final Node was = previous.graph().nodes.get(uuid);
+        return was == null || was.shown != null ? null : was;
     }
 
     /** A card from its game data, as a load reads it; null when that does not read. */

@@ -92,6 +92,16 @@ final class LiveTestServer implements AutoCloseable {
     /** Upgrades refused with `upgradeStatus`. */
     final AtomicInteger upgrades = new AtomicInteger();
     volatile String retryAfter;
+    /**
+     * A site behind a guarding proxy, as the mock's MOCK_REQUIRE_HEADER makes one: "name=value" that every upgrade must
+     * carry, else it is answered 302 to a sign-in page and counted in {@link #upgrades}. Empty for none.
+     */
+    volatile String requireHeader = "";
+    /** The header whose value each upgrade carried is recorded in {@link #watched} (empty string when absent). */
+    volatile String watch = "";
+    final List<String> watched = new CopyOnWriteArrayList<>();
+    /** Where a redirect (a 3xx {@link #upgradeStatus}, or a missing {@link #requireHeader}) says to go. */
+    volatile String redirectTo = "/sign-in";
     private final Map<Channel, java.util.Set<String>> in = new ConcurrentHashMap<>();
     private final AtomicInteger others = new AtomicInteger();
 
@@ -281,6 +291,26 @@ final class LiveTestServer implements AutoCloseable {
                 final String cookie = req.headers()
                     .get(HttpHeaders.Names.COOKIE);
                 cookies.add(cookie == null ? "" : cookie);
+                if (!watch.isEmpty()) {
+                    final String w = req.headers()
+                        .get(watch);
+                    watched.add(w == null ? "" : w);
+                }
+                final int eq = requireHeader.indexOf('=');
+                if (eq > 0 && !requireHeader.substring(eq + 1)
+                    .equals(
+                        req.headers()
+                            .get(requireHeader.substring(0, eq)))) {
+                    upgrades.incrementAndGet();
+                    final DefaultFullHttpResponse r = new DefaultFullHttpResponse(
+                        HttpVersion.HTTP_1_1,
+                        HttpResponseStatus.FOUND);
+                    r.headers()
+                        .set("Location", redirectTo);
+                    ctx.writeAndFlush(r)
+                        .addListener(ChannelFutureListener.CLOSE);
+                    return;
+                }
                 if (upgradeStatus != 0) {
                     upgrades.incrementAndGet();
                     final DefaultFullHttpResponse r = new DefaultFullHttpResponse(
@@ -288,6 +318,8 @@ final class LiveTestServer implements AutoCloseable {
                         HttpResponseStatus.valueOf(upgradeStatus));
                     if (retryAfter != null) r.headers()
                         .set("Retry-After", retryAfter);
+                    if (upgradeStatus >= 300 && upgradeStatus < 400) r.headers()
+                        .set("Location", redirectTo);
                     ctx.writeAndFlush(r)
                         .addListener(ChannelFutureListener.CLOSE);
                     return;

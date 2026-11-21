@@ -33,7 +33,10 @@ GUI, the network and the config stays in `jvm/mod/src`. Shared test data is in `
 - The mod names no remote host. Its website address, live service, update-check address, help page and the extra web
   origins allowed to use "Open in the mod" come from the `network` category of `config/gtnhplanner.cfg`
   (`siteUrl`, `liveUrl`, `updateUrl`, `supportUrl`, `websiteOrigins`, read by `library/SiteConfig`) or from the
-  `-Dgtnhplanner.library.url`, `.live.url`, `.update.url` and `.support.url` system properties, which win. Every one is
+  `-Dgtnhplanner.library.url`, `.live.url`, `.update.url` and `.support.url` system properties, which win. Two more
+  keys, `headerName` and `headerValue` (`-Dgtnhplanner.header.name` and `.value`), name one extra header for a site
+  behind a guarding proxy; `library/SiteHeader` holds it, sends it only to the site's and the live service's host, and
+  never logs it (`conformance/wire/README.md`, "A guarded site"). Every one is
   empty in a fresh jar and empty switches its feature off: a call that needs the site throws `SiteOff` and sends
   nothing. `NoRemoteHostTest` scans the mod and core sources for remote host literals and fails on one. What a pack
   puts in the config is the operator's decision: add no default address, and no new call to a host the config does not

@@ -50,6 +50,8 @@ export interface SpecialSection {
 /** A strip chip that can also be typed into (a number setting). */
 export interface SpecialChip extends CleanChipView {
   edit?: { text: string; commit: (text: string) => void; notes?: string[] };
+  /** A setting the card's other settings leave meaning nothing: greyed, not changed from the chip. */
+  off?: boolean;
 }
 
 export type NameTone = "ink" | "power" | "holder";

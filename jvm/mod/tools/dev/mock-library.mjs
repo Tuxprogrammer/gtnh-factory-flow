@@ -9,6 +9,10 @@
 //
 // Cloud plans, sharing and the live service come from tools/dev/mock-live.mjs: point the live service here too with
 //   tools/dev/mc.sh call 'library?url=http://127.0.0.1:8789&live=ws://127.0.0.1:8789/live'
+//
+// A site behind a guarding proxy: MOCK_REQUIRE_HEADER=<name>=<value> makes every request, and the WebSocket upgrade,
+// need that header with that value; one without it is answered 302 to a sign-in page, as such a proxy does, and
+// nothing is served. The value is never printed.
 import { createServer } from "node:http";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
@@ -24,6 +28,14 @@ const postsDir = join(stateDir, "mock-posts");
 const feedbackDir = join(stateDir, "mock-feedback");
 mkdirSync(postsDir, { recursive: true });
 mkdirSync(feedbackDir, { recursive: true });
+
+// The header a request must carry (MOCK_REQUIRE_HEADER=name=value), or none.
+const requireHeader = (() => {
+  const spec = process.env.MOCK_REQUIRE_HEADER ?? "";
+  const at = spec.indexOf("=");
+  return at > 0 ? { name: spec.slice(0, at).toLowerCase(), value: spec.slice(at + 1) } : undefined;
+})();
+const passesGate = (req) => !requireHeader || req.headers[requireHeader.name] === requireHeader.value;
 
 const users = new Map(); // name -> password
 const sessions = new Map(); // token -> name
@@ -81,6 +93,12 @@ const body = (req) =>
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, `http://localhost:${port}`);
   const path = url.pathname;
+  if (!passesGate(req)) {
+    console.log(new Date().toISOString().slice(11, 19), req.method, req.url, "(302: the required header is missing)");
+    res.writeHead(302, { Location: "/sign-in?next=" + encodeURIComponent(req.url), "Content-Length": "0" });
+    res.end();
+    return;
+  }
   console.log(new Date().toISOString().slice(11, 19), req.method, req.url, userOf(req) ? `(as ${userOf(req)})` : "");
   // Cloud plans, sharing and the live service (tools/dev/mock-live.mjs).
   if (await live.rest(req, res, url, json)) return;
@@ -204,6 +222,7 @@ const live = mockLive(server, {
   ids,
   stateFile: join(stateDir, "mock-designs.json"),
   users,
+  gate: passesGate,
 });
 server.listen(port, "127.0.0.1", () => {
   port = server.address().port;

@@ -58,8 +58,16 @@ public record SpecialView(SpecialInput.Kind kind, String name, int nameStep, Nam
      */
     public record Sockets(String take, String give, String takeHint, String giveHint) {}
 
-    /** A chip of the strip, and how it is typed into when it is a number the card shows its own way. */
-    public record Chip(CardView.ChipView chip, @Nullable Edit edit) {}
+    /**
+     * A chip of the strip, how it is typed into when it is a number the card shows its own way, and whether it is off: a
+     * setting the card's other settings leave meaning nothing, shown greyed and not changed from the chip.
+     */
+    public record Chip(CardView.ChipView chip, @Nullable Edit edit, boolean off) {
+
+        public Chip(final CardView.ChipView chip, @Nullable final Edit edit) {
+            this(chip, edit, false);
+        }
+    }
 
     /**
      * A chip typed into: the text the box opens with, what a typed number is divided by to be stored ({@code scale}:
@@ -129,7 +137,8 @@ public record SpecialView(SpecialInput.Kind kind, String name, int nameStep, Nam
                     .num("scale", c.edit.scale)
                     .strings("notes", c.edit.notes)
                     .end());
-            x.end();
+            x.bool("off", c.off)
+                .end();
         })
             .num("stripHeight", v.stripHeight)
             .strings("warnings", v.warnings)

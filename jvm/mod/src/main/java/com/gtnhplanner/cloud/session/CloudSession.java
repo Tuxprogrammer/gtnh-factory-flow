@@ -37,6 +37,7 @@ import com.gtnhplanner.core.base.Log;
 import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Plan;
+import com.gtnhplanner.library.SiteHeader;
 
 /**
  * A signed-in account's plans on this device (docs/design/cloud-live.md): the planner's plans are the account's cloud
@@ -868,6 +869,7 @@ public final class CloudSession {
             if (state != LiveSocket.State.OPEN) for (final LiveDoc d : docs.values()) d.leftRoom();
             if (LiveSocket.AUTH.equals(reason)) Log.get()
                 .warn("The live service did not take this sign-in; plans are kept here");
+            else if (LiveSocket.SIGN_IN.equals(reason)) signInAsked();
         }
 
         @Override
@@ -1103,11 +1105,23 @@ public final class CloudSession {
                     busyCalls.remove(what);
                     if (e instanceof final CloudApi.Refused r && r.status == 401)
                         Log.get().warn("The account's sign-in ran out ({})", what);
+                    else if (e instanceof final CloudApi.Refused r && SiteHeader.redirect(r.status)) signInAsked();
                     else Log.get().debug("Cloud call {} failed", what, e);
                     failed.accept(e instanceof final IOException io ? io : new IOException(e));
                 });
             }
         });
+    }
+
+    private boolean signInTold;
+
+    /** The site (or a proxy in front of it) sent the client to a sign-in it cannot do: said once, plans stay here. */
+    private void signInAsked() {
+        if (signInTold) return;
+        signInTold = true;
+        Log.get()
+            .warn("The site asked for a sign-in the mod cannot do; plans are kept here");
+        host.notice(SiteHeader.SIGN_IN);
     }
 
     private interface Call<T> {

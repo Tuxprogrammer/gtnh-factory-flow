@@ -21,6 +21,7 @@ import com.google.gson.JsonParser;
 import com.gtnhplanner.Tags;
 import com.gtnhplanner.library.CommunityApi;
 import com.gtnhplanner.library.SiteConfig;
+import com.gtnhplanner.library.SiteHeader;
 import com.gtnhplanner.library.SiteOff;
 
 /**
@@ -531,6 +532,7 @@ public final class CloudApi {
         c.setRequestProperty("Accept", "application/json");
         c.setRequestProperty("User-Agent", "GTNH Planner/" + Tags.VERSION + " (GT New Horizons planner mod)");
         c.setRequestProperty("Cookie", "gtnh_session=" + token);
+        SiteHeader.addTo(url, c::setRequestProperty);
         if (json != null) {
             final byte[] out = json.getBytes(StandardCharsets.UTF_8);
             c.setDoOutput(true);
@@ -549,6 +551,8 @@ public final class CloudApi {
                 for (final int a : allowed) if (a == status) return new Reply(status, body);
                 throw new Refused(status, reason(status, body));
             }
+            // Redirects are never followed (the site's header must not travel): one is a sign-in this client cannot do.
+            if (SiteHeader.redirect(status)) throw new Refused(status, SiteHeader.SIGN_IN);
             return new Reply(status, body);
         } finally {
             c.disconnect();

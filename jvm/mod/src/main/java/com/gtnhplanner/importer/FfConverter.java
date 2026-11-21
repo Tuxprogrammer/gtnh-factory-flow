@@ -335,23 +335,22 @@ public final class FfConverter {
                 }
             if (own == null) return;
             final FfRecipe recipe = recipes.get(card.recipeId());
-            final com.gtnhplanner.core.model.Shown.Reason reason = ShownCards.reason(card.enabled(), recipe);
-            final Node node = com.gtnhplanner.core.codec.DisplayCards.card(
+            final Node node = ShownCards.show(
                 own,
-                com.gtnhplanner.core.codec.DisplayCards.recipeOf(own, tree.get("recipes")),
-                reason,
+                tree.get("recipes"),
+                card,
+                recipe,
                 Uuid.randomUUID(),
                 px(card.x()),
-                py(card.y()));
+                py(card.y()),
+                ports,
+                report,
+                mark);
             graph.addNode(node);
             shown.put(card.id(), node);
             final String name = recipe == null ? card.recipeId() : recipe.name();
             placed.computeIfAbsent(card.id(), k -> new HashMap<>())
                 .put(0, new Placed(node, card, recipe, card.overrides(), 0, name));
-            // Its rates a second as the plan pins them, on a card the solve runs.
-            if (node.shown.solved()) FfCards.portRates(ports, node, recipe, card.overrides(), card, 0, name, report);
-            // What said it was left out now says it is shown.
-            report.shown(mark, name, ShownCards.reportLine(node.shown.solved()));
         }
 
         void placeOwn(final FfNode card) {

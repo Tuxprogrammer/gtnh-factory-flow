@@ -14,3 +14,29 @@
 
 - A website drawer that is both fed and drawn from kept no drain setting (product, byproduct or trash) when the plan went back out. It now keeps it.
 - A cloud plan lost the website's setting pins for machines the board has no card of when a later save changed the board's pins. They now stay.
+- A server that sends the game to a sign-in page now gets a plain message ("The site asked for a sign-in the mod cannot do") in the library and for cloud plans, instead of a read error.
+
+## For the server operator
+
+Two new keys in the `network` category of `config/gtnhplanner.cfg`, both empty in a fresh install:
+
+```
+network {
+    S:headerName=X-Access-Key
+    S:headerValue=<the value the site's owner gives out>
+}
+```
+
+- For a site behind a guarding reverse proxy that lets a request through only with a pre-shared header. The mod cannot
+  follow the proxy's sign-in redirect. With both keys set, the header is sent on every request to `siteUrl` and to the
+  live service (the library, accounts, posting, cloud plans, the `/live` WebSocket upgrade), and to no other host.
+- Both empty (the default) sends nothing. One without the other, a name that is not a header token, a name the client
+  sets itself (`Cookie`, `Host`, `Content-Length`, `Content-Type`, `Transfer-Encoding`, `Upgrade`, `User-Agent`,
+  `Origin`, any `Sec-WebSocket-*` or `Proxy-*`, and the rest of that list in `conformance/wire/README.md`) or a value
+  with a control or non-ASCII character turns it off, with a warning in the log naming the key and never the value.
+- `-Dgtnhplanner.header.name` and `-Dgtnhplanner.header.value` win over the file, like the other keys.
+- The value is never written to a log, an exception, a crash report or the debug overlay. The config file holds it in
+  plain text, so keep its permissions as for any secret.
+- The mod never follows a redirect. When the site answers one (the header missing or wrong), the player is told once that
+  the site asked for a sign-in the mod cannot do, and cloud plans stay on this computer until it is fixed.
+- The update check (`updateUrl`) sends no header.

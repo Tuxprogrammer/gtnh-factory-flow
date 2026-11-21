@@ -152,7 +152,65 @@ public final class ViewExports {
      */
     @JSExport
     public static JSObject viewCardJsKept(final JSObject cardCase, final CardMeasure measure, final int fontState) {
-        return cardJs(cardCase, keptMeasure(measure, fontState));
+        final CardInput.Case c = ViewJs.readCardInputCase(cardCase);
+        final CardView view = CardViews.card(c.card(), c.dials(), keptMeasure(measure, fontState), CardViews.Host.WEB);
+        hold(c, view, fontState);
+        return viewAndGeometry(ViewJs.js(view), ViewJs.js(CardGeometry.web(view)));
+    }
+
+    /**
+     * The cards {@link #viewCardJsKept} made last, each with its input and the font state it was measured in, held
+     * under a ticket so a special card's parts start from its card's view without making it again
+     * ({@link #viewSpecialJsHeld}). A ring: the oldest goes when a new one comes, so a ticket can be gone.
+     */
+    private record Held(int ticket, CardInput.Case input, CardView view, int fontState) {}
+
+    private static final int HELD_MAX = 512;
+    private static final Held[] HELD = new Held[HELD_MAX];
+    private static int lastTicket;
+
+    private static void hold(final CardInput.Case c, final CardView view, final int fontState) {
+        lastTicket = lastTicket == Integer.MAX_VALUE ? 1 : lastTicket + 1;
+        HELD[lastTicket % HELD_MAX] = new Held(lastTicket, c, view, fontState);
+    }
+
+    @Nullable
+    private static Held held(final int ticket, final int fontState) {
+        if (ticket <= 0) return null;
+        final Held h = HELD[ticket % HELD_MAX];
+        return h != null && h.ticket == ticket && h.fontState == fontState ? h : null;
+    }
+
+    /** The ticket of the card {@link #viewCardJsKept} made last (0 before the first). */
+    @JSExport
+    public static int viewCardTicket() {
+        return lastTicket;
+    }
+
+    /** Whether the card under {@code ticket} is still held, measured in {@code fontState}. */
+    @JSExport
+    public static boolean viewCardHeld(final int ticket, final int fontState) {
+        return held(ticket, fontState) != null;
+    }
+
+    /**
+     * A special card's own parts from its card's view as {@link #viewCardJsKept} made it ({@code ticket}, still held:
+     * ask {@link #viewCardHeld} first), its kind's facts ({@code SpecialInput} object) in, its {@code SpecialView}
+     * object out: the card is neither read nor made again. Widths kept as {@link #viewCardJsKept} keeps them.
+     */
+    @JSExport
+    public static JSObject viewSpecialJsHeld(final int ticket, final JSObject special, final CardMeasure measure,
+        final int fontState) {
+        final Held h = held(ticket, fontState);
+        if (h == null) throw new IllegalStateException("card " + ticket + " is no longer held");
+        return ViewJs.js(
+            SpecialViews.special(
+                ViewJs.readSpecialInput(special),
+                h.input.card(),
+                h.view,
+                h.input.dials(),
+                keptMeasure(measure, fontState),
+                CardViews.Host.WEB));
     }
 
     /** {@link #viewCardJs} measured six px a character (the shared cases). */

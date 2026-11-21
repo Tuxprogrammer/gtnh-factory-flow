@@ -240,13 +240,44 @@ with 24 holders, ms, median and range of six interleaved runs each, card area of
 | a solve that moves every card | 48 | 0.3 (0.2-0.7) | 1.5 (1.2-1.7) |
 | hover, pan, drag | 0 to 2 | 0 | 0 to 0.2 |
 
-A changed holder costs about 50 to 100 us on WebAssembly against about 10 us by the rules (the core makes the card's
-own view on the way: the special call does not reuse the recipe card's call); a kept one costs a comparison. The worst
+A changed holder cost about 50 to 100 us on WebAssembly against about 10 us by the rules when the special call made
+the card's own view again; it now starts from the card view the core holds for the card (below); a kept one costs a
+comparison. The worst
 step, a power display turn over 24 holders, is 2.3 ms more. Without the idle fill the open cost 18 ms more over 36
 holders (the first calls of a page), which is why the first parts are the rules'.
 
+### Generators, and the special call from the held card
+
+The special call no longer makes the card's view a second time: `viewCardJsKept` holds each card it makes under a
+ticket and `viewSpecialJsHeld` takes only the kind's facts. Node 24 on the box, the 47 recorded special cards, us a card,
+median (range) of six interleaved runs of nine passes:
+
+| Path | WebAssembly GC | JavaScript |
+|---|---|---|
+| the card's own call (`viewCardJsKept`) | 21.3 (12.7-28.1) | 22.3 (17.3-35.9) |
+| special parts, card made again (`viewSpecialJsKept`, before) | 28.1 (16.9-36.4) | 38.6 (29.2-56.0) |
+| special parts from the held card (`viewSpecialJsHeld`, now) | 10.2 (5.9-13.2) | 14.7 (12.0-21.7) |
+| the website's rules, the card's builders included | 10.2 (7.0-20.7) | 8.0 (7.3-11.4) |
+
+A changed special card now costs its card's call plus about 10 us (it was the card's call plus 28).
+
+On `next start` after prewarm, headless Chromium, the 89-card plan with 24 holders and 24 generators (137 nodes; 12
+generator setups twice: tier selects, a fixed tier, choices, numbers with units, switches, a reading pinned, a pinned
+setting switched off, half Exactly 2) and the chembath fixture with the same (70 nodes): every node's DOM and the page's
+text under four dial sets are identical with the card area off and on (WebAssembly). Time in the special cards' own
+parts, ms, median (range) of six interleaved runs, off / WebAssembly: open 4.8 / 4.8 (98 parts, the first by the rules);
+rate unit 0.6 / 0.8; power display 0.8 / 2.4; a setting 0.5 / 0.8; a solve that moves every card 1.4 / 2.9; hover, pan,
+drag, zoom 0. Every core call after the idle fill started from the held card (`held` equals `core` in every set).
+
 What a player sees change:
 
+- Website: a generator's pinned setting that another setting turns off stays on the strip, greyed and inert, its tip
+  saying why (it was hidden). A generator's readings each have a pin in the gear sheet's Working column; a pinned reading
+  shows on the strip after the settings, as words with no box, and the plan keeps it (`reading:<label>` under the
+  source, as the mod keeps it), so it shows in the mod too.
+- Mod: a generator's count line is the shared one (the rule word on every rule, the set box). A generator's number chip
+  reads its plain label and "N unit" ("Fuel rate 1250 L/s"; it read "Fuel rate (L/s) 1,250"). A pinned setting another
+  setting turns off is drawn greyed. Readings pinned on the website show on the card.
 - Website: every special card's name is drawn on the plain card's ladder, 10, 9 or 8 px (it was 14, 13, 12 or 9 px,
   measured in another face): the special cards had kept the sizes the card had before it took the mod's. A custom rate
   card's count tip says "Runs at its dial." (it said the Exactly line).

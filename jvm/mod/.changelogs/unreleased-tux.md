@@ -5,3 +5,4 @@
 ## Fixed
 
 - Very short recipes in multiblocks run as many parallels as the game gives them. When a recipe takes half a tick or less after the machine's speed bonus or heat overclocks (a 1-tick recipe in a Large Electric Compressor, a Black Hole Compressor or most GT++ multiblocks), the game multiplies the parallels again; cards now show that rate (usually 2x, more on blast furnaces and dehydrators, up to what the hatch can pay for), so fewer machines are needed.
+- Some website plans pasted in game came in wrong: a few chemical reactor cards were view only ("not in this game") and showed their programmed circuit as an input, a few drawers were plugged into the wrong input and showed another resource's icon, and some wires fed the wrong input (Hydrochloric Acid into the Ammonia slot). These cards now find their in-game recipe and every wire and drawer lands on the input it feeds on the website.

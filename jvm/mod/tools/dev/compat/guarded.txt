@@ -23,3 +23,10 @@ MEMBER gregtech/api/recipe/RecipeMaps.treeGrowthSimulatorFakeRecipes : Lgregtech
 # NEI before beta-3 has no RecipeId.getHandlerName: RecipeRefs.of catches the LinkageError around withoutResult, and a
 # recipe with no result stays unfound there as before.
 MEMBER codechicken/nei/recipe/Recipe$RecipeId.getHandlerName()Ljava/lang/String;  <- nei/RecipeRefs  # RecipeRefs.of catches LinkageError
+
+# AE2 in beta-1 and beta-2 has no PartPatternTerminal.encode and no static pattern checks on
+# IPatternTerminal: PatternServer.ready runs AePatterns.link, which resolves each by reflection first and turns Pattern
+# this off (LinkageError caught) before any of them is called; the dev harness's pattern route runs only in a dev game.
+MEMBER appeng/api/parts/IPatternTerminal.isBlankPattern(Lnet/minecraft/item/ItemStack;)Z  <- pattern/AePatterns, dev/DevPattern  # PatternServer.ready
+MEMBER appeng/api/parts/IPatternTerminal.isEncodedPattern(Lnet/minecraft/item/ItemStack;)Z  <- dev/DevPattern  # dev harness only
+MEMBER appeng/parts/reporting/PartPatternTerminal.encode(Lappeng/api/networking/energy/IEnergySource;Lappeng/api/storage/IMEMonitor;Lappeng/api/networking/security/BaseActionSource;Ljava/lang/String;Lnet/minecraft/world/World;)Z  <- pattern/AePatterns  # PatternServer.ready

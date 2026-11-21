@@ -323,6 +323,10 @@ public final class DevHarness {
                     if (handled == 0) mc.thePlayer.sendChatMessage(cmd);
                     return ok();
                 });
+            case "/pattern":
+                // "Pattern this" against a pattern made by hand (DevPattern; PLANNH_GTNH=1 PLANNH_AE=1).
+                requireWorld();
+                return DevPattern.route(q, this::onClient);
             case "/addrecipe":
                 requireWorld();
                 return onClient(
@@ -1018,6 +1022,13 @@ public final class DevHarness {
                         return error("Could not write: " + e.getMessage());
                     }
                 });
+            case "/bookmarks":
+                // NEI's open bookmark page; press=recipes|chain runs that Share menu row on the open plan first.
+                return onClient(() -> {
+                    final com.gtnhplanner.ui.BoardScreen screen = DevBoard.screen();
+                    if (screen == null) return error("the planner is not open");
+                    return DevBookmarks.report(screen.session(), q.get("press"), q.get("seed"));
+                });
             case "/machinemath":
                 // Every card of the active plan as the website's machine maths see it (machines/web).
                 return onClient(() -> q.containsKey("maps") ? DevMachineMath.maps() : DevMachineMath.report());
@@ -1363,6 +1374,7 @@ public final class DevHarness {
                 "/gtmachines?q=turbine[&all=1][&art=1] - GregTech multiblocks (all=1: every machine) as the game names them; art=1 adds the bundled picture each resolves to",
                 "/machinedata?dir=<path> - writes the website's TGS, Bacterial Vat and radio hatch side files from this game (run in the full pack)",
                 "/machinemath - every card of the active plan as the website's machine maths see it: machine, handler, settings, ticks, EU/t, parallels",
+                "/bookmarks[?press=recipes|chain][&seed=<item name>] - NEI's open bookmark page (groups, crafting chains, their recipes and chain outputs, every item in order); press runs that Share menu row on the open plan first, seed bookmarks an item first",
                 "/eec[?dump=<file>|mob=<key>&voltage&amp&set=k:v,..|add=<key>] - the Extreme Entity Crusher's mobs: names, the website's export of them, a mob's card and its maths, or its card on the board (PLANNH_MOBS=1)",
                 "/crops[?items=<id,id>|add=<id>|farm=1] - every CropsNH crop's drops against its card's outputs: lost drops, amounts, drops sharing an ore name (PLANNH_CROPS=1); items= lists ore names; add= puts a crop's card on the board, farm=1 an empty crop farm",
                 "/slots[?add=name | switch=i | delete=i] - list, open, switch or delete plan slots",

@@ -243,8 +243,12 @@ public final class AccountForms {
             buttonY = linkY - 24;
             int y = buttonY - 13;
             if (error != null) {
-                Hyb.text(Hyb.fit(error, W - 2 * PAD), PAD, y, Hyb.AMBER_INK);
-                y -= 11;
+                // Up to two lines, the last on the row above the button: a refusal in the site's words is long.
+                final List<String> why = Hyb.wrap(error, W - 2 * PAD);
+                for (int i = why.size() - 1; i >= 0; i--) {
+                    Hyb.text(why.get(i), PAD, y, Hyb.AMBER_INK);
+                    y -= 11;
+                }
             }
             final String note = note();
             if (note != null && error == null) Hyb.text(Hyb.fit(note, W - 2 * PAD), PAD, y, 0xFF7A7C84);

@@ -56,9 +56,15 @@ public final class Posting {
                     done.accept(s.username());
                 });
             } catch (final Exception e) {
-                onClient(() -> failed.accept(reason(e)));
+                onClient(() -> failed.accept(create ? creating(e) : reason(e)));
             }
         });
+    }
+
+    /** Why making an account failed: a sign-in redirect there means accounts are made on the website. */
+    public static String creating(final Exception e) {
+        return e instanceof final CommunityApi.Refused r && SiteHeader.redirect(r.status) ? SiteHeader.CREATE_ACCOUNT
+            : reason(e);
     }
 
     /** A plan as the site's project JSON, as {@link #post} sends it (the dev harness writes it to a file). */

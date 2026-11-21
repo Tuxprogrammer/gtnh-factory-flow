@@ -370,7 +370,9 @@ function helpEntries({
     { label: "Controls and shortcuts", onSelect: openControls },
     { label: "Welcome", ruleAbove: true, onSelect: () => HelpLinks.openWelcome() },
     { label: unreadNotes ? "What's new *" : "What's new", detail: HelpLinks.version, onSelect: onChangelog },
-    { label: "Download the mod", detail: "GTNH 2.9", onSelect: () => HelpLinks.open(HelpLinks.mod) },
+    ...(HelpLinks.mod
+      ? [{ label: "Download the mod", detail: "GTNH 2.9", onSelect: () => HelpLinks.open(HelpLinks.mod!) }]
+      : []),
     { label: "Source on GitHub", onSelect: () => HelpLinks.open(HelpLinks.github) },
     ...(HelpLinks.support
       ? [{ label: "Get help", onSelect: () => HelpLinks.open(HelpLinks.support!) }]

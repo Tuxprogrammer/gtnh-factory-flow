@@ -29,6 +29,12 @@ public final class SiteHeader {
     public static final String SIGN_IN = "The site asked for a sign-in the mod cannot do. If its owner gave you an"
         + " access header, set it in the mod's config.";
 
+    /**
+     * What the player is told when the site answers the in-game "Create one" with that redirect: accounts there are
+     * made on the website, not from the game.
+     */
+    public static final String CREATE_ACCOUNT = "Create your account on the website, then sign in here.";
+
     /** Headers the client sets itself or that change how a request is framed: a config line may not take them over. */
     private static final Set<String> OWN = Set.of(
         "accept",

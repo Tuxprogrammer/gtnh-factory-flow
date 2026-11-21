@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { parseSiteUrl, siteHost, siteUrl, supportUrl } from "./site-url";
+import { modUrl, parseSiteUrl, siteHost, siteUrl, supportUrl } from "./site-url";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -25,6 +25,17 @@ describe("the site's own address", () => {
     expect(parseSiteUrl("planner.test")).toBeUndefined();
     expect(parseSiteUrl("javascript:alert(1)")).toBeUndefined();
     expect(parseSiteUrl("ftp://planner.test")).toBeUndefined();
+  });
+});
+
+describe("the mod download page", () => {
+  it("is nothing until the build names one, and then the whole address", () => {
+    vi.stubEnv("NEXT_PUBLIC_MOD_URL", "");
+    expect(modUrl()).toBeUndefined();
+    vi.stubEnv("NEXT_PUBLIC_MOD_URL", "https://mods.test/planner?v=1");
+    expect(modUrl()).toBe("https://mods.test/planner?v=1");
+    vi.stubEnv("NEXT_PUBLIC_MOD_URL", "javascript:alert(1)");
+    expect(modUrl()).toBeUndefined();
   });
 });
 

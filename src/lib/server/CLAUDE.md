@@ -20,6 +20,15 @@
   site: check the heap first.
 - The OG card route reads fonts through `process.cwd()` (non-standalone build).
 
+## Plan routes and the compiled core (plan-engine.ts)
+
+- Saving or refreshing a community plan solves it on the compiled core (`public/core`, built by
+  `tools/copy-core.mjs`); the routes call `ensurePlanEngine` first. Without the core they answer 503 and the
+  stats refresh keeps the saved card.
+- `prebuild` runs `copy-core.mjs --required`, so `next build` stops early when `public/core` is missing; the
+  operator's build must have it (or build it) before `next build`. Route tests load it through
+  `src/test-support/core-solve.ts` and fail with what to do when it is not there.
+
 ## Supabase (community.ts, resource-popularity.ts)
 
 The instance is small and has gone down under load. Rules:

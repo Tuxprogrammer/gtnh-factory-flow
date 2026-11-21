@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Recipe } from "@/lib/model/types";
 import type { DatasetManifest, DatasetVersion } from "@/lib/datasets/types";
 import { PROJECT_SCHEMA_VERSION } from "@/lib/model/types";
@@ -95,6 +95,11 @@ vi.mock("@/lib/datasets/browser-loader", () => ({
 }));
 
 describe("RecipeBrowser", () => {
+  // Vitest runs without globals, so Testing Library does not unmount by itself. A browser left mounted keeps
+  // listening to the store and re-renders on every update the next test's setup makes, through React's
+  // scheduler, which can still be running when the file ends and jsdom is gone ("window is not defined").
+  afterEach(cleanup);
+
   beforeEach(() => {
     vi.clearAllMocks();
 

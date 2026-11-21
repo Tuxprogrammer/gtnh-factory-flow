@@ -167,7 +167,7 @@ class SiteOffTest {
         final Fake c = new Fake();
         SiteConfig.read(c);
         assertEquals(
-            List.of("siteUrl", "liveUrl", "updateUrl", "supportUrl", "websiteOrigins"),
+            List.of("siteUrl", "liveUrl", "updateUrl", "supportUrl", "websiteOrigins", "headerName", "headerValue"),
             c.asked,
             "these key names are what packs set; changing one breaks them");
         assertEquals("network", SiteConfig.CATEGORY);

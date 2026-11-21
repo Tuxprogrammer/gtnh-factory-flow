@@ -110,6 +110,14 @@
       ],
       "generator": "goldens and buffer-drawers.json: ./gradlew :mod:test --tests '*SolverGoldenTest*' --tests '*BufferDrawerTest*' -PwriteGoldens (from jvm/); other inputs: the mod's /solvedump command"
     },
+    "solver/highs-differs": {
+      "specifies": "Islands of two generated stress boards (484 and 1,000 cards) where the website's engine on HiGHS answers otherwise than the shared core: points read to six digits, an equal split read as 6/6/0, dust that turns an Up to reason, and one island HiGHS cannot solve. cases.json.gz is {cases: [{name, input, answer}]} as solver/website: input in the mod's dump format, answer the core's digest, which both cores must give (1e-6, golden rules). The evidence for retiring HiGHS.",
+      "readers": [
+        "website: src/lib/solver/plan/__fixtures__/highs-differs.test.ts",
+        "jvm: core-solver solver/HighsDiffersTest"
+      ],
+      "generator": "scratch probe on the stress boards (tools/perf/stress.mjs output), not kept: the cases are the record"
+    },
     "solver/up-to": {
       "specifies": "Up to parity: each file is {name, input, answer}, a plan the website's engine solved, for the mod's engine to solve again and match by the golden rules. Hand-built Up to plans plus every corpus plan with each exact count turned Up to.",
       "readers": [
@@ -814,6 +822,11 @@
       "area": "solver/corpus",
       "bytes": 9752,
       "sha256": "7ffec210637a35bd04d1798aca7680a1e32fc2f9c921dcbcd4ad72a5a2a5ffcb"
+    },
+    "solver/highs-differs/cases.json.gz": {
+      "area": "solver/highs-differs",
+      "bytes": 37261,
+      "sha256": "a6555b5f8fe326b766d7684e2adbe3611064c167ba678c3741163024065f5e58"
     },
     "solver/up-to/alternatives-chosen.json": {
       "area": "solver/up-to",

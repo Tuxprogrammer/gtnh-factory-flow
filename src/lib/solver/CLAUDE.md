@@ -31,8 +31,10 @@ nowhere or goes nowhere except through a source, a drawer or trash. Longer versi
   `src/lib/core/solve-adopt.ts` puts the compiled core behind it (`ADOPT.solve`, WebAssembly GC
   only): the input goes over as JSON (`SolverExports.solverSolveCached`, island cache in the module), the golden digest
   comes back as the website's `Answer`; ids the website mints are renamed to UUIDs in the solve's own order and named
-  back. Nothing waits for the core: until it has loaded, where it fails, on the JavaScript fallback and on a main
-  thread with a Worker the TypeScript solver answers. The two are held equal by `src/lib/core/solve-shadow.test.ts` (every recorded
+  back. In the Worker a solve waits for the core where it solves (`src/store/solve-engines.ts`: bounded, HiGHS is
+  never fetched there), so a plan never shows HiGHS's numbers first; HiGHS and the TypeScript solver answer only where
+  the core does not solve: no WebAssembly GC (the JavaScript build), a failed or hung load, a server without a core,
+  and a main thread with no Worker until the core has loaded. The two are held equal by `src/lib/core/solve-shadow.test.ts` (every recorded
   input, also with the website's kind of ids, and the Worker's books for every reference plan).
 - Plan solver dust (`plan/validate.ts` `dustScales`) is judged per network, never over the whole point: a
   reactor's billions of EU a second must not zero a 0.03/s item wire (the answer then fails its own check).
@@ -93,6 +95,16 @@ nowhere or goes nowhere except through a source, a drawer or trash. Longer versi
 
 The verdict and ring-diagnosis code lives in `src/components/flow/` (`node-verdict.ts`,
 `death-spiral.ts`, `clog-lock.ts`, `bare-slots.ts`).
+
+No plan board reaches the old engines: a plan-mode project always carries `solveMode`, so the
+ring proofs return nothing, `deriveNodeVerdict` stops at its solve-mode line (off, no recipe,
+unwired, balanced, demand set), and the Worker's `attachClogLocks` runs no LP.
+`plan/one-mode-reach.test.ts` pins this on every reference plan. The blueprint stats
+(`lib/blueprints/io-stats.ts`) still solve a payload as a Build plan, and the Inspector's selection
+flow runs on the main thread's homegrown simplex, but no player reaches either: nothing opens the
+blueprint save dialog, and plan boards show the overview, not the Inspector.
+`conformance/solver/highs-differs` holds the stress-board islands where HiGHS answers otherwise
+than the core (the core's answer is the expected one).
 
 - Shared machines: `expandSharedMachines` stands each extra section up as a hidden node;
   the ONLY coupling is a time row (`listSharedMachineGroups`): sections' acts sum to at

@@ -149,10 +149,12 @@ iterative machinery retires entirely. Not required for shipping.
 Prototype: a small dense simplex written in TS (boards are tiny - hundreds of
 variables), Bland's rule for cycling safety, PlanNH-style row scaling,
 staged solves by re-solving with the previous stage's optimum as a
-constraint. If numerics bite on real boards, swap the engine for a WASM LP
-(HiGHS or GLPK) behind the same model-builder interface - the model builder,
-not the engine, is the asset. Integer counts (the planning mode) will need
-the WASM engine or a tiny branch-and-bound; decide when we get there.
+constraint. The model builder, not the engine, is the asset. Every plan now
+solves on the compiled core's LP engine (ojAlgo, `jvm/core/core-solver`, the
+same answers as the mod); the TypeScript solvers keep this dense simplex for
+the plan solve's stand-in (where the core cannot load) and the old Build,
+Solve and Pool engines. Integer counts (the planning mode) will need a
+branch-and-bound in the core; decide when we get there.
 
 ## Migration plan
 

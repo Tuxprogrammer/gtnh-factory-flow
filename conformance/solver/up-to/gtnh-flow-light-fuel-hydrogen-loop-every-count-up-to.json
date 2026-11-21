@@ -161,19 +161,19 @@
  "answer": {
   "solution": {
    "extentsPerSecond": {
-    "81b1f67d-f7ad-3eea-a483-3b9d9bd80652": 0.0020833333333333333,
-    "003d7aca-e9e4-3ae5-b725-1611caa74493": 0.0020833333333333337,
-    "680a8ea4-e50f-3a34-bdfa-cd2b74d5dd3f": 1
+    "003d7aca-e9e4-3ae5-b725-1611caa74493": 0.00208333333333,
+    "680a8ea4-e50f-3a34-bdfa-cd2b74d5dd3f": 1,
+    "81b1f67d-f7ad-3eea-a483-3b9d9bd80652": 0.00208333333333
    },
    "machineCounts": {
-    "81b1f67d-f7ad-3eea-a483-3b9d9bd80652": 0.016666666666666666,
-    "003d7aca-e9e4-3ae5-b725-1611caa74493": 0.015000000000000003,
-    "680a8ea4-e50f-3a34-bdfa-cd2b74d5dd3f": 1
+    "003d7aca-e9e4-3ae5-b725-1611caa74493": 0.014999999999976,
+    "680a8ea4-e50f-3a34-bdfa-cd2b74d5dd3f": 1,
+    "81b1f67d-f7ad-3eea-a483-3b9d9bd80652": 0.01666666666664
    },
    "edgeFlowsPerSecond": {
-    "8c0c5066-abac-37b3-b021-198749c10d85": 4.166666666666667,
-    "d80335a8-0d30-32a2-b5d3-5dc897509013": 25,
-    "2520af6c-ce3c-33f5-8f45-cea784af0c0d": 2.0833333333333335
+    "2520af6c-ce3c-33f5-8f45-cea784af0c0d": 2.08333333333333,
+    "8c0c5066-abac-37b3-b021-198749c10d85": 4.16666666666666,
+    "d80335a8-0d30-32a2-b5d3-5dc897509013": 24.99999999999999
    },
    "gatedSources": [],
    "gatedSinks": [],
@@ -194,7 +194,7 @@
       "portIndex": 1,
       "input": false
      },
-     "ratePerSecond": 25
+     "ratePerSecond": 24.99999999996
     },
     {
      "port": {
@@ -202,13 +202,13 @@
       "portIndex": 1,
       "input": false
      },
-     "ratePerSecond": 0.0020833333333333337
+     "ratePerSecond": 0.00208333333333
     }
    ],
    "unneeded": [],
    "openGates": 0,
    "externalQuantity": 0,
-   "totalInternalFlow": 31.25,
+   "totalInternalFlow": 31.24999999999998,
    "notes": [],
    "key": {
     "gateAnchors": []

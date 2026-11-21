@@ -1,6 +1,5 @@
 /**
- * The plan solver on the homegrown simplex: this file never loads HiGHS (vitest runs each file in its own modules), as
- * a page does before the engine has loaded. Its points are not exact vertices: an island whose Up to cards all sat idle
+ * The website's plan solver on its homegrown simplex (the stand-in where the compiled core cannot load). Its points are not exact vertices: an island whose Up to cards all sat idle
  * came back as noise (largest value about 1e-20, negatives near 1e-25), and the negativity check, relative to that
  * noise's own scale, rejected it under every setting (the simplex ignores them). The plan failed (an old Build plan,
  * 89a96110), or, beside another island, that island failed quietly and its Up to cards had no read-out (4893e692: 45 Up
@@ -9,17 +8,12 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { activeLpEngine } from "../lp-engine";
 import { SolveContext } from "./context";
 import { solvePlan } from "./solve-plan";
 import type { MachineIn, SolveInput } from "./types";
 import { validatePoint } from "./validate";
-
-beforeAll(() => {
-  expect(activeLpEngine()).toBe("simplex");
-});
 
 const idleNoise = (): SolveInput =>
   JSON.parse(

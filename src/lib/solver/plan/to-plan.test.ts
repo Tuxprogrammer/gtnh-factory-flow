@@ -12,7 +12,7 @@ import {
   type FactoryProject,
   type ThroughputResult,
 } from "@/lib/model/types";
-import { initLpEngine } from "../lp-engine";
+import { CORE_LOAD_MS, useCoreSolver } from "@/test-support/core-solve";
 import { calculateThroughput } from "../throughput";
 import { customRecipe, drawer, node, recipe, wire } from "./adapter/test-kit";
 import { openAsPlan, toPlanProject } from "./to-plan";
@@ -21,9 +21,7 @@ import { planClipboard } from "./convert";
 import { useFactoryStore } from "@/store/factory-store";
 import { listNodeSections } from "@/lib/model/shared-machine";
 
-beforeAll(async () => {
-  await initLpEngine();
-});
+beforeAll(() => useCoreSolver(), CORE_LOAD_MS);
 
 /* ------------------------------------------------------------------ */
 /* The example plans: every shipped plan, as a Build, a Solve and a Pool plan. */
@@ -48,23 +46,27 @@ const build = (load: () => FactoryProject) =>
   normalizeLoadedProject(factoryProjectSchema.parse(load()), { keepMode: true });
 
 /**
+ * What the old Build, Solve and Pool engines answered for each example, recorded before they retired (their LPs ran on
+ * HiGHS, which is gone; the engines follow): `asked`, what the Build books made into each product drawer; `solve` and
+ * `pool`, the old Solve and Pool counts of every enabled card.
+ */
+const OLD: Record<string, { asked: Record<string, number>; solve: number[]; pool: number[] }> = read(
+  "./__fixtures__/old-mode-counts.json",
+);
+
+/**
  * The same plan as a Solve plan: no pins, and each product drawer asks for
  * what the Build books made. A plan that makes nothing into a drawer keeps
  * its pins on the cards nothing is wired out of.
  */
-function asSolve(raw: FactoryProject): FactoryProject {
-  const books = calculateThroughput(raw, { generatedAt: "t" });
-  const roles = getStorageRoles(raw);
-  let asked = 0;
-  const storages = (raw.storages ?? []).map((storage) => {
-    if (roles.get(storage.id) !== "product") return storage;
-    const made = raw.edges
-      .filter((edge) => edge.target === storage.id)
-      .reduce((sum, edge) => sum + (books.edges[edge.id]?.transferredPerSecond ?? 0), 0);
-    if (!(made > 0)) return storage;
-    asked += 1;
-    return { ...storage, targetPerSecond: made, targetMode: "at-least" as const };
-  });
+function asSolve(raw: FactoryProject, name: string): FactoryProject {
+  const made = OLD[name]!.asked;
+  const asked = Object.keys(made).length;
+  const storages = (raw.storages ?? []).map((storage) =>
+    made[storage.id] === undefined
+      ? storage
+      : { ...storage, targetPerSecond: made[storage.id], targetMode: "at-least" as const },
+  );
   const feeds = new Set(raw.edges.map((edge) => edge.source));
   return {
     ...raw,
@@ -167,8 +169,7 @@ describe.each(EXAMPLES)("example $name", ({ name, load }) => {
   });
 
   it("a Solve plan runs with the old Solve's counts (or the plan board's where old Solve answers zero)", () => {
-    const solve = asSolve(raw());
-    const old = calculateThroughput(solve, { generatedAt: "t" });
+    const solve = asSolve(raw(), name);
     const opened = openAsPlan(solve);
     expect(opened.origin).toBe("solve");
     const result = calculateThroughput(opened.project, { generatedAt: "t" });
@@ -176,17 +177,16 @@ describe.each(EXAMPLES)("example $name", ({ name, load }) => {
     const planCounts = counts(result, solve);
     expect(planCounts.every(Number.isFinite)).toBe(true);
     if (OLD_SOLVE_ANSWERS_ZERO.has(name)) {
-      expect(counts(old, solve).every((value) => value === 0)).toBe(true);
+      expect(OLD[name]!.solve.every((value) => value === 0)).toBe(true);
       expect(planCounts.some((value) => value > 0)).toBe(true);
     } else {
-      const oldCounts = counts(old, solve);
+      const oldCounts = OLD[name]!.solve;
       planCounts.forEach((value, index) => expect(value).toBeCloseTo(oldCounts[index]!, 4));
     }
   });
 
   it("a Pool plan is wired per resource and runs with the old Pool's counts", () => {
-    const pool = asPool(asSolve(raw()));
-    const old = calculateThroughput(pool, { generatedAt: "t" });
+    const pool = asPool(asSolve(raw(), name));
     const opened = openAsPlan(pool);
     expect(opened.origin).toBe("pool");
     expect(opened.notice?.text).toMatch(/pool plan/i);
@@ -212,7 +212,7 @@ describe.each(EXAMPLES)("example $name", ({ name, load }) => {
       expect(planCounts.every((value) => Number.isFinite(value) && value >= 0)).toBe(true);
       expect(planCounts.some((value) => value > 0)).toBe(true);
     } else {
-      const oldCounts = counts(old, pool);
+      const oldCounts = OLD[name]!.pool;
       planCounts.forEach((value) => expect(Number.isFinite(value)).toBe(true));
       planCounts.forEach((value, index) => expect(value).toBeCloseTo(oldCounts[index]!, 4));
     }

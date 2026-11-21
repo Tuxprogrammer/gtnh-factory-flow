@@ -1,24 +1,19 @@
 /**
  * What a solve in the solve Worker waits for before it runs.
  *
- * Where the compiled core solves (WebAssembly GC, the solve area on: `src/lib/core/solve-adopt.ts`), every solve
- * waits for it, so a plan never shows HiGHS's numbers first and the core's after. HiGHS is fetched only when the core
- * will not solve here: no WebAssembly GC (the JavaScript build does not solve), the area off, a failed load, or a load
- * still going after `coreWaitMs` (the core still takes over once it arrives). Every wait is bounded, so a fetch that
- * never answers cannot hold a solve: past both waits the website's homegrown simplex answers.
+ * Every solve waits for the compiled core (`src/lib/core/solve-adopt.ts`; WebAssembly GC or its JavaScript build), so a
+ * plan never shows the stand-in's numbers first and the core's after. The wait is bounded: a load that fails, or is
+ * still going after `coreWaitMs`, leaves the website's own engine (its homegrown simplex) to answer, and the core still
+ * takes over once it arrives. While the stand-in answers, the page says solving is degraded (`solve-health.ts`).
  */
 export const CORE_WAIT_MS = 10_000;
-export const HIGHS_WAIT_MS = 20_000;
 
-export type SettledEngine = "core" | "highs" | "simplex";
+export type SettledEngine = "core" | "simplex";
 
 export interface EngineLoaders {
   /** Resolves true when the core will solve here (`warmSolveCore`), false when it will not; never rejects. */
   core: () => Promise<boolean>;
-  /** Loads HiGHS; resolves true when it loaded (`initLpEngine`). */
-  highs: () => Promise<boolean>;
   coreWaitMs?: number;
-  highsWaitMs?: number;
 }
 
 const within = <T>(promise: Promise<T>, ms: number, otherwise: T): Promise<T> =>
@@ -30,11 +25,5 @@ export async function settleSolveEngines(loaders: EngineLoaders): Promise<Settle
     loaders.coreWaitMs ?? CORE_WAIT_MS,
     false,
   );
-  if (core) return "core";
-  const highs = await within(
-    loaders.highs().catch(() => false),
-    loaders.highsWaitMs ?? HIGHS_WAIT_MS,
-    false,
-  );
-  return highs ? "highs" : "simplex";
+  return core ? "core" : "simplex";
 }

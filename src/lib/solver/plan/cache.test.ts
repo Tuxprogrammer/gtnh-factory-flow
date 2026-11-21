@@ -1,7 +1,10 @@
-/** The island cache (spec-solver 4.4): an edit re-solves only the islands it touched. Work is counted (LPs), never timed. */
-import { beforeAll, describe, expect, it } from "vitest";
+/**
+ * The island cache (spec-solver 4.4): an edit re-solves only the islands it touched. Work is counted (LPs), never timed.
+ * The website's own engine (the stand-in where the compiled core cannot load, on its own simplex); the core keeps its
+ * own cache (core-solver `Balancer.Cache`).
+ */
+import { describe, expect, it } from "vitest";
 
-import { initLpEngine } from "../lp-engine";
 import { differences } from "./__fixtures__/compare";
 import { digest } from "./__fixtures__/digest";
 import { loadInput, tile } from "./__fixtures__/load";
@@ -11,10 +14,6 @@ import { islandCache } from "./adapter/engine";
 import { splitIslands } from "./islands";
 import { planExtensions, solvePlan } from "./solve-plan";
 import type { Answer, SolveInput } from "./types";
-
-beforeAll(async () => {
-  await initLpEngine();
-});
 
 /** Solves and returns the answer with the LPs it ran. */
 function counted(input: SolveInput, cache?: PieceCache): { answer: Answer; lps: number } {

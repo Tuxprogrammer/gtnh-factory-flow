@@ -132,16 +132,16 @@
  "answer": {
   "solution": {
    "extentsPerSecond": {
-    "8f2eeaeb-bbe0-3a78-9d21-651486b92dd5": 0.1,
-    "0fa87c81-5a2b-3c6b-9879-360e0ff81c98": 0.65
+    "0fa87c81-5a2b-3c6b-9879-360e0ff81c98": 0.65,
+    "8f2eeaeb-bbe0-3a78-9d21-651486b92dd5": 0.1
    },
    "machineCounts": {
-    "8f2eeaeb-bbe0-3a78-9d21-651486b92dd5": 0.025,
-    "0fa87c81-5a2b-3c6b-9879-360e0ff81c98": 0.65
+    "0fa87c81-5a2b-3c6b-9879-360e0ff81c98": 0.65,
+    "8f2eeaeb-bbe0-3a78-9d21-651486b92dd5": 0.025
    },
    "edgeFlowsPerSecond": {
-    "c020de3b-e8e0-3011-aaa4-097d66b256aa": 6.5,
-    "63d7ef46-9fc9-3dc5-a2d3-77f59941fd5b": 3
+    "63d7ef46-9fc9-3dc5-a2d3-77f59941fd5b": 3,
+    "c020de3b-e8e0-3011-aaa4-097d66b256aa": 6.5
    },
    "gatedSources": [],
    "gatedSinks": [
@@ -151,7 +151,7 @@
       "portIndex": 1,
       "input": false
      },
-     "ratePerSecond": 0.24999999999999967
+     "ratePerSecond": 0.25
     }
    ],
    "terminalInputs": [
@@ -200,7 +200,7 @@
    ],
    "unneeded": [],
    "openGates": 1,
-   "externalQuantity": 0.24999999999999967,
+   "externalQuantity": 0.25,
    "totalInternalFlow": 9.5,
    "notes": [],
    "key": {
@@ -236,10 +236,10 @@
           "portIndex": 1,
           "input": false
          },
-         "ratePerSecond": 0.24999999999999967
+         "ratePerSecond": 0.25
         }
        ],
-       "max": 0.24999999999999967,
+       "max": 0.25,
        "share": 1,
        "solverPick": true
       }
@@ -286,7 +286,7 @@
         "portIndex": 1,
         "input": false
        },
-       "ratePerSecond": 0.24999999999999967
+       "ratePerSecond": 0.25
       }
      ],
      "rank": "DEFAULT"
@@ -318,7 +318,7 @@
         "portIndex": 1,
         "input": true
        },
-       "ratePerSecond": 0.4999999999999991
+       "ratePerSecond": 0.5
       }
      ],
      "rank": "BUYS_MORE"

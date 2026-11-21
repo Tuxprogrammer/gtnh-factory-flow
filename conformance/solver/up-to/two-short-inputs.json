@@ -121,17 +121,17 @@
   "solution": {
    "extentsPerSecond": {
     "6ee5fa81-4c65-3453-8f7d-c739e933659d": 1,
-    "f83e13dd-746a-39a0-bdb5-db86c613fb1c": 1,
-    "ae02b412-2e34-33f1-b5a0-3a401d23b5c6": 1
+    "ae02b412-2e34-33f1-b5a0-3a401d23b5c6": 1,
+    "f83e13dd-746a-39a0-bdb5-db86c613fb1c": 1
    },
    "machineCounts": {
     "6ee5fa81-4c65-3453-8f7d-c739e933659d": 1,
-    "f83e13dd-746a-39a0-bdb5-db86c613fb1c": 1,
-    "ae02b412-2e34-33f1-b5a0-3a401d23b5c6": 1
+    "ae02b412-2e34-33f1-b5a0-3a401d23b5c6": 1,
+    "f83e13dd-746a-39a0-bdb5-db86c613fb1c": 1
    },
    "edgeFlowsPerSecond": {
-    "8bc59312-b08c-3569-b325-3f8837690776": 1,
-    "6df4cec9-5e85-308e-8c4d-6b18f380e4be": 1
+    "6df4cec9-5e85-308e-8c4d-6b18f380e4be": 1,
+    "8bc59312-b08c-3569-b325-3f8837690776": 1
    },
    "gatedSources": [],
    "gatedSinks": [],

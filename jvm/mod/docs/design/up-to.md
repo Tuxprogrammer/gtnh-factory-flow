@@ -98,10 +98,8 @@ ported to `balancer/`, name for name where the Java already mirrored it:
 - `UpToParityTest` solves every plan under `conformance/solver/up-to/` and compares its whole answer with
   the website's by the golden rules; `upTo`, `upToLoops` and `banked` are in the digest only when present, so the
   goldens did not move. The website writes the folder: `UPTO_EXPORT_DIR=<this folder> npx vitest run up-to-export` on `up-to-card`
-  (`parity/up-to-export.test.ts`: every hand-built Up to plan, and every corpus plan with each exact count Up to). Three
-  plans answer alike only to the LP's tolerance (the website's committed point breaks one of its own rows by less than
-  HiGHS's tolerance, near a millionth of a unit a second); the test names them with why and compares their read-outs
-  and counts.
+  (`parity/up-to-export.test.ts`: every hand-built Up to plan, and every corpus plan with each exact count Up to), with
+  the compiled core's answers, so every plan is compared whole.
 - gtnh-flow's `number` pins read Exactly (`GtnhFlowLoader`): those charts state demands, and the goldens stand.
 
 ## The board (the website's pass 3 card, `mockups/up-to-card/`)

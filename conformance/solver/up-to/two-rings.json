@@ -245,24 +245,24 @@
  "answer": {
   "solution": {
    "extentsPerSecond": {
+    "0df6d903-e12a-347c-9b50-59ac5704f4ec": 0,
+    "5ac47ede-7109-3e98-b77c-0cbdc3b517a3": 0,
     "5c9a1ba4-04c9-3579-9a17-6eac2ec11a68": 0,
     "eac606f1-25cc-3f91-97ae-bd27f707adbd": 0,
-    "5ac47ede-7109-3e98-b77c-0cbdc3b517a3": 0,
-    "f6d57ca0-5530-34fd-b626-a873b97414de": 0,
-    "0df6d903-e12a-347c-9b50-59ac5704f4ec": 0
+    "f6d57ca0-5530-34fd-b626-a873b97414de": 0
    },
    "machineCounts": {
+    "0df6d903-e12a-347c-9b50-59ac5704f4ec": 0,
+    "5ac47ede-7109-3e98-b77c-0cbdc3b517a3": 0,
     "5c9a1ba4-04c9-3579-9a17-6eac2ec11a68": 0,
     "eac606f1-25cc-3f91-97ae-bd27f707adbd": 0,
-    "5ac47ede-7109-3e98-b77c-0cbdc3b517a3": 0,
-    "f6d57ca0-5530-34fd-b626-a873b97414de": 0,
-    "0df6d903-e12a-347c-9b50-59ac5704f4ec": 0
+    "f6d57ca0-5530-34fd-b626-a873b97414de": 0
    },
    "edgeFlowsPerSecond": {
-    "c49dcbf4-1455-30af-b3e5-e9efb34feeb2": 0,
-    "99588d08-10bd-3700-89be-129687866f65": 0,
-    "445645e0-d8db-3ae0-971b-2b568f6f03a4": 0,
     "3cbe8a23-4b1d-31a6-b0ca-644a5bb57b54": 0,
+    "445645e0-d8db-3ae0-971b-2b568f6f03a4": 0,
+    "99588d08-10bd-3700-89be-129687866f65": 0,
+    "c49dcbf4-1455-30af-b3e5-e9efb34feeb2": 0,
     "d7cdea9e-3693-3245-bdc0-4ab4b3454e73": 0
    },
    "gatedSources": [],

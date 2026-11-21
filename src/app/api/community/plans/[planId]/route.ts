@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { factoryProjectSchema } from "@/lib/model/schemas";
 import { normalizeLoadedProject } from "@/lib/model/project-normalize";
 import { calculateThroughput } from "@/lib/solver";
-import { ensurePlanEngine } from "@/lib/server/plan-engine";
+import { ensurePlanEngine, PlanEngineUnavailableError } from "@/lib/server/plan-engine";
 import { computeCommunityPlanStats } from "@/lib/community/plan-stats";
 import type { CommunityPlanSummary } from "@/lib/community/types";
 import { APP_VERSION } from "@/lib/version";
@@ -309,6 +309,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ plan
     invalidatePlanListCache();
     return NextResponse.json({ id: planId });
   } catch (error) {
+    if (error instanceof PlanEngineUnavailableError)
+      return NextResponse.json({ error: error.message }, { status: 503 });
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Updating the plan failed." },
       { status: 500 },

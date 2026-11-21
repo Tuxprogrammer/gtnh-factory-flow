@@ -6,10 +6,9 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { parseFactoryProjectJson } from "@/lib/import-export/factory-json";
-import { initLpEngine } from "@/lib/solver/lp-engine";
 import { calculatePlanBoardThroughput } from "@/lib/solver/plan/adapter/open";
 
 const ROOT = join(__dirname, "../../..");
@@ -32,9 +31,6 @@ const plans = DIRS.flatMap((dir) =>
 );
 
 describe("reference plans", () => {
-  beforeAll(async () => {
-    await initLpEngine();
-  });
   it.each(plans)("%s", (file) => {
     let project;
     try {

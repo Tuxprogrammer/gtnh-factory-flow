@@ -110,14 +110,15 @@ describe("Industrial Sledgehammer solenoid (MTEIndustrialForgeHammer)", () => {
     // parallels; the game's under-one-tick rule banks the half-tick run past the
     // cap of 16,384 / 30 = 546, so the supply holds it there: 546 x 9 x 20 =
     // 98,280 pieces a second. An MV solenoid
-    // gives 60 parallels, cheap enough for one overclock: 240 a tick, half that.
+    // gives 60 parallels, cheap enough for one overclock: the half-tick run banks
+    // 480 a tick, 480 x 9 x 20 = 86,400 a second.
     const rate = (node: FactoryNode) => {
       const stats = getOverclockedRecipeStats(sunnarium, node);
       return (getNodePowerReport(sunnarium, node).parallels * 9 * 20) / stats.durationTicks;
     };
     expect(getNodePowerReport(sunnarium, sledge("EV", 8, "uv")).parallels).toBe(240);
     expect(rate(sledge("EV", 8, "uv"))).toBe(98280);
-    expect(rate(sledge("EV", 8))).toBe(43200);
+    expect(rate(sledge("EV", 8))).toBe(86400);
   });
 
   it("gives the Large Thermal Refinery the same solenoid knob it reads (MTEIndustrialThermalCentrifuge)", () => {

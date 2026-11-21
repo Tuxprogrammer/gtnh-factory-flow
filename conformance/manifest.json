@@ -203,8 +203,8 @@
     },
     "core-base/solved-number/solved-number-vectors.json": {
       "area": "core-base",
-      "bytes": 2721,
-      "sha256": "d77727f27770516d17d4fb73f2dd50eeba46be34344d86fd4bf8bf8793d1519a"
+      "bytes": 2941,
+      "sha256": "d5f88e44ec347bc939d347699056656684ee7ab598754b0ef8371d14043ea29b"
     },
     "core-base/uuid/uuid-vectors.json": {
       "area": "core-base",

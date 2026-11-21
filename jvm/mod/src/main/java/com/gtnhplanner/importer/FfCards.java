@@ -85,9 +85,10 @@ public final class FfCards {
         // A crop is the crop it names, a bee the species, a crusher the mob: their rates are what the card's settings
         // make of them,
         // nothing to match by. A recipe found by its own id is the one.
+        final Map<Integer, FfSlot> picks = onSlots(recipe, overrides);
         final RecipeMatcher.Match match = recipe.isCrop() || recipe.isBee() || recipe.isEec() || lookup.exact()
             ? exactly(lookup)
-            : RecipeMatcher.match(recipe, overrides, lookup.candidates());
+            : RecipeMatcher.match(recipe, picks, lookup.candidates());
         if (!match.accepted()) {
             String why = match.detail();
             if (why.isEmpty()) why = lookup.note() != null ? lookup.note() : "no recipe like it in game";
@@ -124,10 +125,10 @@ public final class FfCards {
         node.setMachineCountFixed(mapped.pinned());
         node.setMachineCountExact(mapped.exact());
         for (final String note : mapped.notes()) report.add(Kind.CONVERTED, name, note);
-        pickInputs(ctx, ports, node, recipe, overrides, name);
+        pickInputs(ctx, ports, node, recipe, picks, name);
         // The card's target (FF's targetOutput) is no rate here: FfConverter seeds it only into a Solve plan nothing
         // else sets.
-        portRates(ports, node, recipe, overrides, card, section, name, report);
+        portRates(ports, node, recipe, picks, card, section, name, report);
         return node;
     }
 
@@ -158,11 +159,12 @@ public final class FfCards {
         want.add(h.resourceId());
         if (!h.output() && recipe != null) {
             final List<FfSlot> inputs = recipe.inputs();
+            final Map<Integer, FfSlot> picks = onSlots(recipe, overrides);
             for (int i = 0; i < inputs.size(); i++) {
                 final List<String> ids = new ArrayList<>(
                     inputs.get(i)
                         .ids());
-                final FfSlot pick = overrides.get(i);
+                final FfSlot pick = picks.get(i);
                 if (pick != null) ids.add(pick.id());
                 if (FfIds.anySame(ids, want)) {
                     want.addAll(ids);
@@ -171,6 +173,41 @@ public final class FfCards {
             }
         }
         return ports.find(node, h.output(), h.kind(), want);
+    }
+
+    /**
+     * The card's picks (FF's {@code recipeInputOverrides}) on the slots of the recipe the plan carries. A plan whose
+     * recipe was reordered since the picks were made keys a pick to a slot that takes something else, often beside the
+     * same pick on the slot that does take it. The website re-seats picks by what they hold when it carries a card onto
+     * its own dataset's recipe, so here a pick another slot names goes to the first such slot without a pick of its
+     * own, or goes when they all have one. A pick no slot names is the card's own choice and stays where it is.
+     */
+    static Map<Integer, FfSlot> onSlots(@Nullable final FfRecipe recipe, final Map<Integer, FfSlot> overrides) {
+        if (recipe == null || overrides.isEmpty()) return overrides;
+        final Map<Integer, FfSlot> kept = new LinkedHashMap<>(), stray = new LinkedHashMap<>();
+        for (final Map.Entry<Integer, FfSlot> o : overrides.entrySet())
+            (takes(recipe, o.getKey(), o.getValue()) ? kept : stray).put(o.getKey(), o.getValue());
+        if (stray.isEmpty()) return overrides;
+        for (final Map.Entry<Integer, FfSlot> o : stray.entrySet()) {
+            int to = o.getKey();
+            for (int i = 0; i < recipe.inputs()
+                .size(); i++) if (takes(recipe, i, o.getValue())) {
+                    to = kept.containsKey(i) ? -1 : i;
+                    if (to >= 0) break;
+                }
+            if (to >= 0) kept.putIfAbsent(to, o.getValue());
+        }
+        return kept;
+    }
+
+    /** Whether a recipe's input slot takes a pick: the same kind, and the pick is the slot's item or an alternative. */
+    private static boolean takes(final FfRecipe recipe, final int slot, final FfSlot pick) {
+        if (slot < 0 || slot >= recipe.inputs()
+            .size()) return false;
+        final FfSlot own = recipe.inputs()
+            .get(slot);
+        return own.kind()
+            .equals(pick.kind()) && FfIds.anySame(own.ids(), List.of(pick.id()));
     }
 
     /** The one recipe a lookup found by its own id (or a crop's or bee's), as a match; none when it found nothing. */
@@ -359,11 +396,12 @@ public final class FfCards {
         if (extra != null) want.add(extra);
         if (!output && recipe != null) {
             final List<FfSlot> inputs = recipe.inputs();
+            final Map<Integer, FfSlot> picks = onSlots(recipe, overrides);
             for (int i = 0; i < inputs.size(); i++) {
                 final List<String> ids = new ArrayList<>(
                     inputs.get(i)
                         .ids());
-                final FfSlot pick = overrides.get(i);
+                final FfSlot pick = picks.get(i);
                 if (pick != null) ids.add(pick.id());
                 if (FfIds.anySame(ids, want)) {
                     want.addAll(ids);

@@ -68,6 +68,9 @@ final class DevPattern {
         if (q.containsKey("setup")) return setup();
         if (q.containsKey("noblank")) return noBlank();
         if (q.containsKey("card")) return card(q, client);
+        if (q.containsKey("look")) return client.run(DevPattern::look);
+        if (q.containsKey("remote")) return remote(q, client);
+        if (q.containsKey("plan")) return plan(q, client);
         return compare(q, client);
     }
 
@@ -234,6 +237,7 @@ final class DevPattern {
         final NBTTagCompound hand = plain(byHand), button = plain(byButton);
         m.put("same", hand != null && hand.equals(button));
         m.put("byHand", String.valueOf(hand));
+        m.put("byHandCanon", canon(hand));
         if (hand == null || !hand.equals(button)) m.put("byButton", String.valueOf(button));
         return m;
     }
@@ -273,6 +277,113 @@ final class DevPattern {
             return r;
         }));
         return m;
+    }
+
+    /**
+     * The button as a player on any server sees it, from the client only (a dedicated server's player has no server
+     * object here): {@code remote=1} with the recipe's {@code output}, {@code handler}, {@code input}, {@code nth}.
+     */
+    private static Map<String, Object> remote(final Map<String, String> q, final OnClient client) throws Exception {
+        final Map<String, Object> m = new LinkedHashMap<>();
+        m.put("before", client.run(DevPattern::look));
+        client.run(() -> {
+            final RecipeHandlerRef ref = find(
+                q.getOrDefault("output", ""),
+                q.getOrDefault("handler", ""),
+                q.getOrDefault("input", ""),
+                Integer.parseInt(q.getOrDefault("nth", "0")));
+            m.put(
+                "recipe",
+                ref.handler.getRecipeName()
+                    .trim() + " #" + ref.recipeIndex);
+            // many=N asks for the one recipe N times, as a plan of N recipes is sent: in batches, over ticks.
+            PatternThis.pattern(java.util.Collections.nCopies(Integer.parseInt(q.getOrDefault("many", "1")), ref), 0);
+            return null;
+        });
+        Thread.sleep(Long.parseLong(q.getOrDefault("wait", "2500")));
+        m.put("after", client.run(DevPattern::look));
+        m.put("made", made(m));
+        return m;
+    }
+
+    /** The Share menu's "Pattern the plan" on the open plan, read from the client as {@link #remote} is. */
+    private static Map<String, Object> plan(final Map<String, String> q, final OnClient client) throws Exception {
+        final Map<String, Object> m = new LinkedHashMap<>();
+        m.put("before", client.run(DevPattern::look));
+        client.run(() -> {
+            final com.gtnhplanner.ui.BoardSession session = com.gtnhplanner.ui.BoardSession.current();
+            if (session == null) throw new IllegalStateException("open the planner first");
+            m.put("cards", session.graph().nodes.size());
+            PatternThis.plan(session.graph());
+            return null;
+        });
+        Thread.sleep(Long.parseLong(q.getOrDefault("wait", "4000")));
+        m.put("after", client.run(DevPattern::look));
+        m.put("made", made(m));
+        return m;
+    }
+
+    /** What the client's player holds and has at their feet: blanks, encoded patterns (NBT), the board's last line. */
+    private static Map<String, Object> look() {
+        final net.minecraft.entity.player.EntityPlayer p = Minecraft.getMinecraft().thePlayer;
+        final Map<String, Object> m = new LinkedHashMap<>();
+        int blanks = 0, free = 0;
+        final List<String> encoded = new ArrayList<>(), dropped = new ArrayList<>();
+        for (final ItemStack s : p.inventory.mainInventory) {
+            if (s == null) free++;
+            else if (IPatternTerminal.isBlankPattern(s)) blanks += s.stackSize;
+            else if (IPatternTerminal.isEncodedPattern(s)) for (int i = 0; i < s.stackSize; i++) encoded.add(canon(plain(s)));
+        }
+        for (final Object o : p.worldObj.loadedEntityList)
+            if (o instanceof final net.minecraft.entity.item.EntityItem e && e.getDistanceToEntity(p) < 4
+                && e.getEntityItem() != null
+                && IPatternTerminal.isEncodedPattern(e.getEntityItem())) dropped.add(canon(plain(e.getEntityItem())));
+        final ItemStack blank = blanks(1);
+        m.put("creative", p.capabilities.isCreativeMode);
+        m.put("blankItem", net.minecraft.item.Item.itemRegistry.getNameForObject(blank.getItem()) + " " + blank.getItemDamage());
+        m.put("blanks", blanks);
+        m.put("freeSlots", free);
+        m.put("encoded", encoded);
+        m.put("droppedAtFeet", dropped);
+        m.put("offered", PatternThis.offered());
+        m.put("unavailable", String.valueOf(PatternThis.unavailable()));
+        m.put("said", PatternThis.lastSummary());
+        return m;
+    }
+
+    /** The patterns held or at the player's feet after and not before (each once per copy). */
+    @SuppressWarnings("unchecked")
+    private static List<String> made(final Map<String, Object> m) {
+        final List<String> made = new ArrayList<>();
+        final Map<String, Object> before = (Map<String, Object>) m.get("before"),
+            after = (Map<String, Object>) m.get("after");
+        made.addAll((List<String>) after.get("encoded"));
+        made.addAll((List<String>) after.get("droppedAtFeet"));
+        for (final String s : (List<String>) before.get("encoded")) made.remove(s);
+        for (final String s : (List<String>) before.get("droppedAtFeet")) made.remove(s);
+        return made;
+    }
+
+    /** NBT as text with each compound's keys sorted: the same pattern reads the same whichever side built it. */
+    private static String canon(final net.minecraft.nbt.NBTBase t) {
+        if (t instanceof final NBTTagCompound c) {
+            final StringBuilder b = new StringBuilder("{");
+            for (final Object k : new java.util.TreeSet<>(c.func_150296_c())) b.append(k)
+                .append(':')
+                .append(canon(c.getTag((String) k)))
+                .append(',');
+            return b.append('}')
+                .toString();
+        }
+        if (t instanceof final net.minecraft.nbt.NBTTagList l) {
+            final net.minecraft.nbt.NBTTagList copy = (net.minecraft.nbt.NBTTagList) l.copy();
+            final StringBuilder b = new StringBuilder("[");
+            while (copy.tagCount() > 0) b.append(canon(copy.removeTag(0)))
+                .append(',');
+            return b.append(']')
+                .toString();
+        }
+        return String.valueOf(t);
     }
 
     /** The stack's NBT as an item, without the pattern's wall-clock time. */

@@ -66,7 +66,11 @@ dependencies {
     compileOnly("com.github.GTNewHorizons:Applied-Energistics-2-Unofficial:rv3-beta-1080-GTNH:dev")
     // Crops (its NEI page, the crop cards; machines/CropsNh is the website's model of them).
     compileOnly("com.github.GTNewHorizons:CropsNH:2.0.134:dev") { transitive = false }
-    runtimeOnlyNonPublishable('com.github.GTNewHorizons:Angelica:2.2.28:dev') { transitive = false }
+    // Client only: the pack's server has no Angelica, and a dedicated server fails to start with it
+    // (tools/dev/server.sh runs with -PdevServer).
+    if (!project.hasProperty('devServer')) {
+        runtimeOnlyNonPublishable('com.github.GTNewHorizons:Angelica:2.2.28:dev') { transitive = false }
+    }
     // Multiblock pictures on recipe cards (ui/gt/MultiblockPictures): BlockRenderer6343's fake world builds the
     // structure. Optional at runtime; the pack's version. StructureLib comes with GregTech.
     compileOnly('com.github.GTNewHorizons:BlockRenderer6343:1.4.24:dev') { transitive = false }

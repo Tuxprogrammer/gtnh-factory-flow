@@ -65,6 +65,10 @@ public final class DevHarness {
 
     private static final int PORT = Integer.getInteger("gtnhplanner.dev.port", 25599);
     private static final String WORLD = System.getProperty("gtnhplanner.dev.world", "plannh-dev");
+    /**
+     * A dedicated server to join instead of the test world ({@code host:port}, tools/dev/server.sh); empty for none.
+     */
+    private static final String SERVER = System.getProperty("gtnhplanner.dev.server", "");
     private static final long REQUEST_TIMEOUT_SECONDS = 30;
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting()
         .disableHtmlEscaping()
@@ -131,6 +135,10 @@ public final class DevHarness {
         worldRequested = true;
         // The harness drives an unfocused window; a pause menu would steal every screen.
         mc.gameSettings.pauseOnLostFocus = false;
+        if (!SERVER.isEmpty()) {
+            tickActions.add(() -> join(SERVER));
+            return;
+        }
         if (WORLD.isEmpty()) {
             ready = true;
             return;
@@ -189,6 +197,40 @@ public final class DevHarness {
             final Runnable action = frameActions.poll();
             if (action != null) action.run();
         }
+    }
+
+    /** Leaves the world open (as the pause menu's quit does) and joins the server at {@code host:port}. */
+    private void join(final String to) {
+        final int colon = to.lastIndexOf(':');
+        final String host = colon < 0 ? to : to.substring(0, colon);
+        final int port = colon < 0 ? 25565 : Integer.parseInt(to.substring(colon + 1));
+        final net.minecraft.server.MinecraftServer local = mc.getIntegratedServer();
+        if (mc.theWorld != null) {
+            mc.theWorld.sendQuittingDisconnectingPacket();
+            mc.loadWorld((net.minecraft.client.multiplayer.WorldClient) null);
+            mc.displayGuiScreen(new GuiMainMenu());
+        }
+        // The world's own server resets the item ids after it stops: a login meanwhile stalls in FML's handshake, so
+        // the connect waits for it to stop and five seconds more.
+        connectOnceStopped(local, host, port, 0);
+    }
+
+    private void connectOnceStopped(final net.minecraft.server.MinecraftServer local, final String host, final int port,
+        final long notBefore) {
+        if (local != null && (!local.isServerStopped() || notBefore == 0 || System.currentTimeMillis() < notBefore)) {
+            final long at = local.isServerStopped() && notBefore == 0 ? System.currentTimeMillis() + 5000 : notBefore;
+            tickActions.add(() -> connectOnceStopped(local, host, port, at));
+            return;
+        }
+        GtnhPlanner.LOG.info("[dev] Joining the server at {}:{}", host, port);
+        // FML's own connect, as the server list's Join runs it: it arms the latch FML's login handshake waits on (the
+        // list's data first, as opening the server list sets it up).
+        cpw.mods.fml.client.FMLClientHandler.instance()
+            .setupServerList();
+        cpw.mods.fml.client.FMLClientHandler.instance()
+            .connectToServer(
+                new GuiMainMenu(),
+                new net.minecraft.client.multiplayer.ServerData("dev server", host + ":" + port));
     }
 
     private void loadWorld() {
@@ -326,7 +368,20 @@ public final class DevHarness {
             case "/pattern":
                 // "Pattern this" against a pattern made by hand (DevPattern; PLANNH_GTNH=1 PLANNH_AE=1).
                 requireWorld();
+                // Whether the card and Share menu rows show, and why they are off: safe in a game without AE2.
+                if (q.containsKey("offered")) return onClient(
+                    () -> Map.of(
+                        "offered",
+                        com.gtnhplanner.pattern.PatternThis.offered(),
+                        "unavailable",
+                        String.valueOf(com.gtnhplanner.pattern.PatternThis.unavailable())));
                 return DevPattern.route(q, this::onClient);
+            case "/join":
+                // Leave this world for a dedicated server (tools/dev/server.sh): join?to=127.0.0.1:<port>.
+                return onClient(() -> {
+                    join(arg(q, "to"));
+                    return ok();
+                });
             case "/addrecipe":
                 requireWorld();
                 return onClient(

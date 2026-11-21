@@ -227,18 +227,23 @@ public final class FeedbackPanel extends ParentWidget<FeedbackPanel> implements 
         Hyb.rect(PAD, AREA_Y, W - 2 * PAD, AREA_H, CardPaint.EDGE);
         Hyb.rect(PAD + 1, AREA_Y + 1, W - 2 * PAD - 2, AREA_H - 2, WELL);
         // What goes with it, in words.
-        final List<String> lines = wrap(sends(), W - 2 * PAD);
+        final List<String> lines = Hyb.wrap(sends(), W - 2 * PAD);
         for (int i = 0; i < Math.min(2, lines.size()); i++) Hyb.text(lines.get(i), PAD, SENDS_Y + i * 10, 0xFFB8BAC2);
         // Where it goes, and the key.
-        Hyb.text(
-            Hyb.fit(
-                error != null ? error
-                    : CommunityApi.configured() ? "It becomes a public issue on GitHub."
+        if (error != null) {
+            // Two lines beside the key: a refusal in the site's words does not fit one.
+            final List<String> why = Hyb.wrap(error, W - 2 * PAD - 72);
+            for (int i = 0; i < why.size(); i++) Hyb.text(why.get(i), PAD, KEY_Y + 1 + i * 9, Hyb.AMBER_INK);
+        } else {
+            Hyb.text(
+                Hyb.fit(
+                    CommunityApi.configured() ? "It becomes a public issue on GitHub."
                         : "Sending reports is not set up on this install.",
-                W - 2 * PAD - 72),
-            PAD,
-            KEY_Y + 5,
-            error != null ? Hyb.AMBER_INK : 0xFF6A6C74);
+                    W - 2 * PAD - 72),
+                PAD,
+                KEY_Y + 5,
+                0xFF6A6C74);
+        }
         final int[] s = sendRect();
         final boolean hot = !sending && in(s, mx, my);
         Hyb.rect(s[0], s[1], s[2], s[3], sending ? 0xFF1E6B78 : hot ? 0xFF38E1F5 : CYAN);
@@ -257,23 +262,6 @@ public final class FeedbackPanel extends ParentWidget<FeedbackPanel> implements 
         if (crash != null) parts.add("the crash report");
         final String last = parts.remove(parts.size() - 1);
         return "Sent with it: " + (parts.isEmpty() ? last : String.join(", ", parts) + " and " + last) + ".";
-    }
-
-    private static List<String> wrap(final String text, final int width) {
-        final List<String> lines = new ArrayList<>();
-        StringBuilder line = new StringBuilder();
-        for (final String word : text.split(" ")) {
-            final String next = line.length() == 0 ? word : line + " " + word;
-            if (Hyb.width(next) <= width || line.length() == 0) line = new StringBuilder(next);
-            else {
-                lines.add(line.toString());
-                line = new StringBuilder(word);
-            }
-        }
-        lines.add(line.toString());
-        if (lines.size() > 2)
-            lines.set(1, Hyb.fit(lines.get(1) + " " + String.join(" ", lines.subList(2, lines.size())), width));
-        return lines;
     }
 
     /** Sent: a happy face, its issue, and keys to open it or copy its link. */

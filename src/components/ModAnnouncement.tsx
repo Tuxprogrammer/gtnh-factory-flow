@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import "./chrome/mod-panel.css";
 import { Download, Play, X } from "lucide-react";
-import { GITHUB_URL } from "./HeaderLinks";
+import { modUrl } from "@/lib/site-url";
 
 /**
  * Closing the announcement in any way (the X, Dismiss, Escape, the backdrop,
@@ -12,9 +12,6 @@ import { GITHUB_URL } from "./HeaderLinks";
  * player should see once more.
  */
 export const MOD_ANNOUNCEMENT_KEY = "gtnh-factory-flow.mod-announcement-dismissed.v1";
-
-/** The mod's newest release on this repository: GitHub resolves `latest` to it. */
-export const MOD_RELEASE_URL = `${GITHUB_URL}/releases/latest`;
 
 /** Opens a moment after load, so the board is up and the popup is not a flash on arrival. */
 const OPEN_DELAY_MS = 1200;
@@ -42,6 +39,8 @@ function markDismissed(): void {
  */
 export function ModAnnouncement() {
   const [isOpen, setOpen] = useState(false);
+  // The instance's download page, when the build names one; without it the dialog has no download button.
+  const downloadUrl = modUrl();
 
   useEffect(() => {
     if (wasDismissed()) {
@@ -121,16 +120,18 @@ export function ModAnnouncement() {
           >
             Dismiss
           </button>
-          <a
-            href={MOD_RELEASE_URL}
-            target="_blank"
-            rel="noreferrer"
-            onClick={markDismissed}
-            className={`${ACTION} border-cyan-600 bg-cyan-600/20 text-cyan-200 hover:bg-cyan-600/30`}
-          >
-            <Download className="h-4 w-4" aria-hidden />
-            Get the mod
-          </a>
+          {downloadUrl ? (
+            <a
+              href={downloadUrl}
+              target="_blank"
+              rel="noreferrer"
+              onClick={markDismissed}
+              className={`${ACTION} border-cyan-600 bg-cyan-600/20 text-cyan-200 hover:bg-cyan-600/30`}
+            >
+              <Download className="h-4 w-4" aria-hidden />
+              Get the mod
+            </a>
+          ) : null}
         </div>
       </div>
     </div>

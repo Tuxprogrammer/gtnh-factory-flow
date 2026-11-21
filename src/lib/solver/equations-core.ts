@@ -3,8 +3,7 @@ import { makeResourceKey } from "@/lib/model/resources";
 import { getStorageRoles } from "@/lib/model/storage-role";
 import { collectTrashNodeIds } from "@/lib/model/trash";
 import { getCompatibleOutputFlow, getEdgeTargetDemandKey } from "./equilibrium";
-import { type LinearProgram, type LpSolution } from "./simplex";
-import { solveLpAuto } from "./lp-engine";
+import { solveLp, type LinearProgram, type LpSolution } from "./simplex";
 import { listSharedMachineGroups } from "@/lib/model/shared-machine";
 import { isPoolEdgeId } from "./pool-mode";
 import { storageRatioEqualities } from "./storage-ratios";
@@ -94,9 +93,7 @@ export interface EquationsDiagnosis {
 export function solveEquationsCore(
   project: FactoryProject,
   nodes: Record<string, NodeThroughputResult>,
-  // solveLpAuto is the engine switchboard: HiGHS where initLpEngine has run
-  // (the solve worker), the homegrown simplex everywhere else.
-  solve: (lp: LinearProgram) => LpSolution = solveLpAuto,
+  solve: (lp: LinearProgram) => LpSolution = solveLp,
   diagnosis?: EquationsDiagnosis,
   options?: EquationsCoreOptions,
 ): EquationsCoreResult {

@@ -381,26 +381,26 @@
  "answer": {
   "solution": {
    "extentsPerSecond": {
-    "d24c3564-d71a-3acb-8014-063a62072b61": 1,
-    "e2155a0c-11be-3383-b813-9cdbb421d8d6": 0.7000000000000001,
-    "fdcb9341-649c-30c7-b794-8fa081054003": 5.5,
     "0182b10e-bed2-3a0f-b0da-1744743b1579": 1,
-    "0f17f33b-6c35-35f3-8453-868721d0e909": 3.6666666666666665,
+    "0f17f33b-6c35-35f3-8453-868721d0e909": 3.66666666666667,
     "128f4108-cc04-334d-b219-584351753e96": 4,
     "2f0049d1-ee76-3a8f-9b75-b5ab553ee2d5": 1,
-    "36d2f472-0d41-309b-b7c7-f61a541c5c8d": 1.5000000000000002,
-    "6ca507a9-3620-3cbd-9988-d481b3049ca1": 2.5
+    "36d2f472-0d41-309b-b7c7-f61a541c5c8d": 1.5,
+    "6ca507a9-3620-3cbd-9988-d481b3049ca1": 2.5,
+    "d24c3564-d71a-3acb-8014-063a62072b61": 1,
+    "e2155a0c-11be-3383-b813-9cdbb421d8d6": 0.7,
+    "fdcb9341-649c-30c7-b794-8fa081054003": 5.5
    },
    "machineCounts": {
-    "d24c3564-d71a-3acb-8014-063a62072b61": 1,
-    "e2155a0c-11be-3383-b813-9cdbb421d8d6": 0.7000000000000001,
-    "fdcb9341-649c-30c7-b794-8fa081054003": 5.5,
     "0182b10e-bed2-3a0f-b0da-1744743b1579": 1,
-    "0f17f33b-6c35-35f3-8453-868721d0e909": 3.6666666666666665,
+    "0f17f33b-6c35-35f3-8453-868721d0e909": 3.66666666666667,
     "128f4108-cc04-334d-b219-584351753e96": 4,
     "2f0049d1-ee76-3a8f-9b75-b5ab553ee2d5": 1,
-    "36d2f472-0d41-309b-b7c7-f61a541c5c8d": 1.5000000000000002,
-    "6ca507a9-3620-3cbd-9988-d481b3049ca1": 2.5
+    "36d2f472-0d41-309b-b7c7-f61a541c5c8d": 1.5,
+    "6ca507a9-3620-3cbd-9988-d481b3049ca1": 2.5,
+    "d24c3564-d71a-3acb-8014-063a62072b61": 1,
+    "e2155a0c-11be-3383-b813-9cdbb421d8d6": 0.7,
+    "fdcb9341-649c-30c7-b794-8fa081054003": 5.5
    },
    "edgeFlowsPerSecond": {
     "c5ca697d-e8b7-3f48-8d0c-3a87db090955": 4
@@ -448,7 +448,7 @@
       "portIndex": 0,
       "input": false
      },
-     "ratePerSecond": 3.6666666666666665
+     "ratePerSecond": 3.66666666666667
     },
     {
      "port": {
@@ -464,7 +464,7 @@
       "portIndex": 0,
       "input": false
      },
-     "ratePerSecond": 1.5000000000000002
+     "ratePerSecond": 1.5
     }
    ],
    "unneeded": [],
@@ -506,9 +506,9 @@
    },
    "drawers": {
     "rates": {
+     "7685e52b-8546-32d8-8526-612429bd8e76": 10,
      "ad7bbb2a-cb05-3404-bc5a-a7baabbd2e1a": 12,
-     "d2ee5fb6-ce5c-39c9-a554-e7255638f201": 3.0000000000000004,
-     "7685e52b-8546-32d8-8526-612429bd8e76": 10
+     "d2ee5fb6-ce5c-39c9-a554-e7255638f201": 3
     },
     "unmet": [
      "7685e52b-8546-32d8-8526-612429bd8e76"
@@ -527,6 +527,24 @@
      }
     ],
     "ports": {
+     "7685e52b-8546-32d8-8526-612429bd8e76": [
+      {
+       "port": {
+        "nodeId": "d24c3564-d71a-3acb-8014-063a62072b61",
+        "portIndex": 0,
+        "input": false
+       },
+       "ratePerSecond": 10
+      },
+      {
+       "port": {
+        "nodeId": "6ca507a9-3620-3cbd-9988-d481b3049ca1",
+        "portIndex": 0,
+        "input": true
+       },
+       "ratePerSecond": 10
+      }
+     ],
      "ad7bbb2a-cb05-3404-bc5a-a7baabbd2e1a": [
       {
        "port": {
@@ -568,7 +586,7 @@
         "portIndex": 0,
         "input": false
        },
-       "ratePerSecond": 3.0000000000000004
+       "ratePerSecond": 3
       },
       {
        "port": {
@@ -576,25 +594,7 @@
         "portIndex": 0,
         "input": true
        },
-       "ratePerSecond": 3.0000000000000004
-      }
-     ],
-     "7685e52b-8546-32d8-8526-612429bd8e76": [
-      {
-       "port": {
-        "nodeId": "d24c3564-d71a-3acb-8014-063a62072b61",
-        "portIndex": 0,
-        "input": false
-       },
-       "ratePerSecond": 10
-      },
-      {
-       "port": {
-        "nodeId": "6ca507a9-3620-3cbd-9988-d481b3049ca1",
-        "portIndex": 0,
-        "input": true
-       },
-       "ratePerSecond": 10
+       "ratePerSecond": 3
       }
      ]
     }
@@ -620,7 +620,7 @@
       "e2155a0c-11be-3383-b813-9cdbb421d8d6"
      ],
      "capacity": 1,
-     "reached": 0.7000000000000001,
+     "reached": 0.7,
      "reason": "CLOGGED",
      "port": {
       "nodeId": "e2155a0c-11be-3383-b813-9cdbb421d8d6",

@@ -13,7 +13,7 @@ import type { NodeRailsInput } from "@/lib/core/records.generated";
 import { parseFactoryProjectJson } from "@/lib/import-export/factory-json";
 import type { FactoryProject } from "@/lib/model/types";
 import { getPoolProject } from "@/lib/solver/pool-mode";
-import { initLpEngine } from "@/lib/solver/lp-engine";
+import { useCoreSolver } from "@/test-support/core-solve";
 import { calculatePlanBoardThroughput } from "@/lib/solver/plan/adapter/open";
 import { buildRailPorts, deriveNodeVerdict } from "../../node-verdict";
 import { railsInputOf, railsViewOf } from "./rails-conformance";
@@ -74,10 +74,11 @@ describe("rails shadow: the website's rows and verdict and the compiled core's a
   for (const target of targets) {
     describe.skipIf(!present)(`on the ${target} target`, () => {
       beforeAll(async () => {
-        await initLpEngine();
         resetCoreForTests();
         await loadCore({ target });
-      });
+        // The books the rails read are the plan solve's: on the core, as every board's are.
+        await useCoreSolver(target);
+      }, 120_000);
       afterAll(() => resetCoreForTests());
 
       it("over every card of every reference plan", () => {

@@ -1,8 +1,10 @@
 /**
  * Records every solve input the website's tests hand the plan solver, for the solver's two-engine comparison
  * (conformance/solver/website, tools/conformance/solver/generate.mjs). Loaded as a vitest setup file by
- * capture.config.ts only. The solver's three entries are wrapped (`solvePlan`, `solveCore`, `solvePiece`); a call made
- * from inside another (an island of a plan) is the outer call's business and is not written. Each test file's inputs,
+ * capture.config.ts only. Every way a test reaches a plan solver is wrapped: the website's three entries (`solvePlan`,
+ * `solveCore`, `solvePiece`), the engine the plan solve's seam hands out (`getSolveCore`, the compiled core where it is
+ * loaded) and the tests' own door to the core (`coreSolve`); a call made from inside another (an island of a plan) is
+ * the outer call's business and is not written. Each test file's inputs,
  * with the test that asked, go to $SOLVE_CAPTURE_OUT/<test file path with / as ~>.json. Answers are not kept here:
  * the export solves each input again through the public entry, as the Java kernel will.
  */
@@ -70,6 +72,16 @@ beforeEach(() => {
 vi.mock("@/lib/solver/plan/solve-plan", async (importOriginal) => {
   const original = await importOriginal<typeof import("@/lib/solver/plan/solve-plan")>();
   return { ...original, solvePlan: wrap(original.solvePlan) };
+});
+
+vi.mock("@/lib/solver/plan/adapter/engine", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@/lib/solver/plan/adapter/engine")>();
+  return { ...original, getSolveCore: () => wrap(original.getSolveCore()) };
+});
+
+vi.mock("@/test-support/core-solve", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@/test-support/core-solve")>();
+  return { ...original, coreSolve: wrap(original.coreSolve) };
 });
 
 vi.mock("@/lib/solver/plan/solve-core", async (importOriginal) => {

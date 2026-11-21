@@ -1,13 +1,13 @@
 // Writes conformance/solver/website/cases.json.gz: every distinct solve input the website's own tests (the solver's
 // test scenarios, the board parity scenarios, every other test that solves a plan) and the reference plans hand the
-// plan solver, with the website's answer, for the Java kernel to match (core-solver WebsiteCasesTest) and the website
+// plan solver, with the compiled core's answer, for the Java kernel to match (core-solver WebsiteCasesTest) and the website
 // to keep (src/lib/solver/plan/__fixtures__/website-cases.test.ts).
 //
 // Usage: node tools/conformance/solver/generate.mjs
 //   1. capture.config.ts runs the whole website suite and reference-plans.capture.ts with capture-setup.ts recording
 //      every input handed to solvePlan, solveCore or solvePiece (not the islands of one call);
-//   2. export.config.ts dedupes them, makes them what both engines read (export.capture.ts), solves each through the
-//      public entry and writes the file;
+//   2. export.config.ts dedupes them, makes them what both engines read (export.capture.ts), solves each on the compiled
+//      core (needs public/core: tools/copy-core.mjs) and writes the file;
 //   3. the conformance manifest is rewritten.
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync } from "node:fs";

@@ -10,6 +10,7 @@ import { openLocalDatabase, type LocalDatabase } from "@/lib/server/local-db/dat
 import { getCommunityDb, makeSessionToken } from "@/lib/server/community";
 import { fill, readWire, type RestStep } from "@/test-support/wire-server";
 import { expectProblems, shapeProblems } from "@/test-support/wire-shape";
+import { corePresent } from "@/test-support/core-solve";
 import * as loginRoute from "@/app/api/community/auth/login/route";
 import * as registerRoute from "@/app/api/community/auth/register/route";
 import * as meRoute from "@/app/api/community/auth/me/route";
@@ -195,6 +196,13 @@ afterAll(async () => {
 });
 
 describe("the wire contract, the website's REST routes and the live service's HTTP routes", () => {
+  // The plan routes solve on the compiled core and answer 503 without it (src/lib/server/plan-engine.ts): say why here
+  // rather than leave the plan steps' 503s to explain it.
+  it("has the compiled core the plan routes solve on", () => {
+    if (!corePresent)
+      throw new Error("public/core has no compiled core: build it (node tools/copy-core.mjs --build, JDK 25)");
+  });
+
   it("is ordered so every step can run: each placeholder is one the runner fills", () => {
     const ids = new Set<string>();
     for (const step of wire.rest.steps) {

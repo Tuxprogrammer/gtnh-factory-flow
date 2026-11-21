@@ -13,15 +13,16 @@ export function uuidOf(id: Id): Id {
   return UUID.test(id) ? id : nameUuidFromBytes(Buffer.from(`upto:${id}`, "utf8"));
 }
 
-/** A spares key (`node:i:port`, or several joined by commas) with its node ids renamed. */
+/** A spares key (`node:i:port`, or a leftover's bearers joined by "|") with its node ids renamed, its bearers sorted again by their new text as both engines sort them. */
 function keyWith(key: string, rename: (id: Id) => Id): string {
   return key
-    .split(",")
+    .split("|")
     .map((part) => {
       const io = part.lastIndexOf(":", part.lastIndexOf(":") - 1);
       return io < 0 ? part : `${rename(part.slice(0, io))}${part.slice(io)}`;
     })
-    .join(",");
+    .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+    .join("|");
 }
 
 /** The plan with every id a UUID (machines, wires, pools, drawers and their links, pins, the stored choice, spares). */
@@ -47,7 +48,7 @@ export function withOrderedIds(i: SolveInput): SolveInput {
   for (const r of i.choice ?? []) add(r.node);
   Object.keys(i.extentPins).forEach(add);
   const keyNodes = (key: string) =>
-    key.split(",").flatMap((part) => {
+    key.split("|").flatMap((part) => {
       const io = part.lastIndexOf(":", part.lastIndexOf(":") - 1);
       return io < 0 ? [] : [part.slice(0, io)];
     });

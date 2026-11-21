@@ -3194,32 +3194,11 @@
  "answer": {
   "solution": {
    "extentsPerSecond": {
-    "8038c90c-64ef-37ca-ba53-6cde00e3b409": 0,
-    "891a6072-b302-3491-8e71-c4f2db0fcc0e": 0,
-    "91c3e0b8-d90f-34dd-9acb-e445fd97af7e": 0,
-    "9d56eff9-1145-3e57-b02d-76e0f7561329": 0,
-    "9f7605a2-891b-3ad2-9016-6eafc50d94e9": 2,
-    "a935f09e-a985-3b4e-a2ae-9c39ad5bcf8a": 0,
-    "af7e0445-4b68-33a9-b04d-e564445aeb16": 0,
-    "b63e1cae-4d76-33aa-a343-fb1c9c21c8d4": 2,
-    "b70db116-1314-3bd1-9f5d-94ec767950a6": 0.5,
-    "bf16b30d-7dd3-3763-9e24-241e3340ab3e": 0.32258065508506084,
-    "c2bd5b41-97b5-3e1e-a62c-ec2ec2d3b894": 0,
-    "c648f0a3-0109-391a-9043-c8d1d4dc9a43": 0,
-    "cb065c15-596c-33b5-baa1-d18742f83077": 2,
-    "e1fd2a61-480e-3046-8f8b-b6a0b412460f": 0,
-    "e2a8af80-cad2-39b8-a2dd-a3b9f4dde5e6": 0,
-    "e3110aef-b131-304a-a257-499585947e3b": 0,
-    "ec166cf6-2f2d-3e94-b834-2b2d5bbb3c2b": 0,
-    "f2aefc70-1c9a-39b7-8ed8-af86a37aa3e1": 0,
-    "f90b9c5a-047a-3134-bd52-b47daf01540c": 0,
-    "fc46ffe4-0ed7-369c-940b-8e35515a8bb1": 0,
-    "fe6bb3cc-515b-3fbd-969e-1bc17d778fd3": 2,
     "00dbd63c-0478-327b-84dc-12e43375d054": 0,
     "0da4e6a9-d9b9-31dd-b7e2-88b070c3f528": 0,
     "114ff202-19a8-3275-abab-8a3ef478efa5": 0,
     "1925daad-d02e-3700-bd3e-dcc1ae324ecf": 0,
-    "1b048efb-ce66-309a-8813-01332f2eba42": 5.1612904813609735,
+    "1b048efb-ce66-309a-8813-01332f2eba42": 5.16129048136098,
     "1c1bc987-a192-3f3d-9659-5413fd1c2976": 0,
     "1e287ddd-b630-3627-a023-ad463ddad469": 0,
     "213c2ed1-05a9-337e-9856-265508ec83eb": 0,
@@ -3229,7 +3208,7 @@
     "2ede4e4d-0e60-382e-b145-376d7d27c9c1": 0.5,
     "327290e2-5317-3dcb-9c53-de1b8fe4ef0e": 0,
     "43932a79-9e5b-3d39-84bb-3a7653dc89d5": 0,
-    "43b9c7da-bc96-3734-a6b9-4fcaf71f65c3": 0.012626262626262626,
+    "43b9c7da-bc96-3734-a6b9-4fcaf71f65c3": 0.01262626262626,
     "44651d86-b223-381e-8522-f037fcb9b133": 0,
     "451642d6-2f3f-350e-a286-adfb60a06e68": 0,
     "47c8538a-ab69-3cb1-a5b8-2d51b6d2d576": 0,
@@ -3249,22 +3228,20 @@
     "75abadaa-8a8f-3c54-8d48-f0629702408b": 0,
     "78297bae-5575-30b7-9cda-f3e9fb46c641": 0,
     "7a255dd8-fcb2-3108-bc71-252dab0dc18b": 0,
-    "7f2e9f89-8200-350d-aa5a-f67805a5d60d": 0
-   },
-   "machineCounts": {
+    "7f2e9f89-8200-350d-aa5a-f67805a5d60d": 0,
     "8038c90c-64ef-37ca-ba53-6cde00e3b409": 0,
     "891a6072-b302-3491-8e71-c4f2db0fcc0e": 0,
     "91c3e0b8-d90f-34dd-9acb-e445fd97af7e": 0,
     "9d56eff9-1145-3e57-b02d-76e0f7561329": 0,
-    "9f7605a2-891b-3ad2-9016-6eafc50d94e9": 4,
+    "9f7605a2-891b-3ad2-9016-6eafc50d94e9": 2,
     "a935f09e-a985-3b4e-a2ae-9c39ad5bcf8a": 0,
     "af7e0445-4b68-33a9-b04d-e564445aeb16": 0,
-    "b63e1cae-4d76-33aa-a343-fb1c9c21c8d4": 20,
-    "b70db116-1314-3bd1-9f5d-94ec767950a6": 0.75,
-    "bf16b30d-7dd3-3763-9e24-241e3340ab3e": 36.29032369706935,
+    "b63e1cae-4d76-33aa-a343-fb1c9c21c8d4": 2,
+    "b70db116-1314-3bd1-9f5d-94ec767950a6": 0.5,
+    "bf16b30d-7dd3-3763-9e24-241e3340ab3e": 0.32258065508506,
     "c2bd5b41-97b5-3e1e-a62c-ec2ec2d3b894": 0,
     "c648f0a3-0109-391a-9043-c8d1d4dc9a43": 0,
-    "cb065c15-596c-33b5-baa1-d18742f83077": 25,
+    "cb065c15-596c-33b5-baa1-d18742f83077": 2,
     "e1fd2a61-480e-3046-8f8b-b6a0b412460f": 0,
     "e2a8af80-cad2-39b8-a2dd-a3b9f4dde5e6": 0,
     "e3110aef-b131-304a-a257-499585947e3b": 0,
@@ -3272,12 +3249,14 @@
     "f2aefc70-1c9a-39b7-8ed8-af86a37aa3e1": 0,
     "f90b9c5a-047a-3134-bd52-b47daf01540c": 0,
     "fc46ffe4-0ed7-369c-940b-8e35515a8bb1": 0,
-    "fe6bb3cc-515b-3fbd-969e-1bc17d778fd3": 1.5,
+    "fe6bb3cc-515b-3fbd-969e-1bc17d778fd3": 2
+   },
+   "machineCounts": {
     "00dbd63c-0478-327b-84dc-12e43375d054": 0,
     "0da4e6a9-d9b9-31dd-b7e2-88b070c3f528": 0,
     "114ff202-19a8-3275-abab-8a3ef478efa5": 0,
     "1925daad-d02e-3700-bd3e-dcc1ae324ecf": 0,
-    "1b048efb-ce66-309a-8813-01332f2eba42": 154.8387144408292,
+    "1b048efb-ce66-309a-8813-01332f2eba42": 154.8387144408294,
     "1c1bc987-a192-3f3d-9659-5413fd1c2976": 0,
     "1e287ddd-b630-3627-a023-ad463ddad469": 0,
     "213c2ed1-05a9-337e-9856-265508ec83eb": 0,
@@ -3287,7 +3266,7 @@
     "2ede4e4d-0e60-382e-b145-376d7d27c9c1": 7.5,
     "327290e2-5317-3dcb-9c53-de1b8fe4ef0e": 0,
     "43932a79-9e5b-3d39-84bb-3a7653dc89d5": 0,
-    "43b9c7da-bc96-3734-a6b9-4fcaf71f65c3": 0.7575757575757576,
+    "43b9c7da-bc96-3734-a6b9-4fcaf71f65c3": 0.7575757575755999,
     "44651d86-b223-381e-8522-f037fcb9b133": 0,
     "451642d6-2f3f-350e-a286-adfb60a06e68": 0,
     "47c8538a-ab69-3cb1-a5b8-2d51b6d2d576": 0,
@@ -3307,9 +3286,86 @@
     "75abadaa-8a8f-3c54-8d48-f0629702408b": 0,
     "78297bae-5575-30b7-9cda-f3e9fb46c641": 0,
     "7a255dd8-fcb2-3108-bc71-252dab0dc18b": 0,
-    "7f2e9f89-8200-350d-aa5a-f67805a5d60d": 0
+    "7f2e9f89-8200-350d-aa5a-f67805a5d60d": 0,
+    "8038c90c-64ef-37ca-ba53-6cde00e3b409": 0,
+    "891a6072-b302-3491-8e71-c4f2db0fcc0e": 0,
+    "91c3e0b8-d90f-34dd-9acb-e445fd97af7e": 0,
+    "9d56eff9-1145-3e57-b02d-76e0f7561329": 0,
+    "9f7605a2-891b-3ad2-9016-6eafc50d94e9": 4,
+    "a935f09e-a985-3b4e-a2ae-9c39ad5bcf8a": 0,
+    "af7e0445-4b68-33a9-b04d-e564445aeb16": 0,
+    "b63e1cae-4d76-33aa-a343-fb1c9c21c8d4": 20,
+    "b70db116-1314-3bd1-9f5d-94ec767950a6": 0.75,
+    "bf16b30d-7dd3-3763-9e24-241e3340ab3e": 36.29032369706925,
+    "c2bd5b41-97b5-3e1e-a62c-ec2ec2d3b894": 0,
+    "c648f0a3-0109-391a-9043-c8d1d4dc9a43": 0,
+    "cb065c15-596c-33b5-baa1-d18742f83077": 25,
+    "e1fd2a61-480e-3046-8f8b-b6a0b412460f": 0,
+    "e2a8af80-cad2-39b8-a2dd-a3b9f4dde5e6": 0,
+    "e3110aef-b131-304a-a257-499585947e3b": 0,
+    "ec166cf6-2f2d-3e94-b834-2b2d5bbb3c2b": 0,
+    "f2aefc70-1c9a-39b7-8ed8-af86a37aa3e1": 0,
+    "f90b9c5a-047a-3134-bd52-b47daf01540c": 0,
+    "fc46ffe4-0ed7-369c-940b-8e35515a8bb1": 0,
+    "fe6bb3cc-515b-3fbd-969e-1bc17d778fd3": 1.5
    },
    "edgeFlowsPerSecond": {
+    "018f8122-4761-3caa-9c72-a7e89530c6aa": 0,
+    "01e8eedf-f951-3849-b027-e4d1ef58eb96": 0,
+    "06275046-aaeb-3b28-9fd6-03547a7324e8": 0,
+    "092e81c1-3fd7-3641-bf52-b596d76e43c7": 3,
+    "0a242ac7-cb4e-3b79-b2bb-a735cf9e045a": 0,
+    "0a4c1075-81c4-3a2e-8efc-c2aad7bf1462": 0,
+    "0b856f1a-46a7-312a-b936-0013d07ca250": 0,
+    "12b6b026-60ee-3b1a-8b1e-02f4e2d0f287": 0,
+    "15223a57-411b-38e2-8780-50728f2197a2": 0,
+    "15ff4177-651e-38a5-a047-9f6ffc2a929c": 0,
+    "195a5680-b315-32c7-8407-f0bd4b7f9c0d": 0,
+    "19e35837-87be-3bc2-82b2-8ed6dccbdcbd": 2000,
+    "1dd3d19d-73d6-3437-9b56-887da8ed6d30": 0,
+    "20e1b7a4-c6d2-33a5-a4e5-6f59c6ba661c": 0,
+    "21c285fc-d986-35c3-b058-737d0d1add39": 0,
+    "22b9b0bb-ffa0-32eb-b059-188552fbb580": 0,
+    "2777db24-9a9c-30b0-a121-3c52a76a40cd": 0,
+    "295b5d9e-6c91-3100-8b5d-48774fa2b265": 0,
+    "2a93255b-abdf-30fd-814e-db017f8691d6": 0.64516131017012,
+    "330a6bf3-120a-31e3-b7b0-357d740b7f97": 2,
+    "359309a8-c28a-3c1d-bfa3-8d3f5f822d0e": 0,
+    "37e0f726-8766-3725-bc15-d4b74af5917d": 6,
+    "3e36c3b2-b928-38ec-a0af-ad7712350793": 0,
+    "3f4df32e-3d51-3b40-83b9-adae2dd580f3": 0,
+    "403250bf-ba5e-34b6-8eb9-edebbc13863f": 0,
+    "4622cafa-01f8-3f21-839e-00231e8f3632": 0,
+    "467d670b-bbab-319c-93e2-9343a0615804": 0,
+    "499894b2-7d3e-3ed8-adea-dff384edc491": 0,
+    "4a443342-42bd-37e1-8f10-54c6d9e88d8d": 0,
+    "4aa674f2-1639-33ec-843b-0491c880585b": 0,
+    "50480494-63c2-3fde-815f-51f2d751b043": 0,
+    "5256c56e-f0ab-3961-9d7c-6d16a338295d": 0,
+    "541595d8-e065-3745-b42c-23b540e7ebe5": 999.9999999999997,
+    "59b05630-f1d2-3035-b352-1c85745ff2cc": 2000,
+    "5a7556eb-5a47-38b7-aa6e-2935dcba87b4": 0,
+    "5bcf33e1-0913-34ef-a96b-bf9e0a3cd2bd": 0,
+    "5be26bcc-cc45-3506-b9a5-43d5bccbbf7d": 2000,
+    "5db04057-41a3-356e-b781-79d42c606ed3": 0,
+    "5e50c0e9-d353-31ac-9601-a2504533482f": 0,
+    "62af3acc-8aef-3e42-ba6c-35565c049305": 0,
+    "6543dc8f-453a-39d5-b7c8-20db1becf504": 0,
+    "6602ac02-8bff-3369-a6e7-c281d16ade00": 0,
+    "66d7f0b2-c214-3ea1-96cd-619c2896af54": 0,
+    "69c83101-5e19-39df-961c-15faea9b385e": 0,
+    "6a2af693-6839-3e71-8328-a577ed1ea9c7": 0,
+    "6a42317f-3345-3b30-9af6-0c6862f19f91": 0,
+    "6a6bf6c3-9199-342c-b15d-4c4f234d7de6": 0,
+    "6a804c93-2cc8-3046-b324-4e88a578b4ab": 0.5,
+    "6ba0c444-9626-34ac-985c-ffbd7a311ea1": 0,
+    "73a022dd-bf23-3c06-8f05-0f7fa4a6610f": 0,
+    "744ece97-3eb7-36ed-9aeb-e05a98bbf933": 0,
+    "764764d8-db1a-3bf6-9687-e07f773effb4": 0,
+    "765c0cbc-f246-367d-8f4b-ab4fd3bab2d0": 0,
+    "772830bb-d409-3eac-8a24-94856bb5bc94": 499.9999999999998,
+    "7ad41d8a-bd40-3509-9135-3fbe5a9bf231": 0,
+    "7da0e51f-affe-3a09-a5c9-199117af3324": 0,
     "844b1889-d507-3000-a261-fc5b00fca117": 0,
     "848f84e3-65cc-35b0-a6e9-50f4ae23eb0d": 0,
     "84ac3e7e-61fb-329a-9188-f5bdaf2c2f47": 0,
@@ -3321,7 +3377,7 @@
     "8c1b58dd-308e-38b6-9ac8-0ccd4570b08c": 0,
     "8e187dbe-0df9-3282-b50e-bc8a5f0b0550": 0,
     "8eae122f-d60c-3b23-9f6f-4ac973a95fa7": 0,
-    "8fb82eb8-a0ac-331f-a5cf-30d758d47a1d": 500,
+    "8fb82eb8-a0ac-331f-a5cf-30d758d47a1d": 499.9999999999998,
     "9016a00e-4491-34f1-8473-0665e3bf855d": 0,
     "9042dc2e-f751-3c1c-a5c7-0bfdd10c9f1c": 0,
     "943b3518-961e-3f5c-bc82-0ef64ddd2deb": 0,
@@ -3332,18 +3388,18 @@
     "a2871cac-4e4e-3825-9708-9f830340112f": 0,
     "a42a1714-799a-38bd-ab24-f8aeff8dc91e": 0,
     "a4650220-d870-3eb2-871c-b11a58c4fba6": 0,
-    "a4d8afbb-2529-3dd6-adeb-3bd5e0da4c7d": 2.903225895765548,
+    "a4d8afbb-2529-3dd6-adeb-3bd5e0da4c7d": 2.90322589576555,
     "a59135e6-5648-39a7-b323-13387539e3d8": 0,
     "a9121e92-52c1-3ed0-85ea-d73c1eb3cbca": 2000,
     "aa23bb66-1929-37ac-8c3d-7951cb6358be": 0,
     "aef87f03-504f-3776-ace5-9e3c64e450e4": 0,
     "b0286da8-4b51-33e6-b766-64c0e2d422ae": 0,
     "b0d1296e-6a2c-392a-a068-372ddb8c695f": 0,
-    "b0d2489b-565b-37ee-a783-cfb2f6b64793": 2000,
+    "b0d2489b-565b-37ee-a783-cfb2f6b64793": 2000.000000000001,
     "b3b5b615-dd41-3a19-bf53-72d5bea44ded": 0,
     "b47c8315-9a6e-3752-86ff-6ec974f041b1": 0,
     "b52aebed-7003-3972-8e39-b9fc571861d8": 0,
-    "b5e03280-40d7-3df5-a835-75292e3424b7": 5.1612904813609735,
+    "b5e03280-40d7-3df5-a835-75292e3424b7": 5.16129048136098,
     "b5ea9d5a-7a8f-33b7-b704-c7df6ea8e7c4": 0,
     "b650fa7c-35dd-30b4-855a-42fa3dec23c8": 0,
     "b676e58f-2c52-3732-bd5e-5b659b906c3f": 0,
@@ -3378,63 +3434,7 @@
     "f8c98242-62ef-3819-b7f2-df5d6b85c2b7": 0,
     "fbf05fd6-029d-31c0-b999-6929b482c772": 0,
     "fdb24565-1dee-31eb-a5f7-42d895c4fb64": 0,
-    "ff2e04eb-3ba6-348c-b7d2-958a256b40c9": 0,
-    "018f8122-4761-3caa-9c72-a7e89530c6aa": 0,
-    "01e8eedf-f951-3849-b027-e4d1ef58eb96": 0,
-    "06275046-aaeb-3b28-9fd6-03547a7324e8": 0,
-    "092e81c1-3fd7-3641-bf52-b596d76e43c7": 3,
-    "0a242ac7-cb4e-3b79-b2bb-a735cf9e045a": 0,
-    "0a4c1075-81c4-3a2e-8efc-c2aad7bf1462": 0,
-    "0b856f1a-46a7-312a-b936-0013d07ca250": 0,
-    "12b6b026-60ee-3b1a-8b1e-02f4e2d0f287": 0,
-    "15223a57-411b-38e2-8780-50728f2197a2": 0,
-    "15ff4177-651e-38a5-a047-9f6ffc2a929c": 0,
-    "195a5680-b315-32c7-8407-f0bd4b7f9c0d": 0,
-    "19e35837-87be-3bc2-82b2-8ed6dccbdcbd": 2000,
-    "1dd3d19d-73d6-3437-9b56-887da8ed6d30": 0,
-    "20e1b7a4-c6d2-33a5-a4e5-6f59c6ba661c": 0,
-    "21c285fc-d986-35c3-b058-737d0d1add39": 0,
-    "22b9b0bb-ffa0-32eb-b059-188552fbb580": 0,
-    "2777db24-9a9c-30b0-a121-3c52a76a40cd": 0,
-    "295b5d9e-6c91-3100-8b5d-48774fa2b265": 0,
-    "2a93255b-abdf-30fd-814e-db017f8691d6": 0.6451613101701217,
-    "330a6bf3-120a-31e3-b7b0-357d740b7f97": 2,
-    "359309a8-c28a-3c1d-bfa3-8d3f5f822d0e": 0,
-    "37e0f726-8766-3725-bc15-d4b74af5917d": 6,
-    "3e36c3b2-b928-38ec-a0af-ad7712350793": 0,
-    "3f4df32e-3d51-3b40-83b9-adae2dd580f3": 0,
-    "403250bf-ba5e-34b6-8eb9-edebbc13863f": 0,
-    "4622cafa-01f8-3f21-839e-00231e8f3632": 0,
-    "467d670b-bbab-319c-93e2-9343a0615804": 0,
-    "499894b2-7d3e-3ed8-adea-dff384edc491": 0,
-    "4a443342-42bd-37e1-8f10-54c6d9e88d8d": 0,
-    "4aa674f2-1639-33ec-843b-0491c880585b": 0,
-    "50480494-63c2-3fde-815f-51f2d751b043": 0,
-    "5256c56e-f0ab-3961-9d7c-6d16a338295d": 0,
-    "541595d8-e065-3745-b42c-23b540e7ebe5": 1000,
-    "59b05630-f1d2-3035-b352-1c85745ff2cc": 2000,
-    "5a7556eb-5a47-38b7-aa6e-2935dcba87b4": 0,
-    "5bcf33e1-0913-34ef-a96b-bf9e0a3cd2bd": 0,
-    "5be26bcc-cc45-3506-b9a5-43d5bccbbf7d": 2000,
-    "5db04057-41a3-356e-b781-79d42c606ed3": 0,
-    "5e50c0e9-d353-31ac-9601-a2504533482f": 0,
-    "62af3acc-8aef-3e42-ba6c-35565c049305": 0,
-    "6543dc8f-453a-39d5-b7c8-20db1becf504": 0,
-    "6602ac02-8bff-3369-a6e7-c281d16ade00": 0,
-    "66d7f0b2-c214-3ea1-96cd-619c2896af54": 0,
-    "69c83101-5e19-39df-961c-15faea9b385e": 0,
-    "6a2af693-6839-3e71-8328-a577ed1ea9c7": 0,
-    "6a42317f-3345-3b30-9af6-0c6862f19f91": 0,
-    "6a6bf6c3-9199-342c-b15d-4c4f234d7de6": 0,
-    "6a804c93-2cc8-3046-b324-4e88a578b4ab": 0.5,
-    "6ba0c444-9626-34ac-985c-ffbd7a311ea1": 0,
-    "73a022dd-bf23-3c06-8f05-0f7fa4a6610f": 0,
-    "744ece97-3eb7-36ed-9aeb-e05a98bbf933": 0,
-    "764764d8-db1a-3bf6-9687-e07f773effb4": 0,
-    "765c0cbc-f246-367d-8f4b-ab4fd3bab2d0": 0,
-    "772830bb-d409-3eac-8a24-94856bb5bc94": 500,
-    "7ad41d8a-bd40-3509-9135-3fbe5a9bf231": 0,
-    "7da0e51f-affe-3a09-a5c9-199117af3324": 0
+    "ff2e04eb-3ba6-348c-b7d2-958a256b40c9": 0
    },
    "gatedSources": [
     {
@@ -3443,7 +3443,7 @@
       "portIndex": 1,
       "input": true
      },
-     "ratePerSecond": 903.2258957655474
+     "ratePerSecond": 903.2258957655504
     },
     {
      "port": {
@@ -3451,7 +3451,7 @@
       "portIndex": 0,
       "input": true
      },
-     "ratePerSecond": 500
+     "ratePerSecond": 499.9999999999999
     },
     {
      "port": {
@@ -3459,7 +3459,7 @@
       "portIndex": 1,
       "input": true
      },
-     "ratePerSecond": 1.3548386898298783
+     "ratePerSecond": 1.35483868982988
     }
    ],
    "gatedSinks": [
@@ -3477,7 +3477,7 @@
       "portIndex": 2,
       "input": false
      },
-     "ratePerSecond": 0.05050505050505439
+     "ratePerSecond": 0.050505050505
     },
     {
      "port": {
@@ -3493,7 +3493,7 @@
       "portIndex": 1,
       "input": false
      },
-     "ratePerSecond": 90.9090909090909
+     "ratePerSecond": 90.90909090909088
     }
    ],
    "terminalInputs": [
@@ -3570,8 +3570,8 @@
     "fc46ffe4-0ed7-369c-940b-8e35515a8bb1"
    ],
    "openGates": 7,
-   "externalQuantity": 1496.5403304149734,
-   "totalInternalFlow": 17029.209677687297,
+   "externalQuantity": 1496.5403304149759,
+   "totalInternalFlow": 17029.2096776873,
    "notes": [],
    "key": {
     "gateAnchors": [
@@ -3636,10 +3636,10 @@
           "portIndex": 1,
           "input": true
          },
-         "ratePerSecond": 903.2258957655474
+         "ratePerSecond": 903.2258957655504
         }
        ],
-       "max": 903.2258957655474,
+       "max": 903.2258957655504,
        "share": 1,
        "solverPick": true
       },
@@ -3650,7 +3650,7 @@
         "input": true
        },
        "flows": [],
-       "max": 0.6222222646077474,
+       "max": 0.62222226460775,
        "share": 0,
        "solverPick": false
       },
@@ -3661,7 +3661,7 @@
         "input": true
        },
        "flows": [],
-       "max": 0.654970813069061,
+       "max": 0.65497081306906,
        "share": 0,
        "solverPick": false
       }
@@ -3685,10 +3685,10 @@
           "portIndex": 1,
           "input": true
          },
-         "ratePerSecond": 1.3548386898298783
+         "ratePerSecond": 1.35483868982988
         }
        ],
-       "max": 1.3548386898298783,
+       "max": 1.35483868982988,
        "share": 1,
        "solverPick": true
       },
@@ -3699,7 +3699,7 @@
         "input": true
        },
        "flows": [],
-       "max": 4199.999809265137,
+       "max": 4199.999809265133,
        "share": 0,
        "solverPick": false
       },
@@ -3761,10 +3761,10 @@
           "portIndex": 1,
           "input": false
          },
-         "ratePerSecond": 90.9090909090909
+         "ratePerSecond": 90.90909090909088
         }
        ],
-       "max": 90.9090909090909,
+       "max": 90.90909090909088,
        "share": 1,
        "solverPick": true
       },
@@ -3775,7 +3775,7 @@
         "input": false
        },
        "flows": [],
-       "max": 0.6313131313131313,
+       "max": 0.63131313131313,
        "share": 0,
        "solverPick": false
       },
@@ -3786,7 +3786,7 @@
         "input": false
        },
        "flows": [],
-       "max": 0.6313131313131313,
+       "max": 0.63131313131313,
        "share": 0,
        "solverPick": false
       }
@@ -3810,10 +3810,10 @@
           "portIndex": 2,
           "input": false
          },
-         "ratePerSecond": 0.05050505050505439
+         "ratePerSecond": 0.050505050505
         }
        ],
-       "max": 0.05050505050505439,
+       "max": 0.050505050505,
        "share": 1,
        "solverPick": true
       }
@@ -3837,10 +3837,10 @@
           "portIndex": 0,
           "input": true
          },
-         "ratePerSecond": 500
+         "ratePerSecond": 499.9999999999999
         }
        ],
-       "max": 500,
+       "max": 499.9999999999999,
        "share": 1,
        "solverPick": true
       }
@@ -3878,7 +3878,7 @@
         "input": false
        },
        "flows": [],
-       "max": 3167.999999999997,
+       "max": 3168.000000000055,
        "share": 0,
        "solverPick": false
       },
@@ -3889,7 +3889,7 @@
         "input": false
        },
        "flows": [],
-       "max": 21.999999999999975,
+       "max": 22.00000000000002,
        "share": 0,
        "solverPick": false
       }
@@ -3996,7 +3996,7 @@
         "portIndex": 1,
         "input": true
        },
-       "ratePerSecond": 903.2258957655474
+       "ratePerSecond": 903.2258957655504
       }
      ],
      "rank": "DEFAULT"
@@ -4058,7 +4058,7 @@
         "portIndex": 0,
         "input": true
        },
-       "ratePerSecond": 0.6222222646077474
+       "ratePerSecond": 0.62222226460775
       }
      ],
      "rank": "BUYS_MORE"
@@ -4120,7 +4120,7 @@
         "portIndex": 1,
         "input": false
        },
-       "ratePerSecond": 2000
+       "ratePerSecond": 2000.000000000005
       }
      ],
      "rank": "BUYS_MORE"
@@ -4182,7 +4182,7 @@
         "portIndex": 0,
         "input": true
        },
-       "ratePerSecond": 0.654970813069061
+       "ratePerSecond": 0.65497081306906
       }
      ],
      "rank": "BUYS_MORE"
@@ -4244,7 +4244,7 @@
         "portIndex": 1,
         "input": true
        },
-       "ratePerSecond": 1.3548386898298783
+       "ratePerSecond": 1.35483868982988
       }
      ],
      "rank": "DEFAULT"
@@ -4306,7 +4306,7 @@
         "portIndex": 1,
         "input": true
        },
-       "ratePerSecond": 4199.999809265137
+       "ratePerSecond": 4199.999809265133
       }
      ],
      "rank": "BUYS_MORE"
@@ -4430,7 +4430,7 @@
         "portIndex": 0,
         "input": false
        },
-       "ratePerSecond": 4.421052486282305
+       "ratePerSecond": 4.4210524862823
       }
      ],
      "rank": "BUYS_MORE"
@@ -4492,7 +4492,7 @@
         "portIndex": 0,
         "input": false
        },
-       "ratePerSecond": 4.199999809265137
+       "ratePerSecond": 4.19999980926513
       }
      ],
      "rank": "BUYS_MORE"
@@ -4616,7 +4616,7 @@
         "portIndex": 1,
         "input": false
        },
-       "ratePerSecond": 90.9090909090909
+       "ratePerSecond": 90.90909090909088
       }
      ],
      "rank": "DEFAULT"
@@ -4678,7 +4678,7 @@
         "portIndex": 0,
         "input": false
        },
-       "ratePerSecond": 0.6313131313131313
+       "ratePerSecond": 0.63131313131313
       }
      ],
      "rank": "SELLS_MORE"
@@ -4740,7 +4740,7 @@
         "portIndex": 0,
         "input": false
        },
-       "ratePerSecond": 0.6313131313131313
+       "ratePerSecond": 0.63131313131313
       }
      ],
      "rank": "SELLS_MORE"
@@ -4802,7 +4802,7 @@
         "portIndex": 2,
         "input": false
        },
-       "ratePerSecond": 0.05050505050505439
+       "ratePerSecond": 0.050505050505
       }
      ],
      "rank": "DEFAULT"
@@ -4864,7 +4864,7 @@
         "portIndex": 0,
         "input": true
        },
-       "ratePerSecond": 500
+       "ratePerSecond": 499.9999999999999
       }
      ],
      "rank": "DEFAULT"
@@ -4988,7 +4988,7 @@
         "portIndex": 0,
         "input": false
        },
-       "ratePerSecond": 3167.999999999997
+       "ratePerSecond": 3168.000000000055
       }
      ],
      "rank": "BUYS_MORE"
@@ -5050,7 +5050,7 @@
         "portIndex": 0,
         "input": false
        },
-       "ratePerSecond": 21.999999999999975
+       "ratePerSecond": 22.00000000000002
       }
      ],
      "rank": "BUYS_MORE"
@@ -5112,7 +5112,7 @@
         "portIndex": 0,
         "input": true
        },
-       "ratePerSecond": 8.799999999999992
+       "ratePerSecond": 8.80000000000001
       }
      ],
      "rank": "BUYS_MORE"

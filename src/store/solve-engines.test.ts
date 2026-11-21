@@ -7,56 +7,42 @@ import { node, project, recipe, wire } from "@/lib/solver/plan/adapter/test-kit"
 import { settleSolveEngines } from "./solve-engines";
 
 /**
- * The solve Worker's engines (`solve-engines.ts`): where the core solves, a solve waits for it and HiGHS is never
- * fetched; where it does not (no WebAssembly GC, a failed or hung load) HiGHS loads; no wait is unbounded.
+ * The solve Worker's engine (`solve-engines.ts`): every solve waits for the compiled core, bounded; where it does not
+ * load in time the website's own engine answers and the page says solving is degraded (`solve-health.ts`).
  */
 vi.setConfig({ testTimeout: 60_000 });
 
 const never = () => new Promise<boolean>(() => {});
 
-describe("the engines a Worker solve waits for", () => {
+describe("the engine a Worker solve waits for", () => {
   afterEach(() => {
     vi.useRealTimers();
   });
 
-  it("waits for the core and never fetches HiGHS when the core solves", async () => {
-    const highs = vi.fn(async () => true);
-    expect(await settleSolveEngines({ core: async () => true, highs })).toBe("core");
-    expect(highs).not.toHaveBeenCalled();
+  it("waits for the core", async () => {
+    expect(await settleSolveEngines({ core: async () => true })).toBe("core");
   });
 
-  it("loads HiGHS when the core will not solve here (no WebAssembly GC, area off, load failed)", async () => {
-    const highs = vi.fn(async () => true);
-    expect(await settleSolveEngines({ core: async () => false, highs })).toBe("highs");
-    expect(highs).toHaveBeenCalledTimes(1);
+  it("answers on the homegrown simplex when the core will not solve here (area off, load failed)", async () => {
+    expect(await settleSolveEngines({ core: async () => false })).toBe("simplex");
   });
 
   it("treats a core load that throws as a failed load", async () => {
-    const highs = vi.fn(async () => true);
     expect(
-      await settleSolveEngines({ core: () => Promise.reject(new Error("fetch failed")), highs }),
-    ).toBe("highs");
+      await settleSolveEngines({ core: () => Promise.reject(new Error("fetch failed")) }),
+    ).toBe("simplex");
   });
 
-  it("stops waiting for a core load that never answers, then loads HiGHS", async () => {
+  it("stops waiting for a core load that never answers", async () => {
     vi.useFakeTimers();
-    const highs = vi.fn(async () => true);
-    const settled = settleSolveEngines({ core: never, highs, coreWaitMs: 10_000 });
-    await vi.advanceTimersByTimeAsync(9_999);
-    expect(highs).not.toHaveBeenCalled();
-    await vi.advanceTimersByTimeAsync(1);
-    expect(await settled).toBe("highs");
-  });
-
-  it("answers on the homegrown simplex when neither loads in time", async () => {
-    vi.useFakeTimers();
-    const settled = settleSolveEngines({
-      core: never,
-      highs: never,
-      coreWaitMs: 10,
-      highsWaitMs: 20,
+    let done = false;
+    const settled = settleSolveEngines({ core: never, coreWaitMs: 10_000 }).then((e) => {
+      done = true;
+      return e;
     });
-    await vi.advanceTimersByTimeAsync(30);
+    await vi.advanceTimersByTimeAsync(9_999);
+    expect(done).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
     expect(await settled).toBe("simplex");
   });
 });
@@ -72,16 +58,12 @@ function chain(): FactoryProject {
   });
 }
 
-type Reply = { key: string; result?: ThroughputResult; error?: string };
 
-/** The Worker module itself, in this thread, with HiGHS's loader observed and the core's warm-up as given. */
+type Reply = { key: string; result?: ThroughputResult; error?: string; engine?: string };
+
+/** The Worker module itself, in this thread, with the core's warm-up as given. */
 async function worker(warm?: () => Promise<boolean>) {
   vi.resetModules();
-  const initLpEngine = vi.fn(async () => true);
-  vi.doMock("@/lib/solver/lp-engine", async (original) => ({
-    ...(await original<typeof import("@/lib/solver/lp-engine")>()),
-    initLpEngine,
-  }));
   if (warm)
     vi.doMock("@/lib/core/solve-adopt", async (original) => ({
       ...(await original<typeof import("@/lib/core/solve-adopt")>()),
@@ -99,32 +81,72 @@ async function worker(warm?: () => Promise<boolean>) {
       reply = resolve;
       void scope.onmessage!({ data: { key: "k", project: p } } as MessageEvent);
     });
-  return { initLpEngine, send };
+  return { send };
 }
 
 describe("the solve Worker", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
-    vi.doUnmock("@/lib/solver/lp-engine");
     vi.doUnmock("@/lib/core/solve-adopt");
     vi.resetModules();
   });
 
-  it.skipIf(!present)("solves through the core without fetching HiGHS", async () => {
-    const { initLpEngine, send } = await worker();
+  it.skipIf(!present)("solves through the core and says so", async () => {
+    const { send } = await worker();
     const { solveEngine } = await import("@/lib/core/solve-adopt");
     const r = await send(chain());
     expect(r.error).toBeUndefined();
     expect(r.result!.nodes.p!.utilization).toBeGreaterThan(0);
     expect(solveEngine()).toBe("core");
-    expect(initLpEngine).not.toHaveBeenCalled();
+    expect(r.engine).toBe("core");
   });
 
-  it("still solves, with HiGHS, when the core fails to load", async () => {
-    const { initLpEngine, send } = await worker(async () => false);
-    const r = await send(chain());
+  it("still solves, on the website's own engine, when the core fails to load, and says so", async () => {
+    const { send } = await worker(async () => false);
+    // A core an earlier test loaded in this thread must not answer: the solve area off is a core that is not there.
+    const { setAdoptOverride } = await import("@/lib/core/adopt");
+    setAdoptOverride("solve", false);
+    const r = await send(chain()).finally(() => setAdoptOverride("solve", undefined));
     expect(r.error).toBeUndefined();
     expect(r.result!.nodes.p!.utilization).toBeGreaterThan(0);
-    expect(initLpEngine).toHaveBeenCalledTimes(1);
+    expect(r.engine).toBe("website");
+  });
+});
+
+describe("the page hears which engine solved", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.resetModules();
+  });
+
+  /** solve-books with a stand-in Worker that answers every plan with `engine`. */
+  async function booksAnswering(engine: string) {
+    vi.resetModules();
+    class AnsweringWorker {
+      onmessage: ((e: MessageEvent) => void) | null = null;
+      onerror: unknown = null;
+      postMessage(data: { key: string }) {
+        queueMicrotask(() =>
+          this.onmessage?.({
+            data: { key: data.key, result: { nodes: {}, storages: {}, edges: {} }, engine },
+          } as MessageEvent),
+        );
+      }
+    }
+    vi.stubGlobal("Worker", AnsweringWorker);
+    const books = await import("./solve-books");
+    const health = await import("./solve-health");
+    return { solveBooks: books.solveBooks, health };
+  }
+
+  it("a reply from the stand-in marks solving degraded, and one from the core clears it", async () => {
+    const plan = { ...chain(), planMode: true };
+    const stand = await booksAnswering("website");
+    stand.solveBooks(plan);
+    await vi.waitFor(() => expect(stand.health.isSolveDegraded()).toBe(true));
+    const core = await booksAnswering("core");
+    core.health.setSolveDegraded(true);
+    core.solveBooks({ ...plan, id: "other" });
+    await vi.waitFor(() => expect(core.health.isSolveDegraded()).toBe(false));
   });
 });

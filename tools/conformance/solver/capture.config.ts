@@ -1,6 +1,6 @@
 // Runs the website's test suite and the reference plans with capture-setup.ts recording every plan-solver input
-// (tools/conformance/solver/generate.mjs). The two files that replay recorded answers are left out: they would only
-// record the cases again.
+// (tools/conformance/solver/generate.mjs). The files that replay recorded inputs are left out: they would only record
+// the cases again, under other names.
 import path from "node:path";
 import { defineConfig } from "vitest/config";
 
@@ -23,6 +23,8 @@ export default defineConfig({
       "**/*.local.test.*",
       "src/lib/solver/plan/parity/up-to-export.test.ts",
       "src/lib/solver/plan/__fixtures__/website-cases.test.ts",
+      "src/lib/core/solve-through-core.test.ts",
+      "src/lib/core/solve-js.test.ts",
     ],
     setupFiles: [path.resolve(__dirname, "capture-setup.ts")],
     testTimeout: 600_000,

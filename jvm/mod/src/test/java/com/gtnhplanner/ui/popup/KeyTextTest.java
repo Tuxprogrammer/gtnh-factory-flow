@@ -10,8 +10,8 @@ class KeyTextTest {
     @Test
     void padKeysWithNoCharacterTypeWhatTheyPrint() {
         final int[] digits = { Keyboard.KEY_NUMPAD0, Keyboard.KEY_NUMPAD1, Keyboard.KEY_NUMPAD2, Keyboard.KEY_NUMPAD3,
-            Keyboard.KEY_NUMPAD4, Keyboard.KEY_NUMPAD5, Keyboard.KEY_NUMPAD6, Keyboard.KEY_NUMPAD7, Keyboard.KEY_NUMPAD8,
-            Keyboard.KEY_NUMPAD9 };
+            Keyboard.KEY_NUMPAD4, Keyboard.KEY_NUMPAD5, Keyboard.KEY_NUMPAD6, Keyboard.KEY_NUMPAD7,
+            Keyboard.KEY_NUMPAD8, Keyboard.KEY_NUMPAD9 };
         for (int d = 0; d < digits.length; d++) assertEquals((char) ('0' + d), KeyText.typed((char) 0, digits[d]));
         assertEquals('.', KeyText.typed((char) 0, Keyboard.KEY_DECIMAL));
         assertEquals('+', KeyText.typed((char) 0, Keyboard.KEY_ADD));

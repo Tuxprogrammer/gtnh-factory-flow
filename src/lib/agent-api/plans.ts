@@ -6,10 +6,10 @@ import { describeCard, planCard, type PlannedCard } from "./cards";
 import { agentDatasetVersion, loadRecipe, resolveResource, withDataset } from "./dataset";
 import { createDraft, draftExpiresAt, getDraft, touchDraft, type Draft, type DraftTarget } from "./drafts";
 import { AgentApiError } from "./errors";
+import { draftCardCap, importedCarrier, importedPins } from "./imported";
 import { arrangeDraft } from "./layout";
 import { fitList, jsonBytes, RESPONSE_AIM_BYTES } from "./size";
 import {
-  MAX_DRAFT_CARDS,
   type draftTarget,
   type plansAddCardsRequest,
   type plansAddCardsResponse,
@@ -45,9 +45,11 @@ export function targetCards(draft: Draft): Map<string, string> {
       );
     };
     const carrier =
-      draft.project.nodes.find((node) => makes(node, true)) ?? draft.project.nodes.find((node) => makes(node, false));
+      importedCarrier(draft, makeResourceKey(target.kind, target.id)) ??
+      (draft.project.nodes.find((node) => makes(node, true)) ?? draft.project.nodes.find((node) => makes(node, false)))
+        ?.id;
     if (carrier) {
-      carriers.set(makeResourceKey(target.kind, target.id), carrier.id);
+      carriers.set(makeResourceKey(target.kind, target.id), carrier);
     }
   }
   return carriers;
@@ -73,7 +75,9 @@ export function applyTargets(draft: Draft): void {
   draft.project = {
     ...draft.project,
     nodes: draft.project.nodes.map((node) => {
-      const portRates = rates.get(node.id);
+      const pinned = importedPins(draft, node.id);
+      const own = rates.get(node.id);
+      const portRates = own || pinned ? { ...pinned, ...own } : undefined;
       if (portRates) {
         return { ...node, portRates };
       }
@@ -122,10 +126,10 @@ export async function addCards(
 ): Promise<z.infer<typeof plansAddCardsResponse>> {
   const draft = getDraft(body.planId);
   const tooBig = () => {
-    if (draft.project.nodes.length + body.cards.length > MAX_DRAFT_CARDS) {
+    if (draft.project.nodes.length + body.cards.length > draftCardCap(draft)) {
       throw new AgentApiError(
         "plan_too_big",
-        `A draft holds at most ${MAX_DRAFT_CARDS} cards; this one has ${draft.project.nodes.length}.`,
+        `A draft holds at most ${draftCardCap(draft)} cards; this one has ${draft.project.nodes.length}.`,
       );
     }
   };

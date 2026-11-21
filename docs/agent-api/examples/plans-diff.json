@@ -1,0 +1,23 @@
+{
+  "endpoint": "plans/diff",
+  "request": {
+    "planId": "x24adwxjfr5dsv458t6g",
+    "player": {
+      "name": "Steve",
+      "uuid": "00000000-0000-4000-8000-000000000000"
+    }
+  },
+  "status": 200,
+  "response": {
+    "proposalId": "pt6ztd2jjkz5p79t",
+    "basePlanId": "21cac124-0e86-4139-b108-9859d0529c11",
+    "expiresAt": "2026-12-21T21:46:39.410Z",
+    "summary": {
+      "addedCards": 1,
+      "addedWires": 1,
+      "addedDrawers": 0,
+      "changedTargets": 0
+    },
+    "text": "Adds 1 card (Bending Machine: Titanium Foil c2), 1 wire."
+  }
+}

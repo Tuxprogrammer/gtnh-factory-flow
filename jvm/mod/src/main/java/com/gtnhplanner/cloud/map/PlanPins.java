@@ -45,7 +45,7 @@ public final class PlanPins {
     /** A website machine the board has no card of: its pins kept on the board under this prefix. */
     static final String SITE = "site:";
     private static final String MACHINE = "machine:", POWER = "power:", COIL = "machine:coil",
-        SITE_COIL = "heatingCoil", OPTION = "machine:machine:";
+        SITE_COIL = "heatingCoil", OPTION = "machine:machine:", READING = "reading:";
 
     private PlanPins() {}
 
@@ -127,7 +127,8 @@ public final class PlanPins {
 
     @Nullable
     private static String sitePowerControl(final String control) {
-        return control.startsWith(POWER) ? control.substring(POWER.length()) : null;
+        return control.startsWith(POWER) ? control.substring(POWER.length())
+            : control.startsWith(READING) ? control : null;
     }
 
     /**
@@ -153,7 +154,8 @@ public final class PlanPins {
                 }
                 final boolean power = key.startsWith(POWER);
                 final List<String> board = new ArrayList<>();
-                for (final String c : controls) board.add(power ? POWER + c : boardControl(c));
+                for (final String c : controls)
+                    board.add(power ? c.startsWith(READING) ? c : POWER + c : boardControl(c));
                 for (final String b : boardKeys) pins.putIfAbsent(b, new ArrayList<>(board));
             }
         for (final Map.Entry<String, List<String>> e : had.entrySet()) {

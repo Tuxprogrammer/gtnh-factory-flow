@@ -85,8 +85,9 @@ final class PasswordField extends Widget<PasswordField> implements Interactable,
             if (paste != null) for (final char c : paste.toCharArray()) add(c);
             return Result.SUCCESS;
         }
-        if (typedChar >= ' ' && typedChar != 127) {
-            add(typedChar);
+        final char typed = com.gtnhplanner.ui.popup.KeyText.typed(typedChar, keyCode);
+        if (typed != 0) {
+            add(typed);
             return Result.SUCCESS;
         }
         return Result.IGNORE;

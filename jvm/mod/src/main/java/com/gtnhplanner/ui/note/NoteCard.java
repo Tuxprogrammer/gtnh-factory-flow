@@ -23,6 +23,7 @@ import com.gtnhplanner.data.flowchart.Note;
 import com.gtnhplanner.ui.BoardSession;
 import com.gtnhplanner.ui.canvas.BoardCanvas;
 import com.gtnhplanner.ui.note.DrawingGrips.Grip;
+import com.gtnhplanner.ui.popup.KeyText;
 import com.gtnhplanner.ui.popup.PickList;
 import com.gtnhplanner.ui.popup.Popup;
 import com.gtnhplanner.ui.popup.Tip;
@@ -1119,7 +1120,8 @@ public final class NoteCard extends Widget<NoteCard> implements Interactable, ID
             }
             return Result.SUCCESS;
         }
-        if (typedChar != 0 && ChatAllowedCharacters.isAllowedCharacter(typedChar)) insert(String.valueOf(typedChar));
+        final char typed = KeyText.typed(typedChar, keyCode);
+        if (typed != 0 && ChatAllowedCharacters.isAllowedCharacter(typed)) insert(String.valueOf(typed));
         // Every key stays with the note while it is being written on (Delete must not delete the selection).
         return Result.SUCCESS;
     }

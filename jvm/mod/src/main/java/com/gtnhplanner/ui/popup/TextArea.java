@@ -283,7 +283,8 @@ public final class TextArea extends Widget<TextArea> implements Interactable, IF
             }
             return Result.SUCCESS;
         }
-        if (typedChar != 0 && ChatAllowedCharacters.isAllowedCharacter(typedChar)) insert(String.valueOf(typedChar));
+        final char typed = KeyText.typed(typedChar, keyCode);
+        if (typed != 0 && ChatAllowedCharacters.isAllowedCharacter(typed)) insert(String.valueOf(typed));
         // Every key stays here while writing (the planner's own keys must not act on it).
         return Result.SUCCESS;
     }

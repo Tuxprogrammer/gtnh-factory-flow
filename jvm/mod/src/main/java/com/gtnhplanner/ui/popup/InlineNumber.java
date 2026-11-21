@@ -96,9 +96,13 @@ public final class InlineNumber {
 
     /** A key while editing; always taken, so nothing else on the board acts on it. */
     public void keyPressed(final char typed, final int code) {
+        keyPressed(typed, code, GuiScreen.isCtrlKeyDown(), GuiScreen.isShiftKeyDown());
+    }
+
+    /** {@link #keyPressed(char, int)} with the modifiers given, so a test needs no keyboard. */
+    void keyPressed(final char typed, final int code, final boolean ctrl, final boolean shift) {
         if (key == null) return;
         since = System.currentTimeMillis();
-        final boolean ctrl = GuiScreen.isCtrlKeyDown(), shift = GuiScreen.isShiftKeyDown();
         switch (code) {
             case Keyboard.KEY_RETURN, Keyboard.KEY_NUMPADENTER -> commit();
             case Keyboard.KEY_ESCAPE -> cancel();
@@ -119,7 +123,10 @@ public final class InlineNumber {
                     anchor = 0;
                     caret = draft.length();
                 } else if (ctrl && code == Keyboard.KEY_V) insert(clean(GuiScreen.getClipboardString()));
-                else if (!ctrl && allowed(typed)) insert(String.valueOf(typed));
+                else if (!ctrl) {
+                    final char c = KeyText.typed(typed, code);
+                    if (allowed(c)) insert(String.valueOf(c));
+                }
             }
         }
     }

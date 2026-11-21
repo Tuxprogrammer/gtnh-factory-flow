@@ -7,7 +7,9 @@ import org.teavm.jso.JSExport;
 import com.gtnhplanner.core.machines.GameRates;
 import com.gtnhplanner.machines.BeeReadout;
 import com.gtnhplanner.machines.CropReadout;
+import com.gtnhplanner.machines.web.MachineControls;
 import com.gtnhplanner.machines.web.MachineReadout;
+import com.gtnhplanner.machines.web.MachineTable;
 
 /**
  * core-machines for JavaScript: the machine table's maths over a recipe on a node, a bee card and a crop card, each as
@@ -97,5 +99,28 @@ public final class MachinesExports {
     @JSExport
     public static String machinesCropReadout(final String caseJson) {
         return CropReadout.read(caseJson);
+    }
+
+    /**
+     * The EU discount factor the machine table gives a machine at a heating-coil tier (0 is cupronickel) on an EV hatch
+     * with no recipe: the coil machines' {@code power} coefficient, 1 for a machine without one. The coil discounts are
+     * the game's powInt, so the conformance run holds them to the game's doubles (coke-oven-discount.json).
+     */
+    @JSExport
+    public static double machinesTablePower(final String machine, final int coilTier) {
+        final MachineTable.Behaviour b = MachineTable.behaviour(machine);
+        if (b == null) return 1;
+        return MachineTable.resolve(
+            b.power,
+            new MachineTable.Context(
+                id -> MachineControls.COIL.equals(id) ? coilTier : 0,
+                id -> 0,
+                4,
+                null,
+                null,
+                null,
+                null,
+                null),
+            1);
     }
 }

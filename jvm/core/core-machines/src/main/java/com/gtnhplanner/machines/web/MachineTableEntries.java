@@ -6,6 +6,7 @@ import static com.gtnhplanner.machines.web.MachineTable.*;
 import java.util.Map;
 
 import com.gtnhplanner.core.base.ExactMath;
+import com.gtnhplanner.core.base.GameMath;
 import com.gtnhplanner.core.base.Roots;
 import com.gtnhplanner.core.machines.AlgaePond;
 
@@ -144,7 +145,7 @@ final class MachineTableEntries {
                 .parallels(256)
                 .fullPowerPool()
                 .unlimitedTierSkip()
-                .power(c -> ExactMath.pow(0.9, c.tier(COIL) + 1)));
+                .power(c -> GameMath.powInt(0.9, c.tier(COIL) + 1)));
         // MTEIndustrialAlloySmelter: mLevel = coil tier + 1; one perfect heat step per 900 K with no EU discount.
         machines.put(
             "Zyngen",
@@ -169,7 +170,7 @@ final class MachineTableEntries {
                 .unlimitedTierSkip()
                 .speed(c -> 1 / (1 - 0.05 * Math.max(0, c.tier(COIL) - 3)))
                 .power(
-                    c -> ExactMath.pow(
+                    c -> GameMath.powInt(
                         0.95,
                         Math.max(
                             0,
@@ -179,14 +180,14 @@ final class MachineTableEntries {
             "Large Fluid Extractor",
             machine().overclock(normal())
                 .speed(c -> 1.5 + c.tier(COIL) * 0.1)
-                .power(c -> 0.8 * ExactMath.pow(0.9, c.tier(COIL)))
+                .power(c -> 0.8 * GameMath.powInt(0.9, c.tier(COIL)))
                 .parallels(c -> (c.tier(SOLENOID) + 2) * 8));
         // MTEIndustrialThermalCentrifuge: 8 per voltage tier plus 2 per solenoid voltage tier (MV solenoid = 2).
         machines.put(
             "Large Thermal Refinery",
             machine().overclock(normal())
                 .speed(c -> 2.5 + 0.05 * c.tier(COIL))
-                .power(c -> 0.8 * ExactMath.pow(0.95, c.tier(COIL)))
+                .power(c -> 0.8 * GameMath.powInt(0.95, c.tier(COIL)))
                 .parallels(c -> c.voltageTier * 8 + (c.tier(SOLENOID) + 2) * 2)
                 // Its dataset handler has no solenoid knob either.
                 .controls(SOLENOID_CONTROL));
@@ -592,7 +593,7 @@ final class MachineTableEntries {
             "Industrial Coke Oven",
             machine().aliases("Coke Oven")
                 .overclock(c -> c.value(COKE_SLICES) > 0 ? normal() : none())
-                .power(c -> ExactMath.pow(0.98, c.tier(COIL) + 1))
+                .power(c -> GameMath.powInt(0.98, c.tier(COIL) + 1))
                 .parallels(c -> {
                     final double slices = c.value(COKE_SLICES);
                     // No slices control: the Railcraft brick Coke Oven through the legacy alias, one op at a time.

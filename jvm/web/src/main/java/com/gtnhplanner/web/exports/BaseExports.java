@@ -10,6 +10,7 @@ import org.teavm.jso.JSObject;
 
 import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.base.Float32;
+import com.gtnhplanner.core.base.GameMath;
 import com.gtnhplanner.core.base.JsMath;
 import com.gtnhplanner.core.base.NumberText;
 import com.gtnhplanner.core.base.Uuid;
@@ -126,6 +127,12 @@ public final class BaseExports {
         } catch (final IllegalArgumentException e) {
             return "IllegalArgumentException";
         }
+    }
+
+    /** core-base's GameMath.powInt: the game's power by squaring, held to the game's own doubles by the conformance run. */
+    @JSExport
+    public static double gamePowInt(final double base, final int exp) {
+        return GameMath.powInt(base, exp);
     }
 
     /**

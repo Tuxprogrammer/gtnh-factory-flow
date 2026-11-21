@@ -38,6 +38,7 @@ import {
 import { getVatControls, getVatGateReason } from "./bacterial-vat";
 import { EEC_CONTROLS, EEC_MODE } from "./extreme-entity-crusher";
 import { neutronActivatorSpeed, quantiseNeutronActivatorDuration } from "./neutron-activator";
+import { powInt } from "./game-math";
 import { quantiseSteamMultiblockDuration } from "./steam-multiblock";
 import { HILE_SOURCE_CONTROL, hileSourceAt, normalizeHileSettings } from "./hile";
 import { PRASS_NORMAL_CASING, PRASS_PRECISE_CASING, PRASS_MACHINE_CASING, prassInputVoltageLimit } from "./precise-assembler";
@@ -789,7 +790,7 @@ const MACHINES: Record<string, MachineBehaviour> = {
     unlimitedTierSkip: true,
     // Unlike the small cracker's additive, capped discount, the mega compounds
     // 10% per coil tier with no cap: MTEMegaOilCracker.getEuModifier.
-    power: (c) => Math.pow(0.9, c.tier(COIL) + 1),
+    power: (c) => powInt(0.9, c.tier(COIL) + 1),
   },
   Zyngen: {
     // MTEIndustrialAlloySmelter: mLevel = coil tier + 1 (cupronickel = 1); the
@@ -819,13 +820,13 @@ const MACHINES: Record<string, MachineBehaviour> = {
     // tier above the RECIPE's own voltage tier, never a penalty.
     speed: (c) => 1 / (1 - 0.05 * Math.max(0, c.tier(COIL) - 3)),
     power: (c) =>
-      Math.pow(0.95, Math.max(0, c.tier(COIL) + 1 - (c.recipeVoltageTier ?? c.voltageTier))),
+      powInt(0.95, Math.max(0, c.tier(COIL) + 1 - (c.recipeVoltageTier ?? c.voltageTier))),
     note: "Assumes a matching glass tier.",
   },
   "Large Fluid Extractor": {
     overclock: OVERCLOCK.normal(),
     speed: (c) => 1.5 + c.tier(COIL) * 0.1,
-    power: (c) => 0.8 * Math.pow(0.9, c.tier(COIL)),
+    power: (c) => 0.8 * powInt(0.9, c.tier(COIL)),
     parallels: (c) => (c.tier(SOLENOID) + 2) * 8,
   },
   "Large Thermal Refinery": {
@@ -834,7 +835,7 @@ const MACHINES: Record<string, MachineBehaviour> = {
     // 0.8 x 0.95^coilTier EU, 8 per voltage tier plus 2 per solenoid voltage
     // tier (MV solenoid = 2).
     speed: (c) => 2.5 + 0.05 * c.tier(COIL),
-    power: (c) => 0.8 * Math.pow(0.95, c.tier(COIL)),
+    power: (c) => 0.8 * powInt(0.95, c.tier(COIL)),
     parallels: (c) => c.voltageTier * 8 + (c.tier(SOLENOID) + 2) * 2,
     // Its dataset handler has no solenoid knob either.
     controls: [SOLENOID_CONTROL],
@@ -1256,7 +1257,7 @@ const MACHINES: Record<string, MachineBehaviour> = {
     overclock: (c) => c.value(COKE_SLICES) > 0 ? OVERCLOCK.normal() : OVERCLOCK.none(),
     // Coils are a 2% EU discount each, compounding, and nothing else:
     // MTEIndustrialCokeOven bills 0.98^(coil tier + 1), cupronickel included.
-    power: (c) => 0.98 ** (c.tier(COIL) + 1),
+    power: (c) => powInt(0.98, c.tier(COIL) + 1),
     parallels: (c) => {
       const slices = c.value(COKE_SLICES);
       if (slices === 0) {

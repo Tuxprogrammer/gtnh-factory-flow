@@ -12,6 +12,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { gunzipSync } from "node:zlib";
 import { sampleOf } from "./sample.mjs";
+import { bitsOf, fromBits } from "./compare.mjs";
 
 const ROOT = fileURLToPath(new URL("../../", import.meta.url));
 const lines = (rel) =>
@@ -196,7 +197,31 @@ function closeCrop(w, g) {
   return Math.abs(w - g) <= 1e-9 * Math.max(1, Math.abs(w));
 }
 
+// ---- the game's powInt, and the coil discounts taken with it
+
+/**
+ * conformance/machines/coke-oven-discount.json: GTUtility.powInt's doubles from the JVM. The helper itself over every
+ * base and exponent in the file (core-base's GameMath through BaseExports), then the Industrial Coke Oven's discount at
+ * coil tiers 1 to 14 through the machine table (MachinesExports), and the one huge total they change. All bit for bit.
+ */
+export function runCokeOvenDiscount(api, tally) {
+  const golden = JSON.parse(readFileSync(path.join(ROOT, "conformance/machines/coke-oven-discount.json"), "utf8"));
+  for (const [baseHex, exp, answer] of golden.powInt) {
+    const got = bitsOf(api.BaseExports.gamePowInt(fromBits(baseHex), exp));
+    tally.check("machines/pow-int", got === answer, () => `powInt(${baseHex}, ${exp}): ${got} (game ${answer})`);
+  }
+  for (const [tier, answer] of golden.cokeOvenDiscount) {
+    const got = bitsOf(api.MachinesExports.machinesTablePower("Industrial Coke Oven", tier - 1));
+    tally.check("machines/coke-oven-discount", got === answer, () => `tier ${tier}: ${got} (game ${answer})`);
+  }
+  const t = golden.total;
+  const modifier = api.MachinesExports.machinesTablePower("Industrial Coke Oven", t.coilTier - 1);
+  const euPerTick = Math.ceil(t.eut * t.parallels * modifier * 4 ** t.overclocks);
+  tally.check("machines/coke-oven-discount", euPerTick === t.euPerTick, () => `total ${euPerTick} EU/t (game ${t.euPerTick})`);
+}
+
 export function runMachines(api, tally, { every = 1 } = {}) {
+  runCokeOvenDiscount(api, tally);
   runMachineGoldens(api, tally, { every });
   runBeeGoldens(api, tally, { every });
   runCropGoldens(api, tally, { every });

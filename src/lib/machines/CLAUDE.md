@@ -17,6 +17,10 @@ computes in float: replicate it.
   their `voltageTier + 1` is our ordinal), and their `speed` is throughput (ours is a
   duration multiplier, `1 / speed`). `machine-table.test.ts` checks every entry against
   `conformance/machines/reference-coefficients.json` and says how to regenerate it; run it.
+- A heating-coil discount (`0.98^tier` on the Industrial Coke Oven, the 0.9 and 0.95 ones on the Mega Oil Cracker,
+  Mega Alloy Blast Smelter, Large Fluid Extractor and Large Thermal Refinery) is the game's `GTUtility.powInt`, a
+  power by squaring (`game-math.ts`, Java `GameMath`), never `Math.pow` or `**`: they differ in the last digit, which
+  shows as 1 EU/t at hundreds of millions. `coke-oven-discount.json` holds the game's doubles.
 - `ctx.tier(id)` is an option's position; `ctx.value(id)` is the number behind a count
   knob. Formulas that read a count must use `value`.
 - A table machine that declares `speed` or `power` seeds from the recipe's base stats

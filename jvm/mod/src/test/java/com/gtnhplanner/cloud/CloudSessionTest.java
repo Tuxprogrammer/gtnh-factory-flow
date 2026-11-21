@@ -451,6 +451,128 @@ class CloudSessionTest {
         assertFalse(session.undo(undone), "nothing more of the player's own");
     }
 
+    /** The wires of a plan that end at no card or drawer of it. */
+    private static List<String> dangling(final JsonObject plan) {
+        final java.util.Set<String> ends = com.gtnhplanner.cloud.sync.LiveOps.ends(plan);
+        final List<String> out = new ArrayList<>();
+        for (final JsonElement e : plan.getAsJsonArray("edges")) {
+            final JsonObject o = e.getAsJsonObject();
+            if (!ends.contains(
+                o.get("source")
+                    .getAsString())
+                || !ends.contains(
+                    o.get("target")
+                        .getAsString()))
+                out.add(
+                    o.get("id")
+                        .getAsString());
+        }
+        return out;
+    }
+
+    /** What another player's delete of a card sends: the card and every wire the plan has on it. */
+    private static JsonArray deletion(final JsonObject plan, final Uuid card) {
+        final JsonArray ops = new JsonArray();
+        for (final JsonElement e : plan.getAsJsonArray("edges")) {
+            final JsonObject o = e.getAsJsonObject();
+            if (card.toString()
+                .equals(
+                    o.get("source")
+                        .getAsString())
+                || card.toString()
+                    .equals(
+                        o.get("target")
+                            .getAsString()))
+                ops.add(
+                    LiveOp.del(
+                        "edges",
+                        o.get("id")
+                            .getAsString())
+                        .toJson());
+        }
+        ops.add(
+            LiveOp.del("nodes", card.toString())
+                .toJson());
+        return ops;
+    }
+
+    /** A wire of the board put again under a new id: a new wire to the same card. */
+    private static Uuid rewire(final Graph board, final com.gtnhplanner.data.flowchart.Edge old) {
+        final com.gtnhplanner.data.flowchart.Edge wire = new com.gtnhplanner.data.flowchart.Edge(
+            Uuid.randomUUID(),
+            old.sourceNodeId,
+            old.targetNodeId,
+            old.sourceOutputIndex,
+            old.targetInputIndex);
+        board.removeEdge(old.id);
+        board.addEdge(wire);
+        return wire.id;
+    }
+
+    @Test
+    void aCardTheWebsiteDeletedGetsNoWireFromTheModWhicheverComesFirst() {
+        // The website's delete lands first, while the board still shows the card: the wire made to it is never sent.
+        inAccount("d1", "glass");
+        Plan p = begin();
+        Graph board = open(p, ME + ":d1");
+        final com.gtnhplanner.data.flowchart.Edge old = board.getEdges()
+            .iterator()
+            .next();
+        host.busy = true;
+        live.others(ME + ":d1", deletion(live.plans.get(ME + ":d1"), old.targetNodeId));
+        tickUntil(
+            "landed on the live copy",
+            () -> session.doc(ME + ":d1")
+                .behind());
+        final Uuid wire = rewire(board, old);
+        board.touchLayout();
+        host.busy = false;
+        tickUntil("read once at rest", () -> slot(p, ME + ":d1") != board);
+        ticks(20);
+        final JsonObject plan = live.plans.get(ME + ":d1");
+        assertEquals(List.of(), dangling(plan), "no wire to the deleted card");
+        assertFalse(
+            plan.toString()
+                .contains(wire.toString()),
+            "the wire to the deleted card was never sent");
+        assertFalse(slot(p, ME + ":d1").nodes.containsKey(old.targetNodeId), "the board follows the website's delete");
+        assertFalse(
+            slot(p, ME + ":d1").getEdges()
+                .stream()
+                .anyMatch(e -> e.targetNodeId.equals(old.targetNodeId)),
+            "and has no wire to it");
+    }
+
+    @Test
+    void aWireTheModSentBeforeTheWebsitesDeleteIsDeletedWithTheCard() {
+        // The wire lands first and the website's delete (made without it) after: catching up deletes the wire.
+        inAccount("d1", "glass");
+        final Plan p = begin();
+        final Graph board = open(p, ME + ":d1");
+        final LiveDoc doc = session.doc(board);
+        final com.gtnhplanner.data.flowchart.Edge old = board.getEdges()
+            .iterator()
+            .next();
+        final JsonArray theirs = deletion(live.plans.get(ME + ":d1"), old.targetNodeId);
+        final long seq = live.seqs.get(ME + ":d1");
+        final Uuid wire = rewire(board, old);
+        board.touchLayout();
+        session.save(p);
+        tickUntil("the room applied it", () -> live.seqs.get(ME + ":d1") > seq && !doc.waiting());
+        assertTrue(
+            live.plans.get(ME + ":d1")
+                .toString()
+                .contains(wire.toString()),
+            "the wire went up");
+        live.others(ME + ":d1", theirs);
+        assertEquals(List.of(wire.toString()), dangling(live.plans.get(ME + ":d1")), "the delete left it dangling");
+        tickUntil("the wire is deleted", () -> dangling(live.plans.get(ME + ":d1")).isEmpty());
+        tickUntil("the board is read", () -> slot(p, ME + ":d1") != board);
+        assertFalse(slot(p, ME + ":d1").nodes.containsKey(old.targetNodeId));
+        assertFalse(slot(p, ME + ":d1").edges.containsKey(wire));
+        assertEquals(List.of(), dangling(live.plans.get(ME + ":d1")));
+    }
+
     @Test
     void aRenameHoldsBothWays() {
         inAccount("d1", "sulfuric-acid");

@@ -95,6 +95,7 @@ final class PlanWrite {
      */
     private JsonObject carried(final JsonObject out) {
         final JsonObject plan = PlanExport.carried(out, graph);
+        registerShown(plan);
         for (final String c : LiveOps.COLLECTIONS) {
             for (final JsonObject thing : PlanRead.objects(plan, c)) {
                 final JsonElement ext = thing.get("gtnhplanner");
@@ -106,6 +107,31 @@ final class PlanWrite {
         if (ext != null && ext.isJsonObject()) ext.getAsJsonObject()
             .addProperty("sum", PlanRead.metaSum(plan));
         return plan;
+    }
+
+    /**
+     * The display-only cards a new plan went up with, as things of the plan the board holds: a later write then moves
+     * one where the board moved it, and deletes it (with its recipe and wires) where the board deleted it. A card in a
+     * group is named after the group's id in this plan (the file's spelling of it is the file's).
+     */
+    private void registerShown(final JsonObject plan) {
+        final Map<String, JsonObject> cards = new LinkedHashMap<>();
+        for (final JsonObject c : PlanRead.objects(plan, "nodes")) {
+            final String id = PlanRead.str(c, "id");
+            if (id != null) cards.put(id, c);
+        }
+        for (final com.gtnhplanner.data.flowchart.Node n : graph.getNodes()) {
+            final JsonObject card = n.shown == null ? null : cards.get(n.shown.planId());
+            if (card == null) continue;
+            final String id = n.shown.planId(), gameKey = "node:" + n.id, pocket = Fresh.pocket(graph, next, n.group);
+            if (pocket != null) card.addProperty(Fresh.POCKET, pocket);
+            final int[] at = Fresh.inGroup(graph, n.group, n.x, n.y);
+            final JsonObject site = new JsonObject();
+            site.addProperty("id", id);
+            next.map("nodes", id, gameKey);
+            next.things
+                .put(Basis.key("nodes", id), new Basis.Entry(gameKey, Fresh.SHOWN, site, null, at[0], at[1], pocket));
+        }
     }
 
     /**

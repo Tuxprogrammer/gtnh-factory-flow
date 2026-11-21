@@ -60,7 +60,7 @@ export function mockLive(server, { who, ids, users, stateFile }) {
   /** Answers the cloud routes; false when the request is not one of them. */
   async function rest(req, res, url, json) {
     const path = url.pathname;
-    if (req.method === "GET" && path === "/live/health") return json(res, 200, { ok: true, rooms: rooms.size }), true;
+    if (req.method === "GET" && path === "/live/health") return json(res, 200, { ok: true, rooms: rooms.size, connections: sockets.size, flushBacklog: 0 }), true;
     // For a look from a shell: every open room, who is in it, and the last presence each sent.
     if (req.method === "GET" && path === "/mock/rooms") {
       const out = {};
@@ -102,7 +102,7 @@ export function mockLive(server, { who, ids, users, stateFile }) {
       console.log(`  nearby asked for ${names.length} names: ${names.slice(0, 8).join(", ")}`);
       // As the service: no names, nobody (and dee answers whatever names came, as if on the same server).
       const found = BOTS.filter((b) => names.length && b.mcName && ids.get(b.name) !== me.id).map((b) => ({
-        id: ids.get(b.name), username: b.name, mcName: b.mcName,
+        id: ids.get(b.name), username: b.name,
       }));
       return json(res, 200, { accounts: found }), true;
     }
@@ -123,16 +123,23 @@ export function mockLive(server, { who, ids, users, stateFile }) {
       const shared = [...designs.values()]
         .filter((d) => !d.deletedAt && d.members.includes(me.id))
         .map((d) => ({ ...listRow(d), ownerName: nameOf(d.ownerId) }));
-      return json(res, 200, { designs: own, shared }), true;
+      return json(res, 200, { designs: own, folders: [], shared }), true;
     }
     const m = /^\/api\/library\/designs\/([^/]+)(\/members(?:\/([^/]+))?)?$/.exec(path);
     if (!m) return false;
     if (!me) return json(res, 401, { error: "Sign in first." }), true;
-    const ownerId = url.searchParams.get("owner") ?? me.id;
+    // As the site: an owner that is not an account id is refused before anything is looked up.
+    const ownerParam = url.searchParams.get("owner");
+    if (ownerParam && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ownerParam))
+      return json(res, 400, { error: "Bad owner id." }), true;
+    const ownerId = ownerParam || me.id;
     const key = `${ownerId}:${m[1]}`;
     const d = designs.get(key);
     const role = d && d.ownerId === me.id ? "owner" : d && d.members.includes(me.id) ? "editor" : null;
     if (m[2]) {
+      // Taking anyone but oneself off a plan is the owner's alone, said before the plan is even looked for.
+      if (req.method === "DELETE" && m[3] && role !== "owner" && !(m[3] === me.id && role === "editor"))
+        return json(res, 403, { error: "Only the plan's owner can change who it is shared with." }), true;
       if (!d || d.deletedAt || !role) return json(res, 404, { error: "Plan not found." }), true;
       const sharing = () => ({ ownerId: d.ownerId, ownerName: nameOf(d.ownerId), role, members: member(d) });
       if (!m[3] && req.method === "GET") return json(res, 200, sharing()), true;
@@ -158,19 +165,25 @@ export function mockLive(server, { who, ids, users, stateFile }) {
         membersChanged(key, target);
         if (target !== me.id) toAccount(target, { t: "unshared", doc: key });
         save();
-        return json(res, 200, { ok: true }), true;
+        return json(res, 200, { members: member(d) }), true;
       }
       return json(res, 405, { error: "No." }), true;
     }
     if (req.method === "GET") {
-      if (!d || d.deletedAt || !role) return json(res, 404, { error: "Plan not found." }), true;
+      // A member never sees a tombstone; the owner does, with the plan emptied.
+      if (!d || !role || (d.deletedAt && role !== "owner")) return json(res, 404, { error: "Plan not found." }), true;
       const room = rooms.get(key);
       return json(res, 200, { design: listRow(d), plan: room?.plan ?? d.plan, ownerId: d.ownerId, role, seq: room?.seq ?? d.seq, live: Boolean(room) }), true;
     }
     if (req.method === "PUT") {
       const b = await body(req);
+      const name = typeof b.name === "string" ? b.name.trim() : "";
+      if (!name || name.length > 80) return json(res, 400, { error: "Design names run 1 to 80 characters." }), true;
       if (d && !role) return json(res, 403, { error: "That isn't yours." }), true;
       if (!d && ownerId !== me.id) return json(res, 404, { error: "Plan not found." }), true;
+      // Another device wrote later: nothing is overwritten and the caller is told it is behind.
+      if (d && Date.parse(d.row.updatedAt) > Date.parse(b.updatedAt)) return json(res, 200, { design: listRow(d), behind: true }), true;
+      if (!d && b.plan === undefined) return json(res, 400, { error: "A new design needs its plan." }), true;
       if (b.plan && rooms.get(key)?.conns.size) return json(res, 409, { live: true }), true;
       const { plan, ...row } = b;
       const next = d ?? { ownerId, id: m[1], row: {}, plan: {}, seq: 0, members: [] };
@@ -179,14 +192,18 @@ export function mockLive(server, { who, ids, users, stateFile }) {
       next.deletedAt = undefined;
       designs.set(key, next);
       save();
-      return json(res, 200, { design: listRow(next) }), true;
+      return json(res, 200, { design: listRow(next), behind: false }), true;
     }
     if (req.method === "DELETE") {
       if (!d || role !== "owner") return json(res, 403, { error: "Only the owner can delete this." }), true;
       d.deletedAt = new Date().toISOString();
+      // A tombstone: the plan is emptied and nobody is shared with it any more.
+      d.plan = {};
+      d.members = [];
+      d.row.updatedAt = d.deletedAt;
       save();
       kickAll(key, "deleted");
-      return json(res, 200, { ok: true }), true;
+      return json(res, 200, { ok: true, deletedAt: d.deletedAt }), true;
     }
     return json(res, 405, { error: "No." }), true;
   }
@@ -222,6 +239,11 @@ export function mockLive(server, { who, ids, users, stateFile }) {
 
   function join(c, key) {
     const d = designs.get(key);
+    // As the service: a plan of the caller's own that is gone is not_found; any other that is not theirs is forbidden.
+    if ((!d || d.deletedAt) && key.startsWith(`${c.userId}:`)) {
+      c.send(JSON.stringify({ t: "error", doc: key, code: "not_found", msg: "That plan does not exist." }));
+      return;
+    }
     if (!d || d.deletedAt || !(d.ownerId === c.userId || d.members.includes(c.userId))) {
       c.send(JSON.stringify({ t: "error", doc: key, code: "forbidden", msg: "Not shared with you." }));
       return;
@@ -316,6 +338,8 @@ export function mockLive(server, { who, ids, users, stateFile }) {
       case "ops": {
         const room = rooms.get(f.doc);
         if (!room || !room.conns.has(c)) return c.send(JSON.stringify({ t: "error", doc: f.doc, cid: f.cid, code: "forbidden", msg: "Join first." }));
+        if ((f.ops ?? []).some((op) => !["meta", "put", "del", "patch"].includes(op?.o)))
+          return c.send(JSON.stringify({ t: "error", doc: f.doc, cid: f.cid, code: "bad_op", msg: "That edit does not apply." }));
         room.plan = apply(room.plan, f.ops ?? []);
         room.seq += 1;
         const d = designs.get(f.doc);
@@ -342,12 +366,18 @@ export function mockLive(server, { who, ids, users, stateFile }) {
   server.on("upgrade", (req, socket) => {
     const url = new URL(req.url, "http://localhost");
     const me = who(req);
-    if (url.pathname !== "/live" || !me) {
-      socket.end("HTTP/1.1 401 Unauthorized\r\n\r\n");
+    if (url.pathname !== "/live") {
+      socket.end("HTTP/1.1 404 Not Found\r\n\r\n");
       return;
     }
     const accept = createHash("sha1").update(req.headers["sec-websocket-key"] + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").digest("base64");
     socket.write(`HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ${accept}\r\n\r\n`);
+    if (!me) {
+      // As the service: any upgrade is taken, then a session it does not know is told so and closed 4001 (conformance/wire).
+      socket.write(wsFrame(0x1, Buffer.from(JSON.stringify({ t: "error", code: "auth", msg: "Sign in to use live plans." }))));
+      socket.end(wsFrame(0x8, Buffer.from([4001 >> 8, 4001 & 0xff])));
+      return;
+    }
     const c = {
       id: randomUUID().slice(0, 8), userId: me.id, username: me.name, client: "game", rooms: new Set(),
       send: (text) => socket.writable && socket.write(wsFrame(0x1, Buffer.from(text))),

@@ -455,7 +455,8 @@ public final class CommunityApi {
         if (json != null || "POST".equals(method)) {
             c.setDoOutput(true);
             if (json != null) c.setRequestProperty("Content-Type", "application/json");
-            c.setFixedLengthStreamingMode(out.length);
+            // No streaming mode: the JDK drops the body of a 401 answer to a streamed request, and the player would
+            // read "not signed in" instead of the site's own words.
             try (java.io.OutputStream o = c.getOutputStream()) {
                 o.write(out);
             }

@@ -1,0 +1,853 @@
+{
+ "$about": "The live socket, from both ends. 'connect' says what the service does at the upgrade and what the mod does about each answer; 'close' says what each close code is and what the mod does with it; 'scripts' are whole conversations, frame by frame, in the order they happen; 'order' lists the rules of order that hold across them. Client frames are checked by shape and by 'expect' (path to value); server frames carry an example the mod's runner plays back and the service's own frame must match by shape. A client step names the frame by 'via' (open, join:<doc>, leave:<doc>, ops:<doc>, presence:<doc>, ping) and 'expect' gives its fields as paths; a step with a 'frame' is that frame as it stands (the server run sends it; the mod's run sends what its own code sends and checks 'expect'). A server step with 'close' is followed by that close code, and the next client step is on a fresh socket. 'heard' is what the mod ends up knowing: a path starting with the frame's type is read from the frame, any other path (kicked, refused) is a conclusion the mod draws from it. {ann.id}, {bob.id}, {carol.id}, {doc}, {bobdoc}, {strangerdoc} and {missingdoc} are filled by each runner (a doc key is <ownerId>:<designId>) (a doc key is <ownerId>:<designId>).",
+ "path": "/live",
+ "request": {
+  "headers": {
+   "Cookie": {
+    "re": "^gtnh_session=[^;\\s]+$",
+    "note": "The only credential. The mod sends no Origin; a browser must, and it must be an allowed one."
+   },
+   "User-Agent": {
+    "re": "^GTNH Planner/\\S+ \\(GT New Horizons planner mod\\)$"
+   }
+  },
+  "note": "A hello frame follows the open. Pings come from the client every 25 s (a service drops a socket silent for 90 s)."
+ },
+ "connect": [
+  {
+   "id": "session-ok",
+   "cookie": "valid",
+   "origin": "none",
+   "serverDoes": "Answers 101 and accepts the socket.",
+   "status": 101,
+   "mod": {
+    "state": "OPEN"
+   }
+  },
+  {
+   "id": "no-cookie",
+   "cookie": "none",
+   "origin": "none",
+   "serverDoes": "Answers 101, sends an error frame with code auth, closes 4001.",
+   "status": 101,
+   "frames": [
+    {
+     "shape": "$ServerError",
+     "example": {
+      "t": "error",
+      "code": "auth",
+      "msg": "Sign in to use live plans."
+     },
+     "expect": {
+      "code": "auth"
+     }
+    }
+   ],
+   "close": 4001,
+   "mod": {
+    "state": "CLOSED",
+    "reason": "auth",
+    "retries": "never"
+   },
+   "note": "The mod never connects without a token (it goes CLOSED with reason auth before opening a socket); this row stands for any session the service does not know. Finding F2."
+  },
+  {
+   "id": "bad-signature",
+   "cookie": "forged",
+   "origin": "none",
+   "serverDoes": "As no-cookie: a session whose signature fails is no session.",
+   "status": 101,
+   "frames": [
+    {
+     "shape": "$ServerError",
+     "example": {
+      "t": "error",
+      "code": "auth",
+      "msg": "Sign in to use live plans."
+     },
+     "expect": {
+      "code": "auth"
+     }
+    }
+   ],
+   "close": 4001,
+   "mod": {
+    "state": "CLOSED",
+    "reason": "auth",
+    "retries": "never"
+   }
+  },
+  {
+   "id": "unknown-account",
+   "cookie": "unknown-account",
+   "origin": "none",
+   "serverDoes": "As no-cookie: a signed session for an account the database does not hold.",
+   "status": 101,
+   "frames": [
+    {
+     "shape": "$ServerError",
+     "example": {
+      "t": "error",
+      "code": "auth",
+      "msg": "Sign in to use live plans."
+     },
+     "expect": {
+      "code": "auth"
+     }
+    }
+   ],
+   "close": 4001,
+   "mod": {
+    "state": "CLOSED",
+    "reason": "auth",
+    "retries": "never"
+   }
+  },
+  {
+   "id": "lookup-failed",
+   "cookie": "valid",
+   "origin": "none",
+   "serverDoes": "The account lookup threw: answers 101 and closes 1013 with no frame (not a refused sign-in).",
+   "status": 101,
+   "close": 1013,
+   "mod": {
+    "state": "WAITING",
+    "reason": "close:1013",
+    "retries": "backoff"
+   }
+  },
+  {
+   "id": "too-many-connections",
+   "cookie": "valid",
+   "origin": "none",
+   "serverDoes": "The account already holds 16 sockets: answers 101, sends an error frame with code rate, closes 4029.",
+   "status": 101,
+   "frames": [
+    {
+     "shape": "$ServerError",
+     "example": {
+      "t": "error",
+      "code": "rate",
+      "msg": "Too many live connections."
+     },
+     "expect": {
+      "code": "rate"
+     }
+    }
+   ],
+   "close": 4029,
+   "mod": {
+    "state": "WAITING",
+    "reason": "connection lost",
+    "retries": "backoff"
+   }
+  },
+  {
+   "id": "bad-origin",
+   "cookie": "valid",
+   "origin": "https://elsewhere.invalid",
+   "serverDoes": "Refuses the upgrade with a bare 403 and no body.",
+   "status": 403,
+   "mod": {
+    "state": "CLOSED",
+    "reason": "auth",
+    "retries": "never",
+    "note": "The mod sends no Origin, so it sees this only when a proxy in front of the site answers 403 itself."
+   }
+  },
+  {
+   "id": "wrong-path",
+   "cookie": "valid",
+   "origin": "none",
+   "path": "/live/other",
+   "serverDoes": "Refuses the upgrade with a bare 404.",
+   "status": 404,
+   "mod": {
+    "state": "WAITING",
+    "reason": "refused: 404",
+    "retries": "backoff"
+   }
+  },
+  {
+   "id": "address-busy",
+   "cookie": "valid",
+   "origin": "none",
+   "serverDoes": "More upgrades a minute than allowed from one address or account: a bare 429 with no Retry-After.",
+   "status": 429,
+   "mod": {
+    "state": "WAITING",
+    "reason": "busy: 429",
+    "retries": "backoff"
+   }
+  },
+  {
+   "id": "busy-with-retry-after",
+   "cookie": "valid",
+   "origin": "none",
+   "serverDoes": "Not sent by the service itself; a proxy in front may send 429 with Retry-After: <seconds>.",
+   "status": 429,
+   "headers": {
+    "Retry-After": "2"
+   },
+   "mod": {
+    "state": "WAITING",
+    "reason": "busy: 429",
+    "retries": "after Retry-After, at most 60 s"
+   },
+   "server": {
+    "skip": "The service sends no Retry-After. This row is the mod's side of a proxy's answer."
+   }
+  },
+  {
+   "id": "proxy-401",
+   "cookie": "valid",
+   "origin": "none",
+   "serverDoes": "Not sent by the service. A guarding proxy that wants its own credential answers 401 (or 403) before the service is reached.",
+   "status": 401,
+   "mod": {
+    "state": "CLOSED",
+    "reason": "auth",
+    "retries": "never",
+    "note": "The mod reads a 401 or 403 at the upgrade as a refused session and stops until the player signs in again."
+   },
+   "server": {
+    "skip": "A proxy's answer, not the service's."
+   }
+  }
+ ],
+ "close": [
+  {
+   "code": 1001,
+   "sentBy": "service",
+   "when": "The service is stopping.",
+   "mod": {
+    "state": "WAITING",
+    "reason": "connection lost",
+    "retries": "backoff"
+   }
+  },
+  {
+   "code": 1002,
+   "sentBy": "service",
+   "when": "A frame came before hello, or the hello named a protocol version the service does not speak (an error frame with code version goes first).",
+   "mod": {
+    "state": "WAITING",
+    "reason": "connection lost",
+    "retries": "backoff"
+   },
+   "finding": "F5"
+  },
+  {
+   "code": 1008,
+   "sentBy": "service",
+   "when": "More than 200 frames a second (an error frame with code rate goes first).",
+   "mod": {
+    "state": "WAITING",
+    "reason": "connection lost",
+    "retries": "backoff"
+   }
+  },
+  {
+   "code": 1009,
+   "sentBy": "service",
+   "when": "A message over the transport's size limit.",
+   "mod": {
+    "state": "WAITING",
+    "reason": "close:1009",
+    "retries": "fast"
+   }
+  },
+  {
+   "code": 1012,
+   "sentBy": "service",
+   "when": "The service restarts, or a room failed and its members must join again.",
+   "mod": {
+    "state": "WAITING",
+    "reason": "close:1012",
+    "retries": "fast"
+   }
+  },
+  {
+   "code": 1013,
+   "sentBy": "service",
+   "when": "The account lookup failed at the upgrade.",
+   "mod": {
+    "state": "WAITING",
+    "reason": "close:1013",
+    "retries": "backoff"
+   }
+  },
+  {
+   "code": 4001,
+   "sentBy": "service",
+   "when": "The session is not one the service knows (an error frame with code auth goes first).",
+   "mod": {
+    "state": "CLOSED",
+    "reason": "auth",
+    "retries": "never"
+   },
+   "finding": "F2"
+  },
+  {
+   "code": 4002,
+   "sentBy": "service",
+   "when": "No hello within 10 s of the open.",
+   "mod": {
+    "state": "WAITING",
+    "reason": "connection lost",
+    "retries": "backoff"
+   }
+  },
+  {
+   "code": 4029,
+   "sentBy": "service",
+   "when": "The account already holds 16 sockets (an error frame with code rate goes first).",
+   "mod": {
+    "state": "WAITING",
+    "reason": "connection lost",
+    "retries": "backoff"
+   }
+  }
+ ],
+ "scripts": [
+  {
+   "id": "game-edit",
+   "about": "One game client from open to leave. The client acts as ann (a game client on server srv1 as Alex) on a plan she owns.",
+   "steps": [
+    {
+     "dir": "client",
+     "via": "open",
+     "shape": "$ClientHello",
+     "expect": {
+      "v": 1,
+      "client": "game",
+      "game.server": "srv1",
+      "game.mcName": "Alex"
+     }
+    },
+    {
+     "dir": "server",
+     "shape": "$ServerWelcome",
+     "example": {
+      "t": "welcome",
+      "v": 1,
+      "you": {
+       "id": "{ann.id}",
+       "username": "ann",
+       "color": "#aa5500"
+      }
+     },
+     "heard": {
+      "welcome.you.id": "{ann.id}",
+      "welcome.you.username": "ann"
+     }
+    },
+    {
+     "dir": "client",
+     "via": "join:{doc}",
+     "shape": "$ClientJoin",
+     "expect": {
+      "doc": "{doc}"
+     }
+    },
+    {
+     "dir": "server",
+     "shape": "$ServerSnapshot",
+     "example": {
+      "t": "snapshot",
+      "doc": "{doc}",
+      "seq": 0,
+      "plan": {
+       "schemaVersion": 1,
+       "id": "plan-1",
+       "name": "Steel line",
+       "nodes": [],
+       "edges": [],
+       "tasks": [
+        {
+         "id": "t1",
+         "title": "First",
+         "status": "todo",
+         "order": "a0"
+        }
+       ]
+      },
+      "role": "owner",
+      "owner": {
+       "id": "{ann.id}",
+       "username": "ann"
+      },
+      "members": [
+       {
+        "id": "{bob.id}",
+        "username": "bob"
+       }
+      ],
+      "present": []
+     },
+     "heard": {
+      "snapshot.doc": "{doc}",
+      "snapshot.role": "owner",
+      "snapshot.owner.username": "ann",
+      "snapshot.members.0.username": "bob"
+     }
+    },
+    {
+     "dir": "client",
+     "via": "presence:{doc}",
+     "shape": "$ClientPresence",
+     "expect": {
+      "doc": "{doc}",
+      "cursor.x": 4,
+      "cursor.y": 8,
+      "sel.0": "n1",
+      "view.zoom": 1,
+      "view.x": 0,
+      "view.y": 0
+     },
+     "note": "No answer to the sender."
+    },
+    {
+     "dir": "client",
+     "via": "ops:{doc}",
+     "shape": "$ClientOps",
+     "expect": {
+      "doc": "{doc}",
+      "base": 0,
+      "cid": "c1",
+      "ops.0.o": "patch",
+      "ops.0.id": "t1",
+      "ops.0.c": "tasks",
+      "ops.0.f.title": "Second"
+     }
+    },
+    {
+     "dir": "server",
+     "shape": "$ServerOps",
+     "example": {
+      "t": "ops",
+      "doc": "{doc}",
+      "seq": 1,
+      "by": "{ann.id}",
+      "cid": "c1",
+      "ops": [
+       {
+        "o": "patch",
+        "c": "tasks",
+        "id": "t1",
+        "f": {
+         "title": "Second"
+        }
+       }
+      ]
+     },
+     "heard": {
+      "ops.doc": "{doc}",
+      "ops.seq": 1,
+      "ops.cid": "c1"
+     },
+     "note": "The sender hears its own batch back, with a seq."
+    },
+    {
+     "dir": "client",
+     "via": "ping",
+     "shape": "$ClientPing"
+    },
+    {
+     "dir": "server",
+     "shape": "$ServerPong",
+     "example": {
+      "t": "pong"
+     },
+     "heard": {}
+    },
+    {
+     "dir": "client",
+     "via": "leave:{doc}",
+     "shape": "$ClientLeave",
+     "expect": {
+      "doc": "{doc}"
+     }
+    }
+   ]
+  },
+  {
+   "id": "room-events",
+   "about": "What the service sends a client without a client frame asking: other people's work in the room, and changes to who may be in it. Setup, before the first step: ann has said hello and joined {doc} (she owns it; bob is a web editor, carol is not on it yet), so a doc is at seq 0 and ann has its snapshot. {bobdoc} is a plan bob owns. Each step names what makes the service send it, in the order the steps run.",
+   "steps": [
+    {
+     "dir": "server",
+     "cause": "bob joins the doc",
+     "shape": "$ServerPresent",
+     "example": {
+      "t": "present",
+      "doc": "{doc}",
+      "present": [
+       {
+        "id": "{ann.id}",
+        "username": "ann",
+        "color": "#aa5500",
+        "client": "game",
+        "conn": "c1"
+       },
+       {
+        "id": "{bob.id}",
+        "username": "bob",
+        "color": "#00aa55",
+        "client": "web",
+        "conn": "c2"
+       }
+      ]
+     },
+     "heard": {
+      "present.doc": "{doc}",
+      "present.present.1.username": "bob"
+     }
+    },
+    {
+     "dir": "server",
+     "cause": "bob sends presence",
+     "shape": "$ServerPresence",
+     "example": {
+      "t": "presence",
+      "doc": "{doc}",
+      "who": "{bob.id}",
+      "conn": "c2",
+      "cursor": {
+       "x": 1,
+       "y": 2
+      },
+      "sel": [
+       "n1"
+      ],
+      "view": {
+       "x": 0,
+       "y": 0,
+       "zoom": 1
+      }
+     },
+     "heard": {
+      "presence.who": "{bob.id}",
+      "presence.cursor.x": 1,
+      "presence.sel.0": "n1"
+     }
+    },
+    {
+     "dir": "server",
+     "cause": "bob sends ops",
+     "shape": "$ServerOps",
+     "example": {
+      "t": "ops",
+      "doc": "{doc}",
+      "seq": 1,
+      "by": "{bob.id}",
+      "cid": "b1",
+      "ops": [
+       {
+        "o": "patch",
+        "c": "tasks",
+        "id": "t1",
+        "f": {
+         "title": "Third"
+        }
+       }
+      ]
+     },
+     "heard": {
+      "ops.by": "{bob.id}",
+      "ops.seq": 1
+     }
+    },
+    {
+     "dir": "server",
+     "cause": "the owner adds carol as an editor (REST)",
+     "shape": "$ServerMembers",
+     "example": {
+      "t": "members",
+      "doc": "{doc}",
+      "members": [
+       {
+        "id": "{bob.id}",
+        "username": "bob"
+       },
+       {
+        "id": "{carol.id}",
+        "username": "carol"
+       }
+      ]
+     },
+     "heard": {
+      "members.doc": "{doc}",
+      "members.members.1.username": "carol"
+     }
+    },
+    {
+     "dir": "server",
+     "cause": "bob's plan is shared with ann (REST)",
+     "shape": "$ServerShared",
+     "example": {
+      "t": "shared",
+      "doc": "{bobdoc}",
+      "owner": {
+       "id": "{bob.id}",
+       "username": "bob"
+      },
+      "name": "Bob's plan"
+     },
+     "heard": {
+      "shared.doc": "{bobdoc}",
+      "shared.owner.username": "bob",
+      "shared.name": "Bob's plan"
+     }
+    },
+    {
+     "dir": "server",
+     "cause": "bob's plan is unshared from ann (REST)",
+     "shape": "$ServerUnshared",
+     "example": {
+      "t": "unshared",
+      "doc": "{bobdoc}"
+     },
+     "heard": {
+      "unshared.doc": "{bobdoc}"
+     }
+    },
+    {
+     "dir": "server",
+     "cause": "ann is kicked from bob's plan when it is unshared while she is in it",
+     "shape": "$ServerKicked",
+     "example": {
+      "t": "kicked",
+      "doc": "{bobdoc}",
+      "reason": "unshared"
+     },
+     "heard": {
+      "kicked.doc": "{bobdoc}",
+      "kicked.reason": "unshared"
+     }
+    },
+    {
+     "dir": "server",
+     "cause": "ann is kicked from bob's plan when he deletes it while she is in it",
+     "shape": "$ServerKicked",
+     "example": {
+      "t": "kicked",
+      "doc": "{bobdoc}",
+      "reason": "deleted"
+     },
+     "heard": {
+      "kicked.reason": "deleted"
+     }
+    }
+   ]
+  },
+  {
+   "id": "refusals",
+   "about": "Error frames. A frame with a cid refuses that batch; one with a doc and no cid refuses a join; one with neither is about the connection. Setup, before the first step: the client has said hello and joined {doc} as ann. {strangerdoc} is a plan nobody shared with ann; {missingdoc} is a plan she owns that does not exist.",
+   "steps": [
+    {
+     "dir": "client",
+     "via": "join:{strangerdoc}",
+     "shape": "$ClientJoin",
+     "expect": {
+      "doc": "{strangerdoc}"
+     }
+    },
+    {
+     "dir": "server",
+     "shape": "$ServerError",
+     "example": {
+      "t": "error",
+      "doc": "{strangerdoc}",
+      "code": "forbidden",
+      "msg": "You cannot open that plan."
+     },
+     "expect": {
+      "code": "forbidden"
+     },
+     "heard": {
+      "error.doc": "{strangerdoc}",
+      "error.code": "forbidden",
+      "kicked.reason": "forbidden"
+     },
+     "note": "The mod treats a forbidden or not_found join refusal as a kick and stops joining that doc on later reconnects."
+    },
+    {
+     "dir": "client",
+     "via": "join:{missingdoc}",
+     "shape": "$ClientJoin",
+     "expect": {
+      "doc": "{missingdoc}"
+     }
+    },
+    {
+     "dir": "server",
+     "shape": "$ServerError",
+     "example": {
+      "t": "error",
+      "doc": "{missingdoc}",
+      "code": "not_found",
+      "msg": "That plan does not exist."
+     },
+     "expect": {
+      "code": "not_found"
+     },
+     "heard": {
+      "error.code": "not_found",
+      "kicked.reason": "not_found"
+     }
+    },
+    {
+     "dir": "client",
+     "via": "ops:{doc}",
+     "shape": "$ClientOps",
+     "expect": {
+      "cid": "c2"
+     },
+     "note": "A batch the service refuses (here a bad op).",
+     "frame": {
+      "t": "ops",
+      "doc": "{doc}",
+      "base": 0,
+      "cid": "c2",
+      "ops": [
+       {
+        "o": "explode",
+        "c": "tasks",
+        "id": "t1"
+       }
+      ]
+     }
+    },
+    {
+     "dir": "server",
+     "shape": "$ServerError",
+     "example": {
+      "t": "error",
+      "doc": "{doc}",
+      "cid": "c2",
+      "code": "bad_op",
+      "msg": "That edit does not apply."
+     },
+     "expect": {
+      "code": "bad_op",
+      "cid": "c2"
+     },
+     "heard": {
+      "error.code": "bad_op",
+      "refused.cid": "c2"
+     }
+    }
+   ]
+  },
+  {
+   "id": "hello-order",
+   "about": "A frame before hello, and a hello for a protocol the service does not speak. Server run only: the mod always says hello first and speaks version 1.",
+   "steps": [
+    {
+     "dir": "client",
+     "frame": {
+      "t": "join",
+      "doc": "{doc}"
+     },
+     "shape": "$ClientJoin"
+    },
+    {
+     "dir": "server",
+     "shape": "$ServerError",
+     "example": {
+      "t": "error",
+      "code": "version",
+      "msg": "Send hello first."
+     },
+     "expect": {
+      "code": "version"
+     },
+     "close": 1002
+    },
+    {
+     "dir": "client",
+     "frame": {
+      "t": "hello",
+      "v": 99,
+      "client": "game"
+     },
+     "shape": {
+      "t": {
+       "=": "hello"
+      },
+      "v": "integer",
+      "client": "string"
+     },
+     "note": "On a fresh socket. A hello for a protocol version the service does not speak, so it is not a $ClientHello."
+    },
+    {
+     "dir": "server",
+     "shape": "$ServerError",
+     "example": {
+      "t": "error",
+      "code": "version",
+      "msg": "This service speaks version 1."
+     },
+     "expect": {
+      "code": "version"
+     },
+     "close": 1002
+    }
+   ],
+   "mod": {
+    "skip": "The mod's hello is a constant version 1 sent first."
+   }
+  }
+ ],
+ "order": [
+  {
+   "id": "hello-first",
+   "rule": "The first frame a client sends is hello. Any other frame before it is answered with an error frame (code version) and the socket is closed 1002.",
+   "tests": [
+    "hello-order"
+   ]
+  },
+  {
+   "id": "welcome-before-join",
+   "rule": "A client joins after the welcome. The mod holds its joins until it hears welcome and sends them again after every welcome (a reconnect).",
+   "mod": "LiveClient.join waits for welcome"
+  },
+  {
+   "id": "snapshot-first",
+   "rule": "A join is answered with a snapshot before any ops frame for that doc.",
+   "tests": [
+    "game-edit"
+   ]
+  },
+  {
+   "id": "ops-echo",
+   "rule": "A batch is acknowledged to its sender by the ops frame carrying its cid and the seq it got; a batch sent again with the same cid is acknowledged with an empty ops list.",
+   "tests": [
+    "game-edit"
+   ]
+  },
+  {
+   "id": "presence-unechoed",
+   "rule": "A presence frame is relayed to the others in the room, never back to its sender.",
+   "tests": [
+    "game-edit"
+   ]
+  },
+  {
+   "id": "ping-pong",
+   "rule": "A ping is answered with a pong; a client pings every 25 s and the service drops a connection silent for 90 s.",
+   "tests": [
+    "game-edit"
+   ]
+  },
+  {
+   "id": "error-before-close",
+   "rule": "The service sends its error frame before it closes for version (1002), rate (1008, 4029) and auth (4001); 1012 and 1013 come with no frame.",
+   "tests": [
+    "close",
+    "connect"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,90 @@
+{
+ "$about": "Where the two ends of the wire disagreed when the contract was written from the code, and what was decided. The server is deployed and used by the website's own client, so it decides unless it is wrong by its own tests; none was. 'tests' names what now pins each one.",
+ "findings": [
+  {
+   "id": "F1",
+   "title": "The mod read an account id from /api/community/auth/me, which never sends one",
+   "mod": "CloudApi.me parsed user.id and treated an answer without it as signed out.",
+   "server": "Answers 200 {user: {username, isAdmin}} or {user: null}; never an id, never a 401 (a lookup that fails is a 503).",
+   "decision": "The server stands. The mod takes the account id from the first part of its session token, as Account.accountId does, and reads a 401 as signed out too, for a proxy that answers before the site does.",
+   "fixed": "CloudApi.me; the mock's /me; CloudApiTest",
+   "tests": [
+    "rest.json me-signed-in, me-expired, whois-*",
+    "WireRestTest",
+    "wire-rest.test.ts"
+   ]
+  },
+  {
+   "id": "F2",
+   "title": "The mod kept reconnecting after the service closed 4001",
+   "mod": "LiveSocket.lost treated every close but a refused upgrade as a lost connection and retried with backoff.",
+   "server": "Accepts the upgrade for a session it does not know, sends an error frame (code auth), and closes 4001. The web client stops on it.",
+   "decision": "The server stands. The mod goes CLOSED with reason auth on 4001, as it does for a 401 or 403 at the upgrade, and waits for a new sign-in.",
+   "fixed": "LiveSocket.lost; LiveSocketTest",
+   "tests": [
+    "live.json connect no-cookie, bad-signature, unknown-account; close 4001",
+    "WireLiveTest",
+    "wire-live.test.ts"
+   ]
+  },
+  {
+   "id": "F3",
+   "title": "The mocks and the mod's test server refused a bad session with a raw 401 at the upgrade",
+   "mod": "LiveTestServer.refuseAuth and mock-live.mjs answered 401 before the upgrade.",
+   "server": "Never does: a bad session is accepted, told auth and closed 4001 (F2). A 401 or 403 at the upgrade comes only from something in front of the service.",
+   "decision": "The mocks and the test server answer as the service does. The raw 401 stays as the proxy-401 case, on its own.",
+   "fixed": "mock-live.mjs; LiveTestServer",
+   "tests": [
+    "live.json connect proxy-401",
+    "wire-mocks.test.ts",
+    "WireLiveTest"
+   ]
+  },
+  {
+   "id": "F4",
+   "title": "The mocks and CloudApiTest put a Minecraft name in /live/nearby accounts",
+   "mod": "The mocks and CloudApiTest sent {id, username, mcName}.",
+   "server": "Sends {id, username}: the service never reveals the name a game reported.",
+   "decision": "The server stands. The mocks and the tests send what the service sends; the mod reads an absent name as empty.",
+   "fixed": "mock-live.mjs; CloudApiTest",
+   "tests": [
+    "rest.json live-nearby-ok",
+    "wire-mocks.test.ts"
+   ]
+  },
+  {
+   "id": "F5",
+   "title": "Close codes 1002, 1008, 4002 and 4029 are retried with backoff",
+   "mod": "Any close but 4001 (and a refused upgrade) is a lost connection; it retries 1 s, 2 s, 4 s ... up to 60 s.",
+   "server": "Closes 1002 for a protocol error, 1008 for a flood, 4002 for no hello, 4029 for too many sockets.",
+   "decision": "Left alone. None of the four can be caused by the mod in normal use, and a backoff to 60 s is a harmless answer to each. Recorded so a change of either end is a decision, not a surprise.",
+   "fixed": null,
+   "tests": [
+    "live.json close table"
+   ]
+  },
+  {
+   "id": "F6",
+   "title": "The mod lost the site's own words on a 401 to a request with a body",
+   "mod": "CommunityApi.send and CloudApi.send streamed every body with a fixed length; the JDK throws the body of a 401 away for a streamed request, so a wrong password read as 'not signed in'.",
+   "server": "Answers 401 with {error: <text>} on login, library puts, community post and update.",
+   "decision": "The server stands. The mod buffers the body (it already holds it as bytes) and reads the error text like any other status.",
+   "fixed": "CommunityApi.send, CloudApi.send",
+   "tests": [
+    "rest.json login-wrong-password, put-signed-out, community-post-signed-out, community-update-signed-out",
+    "WireRestTest"
+   ]
+  },
+  {
+   "id": "F7",
+   "title": "The development stand-ins answered many routes as the site does not",
+   "mod": "mock-library.mjs and mock-live.mjs (what the mod is run against in game) answered register 200, no folders or behind in the library and put answers, 200 for a put of a new design without its plan or with an empty name, 404 for a member removed by a non-owner, a members list for a member's delete, no deletedAt on delete and a 404 for the owner's tombstone, no connections or flushBacklog on health, any report as readable, a community list that ignored its page, search and version, forbidden for the owner's missing plan, and any op kind as good.",
+   "server": "Answers each as the steps of rest.json and the scripts of live.json say.",
+   "decision": "The server stands. The mocks answer as it does on every step they can play; the steps they cannot (a rate limit, a body over the limit, datasets, a server with no GitHub token, a proxy's answer, the live service's own leases) are left out with the reason in the test's name.",
+   "fixed": "mock-library.mjs; mock-live.mjs",
+   "tests": [
+    "wire-mocks.test.ts"
+   ]
+  }
+ ]
+}

@@ -3065,15 +3065,15 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
         final Node node = model.node;
         final List<PickList.Entry> rows = new ArrayList<>();
         // The card's rows by the shared rules (core-view CardViews.menu); this host adds its own: what a crusher or a
-        // crop card runs on after Clone node, its place in the world before Delete node. A row with no action here
-        // yet (Add another recipe, Replace the recipe: the search that would carry them is NEI's) is left out.
+        // crop card runs on after Clone node, its place in the world before Delete node. The two recipe rows open NEI's
+        // page with its + armed for this card (pickRecipe).
         final List<Uuid> taskCards = session.isSelected(nodeId) ? session.cardsIn(session.selection())
             : List.of(nodeId);
         for (final com.gtnhplanner.core.view.card.CardView.MenuRow row : com.gtnhplanner.core.view.card.CardViews.menu(
             new com.gtnhplanner.core.view.card.CardInput.Menu(
                 false,
                 false,
-                false,
+                BoardSession.ownsRecipe(node),
                 shared(),
                 com.gtnhplanner.power.Holders.is(node),
                 emptyCropFarm(),
@@ -3087,6 +3087,8 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
                     if (crop()) rows
                         .add(PickList.Entry.of("Pick another crop", () -> RecipePicks.crops(session, node, sx, sy)));
                 }
+                case "addRecipe" -> rows.add(PickList.Entry.of(row.label(), () -> pickRecipe(false)));
+                case "replace" -> rows.add(PickList.Entry.of(row.label(), () -> pickRecipe(true)));
                 case "addToTask" -> rows.add(
                     PickList.Entry.of(
                         row.label(),
@@ -3110,6 +3112,35 @@ public final class RecipeCard extends ParentWidget<RecipeCard> implements Intera
             }
         }
         Popup.open(session.panel(), PickList.popup("gtnhplanner_actions", null, rows, false, 150), sx, sy);
+    }
+
+    /**
+     * A recipe row's picker, NEI's own page with its + armed for this card ({@link BoardSession#armRecipePick}): for
+     * another recipe, every recipe of the card's machine (its recipe list, else what the machine is used in); for a
+     * replacement, the recipes that make what the card makes (else that use what it uses). Recipes stay read-only: the
+     * pick is a recipe as NEI has it.
+     */
+    private void pickRecipe(final boolean replace) {
+        session.armRecipePick(nodeId, replace);
+        final boolean opened;
+        if (replace) opened = lookUpFirst(model.outputs, false) || lookUpFirst(model.inputs, true);
+        else {
+            final codechicken.nei.recipe.RecipeHandlerRef page = com.gtnhplanner.nei.NeiRecipes.page(model.node);
+            opened = page != null && com.gtnhplanner.ui.Planner.browse(page.handler.getOverlayIdentifier())
+                || model.machineStack != null && com.gtnhplanner.ui.Planner.lookUp(model.machineStack, true);
+        }
+        if (opened) return;
+        session.disarmRecipePick();
+        com.gtnhplanner.ui.sound.Sfx.DENY.play();
+    }
+
+    /** NEI's page for the first of these ports it has a stack for: what makes it, or ({@code uses}) what uses it. */
+    private static boolean lookUpFirst(final List<CardModel.PortView> ports, final boolean uses) {
+        for (final CardModel.PortView p : ports) {
+            final ItemStack stack = p.isPower() ? null : p.lookupStack();
+            if (stack != null) return com.gtnhplanner.ui.Planner.lookUp(stack, uses);
+        }
+        return false;
     }
 
     private void openMachines() {

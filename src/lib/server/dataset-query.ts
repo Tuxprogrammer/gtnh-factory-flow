@@ -3243,3 +3243,18 @@ function resourceHasIcon(
 function normalizeText(value: string): string {
   return value.trim().toLowerCase();
 }
+
+/** The version the server prewarms and the agent API answers from: latest stable, else latest daily, else the first. */
+export async function getDefaultDatasetVersionId(): Promise<string | undefined> {
+  const manifest = await loadManifest();
+  return manifest.latestStableVersion ?? manifest.latestDailyVersion ?? manifest.versions[0]?.id;
+}
+
+/** One resource of a version's catalog by kind and id, or undefined (agent API lookups). */
+export async function getDatasetResource(
+  versionId: string,
+  kind: string,
+  id: string,
+): Promise<DatasetResource | DatasetResourceIndexEntry | undefined> {
+  return getCatalogResourcesByKey(await loadCatalog(versionId)).get(`${kind}:${id}`);
+}

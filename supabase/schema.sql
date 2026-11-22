@@ -304,3 +304,6 @@ create index if not exists agent_deliveries_kind_created_idx on agent_deliveries
 create index if not exists agent_deliveries_expires_idx on agent_deliveries (expires_at);
 
 alter table agent_deliveries enable row level security;
+
+-- The API layer serves a new table only after it reloads its schema; until then every call on it fails.
+notify pgrst, 'reload schema';

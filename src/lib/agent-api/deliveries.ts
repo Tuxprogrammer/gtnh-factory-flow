@@ -1,6 +1,7 @@
 import { randomInt } from "node:crypto";
 import { getCommunityDb, isCommunityConfigured } from "@/lib/server/community";
 import { draftNow } from "./drafts";
+import { describeDbError } from "./db-error";
 import { AgentApiError } from "./errors";
 
 /**
@@ -50,13 +51,13 @@ function requireDatabase(): void {
 async function checkDailyCap(kind: DeliveryKind, now: number): Promise<void> {
   const cap = kind === "delivery" ? DELIVERIES_PER_DAY : PROPOSALS_PER_DAY;
   const dayStart = `${new Date(now).toISOString().slice(0, 10)}T00:00:00.000Z`;
-  const { count, error } = await getCommunityDb()
+  const { count, error, status, statusText } = await getCommunityDb()
     .from(DELIVERY_TABLE)
     .select("id", { count: "exact", head: true })
     .eq("kind", kind)
     .gte("created_at", dayStart);
   if (error) {
-    throw new Error(`Delivery count failed: ${error.message}`);
+    throw new Error(`Delivery count failed: ${describeDbError(error, { status, statusText })}`);
   }
   if ((count ?? 0) >= cap) {
     const what = kind === "delivery" ? "deliveries" : "proposals";
@@ -80,7 +81,7 @@ export async function storeDelivery(entry: {
   const name = entry.name.trim().slice(0, 80) || "Plan";
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const id = newDeliveryId(entry.kind);
-    const { error } = await getCommunityDb()
+    const { error, status, statusText } = await getCommunityDb()
       .from(DELIVERY_TABLE)
       .insert({
         id,
@@ -97,7 +98,7 @@ export async function storeDelivery(entry: {
       return { id, kind: entry.kind, name, payload: entry.payload, basePlanId: entry.basePlanId, createdAt, expiresAt };
     }
     if (error.code !== "23505") {
-      throw new Error(`Delivery insert failed: ${error.message}`);
+      throw new Error(`Delivery insert failed: ${describeDbError(error, { status, statusText })}`);
     }
   }
   throw new Error("Delivery insert failed: no free id after 3 tries.");
@@ -121,14 +122,14 @@ export async function readDelivery(id: string): Promise<StoredDelivery | undefin
   if (!DELIVERY_ID_PATTERN.test(id)) {
     return undefined;
   }
-  const { data, error } = await getCommunityDb()
+  const { data, error, status, statusText } = await getCommunityDb()
     .from(DELIVERY_TABLE)
     .select("id, kind, name, payload, base_plan_id, created_at, expires_at")
     .eq("id", id)
     .gt("expires_at", new Date(draftNow()).toISOString())
     .maybeSingle<DeliveryRow>();
   if (error) {
-    throw new Error(`Delivery read failed: ${error.message}`);
+    throw new Error(`Delivery read failed: ${describeDbError(error, { status, statusText })}`);
   }
   if (!data) {
     return undefined;

@@ -6,6 +6,7 @@ import { useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useDropdownDismiss } from "@/lib/hooks/use-dropdown-dismiss";
 import { getUiScale } from "@/lib/ui-scale";
+import { placeMenu } from "./menu-place";
 
 /** Where a menu hangs from, in real (unzoomed) screen pixels. */
 export interface MenuAnchor {
@@ -56,9 +57,7 @@ export function MenuPortal({
   const scale = getUiScale();
   const shell = (px: number) => px / scale;
   const vw = shell(window.innerWidth);
-  const spaceBelow = shell(window.innerHeight - anchor.bottom) - 12;
-  const spaceAbove = shell(anchor.top) - 12;
-  const below = spaceBelow >= Math.min(maxHeight, 200) || spaceBelow >= spaceAbove;
+  const place = placeMenu(anchor, window.innerHeight, scale, maxHeight);
   const w = Math.min(width, vw - 16);
   return createPortal(
     <div
@@ -71,9 +70,9 @@ export function MenuPortal({
       style={{
         width: w,
         left: Math.max(8, Math.min(shell(anchor.left), vw - w - 8)),
-        ...(below
-          ? { top: shell(anchor.bottom) + 2, maxHeight: Math.min(maxHeight, spaceBelow) }
-          : { bottom: shell(window.innerHeight - anchor.top) + 2, maxHeight: Math.min(maxHeight, spaceAbove) }),
+        ...(place.below
+          ? { top: place.top, maxHeight: place.maxHeight }
+          : { bottom: place.bottom, maxHeight: place.maxHeight }),
       }}
       onClick={(event) => event.stopPropagation()}
       onPointerDown={(event) => event.stopPropagation()}

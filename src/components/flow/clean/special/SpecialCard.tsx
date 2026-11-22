@@ -32,6 +32,7 @@ import { MachineListMenu } from "../menus/MachineListMenu";
 import { OptionListMenu } from "../menus/OptionListMenu";
 import { SettingsSheet } from "../menus/SettingsSheet";
 import { anchorOf, type MenuAnchor } from "../menus/MenuPortal";
+import { menuHangRect } from "../menus/menu-place";
 import {
   countRowsTip,
   gearTip,
@@ -434,7 +435,7 @@ export function SpecialCard({ model, recipe, node }: SpecialCardProps) {
     if (!wasClick(event)) return;
     // The menu hangs under the key, as the mod's (RecipeCard.openActions).
     const card = event.currentTarget.closest("[data-node-glance-root]") ?? undefined;
-    const r = (card ?? event.currentTarget).getBoundingClientRect();
+    const r = menuHangRect(event.currentTarget, card);
     setMenu(
       menu
         ? undefined

@@ -44,6 +44,11 @@ class UpdateCheckTest {
         assertFalse(UpdateCheck.newer("0.2.0-beta.3", "0.2.0-beta.3-tux.1"));
         assertTrue(UpdateCheck.newer("0.2.0-beta.4", "0.2.0-beta.3-tux.5"));
         assertFalse(UpdateCheck.newer("0.2.0-beta.3-tux.5", "0.2.0-beta.4"));
+        // The fork's own line follows its last suffixed release, and is newer than any 0.x of the original.
+        assertTrue(UpdateCheck.newer("1.0.0", "0.2.0-beta.3-tux.5"));
+        assertTrue(UpdateCheck.newer("mod-1.1.0", "1.0.0"));
+        assertTrue(UpdateCheck.newer("1.0.1", "1.0.0"));
+        assertFalse(UpdateCheck.newer("0.3.0", "1.0.0"));
         // The repo's tag names read as their versions; a dev build past a fork tag is that tag's version.
         assertTrue(UpdateCheck.newer("mod-0.2.0-beta.3-tux.2", "0.2.0-beta.3-tux.1"));
         assertFalse(UpdateCheck.newer("0.2.0-beta.3-tux.1", "0.2.0-beta.3-tux.1-main.4+58f9e3d1a2"));

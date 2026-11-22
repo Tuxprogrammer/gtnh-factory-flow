@@ -40,6 +40,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "4.7.0-tux.6",
+    date: "2026-11-22",
+    headline: "Open plans pick up changes made elsewhere",
+    notes: [
+      "A plan open live now shows changes made to it outside the editor within 30 seconds, instead of keeping and later saving over the old copy. Edits not yet saved on the old copy are dropped.",
+      "A card's menu now opens on screen on very tall cards instead of below the window.",
+    ],
+  },
+  {
     version: "4.7.0-tux.5",
     date: "2026-11-22",
     headline: "Choose what goes in an AE2 pattern",

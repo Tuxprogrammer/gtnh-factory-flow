@@ -90,8 +90,9 @@ GUI, the network and the config stays in `jvm/mod/src`. Shared test data is in `
   `jvm/` that is the tag's version; past it, `<tag>-<branch>.<commits under jvm/ since the tag>+<hash>`, with `-dirty`
   for uncommitted changes under `jvm/`. With no `mod-*` tag reaching `HEAD` the jar is `NO-GIT-TAG-SET`. Nothing in the
   tree holds a version number. The repo's other tags (`web-<version>`) belong to the website and never name the jar.
-- A fork version is the original mod's tag plus a fork suffix, tagged `mod-0.2.0-beta.3-tux.1`, then `-tux.2`. The base
-  is always the latest original version the tree contains; never invent a base number here.
+- A fork version is on the fork's own line: `mod-1.0.0`, then `mod-1.1.0`, `mod-1.2.0`. One step of the middle number
+  per release; the last number moves only for a hotfix of that release. No stage and no suffix. Releases before 1.0.0
+  were the original mod's tag plus a fork suffix (`mod-0.2.0-beta.3-tux.5` was the last).
 - Tag once per handoff, not per commit: an annotated `mod-<version>` tag on the handed-off commit of `main`, pushed to
   `origin`. Build the jar from the tag with `tools/ci/mod.sh --release mod-<version>` (from the repo root; add `--test`
   to run the whole suite as CI does). It needs `HEAD` at the tag and nothing changed under `jvm/`, never creates a

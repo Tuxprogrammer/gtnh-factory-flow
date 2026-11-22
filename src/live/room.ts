@@ -12,7 +12,7 @@ import { prepareBatch } from "./batch";
 import { LiveDoc } from "./doc";
 import type { FlushQueue } from "./flush-queue";
 import type { AppliedCid, Journal } from "./journal";
-import type { PlanStore } from "./store";
+import { sameStamp, type PlanStore } from "./store";
 
 /**
  * One open plan: the plan in memory, its seq, who is in it, and the timers
@@ -153,6 +153,14 @@ export class Room {
   private ending = false;
   /** The design went: the room is being dropped, its journal with it. */
   private dropping = false;
+  /**
+   * The row's `plan_updated_at` as the room last read or wrote it. Another
+   * value at a renewal or a flush means the plan was written from outside the
+   * service: the stored plan wins (`reloadStored`).
+   */
+  private stamp: string | undefined;
+  /** The seq the stored plan last replaced the room's at: a batch based before it was made on the old plan. */
+  private replacedSeq = 0;
 
   private constructor(
     doc: string,
@@ -181,6 +189,7 @@ export class Room {
       return undefined;
     }
     room.content = new LiveDoc(loaded.plan && typeof loaded.plan === "object" ? loaded.plan : {});
+    room.stamp = loaded.stamp;
     room.seq = loaded.seq;
     room.flushedSeq = loaded.seq;
     room.durableSeq = loaded.seq;
@@ -294,7 +303,7 @@ export class Room {
    * version of the plan, however many join or join again: a snapshot is the
    * room's biggest frame by far.
    */
-  snapshotText(role: "owner" | "editor"): string {
+  snapshotText(role: "owner" | "editor", replaced = false): string {
     const plan = this.content.toPlan();
     if (this.planJson?.plan !== plan) {
       this.planJson = { plan, text: JSON.stringify(plan) };
@@ -305,6 +314,7 @@ export class Room {
       members: this.members,
       present: this.present,
       owner: { id: this.ownerId, username: this.ownerName },
+      ...(replaced ? { replaced: true } : {}),
     });
     return `${head.slice(0, -1)},"plan":${this.planJson.text},${tail.slice(1)}`;
   }
@@ -321,13 +331,17 @@ export class Room {
    * stamp: who wrote them and when. Applied in memory at once and journalled;
    * broadcast once its journal line is on disk.
    */
-  apply(peer: RoomPeer, cid: string, incoming: LiveOp[]): BatchResult {
+  apply(peer: RoomPeer, cid: string, incoming: LiveOp[], base?: number): BatchResult {
     if (this.closed) {
       return { kind: "refused", code: "bad_op", msg: "The plan is closed." };
     }
     const seen = this.recent.get(cid) ?? this.deps.cids.get(this.cidKey(cid));
     if (seen !== undefined) {
       return { kind: "duplicate", seq: seen };
+    }
+    if (base !== undefined && base < this.replacedSeq) {
+      // Made on the plan as it was before it was changed from outside.
+      return { kind: "refused", code: "bad_op", msg: "The plan was changed elsewhere." };
     }
     const stamped = this.stampComments(peer, incoming);
     if ("error" in stamped) {
@@ -586,9 +600,10 @@ export class Room {
     if (!captured || this.closed) {
       return false;
     }
-    const { plan, seq } = captured;
+    const { plan, seq, stamp } = captured;
     const sizeAtCapture = this.size;
     this.lastFlushAt = Date.now();
+    const now = new Date().toISOString();
     const outcome = await this.deps.store.flush(
       this.ownerId,
       this.designId,
@@ -596,10 +611,20 @@ export class Room {
       plan,
       seq,
       final ? null : this.leaseUntil(),
+      stamp === undefined ? undefined : { was: stamp, now },
     );
+    if (outcome === "changed") {
+      // Written from outside since the room last read it: nothing was written,
+      // and the stored plan replaces the room's.
+      await this.storedChanged(stamp);
+      return false;
+    }
     if (outcome !== "held") {
       await this.leaseMissed(outcome);
       return false;
+    }
+    if (stamp !== undefined) {
+      this.stamp = now;
     }
     this.flushedSeq = Math.max(this.flushedSeq, seq);
     this.noteFlushed(seq);
@@ -628,10 +653,13 @@ export class Room {
    * whenever it is read; when the journal keeps falling behind (a burst of
    * edits), this flush is skipped and the next one tries.
    */
-  private async capture(): Promise<{ plan: LivePlan; seq: number } | undefined> {
+  private async capture(): Promise<
+    { plan: LivePlan; seq: number; stamp: string | undefined } | undefined
+  > {
     for (let round = 0; round < 5; round += 1) {
       if (this.durableSeq >= this.seq) {
-        return { plan: this.plan, seq: this.seq };
+        // The stamp with the plan: a flush of a plan the stored one replaced meanwhile writes nothing.
+        return { plan: this.plan, seq: this.seq, stamp: this.stamp };
       }
       try {
         await this.whenDurable();
@@ -650,13 +678,17 @@ export class Room {
       return;
     }
     try {
+      const stamp = this.stamp;
       const outcome = await this.deps.store.renew(
         this.ownerId,
         this.designId,
         this.token,
         this.leaseUntil(),
+        stamp,
       );
-      if (outcome !== "held") {
+      if (outcome === "changed") {
+        await this.storedChanged(stamp);
+      } else if (outcome !== "held") {
         await this.leaseMissed(outcome);
         return;
       }
@@ -673,6 +705,86 @@ export class Room {
     } catch (error) {
       this.deps.log(`${this.doc}: lease renewal failed: ${String(error)}`);
     }
+  }
+
+  /**
+   * The plan was written from outside the service (found at a renewal or by a
+   * flush that wrote nothing): what the journal holds since the room read
+   * `stamp` was made on the old plan and goes, and the stored plan replaces
+   * the room's in its turn. Not awaited from a flush, which may be running in
+   * the room's turn itself.
+   */
+  private async storedChanged(stamp: string | undefined): Promise<void> {
+    if (this.closed || this.stamp !== stamp) {
+      // Closed, or the stored plan was taken already since.
+      return;
+    }
+    this.deps.log(
+      `${this.doc}: the plan was written from outside; the stored plan replaces the room's`,
+    );
+    try {
+      await this.deps.journal.trim(this.doc, this.seq, this.recentCids());
+    } catch (error) {
+      this.deps.log(`${this.doc}: trimming the journal failed: ${String(error)}`);
+    }
+    void this.enqueue(() => this.reloadStored());
+  }
+
+  /**
+   * Takes the stored plan as the room's (in the room's turn): unflushed edits
+   * made on the old plan are dropped, batches still based on it are refused,
+   * and everyone in the room gets the new plan as a snapshot marked
+   * `replaced`, on which clients drop their own unsent edits.
+   */
+  private async reloadStored(): Promise<void> {
+    // An own flush under way lands first: its stamp is the room's, not an outside write.
+    while (this.flushing) {
+      await this.flushing;
+    }
+    if (this.closed || this.ending) {
+      return;
+    }
+    try {
+      // Every batch applied so far goes out before the new plan does.
+      await this.whenDurable();
+    } catch {
+      return;
+    }
+    const loaded = await this.deps.store.lease(
+      this.ownerId,
+      this.designId,
+      this.token,
+      this.leaseUntil(),
+    );
+    if (this.closed) {
+      return;
+    }
+    if (!loaded) {
+      await this.drop("deleted");
+      return;
+    }
+    if (loaded.stamp === undefined || sameStamp(loaded.stamp, this.stamp)) {
+      return;
+    }
+    this.content = new LiveDoc(loaded.plan && typeof loaded.plan === "object" ? loaded.plan : {});
+    this.size = sizeOf(this.plan);
+    this.stamp = loaded.stamp;
+    this.seq = Math.max(this.seq, loaded.seq) + 1;
+    this.replacedSeq = this.seq;
+    this.durableSeq = this.seq;
+    // The database holds this plan already; the next flush brings its seq up to the room's.
+    this.flushedSeq = loaded.seq;
+    this.unflushed = [];
+    this.journalBytes = 0;
+    try {
+      await this.deps.journal.trim(this.doc, this.seq, this.recentCids());
+    } catch (error) {
+      this.deps.log(`${this.doc}: trimming the journal failed: ${String(error)}`);
+    }
+    for (const peer of this.peers) {
+      peer.sendText(this.snapshotText(this.roleOf(peer.userId) ?? "editor", true));
+    }
+    this.scheduleFlush();
   }
 
   /** A write found the design gone (dropped as deleted) or its lease another's (the room fails). */

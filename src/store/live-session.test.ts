@@ -551,6 +551,56 @@ describe("live editing in the store", () => {
     expect(annotations().map((note) => note.text)).toEqual(["mine", "bob's"]);
   });
 
+  it("takes a plan changed outside the live service as it is: unsent edits go, a notice says so", async () => {
+    await openLiveDesign(planWith(annotation("n1", "one"), annotation("n2", "two")));
+    useFactoryStore.getState().updateAnnotation("n1", { text: "confirmed" });
+    await settle();
+    // An edit the service never answers: still pending when the stored plan replaces the room's.
+    service.silent = true;
+    useFactoryStore.getState().updateAnnotation("n2", { text: "unsent" });
+    await settle();
+    expect(useLiveSession.getState().pending).toBe(1);
+
+    service.silent = false;
+    service.plan = JSON.parse(JSON.stringify(planWith(annotation("n1", "outside")))) as LivePlan;
+    service.seq += 1;
+    service.reply({
+      t: "snapshot",
+      doc: DOC,
+      seq: service.seq,
+      plan: service.plan,
+      role: "owner",
+      members: [],
+      present: [],
+      owner: { id: ANN, username: "ann" },
+      replaced: true,
+    });
+    await settle();
+
+    expect(annotations().map((note) => note.text)).toEqual(["outside"]);
+    expect(useLiveSession.getState().pending).toBe(0);
+    expect(useLiveSession.getState().notice?.text).toBe(
+      "This plan was changed elsewhere. Showing the new version.",
+    );
+    expect(useFactoryStore.getState().liveUndo?.canUndo).toBe(false);
+    // Same design, still live; nothing of the old plan went back.
+    expect(useDesignStore.getState().designs.map((design) => design.id)).toEqual([DESIGN]);
+    expect(useLiveSession.getState().status).toBe("live");
+    const sentBefore = service.sent("ops").length;
+    await settle();
+    expect(service.sent("ops")).toHaveLength(sentBefore);
+
+    // The next edit goes on top of the new plan.
+    useFactoryStore.getState().updateAnnotation("n1", { text: "after" });
+    await settle();
+    const last = service.sent("ops").at(-1)!;
+    expect(last.base).toBe(service.seq - 1);
+    expect(last.ops).toEqual([{ o: "patch", c: "annotations", id: "n1", f: { text: "after" } }]);
+    expect((service.plan.annotations as FactoryAnnotation[]).map((note) => note.text)).toEqual([
+      "after",
+    ]);
+  });
+
   it("keeps edits made offline, stored, and sends them when the connection is back", async () => {
     await openLiveDesign(planWith(annotation("n1", "one")));
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval"] });

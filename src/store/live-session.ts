@@ -616,7 +616,18 @@ export class LiveSession {
     }
     const before = room.engine.view;
     const snapshotPlan = liveShape(frame.plan);
-    if (room.fresh) {
+    if (frame.replaced) {
+      // The stored plan was changed outside the live service and replaced the room's: it lands as it is. Edits not
+      // confirmed yet were made on the old plan and go, and undo starts again from here, as when a design goes live.
+      room.fresh = false;
+      room.base = undefined;
+      room.engine = new LiveClientState({ seq: frame.seq, plan: snapshotPlan });
+      this.outbox = [];
+      this.persistNow();
+      useLiveSession.setState({
+        notice: noticeOf("This plan was changed elsewhere. Showing the new version."),
+      });
+    } else if (room.fresh) {
       // The first snapshot of a plan made here moments ago: what the canvas held beyond it is this person's edit,
       // sent first, ahead of anything done since the room was made.
       room.fresh = false;

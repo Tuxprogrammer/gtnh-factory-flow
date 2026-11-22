@@ -364,7 +364,8 @@
     "present": [
       "$LivePerson"
     ],
-    "owner": "$LiveMember"
+    "owner": "$LiveMember",
+    "replaced?": "boolean"
   },
   "ServerOps": {
     "t": {

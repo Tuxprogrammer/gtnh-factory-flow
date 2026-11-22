@@ -1043,7 +1043,12 @@ export class LiveService {
         return undefined;
       }
       const started = performance.now();
-      const applied = room.apply(conn, cid, read.ops);
+      const applied = room.apply(
+        conn,
+        cid,
+        read.ops,
+        typeof frame.base === "number" ? frame.base : undefined,
+      );
       budget.spend(performance.now() - started);
       return applied;
     });

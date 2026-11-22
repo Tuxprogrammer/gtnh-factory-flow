@@ -154,6 +154,12 @@ export type ServerFrame =
       present: LivePerson[];
       /** The plan's owner (an addition: the doc key holds only its id). */
       owner: LiveMember;
+      /**
+       * The stored plan was written from outside the live service and replaced
+       * the room's (an addition): the client drops its unsent edits, which were
+       * made on the old plan, and takes this one as it is.
+       */
+      replaced?: true;
     }
   | { t: "ops"; doc: string; seq: number; by: string; cid: string; ops: LiveOp[] }
   | {

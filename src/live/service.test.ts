@@ -1139,3 +1139,124 @@ describe("the live service", { timeout: 30_000 }, () => {
     });
   });
 });
+
+/** Writes the stored plan as someone outside the live service would: the plan and its stamps, nothing else. */
+async function writeFromOutside(designId: string, plan: LivePlan): Promise<void> {
+  const now = new Date().toISOString();
+  const { error } = await getCommunityDb()
+    .from("library_designs")
+    .update({ plan, plan_updated_at: now, updated_at: now })
+    .eq("user_id", users.ann!.id)
+    .eq("id", designId);
+  expect(error).toBeNull();
+}
+
+const titleOf = (plan: LivePlan) => (plan.tasks as Array<{ title: string }>)[0]!.title;
+
+describe("a plan written from outside the live service", { timeout: 30_000 }, () => {
+  it("replaces the room's plan at the next renewal: everyone gets it, edits on the old plan go", async () => {
+    const { port } = await startService({
+      timing: { flushMs: 60_000, renewMs: 300, leaseMs: 5000 },
+    });
+    const { designId, doc, plan } = await makeDesign();
+    const ann = await TestClient.open(port, { who: "ann" });
+    const bob = await TestClient.open(port, { who: "bob", origin: null });
+    await ann.hello();
+    await bob.hello("game", { server: "server-hash" });
+    await ann.join(doc);
+    await bob.join(doc);
+    // An edit the database has not taken yet (no flush for a minute).
+    ann.send({ t: "ops", doc, base: 0, cid: "old-1", ops: [taskPatch("t1", { title: "Ann's" })] });
+    await ann.next("ops", (frame) => frame.cid === "old-1");
+
+    await writeFromOutside(designId, { ...plan, notes: "From outside" });
+    for (const client of [ann, bob]) {
+      const replaced = await client.next("snapshot", (frame) => frame.replaced === true, 5000);
+      expect(replaced.plan.notes).toBe("From outside");
+      expect(titleOf(replaced.plan)).toBe("First");
+      expect(replaced.seq).toBe(2);
+    }
+    // A batch made on the old plan is refused; one made on the new plan applies.
+    ann.send({ t: "ops", doc, base: 1, cid: "old-2", ops: [taskPatch("t1", { title: "Late" })] });
+    expect(await ann.next("error", (frame) => frame.cid === "old-2")).toMatchObject({
+      code: "bad_op",
+    });
+    ann.send({ t: "ops", doc, base: 2, cid: "new-1", ops: [taskPatch("t1", { title: "On top" })] });
+    expect(await bob.next("ops", (frame) => frame.cid === "new-1")).toMatchObject({ seq: 3 });
+
+    await ann.close();
+    await bob.close();
+    await until(async () => (await storedRow(designId)).live_lease_until === null);
+    const row = await storedRow(designId);
+    expect(row.plan.notes).toBe("From outside");
+    expect(titleOf(row.plan)).toBe("On top");
+    expect(Number(row.seq)).toBe(3);
+  });
+
+  it("never flushes over it: the flush writes nothing and the room takes the stored plan", async () => {
+    const { port, journalDir } = await startService({
+      timing: { flushMs: 200, renewMs: 60_000, leaseMs: 90_000 },
+    });
+    const { designId, doc, plan } = await makeDesign();
+    const ann = await TestClient.open(port, { who: "ann" });
+    await ann.hello();
+    await ann.join(doc);
+    await writeFromOutside(designId, { ...plan, notes: "From outside" });
+    // No renewal before the flush: the flush itself finds the row moved on.
+    ann.send({ t: "ops", doc, base: 0, cid: "stale", ops: [taskPatch("t1", { title: "Stale" })] });
+    await ann.next("ops", (frame) => frame.cid === "stale");
+    const replaced = await ann.next("snapshot", (frame) => frame.replaced === true, 5000);
+    expect(replaced.plan.notes).toBe("From outside");
+    expect(titleOf(replaced.plan)).toBe("First");
+    const row = await storedRow(designId);
+    expect(row.plan.notes).toBe("From outside");
+    expect(titleOf(row.plan)).toBe("First");
+    // The stale edit is gone from the journal too: a restart replays nothing over the stored plan.
+    const journal = new Journal(journalDir);
+    expect((await journal.read(doc)).map((entry) => entry.cid)).not.toContain("stale");
+  });
+
+  it("does not take the room's own flushes for writes from outside", async () => {
+    const { port } = await startService({ timing: { flushMs: 100, renewMs: 150, leaseMs: 5000 } });
+    const { designId, doc } = await makeDesign();
+    const ann = await TestClient.open(port, { who: "ann" });
+    await ann.hello();
+    await ann.join(doc);
+    for (let at = 1; at <= 8; at += 1) {
+      ann.send({
+        t: "ops",
+        doc,
+        base: at - 1,
+        cid: `own-${at}`,
+        ops: [taskPatch("t1", { title: `Own ${at}` })],
+      });
+      await ann.next("ops", (frame) => frame.cid === `own-${at}`);
+      await new Promise((resolve) => setTimeout(resolve, 120));
+    }
+    // Several flushes and renewals have run meanwhile.
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    expect(ann.frames.filter((frame) => frame.t === "snapshot")).toEqual([]);
+    const row = await storedRow(designId);
+    expect(titleOf(row.plan)).toBe("Own 8");
+    expect(Number(row.seq)).toBe(8);
+  });
+
+  it("still drops everyone from a plan deleted under it", async () => {
+    const { port } = await startService({
+      timing: { flushMs: 60_000, renewMs: 300, leaseMs: 5000 },
+    });
+    const { designId, doc } = await makeDesign();
+    const ann = await TestClient.open(port, { who: "ann" });
+    await ann.hello();
+    await ann.join(doc);
+    const now = new Date().toISOString();
+    await getCommunityDb()
+      .from("library_designs")
+      .update({ deleted_at: now, plan_updated_at: now, updated_at: now })
+      .eq("user_id", users.ann!.id)
+      .eq("id", designId);
+    expect(await ann.next("kicked", () => true, 5000)).toMatchObject({ reason: "deleted" });
+    expect(ann.frames.filter((frame) => frame.t === "snapshot")).toEqual([]);
+    expect((await storedRow(designId)).deleted_at).not.toBeNull();
+  });
+});

@@ -45,10 +45,11 @@ public final class LiveClient {
 
     /**
      * The whole plan as the service holds it at {@code seq}, this session's role in it, whose it is (null when the
-     * service did not say), who may edit it, and who is in it.
+     * service did not say), who may edit it, and who is in it. {@code replaced}: the stored plan was written outside
+     * the live service and replaced the room's, so batches not yet echoed were made on the old plan and go.
      */
     public record Snapshot(String doc, long seq, JsonObject plan, String role, @Nullable Member owner,
-        List<Member> members, List<Person> present) {}
+        List<Member> members, List<Person> present, boolean replaced) {}
 
     /** An accepted batch, to everyone in the room; {@code cid} is the sender's batch id (its ack, for the sender). */
     public record OpsBatch(String doc, long seq, String by, String cid, JsonArray ops) {}
@@ -360,7 +361,11 @@ public final class LiveClient {
                         str(o, "role"),
                         owner == null ? null : new Member(str(owner, "id"), str(owner, "username")),
                         members(o.get("members")),
-                        people(o.get("present")));
+                        people(o.get("present")),
+                        o.has("replaced") && o.get("replaced")
+                            .isJsonPrimitive()
+                            && o.get("replaced")
+                                .getAsBoolean());
                     joinRetryAt.remove(doc);
                     for (final Listener l : listeners) l.onSnapshot(s);
                 }

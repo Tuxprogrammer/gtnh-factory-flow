@@ -1039,6 +1039,53 @@ class CloudSessionTest {
     }
 
     @Test
+    void aPlanReplacedOutsideTheServiceLandsAsItIsAndUnsentEditsGo() {
+        inAccount("d1", "glass");
+        final Plan p = begin();
+        final Graph board = open(p, ME + ":d1");
+        final LiveDoc doc = session.doc(board);
+        // An edit the room keeps putting off: still pending when the stored plan replaces the room's.
+        live.refuse = "rate";
+        final Node moved = board.getNodes()
+            .iterator()
+            .next();
+        moved.x += 40;
+        board.touchLayout();
+        session.save(p);
+        tickUntil("put off", () -> opsFrames() >= 1);
+        assertTrue(doc.waiting(), "kept pending");
+
+        // The stored plan, written outside the live service: a card fewer.
+        final com.gtnhplanner.data.flowchart.Edge wire = board.getEdges()
+            .iterator()
+            .next();
+        final JsonObject stored = com.gtnhplanner.cloud.sync.LiveOps.apply(
+            live.plans.get(ME + ":d1"),
+            LiveOp.fromJson(deletion(live.plans.get(ME + ":d1"), wire.targetNodeId)));
+        final long seq = live.seqs.get(ME + ":d1") + 1;
+        live.plans.put(ME + ":d1", stored);
+        live.seqs.put(ME + ":d1", seq);
+        final JsonObject s = new JsonObject();
+        s.addProperty("t", "snapshot");
+        s.addProperty("doc", ME + ":d1");
+        s.addProperty("seq", seq);
+        s.add("plan", stored);
+        s.addProperty("role", "owner");
+        s.add("members", new JsonArray());
+        s.add("present", new JsonArray());
+        s.addProperty("replaced", true);
+        live.send(s.toString());
+
+        tickUntil("the stored plan landed", () -> !slot(p, ME + ":d1").nodes.containsKey(wire.targetNodeId));
+        assertFalse(doc.waiting(), "the edit made on the old plan went");
+        assertTrue(host.notices.contains("This plan was changed elsewhere. Showing the new version."));
+        live.refuse = null;
+        final long sent = opsFrames();
+        ticks(40);
+        assertEquals(sent, opsFrames(), "the old edit is never sent again");
+    }
+
+    @Test
     void anEchoThatDiffersFromWhatWasSentIsReadIntoTheBoard() {
         inAccount("d1", "sulfuric-acid");
         final Plan p = begin();

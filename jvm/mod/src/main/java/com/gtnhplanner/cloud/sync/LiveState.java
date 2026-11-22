@@ -177,6 +177,19 @@ public final class LiveState {
         return new ArrayList<>(pending);
     }
 
+    /**
+     * The stored plan replaced the room's (written outside the live service): it becomes the confirmed plan as it is,
+     * the pending batches go (they were made on the old plan), and undo starts again from here.
+     */
+    public void replace(final long seq, final JsonObject plan) {
+        confirmed = plan;
+        this.seq = seq;
+        shown = null;
+        pending.clear();
+        undo.clear();
+        redo.clear();
+    }
+
     public boolean canUndo() {
         return !undo.isEmpty();
     }

@@ -1325,8 +1325,8 @@
     },
     "wire/shapes.json": {
       "area": "wire",
-      "bytes": 8409,
-      "sha256": "4d302e9c657ea105b869a551ca5c5c601f4e9cdc2813de59c63d5b97c8ba3e17"
+      "bytes": 8437,
+      "sha256": "dfc51f2ffe07452425e68003ee820ac1f5adebd54915ef3df26a9810731bba13"
     }
   }
 }

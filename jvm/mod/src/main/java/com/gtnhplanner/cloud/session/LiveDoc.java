@@ -555,7 +555,14 @@ public final class LiveDoc {
         owner = s.owner();
         members = List.copyOf(s.members());
         present = List.copyOf(s.present());
-        final List<LiveState.Batch> again = state.resync(s.seq(), s.plan());
+        final List<LiveState.Batch> again;
+        if (s.replaced()) {
+            state.replace(s.seq(), s.plan());
+            again = List.of();
+            session.notice("This plan was changed elsewhere. Showing the new version.");
+        } else {
+            again = state.resync(s.seq(), s.plan());
+        }
         known = true;
         creating = false;
         inRoom = true;

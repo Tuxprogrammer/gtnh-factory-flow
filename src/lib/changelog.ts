@@ -40,6 +40,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "4.7.0-tux.5",
+    date: "2026-11-22",
+    headline: "Choose what goes in an AE2 pattern",
+    notes: [
+      "In game, Pattern this asks which products go in the pattern when a recipe makes more than one. Only the first is included to start, and Pattern the plan uses each card's choice.",
+      "In game, the line between groups of menu rows is a thin visible line instead of what looked like an empty row.",
+      "When the server's assistant cannot hand over a plan, the error now names the cause.",
+    ],
+  },
+  {
     version: "4.7.0-tux.4",
     date: "2026-11-22",
     headline: "Game-exact fast recipes, and plans from the server's assistant",

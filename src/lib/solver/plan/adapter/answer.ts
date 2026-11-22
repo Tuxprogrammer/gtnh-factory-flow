@@ -96,6 +96,7 @@ export function readAnswer(model: PlanModel, answer: Answer): PlanReading {
 
   // Wires on a buffer: what the solver moved through the buffer at that port.
   const bufferPorts = solution.drawers?.ports ?? {};
+  const bufferCounted = new Set<string>();
   for (const link of model.drawerEdges.values()) {
     const through = bufferPorts[link.drawerId];
     if (!through) continue;
@@ -103,6 +104,14 @@ export function readAnswer(model: PlanModel, answer: Answer): PlanReading {
       (e) => e.port.node === link.ref.node && e.port.port === link.ref.port && e.port.input === link.ref.input,
     );
     flowOf.set(link.edgeId, Math.max(0, at?.ratePerSecond ?? 0));
+    // What crosses a buffer is that port's flow too: a drain or source drawer on the same port reads only the rest.
+    // Counted once per buffer and port, however many wires join them.
+    const portId = `${link.ref.node}|${link.ref.input ? "i" : "o"}|${link.ref.port}`;
+    const once = `${link.drawerId}|${portId}`;
+    if (!bufferCounted.has(once)) {
+      bufferCounted.add(once);
+      wired.set(portId, (wired.get(portId) ?? 0) + Math.max(0, at?.ratePerSecond ?? 0));
+    }
   }
 
   // Wires between a chain's drawers: what passes from one to the next.

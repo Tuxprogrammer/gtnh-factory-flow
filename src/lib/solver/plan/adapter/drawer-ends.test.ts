@@ -1,8 +1,9 @@
 /**
  * A drawer on a wired port is the player's own end, not a trade (docs/up-to.md, "Drawers and buffers"), with or without
  * Up to pools. A loop is one machine step, so every port in it trades at one level; were a drawer priced as a trade
- * there, the least amount at that level would decide between the player's drawer and a forced flow. These plans are the
- * two shapes where that went wrong: joining drawers so a plan's own output feeds its own input.
+ * there, the least amount at that level would decide between the player's drawer and a forced flow. The first two plans
+ * are the shapes where that went wrong: joining drawers so a plan's own output feeds its own input. The rest pin what a
+ * drawer beside a buffer on the same port reads: only its own share of the port, never the port's whole flow.
  */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
@@ -73,6 +74,61 @@ const closedRingWithByproduct = () =>
     ],
   });
 
+/**
+ * m makes 10 c and the 1 g a product drawer asks for; c goes into a buffer that feeds u (4 c -> p, 1/s asked) and the
+ * rest into a byproduct drawer on the same port. The drawer reads only what did not cross the buffer.
+ */
+const sharedMakerPort = () =>
+  project({
+    recipes: [recipe("rm", [["raw", 1]], [["c", 10], ["g", 1]]), recipe("ru", [["c", 4]], [["p", 1]])],
+    nodes: [node("m", "rm"), node("u", "ru")],
+    storages: [
+      drawer("raws", "raw"),
+      drawer("gd", "g", { targetMode: "exact", targetPerSecond: 1 }),
+      drawer("pd", "p", { targetMode: "exact", targetPerSecond: 1 }),
+      drawer("bf", "c"),
+      drawer("cb", "c", { drainMode: "byproduct" }),
+    ],
+    edges: [
+      wire("raws-m", "raws", "m", "raw", {}, { fromDrawer: true }),
+      wire("m-gd", "m", "gd", "g", {}, { toDrawer: true }),
+      wire("m-bf", "m", "bf", "c", {}, { toDrawer: true }),
+      wire("m-cb", "m", "cb", "c", {}, { toDrawer: true }),
+      wire("bf-u", "bf", "u", "c", {}, { fromDrawer: true }),
+      wire("u-pd", "u", "pd", "p", {}, { toDrawer: true }),
+    ],
+  });
+
+/** The mirror: u needs 15 c, the buffer brings m's 10, and a source drawer on u's same port reads only the other 5. */
+const sharedUserPort = () =>
+  project({
+    recipes: [recipe("rm", [["raw", 1]], [["c", 10], ["g", 1]]), recipe("ru", [["c", 15]], [["p", 1]])],
+    nodes: [node("m", "rm"), node("u", "ru")],
+    storages: [
+      drawer("raws", "raw"),
+      drawer("gd", "g", { targetMode: "exact", targetPerSecond: 1 }),
+      drawer("pd", "p", { targetMode: "exact", targetPerSecond: 1 }),
+      drawer("bf", "c"),
+      drawer("cs", "c"),
+    ],
+    edges: [
+      wire("raws-m", "raws", "m", "raw", {}, { fromDrawer: true }),
+      wire("m-gd", "m", "gd", "g", {}, { toDrawer: true }),
+      wire("m-bf", "m", "bf", "c", {}, { toDrawer: true }),
+      wire("bf-u", "bf", "u", "c", {}, { fromDrawer: true }),
+      wire("cs-u", "cs", "u", "c", {}, { fromDrawer: true }),
+      wire("u-pd", "u", "pd", "p", {}, { toDrawer: true }),
+    ],
+  });
+
+/** Both at once: m also keeps a byproduct drawer, and the plan's own 10 c still go to u before anything is drawn. */
+const sharedBothPorts = () => {
+  const plan = sharedUserPort();
+  plan.storages = [...plan.storages!, drawer("cb", "c", { drainMode: "byproduct" })];
+  plan.edges = [...plan.edges, wire("m-cb", "m", "cb", "c", {}, { toDrawer: true })];
+  return plan;
+};
+
 const rate = (result: ReturnType<typeof calculateThroughput>, id: string) =>
   result.nodes[id]!.operationRatePerSecond * Math.min(1, Math.max(0, result.nodes[id]!.utilization));
 
@@ -97,5 +153,37 @@ describe.each([
     for (const id of ["m", "n", "u", "v", "w"]) expect(rate(result, id), id).toBeCloseTo(1, 6);
     expect(result.storages["pd"]!.producedPerSecond).toBeCloseTo(1, 6);
     expect(result.storages["ob"]!.producedPerSecond).toBeCloseTo(1, 6);
+  });
+
+  it("a byproduct drawer beside a buffer on one port reads only what the buffer did not take", () => {
+    use();
+    const result = calculateThroughput(sharedMakerPort(), { generatedAt: "t" });
+    expect(result.plan!.forced).toEqual([]);
+    expect(rate(result, "m")).toBeCloseTo(1, 6);
+    expect(rate(result, "u")).toBeCloseTo(1, 6);
+    expect(result.storages["bf"]!.producedPerSecond).toBeCloseTo(4, 6);
+    expect(result.storages["bf"]!.consumedPerSecond).toBeCloseTo(4, 6);
+    expect(result.storages["cb"]!.producedPerSecond).toBeCloseTo(6, 6);
+    const c = result.resources["item:c" as keyof typeof result.resources]!;
+    expect(c.byproductPerSecond).toBeCloseTo(6, 6);
+    expect(c.surplusPerSecond).toBeCloseTo(6, 6);
+  });
+
+  it("a source drawer beside a buffer on one port reads only what the buffer did not bring", () => {
+    use();
+    const result = calculateThroughput(sharedUserPort(), { generatedAt: "t" });
+    expect(result.plan!.forced).toEqual([]);
+    expect(rate(result, "u")).toBeCloseTo(1, 6);
+    expect(result.storages["bf"]!.consumedPerSecond).toBeCloseTo(10, 6);
+    expect(result.storages["cs"]!.consumedPerSecond).toBeCloseTo(5, 6);
+  });
+
+  it("a port fed by a buffer and a source drawer uses the plan's own supply first", () => {
+    use();
+    const result = calculateThroughput(sharedBothPorts(), { generatedAt: "t" });
+    expect(result.plan!.forced).toEqual([]);
+    expect(result.storages["bf"]!.consumedPerSecond).toBeCloseTo(10, 6);
+    expect(result.storages["cs"]!.consumedPerSecond).toBeCloseTo(5, 6);
+    expect(result.storages["cb"]!.producedPerSecond).toBeCloseTo(0, 6);
   });
 });

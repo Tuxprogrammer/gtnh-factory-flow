@@ -40,6 +40,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "4.7.0-tux.7",
+    date: "2026-11-22",
+    headline: "Plans that reuse their own byproducts solve at full size",
+    notes: [
+      "A plan that wires its own output back to its inputs through a drawer no longer shrinks or shuts a line off.",
+      "A leftover drawer next to a shared drawer shows only what the shared drawer did not take.",
+      "An import drawer next to a shared drawer shows only what the plan could not supply itself.",
+    ],
+  },
+  {
     version: "4.7.0-tux.6",
     date: "2026-11-22",
     headline: "Open plans pick up changes made elsewhere",

@@ -17,7 +17,7 @@ import com.gtnhplanner.data.flowchart.balancer.UpTo;
  * solve. Committing the canonical point short-circuits the chain so the entry and stages never run.
  *
  * <p>
- * With Up to pools (docs/design/up-to.md) "closed" means every forced crossing: a drawer's own ports stay open (the
+ * With Up to pools or a drawer on a wired port (docs/design/up-to.md) "closed" means every forced crossing: a drawer's own ports stay open (the
  * player's supply or sink), the push runs, then the drawer stages, and least flow and the canonical point hold all of
  * it.
  */
@@ -30,7 +30,7 @@ public final class FastPathStage implements Prelude {
 
     @Override
     public void run(final SolveContext ctx) {
-        if (!ctx.upToPools.isEmpty()) {
+        if (!ctx.upToPools.isEmpty() || !ctx.drawnPorts.isEmpty()) {
             runUpTo(ctx);
             return;
         }

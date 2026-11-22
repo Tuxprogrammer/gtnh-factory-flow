@@ -81,13 +81,17 @@ that cannot rise past rounding is held at exactly nothing (as `heldAt` closes a 
 
 ### Drawers and buffers: the player's own end
 
-With Up to pools a drawer on a wired port is the player's own end, as in old Build: a source drawer is supply, a
-product, byproduct or trash drawer a sink. Its ports are no trade level (`levels()`, which the alternatives also rank
+A drawer on a wired port is the player's own end, with or without Up to pools, as in old Build: a source drawer is
+supply, a product, byproduct or trash drawer a sink. Its ports are no trade level (`levels()`, which the alternatives also rank
 by), so the trades settle and hold only forced flow, and the push uses the drawers freely. After the push, two held
 stages pick among the pushed points (`settleDrawers`): the least drawn from source drawers (old Build's "recycle before
 importing"), then the least put into sink drawers ("ship before banking"). The read-out probes the trades and bands
 without these stages (`committedTrades`): they are tie-breaks, not limits. On the fast path only the forced crossings
 are closed.
+
+Without Up to pools there is no push: the trades, then the same drawer stages. Priced as a trade, a drawer would share a
+level with forced flow, and a loop (one step) would trade one for the other by least amount: buy an intermediate rather
+than draw from its own source drawer, or idle rather than put a byproduct into its drawer (`drawer-ends.test.ts`).
 
 ### Buffers
 

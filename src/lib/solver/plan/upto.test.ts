@@ -339,7 +339,7 @@ describe("Up to: a drawer on a wired port is the player's own end", () => {
     expect(readoutOf(full, "q").reason).toBe("FULL");
   });
 
-  it("the trade levels (and the alternatives' ranks) leave a drawer's ports out only with Up to pools", () => {
+  it("the trade levels (and the alternatives' ranks) leave a drawer's ports out with or without Up to pools", () => {
     const traded = (i: SolveInput) => {
       const ctx = new SolveContext(i);
       return { drawn: [...ctx.drawnPorts], ports: levels(ctx).flatMap((l) => l.ports) };
@@ -352,7 +352,8 @@ describe("Up to: a drawer on a wired port is the player's own end", () => {
       ...exact,
       pools: exact.pools.map((p) => ({ ...p, exact: true, upTo: false })),
     });
-    for (const p of plain.drawn) expect(plain.ports).toContain(p);
+    expect(plain.drawn).toHaveLength(2);
+    for (const p of plain.drawn) expect(plain.ports).not.toContain(p);
   });
 });
 

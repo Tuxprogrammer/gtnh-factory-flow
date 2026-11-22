@@ -1,8 +1,8 @@
 /**
  * The zero-gate fast path (spec-solver 3.4.1; Java `FastPathStage`): does the plan balance with every gate closed? If
- * so its least-flow point, canonicalised, is the whole answer. With Up to pools (docs/up-to.md) "closed" means every
- * forced crossing: a drawer's own ports stay open (the player's supply or sink), the push runs, then the drawer stages,
- * and least flow and the canonical point hold all of it.
+ * so its least-flow point, canonicalised, is the whole answer. With Up to pools or a drawer on a wired port
+ * (docs/up-to.md) "closed" means every forced crossing: a drawer's own ports stay open (the player's supply or sink),
+ * the push runs, then the drawer stages, and least flow and the canonical point hold all of it.
  */
 import type { SolveContext } from "./context";
 import { canonicalHolding, canonicalizeClosed } from "./canonical";
@@ -13,7 +13,7 @@ import { holding, settleDrawers, tradeModel, tradesWithin, type Trades } from ".
 
 /** Commits the answer and sets `ctx.shortCircuit` when the plan balances with every gate closed. */
 export function runFastPath(ctx: SolveContext): void {
-  if (ctx.upToPools.length > 0) {
+  if (ctx.upToPools.length > 0 || ctx.drawnPorts.size > 0) {
     runUpToFastPath(ctx);
     return;
   }

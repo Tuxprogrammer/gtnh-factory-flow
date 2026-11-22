@@ -32,3 +32,7 @@ MEMBER codechicken/nei/recipe/Recipe$RecipeId.getHandlerName()Ljava/lang/String;
 MEMBER appeng/api/parts/IPatternTerminal.isBlankPattern(Lnet/minecraft/item/ItemStack;)Z  <- pattern/AePatterns, dev/DevPattern  # PatternServer.ready
 MEMBER appeng/api/parts/IPatternTerminal.isEncodedPattern(Lnet/minecraft/item/ItemStack;)Z  <- dev/DevPattern  # dev harness only
 MEMBER appeng/parts/reporting/PartPatternTerminal.encode(Lappeng/api/networking/energy/IEnergySource;Lappeng/api/storage/IMEMonitor;Lappeng/api/networking/security/BaseActionSource;Ljava/lang/String;Lnet/minecraft/world/World;)Z  <- pattern/AePatterns  # PatternServer.ready
+
+# NEI before RC-1 has no StackInfo.isFluidDisplayItem: PatternThis.fluidOf catches the LinkageError and reads the
+# packed output with StackInfo.getFluid alone.
+MEMBER codechicken/nei/recipe/StackInfo.isFluidDisplayItem(Lnet/minecraft/item/ItemStack;)Z  <- pattern/PatternThis  # PatternThis.fluidOf catches LinkageError

@@ -342,10 +342,23 @@ public final class PatternThis {
     private static String productOf(final NBTTagCompound tag) {
         final ItemStack s = ItemStack.loadItemStackFromNBT(tag);
         if (s == null || s.getItem() == null) return "";
-        final FluidStack fluid = StackInfo.isFluidDisplayItem(s) ? StackInfo.getFluid(s) : null;
+        final FluidStack fluid = fluidOf(s);
         if (fluid != null && fluid.getFluid() != null) return "fluid:" + fluid.getFluid()
             .getName();
         return CardDefaults.itemKey(s);
+    }
+
+    /**
+     * The fluid a packed output's display item stands for, null for an item (Not Enough Energistics' rule). NEI before
+     * 2.9.0's RC-1 has no {@code isFluidDisplayItem}: there {@code getFluid} alone reads it.
+     */
+    @Nullable
+    private static FluidStack fluidOf(final ItemStack s) {
+        try {
+            return StackInfo.isFluidDisplayItem(s) ? StackInfo.getFluid(s) : null;
+        } catch (final LinkageError e) {
+            return StackInfo.getFluid(s);
+        }
     }
 
     /** The card's products in the order it shows them; none for no card. */
@@ -383,7 +396,7 @@ public final class PatternThis {
                     final NBTTagCompound tag = out.getCompoundTag(PatternRules.OUT + slot);
                     final ItemStack s = ItemStack.loadItemStackFromNBT(tag);
                     if (s == null) continue;
-                    final FluidStack f = StackInfo.isFluidDisplayItem(s) ? StackInfo.getFluid(s) : null;
+                    final FluidStack f = fluidOf(s);
                     if (f != null) {
                         fluid = f;
                         name = f.getLocalizedName();

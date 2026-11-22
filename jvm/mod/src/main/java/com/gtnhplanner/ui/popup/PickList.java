@@ -75,10 +75,14 @@ public final class PickList extends Widget<PickList> implements Interactable {
     }
 
     public static final int ROW = 20;
+    /** A rule's whole row: a gap, one clear line and a gap. */
+    static final int RULE = 5;
     private static final int MAX_ROWS = 10;
 
     private final List<Entry> entries;
-    private final int rows;
+    /** The window's height: exactly its first rows, so a list with rules is shorter than the same count without. */
+    private final int view;
+    private int[] heights;
     private String filter = "";
     private List<Entry> shown;
     private int scroll;
@@ -86,11 +90,22 @@ public final class PickList extends Widget<PickList> implements Interactable {
     private PickList(final List<Entry> entries, final int width, final int maxRows) {
         this.entries = entries;
         this.shown = entries;
-        this.rows = Math.max(1, Math.min(maxRows, entries.size()));
-        size(width, rows * ROW);
+        this.heights = heightsOf(entries);
+        this.view = PickRows.total(heights, 0, Math.max(1, Math.min(maxRows, entries.size())));
+        size(width, view);
         for (int i = 0; i < entries.size(); i++) {
-            if (entries.get(i).current && i >= rows) scroll = Math.min(i, entries.size() - rows);
+            if (entries.get(i).current) {
+                scroll = Math.min(PickRows.reveal(heights, 0, i, view), PickRows.maxScroll(heights, view));
+                break;
+            }
         }
+    }
+
+    private static int[] heightsOf(final List<Entry> list) {
+        final int[] h = new int[list.size()];
+        for (int i = 0; i < h.length; i++) h[i] = list.get(i)
+            .isRule() ? RULE : ROW;
+        return h;
     }
 
     /**
@@ -151,7 +166,7 @@ public final class PickList extends Widget<PickList> implements Interactable {
             top.add(field);
             y += 18;
         }
-        final Popup popup = new Popup(name, width, y + list.rows * ROW + 4);
+        final Popup popup = new Popup(name, width, y + list.view + 4);
         for (final com.cleanroommc.modularui.api.widget.IWidget w : top) popup.child(w);
         popup.child(list.pos(4, y));
         return popup;
@@ -200,14 +215,23 @@ public final class PickList extends Widget<PickList> implements Interactable {
                     shown.add(e);
             }
         }
+        heights = heightsOf(shown);
         scroll = 0;
     }
 
-    private int hoveredRow() {
+    /** The row under the mouse, rule or not. */
+    private int rowUnderMouse() {
         if (!isHovering()) return -1;
         final int my = getContext().getAbsMouseY() - getArea().y;
-        final int row = my / ROW;
-        return row >= 0 && row < rows ? row + scroll : -1;
+        return PickRows.rowAt(heights, scroll, my, view);
+    }
+
+    /** The row to light: never a rule. */
+    private int hoveredRow() {
+        final int i = rowUnderMouse();
+        if (i < 0 || i >= shown.size()) return -1;
+        return shown.get(i)
+            .isRule() ? -1 : i;
     }
 
     @Override
@@ -216,13 +240,12 @@ public final class PickList extends Widget<PickList> implements Interactable {
         final int hovered = hoveredRow();
         tellHover(hovered >= 0 && hovered < shown.size() ? entries.indexOf(shown.get(hovered)) : -1);
         final float z = context.getCurrentDrawingZ();
-        for (int r = 0; r < rows; r++) {
-            final int i = r + scroll;
-            if (i >= shown.size()) break;
+        final int end = scroll + PickRows.fitting(heights, scroll, view);
+        for (int i = scroll; i < end; i++) {
             final Entry e = shown.get(i);
-            final int y = r * ROW;
+            final int y = PickRows.top(heights, scroll, i);
             if (e.isRule()) {
-                Hyb.rect(4, y + ROW / 2, w - 8, 1, 0xFF3A3C42);
+                Hyb.rect(4, y + RULE / 2, w - 8, 1, Hyb.HIGHLIGHT);
                 continue;
             }
             if (i == hovered) Hyb.rect(0, y, w, ROW, Hyb.MENU_HOVER);
@@ -245,16 +268,17 @@ public final class PickList extends Widget<PickList> implements Interactable {
             Hyb.text(label, x, y + 6, e.labelColor);
             if (!detail.isEmpty()) Hyb.textRight(detail, w - 4, y + 6, Hyb.MUTED);
         }
-        if (shown.size() > rows) {
-            final int barH = Math.max(8, rows * ROW * rows / shown.size());
-            final int barY = (rows * ROW - barH) * scroll / Math.max(1, shown.size() - rows);
+        final int max = PickRows.maxScroll(heights, view);
+        if (max > 0) {
+            final int barH = Math.max(8, view * view / PickRows.total(heights, 0, heights.length));
+            final int barY = (view - barH) * scroll / max;
             Hyb.rect(w - 2, barY, 2, barH, Hyb.MUTED);
         }
     }
 
     @Override
     public Result onMousePressed(final int mouseButton) {
-        final int i = hoveredRow();
+        final int i = rowUnderMouse();
         if (mouseButton != 0 || i < 0 || i >= shown.size()) return Result.IGNORE;
         final Entry e = shown.get(i);
         if (e.isRule()) return Result.SUCCESS;
@@ -272,17 +296,16 @@ public final class PickList extends Widget<PickList> implements Interactable {
     public int[] rowRect(final String label) {
         for (int i = 0; i < shown.size(); i++) {
             if (!shown.get(i).label.contains(label)) continue;
-            if (i < scroll) scroll = i;
-            else if (i >= scroll + rows) scroll = i - rows + 1;
+            scroll = Math.min(PickRows.reveal(heights, scroll, i, view), PickRows.maxScroll(heights, view));
             final com.cleanroommc.modularui.widget.sizer.Area a = getArea();
-            return new int[] { a.x, a.y + (i - scroll) * ROW, a.width, ROW };
+            return new int[] { a.x, a.y + PickRows.top(heights, scroll, i), a.width, ROW };
         }
         return null;
     }
 
     @Override
     public boolean onMouseScroll(final UpOrDown direction, final int amount) {
-        final int max = Math.max(0, shown.size() - rows);
+        final int max = PickRows.maxScroll(heights, view);
         scroll = Math.max(0, Math.min(max, scroll + (direction == UpOrDown.UP ? -1 : 1)));
         return true;
     }

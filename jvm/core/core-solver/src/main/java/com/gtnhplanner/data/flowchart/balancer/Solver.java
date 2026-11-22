@@ -218,11 +218,12 @@ public final class Solver {
     public static List<Level> levels(final SolveContext ctx) {
         // Keyed so that ascending order is the order above: buying (0) before selling (1), then steps descending.
         final java.util.TreeMap<Long, List<Integer>> byLevel = new java.util.TreeMap<>();
-        // With Up to pools a drawer's ports are no level: what crosses there is the player's own end, not a trade
-        // (docs/design/up-to.md, "Drawers and buffers").
-        final boolean drawerEnds = !ctx.upToPools.isEmpty();
+        // A drawer's ports are no level: what crosses there is the player's own end, not a trade (docs/design/up-to.md,
+        // "Drawers and buffers"). Priced as a trade, a drawer on a wired port shares a level with forced flow, and a
+        // loop (one step) then buys an intermediate rather than draw from its source, or idles rather than fill its
+        // byproduct drawer.
         for (int p = 0; p < ctx.model.connectedPorts.size(); p++) {
-            if (drawerEnds && ctx.drawnPorts.contains(p)) continue;
+            if (ctx.drawnPorts.contains(p)) continue;
             final boolean buying = ctx.model.connectedPorts.get(p)
                 .input();
             byLevel.computeIfAbsent(((buying ? 0L : 1L) << 32) - ctx.model.portSteps[p], k -> new ArrayList<>())

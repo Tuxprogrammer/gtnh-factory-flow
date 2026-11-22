@@ -78,11 +78,10 @@ public final class TradeStage implements Entry<Solver.Trades> {
     /**
      * After the push (docs/design/up-to.md): the least the plan draws from its source drawers ("recycle before
      * importing"), then the least it banks in its sink drawers ("ship before banking"), with everything before held,
-     * each held where it was reached like a trade level. Returns {@code pushed} itself without Up to pools or wired
+     * each held where it was reached like a trade level. Returns {@code pushed} itself without wired
      * drawers. A stage that finds nothing (numerics) stops where it is.
      */
     public static Solver.Trades settleDrawers(final SolveContext ctx, final Solver.Trades pushed) {
-        if (ctx.upToPools.isEmpty()) return pushed;
         Solver.Trades held = pushed;
         for (final Solver.Level level : drawerLevels(ctx)) {
             final Handles h = Solver.tradeModel(ctx, held);

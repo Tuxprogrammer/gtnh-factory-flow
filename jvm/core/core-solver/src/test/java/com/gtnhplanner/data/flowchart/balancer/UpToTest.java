@@ -363,7 +363,7 @@ class UpToTest {
     }
 
     @Test
-    void theTradeLevelsLeaveADrawersPortsOutOnlyWithUpToPools() {
+    void theTradeLevelsLeaveADrawersPortsOutWithOrWithoutUpToPools() {
         final SolveContext up = context(UpToPlans.toppedLoop(DrawerTypes.Rule.ANY, 0));
         assertEquals(2, up.drawnPorts.size());
         final Set<Integer> traded = new java.util.HashSet<>();
@@ -372,7 +372,8 @@ class UpToTest {
         final SolveContext plain = context(UpToPlans.exactly(UpToPlans.toppedLoop(DrawerTypes.Rule.ANY, 0)));
         final Set<Integer> all = new java.util.HashSet<>();
         for (final Solver.Level l : Solver.levels(plain)) for (final int p : l.ports()) all.add(p);
-        for (final int p : plain.drawnPorts) assertTrue(all.contains(p));
+        assertEquals(2, plain.drawnPorts.size());
+        for (final int p : plain.drawnPorts) assertFalse(all.contains(p));
     }
 
     // ── A buffer of any rule banks what its takers do not take ──

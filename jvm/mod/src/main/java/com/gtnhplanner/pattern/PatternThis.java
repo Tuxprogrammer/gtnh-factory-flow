@@ -12,23 +12,29 @@ import javax.annotation.Nullable;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraftforge.fluids.FluidStack;
 
 import com.gtnhplanner.GtnhPlanner;
 import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.MachineGroup;
 import com.gtnhplanner.data.flowchart.Node;
+import com.gtnhplanner.data.flowchart.Port;
 import com.gtnhplanner.data.flowchart.balancer.Severity;
 import com.gtnhplanner.nei.BookmarkPlan;
 import com.gtnhplanner.nei.NeiRecipes;
 import com.gtnhplanner.ui.BoardSession;
 import com.gtnhplanner.ui.CardRecipes;
+import com.gtnhplanner.ui.Resources;
+import com.gtnhplanner.ui.card.CardDefaults;
 import com.gtnhplanner.ui.world.WorldView;
 
 import codechicken.nei.recipe.IRecipeHandler;
 import codechicken.nei.recipe.Recipe;
 import codechicken.nei.recipe.RecipeHandlerRef;
+import codechicken.nei.recipe.StackInfo;
 import cpw.mods.fml.common.Loader;
 
 /**
@@ -75,33 +81,88 @@ public final class PatternThis {
         return Boolean.TRUE.equals(PatternNet.serverReady) ? null : "Not on this server";
     }
 
-    /** "Pattern this" on a card: one pattern for its recipe, or for each recipe of its shared machine. */
+    /**
+     * "Pattern this" on a card: one pattern for its recipe, or for each recipe of its shared machine. A recipe with
+     * more
+     * than one product first asks which products go in ({@link PatternPick}), opening on the card's remembered choice,
+     * else the first product alone; the choice is remembered for the card ({@link PatternMemory}).
+     */
     public static void card(final BoardSession session, final Node node) {
         final Graph graph = session.graph();
         final MachineGroup group = CardRecipes.machineOf(graph, node.id);
-        final List<RecipeHandlerRef> refs = new ArrayList<>();
+        final List<Job> jobs = new ArrayList<>();
         int missing = 0;
-        if (group == null) {
-            final RecipeHandlerRef ref = NeiRecipes.page(node);
-            if (ref != null) refs.add(ref);
+        final List<Node> sections = new ArrayList<>();
+        if (group == null) sections.add(node);
+        else for (final Uuid id : group.getSections()) sections.add(graph.nodes.get(id));
+        for (final Node section : sections) {
+            final RecipeHandlerRef ref = section == null ? null : NeiRecipes.page(section);
+            if (ref != null) jobs.add(new Job(ref, section, PatternMemory.get(graph, section)));
             else missing++;
-        } else {
-            for (final Uuid id : group.getSections()) {
-                final Node section = graph.nodes.get(id);
-                final RecipeHandlerRef ref = section == null ? null : NeiRecipes.page(section);
-                if (ref != null) refs.add(ref);
-                else missing++;
-            }
         }
-        pattern(refs, missing);
+        // The box lists every recipe that has products to pick; it opens only when one has more than one.
+        final List<PatternPick.Recipe> picks = new ArrayList<>();
+        final int[] pickOf = new int[jobs.size()];
+        boolean ask = false;
+        for (int i = 0; i < jobs.size(); i++) {
+            pickOf[i] = -1;
+            final Job job = jobs.get(i);
+            final NBTTagCompound[] packed = pack(job.ref().handler, job.ref().recipeIndex);
+            if (packed == null || packed[1] == null) continue;
+            final List<PatternPick.Row> rows = rows(packed[1], job.card());
+            if (rows.isEmpty()) continue;
+            final List<String> products = new ArrayList<>();
+            for (final PatternPick.Row r : rows) products.add(r.key());
+            ask |= PatternOutputs.asks(products);
+            picks.add(
+                new PatternPick.Recipe(
+                    sections.size() > 1 ? PatternPick.t("recipe", sections.indexOf(job.card()) + 1) : null,
+                    rows,
+                    PatternOutputs.chosen(products, job.products())));
+            pickOf[i] = picks.size() - 1;
+        }
+        if (!ask || session.panel() == null) {
+            start(jobs, missing, -1);
+            return;
+        }
+        final int lost = missing;
+        PatternPick.open(session.panel(), picks, jobs.size() > 1, chosen -> {
+            final List<Job> made = new ArrayList<>();
+            for (int i = 0; i < jobs.size(); i++) {
+                final Job job = jobs.get(i);
+                final int at = pickOf[i];
+                if (at < 0) {
+                    made.add(job);
+                    continue;
+                }
+                final List<String> included = chosen.get(at).included;
+                PatternMemory.put(graph, job.card(), included);
+                made.add(new Job(job.ref(), job.card(), included));
+            }
+            start(made, lost, -1);
+        });
     }
 
     /**
+     * One recipe to pattern: its NEI page, the card it is on (null for none; its order of products comes first), and
+     * the products its pattern includes (null: the first product alone).
+     */
+    public record Job(RecipeHandlerRef ref, @Nullable Node card, @Nullable List<String> products) {}
+
+    /**
      * One pattern for each recipe, made by the server from the player's blank patterns. {@code missing} recipes that
-     * NEI could not find again are counted as ones that cannot be patterned.
+     * NEI could not find again are counted as ones that cannot be patterned. Each pattern holds the recipe's first
+     * product alone.
      */
     public static void pattern(final List<RecipeHandlerRef> refs, final int missing) {
-        start(refs, missing, -1);
+        final List<Job> jobs = new ArrayList<>();
+        for (final RecipeHandlerRef ref : refs) jobs.add(new Job(ref, null, null));
+        start(jobs, missing, -1);
+    }
+
+    /** As {@link #pattern}, each recipe with the products its job names. */
+    public static void patterns(final List<Job> jobs, final int missing) {
+        start(jobs, missing, -1);
     }
 
     /** The Share menu's "Pattern the plan" on the open plan. */
@@ -113,15 +174,18 @@ public final class PatternThis {
      * "Pattern the plan": one pattern for each distinct recipe of {@code plan} ({@link PatternPlan#pick}), each made by
      * the server from one of the player's blank patterns exactly as for one card, and one sentence when the last one
      * is answered (on the board, or in chat with no board open). Unless the player is in creative, nothing is asked
-     * for when they hold fewer blank patterns than the plan needs.
+     * for when they hold fewer blank patterns than the plan needs. Each pattern holds the products remembered for its
+     * card, else its first product alone; no box asks.
      */
     public static void plan(final Graph plan) {
-        final BookmarkPlan.Pick<RecipeHandlerRef> pick = PatternPlan
-            .pick(plan.nodes.values(), PatternThis::refOf, PatternThis::keyOf);
+        final BookmarkPlan.Pick<Job> pick = PatternPlan.pick(plan.nodes.values(), n -> {
+            final RecipeHandlerRef ref = refOf(n);
+            return ref == null ? null : new Job(ref, n, PatternMemory.get(plan, n));
+        }, job -> keyOf(job.ref()));
         start(pick.recipes(), 0, pick.skipped());
     }
 
-    private static void start(final List<RecipeHandlerRef> refs, final int missing, final int skippedCards) {
+    private static void start(final List<Job> jobs, final int missing, final int skippedCards) {
         if (!waiting.isEmpty() || !queued.isEmpty()) {
             report(Severity.WARN, "Still making the last patterns");
             return;
@@ -130,18 +194,18 @@ public final class PatternThis {
         skipped = skippedCards;
         for (int i = 0; i < missing; i++) tally = tally.plus(PatternRules.CANNOT, 0);
         if (unavailable() != null) {
-            for (int i = 0; i < refs.size(); i++) tally = tally.plus(PatternRules.NO_SERVER, 0);
+            for (int i = 0; i < jobs.size(); i++) tally = tally.plus(PatternRules.NO_SERVER, 0);
             done();
             return;
         }
         final List<PatternNet.Ask> asks = new ArrayList<>();
-        for (final RecipeHandlerRef ref : refs) {
-            final NBTTagCompound[] packed = pack(ref.handler, ref.recipeIndex);
+        for (final Job job : jobs) {
+            final NBTTagCompound[] packed = pack(job.ref().handler, job.ref().recipeIndex);
             if (packed == null || packed[0].hasNoTags()) {
                 tally = tally.plus(PatternRules.CANNOT, 0);
                 continue;
             }
-            asks.add(new PatternNet.Ask(++nextId, packed[0], packed[1]));
+            asks.add(new PatternNet.Ask(++nextId, packed[0], packed[1] == null ? null : only(packed[1], job)));
         }
         // A whole plan is made in full or not at all: the blanks are counted before anything is asked for.
         if (skippedCards >= 0 && !asks.isEmpty()) {
@@ -222,6 +286,122 @@ public final class PatternThis {
         final BoardSession session = BoardSession.current();
         if (session != null) session.flash(severity, text);
         else WorldView.say(text);
+    }
+
+    /**
+     * The packed outputs with only the job's products left: the other output keys are taken out and the rest keep
+     * their slots, as clearing those output slots in the terminal before encoding does. Inputs are never touched.
+     */
+    private static NBTTagCompound only(final NBTTagCompound out, final Job job) {
+        final List<String> keys = packedKeys(out);
+        final List<String> products = PatternOutputs.products(keys, cardKeys(job.card()));
+        final List<Integer> keep = PatternOutputs.keep(keys, PatternOutputs.chosen(products, job.products()));
+        final NBTTagCompound kept = new NBTTagCompound();
+        for (final int slot : keep) {
+            final String k = PatternRules.OUT + slot;
+            if (out.hasKey(k)) kept.setTag(
+                k,
+                out.getTag(k)
+                    .copy());
+        }
+        return kept;
+    }
+
+    /** The products the card's pattern can hold, in the card's order; none for a crafting-table recipe. */
+    public static List<String> products(final Node card) {
+        final RecipeHandlerRef ref = refOf(card);
+        final NBTTagCompound[] packed = ref == null ? null : pack(ref.handler, ref.recipeIndex);
+        if (packed == null || packed[1] == null) return List.of();
+        return PatternOutputs.products(packedKeys(packed[1]), cardKeys(card));
+    }
+
+    /** The products remembered for the card in {@code plan}; null when never chosen. */
+    @Nullable
+    public static List<String> remembered(final Graph plan, final Node card) {
+        return PatternMemory.get(plan, card);
+    }
+
+    /** Remembers the card's products in {@code plan}, as Make pattern in the box does. */
+    public static void remember(final Graph plan, final Node card, final List<String> products) {
+        PatternMemory.put(plan, card, products);
+    }
+
+    /** The product in each packed output slot, by slot ("" for a slot with nothing readable in it). */
+    public static List<String> packedKeys(final NBTTagCompound out) {
+        final List<String> keys = new ArrayList<>();
+        for (final Object o : out.func_150296_c()) {
+            final int slot = PatternRules.slot(String.valueOf(o), PatternRules.OUT);
+            if (slot < 0 || slot >= PatternRules.MAX_KEYS) continue;
+            while (keys.size() <= slot) keys.add("");
+            keys.set(slot, productOf(out.getCompoundTag(String.valueOf(o))));
+        }
+        return keys;
+    }
+
+    /** A packed output's product, by Not Enough Energistics' rule: a fluid's display item is the fluid. */
+    private static String productOf(final NBTTagCompound tag) {
+        final ItemStack s = ItemStack.loadItemStackFromNBT(tag);
+        if (s == null || s.getItem() == null) return "";
+        final FluidStack fluid = StackInfo.isFluidDisplayItem(s) ? StackInfo.getFluid(s) : null;
+        if (fluid != null && fluid.getFluid() != null) return "fluid:" + fluid.getFluid()
+            .getName();
+        return CardDefaults.itemKey(s);
+    }
+
+    /** The card's products in the order it shows them; none for no card. */
+    private static List<String> cardKeys(@Nullable final Node card) {
+        final List<String> keys = new ArrayList<>();
+        if (card != null) for (final Port<?> p : card.outputs) keys.add(Resources.key(p));
+        return keys;
+    }
+
+    /** The pattern's products as the box lists them: in the card's order, each with its picture, name and amount. */
+    private static List<PatternPick.Row> rows(final NBTTagCompound out, @Nullable final Node card) {
+        final List<String> keys = packedKeys(out);
+        final List<PatternPick.Row> rows = new ArrayList<>();
+        for (final String key : PatternOutputs.products(keys, cardKeys(card))) {
+            Port<?> port = null;
+            if (card != null) for (final Port<?> p : card.outputs) if (key.equals(Resources.key(p))) {
+                port = p;
+                break;
+            }
+            ItemStack item = null;
+            FluidStack fluid = null;
+            String name;
+            long amount = 0;
+            float chance = 1;
+            if (port != null) {
+                if (port.getValue() instanceof final FluidStack f) fluid = f;
+                else if (port.getValue() instanceof final ItemStack i) item = i;
+                name = port.getDisplayName();
+                amount = Math.round(port.amount());
+                chance = port.getChance();
+            } else {
+                name = key;
+                for (int slot = 0; slot < keys.size(); slot++) {
+                    if (!key.equals(keys.get(slot))) continue;
+                    final NBTTagCompound tag = out.getCompoundTag(PatternRules.OUT + slot);
+                    final ItemStack s = ItemStack.loadItemStackFromNBT(tag);
+                    if (s == null) continue;
+                    final FluidStack f = StackInfo.isFluidDisplayItem(s) ? StackInfo.getFluid(s) : null;
+                    if (f != null) {
+                        fluid = f;
+                        name = f.getLocalizedName();
+                        amount += f.amount;
+                    } else {
+                        item = s;
+                        name = s.getDisplayName();
+                        amount += tag.getInteger("Count");
+                    }
+                }
+            }
+            String text = fluid != null ? String.format(java.util.Locale.ROOT, "%,d L", amount)
+                : String.format(java.util.Locale.ROOT, "%,d", amount);
+            if (chance < 1) text += " (" + new java.math.BigDecimal(Float.toString(chance * 100)).stripTrailingZeros()
+                .toPlainString() + "%)";
+            rows.add(new PatternPick.Row(key, item, fluid, name, text));
+        }
+        return rows;
     }
 
     /** NEE's packing of one recipe: {inputs, outputs}, outputs null for a crafting-table recipe; null if it failed. */

@@ -372,3 +372,11 @@ gtnhplanner.card.dial.rate.title=The rate it holds.
 gtnhplanner.card.generator.unlocks=Unlocks at %s
 gtnhplanner.card.generator.on=On
 gtnhplanner.card.generator.off=Off
+
+# Pattern this: the box that picks which products go in the AE2 pattern (pattern/PatternPick).
+gtnhplanner.pattern.pick.title=Products in the pattern
+gtnhplanner.pattern.pick.recipe=Recipe %s
+gtnhplanner.pattern.pick.make=Make pattern
+gtnhplanner.pattern.pick.make_many=Make patterns
+gtnhplanner.pattern.pick.cancel=Cancel
+gtnhplanner.pattern.pick.none=Include at least one product

@@ -71,6 +71,13 @@ final class DevPattern {
         if (q.containsKey("look")) return client.run(DevPattern::look);
         if (q.containsKey("remote")) return remote(q, client);
         if (q.containsKey("plan")) return plan(q, client);
+        if (q.containsKey("add")) return add(q, client);
+        if (q.containsKey("pick")) return client.run(() -> {
+            com.gtnhplanner.pattern.PatternThis.card(session(), node(q));
+            return Map.<String, Object>of("ok", true);
+        });
+        if (q.containsKey("pickat")) return client.run(DevPattern::pickAt);
+        if (q.containsKey("remember")) return client.run(() -> remember(q));
         return compare(q, client);
     }
 
@@ -127,6 +134,8 @@ final class DevPattern {
     private static Map<String, Object> compare(final Map<String, String> q, final OnClient client) throws Exception {
         final boolean regular = "regular".equals(q.getOrDefault("term", "ex"));
         final boolean direct = q.containsKey("direct");
+        final List<Integer> keep = keep(q);
+        if (keep != null && direct) throw new IllegalArgumentException("keep goes by the network path");
         final int[] at = regular ? regularAt : exAt;
         if (at == null) throw new IllegalArgumentException("run pattern?setup=1 first");
         final Map<String, Object> m = new LinkedHashMap<>();
@@ -188,6 +197,15 @@ final class DevPattern {
             final EntityPlayerMP p = player();
             if (!(p.openContainer instanceof final ContainerPatternTerm c))
                 throw new IllegalStateException("no terminal open on the server");
+            // keep=0,2: the player clears every other output slot before encoding (what a click on a filled output
+            // slot of the terminal sends: the slot set to nothing).
+            if (keep != null) {
+                final int n = c.getPatternTerminal()
+                    .getAEInventoryByName(appeng.api.storage.StorageName.CRAFTING_OUTPUT)
+                    .getSizeInventory();
+                for (int i = 0; i < n; i++)
+                    if (!keep.contains(i)) c.updateVirtualSlot(appeng.api.storage.StorageName.CRAFTING_OUTPUT, i, null);
+            }
             c.encode();
             final IInventory slots = c.getPatternTerminal()
                 .getInventoryByName("pattern");
@@ -218,7 +236,8 @@ final class DevPattern {
                 return blankCount(player());
             });
             client.run(() -> {
-                PatternThis.pattern(List.of(ref), 0);
+                // auto=1: the button as for a card never chosen (its first product), against the hand-cleared slots.
+                send(ref, q.containsKey("auto") ? null : keep, m);
                 return null;
             });
             Thread.sleep(1500);
@@ -297,13 +316,111 @@ final class DevPattern {
                 ref.handler.getRecipeName()
                     .trim() + " #" + ref.recipeIndex);
             // many=N asks for the one recipe N times, as a plan of N recipes is sent: in batches, over ticks.
-            PatternThis.pattern(java.util.Collections.nCopies(Integer.parseInt(q.getOrDefault("many", "1")), ref), 0);
+            final int many = Integer.parseInt(q.getOrDefault("many", "1"));
+            if (many == 1) send(ref, keep(q), m);
+            else PatternThis.pattern(java.util.Collections.nCopies(many, ref), 0);
             return null;
         });
         Thread.sleep(Long.parseLong(q.getOrDefault("wait", "2500")));
         m.put("after", client.run(DevPattern::look));
         m.put("made", made(m));
         return m;
+    }
+
+    /** {@code keep=0,2}: the output slots kept, by Not Enough Energistics' packed order; null when not given. */
+    @org.jetbrains.annotations.Nullable
+    private static List<Integer> keep(final Map<String, String> q) {
+        final String k = q.get("keep");
+        if (k == null || k.isEmpty()) return null;
+        final List<Integer> out = new ArrayList<>();
+        for (final String s : k.split(",")) out.add(Integer.parseInt(s.trim()));
+        return out;
+    }
+
+    /**
+     * The button's ask for one recipe: with {@code keep}, the products in those packed slots included (the choice the
+     * box would hand over), else what a card never chosen gets (its first product).
+     */
+    private static void send(final RecipeHandlerRef ref, @org.jetbrains.annotations.Nullable final List<Integer> keep,
+        final Map<String, Object> m) {
+        List<String> products = null;
+        if (keep != null) {
+            final NBTTagCompound[] packed = PatternThis.pack(ref.handler, ref.recipeIndex);
+            if (packed == null || packed[1] == null) throw new IllegalStateException("no outputs packed");
+            final List<String> keys = PatternThis.packedKeys(packed[1]);
+            products = new ArrayList<>();
+            for (final int i : keep) products.add(keys.get(i));
+            m.put("packedKeys", keys);
+            m.put("products", products);
+        }
+        PatternThis.patterns(List.of(new PatternThis.Job(ref, null, products)), 0);
+    }
+
+    private static com.gtnhplanner.ui.BoardSession session() {
+        final com.gtnhplanner.ui.BoardSession session = com.gtnhplanner.ui.BoardSession.current();
+        if (session == null) throw new IllegalStateException("open the planner first");
+        return session;
+    }
+
+    private static com.gtnhplanner.data.flowchart.Node node(final Map<String, String> q) {
+        final com.gtnhplanner.data.flowchart.Node n = session().graph().nodes
+            .get(com.gtnhplanner.core.base.Uuid.fromString(q.getOrDefault("id", "")));
+        if (n == null) throw new IllegalArgumentException("no card " + q.get("id"));
+        return n;
+    }
+
+    /**
+     * {@code add=1}: the recipe ({@code output}, {@code handler}, {@code input}, {@code nth}) as a card on the board.
+     */
+    private static Map<String, Object> add(final Map<String, String> q, final OnClient client) throws Exception {
+        return client.run(() -> {
+            final RecipeHandlerRef ref = find(
+                q.getOrDefault("output", ""),
+                q.getOrDefault("handler", ""),
+                q.getOrDefault("input", ""),
+                Integer.parseInt(q.getOrDefault("nth", "0")));
+            final com.gtnhplanner.data.flowchart.Node node = session().addRecipe(ref.handler, ref.recipeIndex);
+            final Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", String.valueOf(node.id));
+            m.put(
+                "recipe",
+                ref.handler.getRecipeName()
+                    .trim() + " #" + ref.recipeIndex);
+            final List<String> outputs = new ArrayList<>();
+            for (final com.gtnhplanner.data.flowchart.Port<?> p : node.outputs)
+                outputs.add(com.gtnhplanner.ui.Resources.key(p));
+            m.put("cardOutputs", outputs);
+            m.put("remembered", PatternThis.remembered(session().graph(), node));
+            return m;
+        });
+    }
+
+    /** {@code remember=0,2&id=}: the card's choice set as the box sets it, to the products at those places. */
+    private static Map<String, Object> remember(final Map<String, String> q) {
+        final com.gtnhplanner.data.flowchart.Node node = node(q);
+        final List<String> products = PatternThis.products(node);
+        final List<String> chosen = new ArrayList<>();
+        for (final int i : keep(Map.of("keep", q.get("remember")))) chosen.add(products.get(i));
+        PatternThis.remember(session().graph(), node, chosen);
+        return Map.of("products", products, "remembered", PatternThis.remembered(session().graph(), node));
+    }
+
+    /** Where the open box's switches and keys are, in the game's GUI pixels (what {@code /click} takes). */
+    private static Map<String, Object> pickAt() {
+        final Map<String, Object> t = com.gtnhplanner.pattern.PatternPick.targets();
+        if (t == null) throw new IllegalStateException("no box opened");
+        final Map<String, Object> out = new LinkedHashMap<>(t);
+        final List<int[]> switches = new ArrayList<>();
+        for (final Object o : (List<?>) t.get("switches")) switches.add(game((int[]) o));
+        out.put("switches", switches);
+        out.put("cancel", game((int[]) t.get("cancel")));
+        out.put("make", game((int[]) t.get("make")));
+        return out;
+    }
+
+    private static int[] game(final int[] board) {
+        return new int[] { com.gtnhplanner.ui.PlannerScale.toGame(board[0]),
+            com.gtnhplanner.ui.PlannerScale.toGame(board[1]) };
     }
 
     /** The Share menu's "Pattern the plan" on the open plan, read from the client as {@link #remote} is. */

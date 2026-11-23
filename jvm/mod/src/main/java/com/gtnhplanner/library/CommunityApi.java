@@ -329,28 +329,24 @@ public final class CommunityApi {
     @Nullable
     private static volatile String versionsFor;
     private static volatile List<String[]> versions = List.of();
+    private static volatile String currentVersion;
 
-    /** The item list for a pack version: the same version, else the same major one, else the newest. */
+    /** The item list for a pack version ({@link PackVersions#pick}): the pack's own release decides first. */
     @Nullable
     private static String datasetVersion(final String packVersion) throws IOException {
         if (!site.equals(versionsFor)) {
             final List<String[]> read = new ArrayList<>();
-            for (final JsonElement e : array(
-                json(request("GET", site + "/datasets/gtnh/datasets.manifest.json", null, null)),
-                "versions")) {
+            final JsonObject manifest = json(
+                request("GET", site + "/datasets/gtnh/datasets.manifest.json", null, null));
+            for (final JsonElement e : array(manifest, "versions")) {
                 if (e.isJsonObject()) read.add(
                     new String[] { string(e.getAsJsonObject(), "id"), string(e.getAsJsonObject(), "gtnhVersion") });
             }
             versions = read;
+            currentVersion = string(manifest, "latestStableVersion");
             versionsFor = site;
         }
-        final List<String[]> all = versions;
-        if (all.isEmpty()) return null;
-        for (final String[] v : all) if (v[1].equals(packVersion)) return v[0];
-        final int dot = packVersion.indexOf('.', packVersion.indexOf('.') + 1);
-        final String major = dot > 0 ? packVersion.substring(0, dot + 1) : packVersion;
-        if (!major.isEmpty()) for (final String[] v : all) if (v[1].startsWith(major)) return v[0];
-        return all.get(0)[0];
+        return PackVersions.pick(versions, currentVersion, PackVersions.release(), packVersion);
     }
 
     // endregion

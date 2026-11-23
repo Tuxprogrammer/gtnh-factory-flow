@@ -30,6 +30,7 @@ import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.importer.FfConverter;
 import com.gtnhplanner.importer.game.FactoryFlowImport;
 import com.gtnhplanner.library.CommunityApi;
+import com.gtnhplanner.library.PackVersions;
 import com.gtnhplanner.library.Posting;
 import com.gtnhplanner.library.SiteOff;
 import com.gtnhplanner.ui.BoardSession;
@@ -106,7 +107,7 @@ public final class AskDave {
         final DaveContext.Plan plan = new DaveContext.Plan(
             g.planId(),
             g.getName(),
-            Posting.packVersion(),
+            PackVersions.release().isEmpty() ? Posting.packVersion() : PackVersions.release(),
             g.getNodes()
                 .size(),
             g.getCloudKey() != null,

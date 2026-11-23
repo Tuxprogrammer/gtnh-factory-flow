@@ -177,4 +177,39 @@ class PlanRenamesTest {
                 .iterator()
                 .next());
     }
+
+    @Test
+    void movesSlotPicksWithTheirWires() {
+        // A card's slot pick names the item it takes: it moves with the wire into that slot, or the wire meets no port.
+        final JsonObject before = plan(false);
+        final JsonObject pick = new JsonParser().parse("""
+            {"0": {"id": "ic2:itemfuelplantball", "kind": "item", "amount": 2, "displayName": "Plantball",
+                   "iconPath": "/datasets/old/plantball.png"}}""")
+            .getAsJsonObject();
+        before.getAsJsonArray("nodes")
+            .get(1)
+            .getAsJsonObject()
+            .add("recipeInputOverrides", pick);
+        final JsonObject after = PlanRenames.apply(before, new Game(TABLE));
+        final JsonObject moved = after.getAsJsonArray("nodes")
+            .get(1)
+            .getAsJsonObject()
+            .getAsJsonObject("recipeInputOverrides")
+            .getAsJsonObject("0");
+        assertEquals(
+            NEW,
+            moved.get("id")
+                .getAsString());
+        assertFalse(moved.has("iconPath"), "the old item's picture goes with it");
+        assertEquals(
+            NEW,
+            after.getAsJsonArray("edges")
+                .get(0)
+                .getAsJsonObject()
+                .get("resourceId")
+                .getAsString());
+        final Graph g = FfImport.importFromText(before.toString(), new Game(TABLE), new FakeGame())
+            .graph();
+        assertEquals(1, g.edges.size(), "the wire into the picked slot is kept");
+    }
 }

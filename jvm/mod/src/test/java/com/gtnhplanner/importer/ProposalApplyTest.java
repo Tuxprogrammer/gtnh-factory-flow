@@ -271,6 +271,109 @@ class ProposalApplyTest {
         assertThrows(FfImportException.class, () -> prepared(b, later));
     }
 
+    /**
+     * The website's apply of a proposal is its draft: the plan's cards, drawers and wires plus the proposal's. Split
+     * the demo so the proposal's electrolyzer feeds the plan's own carbon drawer; the applied plan must have the same
+     * wires and drawer links as the whole demo imported at once.
+     */
+    @Test
+    void aWireFromANewCardToTheirOwnDrawerIsKeptAsTheWebsiteHasIt() {
+        final Set<String> own = Set.of("node-fish-catcher", "node-fish-oil", "node-methane-source");
+        final JsonObject plan = demo();
+        final JsonArray nodes = new JsonArray(), edges = new JsonArray();
+        for (final JsonElement n : plan.getAsJsonArray("nodes")) if (own.contains(id(n))) nodes.add(n);
+        for (final JsonElement e : plan.getAsJsonArray("edges"))
+            if (own.contains(str(e, "source")) && own.contains(str(e, "target"))) edges.add(e);
+        plan.add("nodes", nodes);
+        plan.add("edges", edges);
+        plan.remove("targetRate");
+        final FakeGame game = new FakeGame();
+        final FfConverter.Result base = FfImport.importFromText(plan.toString(), game, game);
+        final Map<String, String> ids = new HashMap<>(
+            base.placed()
+                .cards());
+        // The plan's own carbon drawer, nothing wired to it yet (an import leaves out a drawer with no wires).
+        final FakeGame whole = new FakeGame();
+        final JsonObject all = demo();
+        all.remove("targetRate");
+        final Graph expected = FfImport.importFromText(all.toString(), whole, whole)
+            .graph();
+        final com.gtnhplanner.data.flowchart.Drawer carbon = expected.getDrawers()
+            .iterator()
+            .next();
+        final com.gtnhplanner.data.flowchart.Drawer drawer = new com.gtnhplanner.data.flowchart.Drawer(
+            Uuid.randomUUID(),
+            carbon.getKind(),
+            carbon.getResourceKey());
+        base.graph()
+            .addDrawer(drawer);
+        ids.put(
+            "demo-carbon-drawer",
+            drawer.getId()
+                .toString());
+
+        final JsonObject demo = demo(), proposal = new JsonObject();
+        proposal.addProperty("version", 1);
+        proposal.addProperty(
+            "basePlanId",
+            base.graph()
+                .planId());
+        proposal.add("recipes", demo.get("recipes"));
+        final JsonArray cards = new JsonArray(), wires = new JsonArray();
+        for (final JsonElement c : demo.getAsJsonArray("nodes")) if (!own.contains(id(c))) cards.add(c);
+        for (final JsonElement e : demo.getAsJsonArray("edges")) {
+            final JsonObject w = e.getAsJsonObject();
+            if (own.contains(str(w, "source")) && own.contains(str(w, "target"))) continue;
+            for (final String end : List.of("source", "target"))
+                if (ids.containsKey(str(w, end))) w.addProperty(end, ids.get(str(w, end)));
+            wires.add(w);
+        }
+        proposal.add("cards", cards);
+        proposal.add("drawers", new JsonArray());
+        proposal.add("wires", wires);
+        proposal.add("targets", new JsonArray());
+
+        final ProposalApply.Outcome out = ProposalApply
+            .prepare(proposal, text -> FfImport.importFromText(text, game, game))
+            .addTo(base.graph(), new FfCards.Ports(game));
+        assertEquals(4, out.cards());
+        assertEquals(7, out.wires(), "every wire of the proposal, the one to the drawer too");
+        assertEquals(0, out.wiresGone() + out.wiresNoPort());
+
+        assertEquals(wiring(expected), wiring(base.graph()));
+    }
+
+    /** A plan's wires and drawer links, each end named by its card's machine and recipe and its port. */
+    private static List<String> wiring(final Graph g) {
+        final List<String> out = new java.util.ArrayList<>();
+        for (final Edge e : g.getEdges()) out.add(
+            card(g, e.sourceNodeId) + ":"
+                + e.sourceOutputIndex
+                + " -> "
+                + card(g, e.targetNodeId)
+                + ":"
+                + e.targetInputIndex);
+        for (final com.gtnhplanner.data.flowchart.Drawer d : g.getDrawers())
+            for (final com.gtnhplanner.data.flowchart.Drawer.Held h : d.held()) out.add(
+                d.getKind() + " "
+                    + d.getResourceKey()
+                    + (h.input() ? " -> " : " <- ")
+                    + card(
+                        g,
+                        h.link()
+                            .nodeId())
+                    + ":"
+                    + h.link()
+                        .portIndex());
+        java.util.Collections.sort(out);
+        return out;
+    }
+
+    private static String card(final Graph g, final Uuid id) {
+        final Node n = g.nodes.get(id);
+        return n.machineName + "|" + n.recipe;
+    }
+
     @Test
     void messages() {
         assertEquals(

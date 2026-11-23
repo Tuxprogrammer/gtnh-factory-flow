@@ -565,7 +565,7 @@ The stored proposal (served by the read route as `proposal`):
  recipes: [Recipe],          full dataset bodies of the recipes the added cards use
  cards:   [FactoryNode],     the added cards, in the plan document's own format, ids c<n> new to the plan
  drawers: [FactoryStorage],  the added drawers
- wires:   [FactoryEdge],     the added wires; an end on a card the plan already had names that card's own id
+ wires:   [FactoryEdge],     the added wires; an end on a card or drawer the plan already had names its own id
  targets: [{card, port, rate}]}  pins to set: new ones and changed rates, on new or existing cards
 ```
 

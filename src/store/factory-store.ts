@@ -22,6 +22,11 @@ import { createNewProject } from "@/examples";
 import type { DatasetManifest, RecipeDataset } from "@/lib/datasets";
 import { withServedDatasetPaths } from "@/lib/datasets/served-paths";
 import {
+  NO_RENAMES,
+  withRenamedProjectResources,
+  type ResourceRenames,
+} from "@/lib/datasets/resource-renames";
+import {
   canonicalizeResourceHandleId,
   dedupeEdgeWires,
   findDuplicateEdge,
@@ -333,7 +338,11 @@ interface FactoryStore {
    * that stands in for it (matched by content on load), and the nodes on
    * it follow to the new id.
    */
-  refreshProjectRecipes: (recipes: Recipe[], migration?: Record<string, string>) => void;
+  refreshProjectRecipes: (
+    recipes: Recipe[],
+    migration?: Record<string, string>,
+    renames?: ResourceRenames,
+  ) => void;
   /**
    * Stored recipe ids the loaded dataset answered "not found" for, with no recipe matching their content: their cards
    * run on the plan's saved copy and say so. For this dataset version only, never part of the plan.
@@ -1377,7 +1386,7 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
       };
     }));
   },
-  refreshProjectRecipes: (recipes, migration = {}) => quietly(() => {
+  refreshProjectRecipes: (recipes, migration = {}, renames = NO_RENAMES) => quietly(() => {
     setPresentation((state) => {
       if (recipes.length === 0) {
         return state;
@@ -1387,7 +1396,8 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
       const refreshedFor = (storedId: string) =>
         recipesById.get(storedId) ??
         (migration[storedId] ? recipesById.get(migration[storedId]) : undefined);
-      const project = {
+      // The game's item renames move the plan's wires, drawers and keys onto the recipes' new items.
+      const project = withRenamedProjectResources({
         ...state.project,
         recipes: state.project.recipes.map((recipe) => {
           const refreshedRecipe = refreshedFor(recipe.id);
@@ -1444,7 +1454,7 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
             ? { ...nextNode, machineHandlerId: undefined }
             : nextNode;
         }),
-      };
+      }, renames, state.recipesNotInDataset);
 
       return {
         project,

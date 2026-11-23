@@ -6,6 +6,7 @@ import { PNG } from "pngjs";
 import { writeDatasetJson } from "./dataset-json-writer.mjs";
 import { getDominantOpaqueColor } from "./icon-utils.mjs";
 import { spargeRolledOutputs } from "./sparge-byproducts.mjs";
+import { RESOURCE_RENAMES_FILE, resourceRenamesFromExport } from "./resource-renames.mjs";
 import { UNREADABLE_CRAFTING_CLASSES } from "./unreadable-crafting.mjs";
 import {
   EEC_MACHINE_TYPE,
@@ -163,6 +164,12 @@ await writeOracleReport(dataset);
 await fs.mkdir(path.dirname(outputPath), { recursive: true });
 await writeDatasetJson(outputPath, dataset);
 console.log(`Wrote ${dataset.recipes.length} oracle recipe(s) to ${outputPath}.`);
+// The game's own item renames (Postea), for recipe id carry and old plans.
+const resourceRenames = resourceRenamesFromExport(raw.resourceRenames);
+if (resourceRenames) {
+  await fs.writeFile(path.join(outDir, RESOURCE_RENAMES_FILE), `${JSON.stringify(resourceRenames, null, 1)}\n`);
+  console.log(`Wrote ${resourceRenames.renames.length} resource rename(s) to ${RESOURCE_RENAMES_FILE}.`);
+}
 
 function normalizeGregtech(domain) {
   for (const recipeMap of domain?.recipeMaps ?? []) {

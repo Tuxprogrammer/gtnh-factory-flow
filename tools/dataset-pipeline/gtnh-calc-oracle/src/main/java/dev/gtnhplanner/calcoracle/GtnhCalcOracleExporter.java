@@ -13,6 +13,7 @@ import gregtech.api.recipe.RecipeMap;
 import gregtech.api.recipe.RecipeMapBackend;
 import gregtech.api.util.GTRecipe;
 import com.gtnhplanner.read.gt.GtRecipeReader;
+import com.gtnhplanner.read.postea.PosteaRenames;
 import gtneioreplugin.util.DimensionHelper;
 import gtneioreplugin.util.GT5OreLayerHelper;
 import gtneioreplugin.util.GT5OreSmallHelper;
@@ -90,6 +91,11 @@ public final class GtnhCalcOracleExporter {
         root.put("loadedMods", loadedMods());
         root.put("adapters", adapters);
         root.put("domains", domains);
+        // Items the game renames in old saves (Postea): the pipeline maps old plans and recipe ids through them.
+        root.put("resourceRenames", PosteaRenames.read(item -> {
+            Object name = item instanceof Item ? Item.itemRegistry.getNameForObject(item) : null;
+            return name == null ? null : String.valueOf(name);
+        }).toExport());
 
         int recipeCount = countRecipes(domains);
         root.put("recipeCount", Integer.valueOf(recipeCount));

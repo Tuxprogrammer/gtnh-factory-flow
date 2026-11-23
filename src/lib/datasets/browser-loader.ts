@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  NO_RENAMES,
+  resourceRenameLookup,
+  type ResourceRenameTable,
+  type ResourceRenames,
+} from "./resource-renames";
 import type { MachineTier, Recipe, ResourceAmount } from "@/lib/model/types";
 import type { RecipeContentRef } from "@/lib/import-export/recipe-ref-match";
 import { APP_VERSION } from "@/lib/version";
@@ -287,6 +293,28 @@ export async function queryRecipeDatasetResources(
   addDatasetCacheKey(url, version);
 
   return fetchJson<RecipeDatasetResourceQueryResult>(url.toString(), { signal: options.signal });
+}
+
+const resourceRenamesCache = new Map<string, Promise<ResourceRenames>>();
+
+/** The version's item renames; none when it publishes no table or the table cannot be read. */
+export function getResourceRenames(version: DatasetVersion): Promise<ResourceRenames> {
+  const path = version.resourceRenamesPath;
+  if (!path) return Promise.resolve(NO_RENAMES);
+  const url = new URL(path, window.location.origin);
+  addDatasetCacheKey(url, version);
+  const key = url.toString();
+  let pending = resourceRenamesCache.get(key);
+  if (!pending) {
+    pending = fetchJson<ResourceRenameTable>(key)
+      .then(resourceRenameLookup)
+      .catch(() => {
+        resourceRenamesCache.delete(key);
+        return NO_RENAMES;
+      });
+    resourceRenamesCache.set(key, pending);
+  }
+  return pending;
 }
 
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {

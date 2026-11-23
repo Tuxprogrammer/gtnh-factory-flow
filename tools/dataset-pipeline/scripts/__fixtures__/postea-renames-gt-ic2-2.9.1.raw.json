@@ -1,0 +1,18 @@
+{
+ "fixture": "TEST FIXTURE, not exported data. The resourceRenames object a 2.9.1 export would carry for GT5-Unofficial 5.09.54.275 PosteaTransformers.registerIC2ItemTransformers only, written by hand from that source; targets are the 2.9.1 dataset's resource ids for ItemList.IC2_Plantball, IC2_BioChaff, Dynamite, Materials.Biomass/Biogas/DistilledWater cells and the Uranium/Plutonium ingots and nuggets. The real table comes from the exporter (PosteaRenames) and holds every mod's replacements.",
+ "source": "postea",
+ "items": [
+  { "from": "IC2:itemBiochaff", "fromMeta": 32767, "to": "gregtech:gt.metaitem.02", "toMeta": 32021 },
+  { "from": "IC2:itemCellEmpty", "fromMeta": 6, "to": "gregtech:gt.metaitem.01", "toMeta": 30704 },
+  { "from": "IC2:itemCellEmpty", "fromMeta": 7, "to": "gregtech:gt.metaitem.01", "toMeta": 30245 },
+  { "from": "IC2:itemCellEmpty", "fromMeta": 12, "to": "gregtech:gt.metaitem.01", "toMeta": 30705 },
+  { "from": "IC2:itemDynamite", "fromMeta": 32767, "to": "gregtech:gt.metaitem.02", "toMeta": 32011 },
+  { "from": "IC2:itemFuelPlantBall", "fromMeta": 32767, "to": "gregtech:gt.metaitem.02", "toMeta": 32020 },
+  { "from": "IC2:itemPlutonium", "fromMeta": 32767, "to": "gregtech:gt.metaitem.01", "toMeta": 11100 },
+  { "from": "IC2:itemPlutoniumsmall", "fromMeta": 32767, "to": "gregtech:gt.metaitem.01", "toMeta": 9100 },
+  { "from": "IC2:itemUran235", "fromMeta": 32767, "to": "gregtech:gt.metaitem.01", "toMeta": 11097 },
+  { "from": "IC2:itemUran235small", "fromMeta": 32767, "to": "gregtech:gt.metaitem.01", "toMeta": 9097 },
+  { "from": "IC2:itemUran238", "fromMeta": 32767, "to": "gregtech:gt.metaitem.01", "toMeta": 11098 }
+ ],
+ "handlers": [{ "from": "gregtech:gt.blockmachines", "handler": "gregtech.loaders.postload.PosteaTransformers$$Lambda" }]
+}

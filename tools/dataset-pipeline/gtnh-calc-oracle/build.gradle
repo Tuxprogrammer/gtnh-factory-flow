@@ -8,7 +8,7 @@ plugins {
 // library, which this build compiles against.
 def jvmRoot = file('../../../jvm')
 def sharedReader = tasks.register('sharedReaderSources', Sync) {
-    from(new File(jvmRoot, 'mod/src/main/java')) { include 'com/gtnhplanner/read/gt/**' }
+    from(new File(jvmRoot, 'mod/src/main/java')) { include 'com/gtnhplanner/read/gt/**', 'com/gtnhplanner/read/postea/**' }
     from(new File(jvmRoot, 'core/core-model/src/main/java')) { include 'com/gtnhplanner/core/model/read/GtRecipeRecord.java' }
     into(layout.buildDirectory.dir('shared-reader'))
 }

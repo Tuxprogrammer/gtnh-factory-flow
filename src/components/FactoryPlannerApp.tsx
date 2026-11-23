@@ -119,12 +119,12 @@ export function FactoryPlannerApp() {
       datasetManifestUrl ?? DEFAULT_DATASET_MANIFEST_URL,
       version,
       pending,
-    ).then(({ refreshed, migration, missing }) => {
+    ).then(({ refreshed, migration, missing, renames }) => {
       noteRecipesRefreshed(refreshed, version.id, checkedRecipesRef.current);
       // Kept even when this plan has gone: the ids are checked once per version, and another plan may hold them.
       noteRecipesNotInDataset(version.id, missing);
       if (!cancelled && refreshed.length > 0) {
-        refreshProjectRecipes(refreshed, migration);
+        refreshProjectRecipes(refreshed, migration, renames);
       }
     });
     return () => {
@@ -160,13 +160,17 @@ export function FactoryPlannerApp() {
         setDataset(dataset);
         const projectRecipes = useFactoryStore.getState().project.recipes;
         if (projectRecipes.length > 0) {
-          const { refreshed, migration, missing } = await resolveProjectRecipes(manifestUrl, version, projectRecipes);
+          const { refreshed, migration, missing, renames } = await resolveProjectRecipes(
+            manifestUrl,
+            version,
+            projectRecipes,
+          );
           const checked = new Map<string, boolean>();
           noteRecipesRequested(projectRecipes, version.id, checked, requestedRecipesRef.current);
           noteRecipesRefreshed(refreshed, version.id, checked);
           checkedRecipesRef.current = checked;
           noteRecipesNotInDataset(version.id, missing);
-          refreshProjectRecipes(refreshed, migration);
+          refreshProjectRecipes(refreshed, migration, renames);
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : "Dataset load failed.";

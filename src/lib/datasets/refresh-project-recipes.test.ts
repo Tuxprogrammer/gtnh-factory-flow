@@ -11,6 +11,7 @@ import {
 const loader = vi.hoisted(() => ({
   getRecipeDatasetRecipe: vi.fn(),
   resolveRecipeDatasetRecipes: vi.fn(),
+  getResourceRenames: vi.fn(async () => new Map<string, string>()),
 }));
 vi.mock("./browser-loader", () => loader);
 
@@ -76,5 +77,28 @@ describe("resolveProjectRecipes", () => {
     loader.getRecipeDatasetRecipe.mockRejectedValue(failed(404));
     loader.resolveRecipeDatasetRecipes.mockRejectedValue(failed(500));
     expect((await resolveProjectRecipes("", version, [stored("gone")])).missing).toEqual([]);
+  });
+
+  it("matches a stored recipe as the game's item renames write it", async () => {
+    loader.getRecipeDatasetRecipe.mockImplementation(async (_url: string, _v: DatasetVersion, id: string) => {
+      if (id === "compressor-new") return stored(id);
+      throw failed(404);
+    });
+    loader.getResourceRenames.mockResolvedValueOnce(
+      new Map([["ic2:itemfuelplantball@*", "gregtech:gt.metaitem.02@32020"]]),
+    );
+    loader.resolveRecipeDatasetRecipes.mockResolvedValue({
+      matches: [{ importedId: "compressor", recipeId: "compressor-new", exact: true }],
+    });
+    const compressor = {
+      ...stored("compressor"),
+      inputs: [{ kind: "item", id: "natura:berry@1", amount: 8 }],
+      outputs: [{ kind: "item", id: "ic2:itemfuelplantball", amount: 1 }],
+    } as unknown as Recipe;
+    const result = await resolveProjectRecipes("", version, [compressor]);
+    const refs = loader.resolveRecipeDatasetRecipes.mock.calls.at(-1)![2] as Array<{ outputs: Array<{ id: string }> }>;
+    expect(refs[0]!.outputs[0]!.id).toBe("gregtech:gt.metaitem.02@32020");
+    expect(result.migration).toEqual({ compressor: "compressor-new" });
+    expect(result.renames.get("ic2:itemfuelplantball@*")).toBe("gregtech:gt.metaitem.02@32020");
   });
 });

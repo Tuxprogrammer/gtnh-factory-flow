@@ -3,6 +3,7 @@ import { createReadStream, existsSync, statSync } from "node:fs";
 import path from "node:path";
 import { computeDatasetChecksum } from "./dataset-checksum.mjs";
 import { readGameRatesSidecar } from "./game-rates.mjs";
+import { RESOURCE_RENAMES_FILE, readResourceRenamesSidecar } from "./resource-renames.mjs";
 import readline from "node:readline";
 import { createGunzip } from "node:zlib";
 
@@ -27,6 +28,7 @@ for (const entry of entries) {
   const dataset = await readRecipeDatasetMetadata(recipesPath);
   const checksumSha256 = await computeDatasetChecksum(path.dirname(recipesPath));
   const gameRates = readGameRatesSidecar(path.dirname(recipesPath));
+  const resourceRenames = readResourceRenamesSidecar(path.dirname(recipesPath));
 
   discoveredVersions.push({
     id: dataset.datasetVersionId,
@@ -41,6 +43,9 @@ for (const entry of entries) {
     checksumSha256,
     sourceInfo: dataset.sourceInfo,
     ...(gameRates ? { gameRates } : {}),
+    ...(resourceRenames
+      ? { resourceRenamesPath: `/datasets/gtnh/${dataset.datasetVersionId}/${RESOURCE_RENAMES_FILE}` }
+      : {}),
   });
 }
 

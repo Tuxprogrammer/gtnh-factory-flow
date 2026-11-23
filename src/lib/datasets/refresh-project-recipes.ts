@@ -5,7 +5,8 @@ import { isCustomRateRecipe } from "@/lib/model/custom-rate";
 import { FLUID_TANK_EMPTY_MAP } from "@/lib/model/fluid-tank";
 import { CROP_FARM_PLACEHOLDER_RECIPE_ID } from "@/lib/model/passive-production";
 import { recipeContentRef } from "@/lib/import-export/recipe-ref-match";
-import { getRecipeDatasetRecipe, resolveRecipeDatasetRecipes } from "./browser-loader";
+import { getRecipeDatasetRecipe, getResourceRenames, resolveRecipeDatasetRecipes } from "./browser-loader";
+import { NO_RENAMES, withRenamedResources, type ResourceRenames } from "./resource-renames";
 import { noteRestorableRecipes } from "./restorable-recipes";
 
 /**
@@ -70,13 +71,21 @@ export function noteRecipesRefreshed(
  * so old cards still pick up the dataset's current handlers. Power cards are
  * synthesized on the way in and are skipped. `missing` lists the stored ids
  * the dataset has no recipe for by either way; their cards keep the stored
- * body and say so.
+ * body and say so. A stored recipe is matched as the game's item renames
+ * (`renames`, the version's table) would write it, so a recipe that only
+ * changed because an item moved to a new id is found; the caller moves the
+ * plan's wires and drawers with `withRenamedProjectResources`.
  */
 export async function resolveProjectRecipes(
   manifestUrl: string,
   version: DatasetVersion,
   recipes: Recipe[],
-): Promise<{ refreshed: Recipe[]; migration: Record<string, string>; missing: string[] }> {
+): Promise<{
+  refreshed: Recipe[];
+  migration: Record<string, string>;
+  missing: string[];
+  renames: ResourceRenames;
+}> {
   // A demo recipe is the plan's own data: the dataset never has it, so asking only fills the console with 404s.
   // Custom rate cards, empty fluid tanks and the empty crop farm are the plan's own cards too.
   const asked = recipes.filter(
@@ -98,9 +107,15 @@ export async function resolveProjectRecipes(
   );
   const migration: Record<string, string> = {};
   const missing: string[] = [];
+  let renames: ResourceRenames = NO_RENAMES;
   if (stale.length > 0) {
     try {
-      const resolved = await resolveRecipeDatasetRecipes(manifestUrl, version, stale.map(recipeContentRef));
+      renames = await getResourceRenames(version);
+      const resolved = await resolveRecipeDatasetRecipes(
+        manifestUrl,
+        version,
+        stale.map((recipe) => recipeContentRef(withRenamedResources(renames, recipe))),
+      );
       // Not in this dataset: the id answered "not found" and nothing matches the content. A failed request says
       // nothing either way, so only a 404 counts.
       const matched = new Set(resolved.matches.map((match) => match.importedId));
@@ -126,7 +141,7 @@ export async function resolveProjectRecipes(
       // No match service: the stored bodies keep working as they are.
     }
   }
-  return { refreshed, migration, missing };
+  return { refreshed, migration, missing, renames };
 }
 
 function statusOf(error: unknown): number | undefined {

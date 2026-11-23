@@ -88,6 +88,8 @@ export interface DatasetVersion {
   sourceInfo: DatasetSourceInfo;
   /** Copied from the dataset directory's game-rates.json by the manifest step; not part of the checksum. */
   gameRates?: GameRates;
+  /** The game's item renames (`resource-renames.json`, see resource-renames.ts); not part of the checksum. */
+  resourceRenamesPath?: string;
 }
 
 export interface DatasetManifest {

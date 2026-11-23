@@ -225,3 +225,88 @@ describe("Combine into one machine", () => {
     expect(merged).not.toHaveProperty("machineHandlerId");
   });
 });
+
+// "Add another recipe" on a card fits the card the same way: a recipe the
+// card's tier cannot start raises the hatches, one parallel of it gets whole
+// amps, and a recipe no machine on the card runs is refused.
+describe("Add another recipe", () => {
+  const tower: MachineHandler = {
+    id: "distillation-tower",
+    label: "Distillation Tower",
+    machineType: "Distillation Tower",
+    minimumTier: "LV",
+    kind: "multiblock",
+  };
+  const added = () => useFactoryStore.getState().project.nodes[0]!;
+
+  it("raises the hatches to a tier the added recipe starts at", () => {
+    const osmium = recipe("osmium", "Distillation Tower", {
+      minimumTier: "IV",
+      eut: 480,
+      machineHandlers: [{ ...tower, minimumTier: "IV" }],
+    });
+    useFactoryStore
+      .getState()
+      .setProject(
+        plan(
+          [recipe("salt", "Distillation Tower", { machineHandlers: [tower] }), osmium],
+          [card("n-salt", "salt")],
+        ),
+      );
+    expect(useFactoryStore.getState().addRecipeToNode("n-salt", osmium)).toBe(true);
+    expect(added().hatchVoltageTier).toBe("IV");
+    expect(added().hatchAmps).toBe(1);
+    expect(added().powerEuT).toBe(8192);
+  });
+
+  it("adds whole amps where one parallel of the added recipe needs more", () => {
+    const big = recipe("big", "Distillation Tower", { eut: 5000, machineHandlers: [tower] });
+    useFactoryStore
+      .getState()
+      .setProject(
+        plan(
+          [recipe("small", "Distillation Tower", { machineHandlers: [tower] }), big],
+          [card("n-small", "small")],
+        ),
+      );
+    expect(useFactoryStore.getState().addRecipeToNode("n-small", big)).toBe(true);
+    expect(added().hatchVoltageTier).toBe("EV");
+    expect(added().hatchAmps).toBe(3);
+    expect(added().powerEuT).toBe(3 * 2048);
+  });
+
+  it("raises a single block's tier to the added recipe's minimum", () => {
+    const hv = recipe("hv", "Chemical Reactor", { minimumTier: "HV", eut: 480 });
+    useFactoryStore
+      .getState()
+      .setProject(
+        plan(
+          [recipe("lv", "Chemical Reactor"), hv],
+          [
+            card("n-lv", "lv", {
+              overclockTier: "LV",
+              hatchVoltageTier: undefined,
+              hatchAmps: undefined,
+              powerEuT: undefined,
+            }),
+          ],
+        ),
+      );
+    expect(useFactoryStore.getState().addRecipeToNode("n-lv", hv)).toBe(true);
+    expect(added().overclockTier).toBe("HV");
+  });
+
+  it("refuses a recipe no machine on the card runs", () => {
+    const other = recipe("other", "Centrifuge");
+    useFactoryStore
+      .getState()
+      .setProject(
+        plan([recipe("salt", "Distillation Tower", { machineHandlers: [tower] })], [
+          card("n-salt", "salt"),
+        ]),
+      );
+    expect(useFactoryStore.getState().addRecipeToNode("n-salt", other)).toBe(false);
+    expect(added().extraRecipes).toBeUndefined();
+    expect(added().hatchVoltageTier).toBe("EV");
+  });
+});

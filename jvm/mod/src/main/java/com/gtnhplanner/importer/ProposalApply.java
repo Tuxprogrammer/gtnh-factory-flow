@@ -18,6 +18,7 @@ import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Group;
+import com.gtnhplanner.data.flowchart.MachineGroup;
 import com.gtnhplanner.data.flowchart.Node;
 
 /**
@@ -167,7 +168,7 @@ public final class ProposalApply {
             }
             int gone = 0, noPort = 0;
             for (final Cross c : crosses) {
-                final Node from = node(plan, c.from()), to = node(plan, c.to());
+                final Node from = node(plan, c.from(), c.fromPort()), to = node(plan, c.to(), c.toPort());
                 // A wire with a drawer at one end is that drawer holding the card's port, as the website reads it.
                 final Drawer toDrawer = from != null && to == null ? drawer(plan, c.to()) : null,
                     fromDrawer = from == null && to != null ? drawer(plan, c.from()) : null;
@@ -213,7 +214,7 @@ public final class ProposalApply {
             int set = 0, kept = 0, lost = 0;
             for (final Node n : incoming.getNodes()) set += n.targetOutputRates.size() + n.targetInputRates.size();
             for (final Target t : targets) {
-                final Node n = node(plan, t.card());
+                final Node n = node(plan, t.card(), t.port());
                 final FfHandle h = FfHandle.parse(t.port());
                 final int at = n == null || h == null ? -1
                     : ports.find(n, h.output(), h.kind(), List.of(h.resourceId()));
@@ -252,6 +253,26 @@ public final class ProposalApply {
             if (made != null) return plan.nodes.get(made);
             final Uuid own = uuid(id);
             return own == null ? null : plan.nodes.get(own);
+        }
+
+        /**
+         * A card end with its port's handle: a handle on recipe n of a shared machine ({@code r<n>:}) names that
+         * recipe's card, numbered as the snapshot and the export number them (the machine's recipes still on the
+         * board, the card named first); else the card itself.
+         */
+        @Nullable
+        private Node node(final Graph plan, final String id, @Nullable final String handle) {
+            final Node card = node(plan, id);
+            final int section = FfHandle.sectionOf(handle);
+            if (card == null || section == 0) return card;
+            for (final Group g : plan.getGroups()) {
+                if (!(g instanceof final MachineGroup m) || !m.isShared()) continue;
+                final List<Uuid> recipes = new ArrayList<>();
+                for (final Uuid s : m.getSections()) if (plan.nodes.containsKey(s)) recipes.add(s);
+                if (recipes.size() > 1 && recipes.get(0)
+                    .equals(card.id)) return section < recipes.size() ? plan.nodes.get(recipes.get(section)) : null;
+            }
+            return null;
         }
 
         /** A wire end: one of the proposal's drawers as it came in, else one of the plan's own by its board id. */

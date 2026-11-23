@@ -365,6 +365,9 @@ public final class DevHarness {
                     if (handled == 0) mc.thePlayer.sendChatMessage(cmd);
                     return ok();
                 });
+            case "/dave":
+                // A stand-in for DaveBridge (DevDave): dave?mode=answer|error|off&proposal=<id>&recipes=<a,b>&up=0|1.
+                return DevDave.route(q);
             case "/pattern":
                 // "Pattern this" against a pattern made by hand (DevPattern; PLANNH_GTNH=1 PLANNH_AE=1).
                 requireWorld();

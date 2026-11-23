@@ -3,7 +3,9 @@ package com.gtnhplanner.client;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
@@ -59,7 +61,12 @@ public final class Deliveries {
      * plan. The entry point for anything else that adds a proposal (the Ask Dave panel's Add to plan).
      */
     public static void apply(final String id) {
-        read(id, "proposal", Deliveries::applied);
+        apply(id, (text, problem) -> {});
+    }
+
+    /** As {@link #apply(String)}, and {@code told} gets the line the player is told, and whether it is a refusal. */
+    public static void apply(final String id, final BiConsumer<String, Boolean> told) {
+        read(id, "proposal", body -> applied(body, told), told);
     }
 
     /**
@@ -72,8 +79,13 @@ public final class Deliveries {
 
     /** Reads what is under the id in the background, then hands it to {@code then} on the client thread. */
     private static void read(final String id, final String kind, final Consumer<JsonObject> then) {
+        read(id, kind, then, (text, problem) -> {});
+    }
+
+    private static void read(final String id, final String kind, final Consumer<JsonObject> then,
+        final BiConsumer<String, Boolean> told) {
         if (Tutorial.active()) {
-            say(DeliveryText.TOUR, true);
+            say(DeliveryText.TOUR, true, told);
             return;
         }
         NET.execute(() -> {
@@ -103,8 +115,14 @@ public final class Deliveries {
             final JsonObject got = body;
             Minecraft.getMinecraft()
                 .func_152344_a(() -> {
-                    if (why != null) say(why, true);
-                    else then.accept(got);
+                    if (why != null) say(why, true, told);
+                    // The client thread's task queue keeps a failure to itself: it is logged and told here.
+                    else try {
+                        then.accept(got);
+                    } catch (final RuntimeException | LinkageError e) {
+                        GtnhPlanner.LOG.warn("Could not use what the planner site delivered under {}", id, e);
+                        say(unreadable(kind), true, told);
+                    }
                 });
         });
     }
@@ -166,39 +184,49 @@ public final class Deliveries {
         say(outcome.message(), outcome.failed());
     }
 
-    /** A change arrived: added to the open plan when it was made for it, as one undo step. */
-    private static void applied(final JsonObject body) {
+    /** A change read and checked against the open plan: ready to add, or the refusal the player is told. */
+    record Checked(@Nullable ProposalApply.Prepared prepared, @Nullable String refusal) {}
+
+    /**
+     * Reads the change in a delivery and checks it was made for {@code open} (null when no plan is open). Changes
+     * nothing.
+     */
+    static Checked check(final JsonObject body, @Nullable final Graph open,
+        final Function<String, FfConverter.Result> convert) {
         final JsonElement p = body.get("proposal");
-        final Plan plans = Plan.getInstance();
-        if (plans.openSlots()
-            .isEmpty()) {
-            say(DeliveryText.NO_PLAN, true);
-            return;
-        }
-        if (p == null || !p.isJsonObject()) {
-            say(DeliveryText.CHANGE_UNREADABLE, true);
-            return;
-        }
+        if (open == null) return new Checked(null, DeliveryText.NO_PLAN);
+        if (p == null || !p.isJsonObject()) return new Checked(null, DeliveryText.CHANGE_UNREADABLE);
         final ProposalApply.Prepared prepared;
         try {
-            prepared = ProposalApply.prepare(p.getAsJsonObject(), FactoryFlowImport::importFromText);
+            prepared = ProposalApply.prepare(p.getAsJsonObject(), convert);
         } catch (final FfImportException e) {
-            say(e.getMessage(), true);
-            return;
+            return new Checked(null, e.getMessage());
         } catch (final RuntimeException e) {
             GtnhPlanner.LOG.warn("Could not read the change the planner site delivered", e);
-            say(DeliveryText.CHANGE_UNREADABLE, true);
+            return new Checked(null, DeliveryText.CHANGE_UNREADABLE);
+        }
+        if (!prepared.fits(open)) return new Checked(null, DeliveryText.OTHER_PLAN);
+        return new Checked(prepared, null);
+    }
+
+    /** A change arrived: added to the open plan when it was made for it, as one undo step. */
+    private static void applied(final JsonObject body, final BiConsumer<String, Boolean> told) {
+        final Checked checked = check(
+            body,
+            Plan.getInstance()
+                .openSlots()
+                .isEmpty() ? null : Plan.getActiveGraph(),
+            FactoryFlowImport::importFromText);
+        if (checked.refusal() != null) {
+            say(checked.refusal(), true, told);
             return;
         }
-        if (!prepared.fits(Plan.getActiveGraph())) {
-            say(DeliveryText.OTHER_PLAN, true);
-            return;
-        }
+        final ProposalApply.Prepared prepared = checked.prepared();
         final BoardScreen board = board();
         final BoardSession session = board.session();
         final Graph graph = session.graph();
         if (!prepared.fits(graph)) {
-            say(DeliveryText.OTHER_PLAN, true);
+            say(DeliveryText.OTHER_PLAN, true, told);
             return;
         }
         final ProposalApply.Outcome[] out = new ProposalApply.Outcome[1];
@@ -211,7 +239,7 @@ public final class Deliveries {
                 .revealWhenBuilt(out[0].added());
         com.gtnhplanner.ui.sound.Sfx.PLACE.play();
         final String message = out[0].message(graph.getName());
-        say(message, false);
+        say(message, false, told);
         session.flash(Severity.INFO, message);
     }
 
@@ -219,6 +247,13 @@ public final class Deliveries {
     private static BoardScreen board() {
         final BoardScreen open = (BoardScreen) Planner.screenOf(Minecraft.getMinecraft().currentScreen);
         return open != null ? open : Planner.open();
+    }
+
+    /** One chat line, also handed to {@code told}. */
+    private static void say(@Nullable final String text, final boolean problem,
+        final BiConsumer<String, Boolean> told) {
+        say(text, problem);
+        if (text != null) told.accept(text, problem);
     }
 
     /** One chat line: red for a refusal. */

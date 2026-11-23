@@ -444,6 +444,11 @@ public final class BoardSession {
         return add(node, true, true);
     }
 
+    /** Puts a card made elsewhere (Ask Dave's recipe rows) on the board, centred in view and selected; never wired. */
+    public Node addCard(final Node node) {
+        return add(node, true, false);
+    }
+
     /**
      * Puts a card on the board. Only a card from NEI ({@code fromNei}: its + or the plan button) takes what was armed
      * there: the port it was looked up from (it lands beside it, wired to it alone). Anything else (a non-recipe

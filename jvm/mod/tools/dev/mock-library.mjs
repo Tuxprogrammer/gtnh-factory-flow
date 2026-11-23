@@ -39,6 +39,7 @@ const passesGate = (req) => !requireHeader || req.headers[requireHeader.name] ==
 
 const users = new Map(); // name -> password
 const deliveries = new Map(); // id -> what GET /api/deliveries/<id> answers
+const recipes = new Map(); // id -> what GET /api/datasets/<version>/recipes/<id> answers
 const sessions = new Map(); // token -> name
 const posts = []; // summaries, newest first
 const plans = new Map(); // id -> { name, plan }
@@ -114,6 +115,19 @@ const server = createServer(async (req, res) => {
   if (delivery && req.method === "GET" && delivery[1] === "api") {
     const d = deliveries.get(delivery[2]);
     return d ? json(res, 200, d) : json(res, 404, { error: "Plan not found." });
+  }
+  // The dataset's recipes by id (Ask Dave's recipe rows): a probe PUTs one to /mock/recipes/<id>; the dataset list
+  // names one version, "mock", for any pack.
+  if (req.method === "GET" && path === "/datasets/gtnh/datasets.manifest.json")
+    return json(res, 200, { versions: [{ id: "mock", gtnhVersion: "" }] });
+  const recipe = path.match(/^\/(?:api\/datasets\/[^/]+|mock)\/recipes\/([^/]+)$/);
+  if (recipe && req.method === "PUT" && path.startsWith("/mock/")) {
+    recipes.set(decodeURIComponent(recipe[1]), await body(req));
+    return json(res, 201, { id: recipe[1] });
+  }
+  if (recipe && req.method === "GET" && path.startsWith("/api/")) {
+    const r = recipes.get(decodeURIComponent(recipe[1]));
+    return r ? json(res, 200, r) : json(res, 404, { error: "Recipe not found." });
   }
   if (req.method === "POST" && path === "/api/community/auth/register") {
     const { username = "", password = "" } = await body(req);

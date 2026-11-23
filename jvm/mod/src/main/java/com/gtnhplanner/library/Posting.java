@@ -260,7 +260,7 @@ public final class Posting {
     }
 
     /** The pack's version, as the site groups setups by it: the GTNH core mod's. */
-    static String packVersion() {
+    public static String packVersion() {
         final ModContainer core = Loader.instance()
             .getIndexedModList()
             .get("dreamcraft");

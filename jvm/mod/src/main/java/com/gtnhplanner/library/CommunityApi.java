@@ -182,6 +182,13 @@ public final class CommunityApi {
         return request("GET", site + "/api/deliveries/" + enc(id), null, null);
     }
 
+    /** A recipe of the site's dataset for this pack, by the site's recipe id (Ask Dave's recipe rows): the answer. */
+    public static String recipe(final String packVersion, final String id) throws IOException {
+        final String version = datasetVersion(packVersion);
+        if (version == null) throw new IOException("the site lists no recipes");
+        return request("GET", site + "/api/datasets/" + enc(version) + "/recipes/" + enc(id), null, null);
+    }
+
     // region Accounts and posting: the website's own username and password accounts and its session
 
     /** A signed-in account, and the session the site gave it (its {@value #SESSION_COOKIE} cookie). */

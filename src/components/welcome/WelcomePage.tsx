@@ -23,6 +23,7 @@ import { writeWorkspaceView } from "@/lib/workspace-view";
 import { UNTITLED_DESIGN_NAME } from "@/lib/designs/design-library";
 import { useDesignStore } from "@/store/design-store";
 import { useFactoryStore } from "@/store/factory-store";
+import { useServedPaths } from "@/store/use-served-paths";
 import { VersionChip } from "./VersionChip";
 import { WelcomeBackdrop } from "./WelcomeBackdrop";
 import "../chrome/mod-panel.css";
@@ -223,7 +224,8 @@ function SecondaryButton({
 }
 
 /** A saved face, drawn oversized so the art fills the box the way tabs do. */
-function Face({ icon, size }: { icon: EntryIcon | undefined; size: number }) {
+function Face({ icon: saved, size }: { icon: EntryIcon | undefined; size: number }) {
+  const icon = useServedPaths(saved);
   const drawable = Boolean(icon && (icon.iconPath || icon.iconAtlas || icon.kind === "fluid"));
   return (
     <span

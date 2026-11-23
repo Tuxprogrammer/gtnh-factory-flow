@@ -92,6 +92,11 @@ function route(method: string, pathname: string): { handler: Handler; context: u
     const found = Object.fromEntries(names.map((name, i) => [name, decodeURIComponent(hit[i + 1]!)]));
     return { handler, context: params(found) };
   }
+  // Next serves public/ as static files (the dataset manifest is one): answer them from the same folder.
+  const file = path.join(process.cwd(), "public", pathname);
+  if (m === "GET" && pathname.startsWith("/datasets/") && existsSync(file)) {
+    return { handler: () => new Response(readFileSync(file)), context: undefined };
+  }
   throw new Error(`no route for ${pathname}`);
 }
 
@@ -212,9 +217,11 @@ describe("the wire contract, the website's REST routes and the live service's HT
     }
   });
 
+  // Read the manifest here: the tests are collected before beforeAll fills vars, so vars cannot say whether one exists.
+  const hasDataset = datasetId() !== undefined;
   for (const step of wire.rest.steps) {
     const skip = step.server?.skip;
-    const needsDataset = step.server?.dataset && !vars["dataset.id"];
+    const needsDataset = step.server?.dataset && !hasDataset;
     // A runnable step is awaited in order, so the steps share the database as the contract's order says.
     const name = `${step.id}: ${step.request.method} ${step.request.path.split("?")[0]} -> ${step.status}`;
     if (skip || needsDataset) {
@@ -269,7 +276,7 @@ describe("the wire contract, the website's REST routes and the live service's HT
 
   it("keeps a reason for every step it does not run, and runs most of them", () => {
     const total = wire.rest.steps.length;
-    const notRun = wire.rest.steps.filter((s) => s.server?.skip || (s.server?.dataset && !vars["dataset.id"]));
+    const notRun = wire.rest.steps.filter((s) => s.server?.skip || (s.server?.dataset && !datasetId()));
     for (const step of notRun) expect((step.server?.skip ?? "dataset").length).toBeGreaterThan(5);
     expect(total - notRun.length).toBeGreaterThan(total * 0.7);
   });

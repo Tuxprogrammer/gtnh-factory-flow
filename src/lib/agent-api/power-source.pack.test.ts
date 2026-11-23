@@ -28,6 +28,9 @@ const ZERO_EU_NOT_UNPOWERED = new Set(
     "solar tower", "thermal boiler", "extreme heat exchanger",
     // Electric machines whose recipes the dataset exports at 0 EU (the site bills GT's furnace and crafting numbers).
     "furnace", "electric furnace", "multi smelter", "auto workbench",
+    // The Void Miner map shows each dimension's ore pool at 1 tick and 0 EU; the controllers' tooltips in the same
+    // dataset read "Consumes 30,720 / 122,880 / 491,520 EU/t", so they are electric.
+    "void miner i", "void miner ii", "void miner iii",
     // Machines with their own energy (neutrons, the Eye of Harmony's stars) or none: not steam-age machines.
     "neutron activator", "eye of harmony", "nanochip conversion complex", "algae pond", "ice cream machine",
     "tree growth simulator", "nasa workbench (missile)",

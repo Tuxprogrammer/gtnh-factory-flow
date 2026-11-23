@@ -1320,8 +1320,8 @@
     },
     "wire/rest.json": {
       "area": "wire",
-      "bytes": 62681,
-      "sha256": "893bbf59298c28a9c681d01bea6c117b0bbaa657edd7d5566a8792caab3cdf27"
+      "bytes": 62739,
+      "sha256": "2d92af6f4f5e9f97f3ee5701e2cb5f5623471d59d8b91cb701b4396a3ffee984"
     },
     "wire/shapes.json": {
       "area": "wire",

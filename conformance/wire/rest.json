@@ -2807,9 +2807,7 @@
    "expect": {
     "versions.0.gtnhVersion": "2.9.0"
    },
-   "serverExpect": {
-    "versions.0.gtnhVersion": "2.9.0"
-   },
+   "serverExpect": {},
    "result": {
     "ok": {
      "kind": "item",
@@ -2821,7 +2819,7 @@
    "server": {
     "dataset": true
    },
-   "note": "A static file under public/, not a route. One call of the client makes both requests, this one then the next; the call's result is on this step. The server run reads the file from its own dataset folder and uses its first version with a gtnhVersion of 2.9.0 as {dataset.id}."
+   "note": "A static file under public/, not a route. One call of the client makes both requests, this one then the next; the call's result is on this step. The server run reads the file from its own dataset folder and uses its first version with a gtnhVersion of 2.9.0, or its first version when none has, as {dataset.id}; it checks the shape only, since its dataset is its own pack's."
   },
   {
    "id": "datasets-resources",

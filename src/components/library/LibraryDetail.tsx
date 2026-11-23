@@ -16,6 +16,7 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 import { formatSlotRate } from "@/components/flow/flow-explainers";
 import { fluidArtPixels, isSwatchFluid, ResourceIcon } from "@/components/nei/ResourceIcon";
+import { useServedPaths } from "@/store/use-served-paths";
 import { TierBadge, type VoltageTier } from "@/components/shelf-cards";
 import { normalizeBlueprintTags } from "@/lib/blueprints/types";
 import type { PlanResourceStat } from "@/lib/community/types";
@@ -529,7 +530,8 @@ function IconKey({
 }
 
 /** One side of needs or makes: every stat, in as many columns as fit. */
-function StatColumns({ label, stats }: { label: string; stats: PlanResourceStat[] }) {
+function StatColumns({ label, stats: saved }: { label: string; stats: PlanResourceStat[] }) {
+  const stats = useServedPaths(saved);
   return (
     <div className="min-w-0 border border-[var(--mc-33)] bg-[var(--mc-25)] p-2">
       <div className="mb-1 text-[10px] font-black uppercase tracking-[0.14em] text-[var(--mc-ink)]">

@@ -10,6 +10,7 @@ import {
 import type { EntryIcon, PlanResourceStat } from "@/lib/community/types";
 import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
 import { useFactoryStore } from "@/store/factory-store";
+import { useServedPaths } from "@/store/use-served-paths";
 import { ResourceIcon } from "./nei/ResourceIcon";
 
 const PICKER_PAGE = 60;
@@ -52,7 +53,7 @@ export function iconSuggestionsFromStats(
  */
 export function IconPicker({
   title = "Pick an icon",
-  suggestions,
+  suggestions: saved,
   onPick,
   onClear,
   onClose,
@@ -65,6 +66,8 @@ export function IconPicker({
   onClear?: () => void;
   onClose: () => void;
 }) {
+  // Built from a stored summary's ins and outs: drawn, and picked, on a served dataset version.
+  const suggestions = useServedPaths(saved);
   const datasetManifest = useFactoryStore((state) => state.datasetManifest);
   const datasetManifestUrl = useFactoryStore((state) => state.datasetManifestUrl);
   const selectedDatasetVersionId = useFactoryStore((state) => state.selectedDatasetVersionId);

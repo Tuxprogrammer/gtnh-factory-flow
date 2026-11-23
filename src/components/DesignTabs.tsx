@@ -23,6 +23,7 @@ import {
 import { useDesignStore } from "@/store/design-store";
 import { useSolvingBooks } from "@/components/flow/use-solving-books";
 import { useFactoryStore } from "@/store/factory-store";
+import { useServedPaths } from "@/store/use-served-paths";
 import { tipAttrs } from "@/components/flow/clean/interaction/tip-spec";
 import { closeTabTip, newTabTip, planTabTip } from "@/components/flow/clean/interaction/board-tips";
 
@@ -993,7 +994,8 @@ const TAB_FACE_PX = 20;
  * pixel because every pill's 2px bottom border (the active underline) centres
  * content a pixel high.
  */
-function TabFace({ icon }: { icon: EntryIcon }) {
+function TabFace({ icon: saved }: { icon: EntryIcon }) {
+  const icon = useServedPaths(saved);
   return (
     <span
       aria-hidden

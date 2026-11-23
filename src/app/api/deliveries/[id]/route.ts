@@ -1,6 +1,7 @@
 import { DELIVERY_ID_PATTERN, readDelivery } from "@/lib/agent-api/deliveries";
 import { clientAddress, isCommunityConfigured, saltedKey } from "@/lib/server/community";
 import { takeMemoryToken } from "@/lib/server/memory-rate";
+import { onServerDataset } from "@/lib/server/served-dataset-paths";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,7 +27,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     return answer(404, { error: "Plan not found." });
   }
   try {
-    const entry = await readDelivery(id);
+    // A stored plan names the dataset it was made on: its paths are read from the version this server serves.
+    const entry = await onServerDataset(await readDelivery(id));
     if (!entry) {
       return answer(404, { error: "Plan not found." });
     }

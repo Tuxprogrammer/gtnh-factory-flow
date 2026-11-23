@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import { createReadStream, existsSync } from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+import { datasetTimestamp } from "./dataset-time.mjs";
 
 const instanceRoot = process.argv[2];
 const outputPath = process.argv[3];
@@ -46,7 +47,8 @@ for (const file of files) {
 
 const fingerprint = {
   schemaVersion: 1,
-  generatedAt: new Date().toISOString(),
+  // The dataset's time (SOURCE_DATE_EPOCH when set), not the clock: two exports of one pack must match.
+  generatedAt: datasetTimestamp(undefined),
   hash: hash.digest("hex"),
   fileCount: files.length,
   roots,

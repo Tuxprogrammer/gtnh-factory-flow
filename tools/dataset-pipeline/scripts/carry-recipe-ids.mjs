@@ -11,6 +11,11 @@
 // makes (resource-renames.json beside the new recipes.json, the game's own
 // Postea table) keeps its id too: recipes no exact match took are matched
 // again with every item read through the renames, on both sides.
+// A slot of several blocks or items that shows the one the game happens to
+// list first (a Crop Breeder soil, an assembly-line ore) shows another one
+// after a relaunch: a recipe that differs only in which member such a slot
+// shows keeps its id and shows the member the previous dataset showed, so the
+// cell's id stays too. Ore dictionary cells are not matched this way.
 // Everything else (new or changed recipes) keeps its new id.
 //
 // Usage: node carry-recipe-ids.mjs <previous recipes.json[.gz]> <new recipes.json> [report.json] [--renames=<file>]
@@ -92,6 +97,54 @@ export function contentKey(recipe, renames) {
   ]);
 }
 
+// A slot that shows one of its own alternatives, keyed by all of them; else undefined.
+function alternativesKey(entry) {
+  const alternatives = entry.alternatives ?? [];
+  if (alternatives.length < 2 || !alternatives.some((alt) => alt.kind === entry.kind && alt.id === entry.id)) {
+    return undefined;
+  }
+  const ids = alternatives.map((alt) => `${alt.kind}:${alt.id}`).sort();
+  return [entry.kind, `any(${ids.join(",")})`, entry.amount ?? "", entry.consumed === false ? "nc" : "", entry.chance ?? ""].join("|");
+}
+
+// contentKey with every such slot keyed by its alternatives, and [slot key, id it shows] of each; undefined when
+// it has none.
+export function shownKey(recipe) {
+  const inputs = recipe.inputs ?? [];
+  const shown = inputs.filter(alternativesKey).map((entry) => [alternativesKey(entry), entry.id]);
+  if (shown.length === 0) {
+    return undefined;
+  }
+  const key = JSON.stringify([
+    recipe.category,
+    recipe.kind,
+    machineKey(recipe),
+    recipe.specialValue ?? null,
+    recipe.durationTicks ?? null,
+    recipe.eut ?? null,
+    inputs.map((entry) => alternativesKey(entry) ?? slot(entry, false)).sort(),
+    (recipe.outputs ?? []).map((entry) => slot(entry, true)).sort(),
+  ]);
+  return { key, shown };
+}
+
+const ITEM_FIELDS = ["id", "displayName", "iconPath", "dominantColor", "modId", "tooltip"];
+
+// The slot showing its alternative `id`: that member's own fields, the slot's amount and flags, the member first.
+function showAlternative(entry, id) {
+  const alt = entry.alternatives.find((candidate) => candidate.kind === entry.kind && candidate.id === id);
+  if (!alt || entry.id === id) {
+    return entry;
+  }
+  const out = {};
+  for (const [field, value] of Object.entries(entry)) {
+    if (!ITEM_FIELDS.includes(field)) out[field] = value;
+    else if (alt[field] !== undefined) out[field] = alt[field];
+  }
+  out.alternatives = [alt, ...entry.alternatives.filter((candidate) => candidate !== alt)];
+  return out;
+}
+
 function identityKey(recipe) {
   return `${recipe.category}|${String(recipe.id).replace(/^oracle:[^:]+:/, "")}`;
 }
@@ -108,6 +161,7 @@ async function readPrevious(filePath, renames) {
   const byContent = new Map();
   const byRenamed = new Map();
   const byIdentity = new Map();
+  const byShown = new Map();
   const all = new Map();
   let inRecipes = false;
   for await (const line of lines(filePath)) {
@@ -138,8 +192,15 @@ async function readPrevious(filePath, renames) {
     if (IDENTITY_CATEGORIES.has(recipe.category)) {
       byIdentity.set(identityKey(recipe), recipe.id);
     }
+    const shown = shownKey(recipe);
+    if (shown) {
+      if (!byShown.has(shown.key)) {
+        byShown.set(shown.key, []);
+      }
+      byShown.get(shown.key).push({ id: recipe.id, shown: shown.shown });
+    }
   }
-  return { byContent, byRenamed, byIdentity, all };
+  return { byContent, byRenamed, byIdentity, byShown, all };
 }
 
 function loadRenames() {
@@ -151,14 +212,15 @@ function loadRenames() {
   return lookup.size > 0 ? lookup : undefined;
 }
 
-// Which new recipes (by line) only the renames match, and the previous id
-// each takes: exact matches are settled first, in file order as main does, so
-// a renamed match never takes an id an exact match would.
+// Which new recipes (by line) only the renames match, or only the members
+// their slots show, and the previous id each takes (with the members that
+// recipe showed): exact matches are settled first, in file order as main does,
+// so a second-chance match never takes an id an exact match would. Also the
+// catalog rows of the members those recipes show again (the resource index
+// takes a rendered icon only from the catalog).
 async function renamedMatches(previous, renames) {
   const matches = new Map();
-  if (!renames) {
-    return matches;
-  }
+  const catalog = new Map();
   const used = new Set();
   const unmatched = [];
   let inRecipes = false;
@@ -177,29 +239,47 @@ async function renamedMatches(previous, renames) {
     if (match) {
       used.add(match);
     } else {
-      unmatched.push({ lineNo, key: contentKey(recipe, renames) });
+      const shown = shownKey(recipe);
+      const alternatives = shown ? (recipe.inputs ?? []).flatMap((entry) => entry.alternatives ?? []) : [];
+      unmatched.push({ lineNo, key: renames ? contentKey(recipe, renames) : undefined, shown, alternatives });
     }
   }
   for (const { lineNo: at, key } of unmatched) {
-    const match = (previous.byRenamed.get(key) ?? []).find((id) => !used.has(id));
+    const match = key === undefined ? undefined : (previous.byRenamed.get(key) ?? []).find((id) => !used.has(id));
     if (match) {
       used.add(match);
-      matches.set(at, match);
+      matches.set(at, { id: match });
     }
   }
-  return matches;
+  for (const { lineNo: at, shown, alternatives } of unmatched) {
+    const match = matches.has(at) || !shown ? undefined : (previous.byShown.get(shown.key) ?? []).find((row) => !used.has(row.id));
+    if (match) {
+      used.add(match.id);
+      matches.set(at, match);
+      for (const [, id] of match.shown) {
+        const alt = alternatives.find((candidate) => candidate.id === id);
+        if (alt) {
+          const row = { id: alt.id, ...alt };
+          delete row.amount;
+          catalog.set(`${alt.kind}:${alt.id}`, row);
+        }
+      }
+    }
+  }
+  return { matches, catalog };
 }
 
 function bump(table, category, field) {
-  table[category] ??= { kept: 0, keptByRename: 0, keptByIdentity: 0, new: 0, gone: 0 };
+  table[category] ??= { kept: 0, keptByRename: 0, keptByShown: 0, keptByIdentity: 0, new: 0, gone: 0 };
   table[category][field] += 1;
 }
 
 async function main() {
   const renames = loadRenames();
   const previous = await readPrevious(previousPath, renames);
-  const byRename = await renamedMatches(previous, renames);
+  const { matches: byRename, catalog } = await renamedMatches(previous, renames);
   const keptByRename = [];
+  const keptByShown = [];
   const used = new Set();
   const counts = {};
   const pendingIdentity = [];
@@ -213,14 +293,34 @@ async function main() {
   // in place once the whole file has been read: they are few.
   const buffered = [];
   let inRecipes = false;
+  let resourceRows;
+  // The catalog (sorted by kind:id) with each row a shown member needs and lacks put in its place.
+  const flushResources = () => {
+    if (!resourceRows) return;
+    for (const [key, row] of catalog) {
+      if (resourceRows.some((existing) => existing.key === key)) continue;
+      const at = resourceRows.findIndex((existing) => existing.key.localeCompare(key) > 0);
+      resourceRows.splice(at < 0 ? resourceRows.length : at, 0, { key, text: JSON.stringify(row) });
+    }
+    resourceRows.forEach((row, i) => buffered.push({ text: `    ${row.text}${i < resourceRows.length - 1 ? "," : ""}` }));
+    resourceRows = undefined;
+  };
   let lineNo = -1;
   for await (const line of lines(nextPath)) {
     lineNo += 1;
     if (/^ {2}"[^"]+": /.test(line)) {
+      flushResources();
       inRecipes = line.startsWith('  "recipes": [');
+      if (line.startsWith('  "resources": [') && catalog.size > 0) resourceRows = [];
       buffered.push({ text: line });
       continue;
     }
+    if (resourceRows && line.trimStart().startsWith("{")) {
+      const row = recipeLine(line);
+      resourceRows.push({ key: `${row.kind}:${row.id}`, text: line.trim().replace(/,$/, "") });
+      continue;
+    }
+    flushResources();
     const recipe = inRecipes ? recipeLine(line) : undefined;
     if (!recipe) {
       buffered.push({ text: line });
@@ -228,15 +328,23 @@ async function main() {
     }
     const candidates = previous.byContent.get(contentKey(recipe)) ?? [];
     const exact = candidates.find((id) => !used.has(id));
-    const match = exact ?? byRename.get(lineNo);
+    const second = exact ? undefined : byRename.get(lineNo);
+    const match = exact ?? second?.id;
     const prefix = line.slice(0, line.length - line.trimStart().length);
     const comma = line.trimEnd().endsWith(",") ? "," : "";
     if (match) {
       used.add(match);
       recipe.id = match;
-      bump(counts, recipe.category, exact ? "kept" : "keptByRename");
-      if (!exact) {
-        keptByRename.push(match);
+      if (second?.shown) {
+        const pending = [...second.shown];
+        recipe.inputs = recipe.inputs.map((entry) => {
+          const at = pending.findIndex(([key]) => key === alternativesKey(entry));
+          return at < 0 ? entry : showAlternative(entry, pending.splice(at, 1)[0][1]);
+        });
+      }
+      bump(counts, recipe.category, exact ? "kept" : second.shown ? "keptByShown" : "keptByRename");
+      if (second) {
+        (second.shown ? keptByShown : keptByRename).push(match);
       }
       buffered.push({ text: `${prefix}${JSON.stringify(recipe)}${comma}` });
     } else if (IDENTITY_CATEGORIES.has(recipe.category)) {
@@ -282,7 +390,7 @@ async function main() {
   }
   fs.renameSync(outPath, nextPath);
 
-  const totals = { kept: 0, keptByRename: 0, keptByIdentity: 0, new: 0, gone: 0 };
+  const totals = { kept: 0, keptByRename: 0, keptByShown: 0, keptByIdentity: 0, new: 0, gone: 0 };
   for (const row of Object.values(counts)) {
     for (const field of Object.keys(totals)) {
       totals[field] += row[field];
@@ -293,7 +401,7 @@ async function main() {
     fs.writeFileSync(
       reportPath,
       `${JSON.stringify(
-        { previous: previousPath, counts, totals, keptByRename, keptByIdentity: changedIdentity, gone: goneIds },
+        { previous: previousPath, counts, totals, keptByRename, keptByShown, keptByIdentity: changedIdentity, gone: goneIds },
         null,
         1,
       )}\n`,

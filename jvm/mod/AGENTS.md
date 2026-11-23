@@ -109,11 +109,16 @@ GUI, the network and the config stays in `jvm/mod/src`. Shared test data is in `
 
 ## Handoffs
 
-- This repo releases nothing and agents here never publish. No GitHub release, no upload to a mod site, no Maven
-  publish. No workflow here builds or publishes a mod release, so pushing a tag builds nothing; keep it that way.
-- A finished jar is handed to the pack operator (the Dave-Agent project), who puts it in the client pack. Hand over:
-  the jar built at the tag, the commit SHA and tag, the notes for players, and anything the operator must do with it
-  (a changed config file such as a new `network` entry, a new JVM argument, a changed dependency on a pack mod).
+- A mod release is a GitHub release of this repo and nothing else: no upload to a mod site, no Maven publish. Pushing
+  a `mod-<version>` tag runs `.github/workflows/mod-release.yml`, which builds and tests the jar at the tag with
+  `tools/ci/mod.sh --release` and attaches `gtnhplanner-<version>.jar` and its checksum to a release named for the tag,
+  with `.changelogs/<version>.md` as its notes. The workflow refuses a tag that already has a release: a published jar
+  is never replaced, a fix is a new version. So a tag is pushed only for a commit whose pipeline has passed, with its
+  notes file in place.
+- The pack ships that released jar and no other: a jar built elsewhere is for checking, not for a pack. The pack
+  operator (the Dave-Agent project) puts it in the packs. Hand over: the release's address and the jar's checksum, the
+  commit SHA and tag, the notes for players, and anything the operator must do with it (a changed config file such as
+  a new `network` entry, a new JVM argument, a changed dependency on a pack mod).
 - The jar names no site: the operator sets the website, live service, update-check and help addresses in
   `config/gtnhplanner.cfg` for the pack, or leaves them empty.
 - Batch fixes into one handoff.

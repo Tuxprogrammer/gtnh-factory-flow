@@ -16,6 +16,7 @@ import { ownsItsRecipe } from "@/lib/model/owns-recipe";
 import { sameRecipeOr } from "@/lib/model/same-recipe";
 
 import { carryMachineVoltage, normalizeProjectHatchInputs } from "@/lib/solver/hatch-input";
+import { fitCombinedMachine, pickCombineHost } from "./combine-machine";
 
 import { create, type StateCreator, type StoreApi } from "zustand";
 import { createNewProject } from "@/examples";
@@ -1992,7 +1993,10 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
           entry.id === nodeId
             ? {
                 ...entry,
-                machineHandlerId: handler.id,
+                // A map with no exported machines runs a made-up default that a load drops: store none.
+                ...((primary.machineHandlers ?? []).some((exported) => exported.id === handler.id)
+                  ? { machineHandlerId: handler.id }
+                  : {}),
                 extraRecipes: [
                   ...(entry.extraRecipes ?? []),
                   {
@@ -3883,15 +3887,13 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
       if (handlers.length === 0) {
         return state;
       }
-      const host = cards[0]!;
-      const handler =
-        handlers.find((entry) => entry.id === host.machineHandlerId) ?? handlers[0]!;
+      const { host, handler } = pickCombineHost(cards, handlers);
       // The other cards' recipes become the host's next sections, in
       // order, and every wire on them moves to the host under the section
       // it now is.
       const extraRecipes = [...(host.extraRecipes ?? [])];
       const moved = new Map<string, Map<number, number>>();
-      for (const card of cards.slice(1)) {
+      for (const card of cards.filter((entry) => entry !== host)) {
         const sectionMap = new Map<number, number>();
         for (const { section, node: view } of listNodeSections(card)) {
           sectionMap.set(section, 1 + extraRecipes.length);
@@ -3932,7 +3934,9 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
           nodes: rehomed.nodes
             .filter((node) => node.id === host.id || !moved.has(node.id))
             .map((node) =>
-              node.id === host.id ? { ...node, machineHandlerId: handler.id, extraRecipes } : node,
+              node.id === host.id
+                ? fitCombinedMachine({ ...node, extraRecipes }, handler, (id) => recipesById.get(id))
+                : node,
             ),
           edges: dedupeEdgeWires(edges),
         }),

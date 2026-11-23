@@ -59,15 +59,25 @@ function readJson(file) {
   return JSON.parse((file.endsWith(".gz") ? zlib.gunzipSync(bytes) : bytes).toString("utf8"));
 }
 
+// The record lists of recipes.json, compared row by row; the resource index's rows follow recipe counts, so its
+// order is not compared.
+const SECTIONS = ["recipes", "resources", "resourceIndex"];
+
 // Each line of a dataset's recipes.json under its section: id -> hash, plus the text of everything else.
 async function recipeLines(file, wanted) {
   const input = fs.createReadStream(file).pipe(zlib.createGunzip());
-  const out = { recipes: new Map(), resources: new Map(), other: [], members: new Set() };
+  const out = {
+    recipes: new Map(),
+    resources: new Map(),
+    resourceIndex: new Map(),
+    other: [],
+    members: new Set(),
+  };
   let section = "";
   for await (const line of readline.createInterface({ input, crlfDelay: Infinity })) {
     const head = /^ {2}"([^"]+)": /.exec(line);
     if (head) section = head[1];
-    const record = line.startsWith("    {") && (section === "recipes" || section === "resources");
+    const record = line.startsWith("    {") && SECTIONS.includes(section);
     if (!record) {
       out.other.push(line);
       continue;
@@ -92,6 +102,14 @@ const omit = (record, keys) =>
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const ITEM_FIELDS = ["id", "displayName", "iconPath", "dominantColor", "modId", "tooltip"];
 
+// A recipe without its id and the raw id the exporter gave it, which is the same content hash or list position.
+function withoutId(recipe) {
+  const out = omit(recipe, ["id"]);
+  if (recipe.source && "rawRecipeId" in recipe.source)
+    out.source = omit(recipe.source, ["rawRecipeId"]);
+  return out;
+}
+
 // A recipe with each slot that shows one of its own members reduced to the set of members; the id dropped.
 export function withoutShownMember(recipe, keepMembers = true) {
   const slot = (entry) => {
@@ -102,14 +120,14 @@ export function withoutShownMember(recipe, keepMembers = true) {
       ? { ...out, members: alternatives.map((alt) => JSON.stringify(alt)).sort() }
       : out;
   };
-  const out = omit(recipe, ["id"]);
+  const out = withoutId(recipe);
   out.inputs = (recipe.inputs ?? []).map(slot);
   return out;
 }
 
 const isThaumcraft = (recipe) => recipe.category === "thaumcraft";
 const aspectFree = (recipe) => ({
-  ...omit(recipe, ["id", "durationTicks", "runtimeCalculation"]),
+  ...omit(withoutId(recipe), ["durationTicks", "runtimeCalculation"]),
   inputs: (recipe.inputs ?? []).filter((entry) => entry.kind !== "aspect"),
   aspects: (recipe.inputs ?? [])
     .filter((entry) => entry.kind === "aspect")
@@ -167,9 +185,9 @@ export function classifyRecipes(a, b) {
       count(kind, id);
     }
   };
-  pairUp((r) => JSON.stringify(omit(r, ["id"])), "thaumcraft-list-position", isThaumcraft);
+  pairUp((r) => JSON.stringify(withoutId(r)), "thaumcraft-list-position", isThaumcraft);
   pairUp(
-    (r) => JSON.stringify(omit(r, ["id", "outputs", "durationTicks", "runtimeCalculation"])),
+    (r) => JSON.stringify(omit(withoutId(r), ["outputs", "durationTicks", "runtimeCalculation"])),
     "thaumcraft-generated-aspects",
     (r) => r.kind === "essentia_smelting",
   );
@@ -246,7 +264,7 @@ export async function compareDatasets(dirA, dirB) {
       recipeLines(path.join(dirA, "recipes.json.gz")),
       recipeLines(path.join(dirB, "recipes.json.gz")),
     ]);
-    for (const section of ["recipes", "resources"]) {
+    for (const section of SECTIONS) {
       const wanted = new Set();
       for (const [id, h] of la[section]) if (lb[section].get(id) !== h) wanted.add(id);
       for (const id of lb[section].keys()) if (!la[section].has(id)) wanted.add(id);
@@ -254,7 +272,7 @@ export async function compareDatasets(dirA, dirB) {
     }
     if (la.other.join("\n") !== lb.other.join("\n"))
       unexplained.push("recipes.json.gz: text outside the recipe and resource lists differs");
-    const wanted = new Set([...la.recipes, ...la.resources]);
+    const wanted = new Set([...la.recipes, ...la.resources, ...la.resourceIndex]);
     const [ra, rb] = await Promise.all([
       recipeLines(path.join(dirA, "recipes.json.gz"), wanted),
       recipeLines(path.join(dirB, "recipes.json.gz"), wanted),
@@ -262,6 +280,7 @@ export async function compareDatasets(dirA, dirB) {
     members = new Set([...la.members, ...lb.members]);
     add(classifyRecipes(ra.recipes, rb.recipes));
     add(classifyResources(ra.resources, rb.resources, members));
+    add(classifyResources(ra.resourceIndex, rb.resourceIndex, members));
   }
   for (const file of differ) {
     const fa = path.join(dirA, file);

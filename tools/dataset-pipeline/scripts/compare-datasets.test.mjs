@@ -49,7 +49,7 @@ const infusion = (id, out) => ({
   outputs: [item(out)],
 });
 
-function write(dir, { recipes, resources, timing, extra = {} }) {
+function write(dir, { recipes, resources, timing, extra = {}, resourceIndex }) {
   fs.mkdirSync(path.join(dir, "oracle"), { recursive: true });
   fs.mkdirSync(path.join(dir, "recipes-shards"), { recursive: true });
   const lines = (rows) =>
@@ -62,7 +62,8 @@ function write(dir, { recipes, resources, timing, extra = {} }) {
     "  ],",
     '  "recipes": [',
     ...lines(recipes),
-    "  ]",
+    resourceIndex ? "  ]," : "  ]",
+    ...(resourceIndex ? ['  "resourceIndex": [', ...lines(resourceIndex), "  ]"] : []),
     "}",
     "",
   ].join("\n");
@@ -143,6 +144,43 @@ describe("compare-datasets", () => {
     expect(
       spawnSync(process.execPath, [path.join(here, "compare-datasets.mjs"), a, b]).status,
     ).toBe(1);
+  });
+
+  it("reads a dataset as the exporter writes it: raw ids that follow the id, the index rows inside recipes.json", async () => {
+    // The exporter's raw recipe id is the same content hash (GregTech) or list position (Thaumcraft) as the id, and
+    // build-resource-index writes its rows, ordered by recipe count, into recipes.json too.
+    const raw = (recipe) => ({
+      ...recipe,
+      source: { recipeMap: "m", rawRecipeId: `raw:${recipe.id.split(":").pop()}` },
+    });
+    const launch = (shown, counts) => {
+      const dataset = base(shown, 10);
+      dataset.recipes = dataset.recipes.map(raw);
+      dataset.resourceIndex = counts.map(([id, recipeCount]) => ({
+        kind: "item",
+        id,
+        recipeCount,
+      }));
+      return dataset;
+    };
+    const [a, b] = pair(
+      launch("chisel:glowstone@32767", [
+        ["a", 5],
+        ["chisel:glowstone@32767", 3],
+        ["minecraft:glowstone@32767", 2],
+      ]),
+      launch("minecraft:glowstone@32767", [
+        ["a", 4],
+        ["minecraft:glowstone@32767", 3],
+        ["chisel:glowstone@32767", 2],
+      ]),
+    );
+    const report = await compareDatasets(a, b);
+    expect(report.unexplained).toEqual([]);
+    expect(report.noise["shown-member"]).toContain("oracle:x:gregtech:breeder:22");
+    expect(report.noise["thaumcraft-list-position"]).toHaveLength(2);
+    // An index row whose recipe count moved with the noise; the shown soils' rows are members.
+    expect(report.noise.derived).toContain("a");
   });
 
   it("every launch-noise kind is listed in the pipeline's CLAUDE.md", () => {

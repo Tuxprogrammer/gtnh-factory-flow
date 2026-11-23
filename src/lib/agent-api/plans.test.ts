@@ -13,6 +13,8 @@ import type { MachineHandler, Recipe } from "@/lib/model/types";
 import { getDatasetRecipe, getDatasetResource, getDefaultDatasetVersionId } from "@/lib/server/dataset-query";
 import { CORE_LOAD_MS, useCoreSolver } from "@/test-support/core-solve";
 import { normalizeLoadedProject } from "@/lib/model/project-normalize";
+import { machineReadout } from "@/lib/machines/readout";
+import { normalizeHatchInput } from "@/lib/solver/hatch-input";
 import { DRAFT_TTL_MS, DRAFTS_PER_DAY, getDraft, resetDrafts, setDraftClock } from "./drafts";
 import { solveProject } from "./solve";
 import {
@@ -136,6 +138,17 @@ RECIPES["r-smelt"] = recipe("r-smelt", {
     handler("steam-hearth", "Steam Hearth", "multiblock", "NONE"),
     handler("multi-smelter", "Multi Smelter", "multiblock", "NONE"),
   ],
+});
+// A GT++ "tier x 4 parallels" multiblock on a recipe that draws most of its tier's voltage: one amp runs one parallel.
+RECIPES["r-bath"] = recipe("r-bath", {
+  name: "Industrial Chemical Bath: Titanium Ingot",
+  machineType: "Industrial Chemical Bath",
+  minimumTier: "HV",
+  eut: 480,
+  durationTicks: 200,
+  inputs: [slot("item", "dust", 1)],
+  outputs: [slot("item", "ingot", 1)],
+  machineHandlers: [handler("chem-bath", "Industrial Chemical Bath", "multiblock", "HV")],
 });
 RECIPES["r-cauldron"] = recipe("r-cauldron", {
   name: "Cauldron: Titanium Dust",
@@ -423,6 +436,32 @@ describe("steam, primitive machines and the card tier", () => {
     await call(setTargetsPost, { planId: hv, targets: [{ resource: "dust", rate: 4 }] }, plansSetTargetsResponse);
     const slower = await solveProject(getDraft(hv).project);
     expect(draft.nodes.c1!.theoreticalMachinesRequired).toBeLessThan(slower.nodes.c1!.theoreticalMachinesRequired);
+  });
+
+  it("gives a multiblock card the hatch the board gives it, whose amps raise the parallel tier", async () => {
+    const planId = await create({ tierCap: "HV" });
+    await call(addCardsPost, { planId, cards: [{ recipeId: "r-bath" }] }, plansAddCardsResponse);
+    await call(setTargetsPost, { planId, targets: [{ resource: "ingot", rate: 2 }] }, plansSetTargetsResponse);
+    const project = getDraft(planId).project;
+    const card = project.nodes[0]!;
+    // The board's new-card rule (whole amps for full parallels) at the card's tier: 19 A of HV, read as regular
+    // hatches (9,728 / 2 = 4,864 EU/t summed, the IV ordinal), so 5 x 4 = 20 parallels, which the 19 A can feed.
+    const board = normalizeHatchInput(RECIPES["r-bath"]!, { ...card, hatchAmps: undefined, powerEuT: undefined, hatchVoltageTier: "HV" });
+    expect(card).toMatchObject({ overclockTier: "HV", hatchVoltageTier: "HV", hatchAmps: board.hatchAmps, powerEuT: board.powerEuT });
+    expect(card.hatchAmps).toBe(19);
+    expect((machineReadout(RECIPES["r-bath"]!, card).expected as { parallels: number }).parallels).toBe(20);
+    // The delivered plan opens with the same hatch, and solves to the same machines.
+    const draft = await solveProject(project);
+    const opened = normalizeLoadedProject(structuredClone(project));
+    expect(opened.nodes[0]).toMatchObject({ hatchVoltageTier: "HV", hatchAmps: 19 });
+    const shown = await solveProject(opened);
+    expect(shown.nodes.c1!.theoreticalMachinesRequired).toBeCloseTo(draft.nodes.c1!.theoreticalMachinesRequired, 6);
+    expect(shown.totalEuT).toBeCloseTo(draft.totalEuT, 6);
+    // One amp of HV feeds one parallel: twenty times the machines.
+    const single = structuredClone(project);
+    single.nodes[0] = { ...card, hatchAmps: 1, powerEuT: 512 };
+    const oneAmp = await solveProject(single);
+    expect(oneAmp.nodes.c1!.theoreticalMachinesRequired / draft.nodes.c1!.theoreticalMachinesRequired).toBeCloseTo(20, 6);
   });
 
   it("says in the solve what steam its steam machines burn", async () => {

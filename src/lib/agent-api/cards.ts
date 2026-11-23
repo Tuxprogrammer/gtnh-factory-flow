@@ -6,6 +6,7 @@ import {
   type MachineConfigTierControl,
 } from "@/lib/model/recipe-rules";
 import { getVoltageTierIndex, isVoltageTierName } from "@/lib/model/tiers";
+import { normalizeHatchInput } from "@/lib/solver/hatch-input";
 import type { FactoryNode, MachineHandler, Recipe } from "@/lib/model/types";
 import { bannedSet } from "./constraints";
 import { steamAllowed, unpoweredKind, type PowerSource } from "./power-source";
@@ -285,19 +286,30 @@ export function planCard(
   const tier = chooseTier(machine, request, constraints, cardTier, minTier);
   const dials = chooseDials(machine.applied, request);
   const isDefault = machinesOf(recipe)[0]?.id === machine.handler.id;
-  return {
-    recipe,
-    handler: machine.handler,
-    node: {
-      recipeId: recipe.id,
-      machineCount: 1,
-      parallel: 1,
-      ...(isDefault ? {} : { machineHandlerId: machine.handler.id }),
-      overclockTier: tier,
-      ...dials,
-      enabled: true,
-    },
+  const node: PlannedCard["node"] = {
+    recipeId: recipe.id,
+    machineCount: 1,
+    parallel: 1,
+    ...(isDefault ? {} : { machineHandlerId: machine.handler.id }),
+    overclockTier: tier,
+    ...dials,
+    enabled: true,
   };
+  return { recipe, handler: machine.handler, node: withHatch(recipe, node, tier) };
+}
+
+/**
+ * A multiblock card's hatch, as the board gives a new card: the supply its full parallels need, in whole amps
+ * (`normalizeHatchInput`), here at the card's tier. The amps raise the parallel ordinal by the board's own rule (read as
+ * regular hatches), so the API's card runs the parallels the board shows, not one hatch's worth. Other cards are left
+ * as they are.
+ */
+function withHatch(recipe: Recipe, node: PlannedCard["node"], tier: string): PlannedCard["node"] {
+  if (!isVoltageTierName(tier)) {
+    return node;
+  }
+  const seeded = normalizeHatchInput(recipe, { ...node, hatchVoltageTier: tier } as FactoryNode);
+  return seeded.hatchAmps === undefined ? node : seeded;
 }
 
 /** The card as the API shows it. */

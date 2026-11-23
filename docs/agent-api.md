@@ -267,8 +267,10 @@ response: {cardId, recipeId, name, machine: {id, name}, tier, dials?, heat?}
   dial id, an unknown option, a number out of range or an option below the recipe's minimum (a coil too cold for the
   recipe) is `bad_request` naming the dial. Dials not given keep the machine's defaults (the coil the recipe needs).
 - `heat`: the heat in K the recipe needs, on a heat machine.
-- A card's machine count is not set: the solver chooses it. A card starts with no other settings (no power or hatch
-  choices); they are the planner's defaults.
+- A card's machine count is not set: the solver chooses it. A multiblock card gets the hatch the planner gives a new
+  card, at the card's tier: the supply its full parallels need, in whole amps (`hatchVoltageTier`, `hatchAmps` in the
+  plan). The amps count as regular hatches, so they raise the parallel tier of a "parallels per tier" machine as on the
+  board. A card starts with no other settings (no other power choices); they are the planner's defaults.
 - Errors name the card: `cards[2]: ...`. An unknown recipe is `unknown_recipe`.
 
 ### Wires

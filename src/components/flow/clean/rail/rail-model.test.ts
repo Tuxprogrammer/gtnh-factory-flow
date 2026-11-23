@@ -5,6 +5,7 @@ import {
   mockUnneeded,
 } from "@/lib/solver/plan/__fixtures__/mock-extras";
 import { layoutRail, spareHeight, visibleSlice, SECTION_H, ROW_H } from "./rail-layout";
+import { keptAmount } from "./rail-core";
 import { buildRailModel, visibleLines } from "./rail-model";
 import { buildSpares, cardDepths, effectiveShares, sparedByResource } from "./spare-model";
 import { calculateThroughput } from "@/lib/solver/throughput";
@@ -216,6 +217,14 @@ describe("spares", () => {
       rail.inputs.find((l) => l.label === "Copper Dust")!.amount - 4,
       9,
     );
+  });
+
+  it("reads a drawer's line the spares carry to within rounding as 0, and leaves out one with no drawer", () => {
+    const line = { key: "item:water", amount: 690680, drawers: [{}], pins: [] };
+    const spared = new Map([["item:water", 690680 - 4.3e-9]]);
+    expect(keptAmount(line, false, spared)).toBe(0);
+    expect(keptAmount({ ...line, drawers: [] }, false, spared)).toBeUndefined();
+    expect(keptAmount(line, false, new Map([["item:water", 690000]]))).toBeCloseTo(680, 6);
   });
 
   it("orders places most upstream first", () => {

@@ -181,35 +181,7 @@
     "shortfalls": [],
     "ports": {}
    },
-   "spares": [
-    {
-     "key": "ae02b412-2e34-33f1-b5a0-3a401d23b5c6:i:0",
-     "importing": true,
-     "bearers": [
-      {
-       "anchor": {
-        "nodeId": "ae02b412-2e34-33f1-b5a0-3a401d23b5c6",
-        "portIndex": 0,
-        "input": true
-       },
-       "flows": [
-        {
-         "port": {
-          "nodeId": "ae02b412-2e34-33f1-b5a0-3a401d23b5c6",
-          "portIndex": 0,
-          "input": true
-         },
-         "ratePerSecond": 1
-        }
-       ],
-       "max": 1,
-       "share": 1,
-       "solverPick": true
-      }
-     ],
-     "custom": false
-    }
-   ],
+   "spares": [],
    "upTo": [
     {
      "node": "ae02b412-2e34-33f1-b5a0-3a401d23b5c6",
@@ -255,40 +227,7 @@
      }
     ]
    },
-   "options": [
-    {
-     "key": {
-      "gateAnchors": [
-       {
-        "nodeId": "ae02b412-2e34-33f1-b5a0-3a401d23b5c6",
-        "portIndex": 0,
-        "input": true
-       }
-      ]
-     },
-     "replaces": {
-      "nodeId": "ae02b412-2e34-33f1-b5a0-3a401d23b5c6",
-      "portIndex": 0,
-      "input": true
-     },
-     "opens": {
-      "nodeId": "ae02b412-2e34-33f1-b5a0-3a401d23b5c6",
-      "portIndex": 0,
-      "input": true
-     },
-     "externals": [
-      {
-       "port": {
-        "nodeId": "ae02b412-2e34-33f1-b5a0-3a401d23b5c6",
-        "portIndex": 0,
-        "input": true
-       },
-       "ratePerSecond": 1
-      }
-     ],
-     "rank": "DEFAULT"
-    }
-   ],
+   "options": [],
    "complete": true,
    "notes": []
   }

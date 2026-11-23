@@ -73,16 +73,20 @@ public final class Enumerator {
         final ChoiceKey chosen = ctx.keyOf(incumbent);
         if (points != null) points.put(chosen, ctx.point());
         final List<Alternative> options = new ArrayList<>();
-        // One "this is what it does now" row per open gate, so every question in the list has its
+        // The decisions: the open gates with a leftover. What crosses at a port a drawer is linked to is the player's
+        // own supply or sink (docs/up-to.md, "Drawers and buffers"), so a gate carrying flow only there has no
+        // leftover and nothing to place.
+        final List<Integer> decisions = leftoverGates(ctx, incumbent);
+        // One "this is what it does now" row per decision, so every question in the list has its
         // current answer sitting at the top of its own group rather than one row standing for all
         // of them at once.
-        for (final int gate : sorted(incumbent)) {
+        for (final int gate : decisions) {
             options.add(asAlternative(ctx, ctx.externals(), incumbent, gate, gate, Rank.DEFAULT));
         }
         final List<Note> notes = new ArrayList<>();
 
         // Nothing else could open, so nothing else could differ.
-        if (incumbent.isEmpty() || ctx.model.gates.size() == incumbent.size()) {
+        if (decisions.isEmpty() || ctx.model.gates.size() == incumbent.size()) {
             return new Alternatives(chosen, List.copyOf(options), true, List.copyOf(notes));
         }
 
@@ -102,7 +106,6 @@ public final class Enumerator {
         // What the answer opens, gates carrying too little to show included: a swap keeps them open.
         final Set<Integer> open = ctx.openGates.isEmpty() ? incumbent : ctx.openGates;
         // A leftover the plan cannot balance without, every other place open, has nowhere else to go: one LP each.
-        final List<Integer> decisions = sorted(incumbent);
         final List<Boolean> movable = Parallel.map(ctx, decisions, out -> {
             final Set<Integer> without = new JavaHashSet<>();
             for (int g = 0; g < ctx.model.gates.size(); g++) if (g != out) without.add(g);
@@ -369,6 +372,28 @@ public final class Enumerator {
             screen(ctx, open, tried, first, new ArrayList<>(trading.subList(0, mid)), out);
             screen(ctx, open, tried, first, new ArrayList<>(trading.subList(mid, trading.size())), out);
         }
+    }
+
+    /**
+     * The gates of {@code support} that carry flow, above dust, at a port no drawer is linked to: a leftover the plan
+     * forces in or out. In gate order.
+     */
+    private static List<Integer> leftoverGates(final SolveContext ctx, final Set<Integer> support) {
+        final double[] externals = ctx.externals();
+        final double[] scales = ctx.dustScales(null, null, externals)
+            .ports();
+        final double dust = ctx.heuristics.numerics().dust;
+        final List<Integer> out = new ArrayList<>();
+        for (final int gate : sorted(support)) {
+            for (final int p : ctx.model.gates.get(gate)
+                .ports()) {
+                if (!ctx.drawnPorts.contains(p) && externals[p] > dust * scales[p]) {
+                    out.add(gate);
+                    break;
+                }
+            }
+        }
+        return out;
     }
 
     /** A gate whose every port is shut (a buffer's bank or closed by the guard): it never opens as a gate. */

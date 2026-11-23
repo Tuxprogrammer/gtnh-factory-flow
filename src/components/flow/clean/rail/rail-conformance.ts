@@ -443,6 +443,32 @@ function directCases(): Array<[string, RailInput]> {
       }),
     ],
     [
+      "lists: a drawer's line its spares carry to within rounding reads 0",
+      base({
+        flows: [flow("u", [wiredPort(false, "item:water", 690680)])],
+        drawers: [drawer({ id: "d-water", role: "source", resourceId: "water", label: "water" })],
+        cards: ["u", "v"],
+        spares: [
+          {
+            key: "water",
+            importing: true,
+            custom: false,
+            bearers: [
+              bearer({
+                key: "w|u",
+                nodeId: "u",
+                output: false,
+                resource: "item:water",
+                max: 690680 - 4.3e-9,
+                share: 1,
+              }),
+              bearer({ key: "w|v", nodeId: "v", output: false, resource: "item:water", max: 1, share: 0 }),
+            ],
+          },
+        ],
+      }),
+    ],
+    [
       "lists: trash leaves what it voids out of the outputs",
       base({
         flows: [flow("a", [wiredPort(true, "item:slag", 3)])],

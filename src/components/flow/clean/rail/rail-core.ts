@@ -525,14 +525,16 @@ export function keptAmount(
 ): number | undefined {
   if (internal) return line.amount;
   const left = Math.max(0, line.amount - (spared.get(line.key) ?? 0));
+  // What the spares leave within rounding of nothing is nothing: a kept line reads 0, never the rounding.
+  const none = left <= Math.max(RAIL_CORE_EPS, line.amount * 1e-4);
   if (
-    left <= Math.max(RAIL_CORE_EPS, line.amount * 1e-4) &&
+    none &&
     line.drawers.length === 0 &&
     line.pins.length === 0 &&
     !(keepOpen && (line.open?.length ?? 0) > 0)
   )
     return undefined;
-  return left;
+  return none ? 0 : left;
 }
 
 export function keptLines(

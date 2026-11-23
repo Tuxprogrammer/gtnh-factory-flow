@@ -25808,6 +25808,222 @@
    }
   },
   {
+   "name": "lists: a drawer's line its spares carry to within rounding reads 0",
+   "input": {
+    "answered": true,
+    "aliases": {},
+    "flows": [
+     {
+      "card": "u",
+      "machine": "Mixer",
+      "machines": 1,
+      "utilization": 1,
+      "ports": [
+       {
+        "kind": "item",
+        "id": "water",
+        "label": "water",
+        "perSecond": 690680,
+        "handle": "i-item:water",
+        "wired": true,
+        "set": 0,
+        "output": false,
+        "key": "item:water"
+       }
+      ]
+     }
+    ],
+    "drawers": [
+     {
+      "kind": "item",
+      "resourceId": "water",
+      "label": "water",
+      "rule": "ignore",
+      "set": false,
+      "rate": 0,
+      "unmet": false,
+      "eaten": 0,
+      "id": "d-water",
+      "role": "source"
+     }
+    ],
+    "machines": [],
+    "names": {},
+    "spares": [
+     {
+      "key": "water",
+      "importing": true,
+      "custom": false,
+      "bearers": [
+       {
+        "handle": "h-w|u",
+        "name": "Iron Ingot",
+        "machine": "Mixer",
+        "resource": "item:water",
+        "max": 690679.9999999957,
+        "solverPick": false,
+        "energy": false,
+        "share": 1,
+        "ports": [
+         {
+          "nodeId": "u",
+          "handle": "h-w|u"
+         }
+        ],
+        "key": "w|u",
+        "nodeId": "u",
+        "output": false
+       },
+       {
+        "handle": "h-w|v",
+        "name": "Iron Ingot",
+        "machine": "Mixer",
+        "resource": "item:water",
+        "max": 1,
+        "solverPick": false,
+        "energy": false,
+        "share": 0,
+        "ports": [
+         {
+          "nodeId": "v",
+          "handle": "h-w|v"
+         }
+        ],
+        "key": "w|v",
+        "nodeId": "v",
+        "output": false
+       }
+      ]
+     }
+    ],
+    "cards": [
+     "u",
+     "v"
+    ],
+    "wires": [],
+    "view": {
+     "filter": "",
+     "peak": true,
+     "power": "eu"
+    }
+   },
+   "view": {
+    "dial": {
+     "unit": "eu",
+     "suffix": "EU/t"
+    },
+    "sections": [
+     {
+      "id": "INPUTS",
+      "count": 2,
+      "shown": 2,
+      "lines": [
+       {
+        "key": "item:water",
+        "kind": "item",
+        "id": "water",
+        "label": "water",
+        "amount": 0,
+        "energy": false,
+        "drawers": [
+         {
+          "id": "d-water",
+          "source": true,
+          "role": "source",
+          "rule": "ignore",
+          "rate": 0,
+          "set": false,
+          "unmet": false
+         }
+        ],
+        "pins": [],
+        "open": []
+       }
+      ],
+      "spares": [
+       {
+        "key": "water",
+        "importing": true,
+        "custom": false,
+        "bearers": [
+         {
+          "key": "w|u",
+          "nodeId": "u",
+          "handle": "h-w|u",
+          "output": false,
+          "name": "Iron Ingot",
+          "machine": "Mixer",
+          "resourceKey": "item:water",
+          "max": 690679.9999999957,
+          "solverPick": false,
+          "energy": false,
+          "ports": [
+           {
+            "nodeId": "u",
+            "handle": "h-w|u"
+           }
+          ]
+         },
+         {
+          "key": "w|v",
+          "nodeId": "v",
+          "handle": "h-w|v",
+          "output": false,
+          "name": "Iron Ingot",
+          "machine": "Mixer",
+          "resourceKey": "item:water",
+          "max": 1,
+          "solverPick": false,
+          "energy": false,
+          "ports": [
+           {
+            "nodeId": "v",
+            "handle": "h-w|v"
+           }
+          ]
+         }
+        ],
+        "solved": [
+         1,
+         0
+        ],
+        "shares": [
+         1,
+         0
+        ]
+       }
+      ]
+     },
+     {
+      "id": "OUTPUTS",
+      "count": 0,
+      "shown": 0,
+      "empty": "gtnhplanner.rail.empty.outputs",
+      "lines": [],
+      "spares": []
+     },
+     {
+      "id": "INTERNAL",
+      "count": 0,
+      "shown": 0,
+      "empty": "gtnhplanner.rail.empty.internal",
+      "lines": [],
+      "spares": []
+     }
+    ],
+    "machines": {
+     "count": 0,
+     "shown": 0,
+     "total": {
+      "value": 0,
+      "suffix": "EU/t"
+     },
+     "empty": "gtnhplanner.rail.empty.machines",
+     "groups": []
+    }
+   }
+  },
+  {
    "name": "lists: trash leaves what it voids out of the outputs",
    "input": {
     "answered": true,

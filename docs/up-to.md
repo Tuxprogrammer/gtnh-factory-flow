@@ -93,6 +93,10 @@ Without Up to pools there is no push: the trades, then the same drawer stages. P
 level with forced flow, and a loop (one step) would trade one for the other by least amount: buy an intermediate rather
 than draw from its own source drawer, or idle rather than put a byproduct into its drawer (`drawer-ends.test.ts`).
 
+Nor is what a drawer brings or takes a leftover: the alternatives' decisions (`Enumerator`, `enumerate.ts`) are the
+open gates that carry flow at a port no drawer is linked to, so a shortfall drawn from the player's source drawer (or a
+surplus into a byproduct drawer) has no Forced group and no places to choose, beside a buffer or not.
+
 ### Buffers
 
 With Up to pools a BUFFER drawer with rule ANY is a bank, as old Build's overflow buffer was: each maker port linked to it

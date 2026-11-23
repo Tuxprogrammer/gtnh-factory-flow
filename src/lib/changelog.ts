@@ -40,6 +40,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "4.7.0-tux.8",
+    date: "2026-11-22",
+    headline: "The Overview shows imports through your own drawers",
+    notes: [
+      "An import that comes through a drawer you wired is listed under Inputs at its real rate.",
+      "Flow into or out of your own drawers is no longer offered as a Forced leftover to place.",
+      "Input rows no longer show tiny leftover numbers where the rate is zero.",
+    ],
+  },
+  {
     version: "4.7.0-tux.7",
     date: "2026-11-22",
     headline: "Plans that reuse their own byproducts solve at full size",

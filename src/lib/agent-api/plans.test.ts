@@ -13,6 +13,8 @@ import type { MachineHandler, Recipe } from "@/lib/model/types";
 import { getDatasetRecipe, getDatasetResource, getDefaultDatasetVersionId } from "@/lib/server/dataset-query";
 import { CORE_LOAD_MS, useCoreSolver } from "@/test-support/core-solve";
 import { normalizeLoadedProject } from "@/lib/model/project-normalize";
+import { machineReadout } from "@/lib/machines/readout";
+import { normalizeHatchInput } from "@/lib/solver/hatch-input";
 import { DRAFT_TTL_MS, DRAFTS_PER_DAY, getDraft, resetDrafts, setDraftClock } from "./drafts";
 import { solveProject } from "./solve";
 import {
@@ -136,6 +138,17 @@ RECIPES["r-smelt"] = recipe("r-smelt", {
     handler("steam-hearth", "Steam Hearth", "multiblock", "NONE"),
     handler("multi-smelter", "Multi Smelter", "multiblock", "NONE"),
   ],
+});
+// A GT++ "tier x 4 parallels" multiblock on a recipe that draws most of its tier's voltage: one amp runs one parallel.
+RECIPES["r-bath"] = recipe("r-bath", {
+  name: "Industrial Chemical Bath: Titanium Ingot",
+  machineType: "Industrial Chemical Bath",
+  minimumTier: "HV",
+  eut: 480,
+  durationTicks: 200,
+  inputs: [slot("item", "dust", 1)],
+  outputs: [slot("item", "ingot", 1)],
+  machineHandlers: [handler("chem-bath", "Industrial Chemical Bath", "multiblock", "HV")],
 });
 RECIPES["r-cauldron"] = recipe("r-cauldron", {
   name: "Cauldron: Titanium Dust",
@@ -378,6 +391,32 @@ describe("steam, primitive machines and the card tier", () => {
     expect(got).toMatchObject({ cardTier: "EV", constraints: { tierCap: "IV" } });
   });
 
+  it("echoes the card tier it applies, and keeps cards from going below minTier", async () => {
+    // No cardTier: the cap is the card tier, and create says so.
+    const capped = await call(createPost, { name: "x", constraints: { tierCap: "IV" } }, plansCreateResponse);
+    expect(capped.cardTier).toBe("IV");
+    expect(await added(capped.planId, {})).toMatchObject({ machine: { id: "zyngen" }, tier: "IV" });
+    const uncapped = await call(createPost, { name: "x" }, plansCreateResponse);
+    expect(uncapped.cardTier).toBeUndefined();
+
+    const ev = await call(createPost, { name: "x", constraints: { tierCap: "IV" }, cardTier: "EV", minTier: "EV" }, plansCreateResponse);
+    expect(ev).toMatchObject({ cardTier: "EV", minTier: "EV" });
+    expect(await added(ev.planId, {})).toMatchObject({ tier: "EV" });
+    expect(await fails(addCardsPost, { planId: ev.planId, cards: [{ recipeId: "r-bronze", tier: "HV" }] }, "bad_request", 400)).toMatch(/HV is below the draft's minTier EV/);
+    // The single block is built up to HV only: nothing at or above EV.
+    expect(await fails(addCardsPost, { planId: ev.planId, cards: [{ recipeId: "r-bronze", machine: "Alloy Smelter" }] }, "bad_request", 400)).toMatch(/minTier EV/);
+    // A machine that draws no EU keeps its own tier.
+    expect((await call(addCardsPost, { planId: ev.planId, cards: [{ recipeId: "r-cauldron" }] }, plansAddCardsResponse)).cards[0]!.tier).toBe("ULV");
+    expect(await call(getPost, { planId: ev.planId, fields: ["targets"] }, plansGetResponse)).toMatchObject({ cardTier: "EV", minTier: "EV" });
+
+    // With no card tier a card takes the lowest tier that runs it, raised to minTier.
+    const floor = await create(undefined, { minTier: "MV" });
+    expect(await added(floor, {})).toMatchObject({ machine: { id: "zyngen" }, tier: "MV" });
+
+    expect(await fails(createPost, { name: "x", constraints: { tierCap: "IV" }, cardTier: "HV", minTier: "EV" }, "bad_request", 400)).toMatch(/minTier EV is above the cardTier HV/);
+    expect(await fails(createPost, { name: "x", constraints: { tierCap: "HV" }, minTier: "EV" }, "bad_request", 400)).toMatch(/minTier EV is above the tierCap HV/);
+  });
+
   it("solves a card at its tier as the planner shows it once the plan is opened", async () => {
     const planId = await create({ tierCap: "EV" });
     await call(addCardsPost, { planId, cards: [{ recipeId: "r-dust" }] }, plansAddCardsResponse);
@@ -397,6 +436,32 @@ describe("steam, primitive machines and the card tier", () => {
     await call(setTargetsPost, { planId: hv, targets: [{ resource: "dust", rate: 4 }] }, plansSetTargetsResponse);
     const slower = await solveProject(getDraft(hv).project);
     expect(draft.nodes.c1!.theoreticalMachinesRequired).toBeLessThan(slower.nodes.c1!.theoreticalMachinesRequired);
+  });
+
+  it("gives a multiblock card the hatch the board gives it, whose amps raise the parallel tier", async () => {
+    const planId = await create({ tierCap: "HV" });
+    await call(addCardsPost, { planId, cards: [{ recipeId: "r-bath" }] }, plansAddCardsResponse);
+    await call(setTargetsPost, { planId, targets: [{ resource: "ingot", rate: 2 }] }, plansSetTargetsResponse);
+    const project = getDraft(planId).project;
+    const card = project.nodes[0]!;
+    // The board's new-card rule (whole amps for full parallels) at the card's tier: 19 A of HV, read as regular
+    // hatches (9,728 / 2 = 4,864 EU/t summed, the IV ordinal), so 5 x 4 = 20 parallels, which the 19 A can feed.
+    const board = normalizeHatchInput(RECIPES["r-bath"]!, { ...card, hatchAmps: undefined, powerEuT: undefined, hatchVoltageTier: "HV" });
+    expect(card).toMatchObject({ overclockTier: "HV", hatchVoltageTier: "HV", hatchAmps: board.hatchAmps, powerEuT: board.powerEuT });
+    expect(card.hatchAmps).toBe(19);
+    expect((machineReadout(RECIPES["r-bath"]!, card).expected as { parallels: number }).parallels).toBe(20);
+    // The delivered plan opens with the same hatch, and solves to the same machines.
+    const draft = await solveProject(project);
+    const opened = normalizeLoadedProject(structuredClone(project));
+    expect(opened.nodes[0]).toMatchObject({ hatchVoltageTier: "HV", hatchAmps: 19 });
+    const shown = await solveProject(opened);
+    expect(shown.nodes.c1!.theoreticalMachinesRequired).toBeCloseTo(draft.nodes.c1!.theoreticalMachinesRequired, 6);
+    expect(shown.totalEuT).toBeCloseTo(draft.totalEuT, 6);
+    // One amp of HV feeds one parallel: twenty times the machines.
+    const single = structuredClone(project);
+    single.nodes[0] = { ...card, hatchAmps: 1, powerEuT: 512 };
+    const oneAmp = await solveProject(single);
+    expect(oneAmp.nodes.c1!.theoreticalMachinesRequired / draft.nodes.c1!.theoreticalMachinesRequired).toBeCloseTo(20, 6);
   });
 
   it("says in the solve what steam its steam machines burn", async () => {

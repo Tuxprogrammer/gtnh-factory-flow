@@ -115,8 +115,22 @@ export async function createPlan(body: z.infer<typeof plansCreateRequest>): Prom
   if (body.cardTier && cap && TIER_NAMES.indexOf(body.cardTier) > TIER_NAMES.indexOf(cap)) {
     throw new AgentApiError("bad_request", `cardTier ${body.cardTier} is above the tierCap ${cap}.`);
   }
+  // The tier cards default to, echoed so the caller sees it: the one asked for, else the cap.
+  const cardTier = body.cardTier ?? cap;
+  if (body.minTier && cardTier && TIER_NAMES.indexOf(body.minTier) > TIER_NAMES.indexOf(cardTier)) {
+    throw new AgentApiError(
+      "bad_request",
+      `minTier ${body.minTier} is above the ${body.cardTier ? "cardTier" : "tierCap"} ${cardTier}.`,
+    );
+  }
   const dataset = await withDataset(() => agentDatasetVersion());
-  const draft = createDraft({ name: body.name, dataset, constraints: body.constraints, cardTier: body.cardTier });
+  const draft = createDraft({
+    name: body.name,
+    dataset,
+    constraints: body.constraints,
+    cardTier,
+    minTier: body.minTier,
+  });
   return {
     dataset,
     planId: draft.id,
@@ -124,6 +138,7 @@ export async function createPlan(body: z.infer<typeof plansCreateRequest>): Prom
     expiresAt: draftExpiresAt(draft),
     ...(draft.constraints ? { constraints: draft.constraints } : {}),
     ...(draft.cardTier ? { cardTier: draft.cardTier } : {}),
+    ...(draft.minTier ? { minTier: draft.minTier } : {}),
   };
 }
 
@@ -147,7 +162,7 @@ export async function addCards(
       const recipe =
         loaded.get(request.recipeId) ?? (await withDataset(() => loadRecipe(draft.dataset, request.recipeId)));
       loaded.set(recipe.id, recipe);
-      planned.push(planCard(recipe, request, draft.constraints, draft.cardTier));
+      planned.push(planCard(recipe, request, draft.constraints, draft.cardTier, draft.minTier));
     } catch (error) {
       throw prefixed(index, error);
     }
@@ -308,6 +323,7 @@ export async function getPlan(body: z.infer<typeof plansGetRequest>): Promise<z.
     expiresAt: draftExpiresAt(draft),
     ...(draft.constraints ? { constraints: draft.constraints } : {}),
     ...(draft.cardTier ? { cardTier: draft.cardTier } : {}),
+    ...(draft.minTier ? { minTier: draft.minTier } : {}),
     cardCount: draft.project.nodes.length,
     wireCount: draft.project.edges.length,
     ...(fields.has("targets") ? { targets: describeTargets(draft) } : {}),

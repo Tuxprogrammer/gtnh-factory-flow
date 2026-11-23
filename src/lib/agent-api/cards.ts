@@ -6,6 +6,7 @@ import {
   type MachineConfigTierControl,
 } from "@/lib/model/recipe-rules";
 import { getVoltageTierIndex, isVoltageTierName } from "@/lib/model/tiers";
+import { normalizeHatchInput } from "@/lib/solver/hatch-input";
 import type { FactoryNode, MachineHandler, Recipe } from "@/lib/model/types";
 import { bannedSet } from "./constraints";
 import { steamAllowed, unpoweredKind, type PowerSource } from "./power-source";
@@ -22,7 +23,9 @@ import { TIER_NAMES, type AgentConstraints } from "./schemas";
  * first single block that does, never a steam or primitive machine unless the constraints allow them
  * (`steamAllowed`) or the request names one. The tier is the highest the machine is built at that is at or below the
  * draft's card tier (`cardTier`, else `tierCap`) and not below the recipe's minimum; with neither, or for a machine
- * that draws no EU on the recipe, the lowest. A
+ * that draws no EU on the recipe, the lowest. The draft's `minTier` raises a default below it to the lowest tier the
+ * machine is built at from there (within the cap) and refuses a tier asked for below it; steam and primitive machines,
+ * machines that draw no EU on the recipe and recipes with no voltage tier keep their own. A
  * recipe nothing can run at or below the cap is tier_too_low. A recipe whose tier is not a voltage tier (a crafting
  * table, a furnace's "NONE") keeps its own tier and is never capped. Steam and primitive machines count as ULV for
  * every cap whatever their tier reads, and keep that tier: they do not overclock.
@@ -144,9 +147,12 @@ function chooseTier(
   request: CardRequest,
   constraints: AgentConstraints | undefined,
   cardTier: string | undefined,
+  minTier?: string,
 ): string {
   const { applied, handler } = machine;
   const min = String(applied.minimumTier);
+  // minTier binds only a card with a voltage tier that draws EU: a higher tier means nothing to the others.
+  const floor = minTier && !machine.unpowered && isVoltageTierName(min) && applied.eut > 0 ? minTier : undefined;
   if (!request.tier) {
     if (!machine.lowest) {
       throw new AgentApiError(
@@ -154,9 +160,26 @@ function chooseTier(
         `${handler.label} needs ${min} for this recipe, above the draft's tierCap ${constraints?.tierCap}.`,
       );
     }
-    return defaultTier(machine, constraints, cardTier);
+    const chosen = defaultTier(machine, constraints, cardTier);
+    if (!floor || tierIndex(chosen) >= tierIndex(floor)) {
+      return chosen;
+    }
+    const cap = constraints?.tierCap;
+    const raised = allowedTiers(applied).find(
+      (tier) => tierIndex(tier) >= tierIndex(floor) && (!cap || tierIndex(tier) <= tierIndex(cap)),
+    );
+    if (!raised) {
+      throw new AgentApiError(
+        "bad_request",
+        `${handler.label} is built at ${allowedTiers(applied).join(", ")} only, none at or above the draft's minTier ${floor}${cap ? ` and at or below its tierCap ${cap}` : ""}.`,
+      );
+    }
+    return raised;
   }
   const tier = request.tier;
+  if (floor && isVoltageTierName(tier) && tierIndex(tier) < tierIndex(floor)) {
+    throw new AgentApiError("bad_request", `${tier} is below the draft's minTier ${floor}.`);
+  }
   if (machine.unpowered && tier !== min) {
     throw new AgentApiError(
       "bad_request",
@@ -249,31 +272,44 @@ export interface PlannedCard {
 
 /**
  * The card a request makes, or the error that says why it cannot be made. Pure: the draft is not touched. `cardTier`
- * is the draft's (plans/create); without it a card defaults to the highest tier at or below `tierCap`.
+ * is the draft's (plans/create); without it a card defaults to the highest tier at or below `tierCap`. `minTier` is
+ * the draft's too: no card with a voltage tier runs below it.
  */
 export function planCard(
   recipe: Recipe,
   request: CardRequest,
   constraints: AgentConstraints | undefined,
   cardTier?: string,
+  minTier?: string,
 ): PlannedCard {
   const machine = chooseMachine(recipe, request, constraints);
-  const tier = chooseTier(machine, request, constraints, cardTier);
+  const tier = chooseTier(machine, request, constraints, cardTier, minTier);
   const dials = chooseDials(machine.applied, request);
   const isDefault = machinesOf(recipe)[0]?.id === machine.handler.id;
-  return {
-    recipe,
-    handler: machine.handler,
-    node: {
-      recipeId: recipe.id,
-      machineCount: 1,
-      parallel: 1,
-      ...(isDefault ? {} : { machineHandlerId: machine.handler.id }),
-      overclockTier: tier,
-      ...dials,
-      enabled: true,
-    },
+  const node: PlannedCard["node"] = {
+    recipeId: recipe.id,
+    machineCount: 1,
+    parallel: 1,
+    ...(isDefault ? {} : { machineHandlerId: machine.handler.id }),
+    overclockTier: tier,
+    ...dials,
+    enabled: true,
   };
+  return { recipe, handler: machine.handler, node: withHatch(recipe, node, tier) };
+}
+
+/**
+ * A multiblock card's hatch, as the board gives a new card: the supply its full parallels need, in whole amps
+ * (`normalizeHatchInput`), here at the card's tier. The amps raise the parallel ordinal by the board's own rule (read as
+ * regular hatches), so the API's card runs the parallels the board shows, not one hatch's worth. Other cards are left
+ * as they are.
+ */
+function withHatch(recipe: Recipe, node: PlannedCard["node"], tier: string): PlannedCard["node"] {
+  if (!isVoltageTierName(tier)) {
+    return node;
+  }
+  const seeded = normalizeHatchInput(recipe, { ...node, hatchVoltageTier: tier } as FactoryNode);
+  return seeded.hatchAmps === undefined ? node : seeded;
 }
 
 /** The card as the API shows it. */

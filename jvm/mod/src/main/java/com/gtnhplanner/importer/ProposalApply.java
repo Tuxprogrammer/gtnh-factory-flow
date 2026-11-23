@@ -23,9 +23,10 @@ import com.gtnhplanner.data.flowchart.Node;
 /**
  * What the planner site's assistant proposes to add to a plan (a proposal, read from {@code /api/deliveries/p...}),
  * added to the open plan. Its new cards, drawers and the wires between them come in through the website-card import,
- * so recipes are found in the game as for a pasted plan; its wires to the plan's own cards are matched by the ids the
- * plan's snapshot gave them (a card's board id); its target rates land on ports that have none. Adds only: nothing the
- * plan has is removed, moved or changed, so the whole of it is one undo step that puts the plan back exactly.
+ * so recipes are found in the game as for a pasted plan; its wires to the plan's own cards and drawers are matched by
+ * the ids the plan's snapshot gave them (their board ids); its target rates land on ports that have none. Adds only:
+ * nothing the plan has is removed, moved or changed, so the whole of it is one undo step that puts the plan back
+ * exactly.
  *
  * <p>
  * Two steps, so a proposal that does not read leaves no empty undo step: {@link #prepare} converts (NEI on the client
@@ -167,6 +168,24 @@ public final class ProposalApply {
             int gone = 0, noPort = 0;
             for (final Cross c : crosses) {
                 final Node from = node(plan, c.from()), to = node(plan, c.to());
+                // A wire with a drawer at one end is that drawer holding the card's port, as the website reads it.
+                final Drawer toDrawer = from != null && to == null ? drawer(plan, c.to()) : null,
+                    fromDrawer = from == null && to != null ? drawer(plan, c.from()) : null;
+                if (toDrawer != null || fromDrawer != null) {
+                    final boolean input = fromDrawer != null;
+                    final Node card = input ? to : from;
+                    final FfHandle h = FfHandle.parse(input ? c.toPort() : c.fromPort());
+                    final int at = ports.find(
+                        card,
+                        !input,
+                        h != null ? h.kind() : c.kind(),
+                        List.of(h != null ? h.resourceId() : c.resource()));
+                    if (at >= 0 && plan
+                        .linkDrawerPort((input ? fromDrawer : toDrawer).getId(), new Drawer.Link(card.id, at), input))
+                        wires++;
+                    else noPort++;
+                    continue;
+                }
                 if (from == null || to == null) {
                     gone++;
                     continue;
@@ -233,6 +252,15 @@ public final class ProposalApply {
             if (made != null) return plan.nodes.get(made);
             final Uuid own = uuid(id);
             return own == null ? null : plan.nodes.get(own);
+        }
+
+        /** A wire end: one of the proposal's drawers as it came in, else one of the plan's own by its board id. */
+        @Nullable
+        private Drawer drawer(final Graph plan, final String id) {
+            final Uuid made = this.made.get(id);
+            if (made != null) return plan.drawers.get(made);
+            final Uuid own = uuid(id);
+            return own == null ? null : plan.drawers.get(own);
         }
 
         /**

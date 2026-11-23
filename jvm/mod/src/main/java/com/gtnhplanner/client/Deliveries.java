@@ -165,7 +165,8 @@ public final class Deliveries {
             say(DeliveryText.OTHER_PLAN, true);
             return;
         }
-        final BoardSession session = board().session();
+        final BoardScreen board = board();
+        final BoardSession session = board.session();
         final Graph graph = session.graph();
         if (!prepared.fits(graph)) {
             say(DeliveryText.OTHER_PLAN, true);
@@ -174,6 +175,11 @@ public final class Deliveries {
         final ProposalApply.Outcome[] out = new ProposalApply.Outcome[1];
         final FfCards.Ports ports = new FfCards.Ports(new GameNodeMaker());
         session.edit(() -> out[0] = prepared.addTo(graph, ports));
+        // The board goes to what came in, as after a paste: panned the least it takes, framed when it is bigger.
+        if (!out[0].added()
+            .isEmpty())
+            board.canvas()
+                .revealWhenBuilt(out[0].added());
         com.gtnhplanner.ui.sound.Sfx.PLACE.play();
         final String message = out[0].message(graph.getName());
         say(message, false);

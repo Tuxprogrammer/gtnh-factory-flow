@@ -5,7 +5,7 @@
     "constraints": {
       "tierCap": "EV"
     },
-    "cardTier": "EV",
+    "minTier": "HV",
     "player": {
       "name": "Steve"
     }
@@ -19,6 +19,7 @@
     "constraints": {
       "tierCap": "EV"
     },
-    "cardTier": "EV"
+    "cardTier": "EV",
+    "minTier": "HV"
   }
 }

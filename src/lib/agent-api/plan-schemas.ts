@@ -23,6 +23,8 @@ export const plansCreateRequest = z
     constraints: constraintsSchema.optional(),
     /** The tier cards default to; at most constraints.tierCap. Default: the tier cap. */
     cardTier: tierName.optional(),
+    /** No card runs below this tier; at most the card tier. */
+    minTier: tierName.optional(),
     player,
   })
   .strict();
@@ -121,6 +123,7 @@ export const plansCreateResponse = z
     expiresAt: z.string(),
     constraints: constraintsSchema.optional(),
     cardTier: tierName.optional(),
+    minTier: tierName.optional(),
   })
   .strict();
 
@@ -157,6 +160,7 @@ export const plansGetResponse = z
     expiresAt: z.string(),
     constraints: constraintsSchema.optional(),
     cardTier: tierName.optional(),
+    minTier: tierName.optional(),
     cardCount: z.number().int(),
     wireCount: z.number().int(),
     cards: z.array(draftCard).optional(),

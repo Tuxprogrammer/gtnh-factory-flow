@@ -1,5 +1,9 @@
 package com.gtnhplanner.dev;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,8 +26,10 @@ import com.gtnhplanner.client.dave.DaveLink;
  * A stand-in for DaveBridge in the dev game, which has no bridge mod: {@code call 'dave?mode=answer'} makes Ask Dave
  * appear and answer every question with a thinking event, a line, then a final reply carrying {@code proposal} (an id
  * the mock library serves) and the recipes {@code recipes} (site ids, comma separated); {@code mode=error} answers with
- * an error; {@code mode=off} takes it away; {@code up=0} keeps it but has the server stop taking asks. Only reachable
- * through the harness, which runs only in a dev game.
+ * an error; {@code mode=off} takes it away; {@code up=0} keeps it but has the server stop taking asks. Each ask's
+ * context and attachment are written as they were sent to {@code dave-last/context.json} and {@code attachment.json}
+ * in the game directory, so a check can post the attachment where the server's assistant would. Only reachable through
+ * the harness, which runs only in a dev game.
  */
 public final class DevDave implements DaveLink {
 
@@ -88,6 +94,8 @@ public final class DevDave implements DaveLink {
         lastText = text;
         lastContext = contextJson;
         lastAttachment = attachmentJson == null ? -1 : attachmentJson.length();
+        save("context.json", contextJson);
+        save("attachment.json", attachmentJson);
         later(300, event("thinking", id));
         if (error) {
             final JsonObject e = event("error", id);
@@ -119,6 +127,17 @@ public final class DevDave implements DaveLink {
         last.add("data", data);
         later(3000, last);
         return id;
+    }
+
+    /** Writes {@code text} (an absent one as an empty file) to {@code dave-last/<name>} in the game directory. */
+    private static void save(final String name, @Nullable final String text) {
+        final File dir = new File(Minecraft.getMinecraft().mcDataDir, "dave-last");
+        try {
+            Files.createDirectories(dir.toPath());
+            Files.write(new File(dir, name).toPath(), (text == null ? "" : text).getBytes(StandardCharsets.UTF_8));
+        } catch (final IOException e) {
+            throw new IllegalStateException("dev Dave could not write " + name, e);
+        }
     }
 
     private static JsonObject event(final String type, final String id) {

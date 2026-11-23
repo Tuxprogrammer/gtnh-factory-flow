@@ -38,6 +38,11 @@ public final class NeiRecipeIndex implements RecipeIndex {
     private final Map<String, List<GameRecipe>> gregtechMaps = new HashMap<>();
 
     @Override
+    public Map<String, String> renames() {
+        return GameRenames.table();
+    }
+
+    @Override
     public Lookup find(final FfRecipe recipe) {
         // A plan posted from the game names the very recipe, as a saved plan does: found the same way.
         if (recipe.neiRecipe() != null) {

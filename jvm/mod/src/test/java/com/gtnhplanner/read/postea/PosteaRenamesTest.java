@@ -3,6 +3,10 @@ package com.gtnhplanner.read.postea;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,6 +15,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 /** Reads stand-in registries shaped like Postea's private ones (same field names, same nesting). */
 class PosteaRenamesTest {
@@ -144,5 +152,62 @@ class PosteaRenamesTest {
         final PosteaRenames renames = PosteaRenames.read("no.such.Registry", "no.such.Other", item -> "x");
         assertTrue(renames.items.isEmpty());
         assertTrue(renames.handlers.isEmpty());
+    }
+
+    /**
+     * The pipeline's fixture through the mod's rule: the same ids its resource-renames.test.mjs expects, so the
+     * dataset's sidecar, the website and the mod rename alike.
+     */
+    @Test
+    void turnsRowsIntoResourceIdsAsThePipelineDoes() throws IOException {
+        final JsonObject raw = new JsonParser()
+            .parse(
+                new String(
+                    Files.readAllBytes(
+                        Paths.get(
+                            "../../tools/dataset-pipeline/scripts/__fixtures__/postea-renames-gt-ic2-2.9.1.raw.json")),
+                    StandardCharsets.UTF_8))
+            .getAsJsonObject();
+        final List<PosteaRenames.Pair> pairs = new ArrayList<>();
+        for (final JsonElement e : raw.getAsJsonArray("items")) {
+            final JsonObject row = e.getAsJsonObject();
+            pairs.add(
+                new PosteaRenames.Pair(
+                    row.get("from")
+                        .getAsString(),
+                    row.get("fromMeta")
+                        .getAsInt(),
+                    row.get("to")
+                        .getAsString(),
+                    row.get("toMeta")
+                        .getAsInt()));
+        }
+        final Map<String, String> table = PosteaRenames.table(pairs);
+        assertEquals("gregtech:gt.metaitem.02@32020", table.get("ic2:itemfuelplantball@*"));
+        assertEquals("gregtech:gt.metaitem.01@30704", table.get("ic2:itemcellempty@6"));
+        assertEquals("gregtech:gt.metaitem.02@32020", PosteaRenames.rename(table, "ic2:itemfuelplantball"));
+        assertEquals("gregtech:gt.metaitem.02@32021", PosteaRenames.rename(table, "ic2:itembiochaff"));
+        assertEquals("gregtech:gt.metaitem.01@30245", PosteaRenames.rename(table, "ic2:itemcellempty@7"));
+        assertEquals("ic2:itemcellempty@8", PosteaRenames.rename(table, "ic2:itemcellempty@8"));
+        assertEquals("ic2:itemcellempty", PosteaRenames.rename(table, "ic2:itemcellempty"));
+    }
+
+    @Test
+    void keepsTheStacksMetaWhenTheTargetSaysSo() {
+        final Map<String, String> keep = PosteaRenames.table(
+            List.of(
+                new PosteaRenames.Pair(
+                    "miscutils:item.BioRecipeSelector",
+                    PosteaRenames.WILDCARD,
+                    "gregtech:gt.integrated_circuit",
+                    PosteaRenames.WILDCARD)));
+        assertEquals(
+            "gregtech:gt.integrated_circuit@12",
+            PosteaRenames.rename(keep, "miscutils:item.biorecipeselector@12"));
+        assertEquals("gregtech:gt.integrated_circuit", PosteaRenames.rename(keep, "miscutils:item.biorecipeselector"));
+        assertEquals(
+            Map.of(),
+            PosteaRenames.table(List.of(new PosteaRenames.Pair("a:b", 3, "A:B", 3))),
+            "no self rows");
     }
 }

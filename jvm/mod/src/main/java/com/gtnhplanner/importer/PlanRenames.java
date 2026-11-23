@@ -1,0 +1,267 @@
+package com.gtnhplanner.importer;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.annotation.Nullable;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+import com.gtnhplanner.importer.FfPlan.FfRecipe;
+import com.gtnhplanner.importer.FfPlan.FfSlot;
+import com.gtnhplanner.read.postea.PosteaRenames;
+
+/**
+ * A plan saved before the game renamed some items, read with the new ids: the website's
+ * {@code withRenamedProjectResources} (src/lib/datasets/resource-renames.ts) on the plan's JSON, the game's recipes
+ * standing in for the website's dataset.
+ *
+ * <p>
+ * The renames are the game's own (Postea's simple item replacements, {@link RecipeIndex#renames()}). A card's recipe
+ * that names a renamed item and that the game matches as it is stays as it is, and every item it names is kept
+ * everywhere: its wires must keep meeting it (2.9.1 still has recipes on IC2's plantball). Every other card's recipe
+ * that names a renamed item is the plan's own copy, which the game would convert: its body is renamed, and so is every
+ * other mention outside the recipes (wire resources and handles, drawers, picks, port-rate and leftover keys, the
+ * plan's
+ * icon), each object that moved taking the new item's name and picture from a recipe that names it. The game's own data
+ * ({@code gtnhplanner}) is never touched. Unchanged parts keep their identity, so a live read still knows them.
+ */
+public final class PlanRenames {
+
+    /** Handles and port keys carry {@code item:<encodeURIComponent(id)>}, ended by ':', '|', U+001F or the end. */
+    private static final Pattern ENCODED = Pattern.compile("(^|[:|\\u001f])item:([^:|\\u001f]+)(?=$|[:|\\u001f])");
+    private static final String[] FACE_KEYS = { "displayName", "iconPath", "dominantColor", "iconAtlas" };
+
+    private final Map<String, String> table;
+    /** Item ids a card the game matched as it is still names. */
+    private final Set<String> used = new HashSet<>();
+    /** The first slot naming each item id in the plan's recipes: its face. */
+    private final Map<String, JsonObject> faces = new HashMap<>();
+
+    private PlanRenames(final Map<String, String> table) {
+        this.table = table;
+    }
+
+    /**
+     * {@code plan} with the renamed items moved to their new ids, or {@code plan} itself when no card needs it (no
+     * renames, or every card that names one matches as it is).
+     */
+    public static JsonObject apply(final JsonObject plan, final RecipeIndex index) {
+        final Map<String, String> table = index.renames();
+        if (table.isEmpty() || !plan.has("recipes")
+            || !plan.get("recipes")
+                .isJsonArray())
+            return plan;
+        final Set<String> onBoard = new HashSet<>();
+        for (final JsonObject node : objects(plan, "nodes")) {
+            final String id = str(node, "recipeId");
+            if (id != null) onBoard.add(id);
+            for (final JsonObject extra : objects(node, "extraRecipes")) {
+                final String extraId = str(extra, "recipeId");
+                if (extraId != null) onBoard.add(extraId);
+            }
+        }
+        final PlanRenames r = new PlanRenames(table);
+        final Set<String> own = new HashSet<>();
+        for (final JsonObject json : objects(plan, "recipes")) {
+            final String id = str(json, "id");
+            if (id == null || !onBoard.contains(id)) continue;
+            final FfRecipe recipe = FfPlanParser.recipe(json);
+            if (recipe == null || !r.namesRenamed(recipe)) continue;
+            if (matchesAsItIs(recipe, index)) {
+                for (final FfSlot s : slots(recipe)) if ("item".equals(s.kind())) {
+                    r.used.add(s.id());
+                    r.used.add(FfIds.normalize(s.id()));
+                }
+            } else own.add(id);
+        }
+        if (own.isEmpty()) return plan;
+        for (final JsonObject json : objects(plan, "recipes"))
+            for (final String side : new String[] { "inputs", "outputs" })
+                for (final JsonObject slot : objects(json, side)) {
+                    final String slotId = str(slot, "id");
+                    if (slotId != null && "item".equals(str(slot, "kind")) && str(slot, "displayName") != null)
+                        r.faces.putIfAbsent(slotId, slot);
+                }
+        final JsonObject out = new JsonObject();
+        boolean changed = false;
+        for (final Map.Entry<String, JsonElement> e : plan.entrySet()) {
+            JsonElement next = e.getValue();
+            if ("recipes".equals(e.getKey())) {
+                final JsonArray recipes = e.getValue()
+                    .getAsJsonArray();
+                JsonArray copy = null;
+                for (int i = 0; i < recipes.size(); i++) {
+                    final JsonElement recipe = recipes.get(i);
+                    final JsonElement renamed = recipe.isJsonObject()
+                        && own.contains(str(recipe.getAsJsonObject(), "id")) ? r.walk(recipe) : recipe;
+                    if (renamed != recipe && copy == null) {
+                        copy = new JsonArray();
+                        for (int j = 0; j < i; j++) copy.add(recipes.get(j));
+                    }
+                    if (copy != null) copy.add(renamed);
+                }
+                if (copy != null) next = copy;
+            } else if (!"gtnhplanner".equals(e.getKey())) next = r.walk(e.getValue());
+            final String key = r.renameString(e.getKey());
+            changed |= next != e.getValue() || !key.equals(e.getKey());
+            out.add(key, next);
+        }
+        return changed ? out : plan;
+    }
+
+    /** Whether the game finds the recipe as the plan has it, as the importer would ({@code FfCards.section}). */
+    private static boolean matchesAsItIs(final FfRecipe recipe, final RecipeIndex index) {
+        final RecipeIndex.Lookup lookup = index.find(recipe);
+        if (recipe.isCrop() || recipe.isBee() || recipe.isEec() || lookup.exact()) return !lookup.candidates()
+            .isEmpty();
+        return RecipeMatcher.match(recipe, Map.of(), lookup.candidates())
+            .accepted();
+    }
+
+    private boolean namesRenamed(final FfRecipe recipe) {
+        for (final FfSlot s : slots(recipe)) {
+            final String id = FfIds.normalize(s.id());
+            if ("item".equals(s.kind()) && !PosteaRenames.rename(table, id)
+                .equals(id)) return true;
+        }
+        return false;
+    }
+
+    private static List<FfSlot> slots(final FfRecipe recipe) {
+        final java.util.ArrayList<FfSlot> all = new java.util.ArrayList<>(recipe.inputs());
+        all.addAll(recipe.outputs());
+        return all;
+    }
+
+    // region The walk (the website's, string by string)
+
+    @Nullable
+    private String renameOf(final String id) {
+        if (used.contains(id)) return null;
+        final String to = PosteaRenames.rename(table, id);
+        return to.equals(id) ? null : to;
+    }
+
+    private String renameString(final String text) {
+        final String whole = renameOf(text);
+        if (whole != null) return whole;
+        if (text.startsWith("item:")) {
+            final String keyed = renameOf(text.substring(5));
+            if (keyed != null) return "item:" + keyed;
+        }
+        if (!text.contains("item:")) return text;
+        final Matcher m = ENCODED.matcher(text);
+        final StringBuilder out = new StringBuilder();
+        int last = 0;
+        boolean changed = false;
+        while (m.find()) {
+            final String to = renameOf(FfHandle.decode(m.group(2)));
+            if (to == null) continue;
+            out.append(text, last, m.start())
+                .append(m.group(1))
+                .append("item:")
+                .append(encode(to));
+            last = m.end();
+            changed = true;
+        }
+        if (!changed) return text;
+        return out.append(text, last, text.length())
+            .toString();
+    }
+
+    private JsonElement walk(final JsonElement node) {
+        if (node.isJsonPrimitive()) {
+            final JsonPrimitive p = node.getAsJsonPrimitive();
+            if (!p.isString()) return node;
+            final String to = renameString(p.getAsString());
+            return to.equals(p.getAsString()) ? node : new JsonPrimitive(to);
+        }
+        if (node.isJsonArray()) {
+            final JsonArray array = node.getAsJsonArray();
+            JsonArray copy = null;
+            for (int i = 0; i < array.size(); i++) {
+                final JsonElement next = walk(array.get(i));
+                if (next != array.get(i) && copy == null) {
+                    copy = new JsonArray();
+                    for (int j = 0; j < i; j++) copy.add(array.get(j));
+                }
+                if (copy != null) copy.add(next);
+            }
+            return copy == null ? node : copy;
+        }
+        if (!node.isJsonObject()) return node;
+        final JsonObject record = node.getAsJsonObject();
+        final JsonObject out = new JsonObject();
+        boolean changed = false;
+        for (final Map.Entry<String, JsonElement> e : record.entrySet()) {
+            if ("gtnhplanner".equals(e.getKey())) {
+                out.add(e.getKey(), e.getValue());
+                continue;
+            }
+            final String key = renameString(e.getKey());
+            final JsonElement next = walk(e.getValue());
+            changed |= next != e.getValue() || !key.equals(e.getKey());
+            out.add(key, next);
+        }
+        if (!changed) return node;
+        // A resource that moved wears the new item's face.
+        for (final String idKey : new String[] { "id", "resourceId" }) {
+            final String before = str(record, idKey), after = str(out, idKey);
+            if (before == null || after == null || before.equals(after)) continue;
+            final JsonObject face = faces.get(after);
+            for (final String faceKey : FACE_KEYS) {
+                if (!out.has(faceKey)) continue;
+                final JsonElement value = face == null ? null : face.get(faceKey);
+                if (value == null || value.isJsonNull()) out.remove(faceKey);
+                else out.add(faceKey, value);
+            }
+            final String name = face == null ? null : str(face, "displayName");
+            if (name != null && out.has("label") && str(out, "label") != null) out.addProperty("label", name);
+        }
+        return out;
+    }
+
+    // endregion
+
+    /** {@code encodeURIComponent}, as the website writes handles. */
+    private static String encode(final String s) {
+        try {
+            return URLEncoder.encode(s, StandardCharsets.UTF_8.name())
+                .replace("+", "%20")
+                .replace("%21", "!")
+                .replace("%27", "'")
+                .replace("%28", "(")
+                .replace("%29", ")")
+                .replace("%7E", "~");
+        } catch (final UnsupportedEncodingException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private static List<JsonObject> objects(final JsonObject o, final String key) {
+        final java.util.ArrayList<JsonObject> out = new java.util.ArrayList<>();
+        final JsonElement e = o.get(key);
+        if (e == null || !e.isJsonArray()) return out;
+        for (final JsonElement x : e.getAsJsonArray()) if (x.isJsonObject()) out.add(x.getAsJsonObject());
+        return out;
+    }
+
+    @Nullable
+    private static String str(final JsonObject o, final String key) {
+        final JsonElement e = o.get(key);
+        return e != null && e.isJsonPrimitive()
+            && e.getAsJsonPrimitive()
+                .isString() ? e.getAsString() : null;
+    }
+}

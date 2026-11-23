@@ -2790,12 +2790,13 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
       }
 
       if (conflicted) refuseBoardEdit(PORT_HAS_DRAWER);
-      // Wired (or refused over a conflict): sweep orphans, which drops the
-      // fresh storage if nothing reached it. A build failure alone keeps the
-      // unwired storage, exactly as the single-node path always has.
-      const finalProject = touchProject(
-        wired > 0 || conflicted ? pruneOrphanStorages(project) : project,
-      );
+      // A refused drop changes nothing: no drawer, and no sweep of the plan's
+      // other unwired drawers, which the drop never touched.
+      if (conflicted && wired === 0) return state;
+      // Wired: sweep orphans, which drops the fresh storage if nothing reached
+      // it. A build failure alone keeps the unwired storage, exactly as the
+      // single-node path always has.
+      const finalProject = touchProject(wired > 0 ? pruneOrphanStorages(project) : project);
       const placed = (finalProject.storages ?? []).some((entry) => entry.id === storage.id);
       return withProjectHistory(state, {
         project: finalProject,

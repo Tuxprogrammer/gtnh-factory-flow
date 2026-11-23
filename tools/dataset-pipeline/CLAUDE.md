@@ -43,6 +43,22 @@ prefix included); bees, crops, veins, mobs and underground fluids keep theirs by
 `local-2.9.0-rc-2` carries beta-2's ids this way (`~/rebuild-rc2.sh` in WSL; the report is
 `oracle/recipe-id-carry.json`).
 
+## The mod's machine data
+
+The in-game mod has no dataset: `jvm/core/core-machines/src/main/resources/assets/gtnhplanner/machines/handlers.json`
+carries what its cards need of one (each recipe map's machine templates, controls and machine blocks). After a new
+dataset is published, regenerate it from that dataset and commit it with the mod's tests green:
+
+    NODE_OPTIONS=--max-old-space-size=12000 npx tsx tools/audits/export-mod-machine-data.mjs \
+      --dataset public/datasets/gtnh/<version> --report <scratch>/handlers-report.json
+
+It reads `recipes.json.gz` and needs the generated sources (`npm run dev` setup). It exits non-zero unless every
+recipe's handlers and controls come back exactly from the file. The normalized dataset keeps instantiated handlers,
+not the exporter's per-map catalysts, so the report lists what it keeps from the previous file: maps with no recipes
+in the dataset, single-machine templates, and a handler's full block list (the dataset has its face and one block
+per tier). `tools/audits/export-mod-machine-data.test.mjs` checks the parts that come from this repository (tiers,
+coils, machine table names); it cannot see a stale dataset.
+
 ## Game rates sidecar
 
 The pack's rate mod (`config/gtnhrates.cfg`) scales bee and IC2 crop yields and recipe

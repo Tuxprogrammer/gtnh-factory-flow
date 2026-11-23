@@ -1,5 +1,7 @@
 import type { z } from "zod";
+import { parseResourceHandleId } from "@/components/flow/resource-handles";
 import { makeResourceKey } from "@/lib/model/resources";
+import { listNodeSections } from "@/lib/model/shared-machine";
 import { getVoltageTierIndex } from "@/lib/model/tiers";
 import type { MachineTier, Recipe, ThroughputResult } from "@/lib/model/types";
 import type { RecipeSummary } from "@/lib/datasets/types";
@@ -14,6 +16,7 @@ import { formatInput, formatOutput, nameOf, secondsOf } from "./format";
 import { applyTargets } from "./plans";
 import { materialOf, materialPattern, recycles, searchRecipes } from "./recipes";
 import { jsonBytes, RESPONSE_AIM_BYTES } from "./size";
+import { parsePortKey } from "@/lib/solver/plan/port-key";
 import { boundaryFlows, figure, solveProject, type BoundaryFlow } from "./solve";
 import { autoConnect } from "./wiring";
 import type { AgentConstraints } from "./schemas";
@@ -27,8 +30,9 @@ import type { AgentConstraints } from "./schemas";
  *
  * Ranking (docs/agent-api.md, "plans/expand-inputs"): candidates the solve could use first; then fewer new inputs that
  * are made (they need recipes of their own; crafting tools too), then fewer that are nearly raw (ore processing steps,
- * dusts with no ore), then fewer raw ones (ores, ore dusts, water, air gases, `free` resources); then less EU per unit; then
- * fewer machines; then the search's own order (main product before byproduct, producing before giving back).
+ * dusts with no ore), then fewer raw ones (ores, ore dusts, water, air gases, `free` resources); then less added to the
+ * draft's leftovers (`spareCrafts`); then less EU per unit; then fewer machines; then the search's own order (main
+ * product before byproduct, producing before giving back).
  */
 
 type ExpandRequest = z.infer<typeof plansExpandInputsRequest>;
@@ -239,6 +243,36 @@ function skipReason(recipe: Recipe, makes: Key, makesName: string, draft: Draft)
   return undefined;
 }
 
+/**
+ * What leaves the plan unused, in runs per second, as the plan solver trades it: each output flow out of the plan that
+ * is not a target, over what one run of the recipe that makes it puts out (so 2000 L of a fluid a run and 1 dust a run
+ * weigh the same). The solver settles what the plan buys before what it leaves over, so this ranks after the new
+ * inputs: a candidate whose byproducts the draft takes, or that takes the draft's spares, leaves less.
+ */
+function spareCrafts(project: Draft["project"], result: ThroughputResult, targets: Set<Key>): number {
+  const recipes = new Map(project.recipes.map((recipe) => [recipe.id, recipe]));
+  const nodes = new Map(project.nodes.map((node) => [node.id, node]));
+  let total = 0;
+  for (const flow of [...(result.plan?.terminals ?? []), ...(result.plan?.forced ?? [])]) {
+    const port = parsePortKey(flow.portKey);
+    const handle = parseResourceHandleId(port?.handle);
+    if (flow.side !== "out" || !port || !handle || !(flow.perSecond > 0)) continue;
+    const wanted = key({ kind: handle.kind, id: handle.resourceId });
+    if (targets.has(wanted)) continue;
+    const node = nodes.get(port.nodeId);
+    const section = node ? listNodeSections(node).find((entry) => entry.section === handle.section)?.node : undefined;
+    const recipe = section ? recipes.get(section.recipeId) : undefined;
+    let perRun = 0;
+    for (const output of recipe?.outputs ?? []) {
+      if (key(output) === wanted) {
+        perRun += output.amount * (output.chance !== undefined && output.chance > 0 && output.chance <= 1 ? output.chance : 1);
+      }
+    }
+    total += flow.perSecond / (perRun > 0 ? perRun : 1);
+  }
+  return total;
+}
+
 interface Trial {
   candidate: Candidate;
   /** Lower is better, compared in order. */
@@ -310,6 +344,8 @@ interface Base {
   targets: Set<Key>;
   unsupplied: Map<string, BoundaryFlow>;
   byproducts: Map<string, BoundaryFlow>;
+  /** `spareCrafts` of the draft as it is. */
+  spare: number;
 }
 
 async function expandOne(
@@ -386,6 +422,12 @@ async function expandOne(
     const usesByproducts = recipe.inputs
       .filter((entry) => entry.consumed !== false && base.byproducts.has(key(entry)))
       .map((entry) => nameOf(entry));
+    const spares = flows
+      .filter((flow) => flow.side === "out" && !base.byproducts.has(key(flow)) && !base.targets.has(key(flow)))
+      .map((flow) => ({ id: flow.id, kind: flow.kind, name: flow.name, perSecond: flow.perSecond }));
+    // What it adds to the draft's leftovers; solver dust is no difference.
+    const spareDelta = spareCrafts(run.project, result, base.targets) - base.spare;
+    const spareRank = Math.abs(spareDelta) > 1e-6 * Math.max(1, base.spare) ? figure(spareDelta) : 0;
     // Steam cards draw no EU (the site bills litres instead): their steam counts at 2 L per EU so they compare fairly.
     const steamPerSecond = run.steamPerTick * machines * 20;
     const euDelta = result.totalEuT - base.result.totalEuT + (run.steamPerTick * machines) / STEAM_LITRES_PER_EU;
@@ -415,10 +457,8 @@ async function expandOne(
       if (usesByproducts.length) {
         parts.push(`Uses the draft's spare ${list(usesByproducts)}.`);
       }
-      const spare = flows
-        .filter((flow) => flow.side === "out" && !base.byproducts.has(key(flow)) && !base.targets.has(key(flow)))
-        .map((flow) => flow.name);
-      if (spare.length) {
+      if (spares.length) {
+        const spare = spares.map((flow) => flow.name);
         parts.push(`Leaves spare ${list(spare.slice(0, 4))}${spare.length > 4 ? " and more" : ""}.`);
       }
       if (alsoSupplied.length) {
@@ -446,12 +486,13 @@ async function expandOne(
         reason,
         newRaws,
         ...(usesByproducts.length ? { usesByproducts } : {}),
+        ...(works && spares.length ? { spares } : {}),
         machines: figure(machines),
         euPerItem: figure(euPerItem),
         ...(steamPerSecond > 0 ? { steamPerSecond: figure(steamPerSecond) } : {}),
         ...(works ? {} : { works: false }),
       },
-      rank: [works ? 0 : 1, count(2), count(1), count(0), works ? euPerItem : 0, machines, order],
+      rank: [works ? 0 : 1, count(2), count(1), count(0), works ? spareRank : 0, works ? euPerItem : 0, machines, order],
     });
   }
   trials.sort((left, right) => {
@@ -512,6 +553,7 @@ export async function expandInputs(body: ExpandRequest): Promise<ExpandResponse>
     byproducts: new Map(
       flows.filter((flow) => flow.side === "out" && !targetKeys.has(key(flow))).map((flow) => [key(flow), flow]),
     ),
+    spare: spareCrafts(draft.project, result, targetKeys),
   };
 
   const accepted: ExpandResponse["accepted"] = [];

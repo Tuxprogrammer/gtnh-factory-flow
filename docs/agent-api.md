@@ -374,8 +374,8 @@ Response:
 {dataset, planId,
  inputs: [{id, kind, name, perSecond, raw?, found, skipped?, steamOnly?, note?,
            candidates: [{recipeId, name, machine, tier, euT, seconds, inputs, outputs,
-                         reason, newRaws: [{id, kind, name, perSecond}], usesByproducts?, machines, euPerItem,
-                         steamPerSecond?, works?}]}],
+                         reason, newRaws: [{id, kind, name, perSecond}], usesByproducts?,
+                         spares?: [{id, kind, name, perSecond}], machines, euPerItem, steamPerSecond?, works?}]}],
  accepted: [{id, kind, name, perSecond}],
  more, remaining?: [{id, kind, name}], notEnforced?, truncated?}
 ```
@@ -391,7 +391,9 @@ Response:
   added EU per unit of the input it supplies, per L for a fluid; a steam machine's steam counts at 2 L per EU, GregTech's
   rate, so steam and electric candidates compare), `steamPerSecond` (litres of steam a steam machine burns at the
   solved count, by the site's card math), `newRaws` (inputs the draft did not need before and would need from outside with it, per second, largest
-  first), `usesByproducts` (inputs it takes that the draft already makes and nothing uses: a good sign).
+  first), `usesByproducts` (inputs it takes that the draft already makes and nothing uses: a good sign), `spares`
+  (outputs that would leave the draft unused with it added and did not before, per second, largest first; absent when
+  none and on a candidate that does not work).
   `works: false` marks a candidate the solve could not use (it fails, or supplies none of the input); it is ranked
   last.
 - `reason`: one plain sentence or a few: rate, machines, tier and EU per unit; the steam it burns ("Burns 37.5 L/s of
@@ -428,9 +430,18 @@ Ranking, lowest first, compared in order:
 3. fewer new inputs that are nearly raw (a step of ore processing of a material with an ore block, a plain dust of a
    material with no ore block);
 4. fewer new inputs that are raw;
-5. less EU per unit;
-6. fewer machines;
-7. the search's own order.
+5. less added to the draft's leftovers (below);
+6. less EU per unit;
+7. fewer machines;
+8. the search's own order.
+
+Leftovers are counted as the plan solver trades them, in runs: every output that leaves the solved draft unused (not
+a target), per second, over what one run of the recipe that makes it puts out, so 2000 L of a fluid a run and one dust
+a run weigh the same. Step 5 compares the copy's total with the draft's. A candidate that takes the draft's spare
+byproducts lowers it; one whose byproduct the draft takes (Auto-connect wires it to the card that needs it) adds
+nothing for it; one that leaves a byproduct nothing takes adds that byproduct's runs. Like the solver, it settles what
+comes in (steps 2 to 4) before what is left over, and both before power. A difference below a millionth of the
+draft's total is no difference.
 
 Rawness of a resource, by name and the dataset's ore blocks:
 
@@ -452,8 +463,9 @@ Known limits, honestly:
 - The dataset has no world generation. GregTech makes ore blocks for materials that never spawn, so "Titanium Dust"
   and "Magnesium Dust" read as raw (Titanium Ore and Magnesium Ore exist as blocks) whether or not the pack spawns
   them. An assistant that knows the pack's veins should judge `raw` itself.
-- Spare byproducts are named in `reason` but do not change the rank: for Chlorine the terlinguaite electrolysis
-  (an ore dust, 0.08 EU per L) ranks before salt (0.15 EU per L) though it leaves twice as much Mercury as Chlorine.
+- Leftovers rank by their amount in runs, not by worth: a valuable byproduct and a worthless one weigh the same, and a
+  candidate that leaves any spare ranks after one that leaves none however much less power it uses.
+- Supplying another of the draft's unsupplied inputs (`Also supplies` in `reason`) does not change the rank by itself.
 - Only the search's first 12 recipes are looked at, after its own ranking; a good recipe further down its list is not
   tried.
 

@@ -43,6 +43,11 @@ const NAMES: Record<string, string> = {
   "fluid:nitrogen": "Nitrogen",
   "fluid:water": "Water",
   "fluid:tetra": "Titanium Tetrachloride",
+  "item:boron": "Boron Dust",
+  "item:alloy": "Boron Alloy",
+  "item:ash": "Dark Ash",
+  "item:waste": "Rock Waste",
+  "fluid:acid": "Sulfuric Acid",
 };
 
 function nameFor(kind: string, id: string): string | undefined {
@@ -100,6 +105,13 @@ for (let part = 0; part < 8; part += 1) {
     add(recipe(`r-p${part}-${n}`, `Mock Lathe ${n}`, [slot("item", "ore", 1)], [slot("item", `part-${part}`, 1 + n / 100)], { eut: 30 + 4 * n }));
   }
 }
+
+// Byproducts: an alloyer takes boron dust and acid and leaves ash. Three ways to make the boron from ore: the cheapest
+// leaves rock waste nothing takes, one also makes the acid the alloyer takes, one takes the alloyer's ash.
+add(recipe("r-alloy", "Mock Alloyer", [slot("item", "boron", 1), slot("fluid", "acid", 1000)], [slot("item", "alloy", 1), slot("item", "ash", 1)]));
+add(recipe("r-b-waste", "Mock Crusher", [slot("item", "ore", 1)], [slot("item", "boron", 1), slot("item", "waste", 4)], { eut: 8 }));
+add(recipe("r-b-acid", "Mock Leacher", [slot("item", "ore", 1)], [slot("item", "boron", 1), slot("fluid", "acid", 1000)]));
+add(recipe("r-b-ash", "Mock Roaster", [slot("item", "ore", 1), slot("item", "ash", 1)], [slot("item", "boron", 1)]));
 
 function tierIndex(tier: string): number {
   return getVoltageTierIndex(tier as Exclude<MachineTier, "DEMO">);
@@ -241,6 +253,26 @@ describe("plans/expand-inputs", () => {
     expect(chem.reason).toMatch(/\(made\)/);
     expect(chem.reason).toMatch(/Leaves spare Magnesium Chloride Dust\./);
     expect(answer.inputs[0]!.candidates[1]!.reason).toMatch(/Brings in Water \(raw\) and Titanium Ore \(ore\)\./);
+  });
+
+  it("ranks by what a candidate adds to the draft's leftovers before EU: using spares, or giving the draft what it takes", async () => {
+    const { planId } = await call(createPost, { name: "Boron", constraints: { tierCap: "MV" } }, plansCreateResponse);
+    await call(addCardsPost, { planId, cards: [{ recipeId: "r-alloy" }] }, plansAddCardsResponse);
+    await call(setTargetsPost, { planId, targets: [{ resource: "alloy", rate: 1 }] }, plansSetTargetsResponse);
+    const answer = await expand({ planId, resources: ["boron"] });
+    const boron = answer.inputs[0]!;
+    // All three bring in only the ore. The ash roaster takes the draft's one spare (one run of ash a second less),
+    // the leacher's acid goes to the alloyer (no change), the crusher leaves four waste a run (one run a second more)
+    // though it spends the least EU.
+    expect(boron.candidates.map((candidate) => candidate.recipeId)).toEqual(["r-b-ash", "r-b-acid", "r-b-waste"]);
+    const [ash, acid, waste] = boron.candidates;
+    expect(ash!.usesByproducts).toEqual(["Dark Ash"]);
+    expect(ash!.spares).toBeUndefined();
+    expect(acid!.reason).toMatch(/Also supplies Sulfuric Acid\./);
+    expect(acid!.spares).toBeUndefined();
+    expect(waste!.spares).toEqual([{ id: "waste", kind: "item", name: "Rock Waste", perSecond: 4 }]);
+    expect(waste!.reason).toMatch(/Leaves spare Rock Waste\./);
+    expect(waste!.euPerItem).toBeLessThan(acid!.euPerItem);
   });
 
   it("offers steam machines when steam is allowed, their steam counted at 2 L per EU", async () => {

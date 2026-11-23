@@ -71,6 +71,31 @@ class PlannerVerbsTest {
     }
 
     @Test
+    void theCommandBookmarksAPlanById() {
+        final PlannerVerbs.Call call = PlannerVerbs
+            .read(PlannerCommand.VERBS, new String[] { "bookmark", "dabcdefghjkmnpqr" });
+        assertNotNull(call);
+        assertEquals(
+            "bookmark",
+            call.verb()
+                .word());
+        assertNull(PlannerVerbs.read(PlannerCommand.VERBS, new String[] { "bookmark", "pabcdefghjkmnpqr" }));
+        assertEquals(
+            "Use /gtnhplanner open <id>, /gtnhplanner apply <id> or /gtnhplanner bookmark <id>.",
+            PlannerVerbs.usage(PlannerCommand.VERBS));
+    }
+
+    @Test
+    void tabCompletesTheVerbOnly() {
+        assertEquals(
+            List.of("open", "apply", "bookmark"),
+            PlannerVerbs.complete(PlannerCommand.VERBS, new String[] { "" }));
+        assertEquals(List.of("bookmark"), PlannerVerbs.complete(PlannerCommand.VERBS, new String[] { "b" }));
+        assertEquals(List.of(), PlannerVerbs.complete(PlannerCommand.VERBS, new String[] { "x" }));
+        assertEquals(List.of(), PlannerVerbs.complete(PlannerCommand.VERBS, new String[] { "bookmark", "d" }));
+    }
+
+    @Test
     void refusalLines() {
         assertEquals(
             "Nothing is stored under that id, or it has expired.",

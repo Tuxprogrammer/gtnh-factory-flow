@@ -9,9 +9,12 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.item.ItemStack;
+
 import com.gtnhplanner.GtnhPlanner;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.data.flowchart.Node;
+import com.gtnhplanner.data.flowchart.Summary;
 import com.gtnhplanner.data.flowchart.balancer.Severity;
 import com.gtnhplanner.ui.BoardSession;
 import com.gtnhplanner.ui.sound.Sfx;
@@ -99,6 +102,52 @@ public final class PlanBookmarks {
                     .size(),
                 already,
                 pick.skipped()));
+    }
+
+    /**
+     * {@code /gtnhplanner bookmark <id>}: what the plan takes in from outside and what it gives out, as its solve's
+     * totals have them, each as an item bookmark at the end of the page (a fluid as the display item NEI shows for
+     * it), as NEI's bookmark key adds one. One already bookmarked is counted and left as it is.
+     */
+    public static Outcome addShoppingList(final Graph plan) {
+        final ShoppingList.Pick<ItemStack> pick;
+        int inputs = 0, outputs = 0, already = 0;
+        try {
+            final Summary totals = new Summary();
+            totals.setMode(Summary.Mode.THROUGHPUT);
+            totals.recompute(plan);
+            pick = ShoppingList.pick(
+                stacks(totals.lines(Summary.Section.INPUTS)),
+                stacks(totals.lines(Summary.Section.OUTPUTS)),
+                com.gtnhplanner.ui.Resources::keyOf);
+            final BookmarkPanel panel = panel();
+            for (final ItemStack s : pick.inputs()) {
+                if (panel.addItem(s)) inputs++;
+                else already++;
+            }
+            for (final ItemStack s : pick.outputs()) {
+                if (panel.addItem(s)) outputs++;
+                else already++;
+            }
+            if (inputs + outputs > 0) panel.save();
+        } catch (final RuntimeException | LinkageError e) {
+            return failed(e);
+        }
+        return new Outcome(false, ShoppingList.added(plan.getName(), inputs, outputs, already, pick.skipped()));
+    }
+
+    /** Each line's stack as NEI shows it; null for a line the game has no item for (power, a card shown only). */
+    private static List<ItemStack> stacks(final List<Summary.Line<?>> lines) {
+        final List<ItemStack> stacks = new ArrayList<>();
+        for (final Summary.Line<?> line : lines) {
+            if (!(line instanceof final Summary.Line.Measure<?> m)
+                || !(m.label() instanceof final com.gtnhplanner.data.properties.ResourceProperty<?> type)) continue;
+            @SuppressWarnings("unchecked")
+            final Object stack = ((com.gtnhplanner.data.properties.ResourceProperty<Object>) type)
+                .displayStack(m.resource());
+            stacks.add(stack instanceof final ItemStack s ? s.copy() : null);
+        }
+        return stacks;
     }
 
     private static BookmarkPlan.Pick<Recipe> pick(final Graph plan) {

@@ -20,6 +20,68 @@
         "found": 9,
         "candidates": [
           {
+            "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-chemicalreactor:b46b5421788484fa",
+            "name": "Chemical Reactor: Titaniumtetrachloride",
+            "machine": "Chemical Reactor",
+            "tier": "EV",
+            "euT": 480,
+            "seconds": 0.35,
+            "inputs": [
+              {
+                "id": "gregtech:gt.metaitem.01@2375",
+                "kind": "item",
+                "name": "Rutile Dust",
+                "amount": 3,
+                "consumed": true
+              },
+              {
+                "id": "gregtech:gt.metaitem.01@2010",
+                "kind": "item",
+                "name": "Carbon Dust",
+                "amount": 2,
+                "consumed": true
+              },
+              {
+                "id": "chlorine",
+                "kind": "fluid",
+                "name": "Chlorine",
+                "amount": 4000,
+                "consumed": true
+              }
+            ],
+            "outputs": [
+              {
+                "id": "titaniumtetrachloride",
+                "kind": "fluid",
+                "name": "Titaniumtetrachloride",
+                "amount": 1000
+              }
+            ],
+            "reason": "1000/s from 0.15 Chemical Reactor at EV, 5.76 EU per L. Brings in Chlorine (made), Rutile Dust (ore dust) and Carbon Dust (ore dust).",
+            "newRaws": [
+              {
+                "id": "chlorine",
+                "kind": "fluid",
+                "name": "Chlorine",
+                "perSecond": 4000
+              },
+              {
+                "id": "gregtech:gt.metaitem.01@2375",
+                "kind": "item",
+                "name": "Rutile Dust",
+                "perSecond": 3
+              },
+              {
+                "id": "gregtech:gt.metaitem.01@2010",
+                "kind": "item",
+                "name": "Carbon Dust",
+                "perSecond": 2
+              }
+            ],
+            "machines": 0.15,
+            "euPerItem": 5.76
+          },
+          {
             "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-largechemicalreactor:5fb0535b4bb94dfa",
             "name": "Large Chemical Reactor: Carbon Monoxide",
             "machine": "Large Chemical Reactor",
@@ -84,70 +146,16 @@
                 "perSecond": 2
               }
             ],
+            "spares": [
+              {
+                "id": "carbonmonoxide",
+                "kind": "fluid",
+                "name": "Carbon Monoxide",
+                "perSecond": 2000
+              }
+            ],
             "machines": 0.05,
             "euPerItem": 1.92
-          },
-          {
-            "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-chemicalreactor:b46b5421788484fa",
-            "name": "Chemical Reactor: Titaniumtetrachloride",
-            "machine": "Chemical Reactor",
-            "tier": "EV",
-            "euT": 480,
-            "seconds": 0.35,
-            "inputs": [
-              {
-                "id": "gregtech:gt.metaitem.01@2375",
-                "kind": "item",
-                "name": "Rutile Dust",
-                "amount": 3,
-                "consumed": true
-              },
-              {
-                "id": "gregtech:gt.metaitem.01@2010",
-                "kind": "item",
-                "name": "Carbon Dust",
-                "amount": 2,
-                "consumed": true
-              },
-              {
-                "id": "chlorine",
-                "kind": "fluid",
-                "name": "Chlorine",
-                "amount": 4000,
-                "consumed": true
-              }
-            ],
-            "outputs": [
-              {
-                "id": "titaniumtetrachloride",
-                "kind": "fluid",
-                "name": "Titaniumtetrachloride",
-                "amount": 1000
-              }
-            ],
-            "reason": "1000/s from 0.15 Chemical Reactor at EV, 5.76 EU per L. Brings in Chlorine (made), Rutile Dust (ore dust) and Carbon Dust (ore dust).",
-            "newRaws": [
-              {
-                "id": "chlorine",
-                "kind": "fluid",
-                "name": "Chlorine",
-                "perSecond": 4000
-              },
-              {
-                "id": "gregtech:gt.metaitem.01@2375",
-                "kind": "item",
-                "name": "Rutile Dust",
-                "perSecond": 3
-              },
-              {
-                "id": "gregtech:gt.metaitem.01@2010",
-                "kind": "item",
-                "name": "Carbon Dust",
-                "perSecond": 2
-              }
-            ],
-            "machines": 0.15,
-            "euPerItem": 5.76
           },
           {
             "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-chemicalreactor:6dcf206b33924302",
@@ -211,6 +219,14 @@
                 "id": "gregtech:gt.metaitem.01@30010",
                 "kind": "item",
                 "name": "Carbon Cell",
+                "perSecond": 2
+              }
+            ],
+            "spares": [
+              {
+                "id": "gregtech:gt.metaitem.01@30674",
+                "kind": "item",
+                "name": "Carbon Monoxide Cell",
                 "perSecond": 2
               }
             ],

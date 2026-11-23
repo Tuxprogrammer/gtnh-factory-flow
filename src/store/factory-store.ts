@@ -2000,24 +2000,26 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
               entry.id === recipe.id ? mergeRecipe(entry, recipe) : entry,
             )
           : [...state.project.recipes, recipe],
+        // The card is fitted as Combine fits one: the machine stored only when
+        // the dataset names it, and a tier and whole amps every section starts on.
         nodes: state.project.nodes.map((entry) =>
           entry.id === nodeId
-            ? {
-                ...entry,
-                // A map with no exported machines runs a made-up default that a load drops: store none.
-                ...((primary.machineHandlers ?? []).some((exported) => exported.id === handler.id)
-                  ? { machineHandlerId: handler.id }
-                  : {}),
-                extraRecipes: [
-                  ...(entry.extraRecipes ?? []),
-                  {
-                    recipeId: recipe.id,
-                    ...(recipeInputOverrides && Object.keys(recipeInputOverrides).length > 0
-                      ? { recipeInputOverrides }
-                      : {}),
-                  },
-                ],
-              }
+            ? fitCombinedMachine(
+                {
+                  ...entry,
+                  extraRecipes: [
+                    ...(entry.extraRecipes ?? []),
+                    {
+                      recipeId: recipe.id,
+                      ...(recipeInputOverrides && Object.keys(recipeInputOverrides).length > 0
+                        ? { recipeInputOverrides }
+                        : {}),
+                    },
+                  ],
+                },
+                handler,
+                lookup,
+              )
             : entry,
         ),
       });

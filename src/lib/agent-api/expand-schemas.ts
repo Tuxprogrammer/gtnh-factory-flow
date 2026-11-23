@@ -37,6 +37,8 @@ export const expandCandidate = z
     newRaws: z.array(rateLine),
     /** Inputs it takes that the draft already makes and nothing uses: a good sign. */
     usesByproducts: z.array(z.string()).optional(),
+    /** Outputs it adds to what leaves the draft unused, per second, largest first; absent when none. */
+    spares: z.array(rateLine).optional(),
     /** Machines the solve needs for this card (fractional). */
     machines: z.number(),
     /** EU the draft spends more per unit made (per L for a fluid), with this card added; steam at 2 L per EU. */

@@ -216,7 +216,9 @@ class PosteaRenamesTest {
         assertEquals(
             "gregtech.loaders.postload.PosteaTransformers$$Lambda",
             PosteaRenames.stableClassName("gregtech.loaders.postload.PosteaTransformers$$Lambda/0x000076a0ebb28d00"));
-        assertEquals("com.dreammaster.Converter$$Lambda", PosteaRenames.stableClassName("com.dreammaster.Converter$$Lambda$12/34567"));
+        assertEquals(
+            "com.dreammaster.Converter$$Lambda",
+            PosteaRenames.stableClassName("com.dreammaster.Converter$$Lambda$12/34567"));
         assertEquals("a.b.Handler", PosteaRenames.stableClassName("a.b.Handler"));
     }
 }

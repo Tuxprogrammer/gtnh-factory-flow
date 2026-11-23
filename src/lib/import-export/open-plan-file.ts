@@ -20,6 +20,7 @@ import { pickRecipeRefMatch, recipeContentRef } from "@/lib/import-export/recipe
 import { cloneImportedProject, parseFactoryProjectJson, serializeFactoryProject } from "@/lib/import-export";
 import { untagCommunityPlan } from "@/lib/community/client";
 import { useFactoryStore } from "@/store/factory-store";
+import { keepUsedRecipes } from "@/lib/model/embedded-recipes";
 import { useDesignStore } from "@/store/design-store";
 import { flashNotice } from "@/components/flow/clean/rail/NoticeBar";
 
@@ -477,7 +478,8 @@ export async function openPlanJsonText(text: string, fallbackName = "Imported pl
     return;
   }
   const hydration = await hydrateImportedProjectRecipes(importedProject, selectedDatasetVersion);
-  await importProjectAsDesign(refreshImportedProjectEdges(hydration.project), name);
+  // Re-keying onto the dataset's ids can fold two of the plan's recipes into one id.
+  await importProjectAsDesign(keepUsedRecipes(refreshImportedProjectEdges(hydration.project)), name);
 }
 
 /** Open a plan file (.json, or a .png / .svg picture that carries the plan) as a new design tab. */

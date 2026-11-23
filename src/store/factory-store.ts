@@ -17,6 +17,7 @@ import { sameRecipeOr } from "@/lib/model/same-recipe";
 
 import { carryMachineVoltage, normalizeProjectHatchInputs } from "@/lib/solver/hatch-input";
 import { fitCombinedMachine, pickCombineHost } from "./combine-machine";
+import { keepUsedRecipes } from "@/lib/model/embedded-recipes";
 
 import { create, type StateCreator, type StoreApi } from "zustand";
 import { createNewProject } from "@/examples";
@@ -6576,7 +6577,7 @@ function touchProject(project: FactoryProject): FactoryProject {
     // a custom rate card never keeps a resource after its last wire goes —
     // whether the wire, the machine at the far end or a whole selection was
     // what got deleted.
-    ...prunePlanFields(normalizeProjectHatchInputs(normalizeFullFarms(releaseCustomRates(project)))),
+    ...keepUsedRecipes(prunePlanFields(normalizeProjectHatchInputs(normalizeFullFarms(releaseCustomRates(project))))),
     metadata: {
       ...project.metadata,
       updatedAt: new Date().toISOString(),

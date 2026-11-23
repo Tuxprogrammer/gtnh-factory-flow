@@ -133,7 +133,8 @@ describe("factory JSON import/export", () => {
             ],
           },
         ],
-        nodes: [],
+        // A plan keeps only recipes a card runs.
+        nodes: [{ id: "bee", recipeId: "bee-recipe", machineCount: 1, parallel: 1, overclockTier: "LV", enabled: true, position: { x: 0, y: 0 } }],
         edges: [],
         fuelProfiles: [],
       }),

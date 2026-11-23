@@ -103,7 +103,8 @@ What a draft does with its constraints: `tierCap` caps the default machine and t
 above it; `banned` keeps a machine from being chosen; `steam` (unless `true`, or `tierCap` is `ULV`) keeps a steam or
 primitive machine from being a card's default machine, though a card may name one; `free` marks those resources
 `free: true` in the solve's `unsupplied` list. `heat`, `cleanroom` and `lowgrav` do nothing to a draft (a card shows the
-`heat` its recipe needs). The draft's `cardTier` (from `plans/create`, default `tierCap`) is the tier cards default to.
+`heat` its recipe needs). The draft's `cardTier` (from `plans/create`, default `tierCap`) is the tier cards default to, and its `minTier` the
+lowest a card may run at.
 
 ## resources/search
 
@@ -211,7 +212,7 @@ Every change validates the whole request first: a refused request leaves the dra
 
 | endpoint              | request                                                              | response                                              | built |
 | --------------------- | -------------------------------------------------------------------- | ----------------------------------------------------- | ----- |
-| `plans/create`        | `{name, constraints?, cardTier?, player?}`                           | `{dataset, planId, name, expiresAt, constraints?, cardTier?}` | yes |
+| `plans/create`        | `{name, constraints?, cardTier?, minTier?, player?}`                 | `{dataset, planId, name, expiresAt, constraints?, cardTier?, minTier?}` | yes |
 | `plans/add-cards`     | `{planId, cards: [{recipeId, machine?, tier?, dials?}], player?}`    | `{planId, cards, wires, cardCount}`                   | yes   |
 | `plans/remove-cards`  | `{planId, cardIds, player?}`                                         | `{planId, removed, wiresRemoved, cardCount, targets}` | yes   |
 | `plans/set-targets`   | `{planId, targets: [{resource, rate}], player?}`                     | `{planId, targets}`                                   | yes   |
@@ -227,8 +228,15 @@ Every change validates the whole request first: a refused request leaves the dra
 Examples, one real call each against the pack dataset (a titanium line): `docs/agent-api/examples/plans-*.json`.
 
 `plans/create`'s `cardTier`: the tier the draft's cards default to, a tier name at most `constraints.tierCap` (above it
-is `bad_request`). Default: `tierCap`; with neither, cards take the lowest tier that runs them. The draft keeps it;
+is `bad_request`). Default: `tierCap`; with neither, cards take the lowest tier that runs them. The response always
+says the card tier the draft applies (the one given, else `tierCap`; absent only with neither). The draft keeps it;
 `plans/get` returns it.
+
+`plans/create`'s `minTier` (optional): no card runs below this tier. At most the card tier (above it is `bad_request`).
+A card whose default tier would be lower takes the lowest tier its machine is built at from `minTier` up, within
+`tierCap` (a machine built at none of those is `bad_request`); a card asked for at a lower `tier` is `bad_request`.
+Steam and primitive machines, machines that draw no EU on the recipe and recipes with no voltage tier keep their own
+tier. The draft keeps it; `plans/create` and `plans/get` return it, and `plans/expand-inputs` tries candidates at it.
 
 ### A card
 
@@ -296,7 +304,7 @@ press Arrange on the delivered plan.
 
 ### plans/get
 
-`{dataset, planId, name, expiresAt, constraints?, cardTier?, cardCount, wireCount, cards?, wires?, targets?, truncated?}`.
+`{dataset, planId, name, expiresAt, constraints?, cardTier?, minTier?, cardCount, wireCount, cards?, wires?, targets?, truncated?}`.
 
 - `fields`: any of `cards`, `wires`, `targets` (default all three).
 - `cardIds`: only those cards and the wires that touch them.

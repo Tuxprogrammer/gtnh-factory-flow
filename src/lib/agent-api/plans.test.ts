@@ -378,6 +378,32 @@ describe("steam, primitive machines and the card tier", () => {
     expect(got).toMatchObject({ cardTier: "EV", constraints: { tierCap: "IV" } });
   });
 
+  it("echoes the card tier it applies, and keeps cards from going below minTier", async () => {
+    // No cardTier: the cap is the card tier, and create says so.
+    const capped = await call(createPost, { name: "x", constraints: { tierCap: "IV" } }, plansCreateResponse);
+    expect(capped.cardTier).toBe("IV");
+    expect(await added(capped.planId, {})).toMatchObject({ machine: { id: "zyngen" }, tier: "IV" });
+    const uncapped = await call(createPost, { name: "x" }, plansCreateResponse);
+    expect(uncapped.cardTier).toBeUndefined();
+
+    const ev = await call(createPost, { name: "x", constraints: { tierCap: "IV" }, cardTier: "EV", minTier: "EV" }, plansCreateResponse);
+    expect(ev).toMatchObject({ cardTier: "EV", minTier: "EV" });
+    expect(await added(ev.planId, {})).toMatchObject({ tier: "EV" });
+    expect(await fails(addCardsPost, { planId: ev.planId, cards: [{ recipeId: "r-bronze", tier: "HV" }] }, "bad_request", 400)).toMatch(/HV is below the draft's minTier EV/);
+    // The single block is built up to HV only: nothing at or above EV.
+    expect(await fails(addCardsPost, { planId: ev.planId, cards: [{ recipeId: "r-bronze", machine: "Alloy Smelter" }] }, "bad_request", 400)).toMatch(/minTier EV/);
+    // A machine that draws no EU keeps its own tier.
+    expect((await call(addCardsPost, { planId: ev.planId, cards: [{ recipeId: "r-cauldron" }] }, plansAddCardsResponse)).cards[0]!.tier).toBe("ULV");
+    expect(await call(getPost, { planId: ev.planId, fields: ["targets"] }, plansGetResponse)).toMatchObject({ cardTier: "EV", minTier: "EV" });
+
+    // With no card tier a card takes the lowest tier that runs it, raised to minTier.
+    const floor = await create(undefined, { minTier: "MV" });
+    expect(await added(floor, {})).toMatchObject({ machine: { id: "zyngen" }, tier: "MV" });
+
+    expect(await fails(createPost, { name: "x", constraints: { tierCap: "IV" }, cardTier: "HV", minTier: "EV" }, "bad_request", 400)).toMatch(/minTier EV is above the cardTier HV/);
+    expect(await fails(createPost, { name: "x", constraints: { tierCap: "HV" }, minTier: "EV" }, "bad_request", 400)).toMatch(/minTier EV is above the tierCap HV/);
+  });
+
   it("solves a card at its tier as the planner shows it once the plan is opened", async () => {
     const planId = await create({ tierCap: "EV" });
     await call(addCardsPost, { planId, cards: [{ recipeId: "r-dust" }] }, plansAddCardsResponse);

@@ -29,6 +29,8 @@ export interface Draft {
   constraints?: AgentConstraints;
   /** The tier cards default to (plans/create's cardTier); absent, they default to the tier cap (cards.ts). */
   cardTier?: TierName;
+  /** No card runs below this tier (plans/create's minTier), where the card has a voltage tier. */
+  minTier?: TierName;
   createdAt: number;
   touchedAt: number;
   /** A real plan in the site's model (plan mode), card ids `c<n>`, wire ids `w<n>`. */
@@ -101,6 +103,7 @@ export function createDraft(fields: {
   dataset: string;
   constraints?: AgentConstraints;
   cardTier?: TierName;
+  minTier?: TierName;
 }): Draft {
   const now = clock();
   const current = store();
@@ -125,6 +128,7 @@ export function createDraft(fields: {
     dataset: fields.dataset,
     ...(fields.constraints ? { constraints: fields.constraints } : {}),
     ...(fields.cardTier ? { cardTier: fields.cardTier } : {}),
+    ...(fields.minTier ? { minTier: fields.minTier } : {}),
     createdAt: now,
     touchedAt: now,
     project: {

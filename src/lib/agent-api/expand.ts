@@ -276,7 +276,7 @@ async function tryCandidate(
   project: Draft["project"];
   steamPerTick: number;
 }> {
-  const planned = planCard(recipe, { recipeId: recipe.id }, constraints, draft.cardTier);
+  const planned = planCard(recipe, { recipeId: recipe.id }, constraints, draft.cardTier, draft.minTier);
   const cardId = `c${draft.nextCard}`;
   const known = draft.project.recipes.some((entry) => entry.id === recipe.id);
   const copy: Draft = {

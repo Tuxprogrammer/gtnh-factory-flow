@@ -16,6 +16,7 @@
       "tierCap": "EV"
     },
     "cardTier": "EV",
+    "minTier": "HV",
     "cardCount": 4,
     "wireCount": 3,
     "targets": [

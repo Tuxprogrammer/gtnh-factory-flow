@@ -1,6 +1,7 @@
 package com.gtnhplanner.importer;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -14,6 +15,14 @@ public interface RecipeIndex {
 
     /** The in-game recipes that could be this FF recipe, best guess first; the matcher picks among them. */
     Lookup find(FfRecipe recipe);
+
+    /**
+     * The items the game renamed, old resource id to new ({@code read.postea.PosteaRenames#table}): a plan saved before
+     * a rename is read through them ({@link PlanRenames}). None by default.
+     */
+    default Map<String, String> renames() {
+        return Map.of();
+    }
 
     /**
      * Candidates for one FF recipe.

@@ -96,7 +96,10 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   for the importer, the posting export and shared plans alike; a card still sized a little differently is pulled
   apart once the board has solved (`layout/Unstack`). Port rates go both ways as plan mode's `portRates` (by the
   website's row handle), a source drawer's rule as a negative `targetPerSecond`, trash as `drainMode: "trash"`, and
-  posts say `planMode` with `solveMode`. Real plans to try it on: a post's plan comes from `POST /api/community/plans/<id>/download` on the configured site (or the mock's).
+  posts say `planMode` with `solveMode`. A plan saved before the game renamed an item (Postea's simple replacements, read live:
+  `read/postea/PosteaRenames.table`, `importer/game/GameRenames`) is read under the new ids (`importer/PlanRenames`, the
+  website's `withRenamedProjectResources` rule) on paste and on a cloud read: a card the game matches as it is keeps its ids
+  everywhere. Real plans to try it on: a post's plan comes from `POST /api/community/plans/<id>/download` on the configured site (or the mock's).
   A plan carries the rate unit it was read in as the website's `view.rateUnit` (`importer/PlanView`: tick, second,
   minute, hour, eu): every export writes the player's (`PlanExport.World.rateUnit`), every import hands it to the board
   once (`Graph.viewWhenShown`, taken by `BoardSession.takeView`). The + tab's Open plan file (`ui/popup/PlanFileMenu`,

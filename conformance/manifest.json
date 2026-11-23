@@ -306,8 +306,8 @@
     },
     "machines/website-test-inputs.jsonl.gz": {
       "area": "machines",
-      "bytes": 121302,
-      "sha256": "062a7059a87f1bbf6afb198de19e933e5d20054c2b7a70069bc5f671b1b27444"
+      "bytes": 121751,
+      "sha256": "e1f20f3557aa058a0a79dff5f2728b9e5db2dc90379abb5bf08ed3096a3e654f"
     },
     "model/wiring.json": {
       "area": "model",

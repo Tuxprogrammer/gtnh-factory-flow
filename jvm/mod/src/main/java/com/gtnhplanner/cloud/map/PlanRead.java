@@ -144,13 +144,14 @@ final class PlanRead {
     private final List<Graph.LoadedLink> newLinks = new ArrayList<>();
 
     PlanRead(final JsonObject plan, final CloudGame game, @Nullable final CloudPlans.Read previous) {
-        this.plan = plan;
+        // Items the game renamed since the plan was saved are read under their new ids; the board writes against this.
+        this.plan = com.gtnhplanner.importer.PlanRenames.apply(plan, game.recipes());
         this.game = game;
         this.previous = previous;
-        this.things = new FfPlanParser.Things(plan);
+        this.things = new FfPlanParser.Things(this.plan);
         this.ctx = new FfCards.Context(game.recipes(), game.maker(), things.solveMode, report);
         this.ports = new FfCards.Ports(game.maker());
-        final String name = str(plan, "name");
+        final String name = str(this.plan, "name");
         this.graph = new Graph(name == null ? "" : name);
         if (previous != null) {
             for (final String c : List.of("nodes", "storages", "edges", "annotations", "pockets")) {

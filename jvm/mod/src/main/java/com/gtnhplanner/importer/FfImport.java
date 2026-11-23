@@ -37,7 +37,8 @@ public final class FfImport {
      */
     public static FfConverter.Result importFromText(final String text, final RecipeIndex index, final NodeMaker maker,
         @javax.annotation.Nullable final com.gtnhplanner.library.PlanExport.World world) {
-        final com.google.gson.JsonObject root = FfPlanParser.root(FfPlanCode.toJson(text));
+        // Items the game renamed since the plan was saved are read under their new ids.
+        final com.google.gson.JsonObject root = PlanRenames.apply(FfPlanParser.root(FfPlanCode.toJson(text)), index);
         final java.util.Map<String, Object> tree = com.gtnhplanner.data.flowchart.GsonTrees.map(root);
         // With the plan's tree: a card the board cannot run comes in as a display-only card.
         final FfConverter.Result result = FfConverter.convert(FfPlanParser.read(root), index, maker, tree);

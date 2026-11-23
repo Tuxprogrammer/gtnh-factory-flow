@@ -41,6 +41,7 @@ jobs:
       jvm: ${{ steps.changes.outputs.jvm }}
       web_core: ${{ steps.changes.outputs.web_core }}
       web_core_full: ${{ steps.changes.outputs.web_core_full }}
+      oracle: ${{ steps.changes.outputs.oracle }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -149,6 +150,8 @@ jobs:
             21
             25
       - run: tools/ci/jvm.sh
+        env:
+          CI_ORACLE: ${{ needs.changes.outputs.oracle }}
       # Also after a failed build: what it did fetch is kept, so the next run needs less.
       - name: Pack the seed when it was short
         id: seed

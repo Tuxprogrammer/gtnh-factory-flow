@@ -215,10 +215,39 @@ class DaveTalkTest {
         final DaveTalk.Row told = talk.rows()
             .get(
                 talk.rows()
-                    .indexOf(key) + 1);
+                    .indexOf(addPlanRow()) + 1);
         assertEquals(DaveTalk.Kind.OUTCOME, told.kind());
         assertEquals("This was made for another plan.", told.text());
         assertTrue(told.problem());
+    }
+
+    @Test
+    void addToPlanThatAddedNothingCanBePressedAgain() {
+        ask("Ammonia?");
+        link.event(FINAL);
+        final DaveChat.Turn turn = talk.turns()
+            .get(0);
+        final List<String> applied = new ArrayList<>();
+        assertTrue(talk.addToPlan(turn, applied::add));
+        talk.applied(turn, "This was made for another plan.", true);
+        DaveTalk.Row key = addPlanRow();
+        assertEquals("Add to plan", key.text(), "nothing was added");
+        assertTrue(key.enabled());
+        assertTrue(talk.addToPlan(turn, applied::add), "on the right plan this time");
+        talk.applied(turn, "Added 2 cards and 4 wires to Plan.", false);
+        key = addPlanRow();
+        assertEquals("Added to plan", key.text());
+        assertFalse(key.enabled());
+        assertFalse(talk.addToPlan(turn, applied::add), "added once");
+        assertEquals(List.of("p1", "p1"), applied);
+    }
+
+    private DaveTalk.Row addPlanRow() {
+        return talk.rows()
+            .stream()
+            .filter(r -> r.kind() == DaveTalk.Kind.ADD_PLAN)
+            .findFirst()
+            .orElseThrow();
     }
 
     @Test

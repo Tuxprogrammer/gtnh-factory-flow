@@ -194,6 +194,8 @@ public final class DaveTalk {
     /** What came of Add to plan for {@code turn}. */
     public void applied(final DaveChat.Turn turn, final String text, final boolean problem) {
         appliedOutcome.put(turn, new Told(text, problem));
+        // A refusal or a failure added nothing, so the player may press it again (on the right plan, or later).
+        if (problem) applied.remove(turn);
         version++;
     }
 

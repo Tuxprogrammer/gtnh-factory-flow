@@ -148,7 +148,10 @@ public final class Enumerator {
             final int out = tried.get(i)[0], in = tried.get(i)[1];
             if (alt == null || alt.support.size() != incumbent.size()
                 || !alt.support.contains(in)
-                || alt.support.contains(out)) continue;
+                || alt.support.contains(out)
+                // A place is where a leftover crosses: a gate that carries flow only at a drawer's ports is the
+                // player's own supply or sink there, not a place to put this leftover.
+                || leftoverGates(ctx, alt.externals, new JavaHashSet<>(List.of(in))).isEmpty()) continue;
             final ChoiceKey key = ctx.keyOf(alt.support);
             if (!seen.add(key)) continue;
             if (points != null) points.put(key, alt);
@@ -379,7 +382,12 @@ public final class Enumerator {
      * forces in or out. In gate order.
      */
     private static List<Integer> leftoverGates(final SolveContext ctx, final Set<Integer> support) {
-        final double[] externals = ctx.externals();
+        return leftoverGates(ctx, ctx.externals(), support);
+    }
+
+    /** {@link #leftoverGates(SolveContext, Set)} at the point with these externals. */
+    private static List<Integer> leftoverGates(final SolveContext ctx, final double[] externals,
+        final Set<Integer> support) {
         final double[] scales = ctx.dustScales(null, null, externals)
             .ports();
         final double dust = ctx.heuristics.numerics().dust;

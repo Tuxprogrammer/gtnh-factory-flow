@@ -96,6 +96,8 @@ than draw from its own source drawer, or idle rather than put a byproduct into i
 Nor is what a drawer brings or takes a leftover: the alternatives' decisions (`Enumerator`, `enumerate.ts`) are the
 open gates that carry flow at a port no drawer is linked to, so a shortfall drawn from the player's source drawer (or a
 surplus into a byproduct drawer) has no Forced group and no places to choose, beside a buffer or not.
+By the same rule a real leftover's places are gates that carry flow at such a port: a swap whose opened gate
+carries flow only at a drawer's ports is no place for it.
 
 ### Buffers
 

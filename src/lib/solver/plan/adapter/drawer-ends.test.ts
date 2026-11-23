@@ -161,6 +161,42 @@ const bufferAndSourceUpstream = (withDrawer: boolean) =>
     ],
   });
 
+/**
+ * u (b + f -> p) is asked 1 p. b comes from k1 (e -> b) or k2 (y + f -> b); e, f's input w2 and y have makers that get
+ * nothing, so the plan buys e and w2. k2's y port is wired and also has a source drawer: drawing y there and buying more
+ * w2 for k2's f balances too, but that drawer is the player's own supply, not a place for the bought e.
+ */
+const leftoverBesideDrawer = () =>
+  project({
+    recipes: [
+      recipe("ru", [["b", 1], ["f", 1]], [["p", 1]]),
+      recipe("rk1", [["e", 1]], [["b", 1]]),
+      recipe("rk2", [["y", 1], ["f", 1]], [["b", 1]]),
+      recipe("rj", [["w", 1]], [["e", 1]]),
+      recipe("rkf", [["w2", 1]], [["f", 1]]),
+      recipe("rkw", [["w", 1]], [["w2", 1]]),
+      recipe("rky", [["w", 1]], [["y", 1]]),
+    ],
+    nodes: ["u", "k1", "k2", "j", "kf", "kw", "ky"].map((id) => node(id, `r${id}`)),
+    storages: [
+      drawer("pd", "p", { targetMode: "exact", targetPerSecond: 1 }),
+      drawer("ys", "y"),
+      ...["j", "kw", "ky"].map((id) => drawer(`w-${id}`, "w", { targetMode: "at-most", targetPerSecond: 0 })),
+    ],
+    edges: [
+      wire("k1-u", "k1", "u", "b"),
+      wire("k2-u", "k2", "u", "b"),
+      wire("j-k1", "j", "k1", "e"),
+      wire("kf-u", "kf", "u", "f"),
+      wire("kf-k2", "kf", "k2", "f"),
+      wire("kw-kf", "kw", "kf", "w2"),
+      wire("ky-k2", "ky", "k2", "y"),
+      wire("ys-k2", "ys", "k2", "y", {}, { fromDrawer: true }),
+      ...["j", "kw", "ky"].map((id) => wire(`w-${id}`, `w-${id}`, id, "w", {}, { fromDrawer: true })),
+      wire("u-pd", "u", "pd", "p", {}, { toDrawer: true }),
+    ],
+  });
+
 const rate = (result: ReturnType<typeof calculateThroughput>, id: string) =>
   result.nodes[id]!.operationRatePerSecond * Math.min(1, Math.max(0, result.nodes[id]!.utilization));
 
@@ -234,6 +270,16 @@ describe.each([
     expect(result.plan!.leftovers).toEqual([]);
     expect(rate(result, "u")).toBeCloseTo(1, 6);
     expect(result.storages["cs"]!.consumedPerSecond).toBeCloseTo(5, 6);
+  });
+
+  it("a forced leftover is never offered a drawer's port as a place", () => {
+    use();
+    const result = calculateThroughput(leftoverBesideDrawer(), { generatedAt: "t" });
+    const bought = result.plan!.leftovers.find((l) => l.bearers.some((b) => b.portKey === "k1|i|input:item:e"))!;
+    expect(bought.bearers.map((b) => b.portKey).sort()).toEqual(["k1|i|input:item:e", "u|i|input:item:b"]);
+    for (const leftover of result.plan!.leftovers) {
+      for (const bearer of leftover.bearers) expect(bearer.portKey).not.toBe("k2|i|input:item:y");
+    }
   });
 
   it("the same shortfall with no drawer is forced, and a leftover with both places", () => {

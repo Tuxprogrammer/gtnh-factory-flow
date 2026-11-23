@@ -263,7 +263,10 @@ export function enumerate(
       alt === null ||
       alt.support.size !== incumbent.size ||
       !alt.support.has(into) ||
-      alt.support.has(out)
+      alt.support.has(out) ||
+      // A place is where a leftover crosses: a gate that carries flow only at a drawer's ports is the player's own
+      // supply or sink there, not a place to put this leftover.
+      leftoverGates(ctx, alt.externals, new Set([into])).length === 0
     )
       continue;
     const key = ctx.keyOf(alt.support);

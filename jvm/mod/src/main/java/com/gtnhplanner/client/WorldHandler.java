@@ -10,5 +10,6 @@ public class WorldHandler {
     @SubscribeEvent
     public void onClientDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
         Plan.unloadPlan();
+        com.gtnhplanner.ui.dave.AskDave.forget();
     }
 }

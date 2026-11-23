@@ -354,6 +354,29 @@ public final class BoardScreen extends ModularScreen {
         parts.put("railHandle", railHandle);
         // The overview gives way to the board, which keeps its toolbar on one row (RailFit).
         rail.fitTo(() -> panel.getArea().width, toolbar::leastOneRow);
+        // Ask Dave: its key at the board's bottom right while the server takes asks, its panel along the right edge.
+        final com.gtnhplanner.ui.dave.AskDavePanel askPanel = new com.gtnhplanner.ui.dave.AskDavePanel(session);
+        askPanel.right(0)
+            .width(com.gtnhplanner.ui.dave.AskDavePanel.W)
+            .top(() -> headH.getAsInt(), com.cleanroommc.modularui.widget.sizer.Unit.Measure.PIXEL)
+            .bottom(0);
+        askPanel.setEnabled(false);
+        panel.child(askPanel);
+        parts.put("askDave", askPanel);
+        final String askLabel = com.gtnhplanner.core.base.Text.get()
+            .translate("gtnhplanner.dave.key");
+        final ButtonWidget<?> askKey = key(
+            () -> askLabel,
+            () -> true,
+            com.gtnhplanner.core.base.Text.get()
+                .translate("gtnhplanner.dave.key.tip"),
+            fit(askLabel),
+            () -> com.gtnhplanner.ui.dave.AskDave.open = true);
+        askKey.right(6)
+            .bottom(6);
+        askKey.setEnabled(false);
+        panel.child(askKey);
+        parts.put("askDaveKey", askKey);
         // Over everything, so the board waits under it.
         panel.child(offer);
         library.body = body;
@@ -626,6 +649,14 @@ public final class BoardScreen extends ModularScreen {
     public void onUpdate() {
         super.onUpdate();
         if (library.tasksShown != session.showsTasks()) library.apply();
+        // Ask Dave's key shows only while the server takes asks: looked at once a tick, never per frame.
+        com.gtnhplanner.ui.dave.AskDave.TALK.tick();
+        final boolean onBoard = !library.open && !session.showsTasks();
+        parts.get("askDaveKey")
+            .setEnabled(
+                onBoard && com.gtnhplanner.ui.dave.AskDave.TALK.available() && !com.gtnhplanner.ui.dave.AskDave.open);
+        parts.get("askDave")
+            .setEnabled(onBoard && com.gtnhplanner.ui.dave.AskDave.open);
         // The board out of sight (the task board, the library): no cursor on it for the others. Showing, it samples as
         // it draws.
         if (library.open || session.showsTasks() || !canvas.isEnabled()) {

@@ -11,6 +11,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEve
 import type { FactoryNode, Recipe } from "@/lib/model/types";
 import { ResourceIcon } from "@/components/nei/ResourceIcon";
 import { useFactoryStore } from "@/store/factory-store";
+import { NOT_IN_DATASET_TAG, useNotInDataset } from "../not-in-dataset";
 import { CardActionsMenu } from "../menus/CardActionsMenu";
 import { CropPickerMenu } from "../../CropPickerMenu";
 import { checklistLocked } from "../../RecipeNode";
@@ -397,6 +398,7 @@ export function SpecialCard({ model, recipe, node }: SpecialCardProps) {
   }>();
   const updateNode = useFactoryStore((state) => state.updateNode);
   const locked = useFactoryStore((state) => state.isReadOnly || state.checklistMode);
+  const notInDataset = useNotInDataset(node);
   const shared = view.kind === "shared";
   const holder = view.kind === "custom-rate" || view.kind === "tank";
   // A shared machine's and a crop's settings are the machine's own controls (the plain card's gear sheet and chips).
@@ -502,7 +504,7 @@ export function SpecialCard({ model, recipe, node }: SpecialCardProps) {
       data-loop={view.loop}
       onPointerDownCapture={onPointerDownCapture}
     >
-      <div className="cc-head">
+      <div className="cc-head" data-not-in-dataset={notInDataset ? NOT_IN_DATASET_TAG : undefined}>
         <div
           role="button"
           tabIndex={0}

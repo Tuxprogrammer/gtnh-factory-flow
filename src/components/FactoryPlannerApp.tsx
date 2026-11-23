@@ -83,6 +83,7 @@ export function FactoryPlannerApp() {
   const setDatasetManifest = useFactoryStore((state) => state.setDatasetManifest);
   const setDataset = useFactoryStore((state) => state.setDataset);
   const refreshProjectRecipes = useFactoryStore((state) => state.refreshProjectRecipes);
+  const noteRecipesNotInDataset = useFactoryStore((state) => state.noteRecipesNotInDataset);
   const setDatasetLoading = useFactoryStore((state) => state.setDatasetLoading);
   const setDatasetError = useFactoryStore((state) => state.setDatasetError);
   const hydratedRef = useRef(false);
@@ -118,8 +119,10 @@ export function FactoryPlannerApp() {
       datasetManifestUrl ?? DEFAULT_DATASET_MANIFEST_URL,
       version,
       pending,
-    ).then(({ refreshed, migration }) => {
+    ).then(({ refreshed, migration, missing }) => {
       noteRecipesRefreshed(refreshed, version.id, checkedRecipesRef.current);
+      // Kept even when this plan has gone: the ids are checked once per version, and another plan may hold them.
+      noteRecipesNotInDataset(version.id, missing);
       if (!cancelled && refreshed.length > 0) {
         refreshProjectRecipes(refreshed, migration);
       }
@@ -127,7 +130,14 @@ export function FactoryPlannerApp() {
     return () => {
       cancelled = true;
     };
-  }, [datasetManifest, datasetManifestUrl, datasetVersionId, project.recipes, refreshProjectRecipes]);
+  }, [
+    datasetManifest,
+    datasetManifestUrl,
+    datasetVersionId,
+    project.recipes,
+    refreshProjectRecipes,
+    noteRecipesNotInDataset,
+  ]);
   useBoardSoundEffects();
   const skipInitialSaveRef = useRef(true);
   const saveTimeoutRef = useRef<number | undefined>(undefined);
@@ -150,11 +160,12 @@ export function FactoryPlannerApp() {
         setDataset(dataset);
         const projectRecipes = useFactoryStore.getState().project.recipes;
         if (projectRecipes.length > 0) {
-          const { refreshed, migration } = await resolveProjectRecipes(manifestUrl, version, projectRecipes);
+          const { refreshed, migration, missing } = await resolveProjectRecipes(manifestUrl, version, projectRecipes);
           const checked = new Map<string, boolean>();
           noteRecipesRequested(projectRecipes, version.id, checked, requestedRecipesRef.current);
           noteRecipesRefreshed(refreshed, version.id, checked);
           checkedRecipesRef.current = checked;
+          noteRecipesNotInDataset(version.id, missing);
           refreshProjectRecipes(refreshed, migration);
         }
       } catch (error) {
@@ -162,7 +173,7 @@ export function FactoryPlannerApp() {
         setDatasetError(message);
       }
     },
-    [refreshProjectRecipes, setDataset, setDatasetError, setDatasetLoading],
+    [noteRecipesNotInDataset, refreshProjectRecipes, setDataset, setDatasetError, setDatasetLoading],
   );
 
   useEffect(() => {

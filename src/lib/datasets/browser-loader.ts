@@ -309,10 +309,14 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
       : undefined;
 
   if (!response.ok) {
-    throw new Error(
-      typeof payload === "object" && payload && "error" in payload && payload.error
-        ? payload.error
-        : `Request failed (${response.status} ${response.statusText || "HTTP error"}).`,
+    // The status rides on the error: a 404 is the dataset's answer that it has no such thing, any other failure is not.
+    throw Object.assign(
+      new Error(
+        typeof payload === "object" && payload && "error" in payload && payload.error
+          ? payload.error
+          : `Request failed (${response.status} ${response.statusText || "HTTP error"}).`,
+      ),
+      { status: response.status },
     );
   }
 

@@ -1,6 +1,18 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { Recipe } from "@/lib/model/types";
-import { noteRecipesRefreshed, noteRecipesRequested, recipesToRefresh } from "./refresh-project-recipes";
+import type { DatasetVersion } from "./types";
+import {
+  noteRecipesRefreshed,
+  noteRecipesRequested,
+  recipesToRefresh,
+  resolveProjectRecipes,
+} from "./refresh-project-recipes";
+
+const loader = vi.hoisted(() => ({
+  getRecipeDatasetRecipe: vi.fn(),
+  resolveRecipeDatasetRecipes: vi.fn(),
+}));
+vi.mock("./browser-loader", () => loader);
 
 const table = {
   sourceKind: "gregtech-overclock-calculator",
@@ -37,5 +49,32 @@ describe("recipesToRefresh", () => {
     // The same bare object is never sent twice.
     noteRecipesRequested([pulled[0]!], "v1", checked, requested);
     expect(recipesToRefresh(pulled, "v1", checked, requested)).toEqual([]);
+  });
+});
+
+describe("resolveProjectRecipes", () => {
+  const version = { id: "new" } as DatasetVersion;
+  const stored = (id: string) => ({ id, name: id, inputs: [], outputs: [] }) as unknown as Recipe;
+  const failed = (status?: number) => Object.assign(new Error("no"), status ? { status } : {});
+
+  it("names the recipes the dataset has neither by id nor by content, and only on a not-found answer", async () => {
+    loader.getRecipeDatasetRecipe.mockImplementation(async (_url: string, _v: DatasetVersion, id: string) => {
+      if (id === "kept" || id === "moved-new") return stored(id);
+      throw id === "offline" ? failed() : failed(404);
+    });
+    loader.resolveRecipeDatasetRecipes.mockResolvedValue({
+      matches: [{ importedId: "moved", recipeId: "moved-new", exact: true }],
+    });
+    const result = await resolveProjectRecipes("", version, ["kept", "moved", "gone", "offline"].map(stored));
+    expect(result.refreshed.map((recipe) => recipe.id)).toEqual(["kept", "moved-new"]);
+    expect(result.migration).toEqual({ moved: "moved-new" });
+    // A request that failed for another reason says nothing about the dataset.
+    expect(result.missing).toEqual(["gone"]);
+  });
+
+  it("names none when the content match could not be asked", async () => {
+    loader.getRecipeDatasetRecipe.mockRejectedValue(failed(404));
+    loader.resolveRecipeDatasetRecipes.mockRejectedValue(failed(500));
+    expect((await resolveProjectRecipes("", version, [stored("gone")])).missing).toEqual([]);
   });
 });

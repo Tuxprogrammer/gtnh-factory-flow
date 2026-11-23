@@ -40,6 +40,22 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "4.7.0-tux.10",
+    date: "2026-11-22",
+    headline: "Void Miners, Combine and a round of fixes",
+    notes: [
+      "Void Miners use their real power (30,720 / 122,880 / 491,520 EU/t) and ore rate, with a Noble gas setting for the boost.",
+      "Combine keeps the machine you chose and sets a tier and whole amps every recipe can run on.",
+      "A card that needs only a tiny share of a machine shows its real rates and power.",
+      "A forced leftover no longer lists a drawer's port as a place it could go, and a leftover split you set survives combining twin cards.",
+      "A plan saved before the game moved an item to a new id opens with its recipes and wires on the new item, once the recipe data carries the renames.",
+      "A plan downloaded from the library opens with Open plan file.",
+      "Saved and exported plans no longer carry recipes no card uses.",
+      "If a plan was changed elsewhere while the live service was restarting, everyone sees the new version.",
+      "The first searches after a site restart are fast.",
+    ],
+  },
+  {
     version: "4.7.0-tux.9",
     date: "2026-11-22",
     headline: "Plans keep their icons when the recipe data is updated",

@@ -414,6 +414,8 @@ public final class LiveDoc {
         if (!behind) return null;
         commit();
         dropLostWires();
+        // The player's own batches come back in new objects: what still says what the board stands for is the board's.
+        read = read.sharing(state.view(), session.game());
         final Graph old = read.graph();
         final CloudPlans.Read next = CloudPlans.read(state.view(), session.game(), read);
         next.graph()

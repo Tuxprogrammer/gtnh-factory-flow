@@ -52,6 +52,23 @@ describe("a second drawer on a port", () => {
     expect(notice()).toBe("This port already has a drawer.");
   });
 
+  it("dropped off the port, leaves every drawer and wire of the plan as it was", () => {
+    const before = useFactoryStore.getState().project;
+    useFactoryStore
+      .getState()
+      .addStorageForConnection(
+        { kind: "item", id: "x", displayName: "x" },
+        "m",
+        "output",
+        { x: 400, y: 0 },
+        handle("output", "x"),
+      );
+    const after = useFactoryStore.getState().project;
+    expect((after.storages ?? []).map((s) => s.id)).toEqual(["d1", "d2", "r1"]);
+    expect(after.edges.map((e) => e.id)).toEqual(["w1"]);
+    expect(after).toBe(before);
+  });
+
   it("a free port takes its drawer and nothing is said", () => {
     useFactoryStore.getState().connectNodes("r1", "m", {
       kind: "item",

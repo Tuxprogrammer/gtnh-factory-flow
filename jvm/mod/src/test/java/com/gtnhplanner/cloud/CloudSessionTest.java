@@ -512,6 +512,68 @@ class CloudSessionTest {
         assertEquals(2, opsFrames(), "reading others' edits sends nothing");
     }
 
+    /**
+     * The player's own move comes back from the room in new objects that say what the board already shows: the next
+     * catch-up keeps the card the board has, renamed items or not.
+     */
+    @Test
+    void aCardThePlayerMovedIsNotReadAgainOnTheNextCatchUp() {
+        inAccount("d1", "sulfuric-acid");
+        final Plan p = begin();
+        final Graph board = open(p, ME + ":d1");
+        final LiveDoc doc = session.doc(board);
+        final List<Node> cards = new ArrayList<>(board.getNodes());
+        final Node moved = cards.get(0), other = cards.get(1);
+        moved.x += 40;
+        board.touchLayout();
+        session.save(p);
+        tickUntil("the room applied it", () -> live.seqs.get(ME + ":d1") == 4L && !doc.waiting());
+
+        final JsonArray theirs = new JsonArray();
+        theirs.add(
+            LiveOp
+                .patch(
+                    "nodes",
+                    other.id.toString(),
+                    com.gtnhplanner.cloud.map.CloudRenamesTest.position(999, 333),
+                    null)
+                .toJson());
+        live.others(ME + ":d1", theirs);
+        tickUntil("read in", () -> slot(p, ME + ":d1") != board);
+        final Graph now = slot(p, ME + ":d1");
+        assertEquals(com.gtnhplanner.library.PlanExport.gameX(999), now.nodes.get(other.id).x);
+        assertSame(moved, now.nodes.get(moved.id), "the moved card is not read again");
+        ticks(10);
+        assertEquals(1, opsFrames(), "reading others' edits sends nothing");
+    }
+
+    @Test
+    void aRenamedCardThePlayerMovedIsNotReadAgainOnTheNextCatchUp() {
+        com.gtnhplanner.cloud.map.CloudRenamesTest.renaming(host.game);
+        live.plans.put(ME + ":d1", com.gtnhplanner.cloud.map.CloudRenamesTest.plan());
+        live.seqs.put(ME + ":d1", 3L);
+        designs.put("d1", design("d1", "Plantballs"));
+        final Plan p = begin();
+        final Graph board = open(p, ME + ":d1");
+        final LiveDoc doc = session.doc(board);
+        final Node mac = board.nodes.get(com.gtnhplanner.cloud.map.CloudRenamesTest.card("m"));
+        mac.x += 40;
+        board.touchLayout();
+        session.save(p);
+        tickUntil("the room applied it", () -> live.seqs.get(ME + ":d1") == 4L && !doc.waiting());
+
+        final JsonArray theirs = new JsonArray();
+        theirs.add(
+            LiveOp.patch("nodes", "c", com.gtnhplanner.cloud.map.CloudRenamesTest.position(900, 0), null)
+                .toJson());
+        live.others(ME + ":d1", theirs);
+        tickUntil("read in", () -> slot(p, ME + ":d1") != board);
+        final Graph now = slot(p, ME + ":d1");
+        assertSame(mac, now.nodes.get(mac.id), "the moved renamed card is not read again");
+        ticks(10);
+        assertEquals(1, opsFrames(), "reading others' edits sends nothing");
+    }
+
     /** The wires of a plan that end at no card or drawer of it. */
     private static List<String> dangling(final JsonObject plan) {
         final java.util.Set<String> ends = com.gtnhplanner.cloud.sync.LiveOps.ends(plan);

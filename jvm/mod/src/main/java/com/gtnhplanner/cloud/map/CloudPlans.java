@@ -56,6 +56,15 @@ public final class CloudPlans {
         public JsonObject renamed(final JsonObject plan, final CloudGame game) {
             return PlanRenames.apply(plan, game.recipes(), renames);
         }
+
+        /**
+         * The same read, its plan taking {@code later}'s objects (renamed as this read renames) where they say the
+         * same: the next read then takes over what the player's own batches made, as it does what nobody touched.
+         */
+        public Read sharing(final JsonObject later, final CloudGame game) {
+            final JsonObject shared = PlanShare.same(plan, renamed(later, game));
+            return shared == plan ? this : new Read(graph, basis, report, shared, renames);
+        }
     }
 
     /** A board written: the plan, and the basis to write the board against next time. */

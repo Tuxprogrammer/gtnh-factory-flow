@@ -114,6 +114,7 @@ export const datasetVersionSchema = z.object({
   checksumSha256: z.string().optional(),
   sourceInfo: datasetSourceInfoSchema,
   gameRates: gameRatesSchema.optional(),
+  resourceRenamesPath: z.string().optional(),
 });
 
 export const datasetManifestSchema = z.object({

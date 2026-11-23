@@ -2,6 +2,7 @@ import { DEFAULT_DATASET_MANIFEST_URL } from "@/lib/datasets";
 import {
   getRecipeDatasetRecipe,
   getRecipeDatasetRecipeIds,
+  getResourceRenames,
   queryRecipeDatasetRecipes,
   resolveRecipeDatasetRecipes,
 } from "@/lib/datasets/browser-loader";
@@ -17,6 +18,7 @@ import { sectionNodeView } from "@/lib/model/shared-machine";
 import { extractProjectJsonFromPng, extractProjectJsonFromSvg } from "@/lib/import-export/plan-image";
 import { isPowerRecipe } from "@/lib/power/power-recipe";
 import { pickRecipeRefMatch, recipeContentRef } from "@/lib/import-export/recipe-ref-match";
+import { withRenamedProjectResources, withRenamedResources } from "@/lib/datasets/resource-renames";
 import { cloneImportedProject, parseFactoryProjectJson, serializeFactoryProject } from "@/lib/import-export";
 import { untagCommunityPlan } from "@/lib/community/client";
 import { useFactoryStore } from "@/store/factory-store";
@@ -66,13 +68,15 @@ export async function hydrateImportedProjectRecipes(
     // dataset can never answer for - and must never replace by name-match.
     (recipe) => !availableRecipeIds.has(recipe.id) && !isPowerRecipe(recipe) && !recipe.isDemo,
   );
+  // A recipe that only changed because the game renamed an item it names is matched as the renamed game writes it.
+  const renames = await getResourceRenames(version);
   const resolvedRecipeIds = new Map(
     importRecipesToResolve.length
       ? (
           await resolveRecipeDatasetRecipes(
             DEFAULT_DATASET_MANIFEST_URL,
             version,
-            importRecipesToResolve.map(recipeContentRef),
+            importRecipesToResolve.map((recipe) => recipeContentRef(withRenamedResources(renames, recipe))),
           )
         ).matches.map((match) => [match.importedId, match] as const)
       : [],
@@ -96,7 +100,7 @@ export async function hydrateImportedProjectRecipes(
         const contentMatch = resolvedRecipeIds.get(recipe.id);
         const migratedRecipe = contentMatch
           ? await getRecipeDatasetRecipe(DEFAULT_DATASET_MANIFEST_URL, version, contentMatch.recipeId)
-          : await resolveImportedRecipe(version, recipe);
+          : await resolveImportedRecipe(version, withRenamedResources(renames, recipe));
         if (migratedRecipe) {
           migratedRecipes.push({
             fromId: recipe.id,
@@ -123,7 +127,10 @@ export async function hydrateImportedProjectRecipes(
   };
 
   return {
-    project: remapMigratedRecipeReferences(hydratedProject, recipeIdMigration),
+    project: remapMigratedRecipeReferences(
+      withRenamedProjectResources(hydratedProject, renames, new Set(missingRecipes.map((recipe) => recipe.id))),
+      recipeIdMigration,
+    ),
     missingRecipes,
     migratedRecipes,
   };

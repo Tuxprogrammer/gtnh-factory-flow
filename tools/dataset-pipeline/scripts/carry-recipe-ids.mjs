@@ -7,18 +7,28 @@
 // thing (same map, slots, amounts, chances, ticks and EU). Recipes named by a
 // game identity (a bee species, a crop, a vein, a mob, an underground fluid)
 // keep their id when that identity is unchanged, even if their numbers moved.
+// A recipe that only changed because the game renamed an item it takes or
+// makes (resource-renames.json beside the new recipes.json, the game's own
+// Postea table) keeps its id too: recipes no exact match took are matched
+// again with every item read through the renames, on both sides.
 // Everything else (new or changed recipes) keeps its new id.
 //
-// Usage: node carry-recipe-ids.mjs <previous recipes.json[.gz]> <new recipes.json> [report.json]
+// Usage: node carry-recipe-ids.mjs <previous recipes.json[.gz]> <new recipes.json> [report.json] [--renames=<file>]
 // Rewrites the new recipes.json in place. Run after normalize-oracle-export and
 // before the resource and recipe indexes.
 import fs from "node:fs";
+import path from "node:path";
 import readline from "node:readline";
 import zlib from "node:zlib";
+import { RESOURCE_RENAMES_FILE, renameLookup, renameResourceId } from "./resource-renames.mjs";
 
-const [previousPath, nextPath, reportPath] = process.argv.slice(2);
+const args = process.argv.slice(2).filter((arg) => !arg.startsWith("--renames="));
+const renamesArg = process.argv.slice(2).find((arg) => arg.startsWith("--renames="))?.slice("--renames=".length);
+const [previousPath, nextPath, reportPath] = args;
 if (!previousPath || !nextPath) {
-  console.error("Usage: carry-recipe-ids.mjs <previous recipes.json[.gz]> <new recipes.json> [report.json]");
+  console.error(
+    "Usage: carry-recipe-ids.mjs <previous recipes.json[.gz]> <new recipes.json> [report.json] [--renames=<file>]",
+  );
   process.exit(1);
 }
 
@@ -39,10 +49,10 @@ function lines(filePath) {
   return readline.createInterface({ input, crlfDelay: Infinity });
 }
 
-function slot(entry, output) {
+function slot(entry, output, renames) {
   return [
     entry.kind,
-    entry.id,
+    renames ? renameResourceId(renames, entry.id, entry.kind) : entry.id,
     entry.amount ?? "",
     output ? "" : entry.consumed === false ? "nc" : "",
     entry.chance ?? "",
@@ -69,7 +79,7 @@ function machineKey(recipe) {
   return gameMap(recipe) ?? String(recipe.machineType ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "");
 }
 
-export function contentKey(recipe) {
+export function contentKey(recipe, renames) {
   return JSON.stringify([
     recipe.category,
     recipe.kind,
@@ -77,8 +87,8 @@ export function contentKey(recipe) {
     recipe.specialValue ?? null,
     recipe.durationTicks ?? null,
     recipe.eut ?? null,
-    (recipe.inputs ?? []).map((entry) => slot(entry, false)).sort(),
-    (recipe.outputs ?? []).map((entry) => slot(entry, true)).sort(),
+    (recipe.inputs ?? []).map((entry) => slot(entry, false, renames)).sort(),
+    (recipe.outputs ?? []).map((entry) => slot(entry, true, renames)).sort(),
   ]);
 }
 
@@ -94,8 +104,9 @@ function recipeLine(line) {
   return JSON.parse(trimmed.replace(/,$/, ""));
 }
 
-async function readPrevious(filePath) {
+async function readPrevious(filePath, renames) {
   const byContent = new Map();
+  const byRenamed = new Map();
   const byIdentity = new Map();
   const all = new Map();
   let inRecipes = false;
@@ -117,20 +128,78 @@ async function readPrevious(filePath) {
       byContent.set(key, []);
     }
     byContent.get(key).push(recipe.id);
+    if (renames) {
+      const renamed = contentKey(recipe, renames);
+      if (!byRenamed.has(renamed)) {
+        byRenamed.set(renamed, []);
+      }
+      byRenamed.get(renamed).push(recipe.id);
+    }
     if (IDENTITY_CATEGORIES.has(recipe.category)) {
       byIdentity.set(identityKey(recipe), recipe.id);
     }
   }
-  return { byContent, byIdentity, all };
+  return { byContent, byRenamed, byIdentity, all };
+}
+
+function loadRenames() {
+  const file = renamesArg ?? path.join(path.dirname(nextPath), RESOURCE_RENAMES_FILE);
+  if (!fs.existsSync(file)) {
+    return undefined;
+  }
+  const lookup = renameLookup(JSON.parse(fs.readFileSync(file, "utf8")));
+  return lookup.size > 0 ? lookup : undefined;
+}
+
+// Which new recipes (by line) only the renames match, and the previous id
+// each takes: exact matches are settled first, in file order as main does, so
+// a renamed match never takes an id an exact match would.
+async function renamedMatches(previous, renames) {
+  const matches = new Map();
+  if (!renames) {
+    return matches;
+  }
+  const used = new Set();
+  const unmatched = [];
+  let inRecipes = false;
+  let lineNo = -1;
+  for await (const line of lines(nextPath)) {
+    lineNo += 1;
+    if (/^ {2}"[^"]+": /.test(line)) {
+      inRecipes = line.startsWith('  "recipes": [');
+      continue;
+    }
+    const recipe = inRecipes ? recipeLine(line) : undefined;
+    if (!recipe) {
+      continue;
+    }
+    const match = (previous.byContent.get(contentKey(recipe)) ?? []).find((id) => !used.has(id));
+    if (match) {
+      used.add(match);
+    } else {
+      unmatched.push({ lineNo, key: contentKey(recipe, renames) });
+    }
+  }
+  for (const { lineNo: at, key } of unmatched) {
+    const match = (previous.byRenamed.get(key) ?? []).find((id) => !used.has(id));
+    if (match) {
+      used.add(match);
+      matches.set(at, match);
+    }
+  }
+  return matches;
 }
 
 function bump(table, category, field) {
-  table[category] ??= { kept: 0, keptByIdentity: 0, new: 0, gone: 0 };
+  table[category] ??= { kept: 0, keptByRename: 0, keptByIdentity: 0, new: 0, gone: 0 };
   table[category][field] += 1;
 }
 
 async function main() {
-  const previous = await readPrevious(previousPath);
+  const renames = loadRenames();
+  const previous = await readPrevious(previousPath, renames);
+  const byRename = await renamedMatches(previous, renames);
+  const keptByRename = [];
   const used = new Set();
   const counts = {};
   const pendingIdentity = [];
@@ -144,7 +213,9 @@ async function main() {
   // in place once the whole file has been read: they are few.
   const buffered = [];
   let inRecipes = false;
+  let lineNo = -1;
   for await (const line of lines(nextPath)) {
+    lineNo += 1;
     if (/^ {2}"[^"]+": /.test(line)) {
       inRecipes = line.startsWith('  "recipes": [');
       buffered.push({ text: line });
@@ -156,13 +227,17 @@ async function main() {
       continue;
     }
     const candidates = previous.byContent.get(contentKey(recipe)) ?? [];
-    const match = candidates.find((id) => !used.has(id));
+    const exact = candidates.find((id) => !used.has(id));
+    const match = exact ?? byRename.get(lineNo);
     const prefix = line.slice(0, line.length - line.trimStart().length);
     const comma = line.trimEnd().endsWith(",") ? "," : "";
     if (match) {
       used.add(match);
       recipe.id = match;
-      bump(counts, recipe.category, "kept");
+      bump(counts, recipe.category, exact ? "kept" : "keptByRename");
+      if (!exact) {
+        keptByRename.push(match);
+      }
       buffered.push({ text: `${prefix}${JSON.stringify(recipe)}${comma}` });
     } else if (IDENTITY_CATEGORIES.has(recipe.category)) {
       const entry = { recipe, prefix, comma, text: undefined };
@@ -207,7 +282,7 @@ async function main() {
   }
   fs.renameSync(outPath, nextPath);
 
-  const totals = { kept: 0, keptByIdentity: 0, new: 0, gone: 0 };
+  const totals = { kept: 0, keptByRename: 0, keptByIdentity: 0, new: 0, gone: 0 };
   for (const row of Object.values(counts)) {
     for (const field of Object.keys(totals)) {
       totals[field] += row[field];
@@ -217,7 +292,11 @@ async function main() {
   if (reportPath) {
     fs.writeFileSync(
       reportPath,
-      `${JSON.stringify({ previous: previousPath, counts, totals, keptByIdentity: changedIdentity, gone: goneIds }, null, 1)}\n`,
+      `${JSON.stringify(
+        { previous: previousPath, counts, totals, keptByRename, keptByIdentity: changedIdentity, gone: goneIds },
+        null,
+        1,
+      )}\n`,
     );
   }
 }

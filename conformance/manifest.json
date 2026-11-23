@@ -505,8 +505,8 @@
     },
     "schema/dataset-manifest.schema.json": {
       "area": "schema",
-      "bytes": 2726,
-      "sha256": "b192dcb482f93a4df317a2c2b9b78f2be1eb50f0118e9e3e7aa544dfe7b45dcf"
+      "bytes": 2797,
+      "sha256": "7072b4a07799c36f94377040dde59ed7993d76fd3db273033b37a33088cf4fcd"
     },
     "schema/dataset.schema.json": {
       "area": "schema",

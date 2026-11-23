@@ -660,8 +660,8 @@
     },
     "solver/corpus/goldens/platline-x10.json": {
       "area": "solver/corpus",
-      "bytes": 5149268,
-      "sha256": "67520a1de60ab83970c3c665cd9b7419d0faabfa2109f017c9074e718389ba07"
+      "bytes": 5059038,
+      "sha256": "93a971d703d2850802be6d435abbd37c703b56db2145483b00c8747fb02fba1e"
     },
     "solver/corpus/goldens/platline-x4.json": {
       "area": "solver/corpus",

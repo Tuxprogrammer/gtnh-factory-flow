@@ -29,4 +29,10 @@ say "gradle build :mod:compatCheck${CI_CORES:+ on cores $CI_CORES}"
 pin ./gradlew --no-daemon --console=plain "${extra[@]}" build :mod:compatCheck || fail "gradle build or compatCheck failed"
 
 python3 -I "$CI_ROOT/tools/ci/check-jvm-tests.py" || fail "test count check failed"
+
+# The dataset exporter compiles the mod's readers into its own jar, so a change to either must compile there too.
+# Only when the diff touches them (CI_ORACLE=false from changes.sh skips it; unset runs it).
+if [ "${CI_ORACLE:-true}" != false ]; then
+  "$CI_ROOT/tools/ci/oracle.sh" "${extra[@]}" || fail "dataset exporter (oracle) does not compile"
+fi
 say "PASS"

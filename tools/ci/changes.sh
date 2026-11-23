@@ -15,6 +15,9 @@
 #   jvm/ outside jvm/mod/, src/lib/core/     web-core
 #   jvm/web/, jvm/gradle/, jvm/*.kts, tools/web-core/   web_core_full: the web-core job runs every case on the JavaScript target too
 #                                            (a sample otherwise, tools/web-core/sample.mjs); so does a diff that runs every job
+#   tools/dataset-pipeline/gtnh-calc-oracle/, the readers it compiles in (jvm/mod/.../read/, core-model's .../model/read/)
+#                                            oracle: the jvm job also compiles the dataset exporter (tools/ci/oracle.sh); the
+#                                            oracle's own directory also runs jvm. So does a diff that runs every job
 # An empty or unknowable diff runs every job: a skipped job must never be a guess.
 set -euo pipefail
 . "$(dirname "$0")/lib.sh"
@@ -54,7 +57,7 @@ list_files() {
 files=$(list_files)
 if [ "$mode" = list ]; then echo "$files"; exit 0; fi
 
-all=false website=false jvm=false webcore=false webfull=false
+all=false website=false jvm=false webcore=false webfull=false oracle=false
 if [ -z "$files" ]; then all=true; echo "[ci:changes] empty diff; running everything" >&2; fi
 while IFS= read -r f; do
   [ -n "$f" ] || continue
@@ -69,14 +72,19 @@ while IFS= read -r f; do
     *) website=true ;;
   esac
   case "$f" in src/lib/core/*) webcore=true ;; esac
+  case "$f" in
+    tools/dataset-pipeline/gtnh-calc-oracle/*) oracle=true jvm=true ;;
+    jvm/mod/src/main/java/com/gtnhplanner/read/* | jvm/core/core-model/src/main/java/com/gtnhplanner/core/model/read/*) oracle=true ;;
+  esac
   case "$f" in jvm/web/* | jvm/gradle/* | jvm/*.kts | jvm/gradle.properties | tools/web-core/*) webfull=true; webcore=true ;; esac
 done <<< "$files"
-if [ "$all" = true ]; then website=true jvm=true webcore=true webfull=true; fi
+if [ "$all" = true ]; then website=true jvm=true webcore=true webfull=true oracle=true; fi
 
 out="website=$website
 icons=$website
 jvm=$jvm
 web_core=$webcore
-web_core_full=$webfull"
+web_core_full=$webfull
+oracle=$oracle"
 echo "$out"
 if [ -n "${GITHUB_OUTPUT:-}" ]; then echo "$out" >> "$GITHUB_OUTPUT"; fi

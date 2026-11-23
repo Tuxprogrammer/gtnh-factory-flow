@@ -67,7 +67,9 @@ written and synced before the flush). A room opening on a row whose `plan_update
 service was down, or the save that took a lapsed lease) drops the journal: the stored plan wins, its seq moves past
 the dropped batches, a batch based before it is refused, and everyone joining that room gets the snapshot marked
 `replaced`, as in a running room that finds an outside write. At start a room that dropped its journal stays its
-linger, so the people coming back see it. A journal with no stamp file replays as it is.
+linger, so the people coming back see it. A journal with no stamp file replays as it is. Only a save that carries the
+plan moves `plan_updated_at`: a REST save of the name, folder or other metadata keeps the stored stamp, so it never
+reads as an outside write.
 
 Each renewal also reads the plan's members again: a sharing change whose notice never reached the service takes
 effect within 30 s, dropping anyone no longer shared.

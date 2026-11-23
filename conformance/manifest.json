@@ -181,7 +181,7 @@
     "codec/plan-text.json": {
       "area": "codec",
       "bytes": 5307,
-      "sha256": "0f18b636403458b01ca667d2d7d92c6a18b867ab4a0845998c756ea76b0c9a68"
+      "sha256": "5a004566c319bb7493fa4b812b2df24b3a05378885745073e0199d5210e0838a"
     },
     "codec/round-trip/display-cards.json": {
       "area": "codec",
@@ -475,8 +475,8 @@
     },
     "plans/website/titanium-line-chembath-slim.json": {
       "area": "plans",
-      "bytes": 200588,
-      "sha256": "9b490c2841d3c8d063bd1aeab6dc45ad6c1fbe5a6068e25b06cf58dc370e924c"
+      "bytes": 108971,
+      "sha256": "07d6edb1414381867f315ff5cd58568f472aee454c51b76a84cec94fc0cd3745"
     },
     "plans/website/wooden-axe-categories.json": {
       "area": "plans",

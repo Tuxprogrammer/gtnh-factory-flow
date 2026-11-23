@@ -22,6 +22,8 @@ import { withRenamedProjectResources, withRenamedResources } from "@/lib/dataset
 import { cloneImportedProject, parseFactoryProjectJson, serializeFactoryProject } from "@/lib/import-export";
 import { untagCommunityPlan } from "@/lib/community/client";
 import { useFactoryStore } from "@/store/factory-store";
+import { keepUsedRecipes } from "@/lib/model/embedded-recipes";
+import { unwrapNamedPlan } from "./named-plan";
 import { useDesignStore } from "@/store/design-store";
 import { flashNotice } from "@/components/flow/clean/rail/NoticeBar";
 
@@ -473,10 +475,11 @@ export async function openPlanJsonText(text: string, fallbackName = "Imported pl
   const selectedDatasetVersion = factory.datasetManifest?.versions.find(
     (version) => version.id === factory.selectedDatasetVersionId,
   );
+  const named = unwrapNamedPlan(text);
   const importedProject = refreshImportedProjectEdges(
-    cloneImportedProject(untagCommunityPlan(parseFactoryProjectJson(text)) as FactoryProject),
+    cloneImportedProject(untagCommunityPlan(parseFactoryProjectJson(named.text)) as FactoryProject),
   );
-  const name = importedProject.name || fallbackName;
+  const name = named.name || importedProject.name || fallbackName;
   const { importProjectAsDesign } = useDesignStore.getState();
   // A new tab has no camera of its own yet, so it lands framed on the imported cards.
   if (!selectedDatasetVersion) {
@@ -484,7 +487,8 @@ export async function openPlanJsonText(text: string, fallbackName = "Imported pl
     return;
   }
   const hydration = await hydrateImportedProjectRecipes(importedProject, selectedDatasetVersion);
-  await importProjectAsDesign(refreshImportedProjectEdges(hydration.project), name);
+  // Re-keying onto the dataset's ids can fold two of the plan's recipes into one id.
+  await importProjectAsDesign(keepUsedRecipes(refreshImportedProjectEdges(hydration.project)), name);
 }
 
 /** Open a plan file (.json, or a .png / .svg picture that carries the plan) as a new design tab. */

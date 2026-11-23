@@ -128,8 +128,8 @@ describe("the board's Delete and Backspace", () => {
     press("Delete");
     press("Backspace");
     expect(cards()).toEqual(["m0", "m1", "m2", "m4", "m5"]);
-    // Its recipe stays, as every delete leaves it; only m3 went.
-    expect(useFactoryStore.getState().project.recipes).toHaveLength(6);
+    // Its recipe goes with it, as no other card runs it; only m3 went.
+    expect(useFactoryStore.getState().project.recipes).toHaveLength(5);
   });
 
   it("take exactly what is selected on the board, with its wires", () => {

@@ -14,6 +14,7 @@ import { sectionNodeView, splitSectionHandleId } from "./shared-machine";
 import { repairWiredInputOverrides } from "./edge-input-overrides";
 import { openAsPlan, type PlanConversionNotice } from "@/lib/solver/plan/to-plan";
 import { convertLooseCellWires } from "./cell-wires";
+import { keepUsedRecipes } from "./embedded-recipes";
 
 /**
  * Everything a project must go through on its way in, whether it arrives from
@@ -62,13 +63,13 @@ export function normalizeLoadedProjectWithNotice(
 } {
   if (options?.keepMode ?? legacyModes) {
     // Cell wires stay too: they turn into tanks where the plan lands, which says so.
-    return { project: normalizeLegacyProject(project) };
+    return { project: keepUsedRecipes(normalizeLegacyProject(project)) };
   }
   // Cell wires first, so the legacy passes and the mode conversion see ordinary wires (a buffer beside one stays a
   // buffer). A pool plan's cell and fluid pairs get their tanks in its own conversion (`wirePoolProject`).
   const wired = convertLooseCellWires(project);
   const opened = openAsPlan(normalizeLegacyProject(wired.project));
-  return { project: opened.project, notice: withCellWireNotice(opened.notice, wired.converted) };
+  return { project: keepUsedRecipes(opened.project), notice: withCellWireNotice(opened.notice, wired.converted) };
 }
 
 /**

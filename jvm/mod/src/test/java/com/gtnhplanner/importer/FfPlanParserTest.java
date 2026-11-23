@@ -23,6 +23,41 @@ import com.gtnhplanner.importer.FfPlan.FfStorage;
  */
 class FfPlanParserTest {
 
+    /** The site's library hands a plan out as {@code {name, plan}}: it opens as that plan, a copy named as the post. */
+    @Test
+    void opensALibraryDownloadAsItsPlanNamedAsThePost() {
+        final com.google.gson.JsonObject plan = new com.google.gson.Gson()
+            .fromJson(FakeGame.fixture("biodiesel-demo.json"), com.google.gson.JsonObject.class);
+        final com.google.gson.JsonObject meta = new com.google.gson.JsonObject();
+        meta.addProperty("communityPlanId", "post-1");
+        plan.add("metadata", meta);
+        final com.google.gson.JsonObject file = new com.google.gson.JsonObject();
+        file.addProperty("name", "Biodiesel by a player");
+        file.add("plan", plan);
+
+        final FakeGame game = new FakeGame();
+        final FfConverter.Result wrapped = FfImport.importFromText(file.toString(), game, game),
+            bare = FfImport.importFromText(FakeGame.fixture("biodiesel-demo.json"), game, game);
+        assertEquals(
+            "Biodiesel by a player",
+            wrapped.graph()
+                .getName());
+        assertEquals(bare.graph().nodes.size(), wrapped.graph().nodes.size());
+        assertEquals(bare.graph().edges.size(), wrapped.graph().edges.size());
+        assertEquals(bare.graph().drawers.size(), wrapped.graph().drawers.size());
+        final String carried = new com.google.gson.Gson().toJson(wrapped.graph().site);
+        assertFalse(carried.contains("post-1"), "a copy does not keep the post's link: " + carried);
+
+        // With no name of its own the plan keeps its name; a wrapper with no plan is not a plan.
+        file.remove("name");
+        assertEquals(
+            "GTNH Factory Flow - Biodiesel demo",
+            FfImport.importFromText(file.toString(), game, game)
+                .graph()
+                .getName());
+        assertThrows(FfImportException.class, () -> FfPlanParser.parse("{\"name\":\"x\",\"plan\":3}"));
+    }
+
     @Test
     void readsTheSmallReactorPlan() {
         final FfPlan plan = FfPlanParser.parse(FakeGame.fixture("high-amperage-reactor.json"));

@@ -51,16 +51,32 @@ public final class FfPlanParser {
 
     /** The plan's JSON, read: what {@link #parse} reads, with its errors. */
     static JsonObject root(final String json) {
-        final JsonObject root;
+        JsonObject root;
         try {
             root = GSON.fromJson(json, JsonObject.class);
         } catch (final RuntimeException e) {
             throw new FfImportException("That is not a plan: the JSON does not read.", e);
         }
         if (root == null) throw new FfImportException("That is not a plan: it is empty.");
+        root = unwrapped(root);
         if (!root.has("recipes") || !root.has("nodes"))
             throw new FfImportException("That is not a plan: it has no recipes or cards.");
         return root;
+    }
+
+    /**
+     * The plan inside a library download ({@code {name, plan}}, what the site's library hands out), else the text as it
+     * is. Named as the post is when the post has a name, as the website names a copied post. (The post's link in the
+     * plan's metadata is not carried by any import, so the copy is never tied to the post.)
+     */
+    private static JsonObject unwrapped(final JsonObject root) {
+        if (root.has("recipes") || root.has("nodes")) return root;
+        final JsonElement inner = root.get("plan");
+        if (inner == null || !inner.isJsonObject()) return root;
+        final JsonObject plan = inner.getAsJsonObject();
+        final String name = str(root, "name", "");
+        if (!name.isEmpty()) plan.addProperty("name", name);
+        return plan;
     }
 
     static FfPlan read(final JsonObject root) {

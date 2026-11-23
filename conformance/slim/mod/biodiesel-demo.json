@@ -1,0 +1,184 @@
+{
+  "version": 1,
+  "plan": {
+    "id": "demo-biodiesel-demo",
+    "name": "GTNH Factory Flow - Biodiesel demo"
+  },
+  "cards": [
+    {
+      "id": "card-1",
+      "recipeId": "gtnhplanner:card-1",
+      "tier": "LV",
+      "count": 20.0,
+      "position": {
+        "x": 40,
+        "y": 40
+      }
+    },
+    {
+      "id": "card-2",
+      "recipeId": "gtnhplanner:card-2",
+      "tier": "LV",
+      "count": 10.0,
+      "position": {
+        "x": 360,
+        "y": 40
+      }
+    },
+    {
+      "id": "card-3",
+      "recipeId": "gtnhplanner:card-3",
+      "tier": "LV",
+      "count": 1.0,
+      "position": {
+        "x": 1410,
+        "y": 170
+      }
+    },
+    {
+      "id": "card-4",
+      "recipeId": "gtnhplanner:card-4",
+      "tier": "LV",
+      "count": 1.0,
+      "position": {
+        "x": 700,
+        "y": 280
+      }
+    },
+    {
+      "id": "card-5",
+      "recipeId": "gtnhplanner:card-5",
+      "tier": "LV",
+      "count": 1.0,
+      "position": {
+        "x": 1050,
+        "y": 280
+      }
+    },
+    {
+      "id": "card-6",
+      "recipeId": "gtnhplanner:card-6",
+      "tier": "LV",
+      "count": 1.0,
+      "position": {
+        "x": 40,
+        "y": 380
+      }
+    },
+    {
+      "id": "card-7",
+      "recipeId": "gtnhplanner:card-7",
+      "tier": "LV",
+      "count": 3.0,
+      "position": {
+        "x": 360,
+        "y": 380
+      }
+    }
+  ],
+  "drawers": [
+    {
+      "id": "drawer-1",
+      "resource": {
+        "id": "carbon_dust",
+        "kind": "item"
+      },
+      "mode": "byproduct",
+      "position": {
+        "x": 360,
+        "y": 600
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "wire-1",
+      "from": "card-1",
+      "to": "card-2",
+      "resource": {
+        "id": "fish",
+        "kind": "item"
+      },
+      "fromPort": "output:item:fish",
+      "toPort": "input:item:fish"
+    },
+    {
+      "id": "wire-2",
+      "from": "card-2",
+      "to": "card-3",
+      "resource": {
+        "id": "fish_oil",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:fish_oil",
+      "toPort": "input:fluid:fish_oil"
+    },
+    {
+      "id": "wire-3",
+      "from": "card-4",
+      "to": "card-5",
+      "resource": {
+        "id": "carbon_monoxide",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:carbon_monoxide",
+      "toPort": "input:fluid:carbon_monoxide"
+    },
+    {
+      "id": "wire-4",
+      "from": "card-5",
+      "to": "card-3",
+      "resource": {
+        "id": "methanol",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:methanol",
+      "toPort": "input:fluid:methanol"
+    },
+    {
+      "id": "wire-5",
+      "from": "card-6",
+      "to": "card-7",
+      "resource": {
+        "id": "methane",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:methane",
+      "toPort": "input:fluid:methane"
+    },
+    {
+      "id": "wire-6",
+      "from": "card-7",
+      "to": "card-4",
+      "resource": {
+        "id": "carbon_dust",
+        "kind": "item"
+      },
+      "fromPort": "output:item:carbon_dust",
+      "toPort": "input:item:carbon_dust"
+    },
+    {
+      "id": "wire-7",
+      "from": "card-7",
+      "to": "card-5",
+      "resource": {
+        "id": "hydrogen",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:hydrogen",
+      "toPort": "input:fluid:hydrogen"
+    },
+    {
+      "id": "wire-8",
+      "from": "card-7",
+      "to": "drawer-1",
+      "resource": {
+        "id": "carbon_dust",
+        "kind": "item"
+      },
+      "fromPort": "output:item:carbon_dust",
+      "toPort": "input:item:carbon_dust"
+    }
+  ],
+  "targets": []
+}

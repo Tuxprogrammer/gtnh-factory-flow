@@ -1,0 +1,1487 @@
+{
+  "version": 1,
+  "plan": {
+    "id": "demo-early-baux-ti-w-boards",
+    "name": "Early auto Baux-Ti-W"
+  },
+  "boards": [
+    {
+      "id": "pocket-04cda9f2-2016-401e-8c15-de76200843bf",
+      "name": "Titanium",
+      "position": {
+        "x": 3100,
+        "y": -20
+      }
+    },
+    {
+      "id": "pocket-94163ed2-df25-42ed-898d-fad0b40786a6",
+      "name": "Tungsten",
+      "position": {
+        "x": 3100,
+        "y": 1260
+      }
+    },
+    {
+      "id": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1",
+      "name": "Bauxite",
+      "position": {
+        "x": -20,
+        "y": -20
+      }
+    }
+  ],
+  "cards": [
+    {
+      "id": "card-1",
+      "recipeId": "gtnhplanner:card-1",
+      "machine": "electrolyzer",
+      "tier": "HV",
+      "count": 1.0,
+      "position": {
+        "x": 200,
+        "y": 60
+      },
+      "board": "pocket-04cda9f2-2016-401e-8c15-de76200843bf"
+    },
+    {
+      "id": "card-2",
+      "recipeId": "gtnhplanner:card-2",
+      "machine": "large-chemical-reactor",
+      "tier": "HV",
+      "count": 1.0,
+      "position": {
+        "x": 200,
+        "y": 280
+      },
+      "board": "pocket-04cda9f2-2016-401e-8c15-de76200843bf"
+    },
+    {
+      "id": "card-3",
+      "recipeId": "gtnhplanner:card-3",
+      "machine": "electric-blast-furnace",
+      "tier": "HV",
+      "dials": {
+        "heatingCoil": "nichrome"
+      },
+      "count": 1.0,
+      "position": {
+        "x": 580,
+        "y": 480
+      },
+      "board": "pocket-04cda9f2-2016-401e-8c15-de76200843bf"
+    },
+    {
+      "id": "card-4",
+      "recipeId": "gtnhplanner:card-4",
+      "machine": "vacuum-freezer",
+      "tier": "HV",
+      "count": 1.0,
+      "position": {
+        "x": 1020,
+        "y": 480
+      },
+      "board": "pocket-04cda9f2-2016-401e-8c15-de76200843bf"
+    },
+    {
+      "id": "card-5",
+      "recipeId": "gtnhplanner:card-5",
+      "machine": "large-chemical-reactor",
+      "tier": "HV",
+      "count": 1.0,
+      "position": {
+        "x": 200,
+        "y": 720
+      },
+      "board": "pocket-04cda9f2-2016-401e-8c15-de76200843bf"
+    },
+    {
+      "id": "card-6",
+      "recipeId": "gtnhplanner:card-6",
+      "machine": "electrolyzer",
+      "tier": "HV",
+      "count": 1.0,
+      "position": {
+        "x": 200,
+        "y": 980
+      },
+      "board": "pocket-04cda9f2-2016-401e-8c15-de76200843bf"
+    },
+    {
+      "id": "card-7",
+      "recipeId": "gtnhplanner:card-7",
+      "machine": "autoclave",
+      "tier": "EV",
+      "count": 1.0,
+      "position": {
+        "x": 180,
+        "y": 240
+      },
+      "board": "pocket-94163ed2-df25-42ed-898d-fad0b40786a6"
+    },
+    {
+      "id": "card-8",
+      "recipeId": "gtnhplanner:card-8",
+      "machine": "chemical-reactor",
+      "tier": "HV",
+      "count": 1.0,
+      "position": {
+        "x": 600,
+        "y": 240
+      },
+      "board": "pocket-94163ed2-df25-42ed-898d-fad0b40786a6"
+    },
+    {
+      "id": "card-9",
+      "recipeId": "gtnhplanner:card-9",
+      "machine": "large-chemical-reactor",
+      "tier": "HV",
+      "count": 1.0,
+      "sections": [
+        "gtnhplanner:card-9-r1"
+      ],
+      "position": {
+        "x": 1020,
+        "y": 240
+      },
+      "board": "pocket-94163ed2-df25-42ed-898d-fad0b40786a6"
+    },
+    {
+      "id": "card-10",
+      "recipeId": "gtnhplanner:card-10",
+      "machine": "electric-blast-furnace",
+      "tier": "HV",
+      "dials": {
+        "heatingCoil": "nichrome"
+      },
+      "count": 1.0,
+      "position": {
+        "x": 1440,
+        "y": 280
+      },
+      "board": "pocket-94163ed2-df25-42ed-898d-fad0b40786a6"
+    },
+    {
+      "id": "card-11",
+      "recipeId": "gtnhplanner:card-11",
+      "machine": "electrolyzer",
+      "tier": "EV",
+      "count": 1.0,
+      "sections": [
+        "gtnhplanner:card-11-r1"
+      ],
+      "position": {
+        "x": 600,
+        "y": 460
+      },
+      "board": "pocket-94163ed2-df25-42ed-898d-fad0b40786a6"
+    },
+    {
+      "id": "card-12",
+      "recipeId": "gtnhplanner:card-12",
+      "machine": "electrolyzer",
+      "tier": "HV",
+      "count": 1.0,
+      "position": {
+        "x": 1040,
+        "y": 180
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "card-13",
+      "recipeId": "gtnhplanner:card-13",
+      "machine": "chemical-bath",
+      "tier": "HV",
+      "count": 1.0,
+      "position": {
+        "x": 1040,
+        "y": 440
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "card-14",
+      "recipeId": "gtnhplanner:card-14",
+      "machine": "chemical-reactor",
+      "tier": "HV",
+      "count": 1.0,
+      "position": {
+        "x": 1900,
+        "y": 680
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "card-15",
+      "recipeId": "gtnhplanner:card-15",
+      "machine": "macerator",
+      "tier": "HV",
+      "count": 1.0,
+      "position": {
+        "x": 220,
+        "y": 840
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "card-16",
+      "recipeId": "gtnhplanner:card-16",
+      "machine": "simple-washer",
+      "tier": "HV",
+      "dials": {
+        "steamPressure": "normal"
+      },
+      "count": 1.0,
+      "sections": [
+        "gtnhplanner:card-16-r1"
+      ],
+      "position": {
+        "x": 640,
+        "y": 880
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "card-17",
+      "recipeId": "gtnhplanner:card-17",
+      "machine": "large-chemical-reactor",
+      "tier": "HV",
+      "count": 1.0,
+      "position": {
+        "x": 1900,
+        "y": 900
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "card-18",
+      "recipeId": "gtnhplanner:card-18",
+      "machine": "centrifuge",
+      "tier": "HV",
+      "count": 1.0,
+      "position": {
+        "x": 2480,
+        "y": 900
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "card-19",
+      "recipeId": "gtnhplanner:card-19",
+      "machine": "mixer",
+      "tier": "HV",
+      "count": 1.0,
+      "position": {
+        "x": 1060,
+        "y": 920
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "card-20",
+      "recipeId": "gtnhplanner:card-20",
+      "machine": "fluid-heater",
+      "tier": "HV",
+      "count": 1.0,
+      "position": {
+        "x": 1480,
+        "y": 960
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "card-21",
+      "recipeId": "gtnhplanner:card-21",
+      "machine": "macerator",
+      "tier": "EV",
+      "count": 1.0,
+      "position": {
+        "x": 220,
+        "y": 1060
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "card-22",
+      "recipeId": "gtnhplanner:card-22",
+      "machine": "chemical-reactor",
+      "tier": "HV",
+      "count": 1.0,
+      "position": {
+        "x": 1900,
+        "y": 1240
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "card-23",
+      "recipeId": "gtnhplanner:card-23",
+      "machine": "chemical-reactor",
+      "tier": "HV",
+      "count": 1.0,
+      "position": {
+        "x": 1060,
+        "y": 1340
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "card-24",
+      "recipeId": "gtnhplanner:card-24",
+      "machine": "chemical-reactor",
+      "tier": "HV",
+      "count": 1.0,
+      "position": {
+        "x": 1900,
+        "y": 1460
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    }
+  ],
+  "drawers": [
+    {
+      "id": "drawer-1",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@11028",
+        "kind": "item"
+      },
+      "position": {
+        "x": 1500,
+        "y": 500
+      },
+      "board": "pocket-04cda9f2-2016-401e-8c15-de76200843bf"
+    },
+    {
+      "id": "drawer-2",
+      "resource": {
+        "id": "oxygen",
+        "kind": "fluid"
+      },
+      "mode": "byproduct",
+      "position": {
+        "x": 1500,
+        "y": 600
+      },
+      "board": "pocket-04cda9f2-2016-401e-8c15-de76200843bf"
+    },
+    {
+      "id": "drawer-3",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2910",
+        "kind": "item"
+      },
+      "position": {
+        "x": 940,
+        "y": 60
+      },
+      "board": "pocket-94163ed2-df25-42ed-898d-fad0b40786a6"
+    },
+    {
+      "id": "drawer-4",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2006",
+        "kind": "item"
+      },
+      "position": {
+        "x": 300,
+        "y": 120
+      },
+      "board": "pocket-94163ed2-df25-42ed-898d-fad0b40786a6"
+    },
+    {
+      "id": "drawer-5",
+      "resource": {
+        "id": "bartworks:gt.bwmetagenerateddust@63",
+        "kind": "item"
+      },
+      "position": {
+        "x": 940,
+        "y": 160
+      },
+      "board": "pocket-94163ed2-df25-42ed-898d-fad0b40786a6"
+    },
+    {
+      "id": "drawer-6",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2841",
+        "kind": "item"
+      },
+      "position": {
+        "x": 20,
+        "y": 240
+      },
+      "board": "pocket-94163ed2-df25-42ed-898d-fad0b40786a6"
+    },
+    {
+      "id": "drawer-7",
+      "resource": {
+        "id": "bartworks:gt.bwmetagenerateddust@29901",
+        "kind": "item"
+      },
+      "position": {
+        "x": 1860,
+        "y": 360
+      },
+      "board": "pocket-94163ed2-df25-42ed-898d-fad0b40786a6"
+    },
+    {
+      "id": "drawer-8",
+      "resource": {
+        "id": "water",
+        "kind": "fluid"
+      },
+      "position": {
+        "x": 20,
+        "y": 380
+      },
+      "board": "pocket-94163ed2-df25-42ed-898d-fad0b40786a6"
+    },
+    {
+      "id": "drawer-9",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2026",
+        "kind": "item"
+      },
+      "position": {
+        "x": 1000,
+        "y": 620
+      },
+      "board": "pocket-94163ed2-df25-42ed-898d-fad0b40786a6"
+    },
+    {
+      "id": "drawer-10",
+      "resource": {
+        "id": "hydrogen",
+        "kind": "fluid"
+      },
+      "position": {
+        "x": 1140,
+        "y": 620
+      },
+      "board": "pocket-94163ed2-df25-42ed-898d-fad0b40786a6"
+    },
+    {
+      "id": "drawer-11",
+      "resource": {
+        "id": "oxygen",
+        "kind": "fluid"
+      },
+      "mode": "byproduct",
+      "position": {
+        "x": 1040,
+        "y": 60
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "drawer-12",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2010",
+        "kind": "item"
+      },
+      "mode": "trash",
+      "position": {
+        "x": 1300,
+        "y": 60
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "drawer-13",
+      "resource": {
+        "id": "hydrogen",
+        "kind": "fluid"
+      },
+      "mode": "byproduct",
+      "position": {
+        "x": 1460,
+        "y": 480
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "drawer-14",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2010",
+        "kind": "item"
+      },
+      "position": {
+        "x": 1900,
+        "y": 560
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "drawer-15",
+      "resource": {
+        "id": "oxygen",
+        "kind": "fluid"
+      },
+      "position": {
+        "x": 2160,
+        "y": 560
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "drawer-16",
+      "resource": {
+        "id": "water",
+        "kind": "fluid"
+      },
+      "position": {
+        "x": 1060,
+        "y": 800
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "drawer-17",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2375",
+        "kind": "item"
+      },
+      "position": {
+        "x": 2900,
+        "y": 860
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "drawer-18",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2697",
+        "kind": "item"
+      },
+      "position": {
+        "x": 2320,
+        "y": 900
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "drawer-19",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2037",
+        "kind": "item"
+      },
+      "mode": "byproduct",
+      "position": {
+        "x": 2900,
+        "y": 940
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "drawer-20",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2622",
+        "kind": "item"
+      },
+      "mode": "byproduct",
+      "position": {
+        "x": 2900,
+        "y": 1020
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "drawer-21",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2837",
+        "kind": "item"
+      },
+      "mode": "byproduct",
+      "position": {
+        "x": 2900,
+        "y": 1100
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "drawer-22",
+      "resource": {
+        "id": "gregtech:gt.metaitem.03@5822",
+        "kind": "item"
+      },
+      "position": {
+        "x": 60,
+        "y": 1120
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "drawer-23",
+      "resource": {
+        "id": "sluicejuice",
+        "kind": "fluid"
+      },
+      "mode": "trash",
+      "position": {
+        "x": 2320,
+        "y": 1120
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "drawer-24",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2032",
+        "kind": "item"
+      },
+      "mode": "byproduct",
+      "position": {
+        "x": 2900,
+        "y": 1180
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "drawer-25",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2622",
+        "kind": "item"
+      },
+      "position": {
+        "x": 1180,
+        "y": 1220
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "drawer-26",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2831",
+        "kind": "item"
+      },
+      "mode": "trash",
+      "position": {
+        "x": 220,
+        "y": 1320
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "drawer-27",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2299",
+        "kind": "item"
+      },
+      "mode": "trash",
+      "position": {
+        "x": 480,
+        "y": 1320
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "drawer-28",
+      "resource": {
+        "id": "water",
+        "kind": "fluid"
+      },
+      "position": {
+        "x": 2300,
+        "y": 1400
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    },
+    {
+      "id": "drawer-29",
+      "resource": {
+        "id": "carbondioxide",
+        "kind": "fluid"
+      },
+      "mode": "trash",
+      "position": {
+        "x": 1180,
+        "y": 1560
+      },
+      "board": "pocket-d94ce1f2-0399-44f0-896b-3c81cb8600d1"
+    }
+  ],
+  "wires": [
+    {
+      "id": "wire-1",
+      "from": "card-1",
+      "to": "card-2",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2017",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402017",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402017"
+    },
+    {
+      "id": "wire-2",
+      "from": "card-1",
+      "to": "card-5",
+      "resource": {
+        "id": "chlorine",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:chlorine",
+      "toPort": "input:fluid:chlorine"
+    },
+    {
+      "id": "wire-3",
+      "from": "card-10",
+      "to": "drawer-7",
+      "resource": {
+        "id": "bartworks:gt.bwmetagenerateddust@29901",
+        "kind": "item"
+      },
+      "fromPort": "output:item:bartworks%3Agt.bwmetagenerateddust%4029901",
+      "toPort": "input:item:bartworks%3Agt.bwmetagenerateddust%4029901"
+    },
+    {
+      "id": "wire-4",
+      "from": "card-11",
+      "to": "card-7",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2017",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402017",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402017"
+    },
+    {
+      "id": "wire-5",
+      "from": "card-11",
+      "to": "card-9",
+      "resource": {
+        "id": "chlorine",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:chlorine",
+      "toPort": "r1:input:fluid:chlorine"
+    },
+    {
+      "id": "wire-6",
+      "from": "card-11",
+      "to": "card-9",
+      "resource": {
+        "id": "chlorine",
+        "kind": "fluid"
+      },
+      "fromPort": "r1:output:fluid:chlorine",
+      "toPort": "r1:input:fluid:chlorine"
+    },
+    {
+      "id": "wire-7",
+      "from": "card-11",
+      "to": "drawer-9",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2026",
+        "kind": "item"
+      },
+      "fromPort": "r1:output:item:gregtech%3Agt.metaitem.01%402026",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402026"
+    },
+    {
+      "id": "wire-8",
+      "from": "card-12",
+      "to": "card-13",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2017",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402017",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402017"
+    },
+    {
+      "id": "wire-9",
+      "from": "card-12",
+      "to": "drawer-11",
+      "resource": {
+        "id": "oxygen",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:oxygen",
+      "toPort": "input:fluid:oxygen"
+    },
+    {
+      "id": "wire-10",
+      "from": "card-12",
+      "to": "drawer-12",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2010",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402010",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402010"
+    },
+    {
+      "id": "wire-11",
+      "from": "card-13",
+      "to": "card-19",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2685",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402685",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402685"
+    },
+    {
+      "id": "wire-12",
+      "from": "card-13",
+      "to": "drawer-13",
+      "resource": {
+        "id": "hydrogen",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:hydrogen",
+      "toPort": "input:fluid:hydrogen"
+    },
+    {
+      "id": "wire-13",
+      "from": "card-14",
+      "to": "card-17",
+      "resource": {
+        "id": "carbondioxide",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:carbondioxide",
+      "toPort": "input:fluid:carbondioxide"
+    },
+    {
+      "id": "wire-14",
+      "from": "card-15",
+      "to": "card-16",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@3822",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%403822",
+      "toPort": "r1:input:item:gregtech%3Agt.metaitem.01%403822"
+    },
+    {
+      "id": "wire-15",
+      "from": "card-15",
+      "to": "drawer-26",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2831",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402831",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402831"
+    },
+    {
+      "id": "wire-16",
+      "from": "card-16",
+      "to": "card-19",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@6822",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%406822",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%406822"
+    },
+    {
+      "id": "wire-17",
+      "from": "card-16",
+      "to": "card-24",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2822",
+        "kind": "item"
+      },
+      "fromPort": "r1:output:item:gregtech%3Agt.metaitem.01%402822",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402822"
+    },
+    {
+      "id": "wire-18",
+      "from": "card-17",
+      "to": "card-12",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2695",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402695",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402695"
+    },
+    {
+      "id": "wire-19",
+      "from": "card-17",
+      "to": "card-18",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2413",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402413",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402413"
+    },
+    {
+      "id": "wire-20",
+      "from": "card-17",
+      "to": "card-23",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2823",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402823",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402823"
+    },
+    {
+      "id": "wire-21",
+      "from": "card-17",
+      "to": "drawer-18",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2697",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402697",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402697"
+    },
+    {
+      "id": "wire-22",
+      "from": "card-17",
+      "to": "drawer-23",
+      "resource": {
+        "id": "sluicejuice",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:sluicejuice",
+      "toPort": "input:fluid:sluicejuice"
+    },
+    {
+      "id": "wire-23",
+      "from": "card-18",
+      "to": "drawer-17",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2375",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402375",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402375"
+    },
+    {
+      "id": "wire-24",
+      "from": "card-18",
+      "to": "drawer-19",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2037",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402037",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402037"
+    },
+    {
+      "id": "wire-25",
+      "from": "card-18",
+      "to": "drawer-20",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2622",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402622",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402622"
+    },
+    {
+      "id": "wire-26",
+      "from": "card-18",
+      "to": "drawer-21",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2837",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402837",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402837"
+    },
+    {
+      "id": "wire-27",
+      "from": "card-18",
+      "to": "drawer-24",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2032",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402032",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402032"
+    },
+    {
+      "id": "wire-28",
+      "from": "card-19",
+      "to": "card-20",
+      "resource": {
+        "id": "bauxiteslurry",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:bauxiteslurry",
+      "toPort": "input:fluid:bauxiteslurry"
+    },
+    {
+      "id": "wire-29",
+      "from": "card-2",
+      "to": "card-1",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2817",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402817",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402817"
+    },
+    {
+      "id": "wire-30",
+      "from": "card-2",
+      "to": "card-3",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2018",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402018",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402018"
+    },
+    {
+      "id": "wire-31",
+      "from": "card-20",
+      "to": "card-17",
+      "resource": {
+        "id": "headedbauxiteslurry",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:headedbauxiteslurry",
+      "toPort": "input:fluid:headedbauxiteslurry"
+    },
+    {
+      "id": "wire-32",
+      "from": "card-21",
+      "to": "card-15",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@5822",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%405822",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%405822"
+    },
+    {
+      "id": "wire-33",
+      "from": "card-21",
+      "to": "card-16",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@5822",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%405822",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%405822"
+    },
+    {
+      "id": "wire-34",
+      "from": "card-21",
+      "to": "drawer-26",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2831",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402831",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402831"
+    },
+    {
+      "id": "wire-35",
+      "from": "card-21",
+      "to": "drawer-27",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2299",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402299",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402299"
+    },
+    {
+      "id": "wire-36",
+      "from": "card-22",
+      "to": "card-17",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2698",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402698",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402698"
+    },
+    {
+      "id": "wire-37",
+      "from": "card-22",
+      "to": "card-24",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2685",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402685",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402685"
+    },
+    {
+      "id": "wire-38",
+      "from": "card-23",
+      "to": "drawer-25",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2622",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402622",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402622"
+    },
+    {
+      "id": "wire-39",
+      "from": "card-23",
+      "to": "drawer-29",
+      "resource": {
+        "id": "carbondioxide",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:carbondioxide",
+      "toPort": "input:fluid:carbondioxide"
+    },
+    {
+      "id": "wire-40",
+      "from": "card-24",
+      "to": "card-22",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2696",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402696",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402696"
+    },
+    {
+      "id": "wire-41",
+      "from": "card-3",
+      "to": "card-2",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2377",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402377",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402377"
+    },
+    {
+      "id": "wire-42",
+      "from": "card-3",
+      "to": "card-4",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@12028",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%4012028",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%4012028"
+    },
+    {
+      "id": "wire-43",
+      "from": "card-4",
+      "to": "drawer-1",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@11028",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%4011028",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%4011028"
+    },
+    {
+      "id": "wire-44",
+      "from": "card-5",
+      "to": "card-3",
+      "resource": {
+        "id": "titaniumtetrachloride",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:titaniumtetrachloride",
+      "toPort": "input:fluid:titaniumtetrachloride"
+    },
+    {
+      "id": "wire-45",
+      "from": "card-5",
+      "to": "card-6",
+      "resource": {
+        "id": "carbonmonoxide",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:carbonmonoxide",
+      "toPort": "input:fluid:carbonmonoxide"
+    },
+    {
+      "id": "wire-46",
+      "from": "card-6",
+      "to": "card-5",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2010",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402010",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402010"
+    },
+    {
+      "id": "wire-47",
+      "from": "card-6",
+      "to": "drawer-2",
+      "resource": {
+        "id": "oxygen",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:oxygen",
+      "toPort": "input:fluid:oxygen"
+    },
+    {
+      "id": "wire-48",
+      "from": "card-7",
+      "to": "card-8",
+      "resource": {
+        "id": "sodium tungstate",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:sodium%20tungstate",
+      "toPort": "input:fluid:sodium%20tungstate"
+    },
+    {
+      "id": "wire-49",
+      "from": "card-7",
+      "to": "drawer-4",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2006",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402006",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402006"
+    },
+    {
+      "id": "wire-50",
+      "from": "card-8",
+      "to": "card-11",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2817",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402817",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402817"
+    },
+    {
+      "id": "wire-51",
+      "from": "card-8",
+      "to": "card-9",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2910",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402910",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402910"
+    },
+    {
+      "id": "wire-52",
+      "from": "card-9",
+      "to": "card-10",
+      "resource": {
+        "id": "bartworks:gt.bwmetagenerateddust@29900",
+        "kind": "item"
+      },
+      "fromPort": "output:item:bartworks%3Agt.bwmetagenerateddust%4029900",
+      "toPort": "input:item:bartworks%3Agt.bwmetagenerateddust%4029900"
+    },
+    {
+      "id": "wire-53",
+      "from": "card-9",
+      "to": "card-9",
+      "resource": {
+        "id": "hydrochloricacid_gt5u",
+        "kind": "fluid"
+      },
+      "fromPort": "r1:output:fluid:hydrochloricacid_gt5u",
+      "toPort": "input:fluid:hydrochloricacid_gt5u"
+    },
+    {
+      "id": "wire-54",
+      "from": "card-9",
+      "to": "drawer-5",
+      "resource": {
+        "id": "bartworks:gt.bwmetagenerateddust@63",
+        "kind": "item"
+      },
+      "fromPort": "output:item:bartworks%3Agt.bwmetagenerateddust%4063",
+      "toPort": "input:item:bartworks%3Agt.bwmetagenerateddust%4063"
+    },
+    {
+      "id": "wire-55",
+      "from": "drawer-10",
+      "to": "card-9",
+      "resource": {
+        "id": "hydrogen",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:hydrogen",
+      "toPort": "r1:input:fluid:hydrogen"
+    },
+    {
+      "id": "wire-56",
+      "from": "drawer-14",
+      "to": "card-14",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2010",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402010",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402010"
+    },
+    {
+      "id": "wire-57",
+      "from": "drawer-15",
+      "to": "card-14",
+      "resource": {
+        "id": "oxygen",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:oxygen",
+      "toPort": "input:fluid:oxygen"
+    },
+    {
+      "id": "wire-58",
+      "from": "drawer-16",
+      "to": "card-13",
+      "resource": {
+        "id": "water",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:water",
+      "toPort": "input:fluid:water"
+    },
+    {
+      "id": "wire-59",
+      "from": "drawer-16",
+      "to": "card-16",
+      "resource": {
+        "id": "water",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:water",
+      "toPort": "input:fluid:water"
+    },
+    {
+      "id": "wire-60",
+      "from": "drawer-16",
+      "to": "card-16",
+      "resource": {
+        "id": "water",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:water",
+      "toPort": "r1:input:fluid:water"
+    },
+    {
+      "id": "wire-61",
+      "from": "drawer-16",
+      "to": "card-19",
+      "resource": {
+        "id": "water",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:water",
+      "toPort": "input:fluid:water"
+    },
+    {
+      "id": "wire-62",
+      "from": "drawer-17",
+      "to": "card-5",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2375",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402375",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402375"
+    },
+    {
+      "id": "wire-63",
+      "from": "drawer-22",
+      "to": "card-21",
+      "resource": {
+        "id": "gregtech:gt.metaitem.03@5822",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.03%405822",
+      "toPort": "input:item:gregtech%3Agt.metaitem.03%405822"
+    },
+    {
+      "id": "wire-64",
+      "from": "drawer-25",
+      "to": "card-19",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2622",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402622",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402622"
+    },
+    {
+      "id": "wire-65",
+      "from": "drawer-28",
+      "to": "card-22",
+      "resource": {
+        "id": "water",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:water",
+      "toPort": "input:fluid:water"
+    },
+    {
+      "id": "wire-66",
+      "from": "drawer-28",
+      "to": "card-24",
+      "resource": {
+        "id": "water",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:water",
+      "toPort": "input:fluid:water"
+    },
+    {
+      "id": "wire-67",
+      "from": "drawer-3",
+      "to": "card-9",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2910",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402910",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402910"
+    },
+    {
+      "id": "wire-68",
+      "from": "drawer-5",
+      "to": "card-11",
+      "resource": {
+        "id": "bartworks:gt.bwmetagenerateddust@63",
+        "kind": "item"
+      },
+      "fromPort": "output:item:bartworks%3Agt.bwmetagenerateddust%4063",
+      "toPort": "r1:input:item:bartworks%3Agt.bwmetagenerateddust%4063"
+    },
+    {
+      "id": "wire-69",
+      "from": "drawer-5",
+      "to": "card-8",
+      "resource": {
+        "id": "bartworks:gt.bwmetagenerateddust@63",
+        "kind": "item"
+      },
+      "fromPort": "output:item:bartworks%3Agt.bwmetagenerateddust%4063",
+      "toPort": "input:item:bartworks%3Agt.bwmetagenerateddust%4063"
+    },
+    {
+      "id": "wire-70",
+      "from": "drawer-6",
+      "to": "card-7",
+      "resource": {
+        "id": "gregtech:gt.metaitem.01@2841",
+        "kind": "item"
+      },
+      "fromPort": "output:item:gregtech%3Agt.metaitem.01%402841",
+      "toPort": "input:item:gregtech%3Agt.metaitem.01%402841"
+    },
+    {
+      "id": "wire-71",
+      "from": "drawer-8",
+      "to": "card-7",
+      "resource": {
+        "id": "water",
+        "kind": "fluid"
+      },
+      "fromPort": "output:fluid:water",
+      "toPort": "input:fluid:water"
+    }
+  ],
+  "targets": []
+}

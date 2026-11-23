@@ -107,6 +107,14 @@
       ],
       "generator": "npx tsx tools/conformance/schema/write.ts (check with --check), which also rewrites this manifest"
     },
+    "slim": {
+      "specifies": "The slim snapshot the game's Ask Dave panel attaches to a question (docs/agent-api.md, The slim snapshot): mod/<plan>.json is what the mod's own code (client/dave/SlimSnapshot) makes of its demo plans, which the website's plans/import validation must accept.",
+      "readers": [
+        "mod: importer/SlimSnapshotTest (writes slim/mod with -PwriteSlim)",
+        "website: src/lib/agent-api/slim-conformance.test.ts"
+      ],
+      "generator": "SlimSnapshotTest in jvm/mod with -PwriteSlim"
+    },
     "solver/corpus": {
       "specifies": "The solver's whole answer on a plan. inputs/<case>.json is a SolveInput as the mod's SolveInputJson writes it; goldens/<case>.json is the digest of the answer both solvers must give, equal to 1e-6 relative. platline-x4 and platline-x10 have a golden only: their input is platline tiled 4 and 10 times. The 16 gtnh-flow-* inputs are dumps of yaml charts the mod loads itself.",
       "readers": [
@@ -528,6 +536,21 @@
       "area": "schema",
       "bytes": 6531,
       "sha256": "2fecabecbdfc7c3e47418f3df7e974c177efec2a08314ddd1c26447be6b4be16"
+    },
+    "slim/mod/alumina-line-shared-reactor.json": {
+      "area": "slim",
+      "bytes": 19750,
+      "sha256": "f2cc416aa9d21e1d1450994d44c18f40bffd0688db57cd6d3efd8c488f2f3ac0"
+    },
+    "slim/mod/biodiesel-demo.json": {
+      "area": "slim",
+      "bytes": 3595,
+      "sha256": "7e20ee32f8f16b7cb054431d293d501e7ccbc5deb6eec1b2f50391ef90204760"
+    },
+    "slim/mod/early-baux-ti-w-boards.json": {
+      "area": "slim",
+      "bytes": 36180,
+      "sha256": "b3121633ff2894a2691ce1ca13d611aadb48572ecc20b86bdea5243d1cfb1e8f"
     },
     "solver/corpus/goldens/alumina-line-shared-reactor.json": {
       "area": "solver/corpus",

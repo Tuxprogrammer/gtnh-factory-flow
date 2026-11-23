@@ -100,7 +100,7 @@ function nextNumber(ids: string[], prefix: string): number {
 }
 
 /** Every reference in the snapshot names something in it; ids are unique. */
-function checkSnapshot(snapshot: SlimSnapshot): void {
+export function checkSnapshot(snapshot: SlimSnapshot): void {
   if (snapshot.cards.length > MAX_IMPORTED_CARDS) {
     throw new AgentApiError(
       "plan_too_big",

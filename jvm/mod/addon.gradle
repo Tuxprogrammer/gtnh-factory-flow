@@ -16,6 +16,8 @@ test {
     if (project.hasProperty('writeVectors')) systemProperty 'gtnh.writeVectors', 'true'
     // The board scenarios' mod answers in conformance/board (S1ParityTest): -PwriteBoardAnswers writes them afresh.
     if (project.hasProperty('writeBoardAnswers')) systemProperty 'gtnhplanner.board.writeAnswers', 'true'
+    // The Ask Dave panel's plan snapshots in conformance/slim/mod (SlimSnapshotTest): -PwriteSlim writes them afresh.
+    if (project.hasProperty('writeSlim')) systemProperty 'gtnhplanner.slim.write', 'true'
     if (project.hasProperty('stages')) systemProperty 'gtnhplanner.stages', 'true'
     if (project.hasProperty('spacing')) systemProperty 'gtnhplanner.spacing', project.property('spacing')
     if (project.hasProperty('crop')) systemProperty 'gtnhplanner.crop', project.property('crop')

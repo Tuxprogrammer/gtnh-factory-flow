@@ -40,6 +40,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "4.7.0-tux.12",
+    date: "2026-11-23",
+    headline: "The in-game assistant can read your plan",
+    notes: [
+      "Cards you built in game are matched to their recipes when the assistant looks at your plan, so it can solve and add to them.",
+      "A refused drawer drop no longer deletes unwired drawers elsewhere in the plan.",
+    ],
+  },
+  {
     version: "4.7.0-tux.11",
     date: "2026-11-23",
     headline: "Renamed items keep their wires, and more fixes",

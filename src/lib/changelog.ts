@@ -40,6 +40,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "4.7.0-tux.11",
+    date: "2026-11-23",
+    headline: "Renamed items keep their wires, and more fixes",
+    notes: [
+      "Plans that use items the game renamed keep their wires. An edit no longer removes a wire it did not touch.",
+      "Renaming or moving a plan while it is open live no longer throws away recent edits.",
+      "Adding a recipe to a card raises its tier and amps so every recipe on it can run.",
+      "Wiring or dropping a second drawer on a port that already has one says why it was refused.",
+      "Plans solve correctly on the backup solver when the main one cannot load.",
+      "Chemical Plant, Large Thermal Refinery and Large Fluid Extractor cards get their coil choice back, and the Multiblock Mixer, Electric Implosion Compressor and Solar Factory their casing choices, once the recipe data is rebuilt.",
+    ],
+  },
+  {
     version: "4.7.0-tux.10",
     date: "2026-11-22",
     headline: "Void Miners, Combine and a round of fixes",

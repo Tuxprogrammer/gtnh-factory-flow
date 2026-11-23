@@ -1,6 +1,6 @@
 # Every GregTech card as the website computes it
 
-> Since this was written the port moved to core-machines (`jvm/core/core-machines`, with its data in that module's `src/main/resources/assets/gtnhplanner/machines/`), and `tools/audits/export-mod-machine-data.mjs` is not in this repository, so `handlers.json` has no generator here.
+> Since this was written the port moved to core-machines (`jvm/core/core-machines`, with its data in that module's `src/main/resources/assets/gtnhplanner/machines/`). `handlers.json` is written by `tools/audits/export-mod-machine-data.mjs` from a dataset; the regeneration step is in `tools/dataset-pipeline/CLAUDE.md`.
 
 The mod's GregTech cards run on generic engine knobs (speed, parallels, perfect overclocks, overclock limits, heat
 overrides...) fed to GT's `OverclockCalculator`. The website knows each machine instead: its curated machine table
@@ -33,7 +33,7 @@ parallels paid before overclocks, voltage caps for singleblocks, perfect then no
 
 1. **Data from the website, never hand-edited** (as `assets/gtnhplanner/power/`): `assets/gtnhplanner/machines/`
    - `handlers.json`: per recipe map, its handler templates and recipe-level controls, from the dataset
-     (`tools/audits/export-mod-machine-data.mjs` in the website repo).
+     (`tools/audits/export-mod-machine-data.mjs`).
    - EEC mob data and fusion startups by recipe fingerprint, or read from the game where it has them.
 2. **The pure port** `machines/web/` (headless, like `power/` and `machines/`): the website's recipe, handler and
    control shapes; the machine table (entries with their formulas); the generic overclock path, hatches and power

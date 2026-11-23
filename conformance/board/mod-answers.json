@@ -5586,21 +5586,8 @@
         "00000000-0000-0000-0000-0000000000c9": 1.0
       },
       "unmet": [],
-      "spares": [
-        {
-          "key": "00000000-0000-0000-0000-000000000001:o:0",
-          "importing": false,
-          "bearers": [
-            {
-              "anchor": "00000000-0000-0000-0000-000000000001:o:0",
-              "max": 1.0,
-              "share": 1.0,
-              "solverPick": true
-            }
-          ]
-        }
-      ],
-      "options": 1
+      "spares": [],
+      "options": 0
     },
     "board": {
       "nothingToSolveFor": false,

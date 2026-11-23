@@ -148,6 +148,20 @@ export function evaluateSupport(ctx: SolveContext, open: ReadonlySet<number>): S
   return evaluateSupportWith(ctx, open)?.point ?? null;
 }
 
+/** The gates of `support` that carry flow, above dust, at a port no drawer is linked to: a forced leftover. In order. */
+function leftoverGates(
+  ctx: SolveContext,
+  externals: ArrayLike<number>,
+  support: ReadonlySet<number>,
+): number[] {
+  const scales = dustScales(ctx.model, null, null, externals).ports;
+  return sorted(support).filter((gate) =>
+    ctx.model.gates[gate]!.ports.some(
+      (p) => !ctx.drawnPorts.has(p) && externals[p]! > NUMERICS.dust * scales[p]!,
+    ),
+  );
+}
+
 function asAlternative(
   ctx: SolveContext,
   externals: ArrayLike<number>,
@@ -194,13 +208,16 @@ export function enumerate(
   const chosen = ctx.keyOf(incumbent);
   points.set(keyString(chosen), point);
   const options: Alternative[] = [];
-  // One "this is what it does now" row per open gate: every question has its current answer at the top of its group.
-  for (const gate of sorted(incumbent)) {
+  // The decisions: the open gates with a leftover. What crosses at a port a drawer is linked to is the player's own
+  // supply or sink (docs/up-to.md, "Drawers and buffers"), so a gate carrying flow only there has nothing to place.
+  const decisions = leftoverGates(ctx, point.externals, incumbent);
+  // One "this is what it does now" row per decision: every question has its current answer at the top of its group.
+  for (const gate of decisions) {
     options.push(asAlternative(ctx, point.externals, incumbent, gate, gate, "DEFAULT"));
   }
   const notes: Note[] = [];
   // Nothing else could open, so nothing else could differ.
-  if (incumbent.size === 0 || ctx.model.gates.length === incumbent.size) {
+  if (decisions.length === 0 || ctx.model.gates.length === incumbent.size) {
     return { chosen, options, complete: true, notes };
   }
 
@@ -215,7 +232,6 @@ export function enumerate(
 
   // What the answer opens, gates carrying too little to show included: a swap keeps them open.
   const open = ctx.openGates.size === 0 ? incumbent : ctx.openGates;
-  const decisions = sorted(incumbent);
   const movable = decisions.map((out) => {
     const without = new Set<number>();
     for (let g = 0; g < ctx.model.gates.length; g++) if (g !== out) without.add(g);

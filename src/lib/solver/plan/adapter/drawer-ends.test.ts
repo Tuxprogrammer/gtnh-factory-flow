@@ -129,6 +129,38 @@ const sharedBothPorts = () => {
   return plan;
 };
 
+/**
+ * m makes 10 c (pinned by its g drawer) into a buffer for u (15 c -> d); v (d -> p) is asked 1 p. A source drawer on u's
+ * port brings the other 5 c. Closing that drawer and buying 1/3 d at v's wired input balances too, but the drawer's
+ * draw is the player's own supply, not a leftover to place: no leftover, nothing to choose. `withDrawer` false is the
+ * same plan short of the drawer, where the 5 c are forced and that is a leftover with both places.
+ */
+const bufferAndSourceUpstream = (withDrawer: boolean) =>
+  project({
+    recipes: [
+      recipe("rm", [["raw", 1]], [["c", 10], ["g", 1]]),
+      recipe("ru", [["c", 15]], [["d", 1]]),
+      recipe("rv", [["d", 1]], [["p", 1]]),
+    ],
+    nodes: [node("m", "rm"), node("u", "ru"), node("v", "rv")],
+    storages: [
+      drawer("raws", "raw"),
+      drawer("gd", "g", { targetMode: "exact", targetPerSecond: 1 }),
+      drawer("pd", "p", { targetMode: "exact", targetPerSecond: 1 }),
+      drawer("bf", "c"),
+      ...(withDrawer ? [drawer("cs", "c")] : []),
+    ],
+    edges: [
+      wire("raws-m", "raws", "m", "raw", {}, { fromDrawer: true }),
+      wire("m-gd", "m", "gd", "g", {}, { toDrawer: true }),
+      wire("m-bf", "m", "bf", "c", {}, { toDrawer: true }),
+      wire("bf-u", "bf", "u", "c", {}, { fromDrawer: true }),
+      ...(withDrawer ? [wire("cs-u", "cs", "u", "c", {}, { fromDrawer: true })] : []),
+      wire("u-v", "u", "v", "d"),
+      wire("v-pd", "v", "pd", "p", {}, { toDrawer: true }),
+    ],
+  });
+
 const rate = (result: ReturnType<typeof calculateThroughput>, id: string) =>
   result.nodes[id]!.operationRatePerSecond * Math.min(1, Math.max(0, result.nodes[id]!.utilization));
 
@@ -185,5 +217,32 @@ describe.each([
     expect(result.storages["bf"]!.consumedPerSecond).toBeCloseTo(10, 6);
     expect(result.storages["cs"]!.consumedPerSecond).toBeCloseTo(5, 6);
     expect(result.storages["cb"]!.producedPerSecond).toBeCloseTo(0, 6);
+  });
+
+  it("what a drawer brings or takes on a wired port is no leftover, beside a buffer or not", () => {
+    use();
+    const plans = [ringWithSource, closedRingWithByproduct, sharedMakerPort, sharedUserPort, sharedBothPorts];
+    for (const plan of plans) {
+      expect(calculateThroughput(plan(), { generatedAt: "t" }).plan!.leftovers, plan.name).toEqual([]);
+    }
+  });
+
+  it("a shortfall a source drawer brings beside a buffer has no other place to choose", () => {
+    use();
+    const result = calculateThroughput(bufferAndSourceUpstream(true), { generatedAt: "t" });
+    expect(result.plan!.forced).toEqual([]);
+    expect(result.plan!.leftovers).toEqual([]);
+    expect(rate(result, "u")).toBeCloseTo(1, 6);
+    expect(result.storages["cs"]!.consumedPerSecond).toBeCloseTo(5, 6);
+  });
+
+  it("the same shortfall with no drawer is forced, and a leftover with both places", () => {
+    use();
+    const result = calculateThroughput(bufferAndSourceUpstream(false), { generatedAt: "t" });
+    expect(result.plan!.forced.length).toBe(1);
+    const leftovers = result.plan!.leftovers;
+    expect(leftovers.length).toBe(1);
+    expect(leftovers[0]!.importing).toBe(true);
+    expect(leftovers[0]!.bearers.map((b) => b.resourceKey).sort()).toEqual(["item:c", "item:d"]);
   });
 });

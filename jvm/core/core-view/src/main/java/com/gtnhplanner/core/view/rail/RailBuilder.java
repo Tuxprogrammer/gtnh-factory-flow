@@ -346,9 +346,11 @@ public final class RailBuilder {
             }
             final Double sp = spared.get(line.key());
             final double left = Math.max(0, line.amount() - (sp == null ? 0 : sp));
-            if (left <= Math.max(EPS, line.amount() * 1e-4) && line.drawers().isEmpty() && line.pins().isEmpty()
+            // What the spares leave within rounding of nothing is nothing: a kept line reads 0, never the rounding.
+            final boolean none = left <= Math.max(EPS, line.amount() * 1e-4);
+            if (none && line.drawers().isEmpty() && line.pins().isEmpty()
                 && !(view.keepsOpen() && !line.open().isEmpty())) continue;
-            kept.add(withAmount(line, left));
+            kept.add(withAmount(line, none ? 0 : left));
         }
         final List<RailView.Line> shown = new ArrayList<>();
         for (final RailView.Line line : kept) if (matches(filter, line.label())) shown.add(line);

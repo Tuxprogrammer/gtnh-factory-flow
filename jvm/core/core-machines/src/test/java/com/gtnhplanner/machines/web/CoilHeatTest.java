@@ -98,8 +98,8 @@ class CoilHeatTest {
             "Industrial Autoclave",
             "Mega Alloy Blast Smelter",
             "Industrial Coke Oven",
-            // The Chemical Plant and the Large Thermal Refinery are not listed: the 2.9 datasets give them no coil
-            // control (the pipeline does not read their 2.9 tooltips), and handlers.json is the dataset's.
+            "Chemical Plant",
+            "Large Thermal Refinery",
             "Electric Blast Furnace")) assertTrue(checked.contains(machine), machine + " was checked: " + checked);
     }
 }

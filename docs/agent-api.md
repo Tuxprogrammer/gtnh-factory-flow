@@ -203,7 +203,7 @@ Response: `{dataset, recipe}` where `recipe` is
 
 Example: `docs/agent-api/examples/recipes-get.json`.
 
-## plans/* (drafts)
+## plans/\* (drafts)
 
 A draft is a plan the server holds for the assistant to build: a real plan in the site's own model (the same plan the
 planner opens, in plan mode), in the server's memory, under a random id. It is kept 24 hours after its last change,

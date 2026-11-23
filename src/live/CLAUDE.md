@@ -14,7 +14,8 @@ the game is `docs/design/cloud-live.md` in the game's repository: frames and ops
 - A batch applies to the room's plan in memory at once and is journalled (`journal.ts` groups a turn's lines into one
   write and one sync); it is broadcast only once its line is on disk. Snapshots, flushes and resend acks wait for the
   journal (`Room.whenDurable`). A journal that cannot be written fails the room (`peer.reload`: sockets close 1012).
-  A flush trims the journal. Start-up replays every journal. Never send anything that is not on disk yet.
+  A flush trims the journal. Start-up replays every journal, but only over the stored plan it was made on
+  (`.stamp.json` beside it): a plan written from outside meanwhile wins and the journal is dropped. Never send anything that is not on disk yet.
 - A batch costs what it touches, never the plan's size: the room's plan is `LiveDoc` (`doc.ts`, an id index per
   collection kept for the room's life, checked against `applyOps` in `doc.test.ts`), batches are staged and checked
   there (`batch.ts`). Nothing per op may scan a collection. `doc.test.ts` holds the biggest batch on a 40,000-card

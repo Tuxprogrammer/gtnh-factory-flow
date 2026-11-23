@@ -22,6 +22,12 @@ import { docKey, parseDocKey } from "@/lib/live/protocol";
  * recently applied batch ids with their seqs, written by every trim before
  * the entries go. A batch resent after a restart whose journal was already
  * flushed is then still known, and is acknowledged rather than applied twice.
+ *
+ * Beside them, `<ownerId>.<designId>.stamp.json` names the stored plan the
+ * journal's batches were made on: the `plan_updated_at` values the database
+ * row may hold while they still apply (two while a flush is on its way). A
+ * journal whose plan was written from outside while the service was down is
+ * then known on start, and dropped rather than replayed over the new plan.
  */
 
 /** A batch id and the seq it was applied as. */
@@ -65,6 +71,10 @@ export class Journal {
 
   cidsFileFor(doc: string): string {
     return this.fileFor(doc).replace(/\.jsonl$/, ".cids.json");
+  }
+
+  stampsFileFor(doc: string): string {
+    return this.fileFor(doc).replace(/\.jsonl$/, ".stamp.json");
   }
 
   /** Every doc with a journal on disk. */
@@ -208,6 +218,55 @@ export class Journal {
   }
 
   /**
+   * The `plan_updated_at` values the journal's batches were made on (none
+   * known: an empty list). Undefined when there is no such file: what the
+   * batches were made on is not known, and they replay as they are.
+   */
+  async readStamps(doc: string): Promise<string[] | undefined> {
+    let text: string;
+    try {
+      text = await readFile(this.stampsFileFor(doc), "utf8");
+    } catch {
+      return undefined;
+    }
+    try {
+      const parsed = JSON.parse(text) as unknown;
+      return Array.isArray(parsed) && parsed.every((stamp) => typeof stamp === "string")
+        ? (parsed as string[])
+        : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
+   * Names the stored plan the batches journalled from now on are made on,
+   * synced to disk before it settles (in order with the doc's other writes).
+   * Throws when it cannot be written.
+   */
+  writeStamps(doc: string, stamps: string[]): Promise<void> {
+    return this.serial(doc, async () => {
+      const file = this.stampsFileFor(doc);
+      const temp = `${file}.tmp`;
+      await mkdir(this.dir, { recursive: true });
+      const handle = await open(temp, "w");
+      try {
+        await handle.write(JSON.stringify(stamps));
+        await handle.datasync();
+      } finally {
+        await handle.close();
+      }
+      try {
+        await rename(temp, file);
+      } catch {
+        // As for the batch ids: a rename refused for a moment writes in place.
+        await writeFile(file, JSON.stringify(stamps));
+        await rm(temp, { force: true });
+      }
+    });
+  }
+
+  /**
    * Keeps only the entries after `seq` (a flush reached it): usually removes
    * the file. `cids`, the room's recently applied batch ids, are written first
    * (whole, through a rename), so at no moment are they in neither file; when
@@ -260,6 +319,7 @@ export class Journal {
     return this.serial(doc, async () => {
       await rm(this.fileFor(doc), { force: true });
       await rm(this.cidsFileFor(doc), { force: true });
+      await rm(this.stampsFileFor(doc), { force: true });
     });
   }
 

@@ -1,5 +1,5 @@
 {
-  "_doc": "Board states built the same way on both sides: the mod's test (S1ParityTest, a throwaway JUnit in the mod) builds each as a Graph and records its SolveInput, answer and board readouts in mod-answers.json; scenarios.test.ts builds each as a FactoryProject and compares. Machine ids are 1..n, edges 101.., drawers 201.. (UUIDs 00000000-0000-0000-0000-<n>). Ports are indices into in/out. A resource 'f:<name>' is a fluid. kind: custom-supply / custom-request (rate in out/in qty, pinned at one), tank (a fluid tank: free, unpinned, a craft a second).",
+  "_doc": "Board states built the same way on both sides: the mod's test (S1ParityTest, a JUnit in jvm/mod) builds each as a Graph and records its SolveInput, answer and board readouts in mod-answers.json; scenarios.test.ts builds each as a FactoryProject and compares. Machine ids are 1..n, edges 101.., drawers 201.. (UUIDs 00000000-0000-0000-0000-<n>). Ports are indices into in/out. A resource 'f:<name>' is a fluid. kind: custom-supply / custom-request (rate in out/in qty, pinned at one), tank (a fluid tank: free, unpinned, a craft a second).",
   "scenarios": [
     {
       "name": "single-unpinned",

@@ -14,6 +14,8 @@ test {
     if (project.hasProperty('writePlans')) systemProperty 'gtnhplanner.plans.write', 'true'
     // The recipe overlay's number text in conformance/format (RecipeOverlayFormatTest): -PwriteVectors writes it afresh.
     if (project.hasProperty('writeVectors')) systemProperty 'gtnh.writeVectors', 'true'
+    // The board scenarios' mod answers in conformance/board (S1ParityTest): -PwriteBoardAnswers writes them afresh.
+    if (project.hasProperty('writeBoardAnswers')) systemProperty 'gtnhplanner.board.writeAnswers', 'true'
     if (project.hasProperty('stages')) systemProperty 'gtnhplanner.stages', 'true'
     if (project.hasProperty('spacing')) systemProperty 'gtnhplanner.spacing', project.property('spacing')
     if (project.hasProperty('crop')) systemProperty 'gtnhplanner.crop', project.property('crop')

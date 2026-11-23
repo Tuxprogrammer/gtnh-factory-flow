@@ -824,12 +824,13 @@ describe("the live service", { timeout: 30_000 }, () => {
     await until(() => ann.closed);
     expect(ann.closeCode).toBe(1012);
     expect((await storedRow(designId)).plan.notes).toBe("From REST");
-    // Joining again opens the plan afresh: the save, with the journalled edit on top.
+    // Joining again opens the plan afresh: the save wins, and the edit journalled on the plan before it goes.
     const again = await TestClient.open(port, { who: "ann" });
     await again.hello();
     const snapshot = await again.join(doc);
+    expect(snapshot.replaced).toBe(true);
     expect(snapshot.plan.notes).toBe("From REST");
-    expect((snapshot.plan.tasks as Array<{ title: string }>)[0]!.title).toBe("Late");
+    expect((snapshot.plan.tasks as Array<{ title: string }>)[0]!.title).toBe("First");
   });
 
   it("lets in browsers from its own origins and the game, which sends none", async () => {
@@ -1239,6 +1240,92 @@ describe("a plan written from outside the live service", { timeout: 30_000 }, ()
     const row = await storedRow(designId);
     expect(titleOf(row.plan)).toBe("Own 8");
     expect(Number(row.seq)).toBe(8);
+  });
+
+  it("drops a journal made on the old plan when the plan was written while the service was down", async () => {
+    const first = await startService({
+      timing: { flushMs: 60_000, renewMs: 60_000, leaseMs: 90_000 },
+    });
+    const { designId, doc, plan } = await makeDesign();
+    const ann = await TestClient.open(first.port, { who: "ann" });
+    await ann.hello();
+    await ann.join(doc);
+    for (let i = 1; i <= 2; i += 1) {
+      ann.send({
+        t: "ops",
+        doc,
+        base: i - 1,
+        cid: `down-${i}`,
+        ops: [taskPatch("t1", { title: `Edit ${i}` })],
+      });
+      await ann.next("ops", (frame) => frame.cid === `down-${i}`);
+    }
+    await first.service.crash();
+    services.splice(services.indexOf(first.service), 1);
+    await writeFromOutside(designId, { ...plan, notes: "From outside" });
+
+    const second = await startService({
+      journalDir: first.journalDir,
+      timing: { lingerMs: 5000 },
+    });
+    // The stored plan stays, stored again past the seqs the dropped batches had.
+    await until(async () => Number((await storedRow(designId)).seq) === 3);
+    let row = await storedRow(designId);
+    expect(row.plan.notes).toBe("From outside");
+    expect(titleOf(row.plan)).toBe("First");
+    expect(await new Journal(first.journalDir).read(doc)).toEqual([]);
+
+    // Coming back, ann gets the plan marked replaced, as in a running room.
+    const again = await TestClient.open(second.port, { who: "ann" });
+    await again.hello();
+    const snapshot = await again.join(doc);
+    expect(snapshot).toMatchObject({ seq: 3, replaced: true });
+    expect(snapshot.plan.notes).toBe("From outside");
+    expect(titleOf(snapshot.plan)).toBe("First");
+    // An edit made on the old plan is refused; one made on the new plan applies.
+    again.send({ t: "ops", doc, base: 2, cid: "down-3", ops: [taskPatch("t1", { title: "Late" })] });
+    expect(await again.next("error", (frame) => frame.cid === "down-3")).toMatchObject({
+      code: "bad_op",
+    });
+    again.send({ t: "ops", doc, base: 3, cid: "up-1", ops: [taskPatch("t1", { title: "On top" })] });
+    expect(await again.next("ops", (frame) => frame.cid === "up-1")).toMatchObject({ seq: 4 });
+    await again.close();
+    await until(async () => Number((await storedRow(designId)).seq) === 4);
+    row = await storedRow(designId);
+    expect(row.plan.notes).toBe("From outside");
+    expect(titleOf(row.plan)).toBe("On top");
+  });
+
+  it("still replays a journal made on the plan its own last flush stored", async () => {
+    // The database takes one flush, then stops answering: the next batch stays in the journal.
+    const real = supabasePlanStore();
+    let flushes = 0;
+    const store: PlanStore = {
+      ...real,
+      flush: (...args) => {
+        flushes += 1;
+        return flushes === 1 ? real.flush(...args) : Promise.reject(new Error("database down"));
+      },
+    };
+    const first = await startService({
+      store,
+      timing: { flushMs: 50, renewMs: 60_000, leaseMs: 90_000 },
+    });
+    const { designId, doc } = await makeDesign();
+    const ann = await TestClient.open(first.port, { who: "ann" });
+    await ann.hello();
+    await ann.join(doc);
+    ann.send({ t: "ops", doc, base: 0, cid: "own-1", ops: [taskPatch("t1", { title: "One" })] });
+    await ann.next("ops", (frame) => frame.cid === "own-1");
+    await until(async () => Number((await storedRow(designId)).seq) === 1);
+    ann.send({ t: "ops", doc, base: 1, cid: "own-2", ops: [taskPatch("t1", { title: "Two" })] });
+    await ann.next("ops", (frame) => frame.cid === "own-2");
+    await first.service.crash();
+    services.splice(services.indexOf(first.service), 1);
+
+    await startService({ journalDir: first.journalDir });
+    await until(async () => Number((await storedRow(designId)).seq) === 2);
+    expect(titleOf((await storedRow(designId)).plan)).toBe("Two");
   });
 
   it("still drops everyone from a plan deleted under it", async () => {

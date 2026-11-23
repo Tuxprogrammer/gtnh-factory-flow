@@ -35,6 +35,7 @@ import {
 import { machineTableControlResourceIds } from "@/lib/machines/machine-table";
 import { EEC_MACHINE_TYPE } from "@/lib/machines/extreme-entity-crusher";
 import { pickRecipeRefMatch, type RecipeContentRef } from "@/lib/import-export/recipe-ref-match";
+import { processShared } from "@/lib/server/process-shared";
 import {
   MAX_RECIPE_QUERY_CLAUSES,
   recipeQueryClauseMode,
@@ -195,15 +196,37 @@ const BEE_RECIPE_MAPS = new Set(["Bee Produce"]);
 export type ResourceSourceFilter = "plants" | "bees";
 
 const datasetRoot = path.join(process.cwd(), "public", "datasets", "gtnh");
-const loadedCatalogs = new Map<string, LoadedRecipeIndex>();
-const pendingCatalogLoads = new Map<string, Promise<LoadedRecipeIndex>>();
-const pendingRecipeIndexLoads = new Map<string, Promise<LoadedRecipeIndex>>();
-const loadedRecipeLookupIndexes = new Map<string, LoadedRecipeLookupIndex>();
-const pendingRecipeLookupLoads = new Map<string, Promise<LoadedRecipeLookupIndex>>();
-const loadedShards = new Map<string, Recipe[]>();
-const pendingShardLoads = new Map<string, Promise<Recipe[]>>();
-const pendingRawRecipeIdIndexLoads = new Map<string, Promise<Map<string, number[]>>>();
-const pendingPrewarmLoads = new Map<string, Promise<void>>();
+// One copy per process: the start-up prewarm and the routes are bundled apart (process-shared.ts).
+const loadedCatalogs = processShared("loadedCatalogs", () => new Map<string, LoadedRecipeIndex>());
+const pendingCatalogLoads = processShared(
+  "pendingCatalogLoads",
+  () => new Map<string, Promise<LoadedRecipeIndex>>(),
+);
+const pendingRecipeIndexLoads = processShared(
+  "pendingRecipeIndexLoads",
+  () => new Map<string, Promise<LoadedRecipeIndex>>(),
+);
+const loadedRecipeLookupIndexes = processShared(
+  "loadedRecipeLookupIndexes",
+  () => new Map<string, LoadedRecipeLookupIndex>(),
+);
+const pendingRecipeLookupLoads = processShared(
+  "pendingRecipeLookupLoads",
+  () => new Map<string, Promise<LoadedRecipeLookupIndex>>(),
+);
+const loadedShards = processShared("loadedShards", () => new Map<string, Recipe[]>());
+const pendingShardLoads = processShared(
+  "pendingShardLoads",
+  () => new Map<string, Promise<Recipe[]>>(),
+);
+const pendingRawRecipeIdIndexLoads = processShared(
+  "pendingRawRecipeIdIndexLoads",
+  () => new Map<string, Promise<Map<string, number[]>>>(),
+);
+const pendingPrewarmLoads = processShared(
+  "pendingPrewarmLoads",
+  () => new Map<string, Promise<void>>(),
+);
 let manifestCache: DatasetManifest | undefined;
 let manifestCacheStamp: string | undefined;
 const gunzipAsync = promisify(gunzip);
@@ -661,10 +684,14 @@ export async function queryDatasetResources(
 }
 
 type ResourceSearch = Awaited<ReturnType<typeof searchDatasetResources>>;
-const blankResourceSearches = new WeakMap<
-  LoadedRecipeIndex,
-  Map<string, { popularity?: Map<string, number>; value: ResourceSearch }>
->();
+const blankResourceSearches = processShared(
+  "blankResourceSearches",
+  () =>
+    new WeakMap<
+      LoadedRecipeIndex,
+      Map<string, { popularity?: Map<string, number>; value: ResourceSearch }>
+    >(),
+);
 
 async function searchDatasetResources(
   catalog: LoadedRecipeIndex,

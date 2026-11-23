@@ -61,6 +61,14 @@ everyone's socket with 1012, as a restart would; they join again, which opens th
 the room's journal replayed on top. Flushes and renewals only touch designs that are not tombstoned, so a deleted
 plan is never written back.
 
+A journal is replayed only over the stored plan its batches were made on. Beside it,
+`<ownerId>.<designId>.stamp.json` names that plan by its `plan_updated_at` (two values while a flush is on its way,
+written and synced before the flush). A room opening on a row whose `plan_updated_at` is another (a save while the
+service was down, or the save that took a lapsed lease) drops the journal: the stored plan wins, its seq moves past
+the dropped batches, a batch based before it is refused, and everyone joining that room gets the snapshot marked
+`replaced`, as in a running room that finds an outside write. At start a room that dropped its journal stays its
+linger, so the people coming back see it. A journal with no stamp file replays as it is.
+
 Each renewal also reads the plan's members again: a sharing change whose notice never reached the service takes
 effect within 30 s, dropping anyone no longer shared.
 

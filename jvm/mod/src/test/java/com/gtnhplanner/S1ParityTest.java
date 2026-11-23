@@ -1,16 +1,17 @@
 package com.gtnhplanner;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
@@ -19,6 +20,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.gtnhplanner.conformance.Conformance;
+import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Edge;
 import com.gtnhplanner.data.flowchart.Graph;
@@ -29,6 +32,7 @@ import com.gtnhplanner.data.flowchart.balancer.BalanceMode;
 import com.gtnhplanner.data.flowchart.balancer.BalanceResult;
 import com.gtnhplanner.data.flowchart.balancer.Balancer;
 import com.gtnhplanner.data.flowchart.balancer.External;
+import com.gtnhplanner.data.flowchart.balancer.GraphSolve;
 import com.gtnhplanner.data.flowchart.balancer.Note;
 import com.gtnhplanner.data.flowchart.balancer.SolutionView;
 import com.gtnhplanner.data.flowchart.balancer.SolveInput;
@@ -42,22 +46,25 @@ import com.gtnhplanner.power.CustomRate;
 import com.gtnhplanner.power.FluidTank;
 
 /**
- * Throwaway (S1 parity, never on main): builds the website's parity scenarios as mod graphs, and records what the mod
- * solves and what its board shows. S1_SPEC = scenarios.json, S1_OUT = the answers file.
+ * The mod's side of the board scenarios ({@code conformance/board/scenarios.json}, tools/parity/s1/README.md): builds
+ * each scenario as a mod graph and records what the mod solves and what its board shows. The website's
+ * {@code scenarios.test.ts} compares its own answers and board with these. This test checks the recorded answers
+ * ({@code conformance/board/mod-answers.json}) are what the mod gives now, so the recorder keeps compiling and a
+ * re-record changes only what the code changed; {@code -PwriteBoardAnswers} writes them afresh.
  */
 class S1ParityTest {
 
-    private static UUID id(final long n) {
-        return new UUID(0, n);
+    private static final String SPEC = "board/scenarios.json";
+    private static final String ANSWERS = "board/mod-answers.json";
+
+    private static Uuid id(final long n) {
+        return new Uuid(0, n);
     }
 
     @Test
-    void record() throws IOException {
-        final String spec = System.getenv("S1_SPEC");
-        final String outPath = System.getenv("S1_OUT");
-        if (spec == null || outPath == null) return;
+    void theRecordedAnswersAreTheModsAnswers() throws IOException {
         GtnhFlowLoader.ensureDefaultMachineProfile();
-        final JsonObject root = new JsonParser().parse(Files.readString(Path.of(spec)))
+        final JsonObject root = new JsonParser().parse(Files.readString(Conformance.path(SPEC)))
             .getAsJsonObject();
         final JsonObject out = new JsonObject();
         for (final JsonElement s : root.getAsJsonArray("scenarios")) {
@@ -67,13 +74,27 @@ class S1ParityTest {
                     .getAsString(),
                 run(sc));
         }
-        Files.writeString(
-            Path.of(outPath),
-            new GsonBuilder().setPrettyPrinting()
-                .serializeSpecialFloatingPointValues()
-                .create()
-                .toJson(out),
-            StandardCharsets.UTF_8);
+        if (Boolean.getBoolean("gtnhplanner.board.writeAnswers")) {
+            Files.writeString(
+                Conformance.path(ANSWERS),
+                new GsonBuilder().setPrettyPrinting()
+                    .serializeSpecialFloatingPointValues()
+                    .create()
+                    .toJson(out),
+                StandardCharsets.UTF_8);
+            return;
+        }
+        final JsonObject recorded = new JsonParser().parse(Files.readString(Conformance.path(ANSWERS)))
+            .getAsJsonObject();
+        final List<String> changed = new ArrayList<>();
+        for (final Map.Entry<String, JsonElement> e : out.entrySet()) if (!e.getValue()
+            .equals(recorded.get(e.getKey()))) changed.add(e.getKey());
+        for (final Map.Entry<String, JsonElement> e : recorded.entrySet())
+            if (!out.has(e.getKey())) changed.add(e.getKey());
+        assertTrue(
+            !out.entrySet()
+                .isEmpty());
+        assertEquals(List.of(), changed, "scenarios whose recorded answer is not the mod's (-PwriteBoardAnswers)");
     }
 
     private static JsonObject run(final JsonObject sc) {
@@ -117,6 +138,8 @@ class S1ParityTest {
                     .getAsDouble();
                 n.machineConfig.setMachineCount((int) pin);
                 n.setMachineCountFixed(true);
+                // Exactly, as scenario-kit.ts sets it: the answers were recorded when every set count was a fixed one.
+                n.setMachineCountExact(true);
             }
             if (m.has("outRates")) for (final Map.Entry<String, JsonElement> r : m.getAsJsonObject("outRates")
                 .entrySet())
@@ -194,11 +217,12 @@ class S1ParityTest {
                     g.get("pin")
                         .getAsInt());
                 group.setPinned(true);
+                group.setExact(true);
             }
             graph.groups.put(group.getId(), group);
         }
 
-        final SolveInput input = SolveInput.of(graph, BalanceMode.AUTO, null);
+        final SolveInput input = GraphSolve.input(graph, BalanceMode.AUTO, null);
         final JsonObject o = new JsonObject();
         o.add("input", SolveInputJson.write(input));
         final BalanceResult result = Balancer.solve(input);
@@ -225,12 +249,12 @@ class S1ParityTest {
             a.add("terminalInputs", externals(v.terminalInputs));
             a.add("terminalOutputs", externals(v.terminalOutputs));
             final JsonArray unneeded = new JsonArray();
-            for (final UUID u : v.unneeded) unneeded.add(new com.google.gson.JsonPrimitive(u.toString()));
+            for (final Uuid u : v.unneeded) unneeded.add(new com.google.gson.JsonPrimitive(u.toString()));
             a.add("unneeded", unneeded);
             a.add("notes", notes(v.notes));
             a.add("drawerRates", map(v.drawers.rates()));
             final JsonArray unmet = new JsonArray();
-            for (final UUID u : v.drawers.unmet()) unmet.add(new com.google.gson.JsonPrimitive(u.toString()));
+            for (final Uuid u : v.drawers.unmet()) unmet.add(new com.google.gson.JsonPrimitive(u.toString()));
             a.add("unmet", unmet);
             final JsonArray spares = new JsonArray();
             for (final Spares.Leftover l : v.spares()) {
@@ -261,7 +285,7 @@ class S1ParityTest {
         // ---- the board (BoardSession / CardModel / RecipeCard / DrawerCard / buildTotals) ----
         boolean nothingToSolveFor = false;
         for (final Note n : result.notes()) if (n.message() == SolverMessage.NO_PIN) nothingToSolveFor = true;
-        final Set<UUID> unset = new HashSet<>(Unanchored.of(graph));
+        final Set<Uuid> unset = new HashSet<>(Unanchored.of(graph));
         if (result instanceof final BalanceResult.Solved solved) unset.addAll(solved.auto().unneeded);
         final Map<String, Double> extras = new TreeMap<>();
         if (result instanceof final BalanceResult.Solved solved && solved.auto() != null) {
@@ -397,7 +421,7 @@ class S1ParityTest {
         return p;
     }
 
-    private static boolean wired(final Graph graph, final UUID node, final boolean output, final int index) {
+    private static boolean wired(final Graph graph, final Uuid node, final boolean output, final int index) {
         for (final Edge e : graph.getEdges()) {
             if (output && e.sourceNodeId.equals(node) && e.sourceOutputIndex == index) return true;
             if (!output && e.targetNodeId.equals(node) && e.targetInputIndex == index) return true;
@@ -405,7 +429,7 @@ class S1ParityTest {
         return portHasDrawer(graph, node, output, index);
     }
 
-    private static boolean portHasDrawer(final Graph graph, final UUID node, final boolean output, final int index) {
+    private static boolean portHasDrawer(final Graph graph, final Uuid node, final boolean output, final int index) {
         for (final Drawer d : graph.getDrawers()) {
             if ((d.getKind() == Drawer.Kind.SOURCE) == output) continue;
             for (final Drawer.Link l : d.getLinks()) if (l.nodeId()
@@ -414,7 +438,7 @@ class S1ParityTest {
         return false;
     }
 
-    private static String key(final UUID node, final boolean output, final int index) {
+    private static String key(final Uuid node, final boolean output, final int index) {
         return node + (output ? ":o:" : ":i:") + index;
     }
 
@@ -430,9 +454,9 @@ class S1ParityTest {
         return port;
     }
 
-    private static JsonObject map(final Map<UUID, Double> m) {
+    private static JsonObject map(final Map<Uuid, Double> m) {
         final JsonObject o = new JsonObject();
-        for (final Map.Entry<UUID, Double> e : new TreeMap<>(m).entrySet()) o.addProperty(
+        for (final Map.Entry<Uuid, Double> e : new TreeMap<>(m).entrySet()) o.addProperty(
             e.getKey()
                 .toString(),
             e.getValue());
@@ -464,7 +488,10 @@ class S1ParityTest {
 
     private static JsonArray notes(final List<Note> notes) {
         final JsonArray a = new JsonArray();
-        for (final Note n : notes) a.add(new com.google.gson.JsonPrimitive(n.message().name()));
+        for (final Note n : notes) a.add(
+            new com.google.gson.JsonPrimitive(
+                n.message()
+                    .name()));
         return a;
     }
 }

@@ -18,6 +18,11 @@
   cache-immutable, so a changed icon needs a new name.
 - Every server cache is bounded or index-sized (the Node heap is capped at 3 GB). A slow
   site: check the heap first.
+- `src/instrumentation.ts` is bundled apart from the API routes, with its own copy of
+  every module. A cache the start-up prewarm fills is made with `processShared`
+  (`process-shared.ts`, on `globalThis` in production), or the prewarm fills a second
+  copy the routes never read. Check it on `next start`: the first calls after the
+  "prewarmed" line must be warm.
 - The OG card route reads fonts through `process.cwd()` (non-standalone build).
 
 ## Plan routes and the compiled core (plan-engine.ts)

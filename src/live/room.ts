@@ -161,6 +161,13 @@ export class Room {
   private stamp: string | undefined;
   /** The seq the stored plan last replaced the room's at: a batch based before it was made on the old plan. */
   private replacedSeq = 0;
+  /**
+   * The room opened on a plan written from outside since its journal was
+   * made (while the service was down, or by the save that took a lapsed
+   * lease) and dropped that journal: everyone joining gets the plan marked
+   * `replaced`, as the people in a running room would.
+   */
+  replacedOnOpen = false;
 
   private constructor(
     doc: string,
@@ -200,7 +207,7 @@ export class Room {
       room.remember(cid, seq);
     }
     const journalled = await deps.journal.read(doc);
-    const replay = journalled.filter((entry) => entry.seq > room.seq);
+    let replay = journalled.filter((entry) => entry.seq > room.seq);
     // Entries already stored but never trimmed still name applied batches.
     for (const entry of journalled) {
       if (entry.seq <= room.seq) {
@@ -211,6 +218,22 @@ export class Room {
       // Flushed before a crash but never trimmed.
       await deps.journal.trim(doc, room.seq, room.recentCids());
     }
+    if (replay.length > 0 && (await room.journalMadeElsewhere(loaded.stamp))) {
+      // Written from outside since: the stored plan wins, as in a running
+      // room (reloadStored), and the journal made on the old one goes.
+      room.seq = Math.max(room.seq, ...replay.map((entry) => entry.seq)) + 1;
+      room.replacedSeq = room.seq;
+      room.durableSeq = room.seq;
+      room.replacedOnOpen = true;
+      deps.log(
+        `${doc}: the plan was written from outside since its journal was made; ` +
+          `${replay.length} journalled batches made on the old plan dropped`,
+      );
+      await deps.journal.trim(doc, room.seq, room.recentCids());
+      replay = [];
+    }
+    // The batches journalled from here on are made on this stored plan.
+    await deps.journal.writeStamps(doc, loaded.stamp === undefined ? [] : [loaded.stamp]);
     for (const entry of replay) {
       // The same batch journalled twice is applied once; its seq still counts.
       if (!room.recent.has(entry.cid)) {
@@ -237,6 +260,15 @@ export class Room {
       room.scheduleFlush();
     }
     return room;
+  }
+
+  /** The journal on disk was made on a stored plan other than `stamp` (the row's now). */
+  private async journalMadeElsewhere(stamp: string | undefined): Promise<boolean> {
+    if (stamp === undefined) {
+      return false;
+    }
+    const made = await this.deps.journal.readStamps(this.doc);
+    return !!made && made.length > 0 && !made.some((was) => sameStamp(was, stamp));
   }
 
   /** The plan as it stands: a plain object that stays as it is while the room goes on. */
@@ -604,6 +636,18 @@ export class Room {
     const sizeAtCapture = this.size;
     this.lastFlushAt = Date.now();
     const now = new Date().toISOString();
+    if (stamp !== undefined) {
+      // Either stamp may be the row's if the service stops mid-write: the
+      // journal still applies to the plan this flush leaves.
+      try {
+        await this.deps.journal.writeStamps(this.doc, [stamp, now]);
+      } catch (error) {
+        this.deps.log(
+          `${this.doc}: flush skipped, the journal's stamp could not be written: ${String(error)}`,
+        );
+        return false;
+      }
+    }
     const outcome = await this.deps.store.flush(
       this.ownerId,
       this.designId,
@@ -625,6 +669,10 @@ export class Room {
     }
     if (stamp !== undefined) {
       this.stamp = now;
+      await this.deps.journal.writeStamps(this.doc, [now]).catch((error: unknown) => {
+        // Both stamps still name the plan stored: the next flush narrows them.
+        this.deps.log(`${this.doc}: writing the journal's stamp failed: ${String(error)}`);
+      });
     }
     this.flushedSeq = Math.max(this.flushedSeq, seq);
     this.noteFlushed(seq);
@@ -781,6 +829,13 @@ export class Room {
     } catch (error) {
       this.deps.log(`${this.doc}: trimming the journal failed: ${String(error)}`);
     }
+    try {
+      // Before any batch is journalled on the new plan: a restart must not take them for the old one's.
+      await this.deps.journal.writeStamps(this.doc, [loaded.stamp]);
+    } catch (error) {
+      this.fail(`the journal could not be written: ${String(error)}`);
+      return;
+    }
     for (const peer of this.peers) {
       peer.sendText(this.snapshotText(this.roleOf(peer.userId) ?? "editor", true));
     }
@@ -808,7 +863,7 @@ export class Room {
   }
 
   /** Nobody is here: the room closes once `lingerMs` passes with nobody back. */
-  private linger(): void {
+  linger(): void {
     if (this.closed || this.lingerTimer) {
       return;
     }

@@ -83,8 +83,10 @@ mkdir -p "$instance_root/mods"
 oracle_project="tools/dataset-pipeline/gtnh-calc-oracle"
 oracle_patch_hash="$(
   {
-    # The oracle also compiles the mod's GregTech reader and its record (gtnh-calc-oracle/build.gradle).
+    # The oracle also compiles the mod's GregTech and Postea readers and the record (gtnh-calc-oracle/build.gradle).
+    # Every source the jar is built from is listed here, or a change to one reuses a stale cached jar.
     find "$oracle_project" jvm/mod/src/main/java/com/gtnhplanner/read/gt \
+      jvm/mod/src/main/java/com/gtnhplanner/read/postea \
       jvm/core/core-model/src/main/java/com/gtnhplanner/core/model/read/GtRecipeRecord.java -type f \
       ! -path '*/build/*' \
       ! -path '*/.gradle/*' \

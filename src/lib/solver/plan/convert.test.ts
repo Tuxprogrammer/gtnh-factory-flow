@@ -306,6 +306,22 @@ describe("convertBuildToPlan", () => {
       expect(plan.edges.map((e) => [e.source, e.target])).toEqual([["a", "b"]]);
     });
 
+    it("names a joined wire as the wires it replaces were named", () => {
+      const plan = convertBuildToPlan(
+        project({
+          recipes: [recipe("make", [], [["gear", 1]]), recipe("use", [["gear", 1]], [["kit", 1]])],
+          nodes: [node("a", "make"), node("b", "use")],
+          storages: [drawer("b1", "gear"), drawer("b2", "gear")],
+          edges: [
+            wire("x", "a", "b1", "gear", { label: "Gear" }),
+            wire("y", "b1", "b2", "gear", { label: "Gear" }),
+            wire("z", "b2", "b", "gear", { label: "Gear" }),
+          ],
+        }),
+      );
+      expect(plan.edges.map((e) => [e.source, e.target, e.label])).toEqual([["a", "b", "Gear"]]);
+    });
+
     it("turns a source feeding a buffer into a source on each taker", () => {
       const plan = convertBuildToPlan(
         project({

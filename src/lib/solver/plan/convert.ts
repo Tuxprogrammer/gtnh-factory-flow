@@ -286,6 +286,8 @@ function expandBuffers(
           targetHandle: taker.targetHandle,
           resourceKind: feeder.resourceKind,
           resourceId: feeder.resourceId,
+          // Every wire carries its resource's name; solved flows and text dumps read it.
+          ...((feeder.label ?? taker.label) !== undefined ? { label: feeder.label ?? taker.label } : {}),
         };
         edges.push(joined);
       }

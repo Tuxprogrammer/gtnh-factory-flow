@@ -15,6 +15,8 @@ import type {
   Recipe,
   ResourceKind,
 } from "@/lib/model/types";
+import { matchDatasetRecipeRefs } from "@/lib/server/dataset-query";
+import type { RecipeContentRef } from "@/lib/import-export/recipe-ref-match";
 import { agentDatasetVersion, loadRecipe, resolveResource, withDataset } from "./dataset";
 import { storeDelivery } from "./deliveries";
 import type {
@@ -111,6 +113,9 @@ export function checkSnapshot(snapshot: SlimSnapshot): void {
   const cards = new Set<string>();
   for (const [index, card] of snapshot.cards.entries()) {
     if (things.has(card.id)) bad(`snapshot.cards[${index}]: the id "${card.id}" is used twice.`);
+    if (card.sectionRecipes && card.sectionRecipes.length !== (card.sections?.length ?? 0)) {
+      bad(`snapshot.cards[${index}]: sectionRecipes must have one entry per section.`);
+    }
     things.add(card.id);
     cards.add(card.id);
   }
@@ -170,14 +175,26 @@ export async function importPlan(
       }
     }
   }
+  // A recipe the dataset lacks but whose content the card carries is the dataset recipe with that content.
+  const found = await matchContent(dataset, snapshot, recipes);
   const opaque = new Set<string>();
   const warnings: string[] = [];
   for (const card of snapshot.cards) {
-    const missing = [card.recipeId, ...(card.sections ?? [])].filter((id) => !recipes.has(id));
+    const ids = [card.recipeId, ...(card.sections ?? [])];
+    const missing = ids.filter((id, k) => !recipes.has(id) && !found.get(contentKey(card.id, k))?.recipeId);
     if (missing.length) {
       opaque.add(card.id);
+      const why = ids.flatMap((id, k) => (missing.includes(id) ? [found.get(contentKey(card.id, k))?.why] : []));
+      const reason = why.find((entry) => entry) ?? `is not in dataset ${dataset}`;
       warnings.push(
-        `Card ${card.id}: recipe ${missing.join(", ")} is not in dataset ${dataset}; the card is kept as it is and cannot be changed.`,
+        `Card ${card.id}: recipe ${missing.join(", ")} ${reason}; the card is kept as it is and cannot be changed.`,
+      );
+      continue;
+    }
+    const loose = ids.filter((_, k) => found.get(contentKey(card.id, k))?.exact === false);
+    if (loose.length) {
+      warnings.push(
+        `Card ${card.id}: recipe ${loose.join(", ")} is matched to the dataset recipe that takes and makes the same things, but its amounts, time or EU differ.`,
       );
     }
   }
@@ -208,18 +225,26 @@ export async function importPlan(
 
   const nodes: FactoryNode[] = snapshot.cards.map((card) => {
     const { heatingCoil, ...tiers } = card.dials ?? {};
+    // A matched card runs the dataset recipe; the player's handler only when that recipe lists it, as the site's
+    // own import keeps it.
+    const matched = (k: number, id: string) => (opaque.has(card.id) ? undefined : found.get(contentKey(card.id, k))?.recipeId) ?? id;
+    const recipeId = matched(0, card.recipeId);
+    const machine =
+      card.machine && (recipeId === card.recipeId || recipes.get(recipeId)?.machineHandlers?.some((h) => h.id === card.machine))
+        ? card.machine
+        : undefined;
     return {
       id: card.id,
-      recipeId: card.recipeId,
+      recipeId,
       machineCount: 1,
       parallel: 1,
-      ...(card.machine ? { machineHandlerId: card.machine } : {}),
+      ...(machine ? { machineHandlerId: machine } : {}),
       overclockTier: card.tier,
       ...(heatingCoil ? { coilTier: heatingCoil } : {}),
       ...(Object.keys(tiers).length ? { machineConfigTiers: tiers } : {}),
       ...(card.count !== undefined ? { solvePin: card.count } : {}),
       ...(card.count !== undefined && card.exact ? { solvePinExact: true } : {}),
-      ...(card.sections ? { extraRecipes: card.sections.map((recipeId) => ({ recipeId })) } : {}),
+      ...(card.sections ? { extraRecipes: card.sections.map((id, k) => ({ recipeId: matched(k + 1, id) })) } : {}),
       enabled: true,
       ...(card.board ? { pocketId: card.board } : {}),
       position: { x: card.position.x, y: card.position.y },
@@ -277,7 +302,7 @@ export async function importPlan(
 
   const shown = warnings.slice(0, MAX_WARNINGS);
   if (warnings.length > shown.length) {
-    shown.push(`And ${warnings.length - shown.length} more cards with recipes not in this dataset.`);
+    shown.push(`And ${warnings.length - shown.length} more cards with recipes not in this dataset or matched loosely.`);
   }
   return {
     dataset,
@@ -288,6 +313,76 @@ export async function importPlan(
     wireCount: edges.length,
     warnings: shown,
   };
+}
+
+function contentKey(cardId: string, section: number): string {
+  return `${cardId}#${section}`;
+}
+
+interface ContentMatch {
+  /** The dataset recipe with the content; absent when none or more than one has it. */
+  recipeId?: string;
+  exact?: boolean;
+  /** Why there is no recipe id, for the card's warning. */
+  why?: string;
+}
+
+/**
+ * Each card recipe (by `contentKey`) the dataset lacks by id and whose content the snapshot carries, matched to the
+ * dataset by the site's rule for plans the game exported (`matchDatasetRecipeRefs`). One best match is taken; none, or
+ * two or more scoring the same, leave the recipe unmatched. Matched bodies are added to `recipes`.
+ */
+async function matchContent(
+  dataset: string,
+  snapshot: SlimSnapshot,
+  recipes: Map<string, Recipe>,
+): Promise<Map<string, ContentMatch>> {
+  const refs: RecipeContentRef[] = [];
+  const out = new Map<string, ContentMatch>();
+  for (const card of snapshot.cards) {
+    const ids = [card.recipeId, ...(card.sections ?? [])];
+    const contents = [card.recipe, ...(card.sectionRecipes ?? [])];
+    ids.forEach((id, k) => {
+      const content = contents[k];
+      if (recipes.has(id)) return;
+      if (!content) {
+        out.set(contentKey(card.id, k), { why: `is not in dataset ${dataset} and the card carries no recipe content` });
+        return;
+      }
+      refs.push({
+        id: `slim:${contentKey(card.id, k)}`,
+        name: content.name ?? "",
+        machineType: content.machineType,
+        ...(content.recipeMap ? { recipeMap: content.recipeMap } : {}),
+        ...(content.rawRecipeId ? { rawRecipeId: content.rawRecipeId } : {}),
+        inputs: content.inputs,
+        outputs: content.outputs,
+        durationTicks: content.durationTicks,
+        eut: content.eut,
+      });
+    });
+  }
+  if (!refs.length) return out;
+  const matches = new Map(
+    (await withDataset(() => matchDatasetRecipeRefs(dataset, refs))).map((match) => [match.importedId, match]),
+  );
+  for (const ref of refs) {
+    const key = ref.id.slice("slim:".length);
+    const match = matches.get(ref.id);
+    if (!match) {
+      out.set(key, { why: `is not in dataset ${dataset} and no dataset recipe takes and makes the same things` });
+    } else if (match.tied > 0) {
+      out.set(key, {
+        why: `is not in dataset ${dataset} and its content fits ${match.tied + 1} dataset recipes equally well`,
+      });
+    } else {
+      if (!recipes.has(match.recipeId)) {
+        recipes.set(match.recipeId, await withDataset(() => loadRecipe(dataset, match.recipeId)));
+      }
+      out.set(key, { recipeId: match.recipeId, exact: match.exact });
+    }
+  }
+  return out;
 }
 
 type WithPosition = { position: { x: number; y: number } };

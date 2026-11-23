@@ -9,10 +9,36 @@
       },
       "cards": [
         {
-          "id": "c1",
-          "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-metalbender:b1d532ae84169aed",
-          "machine": "industrial-bending-machine",
+          "id": "5d2b6a90-3c1e-4f7a-9b08-1e4c2f6a7d31",
+          "recipeId": "gtnhplanner:5d2b6a90-3c1e-4f7a-9b08-1e4c2f6a7d31",
           "tier": "LV",
+          "recipe": {
+            "name": "Bending Machine: Titanium Plate",
+            "machineType": "Bending Machine",
+            "recipeMap": "Bending Machine",
+            "inputs": [
+              {
+                "kind": "item",
+                "id": "gregtech:gt.metaitem.01@11028",
+                "amount": 1
+              },
+              {
+                "kind": "item",
+                "id": "gregtech:gt.integrated_circuit@1",
+                "amount": 1,
+                "consumed": false
+              }
+            ],
+            "outputs": [
+              {
+                "kind": "item",
+                "id": "gregtech:gt.metaitem.01@17028",
+                "amount": 1
+              }
+            ],
+            "durationTicks": 1,
+            "eut": 24
+          },
           "position": {
             "x": 100,
             "y": 100
@@ -23,7 +49,7 @@
       "wires": [],
       "targets": [
         {
-          "card": "c1",
+          "card": "5d2b6a90-3c1e-4f7a-9b08-1e4c2f6a7d31",
           "port": "output:item:gregtech%3Agt.metaitem.01%4017028",
           "rate": 1
         }
@@ -36,10 +62,10 @@
   },
   "status": 200,
   "response": {
-    "dataset": "stable-2.9.0-tuxmine",
-    "planId": "x24adwxjfr5dsv458t6g",
+    "dataset": "stable-2.9.1-tuxmine",
+    "planId": "xae7feya8ceamz5vnax3",
     "name": "Titanium plates",
-    "expiresAt": "2026-11-22T21:46:39.237Z",
+    "expiresAt": "2026-11-24T21:47:57.182Z",
     "cardCount": 1,
     "wireCount": 0,
     "warnings": []

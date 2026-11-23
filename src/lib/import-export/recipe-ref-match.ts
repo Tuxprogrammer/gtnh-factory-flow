@@ -36,6 +36,8 @@ export interface RecipeRefMatch<T extends RecipeRefCandidate> {
   /** Every slot, amount, tick and EU agrees: the same recipe under a new id. */
   exact: boolean;
   score: number;
+  /** How many other candidates score the same as the pick: the content cannot tell them apart. */
+  tied: number;
 }
 
 const EXACT_SCORE = 400;
@@ -170,10 +172,13 @@ export function pickRecipeRefMatch<T extends RecipeRefCandidate>(
       continue;
     }
     const score = scoreRecipeRefCandidate(ref, candidate);
+    if (best && score === best.score) {
+      best.tied += 1;
+    }
     if (score === 0 || (best && score <= best.score)) {
       continue;
     }
-    best = { candidate, score, exact: score >= EXACT_SCORE };
+    best = { candidate, score, exact: score >= EXACT_SCORE, tied: 0 };
   }
   return best;
 }

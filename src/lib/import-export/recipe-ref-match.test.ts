@@ -103,6 +103,16 @@ describe("finding a recipe again after its id changed", () => {
     const twinB = { ...sameRecipe, id: "new:twin-b" };
     const match = pickRecipeRefMatch(recipeContentRef(exported), [self, twinA, twinB]);
     expect(match?.candidate.id).toBe("new:twin-a");
+    // The content cannot tell the twins apart, and says so.
+    expect(match?.tied).toBe(1);
+  });
+
+  it("counts no tie when the best candidate stands alone", () => {
+    const retimed = recipe("new:steel-retimed", [IRON_DUST, COAL_DUST, CIRCUIT, OXYGEN], [STEEL, ASHES, CO2], {
+      durationTicks: 480,
+    });
+    const match = pickRecipeRefMatch(recipeContentRef(exported), [castIronRecipe, retimed, sameRecipe, slowRecipe]);
+    expect(match).toMatchObject({ candidate: { id: "new:steel-from-dust" }, exact: true, tied: 0 });
   });
 
   it("ignores non-consumed slots, which the exporter may list or not", () => {

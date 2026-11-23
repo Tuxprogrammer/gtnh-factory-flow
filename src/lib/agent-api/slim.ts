@@ -22,6 +22,37 @@ const resource = z
   .strict();
 const port = z.string().min(1).max(600);
 
+const contentKind = z.enum(["item", "fluid", "aspect", "power"]);
+const contentAmount = z.number().finite().nonnegative();
+
+/**
+ * What a recipe does, for a card whose recipe id the dataset does not list (a card the game made): `plans/import`
+ * finds the dataset recipe with the same content by the rule the site uses to open a plan the game exported
+ * (`pickRecipeRefMatch` in `src/lib/import-export/recipe-ref-match.ts`). The fields are the ones that rule reads.
+ */
+export const slimRecipeContent = z
+  .object({
+    /** The recipe's name; only breaks ties. */
+    name: z.string().max(200).optional(),
+    machineType: z.string().min(1).max(200),
+    recipeMap: z.string().min(1).max(200).optional(),
+    rawRecipeId: z.string().min(1).max(400).optional(),
+    inputs: z
+      .array(
+        z
+          .object({ kind: contentKind, id: z.string().min(1).max(400), amount: contentAmount, consumed: z.literal(false).optional() })
+          .strict(),
+      )
+      .max(64),
+    outputs: z
+      .array(z.object({ kind: contentKind, id: z.string().min(1).max(400), amount: contentAmount }).strict())
+      .min(1)
+      .max(64),
+    durationTicks: z.number().finite().nonnegative(),
+    eut: z.number().finite(),
+  })
+  .strict();
+
 export const slimCard = z
   .object({
     id: thingId,
@@ -37,6 +68,10 @@ export const slimCard = z
     exact: z.literal(true).optional(),
     /** A shared machine's further recipes, in order (sections 1..n). */
     sections: z.array(z.string().min(1).max(400)).min(1).max(16).optional(),
+    /** What `recipeId` does, when it may not be a dataset id; read only when the dataset lacks that id. */
+    recipe: slimRecipeContent.optional(),
+    /** What each of `sections` does, one per section in the same order; read only for ids the dataset lacks. */
+    sectionRecipes: z.array(slimRecipeContent).min(1).max(16).optional(),
     position,
     /** The board (pocket) the card sits on; absent is the root board. */
     board: thingId.optional(),
@@ -92,6 +127,7 @@ export type SlimCard = z.infer<typeof slimCard>;
 export type SlimDrawer = z.infer<typeof slimDrawer>;
 export type SlimWire = z.infer<typeof slimWire>;
 export type SlimTarget = z.infer<typeof slimTarget>;
+export type SlimRecipeContent = z.infer<typeof slimRecipeContent>;
 
 /** The slim snapshot of a plan. Pure; the same function the panel's Java mirror must match field for field. */
 export function toSlimSnapshot(project: FactoryProject): SlimSnapshot {

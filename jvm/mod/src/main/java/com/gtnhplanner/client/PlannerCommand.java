@@ -16,7 +16,8 @@ public class PlannerCommand extends CommandBase {
     /** The verbs, one entry each: the word, the kind letter of its id, what it does. */
     static final List<PlannerVerbs.Verb> VERBS = List.of(
         new PlannerVerbs.Verb("open", 'd', Deliveries::open),
-        new PlannerVerbs.Verb("apply", 'p', Deliveries::apply));
+        new PlannerVerbs.Verb("apply", 'p', Deliveries::apply),
+        new PlannerVerbs.Verb("bookmark", 'd', Deliveries::bookmark));
 
     @Override
     public String getCommandName() {
@@ -38,6 +39,12 @@ public class PlannerCommand extends CommandBase {
         call.verb()
             .run()
             .accept(call.id());
+    }
+
+    /** Tab completes the verb; an id is pasted or clicked, never guessed. */
+    @Override
+    public List<String> addTabCompletionOptions(final ICommandSender sender, final String[] args) {
+        return PlannerVerbs.complete(VERBS, args);
     }
 
     @Override

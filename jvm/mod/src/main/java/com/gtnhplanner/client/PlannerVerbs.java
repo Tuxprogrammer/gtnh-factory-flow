@@ -44,6 +44,15 @@ public final class PlannerVerbs {
         return null;
     }
 
+    /** The verbs that start with what is typed so far, for tab completion; nothing past the verb. */
+    public static List<String> complete(final List<Verb> verbs, final String[] args) {
+        final List<String> words = new ArrayList<>();
+        if (args.length != 1) return words;
+        for (final Verb v : verbs) if (v.word()
+            .startsWith(args[0])) words.add(v.word());
+        return words;
+    }
+
     /** "Use /gtnhplanner open <id> or /gtnhplanner apply <id>.", every verb named. */
     public static String usage(final List<Verb> verbs) {
         final List<String> forms = new ArrayList<>();

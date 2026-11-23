@@ -27,6 +27,7 @@ import com.gtnhplanner.importer.game.FactoryFlowImport;
 import com.gtnhplanner.importer.game.GameNodeMaker;
 import com.gtnhplanner.library.CommunityApi;
 import com.gtnhplanner.library.SiteOff;
+import com.gtnhplanner.nei.PlanBookmarks;
 import com.gtnhplanner.ui.BoardScreen;
 import com.gtnhplanner.ui.BoardSession;
 import com.gtnhplanner.ui.Planner;
@@ -59,6 +60,14 @@ public final class Deliveries {
      */
     public static void apply(final String id) {
         read(id, "proposal", Deliveries::applied);
+    }
+
+    /**
+     * {@code bookmark <id>}: what the plan under the id takes in and gives out, added to NEI's bookmarks (its shopping
+     * list). The plan is read, not opened: no plan tab changes.
+     */
+    public static void bookmark(final String id) {
+        read(id, "delivery", Deliveries::bookmarked);
     }
 
     /** Reads what is under the id in the background, then hands it to {@code then} on the client thread. */
@@ -135,6 +144,26 @@ public final class Deliveries {
                         + "': "
                         + result.report()
                             .summary());
+    }
+
+    /** A plan arrived to bookmark: converted against the game's recipes, solved, its inputs and outputs bookmarked. */
+    private static void bookmarked(final JsonObject body) {
+        final JsonElement plan = body.get("plan");
+        if (plan == null || !plan.isJsonObject()) {
+            say(DeliveryText.PLAN_UNREADABLE, true);
+            return;
+        }
+        final Graph graph;
+        try {
+            graph = FactoryFlowImport.importFromText(plan.toString())
+                .graph();
+        } catch (final RuntimeException e) {
+            GtnhPlanner.LOG.warn("Could not read the plan the planner site delivered", e);
+            say(DeliveryText.PLAN_UNREADABLE, true);
+            return;
+        }
+        final PlanBookmarks.Outcome outcome = PlanBookmarks.addShoppingList(graph);
+        say(outcome.message(), outcome.failed());
     }
 
     /** A change arrived: added to the open plan when it was made for it, as one undo step. */

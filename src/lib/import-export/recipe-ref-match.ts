@@ -36,6 +36,8 @@ export interface RecipeRefMatch<T extends RecipeRefCandidate> {
   /** Every slot, amount, tick and EU agrees: the same recipe under a new id. */
   exact: boolean;
   score: number;
+  /** How many other candidates score the same as the pick: the content cannot tell them apart. */
+  tied: number;
 }
 
 const EXACT_SCORE = 400;
@@ -44,8 +46,16 @@ function slotKey(slot: RecipeRefSlot): string {
   return `${slot.kind}:${slot.id}`;
 }
 
-function slotAmountKey(slot: RecipeRefSlot): string {
-  return `${slotKey(slot)}:${slot.amount ?? 0}`;
+/**
+ * Each resource with its total amount. A recipe that makes 80 of an item lists it as two stacks (64 and 16), and the
+ * game's card as one slot of 80: the same recipe.
+ */
+function amountTotals(slots: RecipeRefSlot[]): string[] {
+  const totals = new Map<string, number>();
+  for (const slot of slots) {
+    totals.set(slotKey(slot), (totals.get(slotKey(slot)) ?? 0) + (slot.amount ?? 0));
+  }
+  return [...totals].map(([key, amount]) => `${key}:${amount}`);
 }
 
 function consumedInputs(inputs: RecipeInput[] | RecipeRefSlot[] | undefined): RecipeRefSlot[] {
@@ -134,9 +144,8 @@ export function scoreRecipeRefCandidate(
     (ref.durationTicks === undefined || ref.durationTicks === candidate.durationTicks) &&
     (ref.eut === undefined || ref.eut === candidate.eut);
   const sameAmounts =
-    (!refKnowsInputs ||
-      sameMultiset(refInputs.map(slotAmountKey), candidateInputs.map(slotAmountKey))) &&
-    sameMultiset(ref.outputs.map(slotAmountKey), candidate.outputs.map(slotAmountKey));
+    (!refKnowsInputs || sameMultiset(amountTotals(refInputs), amountTotals(candidateInputs))) &&
+    sameMultiset(amountTotals(ref.outputs), amountTotals(candidate.outputs));
 
   if (sameInputIds && sameOutputIds && sameAmounts && sameTiming && refKnowsInputs) {
     score = EXACT_SCORE;
@@ -170,10 +179,13 @@ export function pickRecipeRefMatch<T extends RecipeRefCandidate>(
       continue;
     }
     const score = scoreRecipeRefCandidate(ref, candidate);
+    if (best && score === best.score) {
+      best.tied += 1;
+    }
     if (score === 0 || (best && score <= best.score)) {
       continue;
     }
-    best = { candidate, score, exact: score >= EXACT_SCORE };
+    best = { candidate, score, exact: score >= EXACT_SCORE, tied: 0 };
   }
   return best;
 }

@@ -309,6 +309,8 @@ class LibraryRoundTripTest {
     static PlanExport.World world(final FakeGame game, final Graph g) {
         final Map<String, PlanExport.Res> byKey = new HashMap<>();
         for (final Node n : g.getNodes()) {
+            // A display-only card's ports name the site's resources; the export reads them from the card itself.
+            if (n.shown != null) continue;
             final List<Port<?>> ports = new ArrayList<>(n.inputs);
             ports.addAll(n.outputs);
             for (final Port<?> p : ports) {

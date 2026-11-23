@@ -511,9 +511,27 @@ Response: `{dataset, planId, name, expiresAt, cardCount, wireCount, warnings}`.
 - The draft keeps the snapshot's ids, positions, boards, drawers, wires and pins, and is not laid out again until a
   card is added. It counts toward the 300 drafts a day and lives 24 hours like any draft.
 - Up to 200 cards (`plan_too_big` beyond), and add-cards may grow it to 200.
-- A card whose recipe id (or a shared section's) the dataset does not have is kept as an opaque card: it stays in the
-  draft as it was, nothing wires to it automatically, the solve reads no recipe for it, and it must not be changed or
-  removed (a diff that finds it changed refuses). Each one is one line in `warnings`, at most 20 lines.
+- A card whose recipe id (or a shared section's) the dataset does not have, but which carries that recipe's content
+  (`card.recipe`, `card.sectionRecipes`: what the game's panel sends for a card the player built in game), is matched
+  to the dataset recipe with the same content, by the rule the site uses to open a plan the game exported
+  (`pickRecipeRefMatch`, `src/lib/import-export/recipe-ref-match.ts`): candidates are the dataset recipes that make its
+  first output (in its `recipeMap` when the dataset has that map), then, when none fits, those with its `rawRecipeId`;
+  one must take and make the same resources (score 300 or more), and the best
+  one must be the only one with its score. A matched card is a normal card on the dataset recipe: it keeps the
+  snapshot's card id, wires, board, tier, dials and count; its `recipeId` in the draft (and in `plans/get`,
+  `plans/solve` and the draft's own snapshot) is the dataset's id, and its `machine` is kept only when the dataset
+  recipe lists that machine (else the recipe's default). It solves, wires automatically and may be wired to; a
+  proposal still names it by its card id. Amounts are compared as each resource's total (the dataset lists 80 of an item as stacks of 64 and 16,
+  the game's card as one slot). A match whose amounts, time or EU differ from the content is taken with a
+  warning (`... is matched to the dataset recipe that takes and makes the same things, but its amounts, time or EU
+  differ.`).
+- A card whose recipe the dataset does not have and that no content matches (no content sent, no recipe with the same
+  resources, or two or more equally good) is kept as an opaque card: it stays in the draft as it was, nothing wires to
+  it automatically, the solve reads no recipe for it, and it must not be changed or removed (a diff that finds it
+  changed refuses). Each one is one line in `warnings`, at most 20 lines, naming the card and why: `Card <id>: recipe
+  <recipeId> is not in dataset <dataset> and the card carries no recipe content` / `... and no dataset recipe takes and
+  makes the same things` / `... and its content fits <n> dataset recipes equally well`, then `; the card is kept as it
+  is and cannot be changed.`
 - Targets: each resource's first pin on a card's own main output slot (`output:<kind>:<id>`, no slot number or section)
   becomes one of the draft's targets, carried by that same card; `plans/get` and `plans/solve` show it. Every other pin
   (input pins, slot or section pins, a second pin of the same resource) stays on its card exactly as it was.
@@ -531,12 +549,15 @@ What the planner (the site, or the game's panel) sends for its open plan. The we
   version: 1,
   plan:    {id, name},                       the open plan's id: a proposal made from it names it as basePlanId
   boards?: [{id, name, parent?, position}],  the plan's boards (pockets); absent when it has none
-  cards:   [{id, recipeId, machine?, tier, dials?, count?, exact?, sections?, position, board?}],
+  cards:   [{id, recipeId, machine?, tier, dials?, count?, exact?, sections?, recipe?, sectionRecipes?, position, board?}],
   drawers: [{id, resource, mode?, position, board?}],
   wires:   [{id, from, to, resource, fromPort?, toPort?}],
   targets: [{card, port, rate}]
 }
 position = {x, y}            resource = {id, kind}   kind: item | fluid | aspect | power
+content  = {name?, machineType, recipeMap?, rawRecipeId?,
+            inputs: [{kind, id, amount, consumed?: false}], outputs: [{kind, id, amount}] (at least one),
+            durationTicks, eut}
 ```
 
 | field                | meaning (the plan document's field)                                                       |
@@ -549,6 +570,9 @@ position = {x, y}            resource = {id, kind}   kind: item | fluid | aspect
 | `card.count`         | the pinned machine count (`solvePin`); absent: the solver chooses it                      |
 | `card.exact`         | `true` when that count is Exactly (`solvePinExact`); only with `count`                    |
 | `card.sections`      | a shared machine's further recipe ids in order (`extraRecipes[].recipeId`)                |
+| `card.recipe`        | what `recipeId` does (a `content`), for a recipe id that may not be a dataset id; read only when the dataset lacks the id |
+| `card.sectionRecipes` | the `content` of each of `sections`, one per section in order; read only for ids the dataset lacks |
+| `content`            | the recipe body's fields of the same names (`source.recipeMap`, `source.rawRecipeId`): what the content match reads; `name` only breaks ties; `consumed: false` marks an input that is not used up (the match ignores those) |
 | `card.board`         | the board it sits on (`pocketId`); absent is the root board                               |
 | `drawer.mode`        | `byproduct` or `trash` (`drainMode`); absent is a product drain                           |
 | `wire.from`, `wire.to` | the card or drawer ids at each end (`source`, `target`)                                 |
@@ -561,8 +585,12 @@ position = {x, y}            resource = {id, kind}   kind: item | fluid | aspect
 - Not carried (the planner's defaults on import): oredict picks, power, hatch and parallel settings, custom rate cards'
   dials, colours, notes, annotations, tasks. A plan's snapshot is a few hundred bytes per card; the game's panel
   refuses one over 256 KiB and says the plan is too big.
+- The site writes no `recipe` content: its cards are on dataset recipes. The game writes it for every card it built
+  (recipe id `gtnhplanner:<card id>`), except power, tank, custom rate and empty crop farm cards, which no dataset
+  recipe stands for; a card it shows from a site plan carries its dataset id and no content.
 - Round trip: importing a snapshot and taking the snapshot of the draft gives the same snapshot (with the draft's own
-  plan id), as `handoff.test.ts` checks.
+  plan id), as `handoff.test.ts` checks, except that a card matched by content comes back with the dataset's recipe
+  id, without `recipe` content, and without a `machine` the dataset recipe does not list.
 
 ### plans/diff and proposals
 
@@ -587,7 +615,7 @@ The stored proposal (served by the read route as `proposal`):
  recipes: [Recipe],          full dataset bodies of the recipes the added cards use
  cards:   [FactoryNode],     the added cards, in the plan document's own format, ids c<n> new to the plan
  drawers: [FactoryStorage],  the added drawers
- wires:   [FactoryEdge],     the added wires; an end on a card or drawer the plan already had names its own id
+ wires:   [FactoryEdge],     the added wires; an end on a card or drawer the plan already had (a card matched by content too) names its own id
  targets: [{card, port, rate}]}  pins to set: new ones and changed rates, on new or existing cards
 ```
 

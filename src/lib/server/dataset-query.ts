@@ -446,6 +446,21 @@ export async function resolveDatasetRecipeRefs(
   versionId: string,
   refs: DatasetRecipeRef[],
 ): Promise<Array<{ importedId: string; recipeId: string; exact: boolean }>> {
+  return (await matchDatasetRecipeRefs(versionId, refs)).map(({ importedId, recipeId, exact }) => ({
+    importedId,
+    recipeId,
+    exact,
+  }));
+}
+
+/**
+ * `resolveDatasetRecipeRefs` with, for each match, how many other candidates scored the same: a caller that must not
+ * guess (the agent API's import) keeps such a recipe as it is.
+ */
+export async function matchDatasetRecipeRefs(
+  versionId: string,
+  refs: DatasetRecipeRef[],
+): Promise<Array<{ importedId: string; recipeId: string; exact: boolean; tied: number }>> {
   if (refs.length === 0) {
     return [];
   }
@@ -461,7 +476,7 @@ export async function resolveDatasetRecipeRefs(
     catalog,
     [...candidateIndexesByRef.values()].flat(),
   );
-  const matches = new Map<string, { recipeId: string; exact: boolean }>();
+  const matches = new Map<string, { recipeId: string; exact: boolean; tied: number }>();
   const unsettled: DatasetRecipeRef[] = [];
   for (const ref of refs) {
     const match = pickRecipeRefMatch(
@@ -471,7 +486,7 @@ export async function resolveDatasetRecipeRefs(
         .filter((recipe): recipe is Recipe => recipe !== undefined),
     );
     if (match && match.score >= RECIPE_REF_MIGRATION_SCORE) {
-      matches.set(ref.id, { recipeId: match.candidate.id, exact: match.exact });
+      matches.set(ref.id, { recipeId: match.candidate.id, exact: match.exact, tied: match.tied });
     } else if (ref.rawRecipeId) {
       unsettled.push(ref);
     }
@@ -491,7 +506,7 @@ export async function resolveDatasetRecipeRefs(
           .filter((recipe): recipe is Recipe => recipe !== undefined),
       );
       if (match && match.score >= RECIPE_REF_MIGRATION_SCORE) {
-        matches.set(ref.id, { recipeId: match.candidate.id, exact: match.exact });
+        matches.set(ref.id, { recipeId: match.candidate.id, exact: match.exact, tied: match.tied });
       }
     }
   }

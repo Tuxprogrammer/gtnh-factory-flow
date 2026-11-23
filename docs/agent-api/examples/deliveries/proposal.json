@@ -1,27 +1,30 @@
 {
   "endpoint": "GET /api/deliveries/{id}",
-  "id": "pt6ztd2jjkz5p79t",
+  "id": "pzem4e8ubu9g4xx6",
   "status": 200,
   "response": {
-    "id": "pt6ztd2jjkz5p79t",
+    "id": "pzem4e8ubu9g4xx6",
     "name": "Titanium plates",
-    "createdAt": "2026-11-21T21:46:39.410Z",
-    "expiresAt": "2026-12-21T21:46:39.410Z",
+    "createdAt": "2026-11-23T21:47:57.207Z",
+    "expiresAt": "2026-12-23T21:47:57.207Z",
     "kind": "proposal",
     "basePlanId": "21cac124-0e86-4139-b108-9859d0529c11",
     "proposal": {
       "cards": [
         {
-          "id": "c2",
+          "id": "c1",
           "enabled": true,
           "parallel": 1,
           "position": {
             "x": 700,
             "y": 100
           },
+          "powerEuT": 448,
           "recipeId": "oracle:stable-2.9.0-tuxmine:gregtech:gt-recipe-metalbender:b7e01db18a7b9200",
+          "hatchAmps": 14,
           "machineCount": 1,
           "overclockTier": "LV",
+          "hatchVoltageTier": "LV",
           "machineHandlerId": "industrial-bending-machine",
           "recipeInputOverrides": {
             "0": {
@@ -29,7 +32,7 @@
               "kind": "item",
               "modId": "gregtech",
               "amount": 1,
-              "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/titanium_plate-017b34f32e31.png",
+              "iconPath": "/datasets/gtnh/stable-2.9.1-tuxmine/textures/rendered/titanium_plate-017b34f32e31.png",
               "displayName": "Titanium Plate",
               "dominantColor": "#af80bf"
             }
@@ -40,8 +43,8 @@
         {
           "id": "w1",
           "label": "Titanium Plate",
-          "source": "c1",
-          "target": "c2",
+          "source": "5d2b6a90-3c1e-4f7a-9b08-1e4c2f6a7d31",
+          "target": "c1",
           "resourceId": "gregtech:gt.metaitem.01@17028",
           "resourceKind": "item",
           "sourceHandle": "output:item:gregtech%3Agt.metaitem.01%4017028:0",
@@ -67,7 +70,7 @@
               "kind": "item",
               "modId": "gregtech",
               "amount": 1,
-              "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/titanium_plate-017b34f32e31.png",
+              "iconPath": "/datasets/gtnh/stable-2.9.1-tuxmine/textures/rendered/titanium_plate-017b34f32e31.png",
               "displayName": "Titanium Plate",
               "dominantColor": "#af80bf"
             },
@@ -77,7 +80,7 @@
               "modId": "gregtech",
               "amount": 1,
               "consumed": false,
-              "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/programmed_circuit_1-2742d10d1001.png",
+              "iconPath": "/datasets/gtnh/stable-2.9.1-tuxmine/textures/rendered/programmed_circuit_1-2742d10d1001.png",
               "displayName": "Programmed Circuit 1",
               "dominantColor": "#9fa58e"
             }
@@ -86,7 +89,7 @@
             "exporter": "gtnh-oracle",
             "recipeMap": "Bending Machine",
             "rawRecipeId": "gt.recipe.metalbender:b7e01db18a7b9200",
-            "datasetVersionId": "stable-2.9.0-tuxmine"
+            "datasetVersionId": "stable-2.9.1-tuxmine"
           },
           "outputs": [
             {
@@ -94,7 +97,7 @@
               "kind": "item",
               "modId": "gregtech",
               "amount": 4,
-              "iconPath": "/datasets/gtnh/stable-2.9.0-tuxmine/textures/rendered/titanium_foil-0f0ac8fd83fb.png",
+              "iconPath": "/datasets/gtnh/stable-2.9.1-tuxmine/textures/rendered/titanium_foil-0f0ac8fd83fb.png",
               "displayName": "Titanium Foil",
               "dominantColor": "#a87ab7"
             }
@@ -397,7 +400,7 @@
             ],
             "recipeMap": "Bending Machine",
             "sourceKind": "gregtech-overclock-calculator",
-            "generatedAt": "2026-11-16T03:34:41.554Z",
+            "generatedAt": "2026-11-23T05:18:25.749Z",
             "sourceClass": "gregtech.api.util.OverclockCalculator",
             "oracleEligible": true
           }

@@ -24,7 +24,8 @@ import com.gtnhplanner.library.PlanExport;
  * ({@link PlanExport#project}), so cards, drawers, wires and boards are named as a post names them, with two rules a
  * proposal made from it needs to come back onto this board: the plan's id is {@link Graph#planId()}, and every card is
  * named by its board id (a display-only card too, not by the website id it shows). Game cards carry the export's own
- * recipe ids; the site keeps a card whose recipe its dataset lacks as it is. Pure: no game state.
+ * recipe ids with what each recipe does ({@link #content}), which the site matches to its dataset's recipe; a
+ * display-only card carries its website recipe id and nothing more. Pure: no game state.
  */
 public final class SlimSnapshot {
 
@@ -66,6 +67,9 @@ public final class SlimSnapshot {
         }
         if (boards.size() > 0) out.add("boards", boards);
 
+        final Map<String, JsonObject> bodies = new HashMap<>();
+        for (final JsonObject r : objects(p, "recipes")) if (str(r, "id") != null) bodies.put(str(r, "id"), r);
+
         final JsonArray cards = new JsonArray(), targets = new JsonArray();
         final Set<String> things = new java.util.HashSet<>();
         for (final JsonObject n : objects(p, "nodes")) {
@@ -98,6 +102,20 @@ public final class SlimSnapshot {
             for (final JsonObject x : objects(n, "extraRecipes"))
                 if (str(x, "recipeId") != null) sections.add(new JsonPrimitive(str(x, "recipeId")));
             if (sections.size() > 0) c.add("sections", sections);
+            // A card the game built names its recipe by the game's own id, which the site's dataset does not list:
+            // what the recipe does goes with it, so the site finds the dataset's recipe by its content.
+            if (display == null) {
+                final JsonObject content = content(bodies.get(str(n, "recipeId")));
+                if (content != null) c.add("recipe", content);
+                final JsonArray sectionContent = new JsonArray();
+                for (final JsonElement x : sections) {
+                    final JsonObject sc = content(bodies.get(x.getAsString()));
+                    if (sc != null) sectionContent.add(sc);
+                }
+                // One per section or none: the site reads them by position.
+                if (sections.size() > 0 && sectionContent.size() == sections.size())
+                    c.add("sectionRecipes", sectionContent);
+            }
             c.add("position", position(n));
             if (str(n, "pocketId") != null) c.addProperty("board", str(n, "pocketId"));
             cards.add(c);
@@ -170,6 +188,62 @@ public final class SlimSnapshot {
     public static String text(final JsonObject snapshot) {
         final String s = snapshot.toString();
         return s.getBytes(StandardCharsets.UTF_8).length > MAX_BYTES ? null : s;
+    }
+
+    /**
+     * What an exported recipe body does, as the snapshot's {@code recipe} carries it: the fields the site's content
+     * match reads. Null for a recipe no dataset recipe stands for (power, tank and custom rate cards are the export's
+     * own {@code custom} recipes; an empty crop farm makes nothing) or one the snapshot cannot carry as it is.
+     */
+    @Nullable
+    public static JsonObject content(@Nullable final JsonObject r) {
+        if (r == null || "custom".equals(str(r, "kind"))) return null;
+        final String machine = str(r, "machineType");
+        final JsonArray inputs = slots(r, "inputs", true), outputs = slots(r, "outputs", false);
+        final JsonPrimitive ticks = number(r, "durationTicks", 0), eut = number(r, "eut", Double.NEGATIVE_INFINITY);
+        if (machine == null || machine.isEmpty() || machine.length() > 200 || inputs == null || outputs == null
+            || outputs.size() == 0 || ticks == null || eut == null) return null;
+        final JsonObject c = new JsonObject();
+        if (str(r, "name") != null) c.addProperty("name", cut(str(r, "name"), 200));
+        c.addProperty("machineType", machine);
+        if (r.get("source") instanceof final JsonObject source) {
+            final String map = str(source, "recipeMap"), raw = str(source, "rawRecipeId");
+            if (map != null && !map.isEmpty() && map.length() <= 200) c.addProperty("recipeMap", map);
+            if (raw != null && !raw.isEmpty() && raw.length() <= 400) c.addProperty("rawRecipeId", raw);
+        }
+        c.add("inputs", inputs);
+        c.add("outputs", outputs);
+        c.add("durationTicks", ticks);
+        c.add("eut", eut);
+        return c;
+    }
+
+    /** A side's slots as {kind, id, amount} (an input not used up adds consumed: false); null if one cannot be. */
+    @Nullable
+    private static JsonArray slots(final JsonObject r, final String field, final boolean inputs) {
+        final List<JsonObject> list = objects(r, field);
+        if (list.size() > 64) return null;
+        final JsonArray out = new JsonArray();
+        for (final JsonObject x : list) {
+            final String kind = str(x, "kind"), id = str(x, "id");
+            if (!KINDS.contains(kind) || id == null || id.isEmpty() || id.length() > 400) return null;
+            final JsonPrimitive amount = number(x, "amount", 0);
+            if (amount == null) return null;
+            final JsonObject o = resource(id, kind);
+            o.add("amount", amount);
+            if (inputs && x.get("consumed") instanceof final JsonPrimitive used && used.isBoolean()
+                && !used.getAsBoolean()) o.addProperty("consumed", false);
+            out.add(o);
+        }
+        return out;
+    }
+
+    /** A finite number at least {@code min}, as written; null if there is none. */
+    @Nullable
+    private static JsonPrimitive number(final JsonObject o, final String field, final double min) {
+        if (!(o.get(field) instanceof final JsonPrimitive v) || !v.isNumber()) return null;
+        final double d = v.getAsDouble();
+        return Double.isFinite(d) && d >= min ? v : null;
     }
 
     private static boolean onBoard(final Graph g, final String id) {

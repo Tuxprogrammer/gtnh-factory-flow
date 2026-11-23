@@ -210,6 +210,99 @@ class SlimSnapshotTest {
             name);
     }
 
+    @ParameterizedTest
+    @MethodSource("plans")
+    void gameCardsCarryWhatTheirRecipeDoes(final String name) {
+        final FakeGame game = new FakeGame();
+        final Graph g = open(name, game);
+        final JsonObject s = SlimSnapshot.of(g, LibraryRoundTripTest.world(game, g));
+        for (final JsonElement e : s.getAsJsonArray("cards")) {
+            final JsonObject c = e.getAsJsonObject();
+            assertTrue(
+                c.get("recipeId")
+                    .getAsString()
+                    .startsWith("gtnhplanner:"),
+                name);
+            assertNotNull(c.get("recipe"), name + " " + c);
+            final JsonObject r = c.getAsJsonObject("recipe");
+            assertTrue(
+                r.getAsJsonArray("outputs")
+                    .size() > 0);
+            assertNotNull(r.get("durationTicks"));
+            assertNotNull(r.get("eut"));
+            if (c.has("sections")) assertEquals(
+                c.getAsJsonArray("sections")
+                    .size(),
+                c.getAsJsonArray("sectionRecipes")
+                    .size(),
+                name);
+        }
+    }
+
+    @Test
+    void aCardShownFromASitePlanIsSentWithItsSiteRecipeIdAndNoContent() {
+        final String site = "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:6db988ddcbfcf8e3";
+        final FakeGame game = new FakeGame();
+        game.missing.add(site);
+        final Graph g = FfImport.importFromText(FakeGame.fixture("titanium-line-chembath.slim.json"), game, game)
+            .graph();
+        final Node display = g.getNodes()
+            .stream()
+            .filter(n -> n.shown != null)
+            .findFirst()
+            .orElseThrow();
+        final JsonObject s = SlimSnapshot.of(g, LibraryRoundTripTest.world(game, g));
+        int game_ = 0;
+        boolean seen = false;
+        for (final JsonElement e : s.getAsJsonArray("cards")) {
+            final JsonObject c = e.getAsJsonObject();
+            if (c.get("id")
+                .getAsString()
+                .equals(display.id.toString())) {
+                assertEquals(
+                    site,
+                    c.get("recipeId")
+                        .getAsString());
+                assertNull(c.get("recipe"));
+                assertNull(c.get("sectionRecipes"));
+                seen = true;
+            } else {
+                assertTrue(
+                    c.get("recipeId")
+                        .getAsString()
+                        .startsWith("gtnhplanner:"));
+                assertNotNull(c.get("recipe"), c.toString());
+                game_++;
+            }
+        }
+        assertTrue(seen);
+        assertEquals(9, game_);
+    }
+
+    @Test
+    void aRecipesContentIsWhatTheSiteMatchesOnAndNoMore() {
+        final JsonObject body = new com.google.gson.JsonParser().parse(
+            "{\"id\":\"gtnhplanner:x\",\"name\":\"Steel\",\"kind\":\"gregtech_machine\",\"machineType\":\"Electric Blast Furnace\","
+                + "\"minimumTier\":\"MV\",\"durationTicks\":400,\"eut\":120,\"specialValue\":1000,"
+                + "\"inputs\":[{\"kind\":\"item\",\"id\":\"iron\",\"amount\":1,\"displayName\":\"Iron\",\"alternatives\":[]},"
+                + "{\"kind\":\"item\",\"id\":\"spawner\",\"amount\":1,\"consumed\":false}],"
+                + "\"outputs\":[{\"kind\":\"item\",\"id\":\"steel\",\"amount\":1,\"chance\":1}],"
+                + "\"source\":{\"recipeMap\":\"Blast Furnace\",\"rawRecipeId\":\"raw-1\",\"exporter\":\"unknown\"},\"metadata\":{\"a\":1}}")
+            .getAsJsonObject();
+        assertEquals(
+            "{\"name\":\"Steel\",\"machineType\":\"Electric Blast Furnace\",\"recipeMap\":\"Blast Furnace\",\"rawRecipeId\":\"raw-1\","
+                + "\"inputs\":[{\"id\":\"iron\",\"kind\":\"item\",\"amount\":1},{\"id\":\"spawner\",\"kind\":\"item\",\"amount\":1,\"consumed\":false}],"
+                + "\"outputs\":[{\"id\":\"steel\",\"kind\":\"item\",\"amount\":1}],\"durationTicks\":400,\"eut\":120}",
+            SlimSnapshot.content(body)
+                .toString());
+        // The export's own recipes (power, tank, custom rate) and one that makes nothing stand for no dataset recipe.
+        body.addProperty("kind", "custom");
+        assertNull(SlimSnapshot.content(body));
+        body.addProperty("kind", "crop_produce");
+        body.add("outputs", new JsonArray());
+        assertNull(SlimSnapshot.content(body));
+    }
+
     @Test
     void aSnapshotOverTheBridgesLimitIsNotSent() {
         final JsonObject small = new JsonObject();

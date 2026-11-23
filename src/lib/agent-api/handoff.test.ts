@@ -15,7 +15,12 @@ import { GET as readGet } from "@/app/api/deliveries/[id]/route";
 import { decodePlanCode } from "@/lib/import-export/plan-code";
 import { factoryProjectSchema } from "@/lib/model/schemas";
 import { PROJECT_SCHEMA_VERSION, type FactoryProject, type MachineHandler, type Recipe } from "@/lib/model/types";
-import { getDatasetRecipe, getDatasetResource, getDefaultDatasetVersionId } from "@/lib/server/dataset-query";
+import {
+  getDatasetRecipe,
+  getDatasetResource,
+  getDefaultDatasetVersionId,
+  matchDatasetRecipeRefs,
+} from "@/lib/server/dataset-query";
 import { resetDbBreaker, getCommunityDb } from "@/lib/server/community";
 import { useInProcessLocalDb } from "@/lib/server/local-db/client";
 import { openLocalDatabase, type LocalDatabase } from "@/lib/server/local-db/database";
@@ -44,6 +49,7 @@ vi.mock("@/lib/server/dataset-query", () => ({
   getDatasetRecipe: vi.fn(),
   queryDatasetResources: vi.fn(),
   queryDatasetRecipes: vi.fn(),
+  matchDatasetRecipeRefs: vi.fn(),
 }));
 
 const TOKEN = "test-token-0123456789";
@@ -418,6 +424,107 @@ describe("slim snapshots", () => {
     const planId = await draftWith(["r-dust"]);
     const elsewhere = JSON.stringify({ planId, player: PLAYER }).replace("}", `${" ".repeat(70 * 1024)}}`);
     expect((await deliverPost(request("http://localhost/x", elsewhere))).status).toBe(400);
+  });
+});
+
+describe("cards that carry their recipe's content", () => {
+  /** A game card: its recipe id is the game's own, its content is r-ingot's. */
+  function gameSnapshot(): SlimSnapshot {
+    return {
+      version: 1,
+      plan: { id: "game-plan-1", name: "Game plan" },
+      cards: [
+        {
+          id: "0c9e8a1b-5f00-4a3e-9d6e-2b7c1d4e5f60",
+          recipeId: "gtnhplanner:0c9e8a1b-5f00-4a3e-9d6e-2b7c1d4e5f60",
+          machine: "a-game-only-machine",
+          tier: "LV",
+          recipe: {
+            name: "Titanium Ingot",
+            machineType: "Mock Furnace",
+            inputs: [
+              { kind: "item", id: "dust", amount: 1 },
+              { kind: "fluid", id: "nitrogen", amount: 1000 },
+            ],
+            outputs: [{ kind: "item", id: "ingot", amount: 1 }],
+            durationTicks: 20,
+            eut: 30,
+          },
+          position: { x: 0, y: 0 },
+        },
+      ],
+      drawers: [],
+      wires: [],
+      targets: [],
+    };
+  }
+  const GAME_CARD = "0c9e8a1b-5f00-4a3e-9d6e-2b7c1d4e5f60";
+
+  it("becomes a normal card on the dataset recipe it matches, and a new card wires to it by its own id", { timeout: CORE_LOAD_MS }, async () => {
+    await useCoreSolver();
+    vi.mocked(matchDatasetRecipeRefs).mockImplementation(async (_version, refs) =>
+      refs.map((ref) => ({ importedId: ref.id, recipeId: "r-ingot", exact: true, tied: 0 })),
+    );
+    const imported = await call(importPost, { snapshot: gameSnapshot() }, plansImportResponse);
+    expect(imported.warnings).toEqual([]);
+    const [ref] = vi.mocked(matchDatasetRecipeRefs).mock.calls[0]![1];
+    expect(ref).toMatchObject({ machineType: "Mock Furnace", outputs: [{ kind: "item", id: "ingot", amount: 1 }], eut: 30 });
+    const draft = getDraft(imported.planId);
+    expect(draft.project.nodes[0]).toMatchObject({ id: GAME_CARD, recipeId: "r-ingot" });
+    // The game's machine is not one the dataset recipe lists: the card runs the recipe's own.
+    expect(draft.project.nodes[0]!.machineHandlerId).toBeUndefined();
+    expect(draft.project.recipes.map((entry) => entry.id)).toEqual(["r-ingot"]);
+    await call(solvePost, { planId: imported.planId }, plansSolveResponse);
+
+    const added = await call(addCardsPost, { planId: imported.planId, cards: [{ recipeId: "r-dust" }] }, plansAddCardsResponse);
+    expect(added.wires).toEqual([expect.objectContaining({ from: added.cards[0]!.cardId, to: GAME_CARD })]);
+    const diff = await call(diffPost, { planId: imported.planId }, plansDiffResponse);
+    const body = await readJson(diff.proposalId);
+    if (body.kind !== "proposal") throw new Error("not a proposal");
+    expect(body.proposal.wires).toEqual([
+      expect.objectContaining({ source: added.cards[0]!.cardId, target: GAME_CARD, resourceId: "dust" }),
+    ]);
+    expect(body.proposal.cards.map((card) => card.id)).toEqual([added.cards[0]!.cardId]);
+  });
+
+  it("stays opaque, with a warning naming the card and why, when nothing matches or two recipes match equally", async () => {
+    vi.mocked(matchDatasetRecipeRefs).mockResolvedValueOnce([]);
+    const none = await call(importPost, { snapshot: gameSnapshot() }, plansImportResponse);
+    expect(none.warnings).toEqual([
+      `Card ${GAME_CARD}: recipe gtnhplanner:${GAME_CARD} is not in dataset ${VERSION} and no dataset recipe takes and makes the same things; the card is kept as it is and cannot be changed.`,
+    ]);
+    expect(getDraft(none.planId).project.nodes[0]!.recipeId).toBe(`gtnhplanner:${GAME_CARD}`);
+    expect(getDraft(none.planId).project.recipes).toEqual([]);
+
+    vi.mocked(matchDatasetRecipeRefs).mockImplementationOnce(async (_version, refs) =>
+      refs.map((ref) => ({ importedId: ref.id, recipeId: "r-ingot", exact: true, tied: 1 })),
+    );
+    const tied = await call(importPost, { snapshot: gameSnapshot() }, plansImportResponse);
+    expect(tied.warnings[0]).toContain(`Card ${GAME_CARD}:`);
+    expect(tied.warnings[0]).toContain("fits 2 dataset recipes equally well");
+    expect(getDraft(tied.planId).project.nodes[0]!.recipeId).toBe(`gtnhplanner:${GAME_CARD}`);
+
+    const bare = gameSnapshot();
+    delete bare.cards[0]!.recipe;
+    const unknown = await call(importPost, { snapshot: bare }, plansImportResponse);
+    expect(unknown.warnings[0]).toContain("carries no recipe content");
+  });
+
+  it("says when the match is by resources only, and refuses content that does not fit the card", async () => {
+    vi.mocked(matchDatasetRecipeRefs).mockImplementation(async (_version, refs) =>
+      refs.map((ref) => ({ importedId: ref.id, recipeId: "r-ingot", exact: false, tied: 0 })),
+    );
+    const loose = await call(importPost, { snapshot: gameSnapshot() }, plansImportResponse);
+    expect(loose.warnings).toHaveLength(1);
+    expect(loose.warnings[0]).toContain("amounts, time or EU differ");
+    expect(getDraft(loose.planId).project.nodes[0]!.recipeId).toBe("r-ingot");
+
+    const extra = gameSnapshot() as unknown as { cards: Array<{ recipe: Record<string, unknown> }> };
+    extra.cards[0]!.recipe.chance = 1;
+    await fails(importPost, { snapshot: extra }, "bad_request", 400);
+    const sections = gameSnapshot();
+    sections.cards[0]!.sectionRecipes = [sections.cards[0]!.recipe!];
+    expect(await fails(importPost, { snapshot: sections }, "bad_request", 400)).toContain("one entry per section");
   });
 });
 

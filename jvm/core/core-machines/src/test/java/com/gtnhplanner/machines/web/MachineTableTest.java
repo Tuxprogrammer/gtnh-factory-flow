@@ -75,8 +75,8 @@ class MachineTableTest {
     @Test
     void hasEveryEntryOfTheWebsitesTableInItsOrder() {
         final List<String> names = MachineTable.names();
-        // The website's 96, the Component Assembly Line and the Algae Pond.
-        assertEquals(98, names.size());
+        // The website's 96, the Component Assembly Line, the Algae Pond and the three Void Miners.
+        assertEquals(101, names.size());
         assertEquals("Blast Furnace", names.get(0));
         assertEquals("Extreme Heat Exchanger", names.get(names.size() - 1));
     }
@@ -276,7 +276,11 @@ class MachineTableTest {
             // kubatech's MTEExtremeEntityCrusher.
             "Extreme Entity Crusher",
             // gregtech's MTEAlgaePond; the reference never covered it.
-            "Algae Pond")) sourceVerified.add(MachineTable.normalizeMachineName(name));
+            "Algae Pond",
+            // bwcrossmod's MTEVoidMinerBase and MTEVoidMiners.
+            "Void Miner I",
+            "Void Miner II",
+            "Void Miner III")) sourceVerified.add(MachineTable.normalizeMachineName(name));
 
         // Every entry traces back to a reference definition or a direct source transcription, under its own name or
         // an alias: nothing is invented.

@@ -4,6 +4,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { writeDatasetJson } from "./dataset-json-writer.mjs";
+import { rewriteAssetIconHints } from "./asset-icon-hints.mjs";
 
 const instanceRoot = process.argv[2];
 const datasetPath = process.argv[3];
@@ -25,6 +26,14 @@ if (datasetSizeBytes > maxDatasetBytes) {
   const versionId = path.basename(outDir);
   const textureOutDir = path.join(outDir, "textures");
   await fs.mkdir(textureOutDir, { recursive: true });
+  // The asset notes still become served textures or go (asset-icon-hints.mjs): the browser cannot load one.
+  const hintIndex = await buildTextureIndex(instanceRoot);
+  const assetIconHints = await rewriteAssetIconHints(datasetPath, async (resource) => {
+    const texture = findIconPathTextureHint(resource, hintIndex);
+    return texture
+      ? extractTexture(resource, texture, textureOutDir, `/datasets/gtnh/${versionId}/textures`)
+      : undefined;
+  });
   await fs.writeFile(
     path.join(textureOutDir, "icon-report.json"),
     `${JSON.stringify(
@@ -35,6 +44,7 @@ if (datasetSizeBytes > maxDatasetBytes) {
         source: "minecraft-asset-pngs",
         skipped: true,
         reason: `Dataset is ${datasetSizeBytes} bytes, above GTNH_TEXTURE_ICON_MAX_DATASET_BYTES=${maxDatasetBytes}.`,
+        assetIconHints,
       },
       null,
       2,

@@ -16,6 +16,7 @@ import { formatNumberWithThousands, trimTrailingDecimalZeros } from "@/lib/forma
 import { isProgrammedCircuitResource } from "@/lib/model/programmed-circuit";
 import { MinecraftTooltip } from "./MinecraftTooltip";
 import { getSpriteFitScale, spriteFitStyle } from "./sprite-fit";
+import { servableIconPath } from "@/lib/datasets/icon-path";
 
 type DisplayResourceAmount = Pick<
   ResourceAmount,
@@ -467,7 +468,7 @@ function IconImage({
     return <PowerIconGlyph iconPixelSize={iconPixelSize} />;
   }
 
-  const iconPath = resource.iconPath ?? getFallbackIconPath(resource);
+  const iconPath = servableIconPath(resource.iconPath) ?? getFallbackIconPath(resource);
   if (!iconPath) {
     // The dataset ships no art for fluids at all — not one of the thousands of
     // fluid references carries an iconPath or an atlas entry — so without this

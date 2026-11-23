@@ -8,6 +8,7 @@ import fs from "node:fs";
 import path from "node:path";
 import zlib from "node:zlib";
 import { describe, expect, it } from "vitest";
+import { enrichPassiveProductionRecipe } from "@/lib/model/passive-production";
 import { applyMachineHandlerToRecipe } from "@/lib/model/recipe-rules";
 import type { Recipe } from "@/lib/model/types";
 import { machinesOf } from "./format";
@@ -28,9 +29,6 @@ const ZERO_EU_NOT_UNPOWERED = new Set(
     "solar tower", "thermal boiler", "extreme heat exchanger",
     // Electric machines whose recipes the dataset exports at 0 EU (the site bills GT's furnace and crafting numbers).
     "furnace", "electric furnace", "multi smelter", "auto workbench",
-    // The Void Miner map shows each dimension's ore pool at 1 tick and 0 EU; the controllers' tooltips in the same
-    // dataset read "Consumes 30,720 / 122,880 / 491,520 EU/t", so they are electric.
-    "void miner i", "void miner ii", "void miner iii",
     // Machines with their own energy (neutrons, the Eye of Harmony's stars) or none: not steam-age machines.
     "neutron activator", "eye of harmony", "nanochip conversion complex", "algae pond", "ice cream machine",
     "tree growth simulator", "nasa workbench (missile)",
@@ -79,7 +77,10 @@ describe.skipIf(!datasetDir())("steam and primitive machines in the pack dataset
             billsEu: 0,
           };
           entry.recipes += 1;
-          entry.allZero &&= !(recipe.eut > 0);
+          // The card's draw, as the site loads the recipe: the Void Miner map exports 0 EU, its cards bill the
+          // controllers' own (void-miner.ts).
+          const card = applyMachineHandlerToRecipe(enrichPassiveProductionRecipe(recipe), { machineHandlerId: handler.id });
+          entry.allZero &&= !(recipe.eut > 0) && !(card.eut > 0);
           const kind = unpoweredKind(handler, recipe);
           entry.unpowered ??= kind;
           if (kind === "steam" && applyMachineHandlerToRecipe(recipe, { machineHandlerId: handler.id }).eut !== 0) {
@@ -107,5 +108,10 @@ describe.skipIf(!datasetDir())("steam and primitive machines in the pack dataset
     expect(unknown.map((entry) => entry.label)).toEqual([]);
     expect(primitive.map((entry) => entry.label).sort()).toEqual(["Bricked Blast Furnace", "Coke Oven"]);
     expect(seen.get("multi smelter")?.unpowered).toBeUndefined();
+    // A Void Miner is electric and its card bills EU (only in packs that have the map).
+    for (const label of ["void miner i", "void miner ii", "void miner iii"]) {
+      const entry = seen.get(label);
+      if (entry) expect({ label, unpowered: entry.unpowered, allZero: entry.allZero }).toEqual({ label, unpowered: undefined, allZero: false });
+    }
   }, 600_000);
 });

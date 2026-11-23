@@ -115,6 +115,7 @@ export function FactoryPlannerApp() {
     }
     noteRecipesRequested(pending, version.id, checkedRecipesRef.current, requestedRecipesRef.current);
     let cancelled = false;
+    const planId = useFactoryStore.getState().project.id;
     void resolveProjectRecipes(
       datasetManifestUrl ?? DEFAULT_DATASET_MANIFEST_URL,
       version,
@@ -123,7 +124,11 @@ export function FactoryPlannerApp() {
       noteRecipesRefreshed(refreshed, version.id, checkedRecipesRef.current);
       // Kept even when this plan has gone: the ids are checked once per version, and another plan may hold them.
       noteRecipesNotInDataset(version.id, missing);
-      if (!cancelled && refreshed.length > 0) {
+      // Applied while the same plan is open even if it changed meanwhile: these recipes are noted as checked and are
+      // not asked again, so dropping the answer would leave some cards on old bodies beside refreshed neighbours.
+      const now = useFactoryStore.getState();
+      const samePlan = now.project.id === planId && now.dataset?.datasetVersionId === version.id;
+      if ((!cancelled || samePlan) && refreshed.length > 0) {
         refreshProjectRecipes(refreshed, migration, renames);
       }
     });

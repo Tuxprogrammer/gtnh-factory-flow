@@ -18,6 +18,7 @@ import {
 import { clearPresence, notePresence, setPresentPeople } from "@/lib/live/live-presence";
 import { liveShape, withRecipesTheyName } from "@/lib/live/live-shape";
 import { diffPlans, type LiveOp, type LivePlan } from "@/lib/live/ops";
+import { takePlanRenamed } from "@/lib/datasets/renamed-plans";
 import {
   docKey,
   LIVE_LIMITS,
@@ -1001,6 +1002,9 @@ export class LiveSession {
     if (ops.length === 0) {
       return;
     }
+    if (takePlanRenamed(next.id as string)) {
+      this.sendRenameMove(room, liveShape(previous));
+    }
     for (const chunk of chunkOps(ops)) {
       const batch = room.engine.localOps(chunk);
       if (batch) {
@@ -1009,6 +1013,21 @@ export class LiveSession {
     }
     this.schedulePersist();
     this.publish();
+  }
+
+  /**
+   * The game's item renames moved this plan on the canvas when it opened (quietly: opening writes nothing). Before
+   * the player's first edit goes, everything the canvas holds beyond the room's plan goes as one batch undo never
+   * takes back: the stored plan moves to the new ids as a whole, its wires with it, and the edit lands on top.
+   */
+  private sendRenameMove(room: Room, canvas: LivePlan): void {
+    const ops = withRecipesTheyName(diffPlans(room.engine.view, canvas), room.engine.view, canvas);
+    for (const chunk of chunkOps(ops)) {
+      const batch = room.engine.localOps(chunk, { undoable: false, keepRedo: true });
+      if (batch) {
+        this.queueBatch(room, batch);
+      }
+    }
   }
 
   /**

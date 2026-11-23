@@ -101,4 +101,19 @@ describe("resolveProjectRecipes", () => {
     expect(result.migration).toEqual({ compressor: "compressor-new" });
     expect(result.renames.get("ic2:itemfuelplantball@*")).toBe("gregtech:gt.metaitem.02@32020");
   });
+
+  it("reads the renames when every recipe is found by its id", async () => {
+    // Recipe ids carry across versions: the dataset answers the stored id with a body on the new item, and the
+    // plan's wires and slot picks must move with it.
+    loader.getRecipeDatasetRecipe.mockImplementation(async (_url: string, _v: DatasetVersion, id: string) => ({
+      ...stored(id),
+      outputs: [{ kind: "item", id: "gregtech:gt.metaitem.02@32020", amount: 1 }],
+    }));
+    loader.getResourceRenames.mockResolvedValueOnce(
+      new Map([["ic2:itemfuelplantball@*", "gregtech:gt.metaitem.02@32020"]]),
+    );
+    const result = await resolveProjectRecipes("", version, [stored("compressor")]);
+    expect(result.refreshed.map((recipe) => recipe.id)).toEqual(["compressor"]);
+    expect(result.renames.get("ic2:itemfuelplantball@*")).toBe("gregtech:gt.metaitem.02@32020");
+  });
 });

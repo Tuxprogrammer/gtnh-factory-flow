@@ -67,6 +67,7 @@ import {
 } from "@/lib/format/rate-unit";
 import { registerBooksSink, solveBooks } from "./solve-books";
 import { liveUndoHandler, quietly } from "./live-edit-gate";
+import { notePlanRenamed } from "@/lib/datasets/renamed-plans";
 import { applyOps, type LiveOp } from "@/lib/live/ops";
 import { applyEdgeInputOverride } from "@/lib/model/edge-input-overrides";
 import {
@@ -1399,7 +1400,7 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
         recipesById.get(storedId) ??
         (migration[storedId] ? recipesById.get(migration[storedId]) : undefined);
       // The game's item renames move the plan's wires, drawers and keys onto the recipes' new items.
-      const project = withRenamedProjectResources({
+      const refreshedProject: FactoryProject = {
         ...state.project,
         recipes: state.project.recipes.map((recipe) => {
           const refreshedRecipe = refreshedFor(recipe.id);
@@ -1456,7 +1457,9 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
             ? { ...nextNode, machineHandlerId: undefined }
             : nextNode;
         }),
-      }, renames, state.recipesNotInDataset);
+      };
+      const project = withRenamedProjectResources(refreshedProject, renames, state.recipesNotInDataset);
+      if (project !== refreshedProject) notePlanRenamed(project.id);
 
       return {
         project,
@@ -1904,7 +1907,7 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
           nodes: state.project.nodes.map((node) =>
             node.id === nodeId ? { ...node, ...patch } : node,
           ),
-        }),
+        }, new Set([nodeId])),
       );
       return withProjectHistory(state, {
         project,
@@ -2321,7 +2324,7 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
             : state.project.recipes.map((entry) => (entry.id === recipe.id ? nextRecipe : entry)),
           edges,
           storages,
-        }),
+        }, new Set([nodeId, ...storagePatches.keys()])),
       );
       return withProjectHistory(state, { project, lastResult: solveBooks(project) });
     });
@@ -5961,8 +5964,20 @@ function pruneOrphanStorages(project: FactoryProject): FactoryProject {
   return nextStorages.length === storages.length ? project : { ...project, storages: nextStorages };
 }
 
-function pruneInvalidEdgesAndOrphanStorages(project: FactoryProject): FactoryProject {
-  const validEdges = project.edges.filter((edge) => isFactoryEdgeStillValid(project, edge));
+/**
+ * `touched`: the cards and drawers the edit changed. Only their wires are judged: an edit never drops a wire it did
+ * not touch, so a card elsewhere whose recipe has not resolved yet (a dataset still loading, an item moved to a new
+ * id) keeps its wires instead of losing them to an unrelated edit.
+ */
+function pruneInvalidEdgesAndOrphanStorages(
+  project: FactoryProject,
+  touched?: ReadonlySet<string>,
+): FactoryProject {
+  const validEdges = project.edges.filter(
+    (edge) =>
+      (touched && !touched.has(edge.source) && !touched.has(edge.target)) ||
+      isFactoryEdgeStillValid(project, edge),
+  );
   const projectWithValidEdges =
     validEdges.length === project.edges.length ? project : { ...project, edges: validEdges };
   return pruneOrphanStorages(projectWithValidEdges);

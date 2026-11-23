@@ -28,7 +28,14 @@ import type {
   plansImportResponse,
   ProposalPayload,
 } from "./delivery-schemas";
-import { createDraft, draftExpiresAt, draftNow, getDraft, touchDraft, type DraftTarget } from "./drafts";
+import {
+  createDraft,
+  draftExpiresAt,
+  draftNow,
+  getDraft,
+  touchDraft,
+  type DraftTarget,
+} from "./drafts";
 import { AgentApiError } from "./errors";
 import { importedBase, MAX_IMPORTED_CARDS, setImportedBase } from "./imported";
 import { applyTargets } from "./plans";
@@ -59,12 +66,20 @@ export async function deliverPlan(
 ): Promise<z.infer<typeof plansDeliverResponse>> {
   const draft = getDraft(body.planId);
   if (!draft.project.nodes.length) {
-    throw new AgentApiError("bad_request", "This draft has no cards: add some before delivering it.");
+    throw new AgentApiError(
+      "bad_request",
+      "This draft has no cards: add some before delivering it.",
+    );
   }
   const code = await encodePlanCode(deliveredPlan(draft.project, draft.name, draftNow()));
   // Stored as the site reads the code back (its loader fills derived fields), so the id and the code open one plan.
   const plan = await decodePlanCode(code);
-  const stored = await storeDelivery({ kind: "delivery", name: draft.name, payload: plan, player: body.player });
+  const stored = await storeDelivery({
+    kind: "delivery",
+    name: draft.name,
+    payload: plan,
+    player: body.player,
+  });
   // The site opens a plan code from a link (`/#p=<code>`) without any post; only when the site knows its address.
   const site = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, "");
   return {
@@ -120,7 +135,8 @@ export function checkSnapshot(snapshot: SlimSnapshot): void {
     cards.add(card.id);
   }
   for (const [index, drawer] of snapshot.drawers.entries()) {
-    if (things.has(drawer.id)) bad(`snapshot.drawers[${index}]: the id "${drawer.id}" is used twice.`);
+    if (things.has(drawer.id))
+      bad(`snapshot.drawers[${index}]: the id "${drawer.id}" is used twice.`);
     things.add(drawer.id);
   }
   const boards = new Set<string>();
@@ -129,14 +145,16 @@ export function checkSnapshot(snapshot: SlimSnapshot): void {
     boards.add(board.id);
   }
   for (const [index, board] of (snapshot.boards ?? []).entries()) {
-    if (board.parent && !boards.has(board.parent)) bad(`snapshot.boards[${index}]: no board "${board.parent}".`);
+    if (board.parent && !boards.has(board.parent))
+      bad(`snapshot.boards[${index}]: no board "${board.parent}".`);
   }
   for (const [list, entries] of [
     ["cards", snapshot.cards],
     ["drawers", snapshot.drawers],
   ] as const) {
     for (const [index, entry] of entries.entries()) {
-      if (entry.board && !boards.has(entry.board)) bad(`snapshot.${list}[${index}]: no board "${entry.board}".`);
+      if (entry.board && !boards.has(entry.board))
+        bad(`snapshot.${list}[${index}]: no board "${entry.board}".`);
     }
   }
   const wires = new Set<string>();
@@ -151,7 +169,8 @@ export function checkSnapshot(snapshot: SlimSnapshot): void {
   for (const [index, target] of snapshot.targets.entries()) {
     if (!cards.has(target.card)) bad(`snapshot.targets[${index}]: no card "${target.card}".`);
     const key = `${target.card}>${target.port}`;
-    if (pinned.has(key)) bad(`snapshot.targets[${index}]: card "${target.card}" pins "${target.port}" twice.`);
+    if (pinned.has(key))
+      bad(`snapshot.targets[${index}]: card "${target.card}" pins "${target.port}" twice.`);
     pinned.add(key);
   }
 }
@@ -164,7 +183,9 @@ export async function importPlan(
   const dataset = await withDataset(() => agentDatasetVersion());
 
   // Recipes by id from the dataset; a card whose recipe (or a section's) is not there is kept opaque.
-  const wanted = new Set(snapshot.cards.flatMap((card) => [card.recipeId, ...(card.sections ?? [])]));
+  const wanted = new Set(
+    snapshot.cards.flatMap((card) => [card.recipeId, ...(card.sections ?? [])]),
+  );
   const recipes = new Map<string, Recipe>();
   for (const recipeId of wanted) {
     try {
@@ -182,22 +203,31 @@ export async function importPlan(
   const loosely: string[] = [];
   for (const card of snapshot.cards) {
     const ids = [card.recipeId, ...(card.sections ?? [])];
-    const missing = ids.filter((id, k) => !recipes.has(id) && !found.get(contentKey(card.id, k))?.recipeId);
+    const missing = ids.filter(
+      (id, k) => !recipes.has(id) && !found.get(contentKey(card.id, k))?.recipeId,
+    );
     if (missing.length) {
       opaque.add(card.id);
-      const why = ids.flatMap((id, k) => (missing.includes(id) ? [found.get(contentKey(card.id, k))?.why] : []));
+      const why = ids.flatMap((id, k) =>
+        missing.includes(id) ? [found.get(contentKey(card.id, k))?.why] : [],
+      );
       const reason = why.find((entry) => entry) ?? `is not in dataset ${dataset}`;
       warnings.push(
         `Card ${card.id}: recipe ${missing.join(", ")} ${reason}; the card is kept as it is and cannot be changed.`,
       );
       continue;
     }
-    const loose = ids.filter((_, k) => found.get(contentKey(card.id, k))?.exact === false);
-    if (loose.length) {
+    // One line per recipe: a shared machine's recipes each name their own dataset recipe and what differs.
+    ids.forEach((id, k) => {
+      const match = found.get(contentKey(card.id, k));
+      if (match?.exact !== false) return;
+      const differs = match.differs?.length
+        ? match.differs.join("; ")
+        : "its amounts, time or EU differ";
       loosely.push(
-        `Card ${card.id}: recipe ${loose.join(", ")} is matched to the dataset recipe that takes and makes the same things, but its amounts, time or EU differ.`,
+        `Card ${card.id}: recipe ${id} is matched to dataset recipe ${match.recipeId}, which takes and makes the same things, but ${differs}.`,
       );
-    }
+    });
   }
 
   // Cards kept opaque come first: they are what the assistant cannot work with.
@@ -216,7 +246,11 @@ export async function importPlan(
       let name = resource.id;
       try {
         if (resource.kind !== "power") {
-          name = (await withDataset(() => resolveResource(dataset, { id: resource.id, kind: resource.kind as "item" }))).name;
+          name = (
+            await withDataset(() =>
+              resolveResource(dataset, { id: resource.id, kind: resource.kind as "item" }),
+            )
+          ).name;
         }
       } catch {
         // A resource the dataset does not name keeps its id as its name.
@@ -231,10 +265,13 @@ export async function importPlan(
     const { heatingCoil, ...tiers } = card.dials ?? {};
     // A matched card runs the dataset recipe; the player's handler only when that recipe lists it, as the site's
     // own import keeps it.
-    const matched = (k: number, id: string) => (opaque.has(card.id) ? undefined : found.get(contentKey(card.id, k))?.recipeId) ?? id;
+    const matched = (k: number, id: string) =>
+      (opaque.has(card.id) ? undefined : found.get(contentKey(card.id, k))?.recipeId) ?? id;
     const recipeId = matched(0, card.recipeId);
     const machine =
-      card.machine && (recipeId === card.recipeId || recipes.get(recipeId)?.machineHandlers?.some((h) => h.id === card.machine))
+      card.machine &&
+      (recipeId === card.recipeId ||
+        recipes.get(recipeId)?.machineHandlers?.some((h) => h.id === card.machine))
         ? card.machine
         : undefined;
     return {
@@ -248,7 +285,9 @@ export async function importPlan(
       ...(Object.keys(tiers).length ? { machineConfigTiers: tiers } : {}),
       ...(card.count !== undefined ? { solvePin: card.count } : {}),
       ...(card.count !== undefined && card.exact ? { solvePinExact: true } : {}),
-      ...(card.sections ? { extraRecipes: card.sections.map((id, k) => ({ recipeId: matched(k + 1, id) })) } : {}),
+      ...(card.sections
+        ? { extraRecipes: card.sections.map((id, k) => ({ recipeId: matched(k + 1, id) })) }
+        : {}),
       enabled: true,
       ...(card.board ? { pocketId: card.board } : {}),
       position: { x: card.position.x, y: card.position.y },
@@ -280,7 +319,9 @@ export async function importPlan(
 
   const name = snapshot.plan.name.trim().slice(0, 80) || "Imported plan";
   const draft = createDraft({ name, dataset });
-  const used = new Set(nodes.flatMap((node) => [node.recipeId, ...(node.extraRecipes ?? []).map((s) => s.recipeId)]));
+  const used = new Set(
+    nodes.flatMap((node) => [node.recipeId, ...(node.extraRecipes ?? []).map((s) => s.recipeId)]),
+  );
   draft.project = {
     ...draft.project,
     recipes: [...recipes.values()].filter((recipe) => used.has(recipe.id)),
@@ -290,8 +331,14 @@ export async function importPlan(
     ...(pockets.length ? { pockets } : {}),
   };
   draft.targets = targets;
-  draft.nextCard = nextNumber([...nodes.map((node) => node.id), ...storages.map((storage) => storage.id)], "c");
-  draft.nextWire = nextNumber(edges.map((edge) => edge.id), "w");
+  draft.nextCard = nextNumber(
+    [...nodes.map((node) => node.id), ...storages.map((storage) => storage.id)],
+    "c",
+  );
+  draft.nextWire = nextNumber(
+    edges.map((edge) => edge.id),
+    "w",
+  );
   setImportedBase(draft, { basePlanId: snapshot.plan.id, base: snapshot, opaque, pins, carriers });
   applyTargets(draft);
   touchDraft(draft);
@@ -306,7 +353,9 @@ export async function importPlan(
 
   const shown = warnings.slice(0, MAX_WARNINGS);
   if (warnings.length > shown.length) {
-    shown.push(`And ${warnings.length - shown.length} more cards with recipes not in this dataset or matched loosely.`);
+    shown.push(
+      `And ${warnings.length - shown.length} more cards with recipes not in this dataset or matched loosely.`,
+    );
   }
   return {
     dataset,
@@ -327,6 +376,8 @@ interface ContentMatch {
   /** The dataset recipe with the content; absent when none or more than one has it. */
   recipeId?: string;
   exact?: boolean;
+  /** For a match that is not exact: what the card's content has that the dataset recipe does not. */
+  differs?: string[];
   /** Why there is no recipe id, for the card's warning. */
   why?: string;
 }
@@ -350,7 +401,9 @@ async function matchContent(
       const content = contents[k];
       if (recipes.has(id)) return;
       if (!content) {
-        out.set(contentKey(card.id, k), { why: `is not in dataset ${dataset} and the card carries no recipe content` });
+        out.set(contentKey(card.id, k), {
+          why: `is not in dataset ${dataset} and the card carries no recipe content`,
+        });
         return;
       }
       refs.push({
@@ -368,13 +421,18 @@ async function matchContent(
   }
   if (!refs.length) return out;
   const matches = new Map(
-    (await withDataset(() => matchDatasetRecipeRefs(dataset, refs))).map((match) => [match.importedId, match]),
+    (await withDataset(() => matchDatasetRecipeRefs(dataset, refs))).map((match) => [
+      match.importedId,
+      match,
+    ]),
   );
   for (const ref of refs) {
     const key = ref.id.slice("slim:".length);
     const match = matches.get(ref.id);
     if (!match) {
-      out.set(key, { why: `is not in dataset ${dataset} and no dataset recipe takes and makes the same things` });
+      out.set(key, {
+        why: `is not in dataset ${dataset} and no dataset recipe takes and makes the same things`,
+      });
     } else if (match.tied > 0) {
       out.set(key, {
         why: `is not in dataset ${dataset} and its content fits ${match.tied + 1} dataset recipes equally well`,
@@ -383,7 +441,45 @@ async function matchContent(
       if (!recipes.has(match.recipeId)) {
         recipes.set(match.recipeId, await withDataset(() => loadRecipe(dataset, match.recipeId)));
       }
-      out.set(key, { recipeId: match.recipeId, exact: match.exact });
+      const differs = match.exact ? [] : contentDiffers(ref, recipes.get(match.recipeId)!);
+      out.set(key, { recipeId: match.recipeId, exact: match.exact, differs });
+    }
+  }
+  return out;
+}
+
+/** What a loosely matched card's content has that its dataset recipe does not: time, EU/t, then amounts by resource. */
+function contentDiffers(content: RecipeContentRef, recipe: Recipe): string[] {
+  const out: string[] = [];
+  if (content.durationTicks !== undefined && content.durationTicks !== recipe.durationTicks) {
+    out.push(
+      `its time differs (${content.durationTicks} ticks on the card, ${recipe.durationTicks} in the dataset)`,
+    );
+  }
+  if (content.eut !== undefined && content.eut !== recipe.eut) {
+    out.push(`its EU/t differs (${content.eut} on the card, ${recipe.eut} in the dataset)`);
+  }
+  const totals = (rows: ReadonlyArray<{ kind: string; id: string; amount?: number }>) => {
+    const sum = new Map<string, number>();
+    for (const row of rows) {
+      const key = `${row.kind}:${row.id}`;
+      sum.set(key, (sum.get(key) ?? 0) + (row.amount ?? 0));
+    }
+    return sum;
+  };
+  for (const [side, mine, theirs] of [
+    ["input", totals(content.inputs ?? []), totals(recipe.inputs)],
+    ["output", totals(content.outputs), totals(recipe.outputs)],
+  ] as const) {
+    const moved = [...new Set([...mine.keys(), ...theirs.keys()])].filter(
+      (key) => mine.get(key) !== theirs.get(key),
+    );
+    if (moved.length) {
+      const first = moved[0]!;
+      const more = moved.length > 1 ? ` and ${moved.length - 1} more` : "";
+      out.push(
+        `its ${side} amounts differ (${first}: ${mine.get(first) ?? 0} on the card, ${theirs.get(first) ?? 0} in the dataset${more})`,
+      );
     }
   }
   return out;
@@ -398,7 +494,9 @@ function withoutPosition<T extends WithPosition>(value: T): string {
 
 function listed(items: string[], limit = 8): string {
   const shown = items.slice(0, limit);
-  return items.length > limit ? `${shown.join(", ")} and ${items.length - limit} more` : shown.join(", ");
+  return items.length > limit
+    ? `${shown.join(", ")} and ${items.length - limit} more`
+    : shown.join(", ");
 }
 
 /** "2 cards" / "1 card". */
@@ -406,7 +504,9 @@ function count(n: number, word: string): string {
   return `${n} ${word}${n === 1 ? "" : "s"}`;
 }
 
-export async function diffPlan(body: z.infer<typeof plansDiffRequest>): Promise<z.infer<typeof plansDiffResponse>> {
+export async function diffPlan(
+  body: z.infer<typeof plansDiffRequest>,
+): Promise<z.infer<typeof plansDiffResponse>> {
   const draft = getDraft(body.planId);
   const imported = importedBase(draft);
   if (!imported) {
@@ -417,7 +517,12 @@ export async function diffPlan(body: z.infer<typeof plansDiffRequest>): Promise<
 
   // Add-only: anything of the imported plan that is gone or different refuses the whole proposal.
   const problems: string[] = [];
-  const compare = <T extends { id: string }>(word: string, before: T[], after: T[], key: (value: T) => string) => {
+  const compare = <T extends { id: string }>(
+    word: string,
+    before: T[],
+    after: T[],
+    key: (value: T) => string,
+  ) => {
     const current = new Map(after.map((entry) => [entry.id, entry]));
     for (const entry of before) {
       const found = current.get(entry.id);
@@ -449,7 +554,9 @@ export async function diffPlan(body: z.infer<typeof plansDiffRequest>): Promise<
   const baseWires = new Set(base.wires.map((wire) => wire.id));
   const basePins = new Map(base.targets.map((target) => [pinKey(target), target.rate]));
   const addedNodes = draft.project.nodes.filter((node) => !baseIds.has(node.id));
-  const addedStorages = (draft.project.storages ?? []).filter((storage) => !baseIds.has(storage.id));
+  const addedStorages = (draft.project.storages ?? []).filter(
+    (storage) => !baseIds.has(storage.id),
+  );
   const addedEdges = draft.project.edges.filter((edge) => !baseWires.has(edge.id));
   const targets = now.targets.filter((target) => basePins.get(pinKey(target)) !== target.rate);
   if (!addedNodes.length && !addedStorages.length && !addedEdges.length && !targets.length) {
@@ -462,15 +569,23 @@ export async function diffPlan(body: z.infer<typeof plansDiffRequest>): Promise<
   let dx = 0;
   let dy = 0;
   if (basePositions.length && added.length) {
-    dx = Math.max(...basePositions.map((p) => p.x)) + 600 - Math.min(...added.map((entry) => entry.position.x));
-    dy = Math.min(...basePositions.map((p) => p.y)) - Math.min(...added.map((entry) => entry.position.y));
+    dx =
+      Math.max(...basePositions.map((p) => p.x)) +
+      600 -
+      Math.min(...added.map((entry) => entry.position.x));
+    dy =
+      Math.min(...basePositions.map((p) => p.y)) -
+      Math.min(...added.map((entry) => entry.position.y));
   }
   const moved = <T extends WithPosition>(entry: T): T => ({
     ...structuredClone(entry),
     position: { x: entry.position.x + dx, y: entry.position.y + dy },
   });
   const recipeIds = new Set(
-    addedNodes.flatMap((node) => [node.recipeId, ...(node.extraRecipes ?? []).map((section) => section.recipeId)]),
+    addedNodes.flatMap((node) => [
+      node.recipeId,
+      ...(node.extraRecipes ?? []).map((section) => section.recipeId),
+    ]),
   );
   const summary = {
     addedCards: addedNodes.length,
@@ -482,7 +597,9 @@ export async function diffPlan(body: z.infer<typeof plansDiffRequest>): Promise<
     version: 1,
     basePlanId: imported.basePlanId,
     summary,
-    recipes: structuredClone(draft.project.recipes.filter((recipe) => recipeIds.has(recipe.id))) as never,
+    recipes: structuredClone(
+      draft.project.recipes.filter((recipe) => recipeIds.has(recipe.id)),
+    ) as never,
     cards: addedNodes.map(moved) as never,
     drawers: addedStorages.map(moved) as never,
     wires: structuredClone(addedEdges) as never,
@@ -514,5 +631,11 @@ export async function diffPlan(body: z.infer<typeof plansDiffRequest>): Promise<
     basePlanId: imported.basePlanId,
     player: body.player,
   });
-  return { proposalId: stored.id, basePlanId: imported.basePlanId, expiresAt: stored.expiresAt, summary, text };
+  return {
+    proposalId: stored.id,
+    basePlanId: imported.basePlanId,
+    expiresAt: stored.expiresAt,
+    summary,
+    text,
+  };
 }

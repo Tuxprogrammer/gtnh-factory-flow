@@ -14,7 +14,12 @@ import { POST as solvePost } from "@/app/api/agent/v1/plans/solve/route";
 import { GET as readGet } from "@/app/api/deliveries/[id]/route";
 import { decodePlanCode } from "@/lib/import-export/plan-code";
 import { factoryProjectSchema } from "@/lib/model/schemas";
-import { PROJECT_SCHEMA_VERSION, type FactoryProject, type MachineHandler, type Recipe } from "@/lib/model/types";
+import {
+  PROJECT_SCHEMA_VERSION,
+  type FactoryProject,
+  type MachineHandler,
+  type Recipe,
+} from "@/lib/model/types";
 import {
   getDatasetRecipe,
   getDatasetResource,
@@ -26,7 +31,13 @@ import { useInProcessLocalDb } from "@/lib/server/local-db/client";
 import { openLocalDatabase, type LocalDatabase } from "@/lib/server/local-db/database";
 import { resetMemoryTokens } from "@/lib/server/memory-rate";
 import { CORE_LOAD_MS, useCoreSolver } from "@/test-support/core-solve";
-import { DELIVERIES_PER_DAY, DELIVERY_ID_PATTERN, DELIVERY_TABLE, DELIVERY_TTL_MS, newDeliveryId } from "./deliveries";
+import {
+  DELIVERIES_PER_DAY,
+  DELIVERY_ID_PATTERN,
+  DELIVERY_TABLE,
+  DELIVERY_TTL_MS,
+  newDeliveryId,
+} from "./deliveries";
 import {
   deliveryReadResponse,
   plansDeliverResponse,
@@ -69,7 +80,12 @@ function slot(kind: "item" | "fluid", id: string, amount: number) {
   return { kind, id, amount, displayName: NAMES[`${kind}:${id}`] ?? id };
 }
 
-function recipe(id: string, machine: string, inputs: ReturnType<typeof slot>[], outputs: ReturnType<typeof slot>[]): Recipe {
+function recipe(
+  id: string,
+  machine: string,
+  inputs: ReturnType<typeof slot>[],
+  outputs: ReturnType<typeof slot>[],
+): Recipe {
   return {
     id,
     name: `${machine}: ${outputs[0]!.displayName}`,
@@ -79,27 +95,57 @@ function recipe(id: string, machine: string, inputs: ReturnType<typeof slot>[], 
     eut: 30,
     inputs,
     outputs,
-    machineHandlers: [{ id: `mock-${id}`, label: machine, kind: "single", machineType: machine, minimumTier: "LV" } as MachineHandler],
+    machineHandlers: [
+      {
+        id: `mock-${id}`,
+        label: machine,
+        kind: "single",
+        machineType: machine,
+        minimumTier: "LV",
+      } as MachineHandler,
+    ],
   } as Recipe;
 }
 
 const RECIPES: Record<string, Recipe> = {
-  "r-dust": recipe("r-dust", "Mock Macerator", [slot("item", "ore", 1)], [slot("item", "dust", 1), slot("item", "stone", 1)]),
-  "r-ingot": recipe("r-ingot", "Mock Furnace", [slot("item", "dust", 1), slot("fluid", "nitrogen", 1000)], [slot("item", "ingot", 1)]),
-  "r-plate": recipe("r-plate", "Mock Bender", [slot("item", "ingot", 1)], [slot("item", "plate", 1)]),
+  "r-dust": recipe(
+    "r-dust",
+    "Mock Macerator",
+    [slot("item", "ore", 1)],
+    [slot("item", "dust", 1), slot("item", "stone", 1)],
+  ),
+  "r-ingot": recipe(
+    "r-ingot",
+    "Mock Furnace",
+    [slot("item", "dust", 1), slot("fluid", "nitrogen", 1000)],
+    [slot("item", "ingot", 1)],
+  ),
+  "r-plate": recipe(
+    "r-plate",
+    "Mock Bender",
+    [slot("item", "ingot", 1)],
+    [slot("item", "plate", 1)],
+  ),
 };
 
 function request(url: string, body: unknown, auth = true): Request {
   return new Request(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...(auth ? { Authorization: `Bearer ${TOKEN}` } : {}) },
+    headers: {
+      "Content-Type": "application/json",
+      ...(auth ? { Authorization: `Bearer ${TOKEN}` } : {}),
+    },
     body: typeof body === "string" ? body : JSON.stringify(body),
   });
 }
 
 type Post = (request: Request) => Promise<Response>;
 
-async function call<S extends z.ZodType>(post: Post, body: unknown, schema: S): Promise<z.infer<S>> {
+async function call<S extends z.ZodType>(
+  post: Post,
+  body: unknown,
+  schema: S,
+): Promise<z.infer<S>> {
   const response = await post(request("http://localhost/api/agent/v1/plans", body));
   const json = await response.json();
   expect(response.status, JSON.stringify(json)).toBe(200);
@@ -115,9 +161,12 @@ async function fails(post: Post, body: unknown, code: string, status: number): P
 }
 
 async function read(id: string, address = "198.51.100.7"): Promise<Response> {
-  return readGet(new Request(`http://localhost/api/deliveries/${id}`, { headers: { "x-client-ip": address } }), {
-    params: Promise.resolve({ id }),
-  });
+  return readGet(
+    new Request(`http://localhost/api/deliveries/${id}`, { headers: { "x-client-ip": address } }),
+    {
+      params: Promise.resolve({ id }),
+    },
+  );
 }
 
 let local: LocalDatabase;
@@ -147,7 +196,9 @@ beforeEach(async () => {
   resetMemoryTokens();
   await local.db.exec(`delete from ${DELIVERY_TABLE}`);
   vi.mocked(getDefaultDatasetVersionId).mockResolvedValue(VERSION);
-  vi.mocked(getDatasetRecipe).mockImplementation(async (_version, id) => structuredClone(RECIPES[id]));
+  vi.mocked(getDatasetRecipe).mockImplementation(async (_version, id) =>
+    structuredClone(RECIPES[id]),
+  );
   vi.mocked(getDatasetResource).mockImplementation(async (_version, kind, id) => {
     const name = NAMES[`${kind}:${id}`];
     return name ? ({ id, kind, displayName: name } as never) : undefined;
@@ -160,11 +211,20 @@ afterEach(() => {
   setDraftClock();
 });
 
-async function draftWith(recipeIds: string[], target?: { resource: string; rate: number }): Promise<string> {
+async function draftWith(
+  recipeIds: string[],
+  target?: { resource: string; rate: number },
+): Promise<string> {
   const { planId } = await call(createPost, { name: "Titanium" }, plansCreateResponse);
-  await call(addCardsPost, { planId, cards: recipeIds.map((recipeId) => ({ recipeId })) }, plansAddCardsResponse);
+  await call(
+    addCardsPost,
+    { planId, cards: recipeIds.map((recipeId) => ({ recipeId })) },
+    plansAddCardsResponse,
+  );
   if (target) {
-    const response = await setTargetsPost(request("http://localhost/x", { planId, targets: [target] }));
+    const response = await setTargetsPost(
+      request("http://localhost/x", { planId, targets: [target] }),
+    );
     expect(response.status).toBe(200);
   }
   return planId;
@@ -212,7 +272,15 @@ function playerPlan(): FactoryProject {
         position: { x: 500, y: 40 },
       },
     ],
-    storages: [{ id: "drawer-1", kind: "item", resourceId: "stone", drainMode: "trash", position: { x: 500, y: 300 } }],
+    storages: [
+      {
+        id: "drawer-1",
+        kind: "item",
+        resourceId: "stone",
+        drainMode: "trash",
+        position: { x: 500, y: 300 },
+      },
+    ],
     edges: [
       {
         id: "edge-1",
@@ -223,7 +291,13 @@ function playerPlan(): FactoryProject {
         resourceKind: "item",
         resourceId: "dust",
       },
-      { id: "w2", source: "node-7f3a", target: "drawer-1", resourceKind: "item", resourceId: "stone" },
+      {
+        id: "w2",
+        source: "node-7f3a",
+        target: "drawer-1",
+        resourceKind: "item",
+        resourceId: "stone",
+      },
     ],
     fuelProfiles: [],
   } as never) as FactoryProject;
@@ -273,7 +347,14 @@ describe("plans/deliver and GET /api/deliveries/{id}", () => {
     const text = await response.text();
     expect(text).not.toContain(PLAYER.name);
     expect(text).not.toContain(PLAYER.uuid);
-    expect(Object.keys(JSON.parse(text)).sort()).toEqual(["createdAt", "expiresAt", "id", "kind", "name", "plan"]);
+    expect(Object.keys(JSON.parse(text)).sort()).toEqual([
+      "createdAt",
+      "expiresAt",
+      "id",
+      "kind",
+      "name",
+      "plan",
+    ]);
     const row = await local.db.query<{ player_name: string; player_uuid: string }>(
       `select player_name, player_uuid from ${DELIVERY_TABLE} where id = $1`,
       [id],
@@ -286,7 +367,12 @@ describe("plans/deliver and GET /api/deliveries/{id}", () => {
     await fails(deliverPost, { planId, player: { name: "Steve" } }, "bad_request", 400);
     const { planId: empty } = await call(createPost, { name: "Empty" }, plansCreateResponse);
     await fails(deliverPost, { planId: empty, player: PLAYER }, "bad_request", 400);
-    await fails(deliverPost, { planId: "x23456789abcdefghjkm", player: PLAYER }, "plan_not_found", 404);
+    await fails(
+      deliverPost,
+      { planId: "x23456789abcdefghjkm", player: PLAYER },
+      "plan_not_found",
+      404,
+    );
   });
 
   it("delivers at most 100 a day (UTC), counting again the next day", async () => {
@@ -309,7 +395,15 @@ describe("plans/deliver and GET /api/deliveries/{id}", () => {
   it("answers 404 for a bad id, an unknown id and an expired one, and only GET", async () => {
     const planId = await draftWith(["r-dust"]);
     const { id } = await call(deliverPost, { planId, player: PLAYER }, plansDeliverResponse);
-    for (const wrong of ["d123", "x23456789abcdefgh", `${id}a`, id.toUpperCase(), "d0000000000000000"[0] + "o".repeat(15), newDeliveryId("delivery"), newDeliveryId("proposal")]) {
+    for (const wrong of [
+      "d123",
+      "x23456789abcdefgh",
+      `${id}a`,
+      id.toUpperCase(),
+      "d0000000000000000"[0] + "o".repeat(15),
+      newDeliveryId("delivery"),
+      newDeliveryId("proposal"),
+    ]) {
       const response = await read(wrong);
       expect(response.status, wrong).toBe(404);
       expect(await response.json()).toEqual({ error: "Plan not found." });
@@ -324,7 +418,9 @@ describe("plans/deliver and GET /api/deliveries/{id}", () => {
     const planId = await draftWith(["r-dust"]);
     const { id } = await call(deliverPost, { planId, player: PLAYER }, plansDeliverResponse);
     vi.stubEnv("AGENT_API_TOKEN", "");
-    expect((await deliverPost(request("http://localhost/x", { planId, player: PLAYER }))).status).toBe(404);
+    expect(
+      (await deliverPost(request("http://localhost/x", { planId, player: PLAYER }))).status,
+    ).toBe(404);
     expect((await read(id)).status).toBe(200);
   });
 
@@ -356,9 +452,22 @@ describe("slim snapshots", () => {
           exact: true,
           position: { x: 100, y: 40 },
         },
-        { id: "c4", recipeId: "r-ingot", tier: "LV", position: { x: 500, y: 40 }, board: "pocket-a" },
+        {
+          id: "c4",
+          recipeId: "r-ingot",
+          tier: "LV",
+          position: { x: 500, y: 40 },
+          board: "pocket-a",
+        },
       ],
-      drawers: [{ id: "drawer-1", resource: { id: "stone", kind: "item" }, mode: "trash", position: { x: 500, y: 300 } }],
+      drawers: [
+        {
+          id: "drawer-1",
+          resource: { id: "stone", kind: "item" },
+          mode: "trash",
+          position: { x: 500, y: 300 },
+        },
+      ],
       wires: [
         {
           id: "edge-1",
@@ -374,26 +483,40 @@ describe("slim snapshots", () => {
     });
 
     const imported = await call(importPost, { snapshot, player: PLAYER }, plansImportResponse);
-    expect(imported).toMatchObject({ cardCount: 2, wireCount: 2, warnings: [], name: "My titanium" });
+    expect(imported).toMatchObject({
+      cardCount: 2,
+      wireCount: 2,
+      warnings: [],
+      name: "My titanium",
+    });
     const draft = getDraft(imported.planId);
-    expect(toSlimSnapshot(draft.project)).toEqual({ ...snapshot, plan: { ...snapshot.plan, id: draft.id } });
-    expect(draft.targets).toEqual([{ id: "ingot", kind: "item", name: "Titanium Ingot", rate: 0.5 }]);
+    expect(toSlimSnapshot(draft.project)).toEqual({
+      ...snapshot,
+      plan: { ...snapshot.plan, id: draft.id },
+    });
+    expect(draft.targets).toEqual([
+      { id: "ingot", kind: "item", name: "Titanium Ingot", rate: 0.5 },
+    ]);
     factoryProjectSchema.parse(draft.project);
   });
 
-  it("keeps a card whose recipe the dataset lacks, says so, and still solves", { timeout: CORE_LOAD_MS }, async () => {
-    await useCoreSolver();
-    const snapshot = toSlimSnapshot(playerPlan());
-    snapshot.cards[0]!.recipeId = "r-gone";
-    const imported = await call(importPost, { snapshot }, plansImportResponse);
-    expect(imported.warnings).toHaveLength(1);
-    expect(imported.warnings[0]).toContain("node-7f3a");
-    expect(imported.warnings[0]).toContain("r-gone");
-    const draft = getDraft(imported.planId);
-    expect(draft.project.nodes[0]!.recipeId).toBe("r-gone");
-    expect(draft.project.recipes.map((entry) => entry.id)).toEqual(["r-ingot"]);
-    await call(solvePost, { planId: imported.planId }, plansSolveResponse);
-  });
+  it(
+    "keeps a card whose recipe the dataset lacks, says so, and still solves",
+    { timeout: CORE_LOAD_MS },
+    async () => {
+      await useCoreSolver();
+      const snapshot = toSlimSnapshot(playerPlan());
+      snapshot.cards[0]!.recipeId = "r-gone";
+      const imported = await call(importPost, { snapshot }, plansImportResponse);
+      expect(imported.warnings).toHaveLength(1);
+      expect(imported.warnings[0]).toContain("node-7f3a");
+      expect(imported.warnings[0]).toContain("r-gone");
+      const draft = getDraft(imported.planId);
+      expect(draft.project.nodes[0]!.recipeId).toBe("r-gone");
+      expect(draft.project.recipes.map((entry) => entry.id)).toEqual(["r-ingot"]);
+      await call(solvePost, { planId: imported.planId }, plansSolveResponse);
+    },
+  );
 
   it("refuses broken references, and plans over 200 cards", async () => {
     const snapshot = toSlimSnapshot(playerPlan());
@@ -403,26 +526,51 @@ describe("slim snapshots", () => {
     const twice = structuredClone(snapshot);
     twice.drawers[0]!.id = "c4";
     await fails(importPost, { snapshot: twice }, "bad_request", 400);
-    const big: SlimSnapshot = { ...snapshot, boards: undefined, wires: [], targets: [], drawers: [] };
-    big.cards = Array.from({ length: 201 }, (_, n) => ({ id: `c${n + 1}`, recipeId: "r-dust", tier: "LV", position: { x: n, y: 0 } }));
+    const big: SlimSnapshot = {
+      ...snapshot,
+      boards: undefined,
+      wires: [],
+      targets: [],
+      drawers: [],
+    };
+    big.cards = Array.from({ length: 201 }, (_, n) => ({
+      id: `c${n + 1}`,
+      recipeId: "r-dust",
+      tier: "LV",
+      position: { x: n, y: 0 },
+    }));
     await fails(importPost, { snapshot: big }, "plan_too_big", 413);
     big.cards = big.cards.slice(0, 200);
     const fine = await call(importPost, { snapshot: big }, plansImportResponse);
     expect(fine.cardCount).toBe(200);
     // An imported draft may grow past 60 cards, never past 200.
-    await fails(addCardsPost, { planId: fine.planId, cards: [{ recipeId: "r-ingot" }] }, "plan_too_big", 413);
+    await fails(
+      addCardsPost,
+      { planId: fine.planId, cards: [{ recipeId: "r-ingot" }] },
+      "plan_too_big",
+      413,
+    );
   });
 
   it("takes a body up to 512 KB on import only", async () => {
     const snapshot = toSlimSnapshot(playerPlan());
     const padded = { snapshot: { ...snapshot, plan: { ...snapshot.plan, name: "x".repeat(150) } } };
-    const filler = JSON.stringify(padded).replace('"targets"', `${" ".repeat(300 * 1024)}"targets"`);
+    const filler = JSON.stringify(padded).replace(
+      '"targets"',
+      `${" ".repeat(300 * 1024)}"targets"`,
+    );
     const response = await importPost(request("http://localhost/x", filler));
     expect(response.status).toBe(200);
-    const tooBig = JSON.stringify(padded).replace('"targets"', `${" ".repeat(513 * 1024)}"targets"`);
+    const tooBig = JSON.stringify(padded).replace(
+      '"targets"',
+      `${" ".repeat(513 * 1024)}"targets"`,
+    );
     expect((await importPost(request("http://localhost/x", tooBig))).status).toBe(400);
     const planId = await draftWith(["r-dust"]);
-    const elsewhere = JSON.stringify({ planId, player: PLAYER }).replace("}", `${" ".repeat(70 * 1024)}}`);
+    const elsewhere = JSON.stringify({ planId, player: PLAYER }).replace(
+      "}",
+      `${" ".repeat(70 * 1024)}}`,
+    );
     expect((await deliverPost(request("http://localhost/x", elsewhere))).status).toBe(400);
   });
 });
@@ -460,32 +608,50 @@ describe("cards that carry their recipe's content", () => {
   }
   const GAME_CARD = "0c9e8a1b-5f00-4a3e-9d6e-2b7c1d4e5f60";
 
-  it("becomes a normal card on the dataset recipe it matches, and a new card wires to it by its own id", { timeout: CORE_LOAD_MS }, async () => {
-    await useCoreSolver();
-    vi.mocked(matchDatasetRecipeRefs).mockImplementation(async (_version, refs) =>
-      refs.map((ref) => ({ importedId: ref.id, recipeId: "r-ingot", exact: true, tied: 0 })),
-    );
-    const imported = await call(importPost, { snapshot: gameSnapshot() }, plansImportResponse);
-    expect(imported.warnings).toEqual([]);
-    const [ref] = vi.mocked(matchDatasetRecipeRefs).mock.calls[0]![1];
-    expect(ref).toMatchObject({ machineType: "Mock Furnace", outputs: [{ kind: "item", id: "ingot", amount: 1 }], eut: 30 });
-    const draft = getDraft(imported.planId);
-    expect(draft.project.nodes[0]).toMatchObject({ id: GAME_CARD, recipeId: "r-ingot" });
-    // The game's machine is not one the dataset recipe lists: the card runs the recipe's own.
-    expect(draft.project.nodes[0]!.machineHandlerId).toBeUndefined();
-    expect(draft.project.recipes.map((entry) => entry.id)).toEqual(["r-ingot"]);
-    await call(solvePost, { planId: imported.planId }, plansSolveResponse);
+  it(
+    "becomes a normal card on the dataset recipe it matches, and a new card wires to it by its own id",
+    { timeout: CORE_LOAD_MS },
+    async () => {
+      await useCoreSolver();
+      vi.mocked(matchDatasetRecipeRefs).mockImplementation(async (_version, refs) =>
+        refs.map((ref) => ({ importedId: ref.id, recipeId: "r-ingot", exact: true, tied: 0 })),
+      );
+      const imported = await call(importPost, { snapshot: gameSnapshot() }, plansImportResponse);
+      expect(imported.warnings).toEqual([]);
+      const [ref] = vi.mocked(matchDatasetRecipeRefs).mock.calls[0]![1];
+      expect(ref).toMatchObject({
+        machineType: "Mock Furnace",
+        outputs: [{ kind: "item", id: "ingot", amount: 1 }],
+        eut: 30,
+      });
+      const draft = getDraft(imported.planId);
+      expect(draft.project.nodes[0]).toMatchObject({ id: GAME_CARD, recipeId: "r-ingot" });
+      // The game's machine is not one the dataset recipe lists: the card runs the recipe's own.
+      expect(draft.project.nodes[0]!.machineHandlerId).toBeUndefined();
+      expect(draft.project.recipes.map((entry) => entry.id)).toEqual(["r-ingot"]);
+      await call(solvePost, { planId: imported.planId }, plansSolveResponse);
 
-    const added = await call(addCardsPost, { planId: imported.planId, cards: [{ recipeId: "r-dust" }] }, plansAddCardsResponse);
-    expect(added.wires).toEqual([expect.objectContaining({ from: added.cards[0]!.cardId, to: GAME_CARD })]);
-    const diff = await call(diffPost, { planId: imported.planId }, plansDiffResponse);
-    const body = await readJson(diff.proposalId);
-    if (body.kind !== "proposal") throw new Error("not a proposal");
-    expect(body.proposal.wires).toEqual([
-      expect.objectContaining({ source: added.cards[0]!.cardId, target: GAME_CARD, resourceId: "dust" }),
-    ]);
-    expect(body.proposal.cards.map((card) => card.id)).toEqual([added.cards[0]!.cardId]);
-  });
+      const added = await call(
+        addCardsPost,
+        { planId: imported.planId, cards: [{ recipeId: "r-dust" }] },
+        plansAddCardsResponse,
+      );
+      expect(added.wires).toEqual([
+        expect.objectContaining({ from: added.cards[0]!.cardId, to: GAME_CARD }),
+      ]);
+      const diff = await call(diffPost, { planId: imported.planId }, plansDiffResponse);
+      const body = await readJson(diff.proposalId);
+      if (body.kind !== "proposal") throw new Error("not a proposal");
+      expect(body.proposal.wires).toEqual([
+        expect.objectContaining({
+          source: added.cards[0]!.cardId,
+          target: GAME_CARD,
+          resourceId: "dust",
+        }),
+      ]);
+      expect(body.proposal.cards.map((card) => card.id)).toEqual([added.cards[0]!.cardId]);
+    },
+  );
 
   it("stays opaque, with a warning naming the card and why, when nothing matches or two recipes match equally", async () => {
     vi.mocked(matchDatasetRecipeRefs).mockResolvedValueOnce([]);
@@ -514,29 +680,46 @@ describe("cards that carry their recipe's content", () => {
     vi.mocked(matchDatasetRecipeRefs).mockImplementation(async (_version, refs) =>
       refs.map((ref) => ({ importedId: ref.id, recipeId: "r-ingot", exact: false, tied: 0 })),
     );
-    const loose = await call(importPost, { snapshot: gameSnapshot() }, plansImportResponse);
+    const slower = gameSnapshot();
+    slower.cards[0]!.recipe!.durationTicks = 999;
+    const loose = await call(importPost, { snapshot: slower }, plansImportResponse);
     expect(loose.warnings).toHaveLength(1);
-    expect(loose.warnings[0]).toContain("amounts, time or EU differ");
+    expect(loose.warnings[0]).toContain(
+      `Card ${GAME_CARD}: recipe gtnhplanner:${GAME_CARD} is matched to dataset recipe r-ingot`,
+    );
+    expect(loose.warnings[0]).toContain("but its time differs (999 ticks on the card, ");
     expect(getDraft(loose.planId).project.nodes[0]!.recipeId).toBe("r-ingot");
 
-    const extra = gameSnapshot() as unknown as { cards: Array<{ recipe: Record<string, unknown> }> };
+    const extra = gameSnapshot() as unknown as {
+      cards: Array<{ recipe: Record<string, unknown> }>;
+    };
     extra.cards[0]!.recipe.chance = 1;
     await fails(importPost, { snapshot: extra }, "bad_request", 400);
     const sections = gameSnapshot();
     sections.cards[0]!.sectionRecipes = [sections.cards[0]!.recipe!];
-    expect(await fails(importPost, { snapshot: sections }, "bad_request", 400)).toContain("one entry per section");
+    expect(await fails(importPost, { snapshot: sections }, "bad_request", 400)).toContain(
+      "one entry per section",
+    );
   });
 });
 
 describe("plans/diff", () => {
   async function importPlayerPlan(): Promise<string> {
-    const imported = await call(importPost, { snapshot: toSlimSnapshot(playerPlan()) }, plansImportResponse);
+    const imported = await call(
+      importPost,
+      { snapshot: toSlimSnapshot(playerPlan()) },
+      plansImportResponse,
+    );
     return imported.planId;
   }
 
   it("stores what the draft adds as a proposal the GET serves", async () => {
     const planId = await importPlayerPlan();
-    const added = await call(addCardsPost, { planId, cards: [{ recipeId: "r-plate" }] }, plansAddCardsResponse);
+    const added = await call(
+      addCardsPost,
+      { planId, cards: [{ recipeId: "r-plate" }] },
+      plansAddCardsResponse,
+    );
     expect(added.cards[0]!.cardId).toBe("c5");
     expect(added.wires).toHaveLength(1);
     const setTargets = await setTargetsPost(
@@ -553,7 +736,12 @@ describe("plans/diff", () => {
     const diff = await call(diffPost, { planId, player: PLAYER }, plansDiffResponse);
     expect(diff.proposalId).toMatch(/^p[a-hjkmnp-z2-9]{15}$/);
     expect(diff.basePlanId).toBe("6c1f0a7e-player-plan");
-    expect(diff.summary).toEqual({ addedCards: 1, addedWires: 1, addedDrawers: 0, changedTargets: 1 });
+    expect(diff.summary).toEqual({
+      addedCards: 1,
+      addedWires: 1,
+      addedDrawers: 0,
+      changedTargets: 1,
+    });
     expect(diff.text).toContain("Mock Bender: Titanium Plate c5");
 
     const body = await readJson(diff.proposalId);
@@ -573,32 +761,54 @@ describe("plans/diff", () => {
   it("refuses a draft that removed or changed what the player had", async () => {
     const planId = await importPlayerPlan();
     await call(addCardsPost, { planId, cards: [{ recipeId: "r-plate" }] }, plansAddCardsResponse);
-    const disconnected = await disconnectPost(request("http://localhost/x", { planId, wireId: "edge-1" }));
+    const disconnected = await disconnectPost(
+      request("http://localhost/x", { planId, wireId: "edge-1" }),
+    );
     expect(disconnected.status).toBe(200);
     expect(await fails(diffPost, { planId }, "bad_request", 400)).toContain("removed wire edge-1");
 
     const second = await importPlayerPlan();
-    expect((await removeCardsPost(request("http://localhost/x", { planId: second, cardIds: ["node-7f3a"] }))).status).toBe(200);
-    expect(await fails(diffPost, { planId: second }, "bad_request", 400)).toContain("removed card node-7f3a");
+    expect(
+      (
+        await removeCardsPost(
+          request("http://localhost/x", { planId: second, cardIds: ["node-7f3a"] }),
+        )
+      ).status,
+    ).toBe(200);
+    expect(await fails(diffPost, { planId: second }, "bad_request", 400)).toContain(
+      "removed card node-7f3a",
+    );
 
     const third = await importPlayerPlan();
-    expect((await setTargetsPost(request("http://localhost/x", { planId: third, targets: [] }))).status).toBe(200);
-    expect(await fails(diffPost, { planId: third }, "bad_request", 400)).toContain("removed the rate pinned on card c4");
+    expect(
+      (await setTargetsPost(request("http://localhost/x", { planId: third, targets: [] }))).status,
+    ).toBe(200);
+    expect(await fails(diffPost, { planId: third }, "bad_request", 400)).toContain(
+      "removed the rate pinned on card c4",
+    );
   });
 
   it("refuses a draft that was not imported, and one that adds nothing", async () => {
     const planId = await draftWith(["r-dust"]);
     expect(await fails(diffPost, { planId }, "bad_request", 400)).toContain("plans/import");
     const imported = await importPlayerPlan();
-    expect(await fails(diffPost, { planId: imported }, "bad_request", 400)).toContain("adds nothing");
+    expect(await fails(diffPost, { planId: imported }, "bad_request", 400)).toContain(
+      "adds nothing",
+    );
   });
 });
 
 describe("read route examples", () => {
   const DIR = path.join(process.cwd(), "docs", "agent-api", "examples");
-  it.each(["delivery.json", "proposal.json"])("deliveries/%s matches the read route's schema", (file) => {
-    const example = JSON.parse(readFileSync(path.join(DIR, "deliveries", file), "utf8")) as { status: number; response: unknown };
-    expect(example.status).toBe(200);
-    deliveryReadResponse.parse(example.response);
-  });
+  it.each(["delivery.json", "proposal.json"])(
+    "deliveries/%s matches the read route's schema",
+    (file) => {
+      const example = JSON.parse(readFileSync(path.join(DIR, "deliveries", file), "utf8")) as {
+        status: number;
+        response: unknown;
+      };
+      expect(example.status).toBe(200);
+      deliveryReadResponse.parse(example.response);
+    },
+  );
 });

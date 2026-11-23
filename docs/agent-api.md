@@ -52,18 +52,18 @@ against the schemas by `src/lib/agent-api/agent-api-examples.test.ts`.
 Every error except the disabled-API 404 is `{"error": {"code": "...", "message": "..."}}`. Branch on `code`; the
 message is for people and may change.
 
-| code                  | HTTP | when                                                                       |
-| --------------------- | ---- | -------------------------------------------------------------------------- |
-| `unauthorized`        | 401  | missing or wrong bearer token                                              |
-| `bad_request`         | 400  | not JSON, over 64 KB, unknown field, wrong type, missing field, wrong method |
-| `unknown_resource`    | 404  | a resource id the dataset does not have                                    |
-| `unknown_recipe`      | 404  | a recipe id the dataset does not have                                      |
-| `no_recipe`           | 422  | nothing makes the resource: no card in the draft makes a target            |
-| `tier_too_low`        | 422  | a card's tier is below its machine's minimum, or nothing runs it at or below the draft's `tierCap` |
-| `plan_not_found`      | 404  | unknown or expired draft id                                                |
-| `plan_too_big`        | 413  | a draft would go over 60 cards (200 for an imported plan)                  |
-| `rate_limited`        | 429  | a daily limit is spent (UTC days: 300 drafts, 100 deliveries, 300 proposals) |
-| `dataset_unavailable` | 503  | the server has no dataset installed or cannot read it                      |
+| code                  | HTTP | when                                                                                                   |
+| --------------------- | ---- | ------------------------------------------------------------------------------------------------------ |
+| `unauthorized`        | 401  | missing or wrong bearer token                                                                          |
+| `bad_request`         | 400  | not JSON, over 64 KB, unknown field, wrong type, missing field, wrong method                           |
+| `unknown_resource`    | 404  | a resource id the dataset does not have                                                                |
+| `unknown_recipe`      | 404  | a recipe id the dataset does not have                                                                  |
+| `no_recipe`           | 422  | nothing makes the resource: no card in the draft makes a target                                        |
+| `tier_too_low`        | 422  | a card's tier is below its machine's minimum, or nothing runs it at or below the draft's `tierCap`     |
+| `plan_not_found`      | 404  | unknown or expired draft id                                                                            |
+| `plan_too_big`        | 413  | a draft would go over 60 cards (200 for an imported plan)                                              |
+| `rate_limited`        | 429  | a daily limit is spent (UTC days: 300 drafts, 100 deliveries, 300 proposals)                           |
+| `dataset_unavailable` | 503  | the server has no dataset installed or cannot read it                                                  |
 | `internal`            | 500  | anything else, and `plans/solve` when the server cannot load its solver; the server log has the detail |
 
 ## Constraints
@@ -72,20 +72,28 @@ Accepted by `recipes/search`, `plans/create` (a draft keeps its constraints; `pl
 `plans/expand-inputs` (joined with the draft's; see its section):
 
 ```json
-{ "tierCap": "HV", "heat": 4500, "cleanroom": false, "lowgrav": false, "banned": ["..."], "free": ["..."], "steam": false }
+{
+  "tierCap": "HV",
+  "heat": 4500,
+  "cleanroom": false,
+  "lowgrav": false,
+  "banned": ["..."],
+  "free": ["..."],
+  "steam": false
+}
 ```
 
 What `recipes/search` does with each:
 
-| field       | effect in search                                                                                       |
-| ----------- | ------------------------------------------------------------------------------------------------------ |
-| `tierCap`   | **filters**: recipes whose minimum tier is above the cap are left out                                  |
-| `heat`      | **filters**: a recipe on a heat machine (Electric Blast Furnace and kin) that needs more heat in K is left out |
+| field       | effect in search                                                                                                                                                                                                                                                                          |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tierCap`   | **filters**: recipes whose minimum tier is above the cap are left out                                                                                                                                                                                                                     |
+| `heat`      | **filters**: a recipe on a heat machine (Electric Blast Furnace and kin) that needs more heat in K is left out                                                                                                                                                                            |
 | `banned`    | **filters**: ids or names, matched without case against the recipe id, its recipe map, and each machine's id, name and type. A recipe is left out when the recipe or its map is banned, or every machine that runs it is; otherwise the first machine that is not banned is the one shown |
-| `steam`     | **filters**, default `false`: unless it is `true` or `tierCap` is `ULV`, a steam or primitive machine is never the machine shown, and a recipe only they run is left out and counted in `steamOnly`. Naming one in `machine` shows it |
-| `cleanroom` | **not enforced**: the dataset carries no cleanroom flag on any recipe, so nothing can be filtered on it |
-| `lowgrav`   | **not enforced**: the dataset carries no low-gravity flag on any recipe                                 |
-| `free`      | **not enforced** by search: it means "treat as raw" to expand and solve                                |
+| `steam`     | **filters**, default `false`: unless it is `true` or `tierCap` is `ULV`, a steam or primitive machine is never the machine shown, and a recipe only they run is left out and counted in `steamOnly`. Naming one in `machine` shows it                                                     |
+| `cleanroom` | **not enforced**: the dataset carries no cleanroom flag on any recipe, so nothing can be filtered on it                                                                                                                                                                                   |
+| `lowgrav`   | **not enforced**: the dataset carries no low-gravity flag on any recipe                                                                                                                                                                                                                   |
+| `free`      | **not enforced** by search: it means "treat as raw" to expand and solve                                                                                                                                                                                                                   |
 
 A search given any field it does not enforce lists those fields in `notEnforced`, so the caller knows the results were
 not narrowed by them.
@@ -195,7 +203,7 @@ Response: `{dataset, recipe}` where `recipe` is
 
 Example: `docs/agent-api/examples/recipes-get.json`.
 
-## plans/* (drafts)
+## plans/\* (drafts)
 
 A draft is a plan the server holds for the assistant to build: a real plan in the site's own model (the same plan the
 planner opens, in plan mode), in the server's memory, under a random id. It is kept 24 hours after its last change,
@@ -210,20 +218,20 @@ is the card's `name` in `plans/get` and `plans/add-cards`).
 
 Every change validates the whole request first: a refused request leaves the draft as it was.
 
-| endpoint              | request                                                              | response                                              | built |
-| --------------------- | -------------------------------------------------------------------- | ----------------------------------------------------- | ----- |
-| `plans/create`        | `{name, constraints?, cardTier?, minTier?, player?}`                 | `{dataset, planId, name, expiresAt, constraints?, cardTier?, minTier?}` | yes |
-| `plans/add-cards`     | `{planId, cards: [{recipeId, machine?, tier?, dials?}], player?}`    | `{planId, cards, wires, cardCount}`                   | yes   |
-| `plans/remove-cards`  | `{planId, cardIds, player?}`                                         | `{planId, removed, wiresRemoved, cardCount, targets}` | yes   |
-| `plans/set-targets`   | `{planId, targets: [{resource, rate}], player?}`                     | `{planId, targets}`                                   | yes   |
-| `plans/connect`       | `{planId, from: {cardId, resource}, to: {cardId, resource?}, player?}` | `{planId, wire, created}`                           | yes   |
-| `plans/disconnect`    | `{planId, wireId, player?}`                                          | `{planId, removed}`                                   | yes   |
-| `plans/get`           | `{planId, fields?, cardIds?, player?}`                               | the draft's cards, wires and targets, compact         | yes   |
-| `plans/solve`         | `{planId, fields?, player?}`                                         | summary first, then one row per card                  | yes   |
-| `plans/import`        | `{snapshot, player?}`: the player's open plan as a slim snapshot (body up to 512 KB) | `{dataset, planId, name, expiresAt, cardCount, wireCount, warnings}` | yes |
-| `plans/expand-inputs` | `{planId, resources?, constraints?, max?}` (max 3)                   | for each unsupplied input, up to `max` recipes ranked by trying each in the solver, each with a one-line reason (EU per item, machines needed, new raws it introduces) | yes |
-| `plans/diff`          | `{planId, player?}` of an imported draft                             | `{proposalId, basePlanId, expiresAt, summary, text}`: what the draft adds to the imported plan, stored as a proposal | yes |
-| `plans/deliver`       | `{planId, player: {name, uuid}}`                                     | `{name, id, code, url?, link?, expiresAt, cardCount}`  | yes   |
+| endpoint              | request                                                                              | response                                                                                                                                                               | built |
+| --------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| `plans/create`        | `{name, constraints?, cardTier?, minTier?, player?}`                                 | `{dataset, planId, name, expiresAt, constraints?, cardTier?, minTier?}`                                                                                                | yes   |
+| `plans/add-cards`     | `{planId, cards: [{recipeId, machine?, tier?, dials?}], player?}`                    | `{planId, cards, wires, cardCount}`                                                                                                                                    | yes   |
+| `plans/remove-cards`  | `{planId, cardIds, player?}`                                                         | `{planId, removed, wiresRemoved, cardCount, targets}`                                                                                                                  | yes   |
+| `plans/set-targets`   | `{planId, targets: [{resource, rate}], player?}`                                     | `{planId, targets}`                                                                                                                                                    | yes   |
+| `plans/connect`       | `{planId, from: {cardId, resource}, to: {cardId, resource?}, player?}`               | `{planId, wire, created}`                                                                                                                                              | yes   |
+| `plans/disconnect`    | `{planId, wireId, player?}`                                                          | `{planId, removed}`                                                                                                                                                    | yes   |
+| `plans/get`           | `{planId, fields?, cardIds?, player?}`                                               | the draft's cards, wires and targets, compact                                                                                                                          | yes   |
+| `plans/solve`         | `{planId, fields?, player?}`                                                         | summary first, then one row per card                                                                                                                                   | yes   |
+| `plans/import`        | `{snapshot, player?}`: the player's open plan as a slim snapshot (body up to 512 KB) | `{dataset, planId, name, expiresAt, cardCount, wireCount, warnings}`                                                                                                   | yes   |
+| `plans/expand-inputs` | `{planId, resources?, constraints?, max?}` (max 3)                                   | for each unsupplied input, up to `max` recipes ranked by trying each in the solver, each with a one-line reason (EU per item, machines needed, new raws it introduces) | yes   |
+| `plans/diff`          | `{planId, player?}` of an imported draft                                             | `{proposalId, basePlanId, expiresAt, summary, text}`: what the draft adds to the imported plan, stored as a proposal                                                   | yes   |
+| `plans/deliver`       | `{planId, player: {name, uuid}}`                                                     | `{name, id, code, url?, link?, expiresAt, cardCount}`                                                                                                                  | yes   |
 
 Examples, one real call each against the pack dataset (a titanium line): `docs/agent-api/examples/plans-*.json`.
 
@@ -523,15 +531,17 @@ Response: `{dataset, planId, name, expiresAt, cardCount, wireCount, warnings}`.
   recipe lists that machine (else the recipe's default). It solves, wires automatically and may be wired to; a
   proposal still names it by its card id. Amounts are compared as each resource's total (the dataset lists 80 of an item as stacks of 64 and 16,
   the game's card as one slot). A match whose amounts, time or EU differ from the content is taken with a
-  warning (`... is matched to the dataset recipe that takes and makes the same things, but its amounts, time or EU
-  differ.`).
+  warning, one line per recipe (a shared machine's recipes each get their own), naming the dataset recipe and what
+  differs: `Card <id>: recipe <id> is matched to dataset recipe <id>, which takes and makes the same things, but its
+time differs (300 ticks on the card, 5 in the dataset).` The parts are `its time differs`, `its EU/t differs`,
+  `its input amounts differ` and `its output amounts differ`, joined by `; `.
 - A card whose recipe the dataset does not have and that no content matches (no content sent, no recipe with the same
   resources, or two or more equally good) is kept as an opaque card: it stays in the draft as it was, nothing wires to
   it automatically, the solve reads no recipe for it, and it must not be changed or removed (a diff that finds it
   changed refuses). Each one is one line in `warnings`, at most 20 lines, naming the card and why: `Card <id>: recipe
-  <recipeId> is not in dataset <dataset> and the card carries no recipe content` / `... and no dataset recipe takes and
-  makes the same things` / `... and its content fits <n> dataset recipes equally well`, then `; the card is kept as it
-  is and cannot be changed.`
+<recipeId> is not in dataset <dataset> and the card carries no recipe content` / `... and no dataset recipe takes and
+makes the same things` / `... and its content fits <n> dataset recipes equally well`, then `; the card is kept as it
+is and cannot be changed.`
 - Targets: each resource's first pin on a card's own main output slot (`output:<kind>:<id>`, no slot number or section)
   becomes one of the draft's targets, carried by that same card; `plans/get` and `plans/solve` show it. Every other pin
   (input pins, slot or section pins, a second pin of the same resource) stays on its card exactly as it was.
@@ -560,25 +570,25 @@ content  = {name?, machineType, recipeMap?, rawRecipeId?,
             durationTicks, eut}
 ```
 
-| field                | meaning (the plan document's field)                                                       |
-| -------------------- | ----------------------------------------------------------------------------------------- |
-| `card.id`            | the card's id (`node.id`); ids match `^[A-Za-z0-9_][A-Za-z0-9_.:-]{0,99}$`                 |
-| `card.recipeId`      | its recipe (`recipeId`), looked up in the dataset on import                               |
-| `card.machine`       | the machine handler id (`machineHandlerId`), only when it is not the recipe's default     |
-| `card.tier`          | the tier it runs at (`overclockTier`), as a string                                         |
-| `card.dials`         | `heatingCoil` is the coil (`coilTier`); every other key is a tier part (`machineConfigTiers`); absent when none |
-| `card.count`         | the pinned machine count (`solvePin`); absent: the solver chooses it                      |
-| `card.exact`         | `true` when that count is Exactly (`solvePinExact`); only with `count`                    |
-| `card.sections`      | a shared machine's further recipe ids in order (`extraRecipes[].recipeId`)                |
-| `card.recipe`        | what `recipeId` does (a `content`), for a recipe id that may not be a dataset id; read only when the dataset lacks the id |
-| `card.sectionRecipes` | the `content` of each of `sections`, one per section in order; read only for ids the dataset lacks |
-| `content`            | the recipe body's fields of the same names (`source.recipeMap`, `source.rawRecipeId`): what the content match reads; `name` only breaks ties; `consumed: false` marks an input that is not used up (the match ignores those) |
-| `card.board`         | the board it sits on (`pocketId`); absent is the root board                               |
-| `drawer.mode`        | `byproduct` or `trash` (`drainMode`); absent is a product drain                           |
-| `wire.from`, `wire.to` | the card or drawer ids at each end (`source`, `target`)                                 |
-| `wire.fromPort`, `wire.toPort` | the slot handles as stored (`sourceHandle`, `targetHandle`), when the plan has them |
-| `target`             | one pinned rate (`portRates[port]` on card `card`), per second, above 0                    |
-| `board.parent`       | the board it sits in (`parentPocketId`)                                                   |
+| field                          | meaning (the plan document's field)                                                                                                                                                                                          |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `card.id`                      | the card's id (`node.id`); ids match `^[A-Za-z0-9_][A-Za-z0-9_.:-]{0,99}$`                                                                                                                                                   |
+| `card.recipeId`                | its recipe (`recipeId`), looked up in the dataset on import                                                                                                                                                                  |
+| `card.machine`                 | the machine handler id (`machineHandlerId`), only when it is not the recipe's default                                                                                                                                        |
+| `card.tier`                    | the tier it runs at (`overclockTier`), as a string                                                                                                                                                                           |
+| `card.dials`                   | `heatingCoil` is the coil (`coilTier`); every other key is a tier part (`machineConfigTiers`); absent when none                                                                                                              |
+| `card.count`                   | the pinned machine count (`solvePin`); absent: the solver chooses it                                                                                                                                                         |
+| `card.exact`                   | `true` when that count is Exactly (`solvePinExact`); only with `count`                                                                                                                                                       |
+| `card.sections`                | a shared machine's further recipe ids in order (`extraRecipes[].recipeId`)                                                                                                                                                   |
+| `card.recipe`                  | what `recipeId` does (a `content`), for a recipe id that may not be a dataset id; read only when the dataset lacks the id                                                                                                    |
+| `card.sectionRecipes`          | the `content` of each of `sections`, one per section in order; read only for ids the dataset lacks                                                                                                                           |
+| `content`                      | the recipe body's fields of the same names (`source.recipeMap`, `source.rawRecipeId`): what the content match reads; `name` only breaks ties; `consumed: false` marks an input that is not used up (the match ignores those) |
+| `card.board`                   | the board it sits on (`pocketId`); absent is the root board                                                                                                                                                                  |
+| `drawer.mode`                  | `byproduct` or `trash` (`drainMode`); absent is a product drain                                                                                                                                                              |
+| `wire.from`, `wire.to`         | the card or drawer ids at each end (`source`, `target`)                                                                                                                                                                      |
+| `wire.fromPort`, `wire.toPort` | the slot handles as stored (`sourceHandle`, `targetHandle`), when the plan has them                                                                                                                                          |
+| `target`                       | one pinned rate (`portRates[port]` on card `card`), per second, above 0                                                                                                                                                      |
+| `board.parent`                 | the board it sits in (`parentPocketId`)                                                                                                                                                                                      |
 
 - Order: cards, drawers, wires and boards in the plan's order; targets in card order, each card's ports sorted by code
   unit. Optional fields are left out, never `null`. Unknown fields are refused.

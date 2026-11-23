@@ -3304,7 +3304,8 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
         project.description = identity.description || undefined;
       }
       if (identity.icon !== undefined) {
-        project.icon = identity.icon ?? undefined;
+        // A face adopted from a post or picked from its stats can name the dataset the post was made on.
+        project.icon = onServedDataset(identity.icon ?? undefined, state);
       }
       return { project };
     });
@@ -6710,7 +6711,7 @@ type IconResource = Pick<
  * (`withServedDatasetPaths`): a saved plan names the dataset it was made on, and those files are gone once the site
  * moves on. Before a dataset is loaded it is left alone; `setDataset` moves it then.
  */
-function onServedDataset<T>(value: T, state: Pick<FactoryStore, "dataset" | "datasetManifest">): T {
+export function onServedDataset<T>(value: T, state: Pick<FactoryStore, "dataset" | "datasetManifest">): T {
   const current = state.dataset?.datasetVersionId;
   if (!current) return value;
   return withServedDatasetPaths(value, new Set((state.datasetManifest?.versions ?? []).map((v) => v.id)), current);

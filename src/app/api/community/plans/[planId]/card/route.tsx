@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { PNG } from "pngjs";
 import { GT_TIER_COLORS } from "@/components/flow/tier-colors";
 import { getPlanPreviewPng, getPublicPlanRow } from "@/lib/server/plan-preview";
+import { onServerDataset } from "@/lib/server/served-dataset-paths";
 import { siteHost } from "@/lib/site-url";
 
 export const runtime = "nodejs";
@@ -154,7 +155,8 @@ export async function GET(
 ) {
   const { planId } = await params;
   const [row, previewPng] = await Promise.all([
-    getPublicPlanRow(planId),
+    // Its face and stats are read from the served dataset version, not the one the post was made on.
+    getPublicPlanRow(planId).then(onServerDataset),
     getPlanPreviewPng(planId),
   ]);
   if (!row) {

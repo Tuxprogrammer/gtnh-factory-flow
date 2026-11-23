@@ -1737,7 +1737,7 @@ export async function getDatasetRecipe(
   };
 }
 
-async function loadManifest(): Promise<DatasetManifest> {
+export async function loadManifest(): Promise<DatasetManifest> {
   const manifestPath = path.join(datasetRoot, "datasets.manifest.json");
   const stat = await fs.stat(manifestPath);
   const stamp = `${stat.mtimeMs}:${stat.size}`;

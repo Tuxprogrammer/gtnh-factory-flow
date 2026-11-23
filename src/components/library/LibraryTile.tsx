@@ -18,6 +18,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { getUiScale } from "@/lib/ui-scale";
 import { FLUID_ICON_SCALE, ResourceIcon } from "@/components/nei/ResourceIcon";
+import { useServedPaths } from "@/store/use-served-paths";
 import { TierBadge, type VoltageTier } from "@/components/shelf-cards";
 import { normalizeBlueprintTags } from "@/lib/blueprints/types";
 import type { EntryIcon } from "@/lib/model/types";
@@ -441,7 +442,8 @@ export function formatEuT(value: number): string {
 }
 
 /** The saved face, drawn oversized so the art fills the box the way tabs do. No box behind it. */
-export function Face({ icon, size }: { icon: EntryIcon | undefined; size: number }) {
+export function Face({ icon: saved, size }: { icon: EntryIcon | undefined; size: number }) {
+  const icon = useServedPaths(saved);
   const drawable = Boolean(icon && (icon.iconPath || icon.iconAtlas || icon.kind === "fluid"));
   return (
     <span

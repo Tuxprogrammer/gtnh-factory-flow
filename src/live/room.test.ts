@@ -17,6 +17,8 @@ import type { LeaseOutcome, PlanStore } from "./store";
 const OWNER = "11111111-1111-4111-8111-111111111111";
 const DOC = `${OWNER}:design-room-1`;
 const dirs: string[] = [];
+/** Every room a test opened: its journal writes must land before its folder goes, or they make it again. */
+const opened: Room[] = [];
 
 interface Write {
   kind: "lease" | "renew" | "flush" | "release";
@@ -139,6 +141,7 @@ async function openRoom(
   if (!room) {
     throw new Error("the room did not open");
   }
+  opened.push(room);
   return room;
 }
 
@@ -146,7 +149,14 @@ const rename = (title: string): LiveOp[] => [
   { o: "patch", c: "tasks", id: "t1", f: { title } },
 ];
 
-afterEach(() => {
+afterEach(async () => {
+  for (const room of opened.splice(0)) {
+    room.abandon();
+    const journal = room["deps"].journal;
+    await journal.durable(DOC).catch(() => undefined);
+    // Queued behind any write or trim still on its way.
+    await journal.read(DOC).catch(() => undefined);
+  }
   for (const dir of dirs.splice(0)) {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -268,6 +278,7 @@ describe("a room's lease", () => {
       log: () => undefined,
       onClosed: () => undefined,
     });
+    opened.push(again!);
     expect((again!.plan.tasks as Array<{ title: string }>)[0]!.title).toBe("Mine");
     expect(await again!.flush()).toBe(true);
   });

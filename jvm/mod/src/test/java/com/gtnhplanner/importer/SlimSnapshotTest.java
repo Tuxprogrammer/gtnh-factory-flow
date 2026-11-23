@@ -240,6 +240,46 @@ class SlimSnapshotTest {
     }
 
     @Test
+    void aCardShownFromASitePlanIsSentWithItsSiteRecipeIdAndNoContent() {
+        final String site = "oracle:local-2.9.0-beta-2:gregtech:gt-recipe-largechemicalreactor:6db988ddcbfcf8e3";
+        final FakeGame game = new FakeGame();
+        game.missing.add(site);
+        final Graph g = FfImport.importFromText(FakeGame.fixture("titanium-line-chembath.slim.json"), game, game)
+            .graph();
+        final Node display = g.getNodes()
+            .stream()
+            .filter(n -> n.shown != null)
+            .findFirst()
+            .orElseThrow();
+        final JsonObject s = SlimSnapshot.of(g, LibraryRoundTripTest.world(game, g));
+        int game_ = 0;
+        boolean seen = false;
+        for (final JsonElement e : s.getAsJsonArray("cards")) {
+            final JsonObject c = e.getAsJsonObject();
+            if (c.get("id")
+                .getAsString()
+                .equals(display.id.toString())) {
+                assertEquals(
+                    site,
+                    c.get("recipeId")
+                        .getAsString());
+                assertNull(c.get("recipe"));
+                assertNull(c.get("sectionRecipes"));
+                seen = true;
+            } else {
+                assertTrue(
+                    c.get("recipeId")
+                        .getAsString()
+                        .startsWith("gtnhplanner:"));
+                assertNotNull(c.get("recipe"), c.toString());
+                game_++;
+            }
+        }
+        assertTrue(seen);
+        assertEquals(9, game_);
+    }
+
+    @Test
     void aRecipesContentIsWhatTheSiteMatchesOnAndNoMore() {
         final JsonObject body = new com.google.gson.JsonParser().parse(
             "{\"id\":\"gtnhplanner:x\",\"name\":\"Steel\",\"kind\":\"gregtech_machine\",\"machineType\":\"Electric Blast Furnace\","

@@ -1,5 +1,6 @@
 import { TGS_MACHINE_TYPE, tgsEuPerTick } from "@/lib/machines/tree-growth-simulator";
 import { enrichAlgaePondRecipe, isAlgaePondRecipe } from "@/lib/machines/algae-pond";
+import { enrichVoidMinerRecipe, isVoidMinerRecipe } from "@/lib/machines/void-miner";
 import { getGameRates } from "./game-rates";
 import { applyInputConsumeChances } from "./input-chance";
 import type {
@@ -761,6 +762,10 @@ export function enrichPassiveProductionRecipe(recipe: Recipe): Recipe {
   // The Algae Farm's NEI page says ULV and 0 EU/t; it draws 9/10 of its hatch's voltage (algae-pond.ts).
   if (isAlgaePondRecipe(recipe)) {
     return enrichAlgaePondRecipe(recipe);
+  }
+  // The Void Miner map says 1 tick and 0 EU/t; each controller runs a 10-tick cycle at its own draw (void-miner.ts).
+  if (isVoidMinerRecipe(recipe)) {
+    return enrichVoidMinerRecipe(recipe);
   }
   if (isCropProductionRecipe(recipe)) {
     return enrichCropProductionRecipe(recipe);

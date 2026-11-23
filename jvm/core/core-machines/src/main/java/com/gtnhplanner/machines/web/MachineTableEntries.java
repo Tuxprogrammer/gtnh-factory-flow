@@ -9,6 +9,7 @@ import com.gtnhplanner.core.base.ExactMath;
 import com.gtnhplanner.core.base.GameMath;
 import com.gtnhplanner.core.base.Roots;
 import com.gtnhplanner.core.machines.AlgaePond;
+import com.gtnhplanner.core.machines.VoidMiner;
 
 /**
  * The website's machine table entries (machine-table.ts MACHINES), one for one and in its order, keyed by the names
@@ -560,6 +561,15 @@ final class MachineTableEntries {
                 .power(c -> AlgaePond.powerMultiplier(c.recipe, c.settings))
                 .controlsFor(AlgaePond::controls)
                 .recipeGate(c -> AlgaePond.gateReason(c.recipe, c.settings, c.voltageTier)));
+        // MTEVoidMinerBase (core.machines.VoidMiner): a fixed 10-tick cycle at VP[tier + 5] whatever the hatch (the draw
+        // rides on the handler), one ore a cycle stacked tier x the noble gas boost. No overclocks, no parallels.
+        final String[] voidMiners = { "Void Miner I", "Void Miner II", "Void Miner III" };
+        for (int tier = 1; tier <= voidMiners.length; tier++) machines.put(
+            voidMiners[tier - 1],
+            machine().overclock(none())
+                .cycleTicks(VoidMiner.CYCLE_TICKS)
+                .parallels(1)
+                .controls(VoidMiner.controls(tier)));
         machines.put(
             "Research Station",
             machine().overclock(normal())

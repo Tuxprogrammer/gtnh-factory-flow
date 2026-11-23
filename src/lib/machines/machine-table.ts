@@ -30,6 +30,7 @@
  */
 import type { MachineConfigControl, Recipe } from "@/lib/model/types";
 import { TGS_TICKS, getTgsControls } from "./tree-growth-simulator";
+import { VOID_MINER_CYCLE_TICKS, getVoidMinerControls } from "./void-miner";
 import {
   algaePondPowerMultiplier,
   getAlgaePondControls,
@@ -1224,6 +1225,13 @@ const MACHINES: Record<string, MachineBehaviour> = {
     controlsFor: (recipe) => getAlgaePondControls(recipe),
     recipeGate: (c) => getAlgaePondGateReason(c.recipe, c.settings, c.voltageTier),
   },
+  /**
+   * MTEVoidMinerBase (void-miner.ts): a fixed 10-tick cycle at VP[tier + 5] whatever the hatch (the draw rides on
+   * the handler), one ore a cycle stacked tier x the noble gas boost. No overclocks, no parallels.
+   */
+  "Void Miner I": { overclock: OVERCLOCK.none(), cycleTicks: VOID_MINER_CYCLE_TICKS, parallels: 1, controls: getVoidMinerControls(1) },
+  "Void Miner II": { overclock: OVERCLOCK.none(), cycleTicks: VOID_MINER_CYCLE_TICKS, parallels: 1, controls: getVoidMinerControls(2) },
+  "Void Miner III": { overclock: OVERCLOCK.none(), cycleTicks: VOID_MINER_CYCLE_TICKS, parallels: 1, controls: getVoidMinerControls(3) },
   "Research Station": { overclock: OVERCLOCK.normal(), aliases: ["Research station"] },
 
   // -- Machines our dataset names differently from the reference -----------

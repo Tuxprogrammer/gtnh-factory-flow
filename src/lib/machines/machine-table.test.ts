@@ -342,6 +342,10 @@ describe("curated machine table", () => {
         // gregtech's MTEAlgaePond; the reference never covered it.
         // algae-pond.test.ts.
         "Algae Pond",
+        // bwcrossmod's MTEVoidMinerBase and MTEVoidMiners; void-miner.test.ts.
+        "Void Miner I",
+        "Void Miner II",
+        "Void Miner III",
       ].map(normalizeMachineName),
     );
     // Every entry must trace back to a reference definition or a direct source

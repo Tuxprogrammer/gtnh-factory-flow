@@ -14,6 +14,7 @@ import com.google.gson.JsonObject;
 import com.gtnhplanner.api.RecipePropertyAPI;
 import com.gtnhplanner.core.base.JsonTree;
 import com.gtnhplanner.core.machines.AlgaePond;
+import com.gtnhplanner.core.machines.VoidMiner;
 import com.gtnhplanner.core.model.ResourceKey;
 import com.gtnhplanner.core.model.read.GtDatasetRecipe;
 import com.gtnhplanner.core.model.read.GtRecipeRecord;
@@ -116,7 +117,9 @@ public final class WebCards {
         r.machineConfigControls = HandlerData.recipeControls(entry, special);
         r.machineHandlers = HandlerData.handlers(entry, r.minimumTier, r.durationTicks, r.eut, r.machineConfigControls);
         // The Algae Farm's recipes are registered at 0 EU/t: the recipe carries the draw of the hatch that grows it.
-        return AlgaePond.isRecipe(r) ? AlgaePond.enrich(r) : r;
+        if (AlgaePond.isRecipe(r)) return AlgaePond.enrich(r);
+        // The Void Miner map says 1 tick and 0 EU/t: each controller runs a 10-tick cycle at its own draw.
+        return VoidMiner.isRecipe(r) ? VoidMiner.enrich(r) : r;
     }
 
     /**

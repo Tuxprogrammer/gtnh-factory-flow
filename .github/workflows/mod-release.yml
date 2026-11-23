@@ -1,0 +1,76 @@
+name: Mod release
+
+# Builds the in-game mod's jar from a mod-<version> tag and publishes it as a GitHub release, so the jar a pack ships
+# is one anybody can pull and check. Runs when such a tag is pushed, or by hand for a tag that already exists.
+# The build is tools/ci/mod.sh, the same script a release is built with anywhere else: the jar's version is the tag's.
+
+on:
+  push:
+    tags:
+      - "mod-*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "The mod tag to release, e.g. mod-1.4.0"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mod-release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build and publish the mod jar
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: refs/tags/${{ inputs.tag || github.ref_name }}
+          fetch-depth: 0
+      # A published jar is never replaced: a release that exists means the tag was already built.
+      - name: Refuse a tag that is already released
+        run: |
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "::error::$TAG already has a release; a published jar is not replaced. Cut a new version."
+            exit 1
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Restore the dependency seed
+        run: tools/ci/seed.sh restore jvm
+        env:
+          GH_TOKEN: ${{ github.token }}
+      # As the CI jvm job: Gradle runs on 25; the mod compiles against 8 and tests on 17 and 21 through toolchains.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: |
+            8
+            17
+            21
+            25
+      - name: Build and test the jar at the tag
+        run: tools/ci/mod.sh --release "$TAG" --test
+      - name: Publish the release
+        run: |
+          version="${TAG#mod-}"
+          jar="jvm/mod/build/libs/gtnhplanner-$version.jar"
+          test -f "$jar"
+          notes="jvm/mod/.changelogs/$version.md"
+          test -f "$notes"
+          (cd "$(dirname "$jar")" && sha256sum "$(basename "$jar")") > "$jar.sha256"
+          cat "$jar.sha256"
+          gh release create "$TAG" "$jar" "$jar.sha256" \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title "Planner mod $version" \
+            --notes-file "$notes"
+        env:
+          GH_TOKEN: ${{ github.token }}

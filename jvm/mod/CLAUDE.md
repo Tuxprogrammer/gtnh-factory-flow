@@ -102,7 +102,9 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   everywhere. A live plan migrates once per load: `PlanRenames.Memo` rides on `CloudPlans.Read`, so a later read gets the
   same renamed objects (untouched cards are taken over, not read again), and `LiveDoc.commit` keeps the renamed view as
   the plan the board writes against, so a rename is never sent as an edit (`CloudRenamesTest`,
-  `CloudSessionTest.anItemRenameIsReadOnceAndNeverSent`). Real plans to try it on: a post's plan comes from `POST /api/community/plans/<id>/download` on the configured site (or the mock's).
+  `CloudSessionTest.anItemRenameIsReadOnceAndNeverSent`). The player's own batches come back from the room in new objects: `LiveDoc.catchUp` first
+  takes the live copy's objects where they say what the plan read says (`PlanShare`), so a card the player moved is not
+  read again (`CloudSessionTest.aCardThePlayerMovedIsNotReadAgainOnTheNextCatchUp`). Real plans to try it on: a post's plan comes from `POST /api/community/plans/<id>/download` on the configured site (or the mock's).
   A plan carries the rate unit it was read in as the website's `view.rateUnit` (`importer/PlanView`: tick, second,
   minute, hour, eu): every export writes the player's (`PlanExport.World.rateUnit`), every import hands it to the board
   once (`Graph.viewWhenShown`, taken by `BoardSession.takeView`). The + tab's Open plan file (`ui/popup/PlanFileMenu`,

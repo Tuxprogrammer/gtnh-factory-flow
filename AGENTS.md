@@ -4,8 +4,10 @@ GTNH Factory Flow: a production-chain planner for GregTech: New Horizons. Next.j
 Router, TypeScript strict, Tailwind, React Flow, Zustand, Zod, Vitest.
 
 This repository is an independent fork (`Tuxprogrammer/gtnh-factory-flow`) of
-`jackwrichards/gtnh-factory-flow`, kept for one private instance. It carries bug fixes on
-top of upstream and merges upstream regularly. The repo is public.
+`jackwrichards/gtnh-factory-flow`, kept for one private instance. It began as bug fixes on
+top of upstream and has since diverged: the solver, the plan model and the in-game mod live
+in a shared Java core under `jvm/` that replaces files upstream owns, so upstream is no
+longer merged as a routine. The repo is public.
 
 This file is the always-loaded core. Each area keeps its own rules in a `CLAUDE.md`
 beside its code, which Claude Code loads when you open files there. Read the area file
@@ -28,9 +30,8 @@ before changing that area; it names the tests that pin its behaviour.
 Longer references, read on demand: `docs/solver-equations.md` (solver doctrine),
 `docs/power-planner-math.md` (the decoded power workbook), `docs/COMMUNITY.md`.
 
-Area files and docs were written upstream and are edited here only where a passage is
-about upstream's own machines or repos. Where one still describes upstream's hosting,
-deploys or branches, this file wins.
+Many area files and docs were first written upstream. They are edited here like any other
+file. Where one still describes upstream's hosting, deploys or branches, this file wins.
 
 ## Commands
 
@@ -66,15 +67,13 @@ Scratch harnesses are `*.local.test.ts` (excluded from the suite); run one with
   name a `jackwrichards` repo as a place to send anything.
 - Pull requests, if any, are opened inside the fork. `gh pr create` on a fork targets the
   parent by default: always pass `--repo Tuxprogrammer/gtnh-factory-flow`.
-- Upstream merges into `main` regularly, so a fix must stay easy to merge over: change the
-  fewest lines that fix the bug, in place. No reformatting, renames, file moves or
-  drive-by cleanups in files upstream owns. New code goes in new files where that is
-  natural.
-- When a merge conflicts, upstream's code wins unless it brings back the bug; then
-  re-apply the fix on upstream's new shape. `AGENTS.md`, `src/lib/version.ts` and the top
-  of `src/lib/changelog.ts` conflict on every merge: keep this fork's `AGENTS.md`, and see
-  Versions for the other two.
-- When upstream fixes a bug this fork also fixed, take upstream's fix and drop the fork's.
+- Upstream is not merged into `main` as a routine: the shared core replaces files upstream
+  owns, so a merge no longer applies cleanly. An upstream change worth having is taken on
+  purpose, one change at a time, ported by hand onto this fork's code and tested like any
+  other fix. Nothing has to stay easy to merge over.
+- A fix is still the smallest change that fixes the bug, in place: no reformatting, renames,
+  file moves or drive-by cleanups riding along with it. That is for review and for
+  bisecting, not for upstream.
 
 ## Working rules
 
@@ -101,13 +100,15 @@ Scratch harnesses are `*.local.test.ts` (excluded from the suite); run one with
 
 ## Versions and the changelog
 
-- `APP_VERSION` in `src/lib/version.ts` is upstream's version plus a fork suffix:
-  `4.7.0-tux.1`, then `-tux.2`. The base number is always upstream's; never bump it here.
+- `APP_VERSION` in `src/lib/version.ts` is the upstream version the fork diverged from plus
+  a fork suffix: `4.7.0-tux.1`, then `-tux.2`. The base number stays as it is; only the
+  suffix moves.
 - Bump the suffix once per deploy handoff, not per commit, and add one entry to
   `src/lib/changelog.ts` for it: a headline and a few one-line notes about what changed
   for players. Work that has not been handed off yet folds into the top entry.
-- After an upstream merge that moves the base version, keep upstream's changelog entries,
-  take the new base and restart the suffix at `-tux.1` with the fork's entry on top.
+- The mod has its own version (`1.0.0`, `1.1.0`: the middle number moves once per release),
+  its notes in `jvm/mod/.changelogs/<version>.md`, and its own tag `mod-<version>`; the
+  website's tag is `web-<version>`.
 - Players open the changelog from the header's version chip (unread dot, stamp
   `changelog-read.v1`); nothing opens by itself. Shift-click the chip for the dev menu.
 
@@ -115,8 +116,8 @@ Scratch harnesses are `*.local.test.ts` (excluded from the suite); run one with
 
 - This repo deploys nothing and agents here never deploy. The instance is built and
   rolled from outside the repo by its operator. Pushing `main` deploys nothing.
-- The GitHub deploy and dataset workflows are upstream's and have no runner here; never
-  dispatch them.
+- Any GitHub deploy or dataset workflow left from upstream has no runner here; never
+  dispatch one.
 - To hand work off, push `main` and report the commit SHA with: what changed; new or
   changed environment variables; new `supabase/migrations/*.sql`; anything that changes
   the dataset format. Batch fixes into one handoff.

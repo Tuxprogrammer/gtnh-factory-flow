@@ -220,8 +220,11 @@ describe("a room's batches", () => {
     const blocked = path.join(dir, "blocked");
     writeFileSync(blocked, "not a folder");
     let closed = 0;
+    const journal = new Journal(path.join(blocked, "journal"));
+    // Opened all the same (a stamp it cannot write fails the open): the batch is what fails here.
+    journal.writeStamps = async () => undefined;
     const room = await openRoom(new HeldStore(), {}, {
-      journal: new Journal(path.join(blocked, "journal")),
+      journal,
       onClosed: () => {
         closed += 1;
       },

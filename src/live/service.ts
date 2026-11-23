@@ -339,6 +339,9 @@ export class LiveService {
         if (!room) {
           this.log(`${doc}: journal for a missing or deleted plan, dropped`);
           await this.journal.remove(doc);
+        } else if (room.peers.size === 0 && room.replacedOnOpen) {
+          // Stays its linger, so the people coming back get the plan marked replaced.
+          room.linger();
         } else if (room.peers.size === 0) {
           await room.closeIfEmpty();
         }
@@ -951,7 +954,7 @@ export class LiveService {
         room.admit(conn);
         conn.rooms.set(doc, room);
         conn.snapshots.set(doc, { seq: room.seq, at: Date.now() });
-        conn.sendText(room.snapshotText(role));
+        conn.sendText(room.snapshotText(role, room.replacedOnOpen));
         room.broadcast({ t: "present", doc, present: room.present }, conn);
         return true;
       });

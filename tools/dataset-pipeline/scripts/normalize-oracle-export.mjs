@@ -2360,11 +2360,14 @@ function recipeId(...parts) {
     .join(":")}`;
 }
 
+// Two registrations of one recipe fold into the first. A slot's NBT tells recipes apart (crop seeds, tool
+// materials, a culture's name): without it, which of them survived followed the export's order.
 function recipeSignature(recipe) {
+  const nbt = (entry) => entry.tooltip?.find((line) => line.startsWith("NBT: "));
   return JSON.stringify({
     machineType: recipe.machineType,
-    inputs: recipe.inputs.map((entry) => [entry.kind, entry.id, entry.amount, entry.consumed]),
-    outputs: recipe.outputs.map((entry) => [entry.kind, entry.id, entry.amount, entry.chance]),
+    inputs: recipe.inputs.map((entry) => [entry.kind, entry.id, entry.amount, entry.consumed, nbt(entry)]),
+    outputs: recipe.outputs.map((entry) => [entry.kind, entry.id, entry.amount, entry.chance, nbt(entry)]),
   });
 }
 

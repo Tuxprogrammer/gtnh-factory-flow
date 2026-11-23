@@ -97,6 +97,18 @@ export function contentKey(recipe, renames) {
   ]);
 }
 
+// contentKey with each slot's NBT text: content keys ignore NBT, so recipes that differ only in it (crop seeds,
+// tool materials, a culture's name) share one, and file order alone would pair them. A new recipe takes the
+// previous id of the recipe with its own NBT first.
+export function nbtKey(recipe) {
+  const nbt = (entry) => (entry.tooltip ?? []).find((line) => String(line).startsWith("NBT: ")) ?? "";
+  return JSON.stringify([
+    contentKey(recipe),
+    (recipe.inputs ?? []).map((entry) => `${slot(entry, false)}|${nbt(entry)}`).sort(),
+    (recipe.outputs ?? []).map((entry) => `${slot(entry, true)}|${nbt(entry)}`).sort(),
+  ]);
+}
+
 // A slot that shows one of its own alternatives, keyed by all of them; else undefined.
 function alternativesKey(entry) {
   const alternatives = entry.alternatives ?? [];
@@ -159,6 +171,7 @@ function recipeLine(line) {
 
 async function readPrevious(filePath, renames) {
   const byContent = new Map();
+  const byNbt = new Map();
   const byRenamed = new Map();
   const byIdentity = new Map();
   const byShown = new Map();
@@ -182,6 +195,11 @@ async function readPrevious(filePath, renames) {
       byContent.set(key, []);
     }
     byContent.get(key).push(recipe.id);
+    const withNbt = nbtKey(recipe);
+    if (!byNbt.has(withNbt)) {
+      byNbt.set(withNbt, []);
+    }
+    byNbt.get(withNbt).push(recipe.id);
     if (renames) {
       const renamed = contentKey(recipe, renames);
       if (!byRenamed.has(renamed)) {
@@ -200,7 +218,47 @@ async function readPrevious(filePath, renames) {
       byShown.get(shown.key).push({ id: recipe.id, shown: shown.shown });
     }
   }
-  return { byContent, byRenamed, byIdentity, byShown, all };
+  return { byContent, byNbt, byRenamed, byIdentity, byShown, all };
+}
+
+// The previous id each new recipe (by line) takes by exact content: first every recipe whose NBT matches too, then
+// the rest by content alone, each in file order.
+async function exactMatches(previous) {
+  const matches = new Map();
+  const used = new Set();
+  const rest = [];
+  let inRecipes = false;
+  let lineNo = -1;
+  for await (const line of lines(nextPath)) {
+    lineNo += 1;
+    if (/^ {2}"[^"]+": /.test(line)) {
+      inRecipes = line.startsWith('  "recipes": [');
+      continue;
+    }
+    const recipe = inRecipes ? recipeLine(line) : undefined;
+    if (!recipe) {
+      continue;
+    }
+    const key = contentKey(recipe);
+    if (!previous.byContent.has(key)) {
+      continue;
+    }
+    const match = (previous.byNbt.get(nbtKey(recipe)) ?? []).find((id) => !used.has(id));
+    if (match) {
+      used.add(match);
+      matches.set(lineNo, match);
+    } else {
+      rest.push([lineNo, key]);
+    }
+  }
+  for (const [at, key] of rest) {
+    const match = previous.byContent.get(key).find((id) => !used.has(id));
+    if (match) {
+      used.add(match);
+      matches.set(at, match);
+    }
+  }
+  return matches;
 }
 
 function loadRenames() {
@@ -218,7 +276,7 @@ function loadRenames() {
 // so a second-chance match never takes an id an exact match would. Also the
 // catalog rows of the members those recipes show again (the resource index
 // takes a rendered icon only from the catalog).
-async function renamedMatches(previous, renames) {
+async function renamedMatches(previous, renames, exact) {
   const matches = new Map();
   const catalog = new Map();
   const used = new Set();
@@ -235,7 +293,7 @@ async function renamedMatches(previous, renames) {
     if (!recipe) {
       continue;
     }
-    const match = (previous.byContent.get(contentKey(recipe)) ?? []).find((id) => !used.has(id));
+    const match = exact.get(lineNo);
     if (match) {
       used.add(match);
     } else {
@@ -277,7 +335,8 @@ function bump(table, category, field) {
 async function main() {
   const renames = loadRenames();
   const previous = await readPrevious(previousPath, renames);
-  const { matches: byRename, catalog } = await renamedMatches(previous, renames);
+  const exactByLine = await exactMatches(previous);
+  const { matches: byRename, catalog } = await renamedMatches(previous, renames, exactByLine);
   const keptByRename = [];
   const keptByShown = [];
   const used = new Set();
@@ -326,8 +385,7 @@ async function main() {
       buffered.push({ text: line });
       continue;
     }
-    const candidates = previous.byContent.get(contentKey(recipe)) ?? [];
-    const exact = candidates.find((id) => !used.has(id));
+    const exact = exactByLine.get(lineNo);
     const second = exact ? undefined : byRename.get(lineNo);
     const match = exact ?? second?.id;
     const prefix = line.slice(0, line.length - line.trimStart().length);

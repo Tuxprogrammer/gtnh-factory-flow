@@ -756,6 +756,18 @@ describe("recipe ids survive a rebuild", () => {
     expect(new Set([a.id, b.id, c.id]).size).toBe(3);
   });
 
+  it("keeps recipes that differ only in a slot's NBT, whatever their order", () => {
+    const seeded = (crop) => ({ ...item("cropsnh:genericseed", 1, `${crop} Seeds`), nbt: `{crop:"cropsnh:${crop}"}` });
+    const cross = (id, out) => steel(id, { itemInputs: [seeded("vine")], itemOutputs: [seeded(out)] });
+    const names = (list) =>
+      normalize(exportWith(list)).recipes.map((r) => r.outputs[0].tooltip.find((line) => line.startsWith("NBT")));
+    expect(names([cross("a", "waterLily"), cross("b", "dayflower")]).sort()).toEqual([
+      'NBT: {crop:"cropsnh:dayflower"}',
+      'NBT: {crop:"cropsnh:waterLily"}',
+    ]);
+    expect(names([cross("b", "dayflower"), cross("a", "waterLily")])).toHaveLength(2);
+  });
+
   it("keeps two identical registrations apart, in export order", () => {
     // addRecipe folds true duplicates by signature; a pair the game keeps
     // apart by duration alone is the case this guards.

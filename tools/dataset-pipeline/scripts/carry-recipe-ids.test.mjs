@@ -124,6 +124,42 @@ describe("carry-recipe-ids", () => {
     expect(resources[1].amount).toBeUndefined();
   });
 
+  it("gives each recipe the id of the one with its own NBT when only NBT tells them apart", () => {
+    // Two Crop Breeder crosses differ only in their seeds' NBT; the new export lists them in the other order.
+    const seed = (crop) => ({
+      kind: "item",
+      id: "cropsnh:genericseed",
+      amount: 1,
+      tooltip: [`NBT: {crop:"${crop}"}`],
+    });
+    const cross = (id, a, b, out) => ({
+      id,
+      name: `Crop Breeder: ${out}`,
+      kind: "gregtech_machine",
+      category: "gregtech",
+      machineType: "Crop Breeder",
+      durationTicks: 7,
+      eut: 30,
+      inputs: [seed(a), seed(b)],
+      outputs: [seed(out)],
+    });
+    const { recipes, report } = carry(
+      [
+        cross("oracle:old:x:waterlily", "vine", "sugarCane", "waterLily"),
+        cross("oracle:old:x:dayflower", "azureBluet", "blueOrchid", "dayflower"),
+      ],
+      [
+        cross("oracle:new:x:2", "azureBluet", "blueOrchid", "dayflower"),
+        cross("oracle:new:x:1", "vine", "sugarCane", "waterLily"),
+      ],
+    );
+    expect(report.totals).toMatchObject({ kept: 2, new: 0, gone: 0 });
+    expect(recipes.map((r) => [r.name, r.id])).toEqual([
+      ["Crop Breeder: dayflower", "oracle:old:x:dayflower"],
+      ["Crop Breeder: waterLily", "oracle:old:x:waterlily"],
+    ]);
+  });
+
   it("does not match a slot whose members changed", () => {
     const { report } = carry(
       [breeder("oracle:old:gregtech:breeder:aaa", "minecraft:glowstone@32767")],

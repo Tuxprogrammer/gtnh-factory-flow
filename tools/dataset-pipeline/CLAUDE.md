@@ -75,6 +75,11 @@ A new pack (or any fresh export) keeps the previous dataset's recipe ids with
 after normalize and before the indexes: same map (GT++'s `gtpp.recipe.*` read as RC-2's
 `gt.recipe.*`), slots, amounts, chances, ticks and EU keep the old id (its old dataset
 prefix included); bees, crops, veins, mobs and underground fluids keep theirs by identity.
+Content keys ignore NBT, so recipes that differ only in a slot's NBT (crop seeds, tool
+materials, a bio culture) first take the id of the previous recipe with the same NBT; file
+order never decides which. The normalizer folds two registrations of one recipe into the
+first, and that fold keys on NBT too: without it, which of such recipes survived followed
+the export's order.
 `local-2.9.0-rc-2` carries beta-2's ids this way (`~/rebuild-rc2.sh` in WSL; the report is
 `oracle/recipe-id-carry.json`).
 

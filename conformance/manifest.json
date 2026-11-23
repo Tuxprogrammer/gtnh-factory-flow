@@ -4,9 +4,10 @@
     "board": {
       "specifies": "S1 board parity: scenarios.json lists board states built on both sides; mod-answers.json is what the mod's own code made of each (its SolveInput, answer and board readouts), which the website must reproduce.",
       "readers": [
-        "website: src/lib/solver/plan/parity/scenarios.test.ts"
+        "website: src/lib/solver/plan/parity/scenarios.test.ts",
+        "mod: S1ParityTest (the recorded answers are the mod's own; writes mod-answers.json with -PwriteBoardAnswers)"
       ],
-      "generator": "mod-answers.json: tools/parity/s1/README.md (S1ParityTest, a throwaway JUnit run in a mod checkout)"
+      "generator": "mod-answers.json: S1ParityTest in jvm/mod with -PwriteBoardAnswers (tools/parity/s1/README.md)"
     },
     "codec": {
       "specifies": "The plan codec (core-codec): canon.json is the canonical spelling and 16-hex SHA-256 sum of JSON values that core-codec's Canon and the mod's cloud-map Canon must give alike (written from the mod's Canon); plan-text.json is what JSON.stringify(JSON.parse(text)) writes for hand-made cases and the SHA-256 of every committed plan written compact, which core-codec's PlanJson must match (written by the website test).",
@@ -165,13 +166,13 @@
   "files": {
     "board/mod-answers.json": {
       "area": "board",
-      "bytes": 158535,
-      "sha256": "35c7980edeacd87c0cef8f56e8abe472aab3b3aa4e84ffc7d2cf2b46c7965564"
+      "bytes": 158524,
+      "sha256": "976576d76bf7e26f5c3d348027189cc3f8adc65f05a4c82c358b697980363342"
     },
     "board/scenarios.json": {
       "area": "board",
-      "bytes": 29350,
-      "sha256": "0fa167c57c6b686b695d8d6125f20fc04ee6a7ac8740e5fab34f9ae1550e1512"
+      "bytes": 29340,
+      "sha256": "e250e6da2acfabfd0b9d04f314fe7c98476c0eeb5631935772eb867d69e03e0a"
     },
     "codec/canon.json": {
       "area": "codec",

@@ -15,6 +15,7 @@ import gregtech.api.util.GTRecipe;
 import com.gtnhplanner.core.model.read.CraftingRecord;
 import com.gtnhplanner.core.model.read.GtRecipeRecord;
 import com.gtnhplanner.core.model.read.SmeltingRecord;
+import com.gtnhplanner.read.OreCellNames;
 import com.gtnhplanner.read.OreLists;
 import com.gtnhplanner.read.crafting.CraftingReader;
 import com.gtnhplanner.read.furnace.SmeltingReader;
@@ -2660,19 +2661,9 @@ public final class GtnhCalcOracleExporter {
             return Collections.emptyList();
         }
         if (oreDictionaryNamesByChoiceSignature == null) {
-            oreDictionaryNamesByChoiceSignature = new LinkedHashMap<String, List<String>>();
-            for (String name : OreLists.names()) {
-                String signature = choiceSignature(OreDictionary.getOres(name));
-                if (signature.length() == 0) {
-                    continue;
-                }
-                List<String> names = oreDictionaryNamesByChoiceSignature.get(signature);
-                if (names == null) {
-                    names = new ArrayList<String>();
-                    oreDictionaryNamesByChoiceSignature.put(signature, names);
-                }
-                names.add(name);
-            }
+            // The game's own name order names the cell (com.gtnhplanner.read.OreCellNames): plans store it by that id.
+            oreDictionaryNamesByChoiceSignature = OreCellNames.bySignature(
+                OreDictionary.getOreNames(), name -> choiceSignature(OreDictionary.getOres(name)));
         }
         return oreDictionaryNamesByChoiceSignature.get(choiceSignature(rawAlternatives));
     }

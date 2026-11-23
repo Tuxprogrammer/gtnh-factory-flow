@@ -31,7 +31,10 @@ public final class OreLists {
         return ores;
     }
 
-    /** The ore dictionary's names in one fixed order: by name. Their ids follow registration, which is not fixed. */
+    /**
+     * The ore dictionary's names in one fixed order: by name. Their ids follow registration, which is not fixed. For
+     * listing the dictionary only, never for naming a cell: that takes the game's order ({@link OreCellNames}).
+     */
     public static List<String> names() {
         final List<String> names = new ArrayList<String>();
         for (final String name : OreDictionary.getOreNames()) names.add(name);

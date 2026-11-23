@@ -7,7 +7,6 @@ import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +25,7 @@ import net.minecraftforge.oredict.ShapelessOreRecipe;
 import com.gtnhplanner.core.model.read.CraftingRecord;
 import com.gtnhplanner.core.model.read.CraftingRecord.Slot;
 import com.gtnhplanner.core.model.read.GtRecipeRecord;
+import com.gtnhplanner.read.OreCellNames;
 import com.gtnhplanner.read.OreLists;
 import com.gtnhplanner.read.gt.GtRecipeReader;
 
@@ -232,19 +232,8 @@ public final class CraftingReader {
 
     private List<String> oreNamesFor(final List<?> list) {
         if (list.isEmpty()) return Collections.emptyList();
-        if (oreNamesBySignature == null) {
-            oreNamesBySignature = new HashMap<String, List<String>>();
-            for (final String name : OreDictionary.getOreNames()) {
-                final String signature = signature(OreDictionary.getOres(name));
-                if (signature.length() == 0) continue;
-                List<String> names = oreNamesBySignature.get(signature);
-                if (names == null) {
-                    names = new ArrayList<String>();
-                    oreNamesBySignature.put(signature, names);
-                }
-                names.add(name);
-            }
-        }
+        if (oreNamesBySignature == null) oreNamesBySignature = OreCellNames
+            .bySignature(OreDictionary.getOreNames(), name -> signature(OreDictionary.getOres(name)));
         return oreNamesBySignature.get(signature(list));
     }
 

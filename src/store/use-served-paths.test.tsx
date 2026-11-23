@@ -45,6 +45,14 @@ describe("faces drawn from stored summaries", () => {
     expect(sources(container.ownerDocument.body)).not.toContain(OLD);
   });
 
+  it("reads this browser's resource history on the served version when the dataset loaded first", () => {
+    useFactoryStore.setState({ dataset, datasetManifest: manifest });
+    useFactoryStore
+      .getState()
+      .hydrateResourceHistory([{ kind: "item", id: "item:gregtech:steel", displayName: "Steel Ingot", iconPath: OLD }]);
+    expect(useFactoryStore.getState().recipeResourceHistory.map((entry) => entry.iconPath)).toEqual([NEW]);
+  });
+
   it("keeps a face adopted into the open plan on the served version", () => {
     useFactoryStore.setState({ dataset, datasetManifest: manifest });
     useFactoryStore.getState().setProjectIdentity({ icon });

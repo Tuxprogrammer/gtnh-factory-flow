@@ -29,3 +29,33 @@ describe("stored rows the server draws from", () => {
     expect(await onServerDataset(undefined)).toBeUndefined();
   });
 });
+
+vi.mock("@/lib/agent-api/deliveries", () => ({
+  DELIVERY_ID_PATTERN: /^[dp][a-z2-9]{15}$/,
+  readDelivery: async (id: string) => ({
+    id,
+    kind: "delivery",
+    name: "Steel",
+    createdAt: "2026-01-01T00:00:00Z",
+    expiresAt: "2026-02-01T00:00:00Z",
+    payload: { nodes: [{ id: "n1", outputs: [{ iconPath: path("old", "steel-1.png") }] }] },
+  }),
+}));
+
+vi.mock("@/lib/server/community", () => ({
+  isCommunityConfigured: () => true,
+  clientAddress: () => "test",
+  saltedKey: (value: string) => value,
+}));
+
+describe("a stored delivery read back", () => {
+  it("answers with its paths on the version the server serves", async () => {
+    const { GET } = await import("@/app/api/deliveries/[id]/route");
+    const response = await GET(new Request("http://localhost/api/deliveries/dabcdefghjkmnpqr"), {
+      params: Promise.resolve({ id: "dabcdefghjkmnpqr" }),
+    });
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as { plan: { nodes: Array<{ outputs: Array<{ iconPath: string }> }> } };
+    expect(body.plan.nodes[0]!.outputs[0]!.iconPath).toBe(path("new", "steel-1.png"));
+  });
+});

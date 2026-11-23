@@ -1490,7 +1490,8 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
     set({ maxTierFilter: tier });
   },
   hydrateResourceHistory: (history) => {
-    set({ recipeResourceHistory: normalizeResourceHistory(history) });
+    // Saved in this browser on whatever dataset was current then; setDataset moves it when it lands later.
+    set((state) => ({ recipeResourceHistory: onServedDataset(normalizeResourceHistory(history), state) }));
   },
   clearResourceHistory: () => {
     set({ recipeResourceHistory: [] });

@@ -40,6 +40,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "4.7.0-tux.9",
+    date: "2026-11-22",
+    headline: "Plans keep their icons when the recipe data is updated",
+    notes: [
+      "A plan saved on older recipe data opens with current icons on the board, tabs, library and community tiles.",
+      "A card whose recipe is no longer in the data says so and keeps working from the plan's saved copy.",
+      "Void Miner recipes are listed with the other electric machines.",
+    ],
+  },
+  {
     version: "4.7.0-tux.8",
     date: "2026-11-22",
     headline: "The Overview shows imports through your own drawers",

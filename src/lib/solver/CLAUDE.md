@@ -51,7 +51,7 @@ nowhere or goes nowhere except through a source, a drawer or trash. Longer versi
 - Only synchronous solves write `lastSolveDurationMs` in `solve-books.ts`; worker timings
   never un-slow a plan.
   "A big plan lags every edit": look first for a diagnosis running on the main thread.
-- Exams: `equations-doctrine.test.ts`, `simplex.test.ts`. The tick simulator
+- Exams: `equations-doctrine.test.ts`, `simplex.test.ts`, `simplex-stall.test.ts`. The tick simulator
   (`src/lib/solver-lab/simulate.ts`) is the independent "what the game does" oracle.
 
 ## Modes

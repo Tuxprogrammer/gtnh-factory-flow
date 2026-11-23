@@ -1242,6 +1242,57 @@ describe("a plan written from outside the live service", { timeout: 30_000 }, ()
     expect(Number(row.seq)).toBe(8);
   });
 
+  it("does not take a save of the name alone for a write from outside", async () => {
+    const { port } = await startService({ timing: { flushMs: 100, renewMs: 150, leaseMs: 5000 } });
+    const { designId, doc } = await makeDesign();
+    const ann = await TestClient.open(port, { who: "ann" });
+    await ann.hello();
+    await ann.join(doc);
+    ann.send({ t: "ops", doc, base: 0, cid: "own", ops: [taskPatch("t1", { title: "Own" })] });
+    await ann.next("ops", (frame) => frame.cid === "own");
+    await until(async () => titleOf((await storedRow(designId)).plan) === "Own");
+    const meta = async () => {
+      const { data } = await getCommunityDb()
+        .from("library_designs")
+        .select("name,plan_updated_at")
+        .eq("user_id", users.ann!.id)
+        .eq("id", designId)
+        .single();
+      return data as { name: string; plan_updated_at: string };
+    };
+    const stamp = (await meta()).plan_updated_at;
+    // The library pushes a rename without the plan while it is open live, with
+    // its own idea of the plan's stamp.
+    const later = new Date(Date.now() + 60_000).toISOString();
+    const response = await designRoute.PUT(
+      new Request(`http://localhost/api/library/designs/${designId}`, {
+        method: "PUT",
+        headers: { cookie: users.ann!.cookie },
+        body: JSON.stringify({
+          name: "Renamed",
+          icon: null,
+          folderId: null,
+          closed: false,
+          favorite: false,
+          order: null,
+          communityPlanId: null,
+          createdAt: "2026-10-14T10:00:00.000Z",
+          updatedAt: later,
+          planUpdatedAt: later,
+        }),
+      }),
+      { params: Promise.resolve({ designId }) },
+    );
+    expect(response.status).toBe(200);
+    // Several renewals and flushes run meanwhile.
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    expect(ann.frames.filter((frame) => frame.t === "snapshot")).toEqual([]);
+    expect(titleOf((await storedRow(designId)).plan)).toBe("Own");
+    const after = await meta();
+    expect(after.name).toBe("Renamed");
+    expect(Date.parse(after.plan_updated_at)).toBe(Date.parse(stamp));
+  });
+
   it("drops a journal made on the old plan when the plan was written while the service was down", async () => {
     const first = await startService({
       timing: { flushMs: 60_000, renewMs: 60_000, leaseMs: 90_000 },

@@ -6,6 +6,8 @@
  * the compiled core cannot load, and the old Build, Solve and Pool engines).
  */
 
+import { solveBasis } from "./simplex-basis";
+
 export interface LinearProgram {
   /** Objective coefficients, one per variable; the solver MAXIMIZES c.x. */
   maximize: number[];
@@ -22,6 +24,11 @@ export interface LpSolution {
 }
 
 const EPS = 1e-9;
+// Harris's ratio test: how far below zero a row may be stepped so the leaving
+// row can be chosen by pivot size, and the smallest pivot Bland's order may
+// take relative to the largest one on offer (see `runSimplex`).
+const HARRIS_SLACK = 1e-9;
+const BLAND_PIVOT_SHARE = 1e-3;
 
 export function solveLp(lp: LinearProgram): LpSolution {
   // A tableau walk through tiny pivots can leave float wreckage large enough
@@ -180,6 +187,31 @@ function solveLpOnce(lp: LinearProgram, blandFromStart: boolean): LpSolution {
     tableau.push(line);
   }
 
+  // A long walk's drift shows as basic values below zero (or, after phase 1,
+  // as artificial residue on a feasible model): read the basis's values once
+  // more from the starting rows (`simplex-basis.ts`). Same basis, same
+  // reduced costs; only the right-hand side is made exact again.
+  const refreshBasicValues = (force = false) => {
+    if (!force && !tableau.some((line) => line[columns]! < -1e-12)) {
+      return;
+    }
+    const fresh = solveBasis(
+      m,
+      basis,
+      (r, c) => {
+        if (c < n) return rows[r]!.coefficients.get(c) ?? 0;
+        if (c === slackOf[r] || c === artificialOf[r]) return 1;
+        return c === surplusOf[r] ? -1 : 0;
+      },
+      rows.map((row) => row.rhs),
+    );
+    if (fresh) {
+      for (let r = 0; r < m; r += 1) {
+        tableau[r]![columns] = fresh[r]!;
+      }
+    }
+  };
+
   // Phase 1: minimize the artificial sum (maximize its negative).
   if (artificialOf.some((a) => a >= 0)) {
     const phase1 = new Array<number>(columns).fill(0);
@@ -192,11 +224,19 @@ function solveLpOnce(lp: LinearProgram, blandFromStart: boolean): LpSolution {
     if (!feasible) {
       return { status: "unbounded", x: [], objective: Number.NaN };
     }
-    let infeasibility = 0;
-    for (let r = 0; r < m; r += 1) {
-      if (artificialOf.includes(basis[r]!)) {
-        infeasibility += tableau[r]![columns]!;
+    const artificialSum = () => {
+      let sum = 0;
+      for (let r = 0; r < m; r += 1) {
+        if (artificialOf.includes(basis[r]!)) {
+          sum += tableau[r]![columns]!;
+        }
       }
+      return sum;
+    };
+    let infeasibility = artificialSum();
+    if (infeasibility > 1e-7) {
+      refreshBasicValues(true);
+      infeasibility = artificialSum();
     }
     if (infeasibility > 1e-7) {
       return { status: "infeasible", x: [], objective: Number.NaN };
@@ -235,6 +275,7 @@ function solveLpOnce(lp: LinearProgram, blandFromStart: boolean): LpSolution {
   if (!bounded) {
     return { status: "unbounded", x: [], objective: Number.NaN };
   }
+  refreshBasicValues();
 
   const x = new Array<number>(n).fill(0);
   for (let r = 0; r < m; r += 1) {
@@ -267,6 +308,13 @@ function normalizeRow(coefficients: Map<number, number>, rhs: number, eq: boolea
  * objective stalls through a run of degenerate pivots, which is what makes
  * cycling impossible. Fully deterministic either way - the same model always
  * walks the same pivots.
+ *
+ * Under float rounding the walk keeps three exact-arithmetic facts true by
+ * construction, or it can pivot in place forever: a basic column never enters
+ * (its reduced cost is zero; float residue in its column can say otherwise),
+ * the pivot column is left an exact unit column (see `pivot`), and a basic
+ * value rounded just below zero bounds the step at zero, never below it (a
+ * negative step lowers the objective, which voids Bland's guarantee).
  */
 function runSimplex(
   tableau: number[][],
@@ -277,6 +325,7 @@ function runSimplex(
   blandFromStart = false,
 ): boolean {
   const m = tableau.length;
+  const basic = new Uint8Array(columns);
   let blandMode = blandFromStart;
   let stalled = 0;
   let previousValue = Number.NEGATIVE_INFINITY;
@@ -296,10 +345,14 @@ function runSimplex(
         reduced[c]! -= cost * tableau[r]![c]!;
       }
     }
+    basic.fill(0);
+    for (let r = 0; r < m; r += 1) {
+      basic[basis[r]!] = 1;
+    }
     let entering = -1;
     if (blandMode) {
       for (let c = 0; c < columns; c += 1) {
-        if (banned?.has(c)) {
+        if (banned?.has(c) || basic[c]) {
           continue;
         }
         if (reduced[c]! > 1e-9) {
@@ -310,7 +363,7 @@ function runSimplex(
     } else {
       let best = 1e-9;
       for (let c = 0; c < columns; c += 1) {
-        if (banned?.has(c)) {
+        if (banned?.has(c) || basic[c]) {
           continue;
         }
         if (reduced[c]! > best) {
@@ -322,47 +375,54 @@ function runSimplex(
     if (entering < 0) {
       return true;
     }
-    // Ratio test, two passes. Pass 1 finds the minimum ratio; pass 2 picks
-    // the winner among near-ties by the LARGEST pivot element (Bland mode:
-    // the lowest basis index, which its anti-cycling proof needs). Taking the
-    // first past-EPS pivot regardless of size lets a chain of tiny pivots
-    // inflate the tableau until a later subtraction cancels catastrophically.
-    let best = Number.POSITIVE_INFINITY;
+    // Ratio test, Harris's two passes. Pass 1 finds the longest step that
+    // leaves no row more than HARRIS_SLACK below zero; pass 2 picks, among
+    // the rows that block within that step, the LARGEST pivot element (Bland
+    // mode: the lowest basis index among the rows whose pivot is within
+    // BLAND_PIVOT_SHARE of that largest, which keeps its anti-cycling order
+    // on every tie it can settle without dividing by rounding residue). Taking
+    // the strict minimum regardless of pivot size lets a row whose value and
+    // entry are both residue (1e-15 over 1e-9) win and inflate the tableau
+    // until a later subtraction cancels catastrophically.
+    let bound = Number.POSITIVE_INFINITY;
     for (let r = 0; r < m; r += 1) {
       const a = tableau[r]![entering]!;
       if (a > EPS) {
-        const ratio = tableau[r]![columns]! / a;
-        if (ratio < best) {
-          best = ratio;
+        const ratio = (Math.max(0, tableau[r]![columns]!) + HARRIS_SLACK) / a;
+        if (ratio < bound) {
+          bound = ratio;
         }
       }
     }
     let leaving = -1;
-    if (best < Number.POSITIVE_INFINITY) {
-      const tieBand = EPS * (1 + Math.abs(best));
+    if (bound < Number.POSITIVE_INFINITY) {
       let bestPivot = 0;
       for (let r = 0; r < m; r += 1) {
         const a = tableau[r]![entering]!;
-        if (a <= EPS) {
-          continue;
-        }
-        const ratio = tableau[r]![columns]! / a;
-        if (ratio > best + tieBand) {
-          continue;
-        }
-        if (blandMode) {
-          if (leaving < 0 || basis[r]! < basis[leaving]!) {
-            leaving = r;
-          }
-        } else if (a > bestPivot) {
+        if (a > EPS && a > bestPivot && Math.max(0, tableau[r]![columns]!) / a <= bound) {
           bestPivot = a;
           leaving = r;
+        }
+      }
+      if (blandMode) {
+        for (let r = 0; r < m; r += 1) {
+          const a = tableau[r]![entering]!;
+          if (
+            a >= BLAND_PIVOT_SHARE * bestPivot &&
+            a > EPS &&
+            basis[r]! < basis[leaving]! &&
+            Math.max(0, tableau[r]![columns]!) / a <= bound
+          ) {
+            leaving = r;
+          }
         }
       }
     }
     if (leaving < 0) {
       if (typeof process !== "undefined" && process.env?.SIMPLEX_DEBUG) {
-        console.log(`simplex: ray at iteration ${iteration}, entering ${entering}, bland=${blandMode}`);
+        console.log(
+          `simplex: ray at iteration ${iteration}, entering ${entering}, bland=${blandMode}`,
+        );
       }
       return false;
     }
@@ -409,6 +469,13 @@ function pivot(tableau: number[][], basis: number[], row: number, col: number, c
     for (let c = 0; c <= columns; c += 1) {
       tableau[r]![c] = tableau[r]![c]! - factor * line[c]!;
     }
+  }
+  // The entering column becomes exactly a unit column: elimination leaves
+  // rounding residue in it, and rows skipped as too small keep their whole
+  // entry. Left there, residue times a large cost reads as a positive
+  // reduced cost on a basic column.
+  for (let r = 0; r < tableau.length; r += 1) {
+    tableau[r]![col] = r === row ? 1 : 0;
   }
   basis[row] = col;
 }

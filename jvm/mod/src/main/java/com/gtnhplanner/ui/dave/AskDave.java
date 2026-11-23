@@ -57,6 +57,11 @@ public final class AskDave {
 
     @Nullable
     private static DaveLink link() {
+        // The dev game has no bridge mod: its harness can stand one in. A release run never has the harness.
+        if (com.gtnhplanner.dev.DevHarness.isEnabled()) {
+            final DaveLink fake = com.gtnhplanner.dev.DevDave.link();
+            if (fake != null) return fake;
+        }
         return DaveBridgeLink.find();
     }
 
@@ -149,7 +154,13 @@ public final class AskDave {
             Minecraft.getMinecraft()
                 .func_152344_a(() -> {
                     if (why != null) done.accept(why, true);
-                    else place(session, recipe, text, done);
+                    // The client thread's task queue keeps a failure to itself: it is logged and told here.
+                    else try {
+                        place(session, recipe, text, done);
+                    } catch (final RuntimeException | LinkageError e) {
+                        GtnhPlanner.LOG.warn("Ask Dave could not add recipe {}", recipe.recipeId(), e);
+                        done.accept(t("gtnhplanner.dave.recipe.unread"), true);
+                    }
                 });
         });
     }
@@ -165,7 +176,7 @@ public final class AskDave {
         try {
             final FfConverter.Result r = FactoryFlowImport.importFromText(plan);
             card = DaveRecipes.card(r.graph());
-        } catch (final RuntimeException e) {
+        } catch (final RuntimeException | LinkageError e) {
             GtnhPlanner.LOG.warn("Ask Dave could not make a card of recipe {}", recipe.recipeId(), e);
             done.accept(t("gtnhplanner.dave.recipe.unread"), true);
             return;

@@ -116,7 +116,13 @@ public final class Deliveries {
             Minecraft.getMinecraft()
                 .func_152344_a(() -> {
                     if (why != null) say(why, true, told);
-                    else then.accept(got);
+                    // The client thread's task queue keeps a failure to itself: it is logged and told here.
+                    else try {
+                        then.accept(got);
+                    } catch (final RuntimeException | LinkageError e) {
+                        GtnhPlanner.LOG.warn("Could not use what the planner site delivered under {}", id, e);
+                        say(unreadable(kind), true, told);
+                    }
                 });
         });
     }

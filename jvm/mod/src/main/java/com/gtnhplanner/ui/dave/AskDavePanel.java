@@ -28,7 +28,7 @@ public final class AskDavePanel extends ParentWidget<AskDavePanel> implements In
     /** Its width, in board pixels. */
     public static final int W = 210;
     private static final int PAD = 6, TITLE = 20, LINE = 10, KEY_H = 14, INPUT_H = 42, GAP = 3;
-    private static final int BG = 0xFF202226, EDGE = 0xFF0C0D10, QUESTION_BG = 0xFF2D2F35;
+    private static final int BG = 0xFF202226, EDGE = 0xFF0C0D10, QUESTION_BG = 0xFF2D2F35, WELL = 0xFF16171A;
 
     /** One row laid out: where it sits in the conversation, its lines, and its key's box when it has one. */
     private record Laid(DaveTalk.Row row, int y, int h, List<String> lines, int colour, @Nullable int[] key) {}
@@ -77,7 +77,7 @@ public final class AskDavePanel extends ParentWidget<AskDavePanel> implements In
             switch (r.kind()) {
                 case QUESTION -> {
                     if (!out.isEmpty()) y += 6;
-                    final List<String> lines = Hyb.wrap(r.text(), room - 8);
+                    final List<String> lines = wrap(r.text(), room - 8);
                     final int h = lines.size() * LINE + 6;
                     out.add(new Laid(r, y, h, lines, Hyb.INK, null));
                     y += h + GAP;
@@ -94,13 +94,13 @@ public final class AskDavePanel extends ParentWidget<AskDavePanel> implements In
                             Hyb.width(t("gtnhplanner.dave.recipe.added")),
                             Hyb.width(t("gtnhplanner.dave.recipe.adding"))))
                         + 10;
-                    final List<String> lines = Hyb.wrap(r.text(), room - kw - 4);
+                    final List<String> lines = wrap(r.text(), room - kw - 4);
                     final int h = Math.max(KEY_H, lines.size() * LINE);
                     out.add(new Laid(r, y, h, lines, Hyb.INK, new int[] { PAD + room - kw, y, kw, KEY_H }));
                     y += h + GAP;
                 }
                 default -> {
-                    final List<String> lines = Hyb.wrap(r.text(), room);
+                    final List<String> lines = wrap(r.text(), room);
                     final int h = lines.size() * LINE;
                     out.add(new Laid(r, y, h, lines, colour(r), null));
                     y += h + GAP;
@@ -160,7 +160,7 @@ public final class AskDavePanel extends ParentWidget<AskDavePanel> implements In
         final List<Laid> rows = laid();
         if (rows.isEmpty()) {
             int ey = top + 4;
-            for (final String line : Hyb.wrap(t("gtnhplanner.dave.empty"), w - 2 * PAD)) {
+            for (final String line : wrap(t("gtnhplanner.dave.empty"), w - 2 * PAD)) {
                 Hyb.text(line, PAD, ey, Hyb.MUTED);
                 ey += LINE;
             }
@@ -195,6 +195,8 @@ public final class AskDavePanel extends ParentWidget<AskDavePanel> implements In
             }
         }
 
+        // The box to write in, sunk into the panel as the Feedback box's is.
+        Hyb.rect(PAD, h - PAD - KEY_H - GAP - INPUT_H, w - 2 * PAD, INPUT_H, WELL);
         // Under the box: the count against the limit, and Send or Stop.
         final int n = words.text()
             .trim()
@@ -265,6 +267,36 @@ public final class AskDavePanel extends ParentWidget<AskDavePanel> implements In
     }
 
     // endregion
+
+    /** Words onto as many lines as they take, a word longer than a line broken across lines. */
+    static List<String> wrap(final String text, final int room) {
+        final List<String> out = new ArrayList<>();
+        final StringBuilder line = new StringBuilder();
+        for (final String word : text.split(" ")) {
+            String w = word;
+            while (w.length() > 1 && Hyb.width(w) > room) {
+                if (line.length() > 0) {
+                    out.add(line.toString());
+                    line.setLength(0);
+                }
+                int n = w.length() - 1;
+                while (n > 1 && Hyb.width(w.substring(0, n)) > room) n--;
+                out.add(w.substring(0, n));
+                w = w.substring(n);
+            }
+            final String next = line.length() == 0 ? w : line + " " + w;
+            if (line.length() > 0 && Hyb.width(next) > room) {
+                out.add(line.toString());
+                line.setLength(0);
+                line.append(w);
+            } else {
+                line.setLength(0);
+                line.append(next);
+            }
+        }
+        if (line.length() > 0 || out.isEmpty()) out.add(line.toString());
+        return out;
+    }
 
     private static boolean in(final int[] r, final int x, final int y) {
         return x >= r[0] && x < r[0] + r[2] && y >= r[1] && y < r[1] + r[3];

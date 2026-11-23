@@ -521,7 +521,8 @@ Response: `{dataset, planId, name, expiresAt, cardCount, wireCount, warnings}`.
   snapshot's card id, wires, board, tier, dials and count; its `recipeId` in the draft (and in `plans/get`,
   `plans/solve` and the draft's own snapshot) is the dataset's id, and its `machine` is kept only when the dataset
   recipe lists that machine (else the recipe's default). It solves, wires automatically and may be wired to; a
-  proposal still names it by its card id. A match whose amounts, time or EU differ from the content is taken with a
+  proposal still names it by its card id. Amounts are compared as each resource's total (the dataset lists 80 of an item as stacks of 64 and 16,
+  the game's card as one slot). A match whose amounts, time or EU differ from the content is taken with a
   warning (`... is matched to the dataset recipe that takes and makes the same things, but its amounts, time or EU
   differ.`).
 - A card whose recipe the dataset does not have and that no content matches (no content sent, no recipe with the same

@@ -179,6 +179,7 @@ export async function importPlan(
   const found = await matchContent(dataset, snapshot, recipes);
   const opaque = new Set<string>();
   const warnings: string[] = [];
+  const loosely: string[] = [];
   for (const card of snapshot.cards) {
     const ids = [card.recipeId, ...(card.sections ?? [])];
     const missing = ids.filter((id, k) => !recipes.has(id) && !found.get(contentKey(card.id, k))?.recipeId);
@@ -193,11 +194,14 @@ export async function importPlan(
     }
     const loose = ids.filter((_, k) => found.get(contentKey(card.id, k))?.exact === false);
     if (loose.length) {
-      warnings.push(
+      loosely.push(
         `Card ${card.id}: recipe ${loose.join(", ")} is matched to the dataset recipe that takes and makes the same things, but its amounts, time or EU differ.`,
       );
     }
   }
+
+  // Cards kept opaque come first: they are what the assistant cannot work with.
+  warnings.push(...loosely);
 
   // Targets: each resource's first canonical main-output pin becomes a draft target on that card; every other pin
   // is kept on its card as it is.

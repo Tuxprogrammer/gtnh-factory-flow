@@ -37,6 +37,32 @@
       "machine": "electrolyzer",
       "tier": "HV",
       "count": 1.0,
+      "recipe": {
+        "name": "item|gregtech:gt.metaitem.01@2017",
+        "machineType": "Electrolyzer",
+        "recipeMap": "Electrolyzer",
+        "inputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2817",
+            "kind": "item",
+            "amount": 2
+          }
+        ],
+        "outputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2017",
+            "kind": "item",
+            "amount": 1
+          },
+          {
+            "id": "chlorine",
+            "kind": "fluid",
+            "amount": 1000
+          }
+        ],
+        "durationTicks": 320,
+        "eut": 30
+      },
       "position": {
         "x": 200,
         "y": 60
@@ -49,6 +75,37 @@
       "machine": "large-chemical-reactor",
       "tier": "HV",
       "count": 1.0,
+      "recipe": {
+        "name": "item|gregtech:gt.metaitem.01@2018",
+        "machineType": "Large Chemical Reactor",
+        "recipeMap": "Large Chemical Reactor",
+        "inputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2017",
+            "kind": "item",
+            "amount": 4
+          },
+          {
+            "id": "gregtech:gt.metaitem.01@2377",
+            "kind": "item",
+            "amount": 6
+          }
+        ],
+        "outputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2018",
+            "kind": "item",
+            "amount": 2
+          },
+          {
+            "id": "gregtech:gt.metaitem.01@2817",
+            "kind": "item",
+            "amount": 8
+          }
+        ],
+        "durationTicks": 400,
+        "eut": 480
+      },
       "position": {
         "x": 200,
         "y": 280
@@ -64,6 +121,37 @@
         "heatingCoil": "nichrome"
       },
       "count": 1.0,
+      "recipe": {
+        "name": "item|gregtech:gt.metaitem.01@12028",
+        "machineType": "Blast Furnace",
+        "recipeMap": "Blast Furnace",
+        "inputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2018",
+            "kind": "item",
+            "amount": 2
+          },
+          {
+            "id": "titaniumtetrachloride",
+            "kind": "fluid",
+            "amount": 1000
+          }
+        ],
+        "outputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@12028",
+            "kind": "item",
+            "amount": 1
+          },
+          {
+            "id": "gregtech:gt.metaitem.01@2377",
+            "kind": "item",
+            "amount": 6
+          }
+        ],
+        "durationTicks": 800,
+        "eut": 480
+      },
       "position": {
         "x": 580,
         "y": 480
@@ -76,6 +164,27 @@
       "machine": "vacuum-freezer",
       "tier": "HV",
       "count": 1.0,
+      "recipe": {
+        "name": "item|gregtech:gt.metaitem.01@11028",
+        "machineType": "Vacuum Freezer",
+        "recipeMap": "Vacuum Freezer",
+        "inputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@12028",
+            "kind": "item",
+            "amount": 1
+          }
+        ],
+        "outputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@11028",
+            "kind": "item",
+            "amount": 1
+          }
+        ],
+        "durationTicks": 144,
+        "eut": 480
+      },
       "position": {
         "x": 1020,
         "y": 480
@@ -88,6 +197,42 @@
       "machine": "large-chemical-reactor",
       "tier": "HV",
       "count": 1.0,
+      "recipe": {
+        "name": "fluid|carbonmonoxide",
+        "machineType": "Large Chemical Reactor",
+        "recipeMap": "Large Chemical Reactor",
+        "inputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2375",
+            "kind": "item",
+            "amount": 3
+          },
+          {
+            "id": "gregtech:gt.metaitem.01@2010",
+            "kind": "item",
+            "amount": 2
+          },
+          {
+            "id": "chlorine",
+            "kind": "fluid",
+            "amount": 4000
+          }
+        ],
+        "outputs": [
+          {
+            "id": "carbonmonoxide",
+            "kind": "fluid",
+            "amount": 2000
+          },
+          {
+            "id": "titaniumtetrachloride",
+            "kind": "fluid",
+            "amount": 1000
+          }
+        ],
+        "durationTicks": 400,
+        "eut": 480
+      },
       "position": {
         "x": 200,
         "y": 720
@@ -100,6 +245,32 @@
       "machine": "electrolyzer",
       "tier": "HV",
       "count": 1.0,
+      "recipe": {
+        "name": "item|gregtech:gt.metaitem.01@2010",
+        "machineType": "Electrolyzer",
+        "recipeMap": "Electrolyzer",
+        "inputs": [
+          {
+            "id": "carbonmonoxide",
+            "kind": "fluid",
+            "amount": 1000
+          }
+        ],
+        "outputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2010",
+            "kind": "item",
+            "amount": 1
+          },
+          {
+            "id": "oxygen",
+            "kind": "fluid",
+            "amount": 1000
+          }
+        ],
+        "durationTicks": 300,
+        "eut": 120
+      },
       "position": {
         "x": 200,
         "y": 980
@@ -112,6 +283,42 @@
       "machine": "autoclave",
       "tier": "EV",
       "count": 1.0,
+      "recipe": {
+        "name": "item|gregtech:gt.metaitem.01@2006",
+        "machineType": "Autoclave",
+        "recipeMap": "Autoclave",
+        "inputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2841",
+            "kind": "item",
+            "amount": 7
+          },
+          {
+            "id": "gregtech:gt.metaitem.01@2017",
+            "kind": "item",
+            "amount": 2
+          },
+          {
+            "id": "water",
+            "kind": "fluid",
+            "amount": 4000
+          }
+        ],
+        "outputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2006",
+            "kind": "item",
+            "amount": 2
+          },
+          {
+            "id": "sodium tungstate",
+            "kind": "fluid",
+            "amount": 1000
+          }
+        ],
+        "durationTicks": 100,
+        "eut": 1920
+      },
       "position": {
         "x": 180,
         "y": 240
@@ -124,6 +331,37 @@
       "machine": "chemical-reactor",
       "tier": "HV",
       "count": 1.0,
+      "recipe": {
+        "name": "item|gregtech:gt.metaitem.01@2910",
+        "machineType": "Chemical Reactor",
+        "recipeMap": "Chemical Reactor",
+        "inputs": [
+          {
+            "id": "bartworks:gt.bwmetagenerateddust@63",
+            "kind": "item",
+            "amount": 3
+          },
+          {
+            "id": "sodium tungstate",
+            "kind": "fluid",
+            "amount": 1000
+          }
+        ],
+        "outputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2910",
+            "kind": "item",
+            "amount": 6
+          },
+          {
+            "id": "gregtech:gt.metaitem.01@2817",
+            "kind": "item",
+            "amount": 4
+          }
+        ],
+        "durationTicks": 100,
+        "eut": 480
+      },
       "position": {
         "x": 600,
         "y": 240
@@ -138,6 +376,65 @@
       "count": 1.0,
       "sections": [
         "gtnhplanner:card-9-r1"
+      ],
+      "recipe": {
+        "name": "item|bartworks:gt.bwmetagenerateddust@29900",
+        "machineType": "Large Chemical Reactor",
+        "recipeMap": "Large Chemical Reactor",
+        "inputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2910",
+            "kind": "item",
+            "amount": 6
+          },
+          {
+            "id": "hydrochloricacid_gt5u",
+            "kind": "fluid",
+            "amount": 2000
+          }
+        ],
+        "outputs": [
+          {
+            "id": "bartworks:gt.bwmetagenerateddust@29900",
+            "kind": "item",
+            "amount": 7
+          },
+          {
+            "id": "bartworks:gt.bwmetagenerateddust@63",
+            "kind": "item",
+            "amount": 3
+          }
+        ],
+        "durationTicks": 50,
+        "eut": 1920
+      },
+      "sectionRecipes": [
+        {
+          "name": "fluid|hydrochloricacid_gt5u",
+          "machineType": "Large Chemical Reactor",
+          "recipeMap": "Large Chemical Reactor",
+          "inputs": [
+            {
+              "id": "hydrogen",
+              "kind": "fluid",
+              "amount": 1000
+            },
+            {
+              "id": "chlorine",
+              "kind": "fluid",
+              "amount": 1000
+            }
+          ],
+          "outputs": [
+            {
+              "id": "hydrochloricacid_gt5u",
+              "kind": "fluid",
+              "amount": 1000
+            }
+          ],
+          "durationTicks": 60,
+          "eut": 7
+        }
       ],
       "position": {
         "x": 1020,
@@ -154,6 +451,27 @@
         "heatingCoil": "nichrome"
       },
       "count": 1.0,
+      "recipe": {
+        "name": "item|bartworks:gt.bwmetagenerateddust@29901",
+        "machineType": "Blast Furnace",
+        "recipeMap": "Blast Furnace",
+        "inputs": [
+          {
+            "id": "bartworks:gt.bwmetagenerateddust@29900",
+            "kind": "item",
+            "amount": 7
+          }
+        ],
+        "outputs": [
+          {
+            "id": "bartworks:gt.bwmetagenerateddust@29901",
+            "kind": "item",
+            "amount": 4
+          }
+        ],
+        "durationTicks": 200,
+        "eut": 480
+      },
       "position": {
         "x": 1440,
         "y": 280
@@ -169,6 +487,60 @@
       "sections": [
         "gtnhplanner:card-11-r1"
       ],
+      "recipe": {
+        "name": "item|gregtech:gt.metaitem.01@2017",
+        "machineType": "Electrolyzer",
+        "recipeMap": "Electrolyzer",
+        "inputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2817",
+            "kind": "item",
+            "amount": 2
+          }
+        ],
+        "outputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2017",
+            "kind": "item",
+            "amount": 1
+          },
+          {
+            "id": "chlorine",
+            "kind": "fluid",
+            "amount": 1000
+          }
+        ],
+        "durationTicks": 320,
+        "eut": 30
+      },
+      "sectionRecipes": [
+        {
+          "name": "item|gregtech:gt.metaitem.01@2026",
+          "machineType": "Electrolyzer",
+          "recipeMap": "Electrolyzer",
+          "inputs": [
+            {
+              "id": "bartworks:gt.bwmetagenerateddust@63",
+              "kind": "item",
+              "amount": 3
+            }
+          ],
+          "outputs": [
+            {
+              "id": "gregtech:gt.metaitem.01@2026",
+              "kind": "item",
+              "amount": 1
+            },
+            {
+              "id": "chlorine",
+              "kind": "fluid",
+              "amount": 2000
+            }
+          ],
+          "durationTicks": 27,
+          "eut": 60
+        }
+      ],
       "position": {
         "x": 600,
         "y": 460
@@ -181,6 +553,37 @@
       "machine": "electrolyzer",
       "tier": "HV",
       "count": 1.0,
+      "recipe": {
+        "name": "item|gregtech:gt.metaitem.01@2017",
+        "machineType": "Electrolyzer",
+        "recipeMap": "Electrolyzer",
+        "inputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2695",
+            "kind": "item",
+            "amount": 6
+          }
+        ],
+        "outputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2017",
+            "kind": "item",
+            "amount": 2
+          },
+          {
+            "id": "gregtech:gt.metaitem.01@2010",
+            "kind": "item",
+            "amount": 1
+          },
+          {
+            "id": "oxygen",
+            "kind": "fluid",
+            "amount": 3000
+          }
+        ],
+        "durationTicks": 96,
+        "eut": 60
+      },
       "position": {
         "x": 1040,
         "y": 180
@@ -193,6 +596,37 @@
       "machine": "chemical-bath",
       "tier": "HV",
       "count": 1.0,
+      "recipe": {
+        "name": "item|gregtech:gt.metaitem.01@2685",
+        "machineType": "Chemical Bath",
+        "recipeMap": "Chemical Bath",
+        "inputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2017",
+            "kind": "item",
+            "amount": 1
+          },
+          {
+            "id": "water",
+            "kind": "fluid",
+            "amount": 1000
+          }
+        ],
+        "outputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2685",
+            "kind": "item",
+            "amount": 3
+          },
+          {
+            "id": "hydrogen",
+            "kind": "fluid",
+            "amount": 1000
+          }
+        ],
+        "durationTicks": 100,
+        "eut": 4
+      },
       "position": {
         "x": 1040,
         "y": 440
@@ -205,6 +639,32 @@
       "machine": "chemical-reactor",
       "tier": "HV",
       "count": 1.0,
+      "recipe": {
+        "name": "fluid|carbondioxide",
+        "machineType": "Chemical Reactor",
+        "recipeMap": "Chemical Reactor",
+        "inputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2010",
+            "kind": "item",
+            "amount": 1
+          },
+          {
+            "id": "oxygen",
+            "kind": "fluid",
+            "amount": 2000
+          }
+        ],
+        "outputs": [
+          {
+            "id": "carbondioxide",
+            "kind": "fluid",
+            "amount": 1000
+          }
+        ],
+        "durationTicks": 40,
+        "eut": 7
+      },
       "position": {
         "x": 1900,
         "y": 680
@@ -217,6 +677,32 @@
       "machine": "macerator",
       "tier": "HV",
       "count": 1.0,
+      "recipe": {
+        "name": "item|gregtech:gt.metaitem.01@3822",
+        "machineType": "Macerator",
+        "recipeMap": "Macerator",
+        "inputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@5822",
+            "kind": "item",
+            "amount": 1
+          }
+        ],
+        "outputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@3822",
+            "kind": "item",
+            "amount": 1
+          },
+          {
+            "id": "gregtech:gt.metaitem.01@2831",
+            "kind": "item",
+            "amount": 1
+          }
+        ],
+        "durationTicks": 400,
+        "eut": 2
+      },
       "position": {
         "x": 220,
         "y": 840
@@ -235,6 +721,60 @@
       "sections": [
         "gtnhplanner:card-16-r1"
       ],
+      "recipe": {
+        "name": "item|gregtech:gt.metaitem.01@6822",
+        "machineType": "Simple Dust Washer",
+        "recipeMap": "Simple Dust Washer",
+        "inputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@5822",
+            "kind": "item",
+            "amount": 1
+          },
+          {
+            "id": "water",
+            "kind": "fluid",
+            "amount": 100
+          }
+        ],
+        "outputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@6822",
+            "kind": "item",
+            "amount": 1
+          }
+        ],
+        "durationTicks": 5,
+        "eut": 7
+      },
+      "sectionRecipes": [
+        {
+          "name": "item|gregtech:gt.metaitem.01@2822",
+          "machineType": "Simple Dust Washer",
+          "recipeMap": "Simple Dust Washer",
+          "inputs": [
+            {
+              "id": "gregtech:gt.metaitem.01@3822",
+              "kind": "item",
+              "amount": 1
+            },
+            {
+              "id": "water",
+              "kind": "fluid",
+              "amount": 100
+            }
+          ],
+          "outputs": [
+            {
+              "id": "gregtech:gt.metaitem.01@2822",
+              "kind": "item",
+              "amount": 1
+            }
+          ],
+          "durationTicks": 5,
+          "eut": 7
+        }
+      ],
       "position": {
         "x": 640,
         "y": 880
@@ -247,6 +787,57 @@
       "machine": "large-chemical-reactor",
       "tier": "HV",
       "count": 1.0,
+      "recipe": {
+        "name": "item|gregtech:gt.metaitem.01@2697",
+        "machineType": "Large Chemical Reactor",
+        "recipeMap": "Large Chemical Reactor",
+        "inputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2698",
+            "kind": "item",
+            "amount": 1
+          },
+          {
+            "id": "carbondioxide",
+            "kind": "fluid",
+            "amount": 5000
+          },
+          {
+            "id": "headedbauxiteslurry",
+            "kind": "fluid",
+            "amount": 8000
+          }
+        ],
+        "outputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2697",
+            "kind": "item",
+            "amount": 80
+          },
+          {
+            "id": "gregtech:gt.metaitem.01@2695",
+            "kind": "item",
+            "amount": 9
+          },
+          {
+            "id": "gregtech:gt.metaitem.01@2823",
+            "kind": "item",
+            "amount": 10
+          },
+          {
+            "id": "gregtech:gt.metaitem.01@2413",
+            "kind": "item",
+            "amount": 16
+          },
+          {
+            "id": "sluicejuice",
+            "kind": "fluid",
+            "amount": 5000
+          }
+        ],
+        "durationTicks": 300,
+        "eut": 480
+      },
       "position": {
         "x": 1900,
         "y": 900
@@ -259,6 +850,47 @@
       "machine": "centrifuge",
       "tier": "HV",
       "count": 1.0,
+      "recipe": {
+        "name": "item|gregtech:gt.metaitem.01@2375",
+        "machineType": "Centrifuge",
+        "recipeMap": "Centrifuge",
+        "inputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2413",
+            "kind": "item",
+            "amount": 1
+          }
+        ],
+        "outputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2375",
+            "kind": "item",
+            "amount": 1
+          },
+          {
+            "id": "gregtech:gt.metaitem.01@2037",
+            "kind": "item",
+            "amount": 1
+          },
+          {
+            "id": "gregtech:gt.metaitem.01@2622",
+            "kind": "item",
+            "amount": 1
+          },
+          {
+            "id": "gregtech:gt.metaitem.01@2837",
+            "kind": "item",
+            "amount": 1
+          },
+          {
+            "id": "gregtech:gt.metaitem.01@2032",
+            "kind": "item",
+            "amount": 1
+          }
+        ],
+        "durationTicks": 40,
+        "eut": 120
+      },
       "position": {
         "x": 2480,
         "y": 900
@@ -271,6 +903,42 @@
       "machine": "mixer",
       "tier": "HV",
       "count": 1.0,
+      "recipe": {
+        "name": "fluid|bauxiteslurry",
+        "machineType": "Mixer",
+        "recipeMap": "Mixer",
+        "inputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@6822",
+            "kind": "item",
+            "amount": 32
+          },
+          {
+            "id": "gregtech:gt.metaitem.01@2685",
+            "kind": "item",
+            "amount": 9
+          },
+          {
+            "id": "gregtech:gt.metaitem.01@2622",
+            "kind": "item",
+            "amount": 4
+          },
+          {
+            "id": "water",
+            "kind": "fluid",
+            "amount": 5000
+          }
+        ],
+        "outputs": [
+          {
+            "id": "bauxiteslurry",
+            "kind": "fluid",
+            "amount": 8000
+          }
+        ],
+        "durationTicks": 200,
+        "eut": 120
+      },
       "position": {
         "x": 1060,
         "y": 920
@@ -283,6 +951,27 @@
       "machine": "fluid-heater",
       "tier": "HV",
       "count": 1.0,
+      "recipe": {
+        "name": "fluid|headedbauxiteslurry",
+        "machineType": "Fluid Heater",
+        "recipeMap": "Fluid Heater",
+        "inputs": [
+          {
+            "id": "bauxiteslurry",
+            "kind": "fluid",
+            "amount": 2000
+          }
+        ],
+        "outputs": [
+          {
+            "id": "headedbauxiteslurry",
+            "kind": "fluid",
+            "amount": 2000
+          }
+        ],
+        "durationTicks": 40,
+        "eut": 480
+      },
       "position": {
         "x": 1480,
         "y": 960
@@ -295,6 +984,37 @@
       "machine": "macerator",
       "tier": "EV",
       "count": 1.0,
+      "recipe": {
+        "name": "item|gregtech:gt.metaitem.01@5822",
+        "machineType": "Macerator",
+        "recipeMap": "Macerator",
+        "inputs": [
+          {
+            "id": "gregtech:gt.metaitem.03@5822",
+            "kind": "item",
+            "amount": 1
+          }
+        ],
+        "outputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@5822",
+            "kind": "item",
+            "amount": 2
+          },
+          {
+            "id": "gregtech:gt.metaitem.01@2831",
+            "kind": "item",
+            "amount": 1
+          },
+          {
+            "id": "gregtech:gt.metaitem.01@2299",
+            "kind": "item",
+            "amount": 1
+          }
+        ],
+        "durationTicks": 400,
+        "eut": 2
+      },
       "position": {
         "x": 220,
         "y": 1060
@@ -307,6 +1027,37 @@
       "machine": "chemical-reactor",
       "tier": "HV",
       "count": 1.0,
+      "recipe": {
+        "name": "item|gregtech:gt.metaitem.01@2698",
+        "machineType": "Chemical Reactor",
+        "recipeMap": "Chemical Reactor",
+        "inputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2696",
+            "kind": "item",
+            "amount": 4
+          },
+          {
+            "id": "water",
+            "kind": "fluid",
+            "amount": 2000
+          }
+        ],
+        "outputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2698",
+            "kind": "item",
+            "amount": 4
+          },
+          {
+            "id": "gregtech:gt.metaitem.01@2685",
+            "kind": "item",
+            "amount": 3
+          }
+        ],
+        "durationTicks": 50,
+        "eut": 120
+      },
       "position": {
         "x": 1900,
         "y": 1240
@@ -319,6 +1070,32 @@
       "machine": "chemical-reactor",
       "tier": "HV",
       "count": 1.0,
+      "recipe": {
+        "name": "item|gregtech:gt.metaitem.01@2622",
+        "machineType": "Chemical Reactor",
+        "recipeMap": "Chemical Reactor",
+        "inputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2823",
+            "kind": "item",
+            "amount": 5
+          }
+        ],
+        "outputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2622",
+            "kind": "item",
+            "amount": 2
+          },
+          {
+            "id": "carbondioxide",
+            "kind": "fluid",
+            "amount": 1000
+          }
+        ],
+        "durationTicks": 240,
+        "eut": 30
+      },
       "position": {
         "x": 1060,
         "y": 1340
@@ -331,6 +1108,37 @@
       "machine": "chemical-reactor",
       "tier": "HV",
       "count": 1.0,
+      "recipe": {
+        "name": "item|gregtech:gt.metaitem.01@2696",
+        "machineType": "Chemical Reactor",
+        "recipeMap": "Chemical Reactor",
+        "inputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2822",
+            "kind": "item",
+            "amount": 4
+          },
+          {
+            "id": "gregtech:gt.metaitem.01@2685",
+            "kind": "item",
+            "amount": 12
+          },
+          {
+            "id": "water",
+            "kind": "fluid",
+            "amount": 1000
+          }
+        ],
+        "outputs": [
+          {
+            "id": "gregtech:gt.metaitem.01@2696",
+            "kind": "item",
+            "amount": 16
+          }
+        ],
+        "durationTicks": 150,
+        "eut": 120
+      },
       "position": {
         "x": 1900,
         "y": 1460

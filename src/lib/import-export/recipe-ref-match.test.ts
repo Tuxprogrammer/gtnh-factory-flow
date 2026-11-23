@@ -115,6 +115,27 @@ describe("finding a recipe again after its id changed", () => {
     expect(match).toMatchObject({ candidate: { id: "new:steel-from-dust" }, exact: true, tied: 0 });
   });
 
+  it("reads an output listed as stacks as the one slot the game's card makes of it", () => {
+    const stacked = recipe("new:steel-stacked", [IRON_DUST, COAL_DUST, CIRCUIT, OXYGEN], [
+      { ...STEEL, amount: 64 },
+      { ...STEEL, amount: STEEL.amount },
+      ASHES,
+      CO2,
+    ]);
+    const merged = recipe("old:steel-merged", [IRON_DUST, COAL_DUST, CIRCUIT, OXYGEN], [
+      { ...STEEL, amount: 64 + STEEL.amount },
+      ASHES,
+      CO2,
+    ]);
+    expect(pickRecipeRefMatch(recipeContentRef(merged), [stacked])).toMatchObject({ exact: true });
+    const more = recipe("old:steel-more", [IRON_DUST, COAL_DUST, CIRCUIT, OXYGEN], [
+      { ...STEEL, amount: 65 + STEEL.amount },
+      ASHES,
+      CO2,
+    ]);
+    expect(pickRecipeRefMatch(recipeContentRef(more), [stacked])).toMatchObject({ exact: false });
+  });
+
   it("ignores non-consumed slots, which the exporter may list or not", () => {
     const withoutCircuit = recipe("new:steel-bare", [IRON_DUST, COAL_DUST, OXYGEN], [STEEL, ASHES, CO2]);
     expect(scoreRecipeRefCandidate(recipeContentRef(exported), withoutCircuit)).toBeGreaterThanOrEqual(400);

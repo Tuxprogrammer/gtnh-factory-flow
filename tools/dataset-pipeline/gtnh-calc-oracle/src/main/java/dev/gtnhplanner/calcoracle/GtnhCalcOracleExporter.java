@@ -12,6 +12,12 @@ import gregtech.api.interfaces.IStoneType;
 import gregtech.api.recipe.RecipeMap;
 import gregtech.api.recipe.RecipeMapBackend;
 import gregtech.api.util.GTRecipe;
+import com.gtnhplanner.core.model.read.CraftingRecord;
+import com.gtnhplanner.core.model.read.GtRecipeRecord;
+import com.gtnhplanner.core.model.read.SmeltingRecord;
+import com.gtnhplanner.read.OreLists;
+import com.gtnhplanner.read.crafting.CraftingReader;
+import com.gtnhplanner.read.furnace.SmeltingReader;
 import com.gtnhplanner.read.gt.GtRecipeReader;
 import com.gtnhplanner.read.postea.PosteaRenames;
 import gtneioreplugin.util.DimensionHelper;
@@ -22,11 +28,6 @@ import gtneioreplugin.util.OreVeinLayer;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.CraftingManager;
-import net.minecraft.item.crafting.FurnaceRecipes;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.item.crafting.ShapedRecipes;
-import net.minecraft.item.crafting.ShapelessRecipes;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.StatCollector;
@@ -34,8 +35,6 @@ import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.oredict.OreDictionary;
-import net.minecraftforge.oredict.ShapedOreRecipe;
-import net.minecraftforge.oredict.ShapelessOreRecipe;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -57,6 +56,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -65,9 +65,11 @@ public final class GtnhCalcOracleExporter {
     private static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
     private Map<String, List<String>> oreDictionaryNamesByChoiceSignature;
     private Map<String, List<Map<String, Object>>> recipeMapCatalystsById;
+    /** The run's one time stamp: every record of a run was read in that run. */
+    private String generatedAt;
 
     public ExportResult export() throws Exception {
-        String generatedAt = isoNow();
+        generatedAt = isoNow();
         List<Map<String, Object>> adapters = new ArrayList<Map<String, Object>>();
         List<Map<String, Object>> domains = new ArrayList<Map<String, Object>>();
 
@@ -123,9 +125,11 @@ public final class GtnhCalcOracleExporter {
         Map<String, Object> entries = map();
         int stackCount = 0;
 
-        for (String name : OreDictionary.getOreNames()) {
+        // The planner mod's ore list order (com.gtnhplanner.read.OreLists): names sorted, since their ids follow a
+        // registration order that differs run to run, and GregTech's hash-ordered glass tiers sorted.
+        for (String name : OreLists.names()) {
             List<Map<String, Object>> alternatives = new ArrayList<Map<String, Object>>();
-            for (ItemStack stack : OreDictionary.getOres(name)) {
+            for (ItemStack stack : OreLists.of(name)) {
                 Map<String, Object> item = itemStack(stack);
                 if (item != null) {
                     alternatives.add(item);
@@ -182,28 +186,38 @@ public final class GtnhCalcOracleExporter {
                     putIfPresent(exportedMap, "icon", recipeMapHandlerInfoIcon(map));
                 }
 
-                List<Map<String, Object>> recipes = new ArrayList<Map<String, Object>>();
-                List<GTRecipe> rawRecipes = new ArrayList<GTRecipe>(map.getAllRecipes());
-                Collections.sort(rawRecipes, new java.util.Comparator<GTRecipe>() {
-                    @Override
-                    public int compare(GTRecipe left, GTRecipe right) {
-                        int outputCompare = firstOutputName(left).compareTo(firstOutputName(right));
-                        if (outputCompare != 0) return outputCompare;
-                        int eutCompare = Long.compare(left.mEUt, right.mEUt);
-                        if (eutCompare != 0) return eutCompare;
-                        return Integer.compare(left.mDuration, right.mDuration);
-                    }
-                });
-
-                int index = 0;
-                for (GTRecipe recipe : rawRecipes) {
+                // A map lists its recipes in the order they were added, which for some maps follows a hash order
+                // that is new every run (CropsNH's mutations, Forestry's combs). Sorted by first output, EU/t and
+                // time, then by the whole exported content, the export lists them the same way every run.
+                List<SortedRecipe> sorted = new ArrayList<SortedRecipe>();
+                for (GTRecipe recipe : map.getAllRecipes()) {
                     // Zero-duration recipes are real (the reader runs them in one tick); a
                     // disabled or negative one is not.
                     if (!recipe.mEnabled || recipe.mDuration < 0) {
                         continue;
                     }
-                    String id = sha1(map.unlocalizedName + ":" + index + ":" + recipe.toString()).substring(0, 16);
-                    recipes.add(GtRawRecipe.recipe(reader.read(map, recipe), id, isoNow()));
+                    Map<String, Object> exported = GtRawRecipe.recipe(reader.read(map, recipe), "", generatedAt);
+                    sorted.add(new SortedRecipe(recipe, exported, recordKey(exported)));
+                }
+                Collections.sort(sorted, new java.util.Comparator<SortedRecipe>() {
+                    @Override
+                    public int compare(SortedRecipe left, SortedRecipe right) {
+                        int outputCompare = firstOutputName(left.exported).compareTo(firstOutputName(right.exported));
+                        if (outputCompare != 0) return outputCompare;
+                        int eutCompare = Long.compare(left.recipe.mEUt, right.recipe.mEUt);
+                        if (eutCompare != 0) return eutCompare;
+                        int durationCompare = Integer.compare(left.recipe.mDuration, right.recipe.mDuration);
+                        if (durationCompare != 0) return durationCompare;
+                        return left.key.compareTo(right.key);
+                    }
+                });
+
+                List<Map<String, Object>> recipes = new ArrayList<Map<String, Object>>();
+                int index = 0;
+                for (SortedRecipe entry : sorted) {
+                    // The raw id names the recipe's place and content, never the JVM's object hash.
+                    entry.exported.put("id", sha1(map.unlocalizedName + ":" + index + ":" + entry.key).substring(0, 16));
+                    recipes.add(entry.exported);
                     index++;
                 }
 
@@ -227,27 +241,35 @@ public final class GtnhCalcOracleExporter {
         List<Map<String, Object>> recipes = new ArrayList<Map<String, Object>>();
 
         try {
-            List<?> rawRecipes = CraftingManager.getInstance().getRecipeList();
-            int index = 0;
-            for (Object raw : rawRecipes) {
-                if (!(raw instanceof IRecipe)) {
-                    continue;
-                }
-                IRecipe recipe = (IRecipe) raw;
-                ItemStack output = recipe.getRecipeOutput();
-                if (output == null) {
-                    continue;
-                }
+            // The planner mod's own crafting reader (com.gtnhplanner.read.crafting). CraftingManager's order is not the
+            // same every run (some mods register from hash maps), so the recipes are sorted by what they are, and the
+            // ids minted from their place follow that order.
+            List<SortedCrafting> sorted = new ArrayList<SortedCrafting>();
+            for (CraftingRecord read : new CraftingReader().readAll()) {
                 Map<String, Object> exported = map();
-                exported.put("id", sha1("crafting:" + index + ":" + raw.getClass().getName() + ":" + stackKey(output)).substring(0, 16));
-                exported.put("className", raw.getClass().getName());
-                CraftingIngredients.Read read = CraftingIngredients.read(raw);
-                exported.put("type", read != null ? read.type : craftingType(raw));
-                exported.put("width", read != null ? read.width : craftingSize(raw, true));
-                exported.put("height", read != null ? read.height : craftingSize(raw, false));
-                exported.put("inputs", read != null ? readCraftingInputs(read) : craftingInputs(raw));
-                exported.put("output", itemStack(output));
-                recipes.add(exported);
+                exported.put("id", "");
+                exported.put("className", read.className);
+                exported.put("type", read.type);
+                exported.put("width", Integer.valueOf(read.width));
+                exported.put("height", Integer.valueOf(read.height));
+                exported.put("inputs", craftingInputs(read));
+                if (read.output != null) {
+                    exported.put("output", GtRawRecipe.stack(read.output));
+                }
+                sorted.add(new SortedCrafting(read, exported, recordKey(exported)));
+            }
+            Collections.sort(sorted, new java.util.Comparator<SortedCrafting>() {
+                @Override
+                public int compare(SortedCrafting left, SortedCrafting right) {
+                    return left.key.compareTo(right.key);
+                }
+            });
+            int index = 0;
+            for (SortedCrafting entry : sorted) {
+                entry.exported.put("id", sha1("crafting:" + index + ":" + entry.read.className + ":"
+                    + CraftingReader.stackKey(entry.read.output == null ? null : (ItemStack) entry.read.output.host))
+                    .substring(0, 16));
+                recipes.add(entry.exported);
                 index++;
             }
             domain.put("recipes", recipes);
@@ -265,16 +287,14 @@ public final class GtnhCalcOracleExporter {
         List<Map<String, Object>> recipes = new ArrayList<Map<String, Object>>();
 
         try {
-            Map<?, ?> smelting = FurnaceRecipes.smelting().getSmeltingList();
+            // The planner mod's own furnace reader (com.gtnhplanner.read.furnace), which lists the recipes sorted
+            // by content: FurnaceRecipes' own order is new every run.
             int index = 0;
-            for (Map.Entry<?, ?> entry : smelting.entrySet()) {
-                if (!(entry.getKey() instanceof ItemStack) || !(entry.getValue() instanceof ItemStack)) {
-                    continue;
-                }
+            for (SmeltingRecord read : SmeltingReader.readAll()) {
                 Map<String, Object> recipe = map();
-                recipe.put("id", sha1("smelting:" + index + ":" + stackKey((ItemStack) entry.getKey())).substring(0, 16));
-                recipe.put("input", itemStack((ItemStack) entry.getKey()));
-                recipe.put("output", itemStack((ItemStack) entry.getValue()));
+                recipe.put("id", sha1("smelting:" + index + ":" + stackKey((ItemStack) read.input.host)).substring(0, 16));
+                recipe.put("input", GtRawRecipe.stack(read.input));
+                recipe.put("output", GtRawRecipe.stack(read.output));
                 recipes.add(recipe);
                 index++;
             }
@@ -285,6 +305,68 @@ public final class GtnhCalcOracleExporter {
         }
 
         return domain;
+    }
+
+    /** A crafting record with what the export writes for it and that content as text, for a total order. */
+    private static final class SortedCrafting {
+        final CraftingRecord read;
+        final Map<String, Object> exported;
+        final String key;
+
+        SortedCrafting(CraftingRecord read, Map<String, Object> exported, String key) {
+            this.read = read;
+            this.exported = exported;
+            this.key = key;
+        }
+    }
+
+    /** A GregTech recipe with what the export writes for it and that content as text, for a total order. */
+    private static final class SortedRecipe {
+        final GTRecipe recipe;
+        final Map<String, Object> exported;
+        final String key;
+
+        SortedRecipe(GTRecipe recipe, Map<String, Object> exported, String key) {
+            this.recipe = recipe;
+            this.exported = exported;
+            this.key = key;
+        }
+    }
+
+    /**
+     * An exported record as text without its id and icon file names: two records with the same key are the same
+     * recipe as far as the dataset can tell.
+     */
+    private static String recordKey(Map<String, Object> exported) {
+        Map<String, Object> content = new LinkedHashMap<String, Object>(exported);
+        content.remove("id");
+        return GSON.toJson(withoutIcons(content));
+    }
+
+    private static Object withoutIcons(Object value) {
+        if (value instanceof Map) {
+            Map<String, Object> copy = new LinkedHashMap<String, Object>();
+            for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
+                String key = String.valueOf(entry.getKey());
+                if (!"icon".equals(key)) copy.put(key, withoutIcons(entry.getValue()));
+            }
+            return copy;
+        }
+        if (value instanceof List) {
+            List<Object> copy = new ArrayList<Object>();
+            for (Object entry : (List<?>) value) copy.add(withoutIcons(entry));
+            return copy;
+        }
+        return value;
+    }
+
+    /** A stack's content as text (item, damage, size, NBT): equal for equal stacks in every run. */
+    private String contentKey(Object value) {
+        if (!(value instanceof ItemStack)) {
+            return String.valueOf(value == null ? "" : value.getClass().getName());
+        }
+        ItemStack stack = (ItemStack) value;
+        return stackKey(stack) + (stack.stackTagCompound == null ? "" : stack.stackTagCompound.toString());
     }
 
     private Map<String, Object> exportThaumcraft(List<Map<String, Object>> adapters) {
@@ -317,6 +399,9 @@ public final class GtnhCalcOracleExporter {
                 if (rawRecipes == null) {
                     continue;
                 }
+                // In the game's order, as before: Thaumcraft's lists keep their order run to run but for a handful of
+                // recipes, and the ids minted from it are the ones the served dataset holds, which a sort would lose
+                // for every recipe whose content changed since (the arcane grid fix).
                 int index = 0;
                 for (Object rawRecipe : rawRecipes) {
                     Map<String, Object> recipe = thaumcraftRecipe(field.getName(), index, rawRecipe);
@@ -893,6 +978,13 @@ public final class GtnhCalcOracleExporter {
                     species.add(exported);
                 }
             }
+            // Forestry's allele registry hands its species out in hash order, new every run: sorted by uid.
+            Collections.sort(species, new java.util.Comparator<Map<String, Object>>() {
+                @Override
+                public int compare(Map<String, Object> left, Map<String, Object> right) {
+                    return safeString(left.get("uid")).compareTo(safeString(right.get("uid")));
+                }
+            });
             domain.put("species", species);
             adapters.add(adapter("forestry-bee-species", "computed", true, 1, species.size(), started, null));
         } catch (Throwable t) {
@@ -918,7 +1010,14 @@ public final class GtnhCalcOracleExporter {
         try {
             Object cropsApi = readStaticField(Class.forName("ic2.api.crops.Crops"), "instance");
             Set<Object> seen = Collections.newSetFromMap(new IdentityHashMap<Object, Boolean>());
-            for (Method method : cropsApi.getClass().getMethods()) {
+            // Drops and some regrowth sizes are rolled on IC2.random; the export samples them, so the roll is seeded
+            // afresh for every crop: the same averages every run, whatever order the crops come in.
+            Object ic2Random = null;
+            try {
+                ic2Random = readStaticField(Class.forName("ic2.core.IC2"), "random");
+            } catch (Throwable ignored) {
+            }
+            for (Method method : methods(cropsApi.getClass())) {
                 if (method.getParameterTypes().length != 0 || !Collection.class.isAssignableFrom(method.getReturnType())) {
                     continue;
                 }
@@ -927,9 +1026,18 @@ public final class GtnhCalcOracleExporter {
                     if (candidate == null || !seen.add(candidate) || !looksLikeCropCard(candidate)) {
                         continue;
                     }
+                    if (ic2Random instanceof Random) {
+                        ((Random) ic2Random).setSeed(CROP_SAMPLE_SEED);
+                    }
                     crops.add(cropCard(candidate));
                 }
             }
+            Collections.sort(crops, new java.util.Comparator<Map<String, Object>>() {
+                @Override
+                public int compare(Map<String, Object> left, Map<String, Object> right) {
+                    return cropOrderKey(left).compareTo(cropOrderKey(right));
+                }
+            });
             domain.put("crops", crops);
             String status = crops.isEmpty() ? "partial" : "computed";
             String warning = crops.isEmpty() ? "IC2 crop API was present, but no crop-card collection method returned cards." : null;
@@ -1342,7 +1450,9 @@ public final class GtnhCalcOracleExporter {
         if (!(rawProducts instanceof Map)) {
             return products;
         }
-        for (Map.Entry<?, ?> entry : ((Map<?, ?>) rawProducts).entrySet()) {
+        // Forestry keeps a species' products in a HashMap keyed by ItemStack (identity hash): no order of its own.
+        // Most likely first, then by the stack's content, the same every run.
+        for (Map.Entry<?, ?> entry : byChanceThenContent((Map<?, ?>) rawProducts)) {
             Map<String, Object> product = map();
             Map<String, Object> stack = itemStack(entry.getKey() instanceof ItemStack ? (ItemStack) entry.getKey() : null);
             if (stack == null) {
@@ -1358,6 +1468,29 @@ public final class GtnhCalcOracleExporter {
             products.add(product);
         }
         return products;
+    }
+
+    /** A map from stacks to a chance or weight, most likely first, then by the stack's content. */
+    private List<Map.Entry<?, ?>> byChanceThenContent(Map<?, ?> raw) {
+        List<Map.Entry<?, ?>> entries = new ArrayList<Map.Entry<?, ?>>(raw.entrySet());
+        Collections.sort(entries, new java.util.Comparator<Map.Entry<?, ?>>() {
+            @Override
+            public int compare(Map.Entry<?, ?> left, Map.Entry<?, ?> right) {
+                Number l = asNumber(left.getValue());
+                Number r = asNumber(right.getValue());
+                int byChance = Double.compare(r == null ? 0.0D : r.doubleValue(), l == null ? 0.0D : l.doubleValue());
+                return byChance != 0 ? byChance : contentKey(left.getKey()).compareTo(contentKey(right.getKey()));
+            }
+        });
+        return entries;
+    }
+
+    /** The seed IC2.random is reset to before each crop's drops are sampled. */
+    private static final long CROP_SAMPLE_SEED = 0x67746e68L;
+
+    private String cropOrderKey(Map<String, Object> crop) {
+        return safeString(crop.get("owner")) + "|" + safeString(crop.get("id")) + "|" + safeString(crop.get("name"))
+            + "|" + safeString(crop.get("className"));
     }
 
     private Map<String, Object> cropCard(Object crop) {
@@ -1733,7 +1866,7 @@ public final class GtnhCalcOracleExporter {
         }
         // Last resort: scan zero-argument methods for a collection of crop cards so a
         // renamed accessor in a future CropsNH version still exports.
-        for (Method method : registry.getClass().getMethods()) {
+        for (Method method : methods(registry.getClass())) {
             if (method.getParameterTypes().length != 0 || method.getDeclaringClass() == Object.class) {
                 continue;
             }
@@ -1761,7 +1894,8 @@ public final class GtnhCalcOracleExporter {
         List<Map<String, Object>> dropTable = new ArrayList<Map<String, Object>>();
         Object rawTable = invokeBest(crop, "getDropTable", new Object[0]);
         if (rawTable instanceof Map) {
-            for (Object rawEntry : ((Map<?, ?>) rawTable).entrySet()) {
+            // CropsNH's drop table is a HashMap keyed by ItemStack (identity hash): heaviest first, then by content.
+            for (Object rawEntry : byChanceThenContent((Map<?, ?>) rawTable)) {
                 Map.Entry<?, ?> entry = (Map.Entry<?, ?>) rawEntry;
                 if (!(entry.getKey() instanceof ItemStack)) {
                     continue;
@@ -1802,6 +1936,8 @@ public final class GtnhCalcOracleExporter {
                 biomeTags.add(String.valueOf(tag));
             }
         }
+        // A HashSet of enum values (identity hash): sorted by name.
+        Collections.sort(biomeTags);
         putIfPresent(exported, "likedBiomeTags", biomeTags);
 
         List<String> requirements = new ArrayList<String>();
@@ -1857,7 +1993,19 @@ public final class GtnhCalcOracleExporter {
 
     private List<Map<String, Object>> cropsNhStackList(Object value, int limit) {
         List<Map<String, Object>> stacks = new ArrayList<Map<String, Object>>();
+        // CropsNH builds its soil and block lists from hash sets (their order is new every run): sorted by content
+        // before the first `limit` are taken, so the same ones come out every run.
+        List<Object> entries = new ArrayList<Object>();
         for (Object entry : iterable(value)) {
+            entries.add(entry);
+        }
+        Collections.sort(entries, new java.util.Comparator<Object>() {
+            @Override
+            public int compare(Object left, Object right) {
+                return contentKey(left).compareTo(contentKey(right));
+            }
+        });
+        for (Object entry : entries) {
             if (!(entry instanceof ItemStack)) {
                 continue;
             }
@@ -2383,91 +2531,47 @@ public final class GtnhCalcOracleExporter {
         return fluid;
     }
 
-    private List<Map<String, Object>> readCraftingInputs(CraftingIngredients.Read read) {
+    /** A crafting record's cells as the raw export writes them (normalize-oracle-export.mjs reads this shape). */
+    private List<Map<String, Object>> craftingInputs(CraftingRecord read) {
         List<Map<String, Object>> inputs = new ArrayList<Map<String, Object>>();
-        for (int index = 0; index < read.slots.size(); index++) {
-            addUnknownInput(inputs, read.slots.get(index), index);
+        for (CraftingRecord.Slot slot : read.inputs) {
+            Map<String, Object> cell;
+            if (CraftingRecord.Slot.ORE_DICTIONARY.equals(slot.kind)) {
+                cell = oreDictionaryChoice(slot.oreNames);
+            } else if (CraftingRecord.Slot.CHOICE.equals(slot.kind)) {
+                cell = map();
+                cell.put("kind", "choice");
+                cell.put("id", slot.choiceId);
+                cell.put("amount", Integer.valueOf(1));
+                cell.put("displayName", "Item Choice");
+                List<Map<String, Object>> alternatives = new ArrayList<Map<String, Object>>();
+                for (GtRecipeRecord.Stack alternative : slot.alternatives) {
+                    alternatives.add(compactStack(alternative));
+                }
+                cell.put("alternatives", alternatives);
+            } else if (CraftingRecord.Slot.MISSING.equals(slot.kind)) {
+                cell = map();
+                cell.put("kind", "missing");
+            } else {
+                cell = GtRawRecipe.stack(slot.stack);
+            }
+            cell.put("slotIndex", Integer.valueOf(slot.slotIndex));
+            inputs.add(cell);
         }
         return inputs;
     }
 
-    // A shaped recipe's inputs are packed width x height, so the size is what puts a cell
-    // back in its grid position. ShapedRecipes has public fields (reflection by the
-    // development name finds nothing in a production client); ShapedOreRecipe and every
-    // subclass keep them private as `width` and `height`.
-    private int craftingSize(Object recipe, boolean width) {
-        if (recipe instanceof ShapedRecipes) {
-            return width ? ((ShapedRecipes) recipe).recipeWidth : ((ShapedRecipes) recipe).recipeHeight;
+    /** One item of a choice cell: kind, id, amount, name, mod. */
+    private Map<String, Object> compactStack(GtRecipeRecord.Stack stack) {
+        Map<String, Object> item = map();
+        item.put("kind", "item");
+        item.put("id", stack.id);
+        item.put("amount", Integer.valueOf(stack.amount));
+        item.put("displayName", stack.host instanceof ItemStack ? StableNames.of((ItemStack) stack.host, stack.displayName) : stack.displayName);
+        if (stack.modId != null) {
+            item.put("modId", stack.modId);
         }
-        if (recipe instanceof ShapedOreRecipe) {
-            return readIntField(recipe, width ? "width" : "height");
-        }
-        return 0;
-    }
-
-    private List<Map<String, Object>> craftingInputs(Object recipe) {
-        List<Map<String, Object>> inputs = new ArrayList<Map<String, Object>>();
-        if (recipe instanceof ShapedRecipes) {
-            ShapedRecipes shaped = (ShapedRecipes) recipe;
-            for (int index = 0; index < shaped.recipeItems.length; index++) {
-                addUnknownInput(inputs, shaped.recipeItems[index], index);
-            }
-            return inputs;
-        }
-        if (recipe instanceof ShapelessRecipes) {
-            ShapelessRecipes shapeless = (ShapelessRecipes) recipe;
-            int index = 0;
-            for (Object stack : shapeless.recipeItems) {
-                addUnknownInput(inputs, stack, index++);
-            }
-            return inputs;
-        }
-        if (recipe instanceof ShapedOreRecipe) {
-            Object[] rawInputs = ((ShapedOreRecipe) recipe).getInput();
-            for (int index = 0; index < rawInputs.length; index++) {
-                addUnknownInput(inputs, rawInputs[index], index);
-            }
-            return inputs;
-        }
-        if (recipe instanceof ShapelessOreRecipe) {
-            int index = 0;
-            for (Object input : ((ShapelessOreRecipe) recipe).getInput()) {
-                addUnknownInput(inputs, input, index++);
-            }
-            return inputs;
-        }
-
-        Object recipeItems = firstObject(recipe, "getInput", "recipeItems", "input");
-        int index = 0;
-        for (Object input : iterable(recipeItems)) {
-            addUnknownInput(inputs, input, index++);
-        }
-        return inputs;
-    }
-
-    private void addUnknownInput(List<Map<String, Object>> inputs, Object input, int slotIndex) {
-        Map<String, Object> resource = resourceFromUnknown(input);
-        if (resource != null) {
-            resource.put("slotIndex", Integer.valueOf(slotIndex));
-            inputs.add(resource);
-        } else if (isEmptyChoice(input)) {
-            // A slot whose oredict list holds no item (a GT recipe's "gemFlawlessFluix"
-            // when no such item exists). Forge never matches an empty list, so the
-            // recipe cannot be crafted and the normalizer needs to see it to drop it.
-            // Other inputs this exporter cannot read (AE2 ingredients, integers, empty
-            // stacks) belong to recipes that do craft, so they stay silently skipped.
-            Map<String, Object> missing = map();
-            missing.put("kind", "missing");
-            missing.put("slotIndex", Integer.valueOf(slotIndex));
-            inputs.add(missing);
-        }
-    }
-
-    private boolean isEmptyChoice(Object input) {
-        if (input instanceof java.util.Collection) {
-            return ((java.util.Collection<?>) input).isEmpty();
-        }
-        return input != null && input.getClass().isArray() && java.lang.reflect.Array.getLength(input) == 0;
+        return item;
     }
 
     private Map<String, Object> resourceFromUnknown(Object input) {
@@ -2557,7 +2661,7 @@ public final class GtnhCalcOracleExporter {
         }
         if (oreDictionaryNamesByChoiceSignature == null) {
             oreDictionaryNamesByChoiceSignature = new LinkedHashMap<String, List<String>>();
-            for (String name : OreDictionary.getOreNames()) {
+            for (String name : OreLists.names()) {
                 String signature = choiceSignature(OreDictionary.getOres(name));
                 if (signature.length() == 0) {
                     continue;
@@ -2739,6 +2843,17 @@ public final class GtnhCalcOracleExporter {
             putIfPresent(resource, "dominantColor", aspectColor(aspect));
             aspects.add(resource);
         }
+        // Thaumcraft sorts by amount only; equal amounts keep the AspectList's insertion order, which follows the
+        // hash order of whatever built it. Ties go by tag, so the list is the same every run.
+        Collections.sort(aspects, new java.util.Comparator<Map<String, Object>>() {
+            @Override
+            public int compare(Map<String, Object> left, Map<String, Object> right) {
+                int byAmount = Double.compare(
+                    asNumber(right.get("amount")).doubleValue(),
+                    asNumber(left.get("amount")).doubleValue());
+                return byAmount != 0 ? byAmount : String.valueOf(left.get("id")).compareTo(String.valueOf(right.get("id")));
+            }
+        });
         return aspects;
     }
 
@@ -2818,25 +2933,20 @@ public final class GtnhCalcOracleExporter {
         return item;
     }
 
-    private String firstOutputName(GTRecipe recipe) {
-        if (recipe.mOutputs != null) {
-            for (ItemStack output : recipe.mOutputs) {
-                String key = stackKey(output);
-                if (key.length() > 0) return key;
-            }
+    /**
+     * The first output as the export writes it (after the reader's own ordering): its registry name, damage and size,
+     * else the first fluid's name. GregTech's own first output is in hash order for some recipes.
+     */
+    @SuppressWarnings("unchecked")
+    private static String firstOutputName(Map<String, Object> exported) {
+        for (Object o : (List<Object>) exported.get("itemOutputs")) {
+            Map<String, Object> stack = (Map<String, Object>) o;
+            return stack.get("registryId") + "@" + stack.get("meta") + "x" + stack.get("amount");
         }
-        if (recipe.mFluidOutputs != null) {
-            for (FluidStack output : recipe.mFluidOutputs) {
-                if (output != null && output.getFluid() != null) return output.getFluid().getName();
-            }
+        for (Object o : (List<Object>) exported.get("fluidOutputs")) {
+            return String.valueOf(((Map<String, Object>) o).get("id"));
         }
         return "";
-    }
-
-    private String craftingType(Object recipe) {
-        if (recipe instanceof ShapedRecipes || recipe instanceof ShapedOreRecipe) return "shaped";
-        if (recipe instanceof ShapelessRecipes || recipe instanceof ShapelessOreRecipe) return "shapeless";
-        return recipe.getClass().getName();
     }
 
     private String thaumcraftType(String className) {
@@ -2853,7 +2963,7 @@ public final class GtnhCalcOracleExporter {
     }
 
     private boolean hasMethod(Object target, String methodName) {
-        for (Method method : target.getClass().getMethods()) {
+        for (Method method : methods(target.getClass())) {
             if (method.getName().equals(methodName) && method.getParameterTypes().length == 0) {
                 return true;
             }
@@ -2888,7 +2998,7 @@ public final class GtnhCalcOracleExporter {
         if (target == null || methodName == null) {
             return null;
         }
-        for (Method method : target.getClass().getMethods()) {
+        for (Method method : methods(target.getClass())) {
             if (!method.getName().equals(methodName) || method.getParameterTypes().length != args.length) {
                 continue;
             }
@@ -2899,6 +3009,27 @@ public final class GtnhCalcOracleExporter {
         }
         return null;
     }
+
+    /**
+     * A class's public methods in a fixed order. {@code getMethods()} promises none, and HotSpot's changes between
+     * runs, so a reflective read that tries the first match, or walks a type's collections, would differ run to run.
+     */
+    private static Method[] methods(Class<?> type) {
+        Method[] methods = SORTED_METHODS.get(type);
+        if (methods == null) {
+            methods = type.getMethods();
+            java.util.Arrays.sort(methods, new java.util.Comparator<Method>() {
+                @Override
+                public int compare(Method left, Method right) {
+                    return left.toString().compareTo(right.toString());
+                }
+            });
+            SORTED_METHODS.put(type, methods);
+        }
+        return methods;
+    }
+
+    private static final Map<Class<?>, Method[]> SORTED_METHODS = new IdentityHashMap<Class<?>, Method[]>();
 
     private String invokeString(Object target, String methodName) {
         Object value = invokeBest(target, methodName, new Object[0]);
@@ -3077,7 +3208,7 @@ public final class GtnhCalcOracleExporter {
 
     private String displayName(ItemStack stack) {
         try {
-            return stack.getDisplayName();
+            return StableNames.of(stack, stack.getDisplayName());
         } catch (Throwable ignored) {
             return stackKey(stack);
         }
@@ -3130,9 +3261,17 @@ public final class GtnhCalcOracleExporter {
         return value.replaceAll("[^0-9T]", "").replace("T", "-");
     }
 
+    /**
+     * Now, or the time SOURCE_DATE_EPOCH names (seconds since 1970, the reproducible-builds convention), so two runs of
+     * the same pack can write identical exports.
+     */
     private String isoNow() {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ROOT);
         format.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String epoch = System.getenv("SOURCE_DATE_EPOCH");
+        if (epoch != null && epoch.trim().matches("[0-9]+")) {
+            return format.format(new Date(Long.parseLong(epoch.trim()) * 1000L));
+        }
         return format.format(new Date());
     }
 

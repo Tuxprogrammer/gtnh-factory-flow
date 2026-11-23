@@ -19,6 +19,7 @@ import java.util.Map;
 import javax.imageio.ImageIO;
 
 import dev.gtnhplanner.calcoracle.GtnhCalcOracleMod;
+import dev.gtnhplanner.calcoracle.StableNames;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
@@ -823,7 +824,7 @@ public final class ClientItemStackIconRenderer {
     private static String safeName(ItemStack stack) {
         String raw;
         try {
-            raw = String.valueOf(stack.getDisplayName());
+            raw = String.valueOf(StableNames.of(stack, stack.getDisplayName()));
         } catch (Throwable t) {
             raw = String.valueOf(Item.itemRegistry.getNameForObject(stack.getItem()));
         }

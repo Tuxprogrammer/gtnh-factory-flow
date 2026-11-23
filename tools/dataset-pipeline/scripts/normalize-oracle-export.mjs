@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import { existsSync } from "node:fs";
 import { PNG } from "pngjs";
 import { writeDatasetJson } from "./dataset-json-writer.mjs";
+import { datasetTimestamp } from "./dataset-time.mjs";
 import { getDominantOpaqueColor } from "./icon-utils.mjs";
 import { spargeRolledOutputs } from "./sparge-byproducts.mjs";
 import { RESOURCE_RENAMES_FILE, resourceRenamesFromExport } from "./resource-renames.mjs";
@@ -34,12 +35,14 @@ if (!inputPath || !outputPath) {
 
 const datasetVersionId = requiredEnv("GTNH_DATASET_VERSION_ID");
 const gtnhVersion = requiredEnv("GTNH_DATASET_VERSION_LABEL");
-const generatedAt = new Date().toISOString();
 const outDir = path.dirname(outputPath);
 const renderedIconDir = process.env.GTNH_RENDERED_ICON_DIR;
 const oracleStrict = envFlag("GTNH_ORACLE_STRICT", false);
 
 const raw = JSON.parse(stripBom(await fs.readFile(inputPath, "utf8")));
+// The dataset's time is the export's (or SOURCE_DATE_EPOCH's), never the clock: normalizing one raw export twice
+// writes the same bytes, which is what every dataset diff relies on.
+const generatedAt = datasetTimestamp(raw.generatedAt);
 const singleblockFamilyIds = new Set((findDomain("gregtech")?.recipeMaps ?? []).flatMap(map =>
   buildMachineHandlerTemplates(map.name, map.catalysts).filter(handler => handler.kind === "single").map(handler => handler.id)));
 const renderedIcons = await stageRenderedIcons(renderedIconDir, outDir);
@@ -1212,7 +1215,18 @@ function normalizeIc2Crops(domain) {
 // (verified against TileEntityCropSticks bytecode) when controls change.
 // Hoisted function: normalizeCropsNhCrops runs during module evaluation.
 function cropsNhReference() {
-  return { growth: 31, gain: 31, water: 100, fertilizer: 100, sky: true, biomeBonus: 28 };
+  // gainChanceMultiplier is CropsNH's 1.03^gain (TileEntityCropSticks: Math.pow(1.03D, gain)) at gain 31, the double
+  // Java prints for it (Math.pow and StrictMath.pow agree). Written out because V8's pow is not specified exactly and
+  // would make the dataset depend on the Node version.
+  return {
+    growth: 31,
+    gain: 31,
+    gainChanceMultiplier: 2.500080345325352,
+    water: 100,
+    fertilizer: 100,
+    sky: true,
+    biomeBonus: 28,
+  };
 }
 
 function normalizeCropsNhCrops(domain) {
@@ -1248,7 +1262,7 @@ function normalizeCropsNhCrops(domain) {
       continue;
     }
 
-    const dropRounds = dropChance * 1.03 ** CROPSNH_REFERENCE.gain;
+    const dropRounds = dropChance * CROPSNH_REFERENCE.gainChanceMultiplier;
     const outputSlot = (index) => ({
       x: 124 + (index % 4) * 18,
       y: dropTable.length > 4 ? 26 + Math.floor(index / 4) * 18 : 35,

@@ -30,10 +30,28 @@ Rebuilds must run `normalize-fluid-icon-alpha.mjs` (with `--rename`) after the i
 builds and before publishing, or faint fluids ship invisible. Texture URLs are cache-immutable: fix pixels under a NEW filename (`--rename`),
 and patch whole basenames only.
 
-A fresh export is NOT deterministic: crafting, furnace, bee, crop and essentia recipes
-reorder, re-minting ~37,000 ids. When an export only ADDS fields, graft them onto the
-published export (`~/graft-sparge.js`, matching recipes by content key) and confirm with
-a shard diff (`~/cmp-field.js`). The 2.9 export in WSL is such a graft.
+Two exports of one pack write the same dataset, byte for byte, when both set
+`SOURCE_DATE_EPOCH` (the time they stamp), apart from what the game itself rolls anew each
+launch (listed below). The normalizer is a pure function of the raw export: its time is the
+export's, and its powers are the game's own products (`scripts/game-math.mjs`), never
+`Math.pow`, so Node 22 and 24 agree. The exporter never relies on hash order: furnace and
+crafting recipes, ore names, bee species and products, crop drops, soils and biomes,
+aspects, IC2 crop samples (seeded), GregTech recipe order (by content), hash-built slot
+lists and outputs are all sorted or pinned; joke item names
+are pinned (`StableNames`). Left to the game: NBT text, kept as the game prints it (plans store icon
+paths minted from it), so the same tag built two ways prints two ways (data orbs: about 60
+records and 32 icon names move per export); Thaumcraft's generated aspects of some items
+(about 45 recipes), a few EEC mobs whose drops or health come from a live entity, the
+shown item of one assembly-line slot and of a few Crop Breeder catalyst cells, the name a
+multi-name ore dictionary cell shows (the first in the game's ore id order; these two stay as
+the game picks them because plans store a cell by that id), a handful of Thaumcraft recipes whose list position
+moves (their raw ids; Thaumcraft keeps the game's order on purpose, because the served ids
+follow it), and icons drawn from animated textures (bytes and colour only). A new rule
+that reads a game collection says what fixes its order.
+
+When an export only ADDS fields, graft them onto the published export
+(`~/graft-sparge.js`, matching recipes by content key) and confirm with a shard diff
+(`~/cmp-field.js`). The 2.9 export in WSL is such a graft.
 
 A new pack (or any fresh export) keeps the previous dataset's recipe ids with
 `scripts/carry-recipe-ids.mjs <previous recipes.json.gz> <new recipes.json> [report]`, run

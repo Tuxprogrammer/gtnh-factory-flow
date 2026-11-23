@@ -70,9 +70,12 @@ public final class GtDatasetRecipe {
         if (resource != null) list.add(resource);
     }
 
-    /** The normalizer's {@code resourceAmount}: kind, id, amount, name, NBT line, kept flag, chance. */
+    /**
+     * The normalizer's {@code resourceAmount} for an item or fluid: kind, id, amount, name, NBT line, kept flag,
+     * chance. The other dataset shapes of this package read their stacks with it too.
+     */
     @Nullable
-    private static Web.Resource resource(final GtRecipeRecord.Stack s, final boolean kept) {
+    static Web.Resource resource(final GtRecipeRecord.Stack s, final boolean kept) {
         if (!"item".equals(s.kind) && !"fluid".equals(s.kind)) return null;
         final String id = s.id == null ? "" : s.id.trim();
         if (id.isEmpty()) return null;
@@ -98,7 +101,7 @@ public final class GtDatasetRecipe {
         return resource;
     }
 
-    private static String label(final Web.Resource resource) {
+    static String label(final Web.Resource resource) {
         return resource.displayName != null ? resource.displayName : resource.id;
     }
 

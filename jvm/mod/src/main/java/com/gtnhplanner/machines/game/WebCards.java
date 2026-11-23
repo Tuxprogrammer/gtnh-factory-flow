@@ -1,9 +1,13 @@
 package com.gtnhplanner.machines.game;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.WeakHashMap;
 
 import javax.annotation.Nullable;
 
@@ -16,24 +20,32 @@ import com.gtnhplanner.core.base.JsonTree;
 import com.gtnhplanner.core.machines.AlgaePond;
 import com.gtnhplanner.core.machines.VoidMiner;
 import com.gtnhplanner.core.model.ResourceKey;
+import com.gtnhplanner.core.model.read.CraftingDatasetRecipe;
+import com.gtnhplanner.core.model.read.CraftingRecord;
 import com.gtnhplanner.core.model.read.GtDatasetRecipe;
 import com.gtnhplanner.core.model.read.GtRecipeRecord;
+import com.gtnhplanner.core.model.read.SmeltingDatasetRecipe;
+import com.gtnhplanner.core.model.read.SmeltingRecord;
 import com.gtnhplanner.data.MachineConfig;
 import com.gtnhplanner.data.flowchart.Node;
 import com.gtnhplanner.data.flowchart.Port;
 import com.gtnhplanner.data.provider.GTKeys;
 import com.gtnhplanner.data.provider.GTProvider;
+import com.gtnhplanner.data.provider.VanillaProvider;
 import com.gtnhplanner.importer.game.GameIds;
 import com.gtnhplanner.machines.web.HandlerData;
 import com.gtnhplanner.machines.web.MachineTable;
 import com.gtnhplanner.machines.web.RecipeRules;
 import com.gtnhplanner.machines.web.Tiers;
 import com.gtnhplanner.machines.web.Web;
+import com.gtnhplanner.read.crafting.CraftingReader;
 import com.gtnhplanner.ui.card.CardDefaults;
 import com.gtnhplanner.ui.card.CardModel;
 
+import codechicken.nei.PositionedStack;
 import codechicken.nei.recipe.FurnaceRecipeHandler;
 import codechicken.nei.recipe.RecipeHandlerRef;
+import codechicken.nei.recipe.ShapelessRecipeHandler;
 import gregtech.api.recipe.RecipeMap;
 
 /**
@@ -67,7 +79,8 @@ public final class WebCards {
      * The card's recipe as the website's dataset carries it, or null when handlers.json has no such map. A GregTech
      * map recipe is the dataset's own record of it (core-model GtDatasetRecipe over the record the shared reader
      * read, GTProvider.RECORD): its numbers, slots and the game's overclock ladder exactly as the export run writes
-     * them. The furnace and the crusher's mobs are built from the card.
+     * them. A furnace recipe is the dataset's own record of it too (core-model SmeltingDatasetRecipe over the furnace
+     * reader's record, VanillaProvider.SMELTING_RECORD). The crusher's mobs are built from the card.
      */
     @Nullable
     public static Web.Recipe recipe(final Node node) {
@@ -78,9 +91,19 @@ public final class WebCards {
         final boolean smelting = SMELTING.equals(mapId);
         final JsonObject eec = EecCards.metadata(node);
         final Web.Recipe r;
+        final Web.Recipe smelted = smelting
+            && node.properties.get(VanillaProvider.SMELTING_RECORD) instanceof final SmeltingRecord read
+                ? SmeltingDatasetRecipe.of(read)
+                : null;
         if (!smelting && eec == null && node.properties.get(GTProvider.RECORD) instanceof final GtRecipeRecord read) {
             r = GtDatasetRecipe.of(read, entry.name);
             // The maths key their tables by handlers.json's map id (GT++'s maps there are gtpp.recipe.*).
+            r.metadata.put("recipeMapId", entry.id);
+        } else if (smelted != null) {
+            // Vanilla smelting as the dataset files it: the Furnace map in category furnace, not a GregTech map. The
+            // card keeps handlers.json's map id beside it, as a GregTech card does (PlanExport files it by that id).
+            r = smelted;
+            r.metadata = new LinkedHashMap<>();
             r.metadata.put("recipeMapId", entry.id);
         } else {
             r = new Web.Recipe();
@@ -150,6 +173,14 @@ public final class WebCards {
      * ({@link RecipeRules#machineHandlers}).
      */
     private static Web.Recipe craftingRecipe(final Node node) {
+        final CraftingRecord read = craftingRecord(node);
+        final Web.Recipe dataset = read == null ? null : CraftingDatasetRecipe.of(read);
+        if (dataset != null) {
+            // The game's own recipe as the dataset carries it (core-model CraftingDatasetRecipe over the shared
+            // crafting reader's record): ore dictionary cells as ore dictionary names, no special value.
+            dataset.id = "crafting:" + com.gtnhplanner.nei.NeiRecipes.id(node);
+            return dataset;
+        }
         final Web.Recipe r = new Web.Recipe();
         final String type = AutoWorkbench.machineType(node);
         r.id = "crafting:" + com.gtnhplanner.nei.NeiRecipes.id(node);
@@ -166,6 +197,41 @@ public final class WebCards {
         r.inputs = resources(node.inputs);
         r.outputs = resources(node.outputs);
         return r;
+    }
+
+    /** The crafting reader the cards share (the client thread's), and each card's recipe once found. */
+    private static final CraftingReader CRAFTING = new CraftingReader();
+    private static final Map<Node, Optional<CraftingRecord>> CRAFTING_RECORDS = Collections
+        .synchronizedMap(new WeakHashMap<>());
+
+    /**
+     * The game recipe a crafting card's NEI page shows, read by the shared crafting reader: the CraftingManager recipe
+     * that makes the page's result and takes, in each cell, one of the items the page cycles there. Null when none fits
+     * (the page of a recipe class the reader cannot open).
+     */
+    @Nullable
+    static CraftingRecord craftingRecord(final Node node) {
+        return CRAFTING_RECORDS.computeIfAbsent(node, n -> Optional.ofNullable(findCraftingRecord(n)))
+            .orElse(null);
+    }
+
+    @Nullable
+    private static CraftingRecord findCraftingRecord(final Node node) {
+        final RecipeHandlerRef ref = com.gtnhplanner.nei.RecipeRefs.of(com.gtnhplanner.nei.NeiRecipes.id(node));
+        if (ref == null || !AutoWorkbench.crafts(ref.handler)) return null;
+        final PositionedStack result = ref.handler.getResultStack(ref.recipeIndex);
+        final List<PositionedStack> shown = ref.handler.getIngredientStacks(ref.recipeIndex);
+        if (result == null || shown == null) return null;
+        final boolean shapeless = ref.handler instanceof ShapelessRecipeHandler;
+        final List<CraftingReader.ShownCell> cells = new ArrayList<>();
+        for (int i = 0; i < shown.size(); i++) {
+            final PositionedStack cell = shown.get(i);
+            if (cell == null) continue;
+            // ShapedRecipeHandler lays a cell at 25 + 18 x column, 6 + 18 x row.
+            final int column = shapeless ? -1 : (cell.relx - 25) / 18, row = shapeless ? -1 : (cell.rely - 6) / 18;
+            cells.add(new CraftingReader.ShownCell(column, row, i, Arrays.asList(cell.items)));
+        }
+        return CRAFTING.find(result.item, cells);
     }
 
     /**

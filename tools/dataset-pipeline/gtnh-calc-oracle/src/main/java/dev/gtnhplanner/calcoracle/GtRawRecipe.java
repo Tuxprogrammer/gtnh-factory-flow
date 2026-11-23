@@ -134,7 +134,7 @@ final class GtRawRecipe {
             out.put("meta", Integer.valueOf(s.meta));
         }
         out.put("amount", Integer.valueOf(s.amount));
-        out.put("displayName", s.displayName);
+        out.put("displayName", s.host instanceof ItemStack ? StableNames.of((ItemStack) s.host, s.displayName) : s.displayName);
         if (s.modId != null) out.put("modId", s.modId);
         if (s.nbt != null) out.put("nbt", s.nbt);
         String icon = icon(s);

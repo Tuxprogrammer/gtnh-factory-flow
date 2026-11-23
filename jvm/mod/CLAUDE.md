@@ -99,7 +99,10 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   posts say `planMode` with `solveMode`. A plan saved before the game renamed an item (Postea's simple replacements, read live:
   `read/postea/PosteaRenames.table`, `importer/game/GameRenames`) is read under the new ids (`importer/PlanRenames`, the
   website's `withRenamedProjectResources` rule) on paste and on a cloud read: a card the game matches as it is keeps its ids
-  everywhere. Real plans to try it on: a post's plan comes from `POST /api/community/plans/<id>/download` on the configured site (or the mock's).
+  everywhere. A live plan migrates once per load: `PlanRenames.Memo` rides on `CloudPlans.Read`, so a later read gets the
+  same renamed objects (untouched cards are taken over, not read again), and `LiveDoc.commit` keeps the renamed view as
+  the plan the board writes against, so a rename is never sent as an edit (`CloudRenamesTest`,
+  `CloudSessionTest.anItemRenameIsReadOnceAndNeverSent`). Real plans to try it on: a post's plan comes from `POST /api/community/plans/<id>/download` on the configured site (or the mock's).
   A plan carries the rate unit it was read in as the website's `view.rateUnit` (`importer/PlanView`: tick, second,
   minute, hour, eu): every export writes the player's (`PlanExport.World.rateUnit`), every import hands it to the board
   once (`Graph.viewWhenShown`, taken by `BoardSession.takeView`). The + tab's Open plan file (`ui/popup/PlanFileMenu`,

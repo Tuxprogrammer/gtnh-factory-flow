@@ -16,6 +16,7 @@ import { buildNotices, byUrgency, type BoardNotice, type NoticeSeverity } from "
 import { framesReadably } from "./rail-actions";
 import { SparePopupHost } from "./SparePopup";
 import { RailTipHost } from "./rail-tip";
+import { registerBoardRefusalSink } from "@/store/board-refusal";
 
 /**
  * The notices bar (UI spec section 11): one row each in the mod's anatomy, a
@@ -48,6 +49,9 @@ export function flashNotice(severity: NoticeSeverity, text: string): void {
   }, FLASH_MS);
   emit();
 }
+
+// A board edit the store refuses says why, as a flash.
+registerBoardRefusalSink((text) => flashNotice("info", text));
 
 function subscribe(listener: () => void) {
   listeners.add(listener);

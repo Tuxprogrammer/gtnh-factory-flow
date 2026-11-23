@@ -649,3 +649,158 @@ describe("machineConfigControlsForOracleRecipe", () => {
     expect(controls.map((control) => control.id).sort()).toEqual(["heatingCoil", "pipeCasing"]);
   });
 });
+
+// The 2.9 tooltips state machine stats in a newer form. Each case is the real
+// tooltip of the pack's controller, as the 2.9.1 export gives it.
+describe("2.9 multiblock tooltips", () => {
+  const multi = (machineType, name, tooltip) =>
+    buildMachineHandlerTemplates(machineType, [{ ...catalyst(name, { tooltip }), multiblock: true }])[0];
+  const control = (template, id) => template.machineConfigControls?.find((c) => c.id === id);
+  const tier = (c, key) => c.tiers.find((t) => t.key === key);
+
+  it("reads the Chemical Plant's coil speed from a zero base plus a step per coil tier", () => {
+    const plant = multi("Chemical Plant", "ExxonMobil Chemical Plant", [
+      "Machine Type: Chemical Plant",
+      "2 Parallels per Pipe Casing Tier",
+      "0% Speed +50% per Heating Coil Tier",
+      "100% Chance to damage catalyst -20% per Pipe Casing Tier",
+    ]);
+    expect(plant.durationMultiplier).toBeUndefined();
+    const coil = control(plant, "heatingCoil");
+    expect(coil.defaultKey).toBe("kanthal");
+    expect(tier(coil, "cupronickel").durationMultiplier).toBe(2);
+    expect(tier(coil, "kanthal").durationMultiplier).toBe(1);
+    expect(tier(coil, "tpv").durationMultiplier).toBe(0.5);
+    expect(tier(control(plant, "pipeCasing"), "steel").parallelMultiplier).toBe(4);
+  });
+
+  it("reads the Large Thermal Refinery's base and per-tier speed, EU and parallels", () => {
+    const ltr = multi("Thermal Centrifuge", "Large Thermal Refinery", [
+      "Machine Type: Thermal Centrifuge, LTR",
+      "8 Parallels per Voltage Tier +2 per Solenoid Tier",
+      "250% Speed +5% per Heating Coil Tier",
+      "80% EU Usage x0.95 per Heating Coil Tier",
+      "1,000 Pollution per second",
+    ]);
+    expect(ltr.durationMultiplier).toBe(0.4);
+    expect(ltr.eutMultiplier).toBe(0.8);
+    expect(tier(control(ltr, "voltageParallel"), "per-tier-8").parallelPerVoltageTier).toBe(8);
+    expect(tier(control(ltr, "solenoidCoil"), "mv").parallelMultiplier).toBe(4);
+    const coil = control(ltr, "heatingCoil");
+    expect(coil.defaultKey).toBe("cupronickel");
+    // 1 / (2.5 + 0.05 x tier) in total, with the base on the handler.
+    expect(ltr.durationMultiplier * tier(coil, "kanthal").durationMultiplier).toBeCloseTo(1 / 2.6, 12);
+    expect(tier(coil, "kanthal").eutMultiplier).toBeCloseTo(0.9025, 12);
+  });
+
+  it("reads the Large Fluid Extractor's coil speed and EU", () => {
+    const lfe = multi("Fluid Extractor", "Large Fluid Extractor", [
+      "Machine Type: Fluid Extractor, LFE",
+      "8 Parallels per Solenoid Tier",
+      "150% Speed +10% per Heating Coil Tier",
+      "80% EU Usage x0.9 per Heating Coil Tier",
+    ]);
+    expect(lfe.durationMultiplier).toBeCloseTo(1 / 1.5, 12);
+    expect(lfe.eutMultiplier).toBe(0.8);
+    const coil = control(lfe, "heatingCoil");
+    expect(lfe.durationMultiplier * tier(coil, "cupronickel").durationMultiplier).toBeCloseTo(1 / 1.6, 12);
+    expect(tier(coil, "cupronickel").eutMultiplier).toBe(0.9);
+    expect(tier(control(lfe, "solenoidCoil"), "mv").parallelMultiplier).toBe(16);
+  });
+
+  it("reads the Industrial Mixing Machine's item pipe casing speed", () => {
+    const mixer = multi("Multiblock Mixer", "Industrial Mixing Machine", [
+      "Machine Type: Mixer, IMM",
+      "8 Parallels per Voltage Tier",
+      "100% Speed +100% per Item Pipe Casing Tier",
+      "100% EU Usage",
+    ]);
+    expect(mixer.durationMultiplier).toBeUndefined();
+    const pipe = control(mixer, "itemPipeCasing");
+    expect(tier(pipe, "tin").durationMultiplier).toBe(0.5);
+    expect(tier(pipe, "brass").durationMultiplier).toBeCloseTo(1 / 3, 12);
+  });
+
+  it("reads the Electric Implosion Compressor's containment block rows", () => {
+    const eic = multi("Electric Implosion Compressor", "Electric Implosion Compressor", [
+      "Machine Type: Implosion Compressor, EIC",
+      "Uses electricity instead of explosives",
+      "The Containment Block used determines the number of Parallels",
+      "Neutronium: 1",
+      "Infinity: 4",
+      "Transcendent Metal: 16",
+      "Spacetime: 64",
+      "Universium: 256",
+      "-----------------------------------------",
+      "This machine can only run recipes up to energy hatch tier + 1",
+    ]);
+    const blocks = control(eic, "parallel-containment-block-tier");
+    expect(blocks.tiers.map((t) => [t.key, t.parallelMultiplier])).toEqual([
+      ["neutronium", 1],
+      ["infinity", 4],
+      ["transcendent-metal", 16],
+      ["spacetime", 64],
+      ["universium", 256],
+    ]);
+    expect(control(eic, "machineParallel")).toBeUndefined();
+  });
+
+  it("reads the Solar Factory's precise casing row", () => {
+    const factory = multi("Solar Factory", "Solar Factory", [
+      "Machine Type: Solar Factory",
+      "Precise Casing Tier determines Parallels",
+      "Mk-I (8) | Mk-II (16) | Mk-III (32) | Mk-IV (64) Parallels",
+      "Supports Multi-Amp Energy Hatches",
+    ]);
+    expect(control(factory, "parallel-precise-casing-tier").tiers.map((t) => [t.key, t.parallelMultiplier])).toEqual([
+      ["mk-i", 8],
+      ["mk-ii", 16],
+      ["mk-iii", 32],
+      ["mk-iv", 64],
+    ]);
+    expect(control(factory, "machineParallel")).toBeUndefined();
+  });
+
+  it("reads the Hot Isostatic Pressurization Unit's normal state beside its overheated one", () => {
+    const hip = multi("Compressor", "Hot Isostatic Pressurization Unit", [
+      "Machine Type: Compressor, HIP",
+      "350% Speed of singleblock machines of the same voltage (40% when overheated)",
+      "Uses 75% of the EU/t normally required (110% when overheated)",
+      "4 Parallels per Voltage Tier (1 when overheated)",
+    ]);
+    expect(hip.durationMultiplier).toBeCloseTo(1 / 3.5, 12);
+    expect(hip.eutMultiplier).toBe(0.75);
+    expect(tier(control(hip, "voltageParallel"), "per-tier-4").parallelPerVoltageTier).toBe(4);
+  });
+
+  it("reads the Industrial Centrifuge's ranged speed at its maximum", () => {
+    const centrifuge = multi("Multiblock Centrifuge", "Industrial Centrifuge", [
+      "Machine Type: Centrifuge",
+      "4-8 Parallels per Voltage Tier",
+      "200-300% Speed",
+      "90% EU Usage",
+    ]);
+    expect(centrifuge.durationMultiplier).toBeCloseTo(1 / 3, 12);
+    expect(centrifuge.eutMultiplier).toBe(0.9);
+  });
+
+  it("reads perfect overclocks only where the whole statement says so", () => {
+    expect(multi("Large Chemical Reactor", "Large Chemical Reactor", ["Performs 4/4 Perfect Overclocks"]).perfectOverclock).toBe(true);
+    expect(
+      multi("Blast Furnace", "Electric Blast Furnace", [
+        "Every 1,800K above the recipe requirement grants 1 Perfect Overclock",
+        "Perfect Overclocks increase speed by 4x instead of 2x (100% energy efficient)",
+      ]).perfectOverclock,
+    ).toBe(true);
+    expect(
+      multi("Plasma Forge", "Dimensionally Transcendent Plasma Forge", [
+        "When Dimensional Convergence is active, it Performs 4/4 Perfect Overclocks",
+      ]).perfectOverclock,
+    ).toBeUndefined();
+  });
+
+  it("reads a parallel count with a thousands separator", () => {
+    const beam = multi("Beam Crafter", "Beam Crafter", ["Machine Type: Beam Crafter, Beam Assembler", "Has 1,024 parallels"]);
+    expect(tier(control(beam, "machineParallel"), "fixed-1024").parallelMultiplier).toBe(1024);
+  });
+});

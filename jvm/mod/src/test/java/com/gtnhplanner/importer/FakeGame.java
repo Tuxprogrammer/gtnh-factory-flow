@@ -92,13 +92,56 @@ public final class FakeGame implements RecipeIndex, NodeMaker {
     /** The website's machine each node was asked to run on, by its handler id. */
     final Map<Uuid, String> handlerIds = new HashMap<>();
 
+    /** The game's item renames, Postea's way ({@link RecipeIndex#renames()}); none unless a test names them. */
+    public final Map<String, String> renames = new HashMap<>();
+    /** Item ids the game no longer has: its recipes name each one's {@link #renames} target instead. */
+    public final Set<String> gone = new HashSet<>();
+
+    @Override
+    public Map<String, String> renames() {
+        return renames;
+    }
+
+    /** Whether the game has an item id: not one it renamed away. */
+    public boolean has(final String id) {
+        return !gone.contains(FfIds.normalize(id));
+    }
+
+    /** The FF recipe as this game lists it: an id it no longer has under its new name. */
+    private GameRecipe inGame(final FfRecipe recipe) {
+        final GameRecipe r = twin(recipe);
+        if (gone.isEmpty()) return r;
+        return new GameRecipe(
+            r.handler(),
+            r.index(),
+            r.handlerName(),
+            moved(r.inputs()),
+            moved(r.outputs()),
+            r.durationTicks(),
+            r.euPerTick(),
+            r.specialValue());
+    }
+
+    private List<GameStack> moved(final List<GameStack> stacks) {
+        final List<GameStack> out = new ArrayList<>();
+        for (final GameStack s : stacks) {
+            final List<String> ids = new ArrayList<>();
+            for (final String id : s.ids()) ids.add(
+                "item".equals(s.kind()) && !has(id)
+                    ? com.gtnhplanner.read.postea.PosteaRenames.rename(renames, FfIds.normalize(id))
+                    : id);
+            out.add(new GameStack(s.kind(), ids, s.amount(), s.chance(), s.consumed()));
+        }
+        return out;
+    }
+
     @Override
     public Lookup find(final FfRecipe recipe) {
         if (missing.contains(recipe.id())) return Lookup.none("not in this game");
-        if (!routed) return Lookup.of(List.of(twin(recipe)));
+        if (!routed) return Lookup.of(List.of(inGame(recipe)));
         if (recipe.neiRecipe() != null && !otherPack) {
             paths.put(recipe.id(), "nei");
-            return Lookup.exact(twin(recipe));
+            return Lookup.exact(inGame(recipe));
         }
         final String path;
         if (recipe.isCrop()) path = "crop";
@@ -111,7 +154,7 @@ public final class FakeGame implements RecipeIndex, NodeMaker {
         else if (recipe.gregtech()) path = recipe.gameMapId() != null ? "map:" + recipe.gameMapId() : "machine";
         else return Lookup.none("no recipe like it in game");
         paths.put(recipe.id(), path);
-        return Lookup.of(List.of(twin(recipe)));
+        return Lookup.of(List.of(inGame(recipe)));
     }
 
     /** The FF recipe as the game would list it. */

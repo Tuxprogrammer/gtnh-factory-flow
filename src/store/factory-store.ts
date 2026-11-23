@@ -68,6 +68,7 @@ import {
 import { registerBooksSink, solveBooks } from "./solve-books";
 import { liveUndoHandler, quietly } from "./live-edit-gate";
 import { notePlanRenamed } from "@/lib/datasets/renamed-plans";
+import { PORT_HAS_DRAWER, refuseBoardEdit } from "./board-refusal";
 import { applyOps, type LiveOp } from "@/lib/live/ops";
 import { applyEdgeInputOverride } from "@/lib/model/edge-input-overrides";
 import {
@@ -1787,6 +1788,7 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
       }
 
       if (hasStorageEndpointConflict(state.project, edge)) {
+        refuseBoardEdit(PORT_HAS_DRAWER);
         return {
           pendingResourceConnection: undefined,
           selectedNodeId: slot.nodeId,
@@ -2787,6 +2789,7 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
         wired += 1;
       }
 
+      if (conflicted) refuseBoardEdit(PORT_HAS_DRAWER);
       // Wired (or refused over a conflict): sweep orphans, which drops the
       // fresh storage if nothing reached it. A build failure alone keeps the
       // unwired storage, exactly as the single-node path always has.
@@ -4685,6 +4688,7 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
       let project = state.project;
       let changed = false;
       let removedAny = false;
+      let refused = false;
       for (const { sourceNodeId, targetNodeId, resource } of connections) {
         const edge = buildEdgeBetweenNodes(project, sourceNodeId, targetNodeId, resource);
         if (!edge) {
@@ -4703,6 +4707,7 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
         }
 
         if (hasStorageEndpointConflict(project, edge)) {
+          refused = true;
           continue;
         }
 
@@ -4719,6 +4724,7 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
         changed = true;
       }
 
+      if (refused) refuseBoardEdit(PORT_HAS_DRAWER);
       if (!changed) {
         return state;
       }
@@ -4783,6 +4789,7 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
 
       const duplicateEdge = findDuplicateEdge(projectWithoutOld.edges, edge);
       if (!duplicateEdge && hasStorageEndpointConflict(projectWithoutOld, edge)) {
+        refuseBoardEdit(PORT_HAS_DRAWER);
         return state;
       }
 

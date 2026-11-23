@@ -99,7 +99,10 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   posts say `planMode` with `solveMode`. A plan saved before the game renamed an item (Postea's simple replacements, read live:
   `read/postea/PosteaRenames.table`, `importer/game/GameRenames`) is read under the new ids (`importer/PlanRenames`, the
   website's `withRenamedProjectResources` rule) on paste and on a cloud read: a card the game matches as it is keeps its ids
-  everywhere. Real plans to try it on: a post's plan comes from `POST /api/community/plans/<id>/download` on the configured site (or the mock's).
+  everywhere. A live plan migrates once per load: `PlanRenames.Memo` rides on `CloudPlans.Read`, so a later read gets the
+  same renamed objects (untouched cards are taken over, not read again), and `LiveDoc.commit` keeps the renamed view as
+  the plan the board writes against, so a rename is never sent as an edit (`CloudRenamesTest`,
+  `CloudSessionTest.anItemRenameIsReadOnceAndNeverSent`). Real plans to try it on: a post's plan comes from `POST /api/community/plans/<id>/download` on the configured site (or the mock's).
   A plan carries the rate unit it was read in as the website's `view.rateUnit` (`importer/PlanView`: tick, second,
   minute, hour, eu): every export writes the player's (`PlanExport.World.rateUnit`), every import hands it to the board
   once (`Graph.viewWhenShown`, taken by `BoardSession.takeView`). The + tab's Open plan file (`ui/popup/PlanFileMenu`,
@@ -491,8 +494,8 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   cases). Its data comes from the website, never hand-edited, in
   `jvm/core/core-machines/src/main/resources/assets/gtnhplanner/machines/`: `handlers.json` (each recipe map's
   machines and settings, with their item ids) and `fusion-startups.json`. `fusion-startups.json` is written by
-  `tools/audits/extract-fusion-startups.mjs` and copied to the website by `tools/sync-core-tables.mjs`; no script in this
-  repo regenerates `handlers.json`, so a change to it is the owner's call. The game side is `machines/game/`: `WebCards` (a card as
+  `tools/audits/extract-fusion-startups.mjs` and copied to the website by `tools/sync-core-tables.mjs`; `handlers.json` is
+  written from a dataset by `tools/audits/export-mod-machine-data.mjs` (`tools/dataset-pipeline/CLAUDE.md`), never by hand. The game side is `machines/game/`: `WebCards` (a card as
   the website's recipe and node: GT++ maps are gtpp.recipe.* in its data, gt.recipe.* here; a machine matched by item
   id, then name), `RuntimeVariants` (GT's OverclockCalculator per tier, as the website's oracle runs it), `WebEffect`
   (through `MachineConfig.nodeEffect`: exact duration and EU/t, parallels, per-output multipliers, the stall) and

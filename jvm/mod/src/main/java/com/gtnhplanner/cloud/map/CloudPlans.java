@@ -9,6 +9,7 @@ import com.gtnhplanner.cloud.sync.LiveOp;
 import com.gtnhplanner.cloud.sync.LiveOps;
 import com.gtnhplanner.data.flowchart.Graph;
 import com.gtnhplanner.importer.ImportReport;
+import com.gtnhplanner.importer.PlanRenames;
 
 /**
  * A board as a shared plan and back (docs/design/cloud-live.md, "Game mapping"). The shared plan is the website's
@@ -33,13 +34,27 @@ public final class CloudPlans {
 
     /**
      * A plan read: the board, what each of its things was read as, what did not come over as it was, and the plan it
-     * was read from (after the board was written, the plan it now stands for: {@link #after}).
+     * was read from (after the board was written, the plan it now stands for: {@link #after}), with the game's item
+     * renames applied; and what those renames came to, so the reads that follow it migrate the plan once.
      */
-    public record Read(Graph graph, Basis basis, ImportReport report, JsonObject plan) {
+    public record Read(Graph graph, Basis basis, ImportReport report, JsonObject plan, PlanRenames.Memo renames) {
+
+        public Read(final Graph graph, final Basis basis, final ImportReport report, final JsonObject plan) {
+            this(graph, basis, report, plan, new PlanRenames.Memo());
+        }
 
         /** The same board once written as {@code w} and that write applied: {@code plan} is what it now stands for. */
         public Read after(final Written w, final JsonObject plan) {
-            return new Read(graph, w.basis(), report, plan);
+            return new Read(graph, w.basis(), report, plan, renames);
+        }
+
+        /**
+         * A later copy of the plan as this board stands for it: the game's item renames applied as this read applied
+         * them, the very renamed objects for things unchanged. The board writes against it, so a rename is never sent
+         * as an edit.
+         */
+        public JsonObject renamed(final JsonObject plan, final CloudGame game) {
+            return PlanRenames.apply(plan, game.recipes(), renames);
         }
     }
 

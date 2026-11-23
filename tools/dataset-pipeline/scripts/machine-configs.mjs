@@ -491,9 +491,13 @@ function parseStatLines(lines, { allLines }) {
     // Perfect overclock statements come in a few phrasings.
     if (
       /performs?\s+4\/4\s+overclocks?/i.test(line) ||
+      // Only the whole statement: "When ... is active, it Performs 4/4
+      // Perfect Overclocks" and "... per Casing Tier" are conditions.
+      /^performs?\s+4\/4\s+perfect\s+overclocks?(?: on lower-tier recipes)?$/i.test(line) ||
       /does not lose efficiency when overclocked/i.test(line) ||
       /performs? perfect overclocks? on lower-tier recipes/i.test(line) ||
-      /reduce recipe time by a factor 4 instead of 2/i.test(line)
+      /reduce recipe time by a factor 4 instead of 2/i.test(line) ||
+      /perfect overclocks increase speed by 4x instead of 2x/i.test(line)
     ) {
       perfectOverclock = true;
       continue;
@@ -530,8 +534,10 @@ function parseStatLines(lines, { allLines }) {
     // "N Parallels per Voltage Tier" and ranged "4 - 8 Parallels per Voltage
     // Tier" (momentum machines; the planner assumes sustained running, so
     // the steady-state maximum applies).
+    // A parenthesised other state ("4 Parallels per Voltage Tier (1 when
+    // overheated)") is the abnormal one; the planner models the normal state.
     const perVoltage =
-      /^(?:Gains\s+)?(\d+)\s+Parallels?\s+per\s+Voltage\s+Tier$/i.exec(line) ??
+      /^(?:Gains\s+)?(\d+)\s+Parallels?\s+per\s+Voltage\s+Tier(?:\s*\([^)]*\))?$/i.exec(line) ??
       /^(\d+)\s*-\s*(\d+)\s+Parallels?\s+per\s+Voltage\s+Tier$/i.exec(line);
     if (perVoltage) {
       const count = Number.parseInt(perVoltage[2] ?? perVoltage[1], 10);
@@ -541,8 +547,74 @@ function parseStatLines(lines, { allLines }) {
       continue;
     }
 
-    // Ranged speed totals ("200% - 300% Speed"): steady-state maximum.
-    const speedRange = /^(\d+(?:[.,]\d+)?)\s*%\s*-\s*(\d+(?:[.,]\d+)?)\s*%\s+Speed$/i.exec(line);
+    // "8 Parallels per Voltage Tier +2 per Solenoid Tier": the voltage
+    // parallels, and the named part's own parallels per its tier.
+    const perVoltagePlus =
+      /^(\d+)\s+Parallels?\s+per\s+Voltage\s+Tier\s+\+(\d+)\s+per\s+(.+?)\s+Tier$/i.exec(line);
+    if (perVoltagePlus) {
+      const count = Number.parseInt(perVoltagePlus[1], 10);
+      const step = Number.parseInt(perVoltagePlus[2], 10);
+      if (count > 0 && count <= 1024) {
+        controls.push(voltageParallelControl(count, []));
+      }
+      controls.push(
+        tieredEffectControlFromSubject(perVoltagePlus[3], line, {
+          effectLabel: "Parallels",
+          effect: (tier, index) => ({ parallelMultiplier: step * tierOrdinal(tier, index) }),
+          keep: (effect) => effect.parallelMultiplier > 1,
+        }),
+      );
+      continue;
+    }
+
+    // "250% Speed +5% per Heating Coil Tier", "0% Speed +50% per Heating Coil
+    // Tier": the total speed is the base plus the step times the part's tier.
+    // The handler carries the base; each tier's option carries the rest, so
+    // the two multiply to 1 / (base + step x tier). With no base, the default
+    // is the tier that runs at 100%, the speed the exported duration is at.
+    const speedPlusPerTier =
+      /^(\d+(?:[.,]\d+)?)\s*%\s+Speed\s+\+(\d+(?:[.,]\d+)?)\s*%\s+per\s+(.+?)\s+Tier$/i.exec(line);
+    if (speedPlusPerTier) {
+      const base = parseTooltipNumber(speedPlusPerTier[1]) / 100;
+      const step = parseTooltipNumber(speedPlusPerTier[2]) / 100;
+      if (base > 0 && base !== 1) {
+        durationMultiplier = 1 / base;
+      }
+      const control = tieredEffectControlFromSubject(speedPlusPerTier[3], line, {
+        effectLabel: "Speed",
+        effect: (tier, index) => ({
+          durationMultiplier: reciprocal((base + step * tierOrdinal(tier, index)) / (base || 1)),
+        }),
+        keep: (effect) => effect.durationMultiplier > 0,
+      });
+      const neutral =
+        base === 0 && control?.tiers.find((tier) => Math.abs(tier.durationMultiplier - 1) < 1e-9);
+      controls.push(neutral ? { ...control, defaultKey: neutral.key } : control);
+      continue;
+    }
+
+    // "80% EU Usage x0.95 per Heating Coil Tier": the base EU/t, times the
+    // factor once per tier of the named part.
+    const euTimesPerTier =
+      /^(\d+(?:[.,]\d+)?)\s*%\s+EU\s+Usage\s+x(\d+(?:[.,]\d+)?)\s+per\s+(.+?)\s+Tier$/i.exec(line);
+    if (euTimesPerTier) {
+      const base = parseTooltipNumber(euTimesPerTier[1]) / 100;
+      const factor = parseTooltipNumber(euTimesPerTier[2]);
+      if (base > 0 && base !== 1) {
+        eutMultiplier = base;
+      }
+      controls.push(
+        tieredEffectControlFromSubject(euTimesPerTier[3], line, {
+          effectLabel: "EU usage",
+          effect: (tier, index) => ({ eutMultiplier: Math.pow(factor, tierOrdinal(tier, index)) }),
+          keep: (effect) => effect.eutMultiplier > 0 && effect.eutMultiplier !== 1,
+        }),
+      );
+      continue;
+    }
+
+    // Ranged speed totals ("200% - 300% Speed", "200-300% Speed"): steady-state maximum.
+    const speedRange = /^(\d+(?:[.,]\d+)?)\s*%?\s*-\s*(\d+(?:[.,]\d+)?)\s*%\s+Speed$/i.exec(line);
     if (speedRange) {
       const factor = parseTooltipNumber(speedRange[2]) / 100;
       if (factor > 0.01 && factor <= 100 && factor !== 1) {
@@ -610,13 +682,32 @@ function parseStatLines(lines, { allLines }) {
     //   "Precise Casing Tier determines Parallels" (Solar Factory), and
     //   "Neutronium : 1 Parallel" rows after "Parallels are determined by
     //   Containment Block Tier" (Electric Implosion Compressor).
+    // A third: "The Containment Block used determines the number of
+    // Parallels" over plain "Neutronium: 1" rows, and a fourth row form,
+    // "Mk-I (8) | Mk-II (16) Parallels". The part is named with "Tier", as
+    // the older phrasing named it, so saved plans keep the control's id.
+    const partUsed = /^The (.{3,40}?) used determines the number of Parallels$/i.exec(line);
     const determinedBy = /^Parallels are determined by (.{3,40})$/i.exec(
       line,
-    ) ?? /^(.{3,40}?) determines Parallels$/i.exec(line);
+    ) ?? /^(.{3,40}?) determines Parallels$/i.exec(line) ?? partUsed;
     if (determinedBy) {
-      const label = determinedBy[1].trim();
+      const label = partUsed ? `${partUsed[1].trim()} Tier` : determinedBy[1].trim();
       const rows = [];
+      if (partUsed) {
+        for (const other of allLines.slice(allLines.indexOf(line) + 1)) {
+          const plainRow = /^([A-Za-z][A-Za-z0-9 .'-]{1,32}?)\s*:\s*(\d{1,3}(?:,\d{3})+|\d+)$/.exec(other);
+          if (!plainRow) break;
+          rows.push({ name: plainRow[1].trim(), count: parseTooltipNumber(plainRow[2]) });
+        }
+      }
       for (const other of allLines) {
+        const pipeTable = /^(.+?\(\d+\)(?:\s*\|\s*.+?\(\d+\))+)\s+Parallels?$/i.exec(other);
+        if (pipeTable) {
+          for (const cell of pipeTable[1].split("|")) {
+            const named = /^(.+?)\s*\((\d+)\)$/.exec(cell.trim());
+            if (named) rows.push({ name: named[1].trim(), count: Number.parseInt(named[2], 10) });
+          }
+        }
         const arrowTable = /^(.+?)->((?:\d+\/)+\d+)\s+Parallels?$/i.exec(other);
         if (arrowTable) {
           const names = arrowTable[1].split("/").map((name) => name.trim());
@@ -752,7 +843,12 @@ function parseStatLines(lines, { allLines }) {
     // GT++ machines state totals ("220% Speed", "90% EU Usage"); a few
     // others state bonuses ("Speed: +120%", "50% faster"). An explicit 100%
     // resets the stat, which matters for multi-mode tooltips.
-    const speedTotal = /^(\d+(?:[.,]\d+)?)\s*%\s+Speed$/i.exec(line);
+    // "350% Speed of singleblock machines of the same voltage (40% when
+    // overheated)" states the same total, with the abnormal state aside.
+    const speedTotal =
+      /^(\d+(?:[.,]\d+)?)\s*%\s+Speed(?: of singleblock machines of the same voltage)?(?:\s*\([^)]*\))?$/i.exec(
+        line,
+      );
     if (speedTotal) {
       const factor = parseTooltipNumber(speedTotal[1]) / 100;
       if (factor === 1) {
@@ -799,12 +895,13 @@ function parseStatLines(lines, { allLines }) {
       continue;
     }
 
+    // Counts may carry thousands separators ("Has 1,024 parallels").
     const parallels =
-      /^(?:Max\.?\s+)?Parallels?:\s*(\d+)\b/i.exec(line) ??
-      /^Has (\d+) parallels? by default$/i.exec(line) ??
-      /(?:^|\b)(\d+)\s+Parallels?\s*$/i.exec(line);
+      /^(?:Max\.?\s+)?Parallels?:\s*(\d{1,3}(?:,\d{3})+|\d+)\b/i.exec(line) ??
+      /^Has (\d{1,3}(?:,\d{3})+|\d+) parallels?(?: by default)?$/i.exec(line) ??
+      /(?:^|[^\d,])(\d{1,3}(?:,\d{3})+|\d+)\s+Parallels?\s*$/i.exec(line);
     if (parallels) {
-      const count = Number.parseInt(parallels[1], 10);
+      const count = parseTooltipNumber(parallels[1]);
       if (count > 1 && count <= 4096) {
         maxParallel = count;
       }
@@ -1425,7 +1522,12 @@ function parseTooltipFactor(value) {
 }
 
 function parseTooltipNumber(value) {
-  return Number.parseFloat(String(value).replace(",", ".").replace("%", ""));
+  // "1,024" groups thousands; a lone comma before other digits is a decimal point.
+  const textValue = String(value).trim();
+  if (/^\d{1,3}(?:,\d{3})+%?$/.test(textValue)) {
+    return Number.parseFloat(textValue.replace(/,/g, "").replace("%", ""));
+  }
+  return Number.parseFloat(textValue.replace(",", ".").replace("%", ""));
 }
 
 function reciprocal(value) {

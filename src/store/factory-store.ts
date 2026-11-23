@@ -20,6 +20,7 @@ import { carryMachineVoltage, normalizeProjectHatchInputs } from "@/lib/solver/h
 import { create, type StateCreator, type StoreApi } from "zustand";
 import { createNewProject } from "@/examples";
 import type { DatasetManifest, RecipeDataset } from "@/lib/datasets";
+import { withServedDatasetPaths } from "@/lib/datasets/served-paths";
 import {
   canonicalizeResourceHandleId,
   dedupeEdgeWires,
@@ -333,6 +334,12 @@ interface FactoryStore {
    * it follow to the new id.
    */
   refreshProjectRecipes: (recipes: Recipe[], migration?: Record<string, string>) => void;
+  /**
+   * Stored recipe ids the loaded dataset answered "not found" for, with no recipe matching their content: their cards
+   * run on the plan's saved copy and say so. For this dataset version only, never part of the plan.
+   */
+  recipesNotInDataset: ReadonlySet<string>;
+  noteRecipesNotInDataset: (versionId: string, recipeIds: string[]) => void;
   clearDataset: () => void;
   setDatasetLoading: (isLoading: boolean) => void;
   setProjectImporting: (isImporting: boolean) => void;
@@ -1085,7 +1092,7 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
   isReadOnly: false,
   loadViewedProject: (project) => {
     quietBoardSoundsFor(1500);
-    const { project: nextProject, notice } = normalizeLoadedProjectWithNotice(project);
+    const { project: nextProject, notice } = normalizeLoadedProjectWithNotice(onServedDataset(project, get()));
     quietly(() => write({
       isReadOnly: true,
       // Only a conversion speaks here; the design store clears it when another plan lands.
@@ -1186,7 +1193,7 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
     // A plan ARRIVING (import, tab switch, setup open) is not an action;
     // its writes must not be mistaken for a giant paste and swept audibly.
     quietBoardSoundsFor(1500);
-    const { project: loaded, notice } = normalizeLoadedProjectWithNotice(project, options);
+    const { project: loaded, notice } = normalizeLoadedProjectWithNotice(onServedDataset(project, get()), options);
     const nextProject = touchProject(loaded);
     quietly(() => set({
       ...(notice ? { planNotice: notice } : {}),
@@ -1202,7 +1209,7 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
   },
   markHydratedProject: (project) => {
     quietBoardSoundsFor(1500);
-    const { project: nextProject, notice } = normalizeLoadedProjectWithNotice(project);
+    const { project: nextProject, notice } = normalizeLoadedProjectWithNotice(onServedDataset(project, get()));
     quietly(() => write({
       isReadOnly: false,
       ...(notice ? { planNotice: notice } : {}),
@@ -1236,7 +1243,12 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
     let conversion: { before: FactoryProject; after: FactoryProject } | undefined;
     quietly(() =>
       write((state) => {
-        const landed = applyOps(state.project as unknown as Record<string, unknown>, ops) as unknown as FactoryProject;
+        // Paths into a dataset the site no longer serves move before the conversion is worked out, so they are never
+        // sent as anyone's edit: every screen moves them for itself.
+        const landed = onServedDataset(
+          applyOps(state.project as unknown as Record<string, unknown>, ops) as unknown as FactoryProject,
+          state,
+        );
         // A plan in the one mode can still carry an older build's loose cell wires: only those convert (to tanks),
         // never the rest of the funnel, which would move the game's own things.
         const opened = landed.planMode
@@ -1340,25 +1352,30 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
       before.beesYield !== after.beesYield ||
       before.ic2CropsYield !== after.ic2CropsYield ||
       before.recipeDurationDivisor !== after.recipeDurationDivisor;
-    setPresentation((state) => {
-      const project = refreshProjectResourceIcons(state.project, dataset);
+    // Quiet: the icons it refreshes are derived from the dataset, which every screen of a live plan loads for itself.
+    quietly(() => setPresentation((state) => {
+      const served = <T,>(value: T) => onServedDataset(value, { dataset, datasetManifest: state.datasetManifest });
+      const project = served(refreshProjectResourceIcons(state.project, dataset));
       return {
         dataset,
         project,
         ...(ratesMoved ? { lastResult: solveBooks(project) } : {}),
-        recipeResourceHistory: refreshResourceHistoryIcons(state.recipeResourceHistory, dataset),
+        recipeResourceHistory: served(refreshResourceHistoryIcons(state.recipeResourceHistory, dataset)),
         recipeBrowserResource: state.recipeBrowserResource
-          ? refreshBrowserResourceIcon(state.recipeBrowserResource, dataset)
+          ? served(refreshBrowserResourceIcon(state.recipeBrowserResource, dataset))
           : undefined,
         pendingResourceConnection: state.pendingResourceConnection
-          ? refreshPendingResourceConnectionIcon(state.pendingResourceConnection, dataset)
+          ? served(refreshPendingResourceConnectionIcon(state.pendingResourceConnection, dataset))
           : undefined,
+        ...(state.dataset?.datasetVersionId === dataset.datasetVersionId
+          ? {}
+          : { recipesNotInDataset: new Set<string>() }),
         selectedDatasetVersionId: dataset.datasetVersionId,
         selectedRecipeId: state.selectedRecipeId ?? dataset.recipes[0]?.id,
         datasetError: undefined,
         isDatasetLoading: false,
       };
-    });
+    }));
   },
   refreshProjectRecipes: (recipes, migration = {}) => quietly(() => {
     setPresentation((state) => {
@@ -1435,9 +1452,18 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
       };
     });
   }),
+  recipesNotInDataset: new Set<string>(),
+  noteRecipesNotInDataset: (versionId, recipeIds) => {
+    const state = get();
+    if (state.dataset?.datasetVersionId !== versionId) return;
+    const fresh = recipeIds.filter((id) => !state.recipesNotInDataset.has(id));
+    if (fresh.length === 0) return;
+    set({ recipesNotInDataset: new Set([...state.recipesNotInDataset, ...fresh]) });
+  },
   clearDataset: () => {
     setActiveGameRates(undefined);
     set({
+      recipesNotInDataset: new Set<string>(),
       dataset: undefined,
       recipeSearch: "",
       highlightSearch: "",
@@ -6678,6 +6704,17 @@ type IconResource = Pick<
   ResourceAmount,
   "kind" | "id" | "displayName" | "iconPath" | "iconAtlas" | "dominantColor"
 >;
+
+/**
+ * `value` with every path into a dataset version the site no longer serves moved onto the loaded one
+ * (`withServedDatasetPaths`): a saved plan names the dataset it was made on, and those files are gone once the site
+ * moves on. Before a dataset is loaded it is left alone; `setDataset` moves it then.
+ */
+function onServedDataset<T>(value: T, state: Pick<FactoryStore, "dataset" | "datasetManifest">): T {
+  const current = state.dataset?.datasetVersionId;
+  if (!current) return value;
+  return withServedDatasetPaths(value, new Set((state.datasetManifest?.versions ?? []).map((v) => v.id)), current);
+}
 
 function refreshProjectResourceIcons(
   project: FactoryProject,

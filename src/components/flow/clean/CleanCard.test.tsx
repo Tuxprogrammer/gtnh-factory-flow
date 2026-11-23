@@ -7,6 +7,7 @@ import type { FactoryNode, Recipe, ResourceKind } from "@/lib/model/types";
 import type { RailPort } from "../node-verdict";
 import { CleanCard, StripChip } from "./CleanCard";
 import { writeDeviceSettings } from "@/lib/device-settings";
+import { useFactoryStore } from "@/store/factory-store";
 import type {
   CleanCardActions,
   CleanCardContext,
@@ -631,6 +632,38 @@ it("marks an unwired port and a card that cannot run", () => {
   const card = container.querySelector(".cc-card")!;
   expect(card.hasAttribute("data-cannot-run")).toBe(true);
   expect(card.hasAttribute("data-selected")).toBe(true);
+});
+
+it("tags a card whose recipe the current dataset lacks over its head, and says so first in its name's tip", () => {
+  const plain = renderCard(referenceView()).container;
+  expect(plain.querySelector(".cc-head")!.hasAttribute("data-not-in-dataset")).toBe(false);
+  cleanup();
+  useFactoryStore.setState({ recipesNotInDataset: new Set(["gone"]) });
+  try {
+    const { container } = render(
+      <ReactFlowProvider>
+        <CleanCard
+          view={referenceView()}
+          actions={actionsSpy()}
+          context={context}
+          recipe={recipe}
+          node={{ id: "n1", recipeId: "gone" } as unknown as FactoryNode}
+        />
+      </ReactFlowProvider>,
+    );
+    expect(container.querySelector(".cc-head")!.getAttribute("data-not-in-dataset")).toBe(
+      "Recipe not in the current dataset",
+    );
+    const tip = JSON.parse(container.querySelector(".cc-name")!.getAttribute("data-tip")!) as {
+      notes: Array<{ text: string; tone: string }>;
+    };
+    expect(tip.notes[0]).toEqual({
+      text: "This recipe is not in the current dataset. The card uses the plan's saved copy.",
+      tone: "warn",
+    });
+  } finally {
+    useFactoryStore.setState({ recipesNotInDataset: new Set() });
+  }
 });
 
 it("keeps every port row a wire anchor with its handle", () => {

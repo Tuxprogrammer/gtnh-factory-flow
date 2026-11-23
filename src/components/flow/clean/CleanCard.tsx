@@ -31,6 +31,7 @@ import { CardActionsMenu } from "./menus/CardActionsMenu";
 import { openAddToTask } from "@/components/tasks/AddToTask";
 import { cardsForTask } from "@/lib/tasks/make-task";
 import { isLiveConfigured } from "@/lib/live/live-config";
+import { NOT_IN_DATASET_TAG, useNotInDataset, withNotInDatasetNote } from "./not-in-dataset";
 
 /** Task boards come with live plans: no Add to a task row without them. */
 const TASKS_ENABLED = isLiveConfigured();
@@ -893,6 +894,7 @@ export function CleanCard({ view, actions, context, recipe, node }: CleanCardPro
   );
   // A task board somewhere on this device is about this card: the most pressing one's colour, a dot before the name.
   const taskStatus = useCardTaskStatus(view.nodeId);
+  const notInDataset = useNotInDataset(node);
   const rootRef = useRef<HTMLDivElement>(null);
   useEffect(() => ensureInteractionHost(), []);
   // Every prompt on the board shares one phase however late it mounted.
@@ -965,7 +967,7 @@ export function CleanCard({ view, actions, context, recipe, node }: CleanCardPro
       data-loop={view.loop}
       onPointerDownCapture={onPointerDownCapture}
     >
-      <div className="cc-head">
+      <div className="cc-head" data-not-in-dataset={notInDataset ? NOT_IN_DATASET_TAG : undefined}>
         <div
           role="button"
           tabIndex={0}
@@ -1014,7 +1016,7 @@ export function CleanCard({ view, actions, context, recipe, node }: CleanCardPro
           data-wheel-steps={view.hasPicker ? "" : undefined}
           data-wheel-value={view.hasPicker ? "" : undefined}
           data-menu-anchor=""
-          {...tipAttrs(machineNameTip(view, tipFacts))}
+          {...tipAttrs(withNotInDatasetNote(machineNameTip(view, tipFacts), notInDataset))}
           onClick={
             view.hasPicker
               ? (event) => {

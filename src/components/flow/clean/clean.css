@@ -115,6 +115,24 @@
     0 0 0 4px var(--cc-red);
 }
 
+/* A card whose recipe the loaded dataset lacks (not-in-dataset.ts): a tag sitting on its top edge, outside the card's
+   box, so its size, rows and wires stay as they are. Drawn by the head, whose ::before is free (the card's ::after is
+   the wire-in-hand overlay). */
+.cc-head[data-not-in-dataset]::before {
+  content: attr(data-not-in-dataset);
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  margin-bottom: 2px;
+  padding: 2px 4px;
+  background: var(--cc-surface);
+  box-shadow: inset 0 0 0 1px var(--cc-red);
+  color: var(--cc-red);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 3;
+}
+
 /* ---- Head --------------------------------------------------------------- */
 
 .cc-head {

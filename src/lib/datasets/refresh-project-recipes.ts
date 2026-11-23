@@ -68,13 +68,15 @@ export function noteRecipesRefreshed(
  * recipes) is matched by what it takes and makes, the way import does, and
  * comes back with a `migration` entry from the stored id to the current one,
  * so old cards still pick up the dataset's current handlers. Power cards are
- * synthesized on the way in and are skipped.
+ * synthesized on the way in and are skipped. `missing` lists the stored ids
+ * the dataset has no recipe for by either way; their cards keep the stored
+ * body and say so.
  */
 export async function resolveProjectRecipes(
   manifestUrl: string,
   version: DatasetVersion,
   recipes: Recipe[],
-): Promise<{ refreshed: Recipe[]; migration: Record<string, string> }> {
+): Promise<{ refreshed: Recipe[]; migration: Record<string, string>; missing: string[] }> {
   // A demo recipe is the plan's own data: the dataset never has it, so asking only fills the console with 404s.
   // Custom rate cards, empty fluid tanks and the empty crop farm are the plan's own cards too.
   const asked = recipes.filter(
@@ -95,9 +97,19 @@ export async function resolveProjectRecipes(
     (recipe, index) => byId[index]?.status === "rejected" && !isPowerRecipe(recipe),
   );
   const migration: Record<string, string> = {};
+  const missing: string[] = [];
   if (stale.length > 0) {
     try {
       const resolved = await resolveRecipeDatasetRecipes(manifestUrl, version, stale.map(recipeContentRef));
+      // Not in this dataset: the id answered "not found" and nothing matches the content. A failed request says
+      // nothing either way, so only a 404 counts.
+      const matched = new Set(resolved.matches.map((match) => match.importedId));
+      stale.forEach((recipe) => {
+        const answer = byId[asked.indexOf(recipe)];
+        if (!matched.has(recipe.id) && answer?.status === "rejected" && statusOf(answer.reason) === 404) {
+          missing.push(recipe.id);
+        }
+      });
       const fetched = await Promise.allSettled(
         resolved.matches.map(async (match) => ({
           importedId: match.importedId,
@@ -114,5 +126,10 @@ export async function resolveProjectRecipes(
       // No match service: the stored bodies keep working as they are.
     }
   }
-  return { refreshed, migration };
+  return { refreshed, migration, missing };
+}
+
+function statusOf(error: unknown): number | undefined {
+  const status = (error as { status?: unknown } | undefined)?.status;
+  return typeof status === "number" ? status : undefined;
 }

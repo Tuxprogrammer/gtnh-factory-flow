@@ -107,10 +107,11 @@ export async function resolveProjectRecipes(
   );
   const migration: Record<string, string> = {};
   const missing: string[] = [];
-  let renames: ResourceRenames = NO_RENAMES;
+  // Always read: a recipe found by its id can name an item the game has since moved (ids carry across versions), and
+  // the plan's wires and slot picks must move with its body or they stop meeting it.
+  const renames: ResourceRenames = asked.length > 0 ? await getResourceRenames(version) : NO_RENAMES;
   if (stale.length > 0) {
     try {
-      renames = await getResourceRenames(version);
       const resolved = await resolveRecipeDatasetRecipes(
         manifestUrl,
         version,

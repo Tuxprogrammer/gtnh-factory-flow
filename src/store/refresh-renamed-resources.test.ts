@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { PROJECT_SCHEMA_VERSION, type FactoryProject, type Recipe } from "@/lib/model/types";
 import { allowLegacyModesForTests } from "@/lib/model/project-normalize";
+import { takePlanRenamed } from "@/lib/datasets/renamed-plans";
 import { useFactoryStore } from "./factory-store";
 
 allowLegacyModesForTests();
@@ -69,5 +70,63 @@ describe("landing refresh: items the game renamed", () => {
     useFactoryStore.getState().setProject(plan);
     useFactoryStore.getState().refreshProjectRecipes([centrifugeNew], { "centrifuge-old": "centrifuge-new" });
     expect(useFactoryStore.getState().project.edges[0]!.resourceId).toBe(OLD);
+  });
+
+  it("moves slot picks and wires when every body comes back by its own id", () => {
+    // Ids carry across versions, so the dataset answers the stored ids with bodies on the new item.
+    const P_OLD = "ic2:itemfuelplantball";
+    const P_NEW = "gregtech:gt.metaitem.02@32020";
+    const press = recipe("press", [{ kind: "item", id: "berry", amount: 8 }], [{ kind: "item", id: P_OLD, amount: 1 }]);
+    const mill = recipe("mill", [{ kind: "item", id: P_OLD, amount: 2 }], [{ kind: "item", id: "mass", amount: 1 }]);
+    const pick = { id: P_OLD, kind: "item", amount: 2, displayName: "Plantball", iconPath: "/old/plantball.png" };
+    useFactoryStore.getState().setProject({
+      ...plan,
+      id: "by-id",
+      recipes: [press, mill],
+      nodes: [card("p", "press"), { ...card("m", "mill"), recipeInputOverrides: { 0: pick } }],
+      edges: [
+        {
+          id: "w",
+          source: "p",
+          target: "m",
+          resourceKind: "item",
+          resourceId: P_OLD,
+          sourceHandle: `output:item:${enc(P_OLD)}:0`,
+          targetHandle: `input:item:${enc(P_OLD)}:0`,
+        },
+      ],
+    } as unknown as FactoryProject);
+    takePlanRenamed("by-id");
+    const face = { displayName: "Plant Ball", iconPath: "/new/plantball.png" };
+    useFactoryStore.getState().refreshProjectRecipes(
+      [
+        { ...press, outputs: [{ kind: "item", id: P_NEW, amount: 1, ...face }] },
+        { ...mill, inputs: [{ kind: "item", id: P_NEW, amount: 2, ...face }] },
+      ],
+      {},
+      new Map([["ic2:itemfuelplantball@*", P_NEW]]),
+    );
+    const project = useFactoryStore.getState().project;
+    expect(project.nodes.find((node) => node.id === "m")!.recipeInputOverrides![0]).toMatchObject({ id: P_NEW, ...face });
+    expect(project.edges[0]).toMatchObject({ resourceId: P_NEW, sourceHandle: `output:item:${enc(P_NEW)}:0` });
+    expect(takePlanRenamed("by-id")).toBe(true);
+    // The wire still meets both cards: an edit keeps it.
+    useFactoryStore.getState().updateNode("p", { machineCount: 2 });
+    expect(useFactoryStore.getState().project.edges.map((edge) => edge.id)).toEqual(["w"]);
+  });
+
+  it("never drops a wire an edit did not touch", () => {
+    // A wire that meets no port (a card whose recipe has not resolved yet) stays until its own cards are edited.
+    useFactoryStore.getState().setProject({
+      ...plan,
+      id: "untouched",
+      recipes: [centrifugeNew, oven, recipe("other", [], [{ kind: "item", id: "x", amount: 1 }])],
+      nodes: [card("a", "centrifuge-new"), card("b", "oven"), card("c", "other")],
+    } as unknown as FactoryProject);
+    expect(takePlanRenamed("untouched")).toBe(false);
+    useFactoryStore.getState().updateNode("c", { machineCount: 3 });
+    expect(useFactoryStore.getState().project.edges.map((edge) => edge.id)).toEqual(["e"]);
+    useFactoryStore.getState().updateNode("b", { machineCount: 3 });
+    expect(useFactoryStore.getState().project.edges).toEqual([]);
   });
 });

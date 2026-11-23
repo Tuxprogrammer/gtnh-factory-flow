@@ -493,6 +493,59 @@ describe("live editing in the store", () => {
     expect(service.sent("ops")).toHaveLength(1);
   });
 
+  it("sends nothing when the game's item renames move a plan on opening, and the whole move ahead of the first edit", async () => {
+    const OLD = "ic2:itemfuelplantball";
+    const NEW = "gregtech:gt.metaitem.02@32020";
+    const enc = encodeURIComponent;
+    const recipe = (id: string, inputs: string[], outputs: string[]) => ({
+      id, name: id, machineType: "Compressor", minimumTier: "LV", durationTicks: 20, eut: 30,
+      inputs: inputs.map((item) => ({ kind: "item" as const, id: item, amount: 1 })),
+      outputs: outputs.map((item) => ({ kind: "item" as const, id: item, amount: 1 })),
+    });
+    const at = (x: number) => ({ machineCount: 1, parallel: 1, overclockTier: "LV", enabled: true, position: { x, y: 0 } });
+    const stored: FactoryProject = {
+      ...planWith(),
+      recipes: [recipe("press", ["berry"], [OLD]), recipe("mill", [OLD], ["mass"])],
+      nodes: [
+        { id: "p", recipeId: "press", ...at(0) },
+        { id: "m", recipeId: "mill", ...at(400), recipeInputOverrides: { 0: { id: OLD, kind: "item", amount: 1 } } },
+      ],
+      edges: [{ id: "w", source: "p", target: "m", sourceHandle: `output:item:${enc(OLD)}:0`,
+        targetHandle: `input:item:${enc(OLD)}:0`, resourceKind: "item", resourceId: OLD }],
+    };
+    await openLiveDesign(stored);
+
+    // The landing refresh: the dataset answers the stored ids with bodies on the new item.
+    useFactoryStore.getState().refreshProjectRecipes(
+      [recipe("press", ["berry"], [NEW]), recipe("mill", [NEW], ["mass"])],
+      {},
+      new Map([[`${OLD}@*`, NEW]]),
+    );
+    await settle();
+    expect(useFactoryStore.getState().project.edges[0]!.resourceId).toBe(NEW);
+    expect(service.sent("ops")).toHaveLength(0);
+    expect((service.plan.edges as Array<{ resourceId: string }>)[0]!.resourceId).toBe(OLD);
+
+    useFactoryStore.getState().updateNode("p", { machineCount: 2 });
+    await settle();
+    const batches = service.sent("ops");
+    expect(batches).toHaveLength(2);
+    expect(batches[1]!.ops).toEqual([{ o: "patch", c: "nodes", id: "p", f: { machineCount: 2 } }]);
+    // The stored plan moved as a whole, wire included.
+    const plan = service.plan as unknown as FactoryProject;
+    expect(plan.edges).toHaveLength(1);
+    expect(plan.edges[0]).toMatchObject({ resourceId: NEW, sourceHandle: `output:item:${enc(NEW)}:0` });
+    expect(plan.nodes.find((node) => node.id === "m")!.recipeInputOverrides![0]!.id).toBe(NEW);
+    expect(plan.recipes.flatMap((entry) => [...entry.inputs, ...entry.outputs]).map((slot) => slot.id)).not.toContain(OLD);
+
+    // Undo takes back the edit, never the move; later edits send only themselves.
+    useFactoryStore.getState().undo();
+    await settle();
+    expect((service.plan as unknown as FactoryProject).nodes.find((node) => node.id === "p")!.machineCount).toBe(1);
+    expect((service.plan as unknown as FactoryProject).edges[0]!.resourceId).toBe(NEW);
+    expect(service.sent("ops")).toHaveLength(3);
+  });
+
   it("sends each edit as the batch of what changed, nothing derived, confirmed by its echo", async () => {
     await openLiveDesign(planWith(annotation("n1", "one"), annotation("n2", "two")));
 

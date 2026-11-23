@@ -80,8 +80,9 @@ GUI, the network and the config stays in `jvm/mod/src`. Shared test data is in `
   (`tools/dataset-pipeline/CLAUDE.md`). Betas, release candidates and other pack versions are not targeted: a report
   that only concerns one of them is not worked.
 - The pack's own mod versions decide what the code may call. `jvm/mod/tools/dev/compat/manifests/` holds each pack
-  build's list (the 2.9.0 builds so far; 2.9.1's is not there yet) and `./gradlew :mod:compatCheck` (from `jvm/`) checks the jar against them; a fix must keep that check
-  passing.
+  build's list, the target's included, and `./gradlew :mod:compatCheck` (from `jvm/`) checks the jar against them; a
+  fix must keep that check passing. When the instance moves to a new build, add its manifest and move the pins in
+  `dependencies.gradle` to it in the same change.
 - Game source for checking a mechanic is the source at the refs the target pack ships, kept by the pack operator's
   tooling outside this repo. Ask for it; do not read a newer public branch and call it truth.
 

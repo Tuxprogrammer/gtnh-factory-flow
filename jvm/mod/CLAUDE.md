@@ -579,8 +579,10 @@ tools/dev/board-check.sh  # GT runs: end-to-end board check (recipe, port drag, 
 - `PLANNH_GTNH=1 tools/dev/mc.sh start` loads GregTech and the pack's recipes through the GTNH core mod (72 mods,
   about 30s once the jars are cached) in its own test world, `plannh-dev-gtnh`. Use it whenever real GT recipes,
   machines or items are needed; the plain start (29 mods, no GT) is enough for anything else.
-- The target pack is the GTNH 2.9.0 full release (`AGENTS.md`, Target pack). `dependencies.gradle` pins one pack
-  build's versions of NEI, GT, MUI2, GTNHLib, the core mod and every mod a recipe provider reads, so what compiles
+- The target pack is the build the owner's instance runs, GTNH 2.9.1 now (`AGENTS.md`, Target pack).
+  `dependencies.gradle` and `tools/dev/compat/manifests/` still hold the 2.9.0 builds' versions: the jar is compiled
+  and `compatCheck`ed against those, not against 2.9.1, until the pins move and a 2.9.1 manifest is added.
+  `dependencies.gradle` pins one pack build's versions of NEI, GT, MUI2, GTNHLib, the core mod and every mod a recipe provider reads, so what compiles
   runs there; move them together when the pins move (NEI 2.8.155 changed the recipe button event and broke the plan
   button, so the older event is guarded; `compatCheck` keeps the older builds working).
 - The dev harness also drives a full pack instance: build, swap the `gtnhplanner-*.jar` in the instance's

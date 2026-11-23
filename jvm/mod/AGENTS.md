@@ -75,10 +75,12 @@ GUI, the network and the config stays in `jvm/mod/src`. Shared test data is in `
 
 ## Target pack
 
-- Only the GTNH 2.9.0 full release is targeted. Betas, release candidates and other pack versions are not: a report
+- The target is the pack build the owner's instance runs: GTNH 2.9.1 now. It moves when the instance moves, and the
+  bundled machine data (`core-machines` `handlers.json`) is regenerated from that build's dataset
+  (`tools/dataset-pipeline/CLAUDE.md`). Betas, release candidates and other pack versions are not targeted: a report
   that only concerns one of them is not worked.
 - The pack's own mod versions decide what the code may call. `jvm/mod/tools/dev/compat/manifests/` holds each pack
-  build's list and `./gradlew :mod:compatCheck` (from `jvm/`) checks the jar against them; a fix must keep that check
+  build's list (the 2.9.0 builds so far; 2.9.1's is not there yet) and `./gradlew :mod:compatCheck` (from `jvm/`) checks the jar against them; a fix must keep that check
   passing.
 - Game source for checking a mechanic is the source at the refs the target pack ships, kept by the pack operator's
   tooling outside this repo. Ask for it; do not read a newer public branch and call it truth.

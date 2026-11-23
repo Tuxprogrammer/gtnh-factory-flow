@@ -12,6 +12,7 @@ import type { PlanSolveArgs } from "./args";
 import type { PlanUpTo } from "../types";
 import type { PlanReading } from "./answer";
 import type { PlanModel } from "./model";
+import { NUMERICS } from "../validate";
 
 const EPSILON = 0.000001;
 
@@ -40,6 +41,25 @@ export function finalizePlanResult(
     throw new Error("Plan mode: the seam did not hand over the books' helpers.");
   }
 
+  // What a running card moves at its solved scale, nameplate flow times count over built count.
+  const movedAt = (nodeResult: NodeThroughputResult, act: number) => {
+    let most = 0;
+    for (const flow of [...Object.values(nodeResult.inputs), ...Object.values(nodeResult.outputs)]) {
+      most = Math.max(most, Math.abs(flow.amountPerSecond) * act);
+    }
+    return most;
+  };
+  // Idle is judged on what a card moves against the plan's largest flow, as the solver judges dust: a count alone says
+  // nothing, since a fast recipe on a big hatch makes a real 0.05/s with a millionth of a machine.
+  let planScale = 0;
+  for (const flow of reading.edgeFlows.values()) planScale = Math.max(planScale, flow);
+  for (const nodeResult of Object.values(nodes) as NodeThroughputResult[]) {
+    const built = model.machines.get(nodeResult.nodeId)?.builtCount ?? 0;
+    const count = reading.counts.get(nodeResult.nodeId) ?? 0;
+    if (built > 0 && count > 0) planScale = Math.max(planScale, movedAt(nodeResult, count / built));
+  }
+  const dust = NUMERICS.dust * Math.max(1, planScale);
+
   let totalEuT = 0;
   for (const nodeResult of Object.values(nodes) as NodeThroughputResult[]) {
     if (!nodeResult.enabled || nodeResult.status === "missing-recipe") {
@@ -56,7 +76,7 @@ export function finalizePlanResult(
     nodeResult.disposalUtilization = 1;
     // Flows are nameplate at the built count; the solved scale is count / built.
     const act = built > 0 ? count / built : 0;
-    if (count <= EPSILON || !(act > 0)) {
+    if (!(act > 0) || movedAt(nodeResult, act) <= dust) {
       // A machine nothing needs keeps its NAMEPLATE rates: port rows and
       // handles are built from them. Utilization 0 says nothing runs.
       nodeResult.utilization = 0;

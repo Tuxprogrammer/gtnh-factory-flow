@@ -8,6 +8,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.gtnhplanner.core.base.JavaHashMap;
 import com.gtnhplanner.core.base.Log;
 import com.gtnhplanner.data.flowchart.balancer.alternatives.Alternative;
 import com.gtnhplanner.data.flowchart.balancer.alternatives.Alternatives;
@@ -74,9 +75,10 @@ public final class Spares {
      * nothing to choose.
      */
     static List<Leftover> apply(final SolveContext ctx, final Alternatives alternatives,
-        final Map<ChoiceKey, StageOutcome> points, final Map<String, Map<String, Double>> stored) {
+        final Map<ChoiceKey, StageOutcome> points, final Map<String, Map<String, Double>> given) {
         final StageOutcome own = ctx.point();
         if (own == null || alternatives == null) return List.of();
+        final Map<String, Map<String, Double>> stored = byAnchor(ctx, given);
         // The options per decision (the open gate each would replace), in the order the search listed them.
         final Map<PortRef, List<Alternative>> byDecision = new LinkedHashMap<>();
         for (final Alternative option : alternatives.options()) {
@@ -173,6 +175,42 @@ public final class Spares {
             out.add(new Leftover(d.key, d.importing, List.copyOf(bearers), custom));
         }
         return List.copyOf(out);
+    }
+
+    /**
+     * The stored splits with every bearer named by its gate's anchor on this plan. A split names a place by one of its
+     * ports, the solver names it by the gate's lowest port, and renaming cards (twins combined into one) can change
+     * which port that is while the place stays the same. Bearers of one gate add up.
+     */
+    private static Map<String, Map<String, Double>> byAnchor(final SolveContext ctx,
+        final Map<String, Map<String, Double>> stored) {
+        final Map<String, String> anchors = new JavaHashMap<>();
+        final Map<Integer, String> ofGate = new JavaHashMap<>();
+        for (int p = 0; p < ctx.model.connectedPorts.size(); p++) {
+            final int gate = ctx.model.portGate[p];
+            final String anchor = ofGate.computeIfAbsent(gate, g -> keyOf(ctx.anchorOf(g)));
+            anchors.put(keyOf(ctx.refOf(p)), anchor);
+        }
+        final Map<String, Map<String, Double>> out = new LinkedHashMap<>();
+        for (final Map.Entry<String, Map<String, Double>> entry : stored.entrySet()) {
+            final Map<String, Double> shares = new LinkedHashMap<>();
+            for (final Map.Entry<String, Double> share : entry.getValue()
+                .entrySet()) {
+                shares.merge(anchors.getOrDefault(share.getKey(), share.getKey()), share.getValue(), Double::sum);
+            }
+            final List<String> bearers = new ArrayList<>();
+            final String key = entry.getKey();
+            for (int from = 0, to; from <= key.length(); from = to + 1) {
+                to = key.indexOf('|', from);
+                if (to < 0) to = key.length();
+                final String k = key.substring(from, to);
+                final String anchor = anchors.getOrDefault(k, k);
+                if (!bearers.contains(anchor)) bearers.add(anchor);
+            }
+            bearers.sort(Comparator.naturalOrder());
+            out.put(String.join("|", bearers), shares);
+        }
+        return out;
     }
 
     /** A leftover being built: its options, their points and the split to apply (null: the solver's own). */

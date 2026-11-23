@@ -67,6 +67,33 @@ const clampDust = (values: number[]): void => {
 };
 
 /**
+ * The stored splits with every bearer named by its gate's anchor on this plan. A split names a place by one of its
+ * ports, the solver names it by the gate's lowest port, and renaming cards (twins combined into one) can change which
+ * port that is while the place stays the same. Bearers of one gate add up.
+ */
+function byAnchor(
+  ctx: SolveContext,
+  stored: Record<string, Record<string, number>>,
+): Record<string, Record<string, number>> {
+  const anchors = new Map<string, string>();
+  const ofGate = new Map<number, string>();
+  ctx.model.connectedPorts.forEach((_, p) => {
+    const gate = ctx.model.portGate[p]!;
+    if (!ofGate.has(gate)) ofGate.set(gate, bearerKey(ctx.anchorOf(gate)));
+    anchors.set(bearerKey(ctx.refOf(p)), ofGate.get(gate)!);
+  });
+  const anchored = (k: string) => anchors.get(k) ?? k;
+  const out: Record<string, Record<string, number>> = {};
+  for (const [key, split] of Object.entries(stored)) {
+    const shares: Record<string, number> = {};
+    for (const [k, share] of Object.entries(split)) shares[anchored(k)] = (shares[anchored(k)] ?? 0) + share;
+    const bearers = [...new Set(key.split("|").map(anchored))].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+    out[bearers.join("|")] = shares;
+  }
+  return out;
+}
+
+/**
  * The leftovers on the committed point, from its alternatives and their points, with `stored` splits applied: when any
  * applies, the mix is committed on `ctx`. A leftover with one possible place is listed too.
  */
@@ -78,6 +105,7 @@ export function applySpares(
 ): Leftover[] {
   const own = ctx.point;
   if (own === null) return [];
+  stored = byAnchor(ctx, stored);
   // The options per decision (the open gate each would replace), in the order the search listed them.
   const byDecision = new Map<string, Alternative[]>();
   for (const option of alternatives.options) {

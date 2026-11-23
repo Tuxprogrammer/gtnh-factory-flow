@@ -129,6 +129,8 @@ final class PlanRead {
     /** Where each pocket's members are measured from on the board, by plan id (worked out on first ask). */
     private final Map<String, int[]> bases = new HashMap<>();
 
+    /** What the game's item renames came to, carried from the read this one follows. */
+    private final com.gtnhplanner.importer.PlanRenames.Memo renames;
     /** The read this one follows, or null; its plan's things by key and its recipes by id. */
     @Nullable
     private final CloudPlans.Read previous;
@@ -145,7 +147,9 @@ final class PlanRead {
 
     PlanRead(final JsonObject plan, final CloudGame game, @Nullable final CloudPlans.Read previous) {
         // Items the game renamed since the plan was saved are read under their new ids; the board writes against this.
-        this.plan = com.gtnhplanner.importer.PlanRenames.apply(plan, game.recipes());
+        // Following a read, as that read renamed them: the renamed things it held are the very objects again.
+        this.renames = previous == null ? new com.gtnhplanner.importer.PlanRenames.Memo() : previous.renames();
+        this.plan = com.gtnhplanner.importer.PlanRenames.apply(plan, game.recipes(), renames);
         this.game = game;
         this.previous = previous;
         this.things = new FfPlanParser.Things(this.plan);
@@ -270,7 +274,7 @@ final class PlanRead {
         final Fresh.Meta meta = Fresh.meta(graph, game, basis);
         basis.metaState = Canon.of(meta.game());
         basis.metaSite = meta.site();
-        return new CloudPlans.Read(graph, basis, report, plan);
+        return new CloudPlans.Read(graph, basis, report, plan, renames);
     }
 
     /**

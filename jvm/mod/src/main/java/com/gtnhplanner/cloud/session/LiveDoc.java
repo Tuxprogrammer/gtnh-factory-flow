@@ -390,15 +390,16 @@ public final class LiveDoc {
         final boolean caughtUp = !behind;
         final List<LiveState.Batch> batches = ops.isEmpty() ? List.of() : state.local(ops, maxOpBytes());
         warnTooBig();
-        // Caught up, the board is the live copy: what follows reads against its objects, sharing the most.
-        read = read.after(w, caughtUp && !batches.isEmpty() ? state.view() : w.plan());
+        // Caught up, the board is the live copy: what follows reads against its objects, sharing the most. Renamed as
+        // the board read it, so the next write never sends the game's item renames as an edit.
+        read = read.after(w, caughtUp && !batches.isEmpty() ? read.renamed(state.view(), session.game()) : w.plan());
         for (final LiveState.Batch b : batches) keep(b);
         return !batches.isEmpty();
     }
 
     /** The slot holds another graph than the one read (something put it there): it is the board now. */
     void rebind(final Graph g) {
-        read = new CloudPlans.Read(g, read.basis(), read.report(), read.plan());
+        read = new CloudPlans.Read(g, read.basis(), read.report(), read.plan(), read.renames());
         g.setCloudKey(key);
         synced = Long.MIN_VALUE;
     }

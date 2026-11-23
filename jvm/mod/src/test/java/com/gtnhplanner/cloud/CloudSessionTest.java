@@ -461,6 +461,57 @@ class CloudSessionTest {
         assertFalse(session.undo(undone), "nothing more of the player's own");
     }
 
+    /**
+     * A plan saved before the game renamed an item: the board reads the rename once and the player's edits send only
+     * themselves, edit after edit; others' edits read in keep the renamed cards nobody touched.
+     */
+    @Test
+    void anItemRenameIsReadOnceAndNeverSent() {
+        com.gtnhplanner.cloud.map.CloudRenamesTest.renaming(host.game);
+        live.plans.put(ME + ":d1", com.gtnhplanner.cloud.map.CloudRenamesTest.plan());
+        live.seqs.put(ME + ":d1", 3L);
+        designs.put("d1", design("d1", "Plantballs"));
+        final Plan p = begin();
+        final Graph board = open(p, ME + ":d1");
+        final LiveDoc doc = session.doc(board);
+        final Uuid mac = com.gtnhplanner.cloud.map.CloudRenamesTest.card("m"),
+            comp = com.gtnhplanner.cloud.map.CloudRenamesTest.card("c");
+        assertNull(board.nodes.get(mac).shown, "the renamed card runs");
+
+        // Two moves of the compressor, each its own batch: each sends the card's place and nothing else.
+        final Node macCard = board.nodes.get(mac);
+        for (int i = 1; i <= 2; i++) {
+            board.nodes.get(comp).x += 40;
+            board.touchLayout();
+            session.save(p);
+            final long seq = 3 + i;
+            tickUntil("move " + i + " applied", () -> live.seqs.get(ME + ":d1") == seq && !doc.waiting());
+        }
+        final List<String> sent = new ArrayList<>();
+        for (final JsonObject frame : live.framesOf("ops"))
+            for (final JsonElement op : frame.getAsJsonArray("ops")) sent.add(op.toString());
+        assertEquals(2, sent.size(), "two moves, nothing more: " + sent);
+        for (final String op : sent) assertTrue(op.contains("\"position\"") && !op.contains("gregtech"), op);
+        assertTrue(
+            live.plans.get(ME + ":d1")
+                .toString()
+                .contains(com.gtnhplanner.cloud.map.CloudRenamesTest.OLD),
+            "the shared plan keeps its ids");
+
+        // Someone moves the compressor too: the macerator, renamed and untouched since, is the board's card still.
+        final JsonArray theirs = new JsonArray();
+        theirs.add(
+            LiveOp.patch("nodes", "c", com.gtnhplanner.cloud.map.CloudRenamesTest.position(900, 0), null)
+                .toJson());
+        live.others(ME + ":d1", theirs);
+        tickUntil("read in", () -> slot(p, ME + ":d1") != board);
+        final Graph now = slot(p, ME + ":d1");
+        assertEquals(com.gtnhplanner.library.PlanExport.gameX(900), now.nodes.get(comp).x);
+        assertSame(macCard, now.nodes.get(mac), "the renamed card is not read again");
+        ticks(10);
+        assertEquals(2, opsFrames(), "reading others' edits sends nothing");
+    }
+
     /** The wires of a plan that end at no card or drawer of it. */
     private static List<String> dangling(final JsonObject plan) {
         final java.util.Set<String> ends = com.gtnhplanner.cloud.sync.LiveOps.ends(plan);

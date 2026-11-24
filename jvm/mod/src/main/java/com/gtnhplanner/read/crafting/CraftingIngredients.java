@@ -1,7 +1,4 @@
-package dev.gtnhplanner.calcoracle;
-
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+package com.gtnhplanner.read.crafting;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -11,22 +8,27 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+
 /**
  * The ingredients of crafting recipes whose class keeps them where the generic reader
  * does not look, so the export would otherwise give them no inputs and the planner
  * would make their output from nothing.
  *
- * Each reader returns the slots the way the exporter's generic reader sees a vanilla
- * recipe: an ItemStack, a list of alternative stacks, an ore dictionary name, null for
- * an empty grid cell, or {@link #MISSING} for a slot the game can never fill. Classes
+ * Each reader returns the slots the way {@link CraftingReader}'s generic reading sees a
+ * vanilla recipe: an ItemStack, a list of alternative stacks, an ore dictionary name, null
+ * for an empty grid cell, or {@link #MISSING} for a slot the game can never fill. Classes
  * not named here return null and keep the generic reader. Mods are read by reflection
- * because the exporter is not built against them.
+ * because neither the mod nor the export run is built against them.
  */
 final class CraftingIngredients {
-    /** A slot nothing can fill: the exporter writes it as "missing" and the normalizer drops the recipe. */
+
+    /** A slot nothing can fill: a "missing" cell, and the dataset drops the recipe. */
     static final List<Object> MISSING = Collections.emptyList();
 
     static final class Read {
+
         final String type;
         final int width;
         final int height;
@@ -43,11 +45,13 @@ final class CraftingIngredients {
 
     static Read read(Object recipe) {
         try {
-            String name = recipe.getClass().getName();
+            String name = recipe.getClass()
+                .getName();
             if ("appeng.recipes.game.ShapedRecipe".equals(name)) return appliedEnergistics(recipe, true);
             if ("appeng.recipes.game.ShapelessRecipe".equals(name)) return appliedEnergistics(recipe, false);
             if ("mrtjp.projectred.core.libmc.recipe.ShapedBuilderRecipe".equals(name)) return projectRedShaped(recipe);
-            if ("mrtjp.projectred.core.libmc.recipe.ShapelessBuilderRecipe".equals(name)) return projectRedShapeless(recipe);
+            if ("mrtjp.projectred.core.libmc.recipe.ShapelessBuilderRecipe".equals(name))
+                return projectRedShapeless(recipe);
             // Pours the inventory of a dyed or undyed box into a recoloured one: the box
             // (any colour, the plan has no NBT variants) plus the dye, or the box alone.
             if ("com.dreammaster.scripts.ScriptEFR$ShulkerNBTRecipe".equals(name)) {
@@ -75,9 +79,13 @@ final class CraftingIngredients {
     // disabled by AE2 itself (bake() sets "disable") and never matches.
     private static Read appliedEnergistics(Object recipe, boolean shaped) throws Exception {
         Object input = invoke(recipe, "getInput");
-        List<Object> cells = input instanceof Object[] ? Arrays.asList((Object[]) input) : new ArrayList<Object>((List<?>) input);
+        List<Object> cells = input instanceof Object[] ? Arrays.asList((Object[]) input)
+            : new ArrayList<Object>((List<?>) input);
         Read read = shaped
-            ? new Read("shaped", ((Number) field(recipe, "width")).intValue(), ((Number) field(recipe, "height")).intValue())
+            ? new Read(
+                "shaped",
+                ((Number) field(recipe, "width")).intValue(),
+                ((Number) field(recipe, "height")).intValue())
             : new Read("shapeless", 0, 0);
         boolean enabled = !Boolean.FALSE.equals(invoke(recipe, "isEnabled"));
         for (Object cell : cells) {
@@ -115,14 +123,18 @@ final class CraftingIngredients {
         Object builder = invoke(recipe, "builder");
         int size = ((Number) invoke(builder, "size")).intValue();
         Object inputMap = invoke(builder, "inputMap");
-        Method contains = inputMap.getClass().getMethod("contains", Object.class);
-        Method apply = inputMap.getClass().getMethod("apply", Object.class);
+        Method contains = inputMap.getClass()
+            .getMethod("contains", Object.class);
+        Method apply = inputMap.getClass()
+            .getMethod("apply", Object.class);
         contains.setAccessible(true);
         apply.setAccessible(true);
         Read read = new Read("shaped", size, size);
         for (int index = 0; index < size * size; index++) {
             Integer key = Integer.valueOf(index);
-            read.slots.add(Boolean.TRUE.equals(contains.invoke(inputMap, key)) ? projectRedInput(apply.invoke(inputMap, key)) : null);
+            read.slots.add(
+                Boolean.TRUE.equals(contains.invoke(inputMap, key)) ? projectRedInput(apply.invoke(inputMap, key))
+                    : null);
         }
         return read;
     }
@@ -147,8 +159,10 @@ final class CraftingIngredients {
     private static List<Object> scalaList(Object seq) throws Exception {
         List<Object> out = new ArrayList<Object>();
         Object iterator = invoke(seq, "iterator");
-        Method hasNext = iterator.getClass().getMethod("hasNext");
-        Method next = iterator.getClass().getMethod("next");
+        Method hasNext = iterator.getClass()
+            .getMethod("hasNext");
+        Method next = iterator.getClass()
+            .getMethod("next");
         hasNext.setAccessible(true);
         next.setAccessible(true);
         while (Boolean.TRUE.equals(hasNext.invoke(iterator))) {
@@ -191,7 +205,8 @@ final class CraftingIngredients {
     }
 
     private static Object invoke(Object target, String name) throws Exception {
-        Method method = target.getClass().getMethod(name);
+        Method method = target.getClass()
+            .getMethod(name);
         method.setAccessible(true);
         return method.invoke(target);
     }

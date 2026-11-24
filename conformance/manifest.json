@@ -26,11 +26,12 @@
       "generator": "number-text: node tools/conformance/core-base/gen-vectors.mjs; uuid: ./gradlew :core-base:test --tests '*UuidTest.writeVectors' -PwriteVectors (from jvm/); then node tools/conformance/manifest.mjs --write; exact-math: ./gradlew :core-base:test --tests '*ExactMathTest.writeVectors' -PwriteVectors (from jvm/; inputs from jvm/conformance-support MathCases); solved-number: by hand"
     },
     "data": {
-      "specifies": "What the export run's GregTech reader writes and the dataset record made of it. gt-records.json: per case the raw export's recipe (raw.map, raw.recipe, as jvm/mod read/gt/GtRecipeReader read it in game and the exporter wrote it) and the record normalize-oracle-export.mjs makes of it (dataset; ids, notes, provenance and times left out). The mod's record of the same recipe (core-model GtDatasetRecipe) must equal it on every field Web.Recipe carries.",
+      "specifies": "What the export run's recipe readers write and the dataset records made of it. gt-records.json: per case the raw export's recipe (raw.map, raw.recipe, as jvm/mod read/gt/GtRecipeReader read it in game and the exporter wrote it) and the record normalize-oracle-export.mjs makes of it (dataset; ids, notes, provenance and times left out). smelting-records.json and crafting-records.json: the same for furnace recipes (read/furnace/SmeltingReader) and crafting-grid recipes (read/crafting/CraftingReader; with the ore dictionary lists the case's cells name), dataset null where the dataset drops the recipe, machines left out. The mod's record of the same recipe (core-model GtDatasetRecipe, SmeltingDatasetRecipe, CraftingDatasetRecipe) must equal it on every field Web.Recipe carries.",
       "readers": [
-        "core-model: core/model/read/GtDatasetRecipeTest"
+        "core-model: core/model/read/GtDatasetRecipeTest",
+        "core-model: core/model/read/FurnaceCraftingDatasetTest"
       ],
-      "generator": "node --max-old-space-size=12000 tools/conformance/data/gt-record-cases.mjs <a full raw export's oracle-export.json> conformance/data/gt-records.json (an export run in a scratch directory; the raw export is never committed)"
+      "generator": "node --max-old-space-size=12000 tools/conformance/data/gt-record-cases.mjs <a full raw export's oracle-export.json> conformance/data/gt-records.json; node --max-old-space-size=12000 tools/conformance/data/furnace-crafting-cases.mjs <the same oracle-export.json> conformance/data (an export run in a scratch directory; the raw export is never committed)"
     },
     "format": {
       "specifies": "How the two sides spell numbers: values.json is the shared input list; website-out.json, mod-out.json and mod-recipe-overlay-out.json are what each side's formatters return for it (the website's compact, brief, power, rate, machine-count, percent and multiplier formatters; the mod's Fmt and the recipe overlay's GuiHelper formatters); COMPARISON.md is the generated table of where they differ. The sides are not required to agree: the table is the work order for the view item.",
@@ -222,10 +223,20 @@
       "bytes": 39121,
       "sha256": "23347b689fcef8d736c3e56f37bad34af5fe7efbde19cee759cd43cf827f39da"
     },
+    "data/crafting-records.json": {
+      "area": "data",
+      "bytes": 269619,
+      "sha256": "fe4e22d9ac2d4b6925362ab5d6114448f731eb2b6d8b0e78432d68cc7131d926"
+    },
     "data/gt-records.json": {
       "area": "data",
       "bytes": 1282508,
       "sha256": "58b8238b44de3aaf744b0a1d953eb127c6b0aabcdf92aa31a880efcc73566252"
+    },
+    "data/smelting-records.json": {
+      "area": "data",
+      "bytes": 16499,
+      "sha256": "7799d0576fcbfe46f26f09fff0c0bfa8003939479fe03b364676a36c7ce1bfc9"
     },
     "format/COMPARISON.md": {
       "area": "format",

@@ -46,9 +46,12 @@ export function resourceRenamesFromExport(raw) {
     renames.push({ from, kind: "item", to });
   }
   renames.sort((a, b) => (a.from < b.from ? -1 : a.from > b.from ? 1 : 0));
+  // A lambda's class name ends in the address the JVM gave it this launch (`$$Lambda/0x...`): cut there, then
+  // sort, so two exports of one pack write the same file.
   const handlers = (Array.isArray(raw.handlers) ? raw.handlers : [])
-    .map((row) => ({ from: canonical(row.from), handler: String(row.handler ?? "") }))
-    .filter((row) => row.from);
+    .map((row) => ({ from: canonical(row.from), handler: String(row.handler ?? "").replace(/\$\$Lambda[$/].*$/, "$$$$Lambda") }))
+    .filter((row) => row.from)
+    .sort((a, b) => (a.from + "\0" + a.handler < b.from + "\0" + b.handler ? -1 : a.from + "\0" + a.handler > b.from + "\0" + b.handler ? 1 : 0));
   return { schemaVersion: 1, source: String(raw.source ?? "postea"), renames, handlers };
 }
 

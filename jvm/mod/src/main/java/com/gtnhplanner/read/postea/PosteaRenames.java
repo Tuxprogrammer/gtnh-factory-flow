@@ -111,7 +111,7 @@ public final class PosteaRenames {
                     .getName();
                 // The table's own entries, compiled into one handler per id at load: already read above.
                 if (handler.endsWith("$SimpleItemTransformationHandler")) continue;
-                handlers.add(new Handler(String.valueOf(entry.getKey()), handler));
+                handlers.add(new Handler(String.valueOf(entry.getKey()), stableClassName(handler)));
             }
         } catch (ReflectiveOperationException | ClassCastException | NullPointerException e) {
             handlers.clear();
@@ -123,6 +123,15 @@ public final class PosteaRenames {
             Comparator.comparing((Handler h) -> h.from)
                 .thenComparing(h -> h.handler));
         return new PosteaRenames(items, handlers);
+    }
+
+    /**
+     * A class name without the part the JVM picks per launch: a lambda is named {@code Outer$$Lambda/0x<address>}
+     * (or {@code Outer$$Lambda$<n>/<m>} on older JVMs), so two exports of one pack keep only {@code Outer$$Lambda}.
+     */
+    static String stableClassName(final String name) {
+        final int lambda = name.indexOf("$$Lambda");
+        return lambda < 0 ? name : name.substring(0, lambda + "$$Lambda".length());
     }
 
     /** The export's {@code resourceRenames} object: raw, as registered; the pipeline turns it into resource ids. */

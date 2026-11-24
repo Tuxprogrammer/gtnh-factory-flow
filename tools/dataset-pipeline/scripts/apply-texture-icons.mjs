@@ -5,6 +5,7 @@ import crypto from "node:crypto";
 import { spawnSync } from "node:child_process";
 import { writeDatasetJson } from "./dataset-json-writer.mjs";
 import { rewriteAssetIconHints } from "./asset-icon-hints.mjs";
+import { datasetTimestamp } from "./dataset-time.mjs";
 
 const instanceRoot = process.argv[2];
 const datasetPath = process.argv[3];
@@ -40,7 +41,7 @@ if (datasetSizeBytes > maxDatasetBytes) {
       {
         schemaVersion: 1,
         datasetVersionId: versionId,
-        generatedAt: new Date().toISOString(),
+        generatedAt: datasetTimestamp(undefined),
         source: "minecraft-asset-pngs",
         skipped: true,
         reason: `Dataset is ${datasetSizeBytes} bytes, above GTNH_TEXTURE_ICON_MAX_DATASET_BYTES=${maxDatasetBytes}.`,
@@ -149,7 +150,7 @@ await fs.writeFile(
     {
       schemaVersion: 1,
       datasetVersionId: versionId,
-      generatedAt: new Date().toISOString(),
+      generatedAt: datasetTimestamp(undefined),
       source: "minecraft-asset-pngs",
       matchedResources: matched,
       missingResources: missing,

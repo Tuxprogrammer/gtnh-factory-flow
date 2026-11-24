@@ -30,16 +30,64 @@ Rebuilds must run `normalize-fluid-icon-alpha.mjs` (with `--rename`) after the i
 builds and before publishing, or faint fluids ship invisible. Texture URLs are cache-immutable: fix pixels under a NEW filename (`--rename`),
 and patch whole basenames only.
 
-A fresh export is NOT deterministic: crafting, furnace, bee, crop and essentia recipes
-reorder, re-minting ~37,000 ids. When an export only ADDS fields, graft them onto the
-published export (`~/graft-sparge.js`, matching recipes by content key) and confirm with
-a shard diff (`~/cmp-field.js`). The 2.9 export in WSL is such a graft.
+Two exports of one pack write the same dataset, byte for byte, when both set
+`SOURCE_DATE_EPOCH` (the time every file stamps, the asset fingerprint and icon report
+included), apart from what the game itself rolls anew each launch (listed below). The
+normalizer is a pure function of the raw export: its time is the export's, and its powers
+are the game's own products (`scripts/game-math.mjs`), never `Math.pow`, so Node 22 and 24
+agree. The exporter never relies on hash order: furnace and crafting recipes, ore names,
+bee species and products, crop drops, soils and biomes, aspects, IC2 crop samples
+(seeded), GregTech recipe order (by content), hash-built slot lists and outputs are all
+sorted or pinned; joke item names are pinned (`StableNames`); a Postea lambda handler is
+named without its launch address. NBT text is kept as the game prints it (plans store icon
+paths minted from it). A new rule that reads a game collection says what fixes its order.
+The icon renderer names every stack of one content after the first it sees, and two stacks
+of one content can print their NBT keys in different orders (a data orb's title and name),
+so GregTech recipes are read, and their icons rendered, in the served export's order
+(`GtIconOrder`: first output, EU/t, time, map order) and only then sorted for listing. IC2's
+crop cards keep the game's order (a map keyed by name, the same every launch): the first
+card's seed is the IC2 Crop map's face.
+
+`scripts/compare-datasets.mjs <A> <B>` compares two datasets and exits 1 on any difference
+outside this list of launch noise (`LAUNCH_NOISE` in the script, kept equal to it):
+- `shown-member`: a slot of several blocks shows the one the game lists first from a hash
+  set (Crop Breeder soils, an assembly-line ore). The shown block, its resource and, for
+  GregTech, the recipe id move. It names a cell, so it is not pinned; `carry-recipe-ids`
+  keeps the previous dataset's shown block and id instead (`keptByShown`).
+- `slot-members`: such a slot can also list another subset of blocks (a Crop Breeder
+  soil lacking two bartworks ores one launch); carry cannot match it, so its id is new.
+- `thaumcraft-list-position`: infusion, arcane and crucible ids are list positions, and a
+  few recipes register in another order (Thaumic Tinkerer's soul aspects): same recipes,
+  swapped ids. Not sorted: the served ids follow the game's order; carry matches by content.
+- `thaumcraft-generated-aspects`: aspects Thaumcraft generates for items without any
+  (about 45 essentia smelting recipes: aspects and time).
+- `thaumcraft-addon-aspect-costs`: Gadomancy's Aura Core and Element of Darkness draw
+  their aspect costs at launch.
+- `eec-live-entity`: EEC mobs whose health or drops MobsInfo reads from a live entity
+  (slime size, mandrakes): numbers and the spawner's tooltip, never ids.
+- `icon-bytes`: icons drawn from animated textures (bytes only, same name).
+- `instance-fingerprint`: the asset fingerprint's hash of the instance, whose configs the
+  game rewrites as it runs.
+- `icon-report-size`, `export-timing`, `derived`: the icon report's byte count of
+  recipes.json, the oracle report's durations, and the indexes and shards built from
+  recipes.json when it differs by the noise above.
+
+When an export only ADDS fields, graft them onto the published export
+(`~/graft-sparge.js`, matching recipes by content key) and confirm with a shard diff
+(`~/cmp-field.js`). The 2.9 export in WSL is such a graft.
 
 A new pack (or any fresh export) keeps the previous dataset's recipe ids with
 `scripts/carry-recipe-ids.mjs <previous recipes.json.gz> <new recipes.json> [report]`, run
 after normalize and before the indexes: same map (GT++'s `gtpp.recipe.*` read as RC-2's
 `gt.recipe.*`), slots, amounts, chances, ticks and EU keep the old id (its old dataset
 prefix included); bees, crops, veins, mobs and underground fluids keep theirs by identity.
+Content keys ignore NBT, so recipes that differ only in a slot's NBT (crop seeds, tool
+materials, a bio culture) first take the id of the previous recipe with the same NBT; file
+order never decides which. An item seen with several NBT stacks has one catalog row showing
+whichever the export lists first; carry keeps the previous row's icon (and that stack's
+name and NBT line) while a slot still shows that icon file (`catalogIconKept` in the report). The normalizer folds two registrations of one recipe into the
+first, and that fold keys on NBT too: without it, which of such recipes survived followed
+the export's order.
 `local-2.9.0-rc-2` carries beta-2's ids this way (`~/rebuild-rc2.sh` in WSL; the report is
 `oracle/recipe-id-carry.json`).
 

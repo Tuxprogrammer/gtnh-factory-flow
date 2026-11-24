@@ -634,6 +634,21 @@ describe("machineConfigControlsForOracleRecipe", () => {
     expect(heatProof.parallelMultiplier * sixteenSlices.parallelMultiplier).toBe(32 + 16 * 15);
   });
 
+  it("gives the Industrial Coke Oven's coils the game's own discount doubles, whatever Node runs it", () => {
+    // MTEIndustrialCokeOven.getEuModifier = GTUtility.powInt(0.98, coil tier), exponentiation by squaring;
+    // Math.pow gives other last digits from tier 4 on, and different ones under Node 22 and 24.
+    const coil = machineConfigControlsForOracleRecipe("Industrial Coke Oven", 0, []).find(
+      (control) => control.id === "heatingCoil",
+    );
+    const discount = new Map(coil.tiers.map((tier) => [tier.key, tier.eutMultiplier]));
+    expect(discount.get("cupronickel")).toBe(0.98);
+    expect(discount.get("kanthal")).toBe(0.9603999999999999);
+    expect(discount.get("tpv")).toBe(0.9223681599999999);
+    expect(discount.get("hss_g")).toBe(0.9039207967999998);
+    expect(discount.get("naquadah_alloy")).toBe(0.8507630225817854);
+    expect(discount.get("trinium")).toBe(0.8337477621301497);
+  });
+
   it("keeps the catalyst-derived controls of the primary machine", () => {
     const templates = buildMachineHandlerTemplates("Chemical Plant", [
       catalyst("ExxonMobil Chemical Plant", {

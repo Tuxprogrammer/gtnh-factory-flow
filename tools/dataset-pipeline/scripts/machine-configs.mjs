@@ -131,6 +131,7 @@ const solenoidTiers = [
   },
 ];
 
+import { gtPowInt } from "./game-math.mjs";
 import { wikiStatsForMachine } from "./machine-wiki-stats.mjs";
 
 // ---------------------------------------------------------------------------
@@ -181,11 +182,12 @@ export function machineConfigControlsForOracleRecipe(machineType, specialValue, 
   // Only the Industrial Coke Oven's map (gtpp.recipe.cokeoven, renamed by the
   // normalizer): the Railcraft brick Coke Oven's map (gt.recipe.cokeoven) is
   // also localized "Coke Oven" but has no coils, casings or slices.
+  // The discount is the game's own double: GTUtility.powInt(0.98, coil tier), cupronickel being tier 1.
   if (normalized === "industrial coke oven") {
     controls.push(
       heatingCoilControl({
-        tooltip: (_tier, index) => [`EU usage: ${formatTooltipPercent(Math.pow(0.98, index + 1))}`],
-        effect: (_tier, index) => ({ eutMultiplier: Math.pow(0.98, index + 1) }),
+        tooltip: (_tier, index) => [`EU usage: ${formatTooltipPercent(gtPowInt(0.98, index + 1))}`],
+        effect: (_tier, index) => ({ eutMultiplier: gtPowInt(0.98, index + 1) }),
       }),
     );
     controls.push({
@@ -606,7 +608,7 @@ function parseStatLines(lines, { allLines }) {
       controls.push(
         tieredEffectControlFromSubject(euTimesPerTier[3], line, {
           effectLabel: "EU usage",
-          effect: (tier, index) => ({ eutMultiplier: Math.pow(factor, tierOrdinal(tier, index)) }),
+          effect: (tier, index) => ({ eutMultiplier: gtPowInt(factor, tierOrdinal(tier, index)) }),
           keep: (effect) => effect.eutMultiplier > 0 && effect.eutMultiplier !== 1,
         }),
       );
@@ -750,7 +752,7 @@ function parseStatLines(lines, { allLines }) {
     }
 
     // "Every coil tier gives a +10% speed bonus and a 10% EU/t discount
-    // (multiplicative)": compounding per coil tier.
+    // (multiplicative)": compounding per coil tier, as products of doubles (gtPowInt), the same under every Node.
     const coilCompound =
       /every coil tier gives a \+(\d+(?:[.,]\d+)?)\s*%\s+speed bonus and a (\d+(?:[.,]\d+)?)\s*%\s+EU\/?t discount \(multiplicative\)/i.exec(
         line,
@@ -762,8 +764,8 @@ function parseStatLines(lines, { allLines }) {
         coilFormulaControl({
           line,
           effect: (index) => ({
-            durationMultiplier: 1 / Math.pow(speedStep, index + 1),
-            eutMultiplier: Math.pow(euStep, index + 1),
+            durationMultiplier: 1 / gtPowInt(speedStep, index + 1),
+            eutMultiplier: gtPowInt(euStep, index + 1),
           }),
         }),
       );
@@ -1088,7 +1090,7 @@ function machineConfigControlFromTooltipLine(rawLine) {
     return tieredEffectControlFromSubject(multiplicativePerTier[2], line, {
       effectLabel: "Parallels",
       effect: (tier, index) => ({
-        parallelMultiplier: Math.pow(factor, tierOrdinal(tier, index)),
+        parallelMultiplier: gtPowInt(factor, tierOrdinal(tier, index)),
       }),
       keep: (effect) => effect.parallelMultiplier > 1,
     });

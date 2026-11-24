@@ -19,6 +19,7 @@ import com.gtnhplanner.read.OreCellNames;
 import com.gtnhplanner.read.OreLists;
 import com.gtnhplanner.read.crafting.CraftingReader;
 import com.gtnhplanner.read.furnace.SmeltingReader;
+import com.gtnhplanner.read.gt.GtIconOrder;
 import com.gtnhplanner.read.gt.GtRecipeReader;
 import com.gtnhplanner.read.postea.PosteaRenames;
 import gtneioreplugin.util.DimensionHelper;
@@ -190,8 +191,9 @@ public final class GtnhCalcOracleExporter {
                 // A map lists its recipes in the order they were added, which for some maps follows a hash order
                 // that is new every run (CropsNH's mutations, Forestry's combs). Sorted by first output, EU/t and
                 // time, then by the whole exported content, the export lists them the same way every run.
+                // Read (and so their icons rendered) in GtIconOrder, the order icon file names were first minted in.
                 List<SortedRecipe> sorted = new ArrayList<SortedRecipe>();
-                for (GTRecipe recipe : map.getAllRecipes()) {
+                for (GTRecipe recipe : GtIconOrder.sorted(map.getAllRecipes(), iconOrderKeys)) {
                     // Zero-duration recipes are real (the reader runs them in one tick); a
                     // disabled or negative one is not.
                     if (!recipe.mEnabled || recipe.mDuration < 0) {
@@ -2929,6 +2931,34 @@ public final class GtnhCalcOracleExporter {
      * else the first fluid's name. GregTech's own first output is in hash order for some recipes.
      */
     @SuppressWarnings("unchecked")
+    private final GtIconOrder.Keys<GTRecipe> iconOrderKeys = new GtIconOrder.Keys<GTRecipe>() {
+        @Override
+        public String firstOutput(GTRecipe recipe) {
+            if (recipe.mOutputs != null) {
+                for (ItemStack output : recipe.mOutputs) {
+                    String key = stackKey(output);
+                    if (key.length() > 0) return key;
+                }
+            }
+            if (recipe.mFluidOutputs != null) {
+                for (FluidStack output : recipe.mFluidOutputs) {
+                    if (output != null && output.getFluid() != null) return output.getFluid().getName();
+                }
+            }
+            return "";
+        }
+
+        @Override
+        public long eut(GTRecipe recipe) {
+            return recipe.mEUt;
+        }
+
+        @Override
+        public int duration(GTRecipe recipe) {
+            return recipe.mDuration;
+        }
+    };
+
     private static String firstOutputName(Map<String, Object> exported) {
         for (Object o : (List<Object>) exported.get("itemOutputs")) {
             Map<String, Object> stack = (Map<String, Object>) o;

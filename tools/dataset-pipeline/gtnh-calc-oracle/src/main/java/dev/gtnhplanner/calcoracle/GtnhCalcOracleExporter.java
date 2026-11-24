@@ -1035,12 +1035,8 @@ public final class GtnhCalcOracleExporter {
                     crops.add(cropCard(candidate));
                 }
             }
-            Collections.sort(crops, new java.util.Comparator<Map<String, Object>>() {
-                @Override
-                public int compare(Map<String, Object> left, Map<String, Object> right) {
-                    return cropOrderKey(left).compareTo(cropOrderKey(right));
-                }
-            });
+            // In the game's order, not sorted: IC2 lists its cards from a map keyed by crop name, the same every launch,
+            // and the first card's seed is the IC2 Crop map's face, an icon path plans store.
             domain.put("crops", crops);
             String status = crops.isEmpty() ? "partial" : "computed";
             String warning = crops.isEmpty() ? "IC2 crop API was present, but no crop-card collection method returned cards." : null;
@@ -1490,11 +1486,6 @@ public final class GtnhCalcOracleExporter {
 
     /** The seed IC2.random is reset to before each crop's drops are sampled. */
     private static final long CROP_SAMPLE_SEED = 0x67746e68L;
-
-    private String cropOrderKey(Map<String, Object> crop) {
-        return safeString(crop.get("owner")) + "|" + safeString(crop.get("id")) + "|" + safeString(crop.get("name"))
-            + "|" + safeString(crop.get("className"));
-    }
 
     private Map<String, Object> cropCard(Object crop) {
         Map<String, Object> exported = map();

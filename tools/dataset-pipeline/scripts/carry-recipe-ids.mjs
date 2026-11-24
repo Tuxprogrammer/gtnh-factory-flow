@@ -17,6 +17,12 @@
 // shows keeps its id and shows the member the previous dataset showed, so the
 // cell's id stays too. Ore dictionary cells are not matched this way.
 // Everything else (new or changed recipes) keeps its new id.
+// An item seen with several NBT tags (tools of each material, tool parts,
+// shulker boxes) has one catalog row, which shows the stack the export happens
+// to list first; plans store that row's icon path. The row keeps the previous
+// dataset's icon (with that stack's name, colour and NBT line) whenever a slot
+// of the new build still shows that icon file, so the export's order never
+// moves it.
 //
 // Usage: node carry-recipe-ids.mjs <previous recipes.json[.gz]> <new recipes.json> [report.json] [--renames=<file>]
 // Rewrites the new recipes.json in place. Run after normalize-oracle-export and
@@ -176,10 +182,18 @@ async function readPrevious(filePath, renames) {
   const byIdentity = new Map();
   const byShown = new Map();
   const all = new Map();
+  const icons = new Map();
   let inRecipes = false;
+  let inResources = false;
   for await (const line of lines(filePath)) {
     if (/^ {2}"[^"]+": /.test(line)) {
       inRecipes = line.startsWith('  "recipes": [');
+      inResources = line.startsWith('  "resources": [');
+      continue;
+    }
+    if (inResources) {
+      const row = recipeLine(line);
+      if (row?.iconPath) icons.set(`${row.kind}:${row.id}`, iconFile(row.iconPath));
       continue;
     }
     if (!inRecipes) {
@@ -218,7 +232,48 @@ async function readPrevious(filePath, renames) {
       byShown.get(shown.key).push({ id: recipe.id, shown: shown.shown });
     }
   }
-  return { byContent, byNbt, byRenamed, byIdentity, byShown, all };
+  return { byContent, byNbt, byRenamed, byIdentity, byShown, all, icons };
+}
+
+// An icon path's file name: the dataset version in front of it changes between builds, the file does not.
+function iconFile(iconPath) {
+  return String(iconPath).slice(String(iconPath).lastIndexOf("/") + 1);
+}
+
+// The catalog rows (by kind:id) whose icon is not the previous dataset's while a slot of the new build still shows
+// that icon file, each with that slot's stack fields.
+async function catalogIcons(previous) {
+  const rows = new Map();
+  const slots = new Map();
+  let section = "";
+  for await (const line of lines(nextPath)) {
+    if (/^ {2}"[^"]+": /.test(line)) {
+      section = line.slice(3, line.indexOf('"', 3));
+      continue;
+    }
+    const value = section === "resources" || section === "recipes" ? recipeLine(line) : undefined;
+    if (!value) {
+      continue;
+    }
+    if (section === "resources") {
+      rows.set(`${value.kind}:${value.id}`, iconFile(value.iconPath ?? ""));
+      continue;
+    }
+    for (const entry of [...(value.inputs ?? []), ...(value.outputs ?? [])]) {
+      const key = `${entry.kind}:${entry.id}`;
+      if (!slots.has(key) && entry.iconPath && previous.icons.get(key) === iconFile(entry.iconPath)) {
+        slots.set(key, entry);
+      }
+    }
+  }
+  const out = new Map();
+  for (const [key, entry] of slots) {
+    if (rows.has(key) && rows.get(key) !== iconFile(entry.iconPath)) {
+      const { displayName, iconPath, dominantColor, tooltip } = entry;
+      out.set(key, { displayName, iconPath, dominantColor, tooltip });
+    }
+  }
+  return out;
 }
 
 // The previous id each new recipe (by line) takes by exact content: first every recipe whose NBT matches too, then
@@ -337,6 +392,7 @@ async function main() {
   const previous = await readPrevious(previousPath, renames);
   const exactByLine = await exactMatches(previous);
   const { matches: byRename, catalog } = await renamedMatches(previous, renames, exactByLine);
+  const iconRows = await catalogIcons(previous);
   const keptByRename = [];
   const keptByShown = [];
   const used = new Set();
@@ -356,6 +412,14 @@ async function main() {
   // The catalog (sorted by kind:id) with each row a shown member needs and lacks put in its place.
   const flushResources = () => {
     if (!resourceRows) return;
+    for (const row of resourceRows) {
+      const stack = iconRows.get(row.key);
+      if (!stack) continue;
+      const kept = { ...JSON.parse(row.text), ...stack };
+      if (stack.tooltip === undefined) delete kept.tooltip;
+      if (stack.dominantColor === undefined) delete kept.dominantColor;
+      row.text = JSON.stringify(kept);
+    }
     for (const [key, row] of catalog) {
       if (resourceRows.some((existing) => existing.key === key)) continue;
       const at = resourceRows.findIndex((existing) => existing.key.localeCompare(key) > 0);
@@ -370,7 +434,7 @@ async function main() {
     if (/^ {2}"[^"]+": /.test(line)) {
       flushResources();
       inRecipes = line.startsWith('  "recipes": [');
-      if (line.startsWith('  "resources": [') && catalog.size > 0) resourceRows = [];
+      if (line.startsWith('  "resources": [') && (catalog.size > 0 || iconRows.size > 0)) resourceRows = [];
       buffered.push({ text: line });
       continue;
     }
@@ -455,11 +519,21 @@ async function main() {
     }
   }
   console.table({ ...counts, TOTAL: totals });
+  console.log(`catalog rows that keep the previous icon: ${iconRows.size}`);
   if (reportPath) {
     fs.writeFileSync(
       reportPath,
       `${JSON.stringify(
-        { previous: previousPath, counts, totals, keptByRename, keptByShown, keptByIdentity: changedIdentity, gone: goneIds },
+        {
+          previous: previousPath,
+          counts,
+          totals,
+          keptByRename,
+          keptByShown,
+          keptByIdentity: changedIdentity,
+          gone: goneIds,
+          catalogIconKept: [...iconRows.keys()],
+        },
         null,
         1,
       )}\n`,

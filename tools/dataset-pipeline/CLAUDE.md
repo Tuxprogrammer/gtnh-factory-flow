@@ -41,6 +41,12 @@ bee species and products, crop drops, soils and biomes, aspects, IC2 crop sample
 sorted or pinned; joke item names are pinned (`StableNames`); a Postea lambda handler is
 named without its launch address. NBT text is kept as the game prints it (plans store icon
 paths minted from it). A new rule that reads a game collection says what fixes its order.
+The icon renderer names every stack of one content after the first it sees, and two stacks
+of one content can print their NBT keys in different orders (a data orb's title and name),
+so GregTech recipes are read, and their icons rendered, in the served export's order
+(`GtIconOrder`: first output, EU/t, time, map order) and only then sorted for listing. IC2's
+crop cards keep the game's order (a map keyed by name, the same every launch): the first
+card's seed is the IC2 Crop map's face.
 
 `scripts/compare-datasets.mjs <A> <B>` compares two datasets and exits 1 on any difference
 outside this list of launch noise (`LAUNCH_NOISE` in the script, kept equal to it):
@@ -77,7 +83,9 @@ after normalize and before the indexes: same map (GT++'s `gtpp.recipe.*` read as
 prefix included); bees, crops, veins, mobs and underground fluids keep theirs by identity.
 Content keys ignore NBT, so recipes that differ only in a slot's NBT (crop seeds, tool
 materials, a bio culture) first take the id of the previous recipe with the same NBT; file
-order never decides which. The normalizer folds two registrations of one recipe into the
+order never decides which. An item seen with several NBT stacks has one catalog row showing
+whichever the export lists first; carry keeps the previous row's icon (and that stack's
+name and NBT line) while a slot still shows that icon file (`catalogIconKept` in the report). The normalizer folds two registrations of one recipe into the
 first, and that fold keys on NBT too: without it, which of such recipes survived followed
 the export's order.
 `local-2.9.0-rc-2` carries beta-2's ids this way (`~/rebuild-rc2.sh` in WSL; the report is

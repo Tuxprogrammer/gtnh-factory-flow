@@ -76,10 +76,10 @@ function dataset(
   return file;
 }
 
-function carry(previous, next) {
+function carry(previous, next, previousResources, nextResources) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "carry-"));
-  const before = dataset(dir, "before.json", previous);
-  const after = dataset(dir, "recipes.json", next);
+  const before = dataset(dir, "before.json", previous, previousResources);
+  const after = dataset(dir, "recipes.json", next, nextResources);
   const report = path.join(dir, "report.json");
   const run = spawnSync(process.execPath, [script, before, after, report], { encoding: "utf8" });
   expect(run.status, run.stderr).toBe(0);
@@ -158,6 +158,89 @@ describe("carry-recipe-ids", () => {
       ["Crop Breeder: dayflower", "oracle:old:x:dayflower"],
       ["Crop Breeder: waterLily", "oracle:old:x:waterlily"],
     ]);
+  });
+
+  it("keeps the catalog row's icon when the new build lists another NBT stack of the item first", () => {
+    // Wrenches of two materials: the previous build's catalog showed the Beryllium one, the new export lists the
+    // Adamantium one first. A shulker box only the new build sees with NBT keeps nothing it never had.
+    const wrench = (material, icon) => ({
+      kind: "item",
+      id: "gregtech:gt.metatool.01@120",
+      amount: 1,
+      displayName: "Wrench (LV)",
+      iconPath: `/datasets/gtnh/v1/textures/rendered/${icon}`,
+      dominantColor: material === "Beryllium" ? "#aaaaaa" : "#bbbbbb",
+      tooltip: [`NBT: {GT.ToolStats:{PrimaryMaterial:"${material}"}}`],
+    });
+    const recipe = (id, material, icon) => ({
+      id,
+      name: `Crafting: Wrench (${material})`,
+      kind: "crafting",
+      category: "crafting",
+      machineType: "Shaped Crafting",
+      inputs: [{ kind: "item", id: `gregtech:plate.${material}`, amount: 4 }],
+      outputs: [wrench(material, icon)],
+    });
+    const row = (material, icon) => {
+      const { amount, ...rest } = wrench(material, icon);
+      return rest;
+    };
+    const { resources, report } = carry(
+      [
+        recipe("oracle:old:b", "Beryllium", "wrench_lv-bddc9cf19ef5.png"),
+        recipe("oracle:old:a", "Adamantium", "wrench_lv-95e401a01329.png"),
+      ],
+      [
+        recipe("oracle:new:a", "Adamantium", "wrench_lv-95e401a01329.png"),
+        recipe("oracle:new:b", "Beryllium", "wrench_lv-bddc9cf19ef5.png"),
+      ],
+      [row("Beryllium", "wrench_lv-bddc9cf19ef5.png"), { id: "z:block", kind: "item" }],
+      [row("Adamantium", "wrench_lv-95e401a01329.png"), { id: "z:block", kind: "item" }],
+    );
+    expect(resources[0]).toEqual({
+      ...row("Beryllium", "wrench_lv-bddc9cf19ef5.png"),
+      iconPath: "/datasets/gtnh/v1/textures/rendered/wrench_lv-bddc9cf19ef5.png",
+    });
+    expect(resources[1]).toEqual({ id: "z:block", kind: "item" });
+    expect(report.catalogIconKept).toEqual(["item:gregtech:gt.metatool.01@120"]);
+  });
+
+  it("leaves a catalog row alone when no slot shows the previous icon any more", () => {
+    const stack = (icon) => ({
+      kind: "item",
+      id: "dreamcraft:quantumbread",
+      amount: 1,
+      iconPath: `/t/${icon}`,
+    });
+    const recipe = (id, icon) => ({
+      id,
+      name: "Crafting: Quantum Bread",
+      kind: "crafting",
+      category: "crafting",
+      machineType: "Shaped Crafting",
+      inputs: [{ kind: "item", id: "minecraft:bread", amount: 1 }],
+      outputs: [stack(icon)],
+    });
+    const { resources, report } = carry(
+      [recipe("oracle:old:q", "quantum_sliced_bread-a4363c428831.png")],
+      [recipe("oracle:new:q", "quantum_bread-a4363c428831.png")],
+      [
+        {
+          id: "dreamcraft:quantumbread",
+          kind: "item",
+          iconPath: "/t/quantum_sliced_bread-a4363c428831.png",
+        },
+      ],
+      [
+        {
+          id: "dreamcraft:quantumbread",
+          kind: "item",
+          iconPath: "/t/quantum_bread-a4363c428831.png",
+        },
+      ],
+    );
+    expect(resources[0].iconPath).toBe("/t/quantum_bread-a4363c428831.png");
+    expect(report.catalogIconKept).toEqual([]);
   });
 
   it("does not match a slot whose members changed", () => {

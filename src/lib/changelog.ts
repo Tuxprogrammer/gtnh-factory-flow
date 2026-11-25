@@ -40,6 +40,17 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "4.7.0-tux.13",
+    date: "2026-11-24",
+    headline: "Recipe data update for 2.9.1",
+    notes: [
+      "About 1,345 more recipes: recipes that differ only by an item's stored data are each listed.",
+      "Oven Glove, Quantum Bread and the QED items keep one name instead of a random joke name.",
+      "Bee products, centrifuge outputs and essentia aspects are listed in the same order every time the data is rebuilt.",
+      "Your plans keep their recipes and wires.",
+    ],
+  },
+  {
     version: "4.7.0-tux.12",
     date: "2026-11-23",
     headline: "The in-game assistant can read your plan",

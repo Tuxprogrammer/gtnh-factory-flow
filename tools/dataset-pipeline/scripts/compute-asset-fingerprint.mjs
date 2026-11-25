@@ -6,9 +6,11 @@ import { datasetTimestamp } from "./dataset-time.mjs";
 
 const instanceRoot = process.argv[2];
 const outputPath = process.argv[3];
+// Hashed in after the files: what else decides the export besides the instance (the exporter's source hash).
+const extra = process.argv[4] ?? "";
 
 if (!instanceRoot || !outputPath) {
-  throw new Error("Usage: compute-asset-fingerprint.mjs <gtnh-instance-root> <output.json>");
+  throw new Error("Usage: compute-asset-fingerprint.mjs <gtnh-instance-root> <output.json> [extra]");
 }
 
 const roots = ["mods", "resourcepacks", "config", "scripts"];
@@ -43,6 +45,10 @@ for (const file of files) {
   hash.update("\0");
   await hashFile(file.absolutePath, hash);
   hash.update("\0");
+}
+if (extra) {
+  hash.update("extra\0");
+  hash.update(extra);
 }
 
 const fingerprint = {

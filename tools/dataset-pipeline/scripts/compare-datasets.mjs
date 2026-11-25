@@ -25,8 +25,6 @@ export const LAUNCH_NOISE = {
   "eec-live-entity":
     "Extreme Entity Crusher mobs whose health or drops MobsInfo reads from a live entity (slime size, mandrake drops): the mob's numbers and its spawner's tooltip.",
   "icon-bytes": "Icons rendered from animated textures: same file name, other bytes.",
-  "instance-fingerprint":
-    "The asset fingerprint hashes the instance's files, which the game rewrites as it runs (its configs).",
   "icon-report-size":
     "The icon report names recipes.json's size in bytes, which follows the noise above.",
   "export-timing": "The oracle report's durationMillis: how long each reader took.",
@@ -294,11 +292,6 @@ export async function compareDatasets(dirA, dirB) {
       add(classifyResources(byId(x.resources), byId(y.resources), members));
       add(classifyResources(byId(x.resourceIndex), byId(y.resourceIndex), members));
     } else if (
-      /^textures\/[^/]+-asset-fingerprint\.json$/.test(file) &&
-      same(omit(readJson(fa), ["hash"]), omit(readJson(fb), ["hash"]))
-    )
-      (noise["instance-fingerprint"] ??= []).push(file);
-    else if (
       file === "textures/icon-report.json" &&
       same(omit(readJson(fa), ["reason"]), omit(readJson(fb), ["reason"]))
     )

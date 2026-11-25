@@ -93,6 +93,14 @@ oracle_patch_hash="$(
       -print0 | sort -z | xargs -0 sha256sum
   } | sha256sum | awk '{print $1}'
 )"
+# The asset fingerprint is taken here: the pack as unpacked, plus the exporter's own source hash. The game rewrites
+# its configs as it runs, so a hash taken after the run differs on every export of one pack, and the client icon
+# phase that is skipped on an unchanged fingerprint would never be skipped.
+echo "Computing GTNH asset fingerprint"
+fingerprint_name="${GTNH_EXPORT_PHASE:-runtime}-asset-fingerprint.json"
+asset_fingerprint_file="$GTNH_RAW_EXPORT_DIR/$fingerprint_name"
+node tools/dataset-pipeline/scripts/compute-asset-fingerprint.mjs "$instance_root" "$asset_fingerprint_file" "$oracle_patch_hash"
+
 oracle_cached_jar=""
 if [[ -n "$GTNH_ORACLE_BUILD_CACHE_DIR" ]]; then
   mkdir -p "$GTNH_ORACLE_BUILD_CACHE_DIR"
@@ -324,9 +332,8 @@ echo "Normalizing oracle export into dataset recipes.json"
 node tools/dataset-pipeline/scripts/normalize-oracle-export.mjs "$raw_oracle_json" "$GTNH_DATASET_OUT_DIR/recipes.json"
 echo "Applying texture icons to normalized dataset"
 node tools/dataset-pipeline/scripts/apply-texture-icons.mjs "$instance_root" "$GTNH_DATASET_OUT_DIR/recipes.json" "$GTNH_DATASET_OUT_DIR"
-echo "Computing GTNH asset fingerprint"
-fingerprint_name="${GTNH_EXPORT_PHASE:-runtime}-asset-fingerprint.json"
-node tools/dataset-pipeline/scripts/compute-asset-fingerprint.mjs "$instance_root" "$GTNH_DATASET_OUT_DIR/textures/$fingerprint_name"
+mkdir -p "$GTNH_DATASET_OUT_DIR/textures"
+cp "$asset_fingerprint_file" "$GTNH_DATASET_OUT_DIR/textures/$fingerprint_name"
 # The client icon phase only renders icons; the data phase owns the rate record.
 if [ "${GTNH_EXPORT_PHASE:-}" != "client" ]; then
   node tools/dataset-pipeline/scripts/write-game-rates.mjs "$instance_root" "$GTNH_DATASET_OUT_DIR"

@@ -66,8 +66,6 @@ outside this list of launch noise (`LAUNCH_NOISE` in the script, kept equal to i
 - `eec-live-entity`: EEC mobs whose health or drops MobsInfo reads from a live entity
   (slime size, mandrakes): numbers and the spawner's tooltip, never ids.
 - `icon-bytes`: icons drawn from animated textures (bytes only, same name).
-- `instance-fingerprint`: the asset fingerprint's hash of the instance, whose configs the
-  game rewrites as it runs.
 - `icon-report-size`, `export-timing`, `derived`: the icon report's byte count of
   recipes.json, the oracle report's durations, and the indexes and shards built from
   recipes.json when it differs by the noise above.

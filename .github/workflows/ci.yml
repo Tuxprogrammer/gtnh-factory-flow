@@ -66,7 +66,7 @@ jobs:
           node-version: 24
           cache: npm
       # The website's tests load the core, which Gradle and TeaVM build (tools/copy-core.mjs): JDK 25 only.
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: zulu
           java-version: 25
@@ -141,7 +141,7 @@ jobs:
       # Gradle itself runs on 25 (the last version listed is the default JAVA_HOME); the mod compiles
       # against 8 and tests on 17 and 21 through Gradle's toolchains, which find the JAVA_HOME_<n>_X64
       # variables this step sets. Zulu is the vendor the build's toolchains ask for.
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: zulu
           java-version: |
@@ -188,7 +188,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: zulu
           java-version: 25

@@ -28,6 +28,24 @@ describe("export side files under SOURCE_DATE_EPOCH", () => {
     expect(JSON.parse(fs.readFileSync(out, "utf8")).generatedAt).toBe(STAMP);
   });
 
+  it("the asset fingerprint follows the instance's files and the extra text, nothing else", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "fingerprint-"));
+    const instance = path.join(dir, "instance");
+    fs.mkdirSync(path.join(instance, "mods"), { recursive: true });
+    fs.writeFileSync(path.join(instance, "mods", "a.jar"), "jar");
+    const hashOf = (name, extra) => {
+      const out = path.join(dir, "out", name);
+      run("compute-asset-fingerprint.mjs", [instance, out, ...extra]);
+      return JSON.parse(fs.readFileSync(out, "utf8")).hash;
+    };
+    const first = hashOf("a.json", ["exporter-1"]);
+    expect(hashOf("b.json", ["exporter-1"])).toBe(first);
+    expect(hashOf("c.json", ["exporter-2"])).not.toBe(first);
+    fs.mkdirSync(path.join(instance, "config"));
+    fs.writeFileSync(path.join(instance, "config", "written-by-the-game.cfg"), "x");
+    expect(hashOf("d.json", ["exporter-1"])).not.toBe(first);
+  });
+
   it("the icon report of a skipped texture pass stamps the dataset's time", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "texture-icons-"));
     fs.mkdirSync(path.join(dir, "instance"));

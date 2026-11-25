@@ -48,7 +48,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
       # As the CI jvm job: Gradle runs on 25; the mod compiles against 8 and tests on 17 and 21 through toolchains.
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: zulu
           java-version: |

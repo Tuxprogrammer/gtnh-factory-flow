@@ -67,7 +67,7 @@ public final class PowerPicker extends ParentWidget<PowerPicker> implements Inte
     @Nullable
     private String tierFilter;
     private int scroll, contentH;
-    private final com.gtnhplanner.ui.theme.ScrollBar bar = new com.gtnhplanner.ui.theme.ScrollBar();
+    private final com.gtnhplanner.ui.theme.ScrollBar bar = new com.gtnhplanner.ui.theme.ScrollBar("nonrecipe", this);
 
     private enum Kind {
         CLOSE,

@@ -76,7 +76,7 @@ public final class LibraryView extends ParentWidget<LibraryView> implements Inte
     @Nullable
     private String listedFor = com.gtnhplanner.library.Account.username();
     private int scroll, contentH;
-    private final com.gtnhplanner.ui.theme.ScrollBar bar = new com.gtnhplanner.ui.theme.ScrollBar();
+    private final com.gtnhplanner.ui.theme.ScrollBar bar = new com.gtnhplanner.ui.theme.ScrollBar("library", this);
     private long lastClick;
     @Nullable
     private String lastClickId;

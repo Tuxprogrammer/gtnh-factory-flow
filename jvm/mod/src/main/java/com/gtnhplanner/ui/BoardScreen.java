@@ -1072,6 +1072,8 @@ public final class BoardScreen extends ModularScreen {
     public boolean onMouseRelease(final int mouseButton) {
         if (mouseButton == 2) canvas.endMiddlePan();
         final boolean taken = super.onMouseRelease(mouseButton);
+        // No panel keeps holding a button that is up, or its next press leaves the drags with an old widget.
+        PanelHolds.released(getPanelManager().getOpenPanels(), mouseButton);
         // A task card or checklist line let go off its view: it is put down all the same.
         library.tasks.screenReleased(mouseButton);
         com.gtnhplanner.ui.task.TaskPanel.screenReleased(mouseButton);

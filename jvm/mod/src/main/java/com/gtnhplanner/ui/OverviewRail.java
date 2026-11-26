@@ -29,8 +29,10 @@ import com.gtnhplanner.ui.canvas.BoardCanvas;
 import com.gtnhplanner.ui.card.CardModel;
 import com.gtnhplanner.ui.drawer.DrawerCard;
 import com.gtnhplanner.ui.drawer.DrawerModel;
+import com.gtnhplanner.ui.theme.BarDrag;
 import com.gtnhplanner.ui.theme.Fmt;
 import com.gtnhplanner.ui.theme.Hyb;
+import com.gtnhplanner.ui.theme.Thumb;
 
 /**
  * The overview, Factory Flow's resources column moved to the board's left edge: what the plan needs from outside
@@ -385,16 +387,14 @@ final class OverviewRail extends ParentWidget<OverviewRail>
             if (scroll > max) scroll = Math.max(max, scroll - Math.max(1, (scroll - max) / 4));
             else if (scroll < 0) scroll = Math.min(0, scroll + Math.max(1, -scroll / 4));
         }
-        scrollMax = max;
+        bar.layout(listY, visible, contentH);
+        scroll = BarDrag.follow(bar, localMouseY(), scroll);
         if (max > 0) {
-            final int thumb = Math.max(14, visible * visible / contentH);
-            barThumb = thumb;
-            barTrack = visible - thumb;
-            final int top = listY + barTrack * Math.max(0, Math.min(max, scroll)) / max;
-            final boolean hot = draggingBar || hover != null && hover.kind() == Kind.SCROLLBAR;
+            final boolean hot = bar.dragging() || hover != null && hover.kind() == Kind.SCROLLBAR;
             if (hot) Hyb.rect(w - BAR_W - 1, listY, BAR_W, visible, 0x40000000);
             final int[] tx = thumbX(w);
-            Hyb.rect(tx[0], top, tx[1] - tx[0], thumb, hot ? Hyb.INK : 0xFF6A6C74);
+            Hyb.rect(tx[0], bar.at(scroll), tx[1] - tx[0], bar.size(), hot ? Hyb.INK : 0xFF6A6C74);
+            com.gtnhplanner.dev.DevBars.drawn("overview", this, bar, false, tx[0], tx[1] - tx[0], scroll);
         }
         // Keep what is on screen of the list; the heading's fold key stays as it is.
         final List<Hit> moved = new ArrayList<>(hits.size());
@@ -1274,12 +1274,9 @@ final class OverviewRail extends ParentWidget<OverviewRail>
 
     // region Mouse
 
-    /** The scroll bar's width, and its state as last drawn: the thumb's height, how far it travels, the most scroll. */
+    /** The scroll bar's width, and its thumb as last drawn (and while it is dragged, where it was taken). */
     private static final int BAR_W = 5;
-    private int barThumb, barTrack, scrollMax;
-    /** Dragging the thumb, and where on it it was taken. */
-    private boolean draggingBar;
-    private int barGrab;
+    private final Thumb bar = new Thumb(14);
 
     /** Where the scroll bar starts taking presses, for an overview {@code w} wide: from here to its edge. */
     static int scrollBarLeft(final int w) {
@@ -1291,16 +1288,9 @@ final class OverviewRail extends ParentWidget<OverviewRail>
         return new int[] { w - BAR_W, w - 2 };
     }
 
-    /** Scrolls so the thumb's top is at {@code thumbTop} (rail-local). */
-    private void scrollBarTo(final int thumbTop) {
-        if (barTrack <= 0) return;
-        final int at = Math.max(0, Math.min(barTrack, thumbTop - LIST_Y));
-        scroll = Math.round((float) at * scrollMax / barTrack);
-    }
-
     @Override
     public void onMouseDrag(final int mouseButton, final long timeSinceClick) {
-        if (draggingBar) scrollBarTo(localMouseY() - barGrab);
+        if (bar.dragging()) scroll = bar.to(localMouseY());
         final SpareBar edge = dragging();
         if (edge != null) edge.drag(session, localX(), SPARE_X, sliderW(getArea().width));
     }
@@ -1312,9 +1302,7 @@ final class OverviewRail extends ParentWidget<OverviewRail>
             edge.release(session);
             return true;
         }
-        if (!draggingBar) return false;
-        draggingBar = false;
-        return true;
+        return bar.release();
     }
 
     private int localMouseY() {
@@ -1330,10 +1318,7 @@ final class OverviewRail extends ParentWidget<OverviewRail>
         if (hit.kind() == Kind.SCROLLBAR) {
             if (mouseButton != 0) return Result.SUCCESS;
             // On the thumb it is taken where it was grabbed; on the track the thumb jumps to centre on the mouse.
-            final int y = localMouseY(), top = LIST_Y + (scrollMax <= 0 ? 0 : barTrack * scroll / scrollMax);
-            barGrab = y >= top && y < top + barThumb ? y - top : barThumb / 2;
-            draggingBar = true;
-            scrollBarTo(y - barGrab);
+            scroll = bar.press(localMouseY(), scroll);
             return Result.SUCCESS;
         }
         // The middle button goes to what a line is about, anywhere in the overview (on a rule or a rate it clears it).

@@ -35,8 +35,10 @@ import com.gtnhplanner.ui.popup.TextArea;
 import com.gtnhplanner.ui.popup.TextPopup;
 import com.gtnhplanner.ui.popup.Tip;
 import com.gtnhplanner.ui.sound.Sfx;
+import com.gtnhplanner.ui.theme.BarDrag;
 import com.gtnhplanner.ui.theme.Hyb;
 import com.gtnhplanner.ui.theme.Icons;
+import com.gtnhplanner.ui.theme.Thumb;
 
 /**
  * A task, open in a box over its board, laid out as an issue is in Jira: a wide main column (the title, big and written
@@ -583,6 +585,8 @@ public final class TaskPanel extends ParentWidget<TaskPanel> implements Interact
 
         private int scroll, fieldsAt = Integer.MIN_VALUE;
         private int pageH;
+        /** The bar down the window's right edge: drag its thumb, or click the track to jump. */
+        private final Thumb bar = new Thumb(12);
         private final List<Hit> pageHits = new ArrayList<>(), lastPageHits = new ArrayList<>();
         /** Where the title and notes boxes go on the page, and how tall, as last laid out. */
         private int titleY, titleH, notesY, notesH;
@@ -660,10 +664,12 @@ public final class TaskPanel extends ParentWidget<TaskPanel> implements Interact
             }
             Stencil.remove();
             final int max = maxScroll();
+            bar.layout(2, windowH() - 4, windowH() - 4 + max);
+            scroll = bar.clamp(BarDrag.follow(bar, windowY(), scroll));
             if (max > 0) {
                 // A thin bar down the right edge: how far down the page the window is.
-                final int track = windowH() - 4, bar = Math.max(12, track * track / (track + max));
-                Hyb.rect(boxW - 4, 2 + (track - bar) * scroll / max, 2, bar, 0xFF4A4C54);
+                Hyb.rect(boxW - 4, bar.at(scroll), 2, bar.size(), bar.dragging() || onBar() ? Hyb.INK : 0xFF6A6C74);
+                com.gtnhplanner.dev.DevBars.drawn("task box", this, bar, false, boxW - 4, 2, scroll);
             }
             // What the mouse rests on explains itself, over everything in the box.
             if (getScreen().getPanelManager()
@@ -683,6 +689,16 @@ public final class TaskPanel extends ParentWidget<TaskPanel> implements Interact
 
         private int maxScroll() {
             return Math.max(0, pageH - windowH());
+        }
+
+        /** The mouse's y in the window, not scrolled. */
+        private int windowY() {
+            return getContext().getAbsMouseY() - getArea().y;
+        }
+
+        /** Whether the mouse is on the bar's strip down the window's right edge, while the page scrolls. */
+        private boolean onBar() {
+            return maxScroll() > 0 && mouseIn() && mouseX() >= boxW - 7;
         }
 
         @Nullable
@@ -1478,6 +1494,10 @@ public final class TaskPanel extends ParentWidget<TaskPanel> implements Interact
         @Override
         public Result onMousePressed(final int mouseButton) {
             if (BoardScreen.textFocused(getScreen())) getContext().removeFocus();
+            if (mouseButton == 0 && onBar()) {
+                scroll = bar.clamp(bar.press(windowY(), scroll));
+                return Result.SUCCESS;
+            }
             final Hit hit = hover();
             final Tasks.Task t = task();
             if (hit == null || t == null) return Result.ACCEPT;
@@ -1546,6 +1566,7 @@ public final class TaskPanel extends ParentWidget<TaskPanel> implements Interact
 
         @Override
         public void onMouseDrag(final int mouseButton, final long timeSinceClick) {
+            if (bar.dragging()) scroll = bar.clamp(bar.to(windowY()));
             lift();
         }
 
@@ -1567,6 +1588,7 @@ public final class TaskPanel extends ParentWidget<TaskPanel> implements Interact
 
         @Override
         public boolean onMouseRelease(final int mouseButton) {
+            if (bar.release()) return true;
             if (mouseButton != 0 || pressed == null) return false;
             release();
             return true;

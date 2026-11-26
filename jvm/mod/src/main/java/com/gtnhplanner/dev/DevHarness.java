@@ -343,6 +343,8 @@ public final class DevHarness {
                 return screenshot(q.getOrDefault("name", "harness-" + System.currentTimeMillis() + ".png"), q);
             case "/widgets":
                 return onClient(this::widgets);
+            case "/scrollbars":
+                return onClient(DevHarness::scrollbars);
             case "/move":
                 return input(List.of(() -> moveTo(intArg(q, "x"), intArg(q, "y"))));
             case "/click":
@@ -1489,7 +1491,9 @@ public final class DevHarness {
                         + " anyHovered="
                         + p.isAnyHovered()
                         + " valid="
-                        + p.isValid());
+                        + p.isValid()
+                        + " mouse="
+                        + mouseInput(p));
             }
             m.put("panels", panels);
             m.put(
@@ -1611,6 +1615,73 @@ public final class DevHarness {
             y,
             com.gtnhplanner.ui.PlannerScale.toGame(a.x() + a.w()) - x,
             com.gtnhplanner.ui.PlannerScale.toGame(a.y() + a.h()) - y);
+    }
+
+    /**
+     * Every scroll bar drawn in the last second, in screen pixels from the window's top left (what OS-level mouse input
+     * takes): its track, its thumb, the scroll and its most, and whether the thumb is held. For
+     * {@code tools/dev/scrollbar-drag.sh}.
+     */
+    private static Object scrollbars() {
+        final Minecraft mc = Minecraft.getMinecraft();
+        final int k = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight).getScaleFactor();
+        final boolean planner = com.gtnhplanner.ui.Planner.isPlanner(mc.currentScreen);
+        final long now = System.currentTimeMillis();
+        final Map<String, Object> out = new LinkedHashMap<>();
+        for (final Map.Entry<String, DevBars.Bar> e : new java.util.TreeMap<>(DevBars.BARS).entrySet()) {
+            final DevBars.Bar b = e.getValue();
+            if (now - b.at() > 1000) continue;
+            final com.gtnhplanner.ui.theme.Thumb t = b.thumb();
+            final Area a = b.widget()
+                .getArea();
+            final int along0 = (b.across() ? a.x() : a.y()), cross0 = (b.across() ? a.y() : a.x());
+            final java.util.function.IntUnaryOperator px = v -> (planner ? com.gtnhplanner.ui.PlannerScale.toGame(v)
+                : v) * k;
+            final int c0 = px.applyAsInt(cross0 + b.cross()), c1 = px.applyAsInt(cross0 + b.cross() + b.crossW());
+            final int t0 = px.applyAsInt(along0 + t.start()), t1 = px.applyAsInt(along0 + t.start() + t.track());
+            final int h0 = px.applyAsInt(along0 + t.at(b.scroll())),
+                h1 = px.applyAsInt(along0 + t.at(b.scroll()) + t.size());
+            final Map<String, Object> m = new LinkedHashMap<>();
+            m.put("axis", b.across() ? "x" : "y");
+            // Screen pixels to one of the bar's own: how far apart two positions can be by rounding alone.
+            m.put("scale", (px.applyAsInt(along0 + 1000) - px.applyAsInt(along0)) / 1000.0);
+            m.put("scroll", b.scroll());
+            m.put("max", t.max());
+            m.put("dragging", t.dragging());
+            m.put("cross", List.of(c0, c1));
+            m.put("track", List.of(t0, t1));
+            m.put("thumb", List.of(h0, h1));
+            out.put(e.getKey(), m);
+        }
+        return out;
+    }
+
+    /**
+     * A panel's mouse state as ModularUI keeps it: whether it thinks a button is held, and the widget its drags go to.
+     * A press only takes the drags while nothing is held, so a stale hold sends every drag to an old widget.
+     */
+    private static String mouseInput(final ModularPanel p) {
+        try {
+            final java.lang.reflect.Field f = ModularPanel.class.getDeclaredField("mouse");
+            f.setAccessible(true);
+            final Object in = f.get(p);
+            final Class<?> c = in.getClass();
+            final java.lang.reflect.Field held = c.getDeclaredField("held"), last = c.getDeclaredField("lastPressed"),
+                button = c.getDeclaredField("lastButton");
+            held.setAccessible(true);
+            last.setAccessible(true);
+            button.setAccessible(true);
+            final LocatedWidget lw = (LocatedWidget) last.get(in);
+            final Object e = lw == null ? null : lw.getElement();
+            return "held:" + held.getBoolean(in)
+                + ",button:"
+                + button.getInt(in)
+                + ",last:"
+                + (e instanceof IWidget w ? w.getClass()
+                    .getSimpleName() : String.valueOf(e));
+        } catch (final ReflectiveOperationException | RuntimeException ex) {
+            return "?" + ex;
+        }
     }
 
     private static String describe(final IWidget widget) {

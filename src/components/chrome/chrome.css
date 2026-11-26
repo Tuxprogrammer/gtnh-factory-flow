@@ -363,7 +363,7 @@
   flex-direction: column;
   min-width: 100px;
   width: max-content;
-  max-width: 360px;
+  max-width: min(360px, var(--box-max-w, 360px));
   padding: 0 4px 4px 4px;
   background: var(--mc-menu);
   box-shadow:
@@ -461,7 +461,7 @@
 /* ---- The controls list ---------------------------------------------------- */
 
 .mc-controls {
-  max-width: none;
+  max-width: var(--box-max-w);
   width: 420px;
   padding-bottom: 6px;
 }

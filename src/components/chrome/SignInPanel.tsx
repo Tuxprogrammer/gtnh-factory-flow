@@ -10,6 +10,7 @@ import { useCommunityUser } from "@/components/community/auth";
 import { useDropdownDismiss } from "@/lib/hooks/use-dropdown-dismiss";
 import { getUiScale } from "@/lib/ui-scale";
 import { CHROME_SCREEN_K, type ChromeAnchor } from "./ChromeMenu";
+import { BOX_FIT_GUI, useSlideIntoWindow } from "@/components/box-fit";
 
 /** The sign-in form, hung from the account key: sign in, or make an account (a name and a password, no email). */
 export function SignInPanel({ anchor, onClose }: { anchor: ChromeAnchor; onClose: () => void }) {
@@ -24,6 +25,8 @@ export function SignInPanel({ anchor, onClose }: { anchor: ChromeAnchor; onClose
   // The panel wears the bar's extra zoom (chrome.css .mm, CHROME_SCREEN_K): its box is in those pixels.
   const scale = getUiScale() * CHROME_SCREEN_K;
   const vw = window.innerWidth / scale;
+  // Hung from the key's right edge; on a narrow window it slides right until its left edge is on screen.
+  const slide = useSlideIntoWindow(ref, scale);
 
   const submit = async () => {
     if (busy || username.trim().length < 3 || password.length < 6) return;
@@ -46,11 +49,16 @@ export function SignInPanel({ anchor, onClose }: { anchor: ChromeAnchor; onClose
       ref={ref}
       role="dialog"
       aria-label="Sign in"
-      className="mm ml-signpanel ui-zoom"
-      style={{ top: anchor.bottom / scale + 2, right: Math.max(2, vw - (anchor.right ?? anchor.left) / scale) }}
+      className={`mm ml-signpanel ${BOX_FIT_GUI} ui-zoom`}
+      style={{
+        top: anchor.bottom / scale + 2,
+        right: Math.max(2, vw - (anchor.right ?? anchor.left) / scale) - slide,
+        maxHeight: (window.innerHeight - anchor.bottom) / scale - 8,
+      }}
       onPointerDown={(event) => event.stopPropagation()}
     >
       <form
+        className="box-body"
         onSubmit={(event) => {
           event.preventDefault();
           void submit();

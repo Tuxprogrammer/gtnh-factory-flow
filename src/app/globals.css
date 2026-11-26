@@ -52,6 +52,29 @@
   zoom: var(--ui-scale);
 }
 
+/* Every box (dialog, menu, popover, panel, tooltip) fits the window: no box runs off screen, whatever it holds
+   (src/components/CLAUDE.md, Boxes). `--box-zoom` is the zoom the box is drawn at; viewport units are not divided
+   by zoom, so the room is the window over it, less a margin each side. `--box-max-w` / `--box-max-h` are that room
+   for a box whose own rule sets a width or a height of its own. What does not fit scrolls inside the box
+   (`.box-body`); its title and its keys stay put. */
+.box-fit {
+  --box-zoom: var(--ui-scale);
+  --box-max-w: calc(100vw / var(--box-zoom) - 16px);
+  --box-max-h: calc(100dvh / var(--box-zoom) - 16px);
+  max-width: var(--box-max-w);
+  max-height: var(--box-max-h);
+}
+/* The mod-skinned boxes wear the game GUI's 2 / 1.17 on top of the interface's zoom (chrome.css). */
+.box-fit.box-gui {
+  --box-zoom: calc(var(--ui-scale) * 1.7094);
+}
+.box-body {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 /* THE BOARD IS ITS OWN COMPOSITOR LAYER. A pan moves a composited transform,
    and Chrome re-tests everything painted after it for overlap, out to the
    nearest COMPOSITED clip; without one that is the whole page, and the side

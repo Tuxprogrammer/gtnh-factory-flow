@@ -233,7 +233,7 @@ export function ModSettings({ onClose }: { onClose: () => void }) {
       }}
     >
       <div
-        className="ms mx"
+        className="ms mx box-fit box-gui"
         role="dialog"
         aria-modal="true"
         aria-label="Settings"

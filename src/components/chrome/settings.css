@@ -39,8 +39,9 @@
   display: flex;
   flex-direction: column;
   width: 640px;
-  max-width: calc(100vw / var(--ui-scale, 1) - 16px);
+  max-width: var(--box-max-w);
   height: 262px;
+  max-height: var(--box-max-h);
   background: var(--ms-surface);
   box-shadow:
     inset 0 0 0 1px var(--ms-edge),
@@ -111,6 +112,8 @@
 .ms-row {
   position: relative;
   display: flex;
+  /* A row wider than a narrow window's box puts its control under its label rather than past the edge. */
+  flex-wrap: wrap;
   align-items: center;
   min-height: 22px;
   padding: 3px 10px;
@@ -178,8 +181,9 @@
   background: var(--mc-ink);
 }
 .ms-choices {
-  flex: none;
+  flex: 0 1 auto;
   display: inline-flex;
+  flex-wrap: wrap;
   gap: 1px;
   padding: 1px;
   background: var(--ms-edge);

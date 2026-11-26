@@ -157,7 +157,7 @@ export function PlanShareDialog({ onClose }: { onClose: () => void }) {
         aria-modal="true"
         aria-label="Plan together"
         data-plan-share-dialog
-        className="pn pn-skin"
+        className="pn pn-skin box-fit"
       >
         <div className="pn-title">
           <span>Plan together</span>

@@ -42,7 +42,7 @@ export function PastePlanDialog({ onClose }: { onClose: () => void }) {
         }
       }}
     >
-      <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Paste a plan" className="pn">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Paste a plan" className="pn box-fit">
         <div className="pn-title">
           <span>Paste a plan</span>
           <button type="button" onClick={onClose} aria-label="Close" className="pn-x" />

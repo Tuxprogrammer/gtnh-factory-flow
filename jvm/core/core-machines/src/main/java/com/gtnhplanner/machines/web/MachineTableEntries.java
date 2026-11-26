@@ -35,7 +35,7 @@ final class MachineTableEntries {
         .quantiseDuration(MachineTableEntries::quantiseSteamMultiblockDuration)
         .controls(STEAM_PRESSURE_CONTROL)
         // The Steam Blender's handler inherited the mixer map's scraped pipe knob; its pipes are the build's.
-        .hidesControls(PIPE);
+        .hidesControls(PIPE, ITEM_PIPE);
 
     /**
      * steam-multiblock.ts quantiseSteamMultiblockDuration: the steam multiblocks' processing logic builds
@@ -314,14 +314,18 @@ final class MachineTableEntries {
                 .speed(c -> row(SAWBLADES, c.tier(SAWBLADE)).speed())
                 .power(c -> row(SAWBLADES, c.tier(SAWBLADE)).power())
                 .parallels(c -> row(SAWBLADES, c.tier(SAWBLADE)).parallels() * c.voltageTier)
-                .controls(SAWBLADE_CONTROL));
+                .controls(SAWBLADE_CONTROL)
+                // The dataset's own sawblade knob: the same blade, read by nothing.
+                .hidesControls("cuttingSawblade"));
         machines.put(
             "Magnetic Flux Exhibitor",
             machine().overclock(normal())
                 .speed(c -> row(ELECTROMAGNETS, c.tier(ELECTROMAGNET)).speed())
                 .power(c -> row(ELECTROMAGNETS, c.tier(ELECTROMAGNET)).power())
                 .parallels(c -> row(ELECTROMAGNETS, c.tier(ELECTROMAGNET)).parallels())
-                .controls(ELECTROMAGNET_CONTROL));
+                .controls(ELECTROMAGNET_CONTROL)
+                // The dataset's own electromagnet knob: the same magnet, read by nothing.
+                .hidesControls("fluxElectromagnet"));
         machines.put(
             "Industrial Autoclave",
             machine().overclock(normal())
@@ -334,7 +338,9 @@ final class MachineTableEntries {
             "Electric Implosion Compressor",
             machine().overclock(normal())
                 .parallels(c -> ExactMath.pow(4, c.tier(CONTAINMENT)))
-                .controls(CONTAINMENT_CONTROL));
+                .controls(CONTAINMENT_CONTROL)
+                // The dataset's own containment block knob: the same blocks, read by nothing.
+                .hidesControls("parallel-containment-block-tier"));
         machines.put(
             "Dissection Apparatus",
             machine().overclock(normal())
@@ -436,6 +442,8 @@ final class MachineTableEntries {
                 .power(1)
                 .parallels(c -> 16 * ExactMath.pow(2, c.tier("preciseCasing")))
                 .controls(PreciseAssembler.NORMAL_CASING, PreciseAssembler.MACHINE_CASING)
+                // The dataset's own unit casing knob: the same casings, read by nothing.
+                .hidesControls("parallel-precise-casing-tier")
                 .inputVoltageTierLimit(MachineTableEntries::prassInputVoltageLimit)
                 .note(
                     "Normal Assembler mode. Requires EV+ glass. Unit casings set parallels; machine casings limit "
@@ -447,6 +455,8 @@ final class MachineTableEntries {
                 .power(1)
                 .parallels(1)
                 .controls(PreciseAssembler.PRECISE_CASING, PreciseAssembler.MACHINE_CASING)
+                // The dataset's own unit casing knob: the same casings, read by nothing.
+                .hidesControls("parallel-precise-casing-tier")
                 .inputVoltageTierLimit(MachineTableEntries::prassInputVoltageLimit)
                 .recipeGate(
                     c -> (c.recipeSpecialValue != null ? c.recipeSpecialValue : 0) > c.tier("preciseCasing") + 1

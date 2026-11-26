@@ -166,8 +166,15 @@ final class SpareBar {
                 Hyb.rect(mini, y + 2, fill, 1, Hyb.mix(ink, CardPaint.SURFACE, 0.7f));
             }
             rects.add(new Rect(Kind.FILL, i, mini - 2, y, right + 1, y + ROW));
-            if (devOwner != null) com.gtnhplanner.dev.DevBars
-                .slider(devName + ":" + i, devOwner, mini, mini + barW, y + ROW / 2f, share, 50, held(line) && dragRow == i);
+            if (devOwner != null) com.gtnhplanner.dev.DevBars.slider(
+                devName + ":" + i,
+                devOwner,
+                mini,
+                mini + barW,
+                y + ROW / 2f,
+                share,
+                50,
+                held(line) && dragRow == i);
         }
         rects.add(new Rect(Kind.ROW, i, x - 2, y, right + 1, y + ROW));
     }

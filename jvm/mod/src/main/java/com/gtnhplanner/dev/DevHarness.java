@@ -1676,7 +1676,9 @@ public final class DevHarness {
             final Area a = s.widget()
                 .getArea();
             final Map<String, Object> m = new LinkedHashMap<>();
-            m.put("x", List.of(Math.round(px.applyAsDouble(a.x() + s.x0())), Math.round(px.applyAsDouble(a.x() + s.x1()))));
+            m.put(
+                "x",
+                List.of(Math.round(px.applyAsDouble(a.x() + s.x0())), Math.round(px.applyAsDouble(a.x() + s.x1()))));
             m.put("y", Math.round(px.applyAsDouble(a.y() + s.y())));
             m.put("value", s.value());
             m.put("steps", s.steps());

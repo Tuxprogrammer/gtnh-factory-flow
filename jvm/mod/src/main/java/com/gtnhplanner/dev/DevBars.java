@@ -24,8 +24,7 @@ public final class DevBars {
      * A slider in its widget's pixels: the mouse's {@code x0} to {@code x1} span the values from 0 to 1 in
      * {@code steps}; {@code y} its middle; {@code value} where it stands, {@code held} whether it is in hand.
      */
-    public record Slider(IWidget widget, float x0, float x1, float y, double value, int steps, boolean held,
-        long at) {}
+    public record Slider(IWidget widget, float x0, float x1, float y, double value, int steps, boolean held, long at) {}
 
     static final Map<String, Slider> SLIDERS = new ConcurrentHashMap<>();
 

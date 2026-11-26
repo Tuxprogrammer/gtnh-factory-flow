@@ -25,7 +25,8 @@ final class UndoKeys {
     private static boolean olderNei;
 
     /**
-     * Which act the key just pressed ({@code key}, with the modifiers held) asks for, from NEI's bindings. The NEI of 2.9.0 beta-1 has no
+     * Which act the key just pressed ({@code key}, with the modifiers held) asks for, from NEI's bindings. The NEI of
+     * 2.9.0 beta-1 has no
      * {@code KeyManager.isHashDown(name, modifiers)}: there the binds are read with NEI's own whole-bind check, as the
      * board always read them.
      */

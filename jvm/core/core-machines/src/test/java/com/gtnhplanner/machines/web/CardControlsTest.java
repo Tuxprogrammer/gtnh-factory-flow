@@ -124,17 +124,9 @@ class CardControlsTest {
         assertEquals(KNOWN_UNREAD, unread, "dataset settings a table machine's card shows and no formula reads");
     }
 
-    /** Measured on handlers.json, not yet fixed. */
-    private static final Set<String> KNOWN_DOUBLED = Set.of(
-        "Industrial Cutting Factory: cuttingSawblade + sawblade",
-        "Magnetic Flux Exhibitor: fluxElectromagnet + electromagnet");
+    /** None: the machine table hides every dataset setting it replaces ({@code hidesControls}). */
+    private static final Set<String> KNOWN_DOUBLED = Set.of();
 
-    /** Measured on handlers.json, not yet fixed. */
-    private static final Set<String> KNOWN_UNREAD = Set.of(
-        "Electric Implosion Compressor: parallel-containment-block-tier",
-        "Industrial Cutting Factory: cuttingSawblade",
-        "Magnetic Flux Exhibitor: fluxElectromagnet",
-        "Precise Assembler: parallel-precise-casing-tier",
-        "Precise Auto-Assembler MT-3662: parallel-precise-casing-tier",
-        "Steam Blender: itemPipeCasing");
+    /** None. */
+    private static final Set<String> KNOWN_UNREAD = Set.of();
 }

@@ -60,6 +60,7 @@ class SavedRenamesTest {
     private static final String B = "00000000-0000-4000-8000-00000000000b";
     private static final String C = "00000000-0000-4000-8000-00000000000c";
     private static final String D = "00000000-0000-4000-8000-00000000000d";
+    private static final String E = "00000000-0000-4000-8000-00000000000e";
 
     /** The recipes the stood-in game has, by handler, ingredients and result. */
     private final Set<String> recipes = new HashSet<>();
@@ -205,6 +206,62 @@ class SavedRenamesTest {
         assertEquals(Set.of("item:" + PLANTBALL + ":0"), graph.spareShares.keySet());
         // The bio chaff is named by no card found as saved: it follows the rename.
         assertEquals("item:" + META + ":32021", drawer(graph, "10000000-0000-4000-8000-000000000002").getResourceKey());
+    }
+
+    @Test
+    void aCustomRateCardOnARenamedItemHoldsTheNewOne() {
+        final JsonObject g = plan(false);
+        final JsonObject rate = new JsonParser()
+            .parse(
+                "{\"id\":\"" + E
+                    + "\",\"x\":0,\"y\":0,\"machine\":\"Custom rate\",\"power\":\"custom-rate\","
+                    + "\"powerSettings\":{\"mode\":\"supply\",\"rate\":\"2\",\"resource\":\"item:"
+                    + PLANTBALL
+                    + ":0\"},\"handlerRecipeIndex\":0,\"extractorIndex\":0,\"machineCount\":1,"
+                    + "\"inputs\":[],\"outputs\":[]}")
+            .getAsJsonObject();
+        g.getAsJsonArray("nodes")
+            .add(rate);
+        g.getAsJsonArray("edges")
+            .add(edge("20000000-0000-4000-8000-000000000003", E, B));
+        // A power card's ports are built from the game's items: what each build was asked to hold is recorded instead.
+        final List<String> built = new ArrayList<>();
+        com.gtnhplanner.core.model.RecipeSource.install(new com.gtnhplanner.core.model.RecipeSource() {
+
+            @Override
+            public boolean readRecipe(final Node card) {
+                return NeiRecipes.INSTANCE.readRecipe(card);
+            }
+
+            @Override
+            public void readPower(final Node card) {
+                built.add(com.gtnhplanner.power.CustomRate.resource(card));
+            }
+
+            @Override
+            public com.gtnhplanner.machines.web.Web.Recipe record(final Node card) {
+                return NeiRecipes.INSTANCE.record(card);
+            }
+        });
+        try {
+            final Graph graph = only(Serializer.decodePlan(Serializer.GSON.toJson(save(g))));
+            final Node card = graph.nodes.get(id(E));
+            assertEquals("item:" + META + ":32020", com.gtnhplanner.power.CustomRate.resource(card));
+            assertEquals("item:" + META + ":32020", built.getLast(), "its ports are made again on the new item");
+        } finally {
+            com.gtnhplanner.core.model.RecipeSource.install(NeiRecipes.INSTANCE);
+        }
+    }
+
+    @Test
+    void aPatternsRememberedProductsFindTheRenamedOne() {
+        final List<String> remembered = SavedRenames.withRenamed(List.of("item:" + PLANTBALL + ":0", "fluid:water"));
+        assertEquals(List.of("item:" + PLANTBALL + ":0", "fluid:water", "item:" + META + ":32020"), remembered);
+        assertEquals(
+            List.of("item:" + META + ":32020"),
+            com.gtnhplanner.pattern.PatternOutputs
+                .chosen(List.of("item:dreamcraft:MaceratedPlantmass:0", "item:" + META + ":32020"), remembered),
+            "the product the player chose stays chosen, under its new id");
     }
 
     @Test

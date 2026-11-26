@@ -19,6 +19,9 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.gtnhplanner.data.flowchart.Drawer;
 import com.gtnhplanner.data.flowchart.Graph;
+import com.gtnhplanner.data.flowchart.Node;
+import com.gtnhplanner.power.CustomRate;
+import com.gtnhplanner.power.FluidTank;
 import com.gtnhplanner.read.postea.PosteaRenames;
 
 /**
@@ -129,11 +132,21 @@ public final class SavedRenames {
         }
 
         /**
-         * The plan's mentions of an item outside its cards' recipes, once every card is read: each drawer's resource
-         * and each leftover split's key.
+         * The plan's mentions of an item outside its cards' recipes, once every card is read: what a custom rate card
+         * or a fluid tank holds (its ports made again on it), each drawer's resource and each leftover split's key.
          */
         public void finish(final Graph graph) {
             if (table.isEmpty()) return;
+            for (final Node n : graph.getNodes()) {
+                final String setting = CustomRate.ID.equals(n.powerSource) ? CustomRate.RESOURCE
+                    : FluidTank.ID.equals(n.powerSource) ? FluidTank.CELL : null;
+                final String was = setting == null ? null : n.powerSettings.get(setting);
+                if (was == null) continue;
+                final String to = key(was);
+                if (to.equals(was)) continue;
+                n.powerSettings.put(setting, to);
+                n.refresh();
+            }
             for (final Drawer d : graph.getDrawers()) {
                 final String to = key(d.getResourceKey());
                 if (!to.equals(d.getResourceKey())) d.setResourceKey(to);
@@ -147,6 +160,21 @@ public final class SavedRenames {
             graph.spareShares.clear();
             graph.spareShares.putAll(new TreeMap<>(moved));
         }
+    }
+
+    /**
+     * Resource keys a world keeps beside its plans (a card's pattern products), each followed by its renamed key when
+     * the game renamed the item: whichever the card's recipe now names is the one that matches.
+     */
+    public static java.util.List<String> withRenamed(final java.util.List<String> keys) {
+        final Load load = begin();
+        if (load.table.isEmpty()) return keys;
+        final java.util.List<String> out = new java.util.ArrayList<>(keys);
+        for (final String k : keys) {
+            final String to = load.key(k);
+            if (!to.equals(k) && !out.contains(to)) out.add(to);
+        }
+        return out;
     }
 
     /** A read under the game's renames now. */

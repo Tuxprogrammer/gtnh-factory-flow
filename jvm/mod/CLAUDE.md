@@ -101,7 +101,8 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   website's `withRenamedProjectResources` rule) on paste and on a cloud read: a card the game matches as it is keeps its ids
   everywhere. A world's own save is read the same way (`nei/SavedRenames`, from `Serializer`'s graph read): a card NEI
   cannot find by its saved id is looked for under the renamed items and takes that id only when NEI finds it; its picks,
-  and the plan's drawers and leftover splits, follow unless a card found as saved still names the item. Card, wire and
+  and the plan's drawers, leftover splits and custom rate or fluid tank holdings, follow unless a card found as saved
+  still names the item, and a card's remembered pattern products match under either id. Card, wire and
   drawer ids never move, so world links hold; the save is mapped on every load and written with the new ids only when
   that plan is next saved after an edit (`SavedRenamesTest`). A live plan migrates once per load: `PlanRenames.Memo` rides on `CloudPlans.Read`, so a later read gets the
   same renamed objects (untouched cards are taken over, not read again), and `LiveDoc.commit` keeps the renamed view as

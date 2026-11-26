@@ -40,6 +40,20 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "4.7.0-tux.14",
+    date: "2026-11-26",
+    headline: "Delete asks first, boxes fit the window, and paste keeps shared machines whole",
+    notes: [
+      "Deleting more than one card on the board asks first.",
+      "Menus, dialogs and panels always fit the window: long lists scroll inside the box and dialog keys stay on screen.",
+      "Cutting and pasting a card that runs several recipes keeps all its wires, and a plan that lost some opens cleanly.",
+      "Combine gives the same machine, tier and amps whichever cards you pick and in any order.",
+      "Magnetic Flux Exhibitor, Industrial Cutting Factory, Electric Implosion Compressor and both Precise Assembler modes show each setting once.",
+      "A card imported at 0 machines shows its real rate, power and flows.",
+      "A wire into several recipes of one machine lights all their ports on hover and counts all of them on the checklist.",
+    ],
+  },
+  {
     version: "4.7.0-tux.13",
     date: "2026-11-24",
     headline: "Recipe data update for 2.9.1",

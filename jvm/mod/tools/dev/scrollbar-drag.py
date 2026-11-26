@@ -795,7 +795,51 @@ def spare_open_scene(a):
     return c.done()
 
 
-SCENES = {"pattern-box": pattern_scene, "delete": delete_scene, "card-chips": chips_scene, "box": box_scene, "spare-open": spare_open_scene}
+def offer_showing():
+    """The offer standing over the board now: the tour's (a TourOffer widget) or an offer box; None for none."""
+    def walk(n):
+        if isinstance(n, dict):
+            if n.get("type") == "TourOffer" and n.get("w", 0) > 0:
+                return "tour"
+            for ch in n.get("children", []):
+                r = walk(ch)
+                if r:
+                    return r
+        return None
+    w = harness("widgets")
+    for u in w.get("popups") or []:
+        if u.get("name", "").split("_")[1:3] in (["update", "offer"], ["crash", "offer"], ["incoming", "offer"]):
+            return u["name"]
+    return walk(w)
+
+
+def offer_scene(a):
+    """With an offer over the board (the tour's: /touroffer; an update's: /update?latest=v9 then reopen), the board's
+    keys and mouse do nothing to the plan or the view: Ctrl+A, Delete, Enter, Ctrl+X, Backspace, Ctrl+Z, Ctrl+V, +, the
+    wheel and a click on the board, all through the X server; the offer is still there afterwards."""
+    c = Checks("offer keys")
+    which = offer_showing()
+    if not which:
+        print("no offer over the board; /touroffer, or /update?latest=v9 and open the planner again")
+        return 2
+    base, n0, zoom0 = plan_digest("offer"), len(cards()), harness("board")["zoom"]
+    xdo("mousemove", *gui_pt(a.board_at))
+    time.sleep(0.3)
+    key("ctrl+a", "Delete", "Return", "ctrl+x", "BackSpace", "ctrl+z", "ctrl+v", "plus")
+    for _ in range(3):
+        xdo("click", 4)
+        time.sleep(0.15)
+    xdo("click", 1)
+    time.sleep(1.0)
+    same = plan_digest("offer-after") == base
+    c("plan kept", same and len(cards()) == n0, f"{len(cards())} cards ({n0} before), plan {'same' if same else 'changed'}")
+    zoom = harness("board")["zoom"]
+    c("view kept", abs(zoom - zoom0) < 1e-6, f"zoom {zoom0} then {zoom}")
+    c("offer stays", offer_showing() == which, f"{which} then {offer_showing()}")
+    return c.done()
+
+
+SCENES = {"pattern-box": pattern_scene, "delete": delete_scene, "card-chips": chips_scene, "box": box_scene, "spare-open": spare_open_scene, "offer": offer_scene}
 
 
 if __name__ == "__main__":

@@ -101,6 +101,12 @@ final class TourOffer extends Widget<TourOffer> implements Interactable {
         return new int[] { getArea().x + r[0], getArea().y + r[1], r[2], r[3] };
     }
 
+    /** The wheel over the dimmed board does nothing while the offer stands: the board waits for an answer. */
+    @Override
+    public boolean onMouseScroll(final com.cleanroommc.modularui.api.UpOrDown direction, final int amount) {
+        return true;
+    }
+
     @Override
     public Result onMousePressed(final int mouseButton) {
         if (mouseButton != 0) return Result.SUCCESS;

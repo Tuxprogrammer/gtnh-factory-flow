@@ -53,6 +53,11 @@ public final class CrashOffer extends Widget<CrashOffer> implements Interactable
             public boolean closeOnOutOfBoundsClick() {
                 return false;
             }
+
+            @Override
+            public boolean holdsBoard() {
+                return true;
+            }
         };
         popup.child(new CrashOffer(board, session, canvas, crash).pos(0, 0));
         final Minecraft mc = Minecraft.getMinecraft();

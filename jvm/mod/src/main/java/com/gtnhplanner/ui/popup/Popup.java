@@ -238,9 +238,17 @@ public class Popup extends ModularPanel {
         return false;
     }
 
+    /**
+     * Whether this box holds the board while it is open (the tour's, update's, crash report's and incoming plan's
+     * offers): the topmost such box takes the input, so the board's keys and mouse wait until it is answered.
+     */
+    public boolean holdsBoard() {
+        return false;
+    }
+
     @Override
     public boolean disablePanelsBelow() {
-        return false;
+        return holdsBoard();
     }
 
     @Override

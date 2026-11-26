@@ -953,6 +953,12 @@ public final class BoardScreen extends ModularScreen {
         if ((keyCode == org.lwjgl.input.Keyboard.KEY_RETURN || keyCode == org.lwjgl.input.Keyboard.KEY_NUMPADENTER)
             && getPanelManager().getTopMostPanel() instanceof Popup popup
             && popup.enter()) return true;
+        // A box that holds the board (the tour's offer, an update, crash report or incoming plan offer) takes the
+        // keys: the board's wait until it is answered. Esc does what it always did; Enter answers a box that asks.
+        if (boardHeld()) {
+            if (keyCode == org.lwjgl.input.Keyboard.KEY_ESCAPE) return super.onKeyPressed(typedChar, keyCode);
+            return true;
+        }
         // The non-recipe machines: Esc closes them, even from the search; the board's keys wait meanwhile.
         if (picker.isEnabled()) {
             if (keyCode == org.lwjgl.input.Keyboard.KEY_ESCAPE) {
@@ -1040,6 +1046,17 @@ public final class BoardScreen extends ModularScreen {
             if (undoKeys(keyCode)) return true;
         }
         return super.onKeyPressed(typedChar, keyCode);
+    }
+
+    /**
+     * Whether a box over the board takes its input now: the tour's first offer, or an open box that holds the board
+     * ({@link Popup#holdsBoard}).
+     */
+    public boolean boardHeld() {
+        if (parts.get("tourOffer") instanceof final TourOffer offer && offer.isEnabled()) return true;
+        for (final com.cleanroommc.modularui.screen.ModularPanel p : getPanelManager().getOpenPanels())
+            if (p instanceof final Popup box && box.holdsBoard()) return true;
+        return false;
     }
 
     /** Undo and redo, on the keys Controls binds them to ({@link UndoKeys}): true when the key was one of them. */

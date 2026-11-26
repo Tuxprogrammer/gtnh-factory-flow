@@ -983,6 +983,14 @@ public final class DevHarness {
                                 .name());
                     return r;
                 });
+            case "/touroffer":
+                // The tour's first offer shown again over the board (done=1 marks it answered).
+                return onClient(() -> {
+                    com.gtnhplanner.ui.PlannerSettings.setTourOffered("1".equals(q.get("done")));
+                    final Map<String, Object> m = new LinkedHashMap<>();
+                    m.put("offered", com.gtnhplanner.ui.PlannerSettings.tourOffered());
+                    return m;
+                });
             case "/update":
                 // The update offer: latest=<tag>[&url=] fakes the newest release and offers it again on the next open.
                 return onClient(() -> {

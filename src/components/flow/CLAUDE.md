@@ -235,7 +235,10 @@ contents. Read `virtual/card-virtualizer.ts` first (pure, tested); budgets and n
   hidden wrapper provokes when it is shown again reads them back instead of wiping the handles.
 - Wires: `board-edges.ts` hands React Flow only the wires whose box (the two cards, or the routed path once there
   is one) meets the camera grown by a third. The controller writes React Flow's store as the camera moves; the
-  `edges` prop only changes with the plan, and the memo in FactoryFlow applies the current choice.
+  `edges` prop only changes with the plan, and the memo in FactoryFlow applies the current choice. A wire goes over
+  only once both its cards hold handles (drawn, or measured with handles): a card first shown as a shell is measured
+  with none, and React Flow would fail its wires on every store change. A newly drawn card re-picks the wires.
+  Exam: `virtual/board-edges.test.ts`; probe: open a 50-card plan at 1000x700 and count console warnings.
 - `--board-zoom` is written on the board only at the glance step and on each sticky note directly (`zoom-var.ts`):
   an inherited property written per step restyles every element under it.
 - The prompts (a count's "Set" box, "Set rate") blink off one clock: `data-cc-blink` on the root, flipped twice a second

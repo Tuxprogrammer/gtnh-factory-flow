@@ -37,6 +37,6 @@ MEMBER appeng/parts/reporting/PartPatternTerminal.encode(Lappeng/api/networking/
 # packed output with StackInfo.getFluid alone.
 MEMBER codechicken/nei/recipe/StackInfo.isFluidDisplayItem(Lnet/minecraft/item/ItemStack;)Z  <- pattern/PatternThis  # PatternThis.fluidOf catches LinkageError
 
-# NEI in beta-1 has no KeyManager.isHashDown(name, modifiers): UndoKeys.now catches the LinkageError and reads undo and
-# redo with NEIClientConfig.isKeyHashDown, as the board always did there.
-MEMBER codechicken/nei/KeyManager.isHashDown(Ljava/lang/String;I)Z  <- ui/UndoKeys  # UndoKeys.now catches LinkageError
+# NEI in beta-1 has no KeyManager.getKeyCode(name): UndoKeys.now calls it inside its try, catches the LinkageError and
+# reads undo and redo with NEIClientConfig.isKeyHashDown, as the board always did there.
+MEMBER codechicken/nei/KeyManager.getKeyCode(Ljava/lang/String;)I  <- ui/UndoKeys  # UndoKeys.now catches LinkageError

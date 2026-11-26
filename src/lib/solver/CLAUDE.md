@@ -115,7 +115,8 @@ blueprint save dialog, and plan boards show the overview, not the Inspector.
 - Combine (`store/combine-machine.ts`) never depends on which card hosts: the machine is the one most cards name,
   and its tier, supply, coil and settings are the highest any of the cards had, raised until every recipe starts
   and gets one parallel. Tests: "Combine is the same whichever card hosts" in `combine-machine.test.ts` (every plan
-  and selection order). The mod's Combine (`BoardSession.combine`) still copies the top-left card's settings.
+  and selection order). The mod's Combine follows the same rule
+  (core `machines.web.CombineMachine`, applied by `ui/CombineCards`; `CombineMachineTest`).
 - No wire crosses forms: a cell meets its fluid in a visible fluid tank card, a machine step like any other
   (`model/cell-wires.ts` turns an older plan's loose cell wires into tanks before the solver sees them).
 - Ring diagnoses (`death-spiral.ts`, `clog-lock.ts`) stand down for an unfinished setup

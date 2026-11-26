@@ -36,7 +36,7 @@ public final class FakeGame implements RecipeIndex, NodeMaker {
     /** Recipe ids the game "does not have". */
     final Set<String> missing = new HashSet<>();
     /** The machine each node was asked to run on. */
-    final Map<Uuid, String> machines = new HashMap<>();
+    final ByNode machines = new ByNode();
     /** Whether the game builds generators (power cards): a bare node naming its source. */
     boolean generators;
     /** The cells the game knows, by FF id: {its fluid, its litres, its empty cell}. Fluid tanks are made for these. */
@@ -90,7 +90,25 @@ public final class FakeGame implements RecipeIndex, NodeMaker {
     /** How each recipe was found, by recipe id: "nei", "crop", "page", "map:<id>" or "machine". */
     final Map<String, String> paths = new LinkedHashMap<>();
     /** The website's machine each node was asked to run on, by its handler id. */
-    final Map<Uuid, String> handlerIds = new HashMap<>();
+    final ByNode handlerIds = new ByNode();
+
+    /**
+     * What was noted per node made, read by the node's id now: an import gives a node its id after making it (in the
+     * order of the plan's own ids), so a note taken under the id it was made with is found under its new one.
+     */
+    static final class ByNode {
+
+        private final Map<Node, String> notes = new java.util.IdentityHashMap<>();
+
+        void put(final Node node, final String value) {
+            notes.put(node, value);
+        }
+
+        String get(final Uuid id) {
+            for (final Map.Entry<Node, String> e : notes.entrySet()) if (e.getKey().id.equals(id)) return e.getValue();
+            return null;
+        }
+    }
 
     /** The game's item renames, Postea's way ({@link RecipeIndex#renames()}); none unless a test names them. */
     public final Map<String, String> renames = new HashMap<>();
@@ -184,7 +202,7 @@ public final class FakeGame implements RecipeIndex, NodeMaker {
         final String machineLabel = machine == null ? null : machine.label();
         final Node node = new Node(Uuid.randomUUID(), 0, 0);
         node.machineName = recipe.handlerName();
-        if (machine != null && machine.handlerId() != null) handlerIds.put(node.id, machine.handlerId());
+        if (machine != null && machine.handlerId() != null) handlerIds.put(node, machine.handlerId());
         if (recipe.durationTicks() != null) node.properties.put(DURATION, recipe.durationTicks());
         if (recipe.euPerTick() != null) node.properties.put(EU_PER_TICK, recipe.euPerTick());
         for (final Map.Entry<String, Double> e : merged(recipe.inputs(), true).entrySet()) {
@@ -202,7 +220,7 @@ public final class FakeGame implements RecipeIndex, NodeMaker {
         }
         for (final Map.Entry<String, Double> e : merged(recipe.outputs(), false).entrySet())
             node.outputs.add(TestIngredients.port(e.getKey(), e.getValue()));
-        if (machineLabel != null) machines.put(node.id, machineLabel);
+        if (machineLabel != null) machines.put(node, machineLabel);
         return node;
     }
 

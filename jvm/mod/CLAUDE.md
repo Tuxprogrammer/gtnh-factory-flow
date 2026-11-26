@@ -91,7 +91,9 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   the website's 20 px grid (importer, `PlanExport.edge`, `cloud/map` with the game's own to the pixel).
 - `importer/` converts Factory Flow plans (JSON, plan codes, links) to graphs: a pure core plus `importer/game/`,
   the NEI and GregTech side. The "+" plan tab pastes one from the clipboard; `call 'importff?file=<path>'` does it
-  from the harness. Fixtures are in `src/test/resources/factory-flow/`. A card's machine is found by the website's
+  from the harness. Fixtures are in `src/test/resources/factory-flow/`. What an import makes gets ids in the order of
+  the plan's own ids, as the website hands them to the solver (`importer/SourceIds`, a random first half per import):
+  the solver breaks ties by id, so the same plan solves the same every time (`SameSolveEveryImportTest`). A card's machine is found by the website's
   handler id among the blocks `handlers.json` lists for it (`WebCards.handlerItems`; names alone never match a GT
   single block, named per tier), a single block at the card's tier (the nearest it comes in, reported). The website's
   board px are ours one to one (the owner's backport, 2026-10-15: its board draws our 320 card and 116x48 drawers),
@@ -118,7 +120,13 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   `library/PlanFiles`) lists `gtnhplanner/exports/` and the screenshots that carry a plan, newest first.
 - Shared machines (one card, several recipes time-sharing one machine; `docs/design/ff-shared-machine-spec.md`) are
   `MachineGroup`s with ordered `sections`: each recipe stays a node with its own ports and wires, the group draws as
-  one card, its machine settings are copied to every recipe, and a pinned count is an exact solver pool.
+  one card, its machine settings are copied to every recipe, and a pinned count is an exact solver pool. Combine
+  (`BoardSession.combine`, `ui/CombineCards`, the rule in core `machines.web.CombineMachine`, the website's
+  `store/combine-machine.ts`) never depends on which card is top-left or the order they come in: the machine most cards
+  name (ties by the summed order of the machines that run them all), its tier, supply, coil and settings the highest any
+  card had (numbers by value, voltage tiers by tier order, a control's options by the control's order, anything else
+  by text), raised until every recipe starts and gets one parallel. The top-left card keeps its place and id and its
+  set count becomes the machine's. `CombineMachineTest` combines its cards in every order.
 - Buffer drawers (`docs/buffer-drawers.md` at the repo root, the website's doc): `Drawer.Kind.BUFFER`, its `links` the outputs feeding it and its
   `takers` the inputs it feeds (`Drawer.held()` gives both with their side). An input dropped on a product, or an output
   on a source, makes one. The solver draws an edge from each maker to each user (`ModelData.buildBuffers`) and holds
@@ -308,8 +316,10 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   stand-in people); `PLANNH_LIBRARY_URL=http://localhost:3000 tools/dev/mc.sh start` points a dev game at a local site
   (a dev game with no address set contacts nothing). End to end: `npm run dev:local` at the repo root (site :3000,
   live ws://localhost:3001/live, local Postgres), `node tools/dev/mock-library.mjs`, which loads `tools/dev/mock-live.mjs`, without the website.
-- On the board a left press on anything (a card's keys and chips too, a drawer's, a note's) is a click when let go
-  within 6 GUI pixels (`BoardCanvas.DRAG_SLOP`; tabs and task cards too) and acts then; moved further, it carries the thing. Carried things
+- On the board a left press on anything (a card's keys and chips too, a drawer's, a note's, a port, a leftover row, a
+  wire's dot, a group's edge) is a click when let go within the slop, 6 GUI pixels or 8 screen pixels along either
+  axis, whichever is further (`ui/ClickSlop`, one rule for tabs and task cards too: a slow click that wobbles a few
+  pixels still clicks), and acts then; moved further, it carries the thing. Carried things
   glide (about 120 ms) between 10 px grid spots and never land on another card or drawer: each frame they go to the
   clear spot nearest the mouse (`BoardCanvas.nearestClear`, the website's ring search), so they hug what is in the way
   and come out its far side past its middle; notes pass over. Hovering a port, drawer or wire lights only it, its

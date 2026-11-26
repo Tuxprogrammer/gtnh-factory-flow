@@ -57,7 +57,12 @@ declared it. Their machinery, our constraint set.
 
 ## The formulation, in our vocabulary
 
-Variables (all continuous, all deterministically ordered by node/edge id):
+Variables (all continuous, all deterministically ordered by node/edge id; a
+tie between equal answers goes to the lower id, so an import keeps the plan's
+own id order: the website hands the core its plan's ids in their order
+(`src/lib/core/solve-adopt.ts` idsFor), and the mod's import gives what it makes
+ids in that same order (`importer/SourceIds`), so the same plan solves the same
+every time it is opened):
 
 - `act[m]` for every enabled machine: operations per second, in
   `[0, nameplate(m)]` where nameplate is the overclocked rate x machineCount

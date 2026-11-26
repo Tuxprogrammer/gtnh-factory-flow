@@ -841,9 +841,9 @@ public final class NoteCard extends Widget<NoteCard> implements Interactable, ID
             pressed = null;
             regainFocus();
             // A press on the edge that never went anywhere is a click on the note.
-            if (Math.max(
-                Math.abs(getContext().getAbsMouseX() - startMouseX),
-                Math.abs(getContext().getAbsMouseY() - startMouseY)) < 3 && n != null) click(Part.BODY);
+            if (!com.gtnhplanner.ui.ClickSlop
+                .moved(getContext().getAbsMouseX() - startMouseX, getContext().getAbsMouseY() - startMouseY)
+                && n != null) click(Part.BODY);
             return;
         }
         final Part part = pressed;
@@ -862,7 +862,7 @@ public final class NoteCard extends Widget<NoteCard> implements Interactable, ID
         final float zoom = session.graph()
             .getZoom();
         final int mx = getContext().getAbsMouseX() - gripMouseX, my = getContext().getAbsMouseY() - gripMouseY;
-        gripMoved |= Math.max(Math.abs(mx), Math.abs(my)) >= 3;
+        gripMoved |= com.gtnhplanner.ui.ClickSlop.moved(mx, my);
         if (!gripMoved) return;
         final float dx = mx / zoom, dy = my / zoom;
         if (grabbed == Grip.TAIL || grabbed == Grip.HEAD) {

@@ -42,7 +42,6 @@ final class TaskChainView {
     private static final int LIST_W = 132, LIST_SHUT = 14, ROW_H = 13, HEAD_H = 16;
     /** The map's zoom steps. */
     private static final float[] ZOOMS = { 0.5f, 0.67f, 0.75f, 1f, 1.25f, 1.5f, 2f };
-    private static final int DRAG_SLOP = 6;
     private static final int LIST_BG = 0xFF18191C, LIST_EDGE = 0xFF26282D, ROW_HOT = 0xFF24262B, ROW_ON = 0xFF2C3036,
         ARROW = 0xFF5A5D66, ARROW_DONE = 0xFF3D7A57, CARD_HOT = 0xFF2A2C32;
 
@@ -590,7 +589,7 @@ final class TaskChainView {
             .getAbsMouseX() - pressX,
             dy = view.getContext()
                 .getAbsMouseY() - pressY;
-        if (!panning && Math.max(Math.abs(dx), Math.abs(dy)) < DRAG_SLOP) return;
+        if (!panning && !com.gtnhplanner.ui.ClickSlop.moved(dx, dy)) return;
         panning = true;
         gliding = false;
         panX = toX = pressPanX - dx / scale();

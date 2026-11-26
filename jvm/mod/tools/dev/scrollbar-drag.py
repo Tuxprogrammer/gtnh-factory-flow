@@ -730,6 +730,18 @@ def extra_row():
     return None
 
 
+def row_in_view():
+    """A leftover row inside the board's canvas, as a GUI point; None for none."""
+    b = harness("board")
+    cv = b["canvas"]
+    for card in b["cards"]:
+        for name, r in card.get("parts", {}).items():
+            if (name.startswith("XOUT") or name.startswith("XIN")) and cv["x"] + 4 <= r["cx"] < cv["x"] + cv["w"] - 4 \
+                    and cv["y"] + 30 <= r["cy"] < cv["y"] + cv["h"] - 4:
+                return r["cx"], r["cy"]
+    return None
+
+
 def spare_box():
     return next((u for u in popups() if u["name"].startswith("gtnhplanner_spare")), None)
 
@@ -839,7 +851,100 @@ def offer_scene(a):
     return c.done()
 
 
-SCENES = {"pattern-box": pattern_scene, "delete": delete_scene, "card-chips": chips_scene, "box": box_scene, "spare-open": spare_open_scene, "offer": offer_scene}
+def wobble_click(pt, button=1, hold=0.15, d=2):
+    """A slow click that wobbles: pressed, moved 2 screen pixels each way around the press over 150 ms, let go 2 px off
+    where it went down, as a hand holding a careful click does."""
+    if button != 1:
+        return plain_click(pt, button)
+    x, y = pt
+    xdo("mousemove", x, y)
+    time.sleep(0.25)
+    xdo("mousedown", 1)
+    steps = [(d, d), (-d, -d), (d, -d), (-d, d), (d, d)]
+    for dx, dy in steps:
+        time.sleep(hold / len(steps))
+        xdo("mousemove", x + dx, y + dy)
+    xdo("mouseup", 1)
+    time.sleep(0.5)
+
+
+plain_click = click_at
+
+
+def wobble_scene(a):
+    """Every kind of control clicked with a slow click that wobbles 2 screen pixels each way and is held 150 ms: each
+    card and drawer control as in card-chips (its box opens, the tier chip steps), a card's leftover row (its spare
+    box opens and the plan is unchanged), a card's body (the card is selected) and the empty board (nothing is
+    selected). A press that small is a click at every GUI scale, never a drag that does nothing. --only picks some
+    (chips,row,body,board); a plan of GregTech cards shows every chip, one with spare places (spare-places.json) the
+    leftover rows and drawers."""
+    global click_at
+    c = Checks("wobble")
+    parts = [p for p in a.only.split(",") if p in ("chips", "row", "body", "board")] or ["chips", "row", "body", "board"]
+    click_at = wobble_click
+    try:
+        chips = chips_scene(a) if "chips" in parts else 2
+        c("card and drawer controls", chips != 1, "card-chips with wobbling clicks: " + ("PASS" if chips == 0 else
+                                                                                       "nothing in view" if chips == 2 else "FAIL"))
+        at = row_in_view() if "row" in parts else None
+        if "row" in parts and at is None and extra_row() is not None:
+            # Set up, not under test: the view moved to put a leftover row in the board's middle.
+            b, (rx, ry) = harness("board"), extra_row()
+            cv = b["canvas"]
+            harness(f"view?zoom={b['zoom']}&panX={b['panX'] + cv['cx'] - rx}&panY={b['panY'] + cv['cy'] - ry}")
+            time.sleep(1.0)
+            at = row_in_view()
+        if "row" in parts and at is None:
+            print("skip the leftover row: no card shows one in view")
+        if at is not None:
+            base = plan_digest("wobble-base")
+            wobble_click(gui_pt(at))
+            time.sleep(0.8)
+            box = spare_box()
+            c("leftover row", box is not None and plan_digest("wobble-row") == base,
+              "spare box open, plan unchanged" if box else "no spare box")
+            if box is not None:
+                key("Escape")
+        board = harness("board")
+        cv = board["canvas"]
+        def shown(r):
+            return cv["x"] + 4 <= r["cx"] < cv["x"] + cv["w"] - 4 and cv["y"] + 30 <= r["cy"] < cv["y"] + cv["h"] - 4
+
+        card = next((k for k in board["cards"] if "BODY" in k["parts"] and shown(k["parts"]["BODY"])), None) \
+            if "body" in parts else None
+        if "body" in parts and card is None:
+            print("skip the card body: no card body in view")
+        if card is not None:
+            b = card["parts"]["BODY"]
+            wobble_click(gui_pt((b["cx"], b["cy"])))
+            sel = next(k for k in harness("board")["cards"] if k["id"] == card["id"])["selected"]
+            c("card body", sel, "the card is selected" if sel else "the card is not selected")
+        spot = None
+        for fy in (0.95,) if "board" not in parts else (0.95, 0.85, 0.7, 0.5):
+            for fx in (0.97, 0.85, 0.6, 0.3, 0.05) if "board" in parts else ():
+                p = (int(cv["x"] + cv["w"] * fx), int(cv["y"] + cv["h"] * fy))
+                xdo("mousemove", *gui_pt(p))
+                time.sleep(0.3)
+                # The empty board hovers no widget of its own.
+                under = harness("status").get("hovered") or ""
+                if under == "" or under.startswith("BoardCanvas"):
+                    spot = p
+                    break
+            if spot:
+                break
+        if spot is None:
+            print("skip the empty board: none in view")
+        else:
+            wobble_click(gui_pt(spot))
+            left = [k["index"] for k in harness("board")["cards"] if k["selected"]]
+            c("empty board", not left, f"nothing selected" if not left else f"cards {left} still selected")
+        c("no hold", not holds(), f"held {holds()}")
+    finally:
+        click_at = plain_click
+    return c.done()
+
+
+SCENES = {"pattern-box": pattern_scene, "delete": delete_scene, "card-chips": chips_scene, "box": box_scene, "spare-open": spare_open_scene, "offer": offer_scene, "wobble": wobble_scene}
 
 
 if __name__ == "__main__":

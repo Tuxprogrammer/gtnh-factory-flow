@@ -93,7 +93,7 @@ A player can pin dots on a wire that its route must pass through, in order: the 
   header, which prints the route time (`build/bench/wp-before` against `wp-after`).
 - **On the board** (`BoardCanvas`, `WireLayer`): a double-click on a wire pins a dot on the cell of the wire nearest
   the click, put among its dots in the order they lie along it (the website's insertion by arc position). A press on
-  a dot past `DRAG_SLOP` carries it: it moves cell to cell, kept off cards and drawers and the ring of cells touching
+  a dot past the slop (`ui/ClickSlop`) carries it: it moves cell to cell, kept off cards and drawers and the ring of cells touching
   them (the website's `clampWaypointToClearSpace`), and the wire routes through it as it goes (roughly while carried,
   properly once let go, one undoable step). A second press on a dot within 400 ms takes it off. Dots draw over the
   wires, a touch wider than the wire in its colour in a dark ring, lit under the mouse; a picture of the plan leaves

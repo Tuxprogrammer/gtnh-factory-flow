@@ -399,9 +399,9 @@ public final class GroupCard extends Widget<GroupCard> implements Interactable, 
             if (c != null && successful) c.groups()
                 .resize(groupId, live[0], live[1], live[2], live[3]);
             sync();
-            if (Math.max(
-                Math.abs(getContext().getAbsMouseX() - startMouseX),
-                Math.abs(getContext().getAbsMouseY() - startMouseY)) < 3 && part != null) click(Part.STRIP);
+            if (!com.gtnhplanner.ui.ClickSlop
+                .moved(getContext().getAbsMouseX() - startMouseX, getContext().getAbsMouseY() - startMouseY)
+                && part != null) click(Part.STRIP);
             return;
         }
         if (c != null && c.endMove(successful) && part != null && group() != null) click(part);

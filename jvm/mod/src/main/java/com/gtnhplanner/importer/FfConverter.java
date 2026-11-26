@@ -189,6 +189,8 @@ public final class FfConverter {
         final Map<String, String[]> joined = new HashMap<>();
         /** Buffers joined into wires (wired to another drawer or by a cell wire): no drawer of their own. */
         final Set<String> joinedBuffers = new HashSet<>();
+        /** The ids of what the import makes, in the order of the plan's own ids (the solver breaks ties by it). */
+        final SourceIds ids;
 
         Run(final FfPlan plan, final RecipeIndex index, final NodeMaker maker,
             @Nullable final Map<String, Object> tree) {
@@ -202,6 +204,11 @@ public final class FfConverter {
             this.recipes = plan.recipesById();
             for (final FfStorage s : plan.storages()) storages.put(s.id(), s);
             for (final FfNode n : plan.nodes()) cardIds.add(n.id());
+            final List<String> planIds = new ArrayList<>();
+            for (final FfNode n : plan.nodes()) planIds.add(n.id());
+            for (final FfEdge e : plan.edges()) planIds.add(e.id());
+            for (final FfStorage s : plan.storages()) planIds.add(s.id());
+            this.ids = new SourceIds(planIds);
             this.roles = FfDrawers.roles(plan);
             double x = Double.POSITIVE_INFINITY, y = Double.POSITIVE_INFINITY;
             for (final FfNode n : plan.nodes()) {
@@ -349,7 +356,7 @@ public final class FfConverter {
                 tree.get("recipes"),
                 card,
                 recipe,
-                Uuid.randomUUID(),
+                ids.of(card.id(), 0),
                 px(card.x()),
                 py(card.y()),
                 ports,
@@ -426,6 +433,7 @@ public final class FfConverter {
             final Node node = FfCards
                 .section(ctx, ports, card, recipe, overrides, section, name, px(card.x()), py(card.y()));
             if (node == null) return null;
+            node.id = ids.of(card.id(), section);
             graph.addNode(node);
             final Placed p = new Placed(node, card, recipe, overrides, section, name);
             placed.computeIfAbsent(card.id(), k -> new HashMap<>())
@@ -437,6 +445,7 @@ public final class FfConverter {
         void placePower(final FfNode card, final FfRecipe recipe) {
             final Node node = FfCards.power(ctx, card, recipe, px(card.x()), py(card.y()));
             if (node == null) return;
+            node.id = ids.of(card.id(), 0);
             graph.addNode(node);
             placed.computeIfAbsent(card.id(), k -> new HashMap<>())
                 .put(0, new Placed(node, card, recipe, Map.of(), 0, recipe.name()));
@@ -446,6 +455,7 @@ public final class FfConverter {
         void placeCropFarm(final FfNode card, final FfRecipe recipe) {
             final Node node = FfCards.cropFarm(ctx, card, recipe, px(card.x()), py(card.y()));
             if (node == null) return;
+            node.id = ids.of(card.id(), 0);
             graph.addNode(node);
             placed.computeIfAbsent(card.id(), k -> new HashMap<>())
                 .put(0, new Placed(node, card, recipe, Map.of(), 0, recipe.name()));
@@ -455,6 +465,7 @@ public final class FfConverter {
         boolean placeTank(final FfNode card, final FfRecipe recipe) {
             final Node node = FfCards.tank(ctx, card, recipe, px(card.x()), py(card.y()));
             if (node == null) return false;
+            node.id = ids.of(card.id(), 0);
             graph.addNode(node);
             placed.computeIfAbsent(card.id(), k -> new HashMap<>())
                 .put(0, new Placed(node, card, recipe, Map.of(), 0, recipe.name()));
@@ -480,9 +491,10 @@ public final class FfConverter {
             if (o < 0 || i < 0 || tankIn < 0 || tankOut < 0) return false;
             tank.x = snap((from.node().x + to.node().x) / 2.0);
             tank.y = snap((from.node().y + to.node().y) / 2.0);
+            tank.id = ids.next();
             graph.addNode(tank);
-            graph.addEdge(new Edge(Uuid.randomUUID(), from.node().id, tank.id, o, tankIn));
-            graph.addEdge(new Edge(Uuid.randomUUID(), tank.id, to.node().id, tankOut, i));
+            graph.addEdge(new Edge(ids.next(), from.node().id, tank.id, o, tankIn));
+            graph.addEdge(new Edge(ids.next(), tank.id, to.node().id, tankOut, i));
             report.add(
                 Kind.CONVERTED,
                 e.resourceId(),
@@ -516,6 +528,7 @@ public final class FfConverter {
                     report.add(Kind.DROPPED, name, "it holds no resource; left out");
                     return;
                 }
+                node.id = ids.of(card.id(), 0);
                 graph.addNode(node);
                 placed.computeIfAbsent(card.id(), k -> new HashMap<>())
                     .put(0, new Placed(node, card, recipe, Map.of(), 0, name));
@@ -642,7 +655,7 @@ public final class FfConverter {
                     return;
                 }
                 final Edge edge = new Edge(
-                    Uuid.randomUUID(),
+                    ids.of(e.id(), 0),
                     from.card()
                         .node().id,
                     to.card()
@@ -747,7 +760,7 @@ public final class FfConverter {
                     if (from[0] == to[0]) continue;
                     graph.addEdge(
                         new Edge(
-                            Uuid.randomUUID(),
+                            ids.next(),
                             all.get(from[0])
                                 .node().id,
                             all.get(to[0])
@@ -962,7 +975,7 @@ public final class FfConverter {
                 }
                 final PortInfo first = d.infos.getFirst();
                 if (d.dial != null && makeCustomRate(d, first)) return;
-                final Drawer drawer = new Drawer(d.kind, first.key());
+                final Drawer drawer = new Drawer(ids.next(), d.kind, first.key());
                 drawer.setLabel(d.label != null && !d.label.isEmpty() ? d.label : first.label());
                 drawer.setX(d.x);
                 drawer.setY(d.y);
@@ -987,7 +1000,7 @@ public final class FfConverter {
          */
         void makeBuffer(final PendingDrawer d) {
             final PortInfo first = d.infos.getFirst();
-            final Drawer drawer = new Drawer(Drawer.Kind.PRODUCT, first.key());
+            final Drawer drawer = new Drawer(ids.next(), Drawer.Kind.PRODUCT, first.key());
             drawer.setLabel(d.label != null && !d.label.isEmpty() ? d.label : first.label());
             drawer.setX(d.x);
             drawer.setY(d.y);
@@ -1012,11 +1025,11 @@ public final class FfConverter {
                 node.machineConfig.setMachineCount((int) Math.max(1, Math.round(dial.pinned())));
                 node.setMachineCountFixed(true);
             }
+            node.id = ids.next();
             graph.addNode(node);
             for (final Drawer.Link link : d.links) {
-                final Edge edge = dial.supply()
-                    ? new Edge(Uuid.randomUUID(), node.id, link.nodeId(), 0, link.portIndex())
-                    : new Edge(Uuid.randomUUID(), link.nodeId(), node.id, link.portIndex(), 0);
+                final Edge edge = dial.supply() ? new Edge(ids.next(), node.id, link.nodeId(), 0, link.portIndex())
+                    : new Edge(ids.next(), link.nodeId(), node.id, link.portIndex(), 0);
                 edge.waypoints = link.waypoints();
                 graph.addEdge(edge);
             }

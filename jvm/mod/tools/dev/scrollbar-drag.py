@@ -294,7 +294,10 @@ def bar_run(a):
         after = bar.thumb()
         moved = held[0] - th[0] if held else 0
         check("drag", abs(moved - want) <= tol, f"mouse {a.distance} px, thumb {moved} px while held (room {room})")
-        check("let go", after == held, f"thumb at {after} after the release, {held} while held")
+        # A list that scrolls by whole rows (the pick menu's) settles on the row the thumb shows once let go: a pixel
+        # or two, as the mouse and the thumb each round. A thumb that jumps back moves far more than that.
+        settled = after is not None and held is not None and all(abs(p - q) <= tol for p, q in zip(after, held))
+        check("let go", settled, f"thumb at {after} after the release, {held} while held")
     if "end" in checks:
         th = to_start()
         drag(bar, (th[0] + th[1]) // 2, bar.t1 - bar.t0 + 200, a.steps, a.pause)
@@ -568,7 +571,94 @@ def delete_scene(a):
     return c.done()
 
 
-SCENES = {"pattern-box": pattern_scene, "delete": delete_scene}
+def holds():
+    """The open panels that still hold a mouse button (the /status readout), as their names."""
+    return [p.split(" ")[0] for p in harness("status").get("panels", []) if "held:true" in p]
+
+
+def popups():
+    return harness("widgets").get("popups") or []
+
+
+# What a left click on each control of a card or drawer does: "menu" opens a box (a popup panel), "edit" opens a
+# menu or the board's inline number box (the field takes the keys), "step" changes the card in place (the tier chip).
+CARD_CONTROLS = [("MACHINE", "menu"), ("AMPS", "edit"), ("SETTINGS", "menu"), ("ACTIONS", "menu"),
+                 ("PLACE", "menu"), ("RULE", "menu"), ("MACHINES", "edit"), ("TIER", "step")]
+DRAWER_CONTROLS = [("RULE", "menu"), ("RATE", "edit")]
+
+
+def chips_scene(a):
+    """Each control on the board's cards and drawers clicked with the real mouse: its box opens and is wholly on the
+    screen, the tier chip steps the tier, Esc closes the box, and afterwards no panel holds a mouse button (a held
+    button sends every later drag to the old widget). Put a multiblock card (tier and amps chips) and a drawer with a
+    rule in view first; every control in view is clicked."""
+    c = Checks("card chips")
+    st = harness("status")
+    gw, gh = st["guiWidth"], st["guiHeight"]
+    board = harness("board")
+    cv = board["canvas"]
+
+    def in_view(p):
+        return cv["x"] + 2 <= p["cx"] < cv["x"] + cv["w"] - 2 and cv["y"] + 2 <= p["cy"] < cv["y"] + cv["h"] - 2
+
+    def state_of(kind, index):
+        b = harness("board")
+        return (b["cards"] if kind == "card" else b["drawers"])[index]
+
+    def press(kind, index, part, does):
+        p = state_of(kind, index)["parts"].get(part)
+        if p is None or not in_view(p):
+            return False
+        label = f"{kind} {index} {part}"
+        # The board's toolbar and notices lie over the canvas's top: only a control the mouse is on counts.
+        xdo("mousemove", *gui_pt((p["cx"], p["cy"])))
+        time.sleep(0.4)
+        under = harness("status").get("hovered") or ""
+        if not under.startswith("RecipeCard" if kind == "card" else "DrawerCard"):
+            print(f"skip {label}: covered by {under or 'nothing'}")
+            return False
+        before = state_of(kind, index)
+        n0 = len(popups())
+        click_at(gui_pt((p["cx"], p["cy"])))
+        time.sleep(0.4)
+        ups = popups()
+        held = holds()
+        if does == "step":
+            after = state_of(kind, index)
+            changed = (after.get("tier"), after.get("machine")) != (before.get("tier"), before.get("machine"))
+            c(label, changed and len(ups) == n0 and not held,
+              f"tier {before.get('tier')} -> {after.get('tier')}, {len(ups) - n0} boxes opened, held {held}")
+            # Back where it was: the right button steps it down.
+            click_at(gui_pt((p["cx"], p["cy"])), button=3)
+            return True
+        new = ups[n0:]
+        focused = harness("status").get("focused")
+        opened = bool(new) or (does == "edit" and focused)
+        on_screen = all(u["x"] >= 0 and u["y"] >= 0 and u["x"] + u["w"] <= gw and u["y"] + u["h"] <= gh for u in new)
+        boxes = ", ".join(f"{u['name']} {u['x']},{u['y']} {u['w']}x{u['h']}" for u in new) or f"focused {focused}"
+        c(label, opened and on_screen and not held, f"{boxes} on a {gw}x{gh} screen; held {held}")
+        if not opened:
+            return True
+        # Esc with nothing open would close the planner.
+        key("Escape")
+        left = popups()
+        c(label + " esc", len(left) == n0 and not holds(), f"{len(left) - n0} boxes left open; held {holds()}")
+        return True
+
+    clicked = 0
+    for i, card in enumerate(board["cards"]):
+        for part, does in CARD_CONTROLS:
+            clicked += press("card", i, part, does)
+    for i, _ in enumerate(board.get("drawers", [])):
+        for part, does in DRAWER_CONTROLS:
+            clicked += press("drawer", i, part, does)
+    if clicked == 0:
+        print("no card or drawer control in view: put a card on the board where it shows")
+        return 2
+    return c.done()
+
+
+SCENES = {"pattern-box": pattern_scene, "delete": delete_scene, "card-chips": chips_scene}
 
 
 if __name__ == "__main__":

@@ -244,7 +244,7 @@ export function SharePlanDialog({
 
   return (
     <div className="pn-backdrop">
-      <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={dialogTitle} className="pn pn-skin" data-wide="">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={dialogTitle} className="pn pn-skin box-fit" data-wide="">
         <div className="pn-title">
           <span>{dialogTitle}</span>
           <button type="button" onClick={onClose} aria-label="Close" className="pn-x" />
@@ -466,7 +466,7 @@ export function SharePlanDialog({
 
             {error ? <p className="text-sm text-red-500">{error}</p> : null}
 
-            <div className="flex justify-end gap-2">
+            <div className="pn-keys">
               <button
                 type="button"
                 onClick={onClose}

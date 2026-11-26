@@ -7,6 +7,8 @@ import { createPortal } from "react-dom";
 import { useDeviceSettings } from "@/lib/device-settings";
 import { useDropdownDismiss } from "@/lib/hooks/use-dropdown-dismiss";
 import { getUiScale } from "@/lib/ui-scale";
+import { BOX_FIT_GUI, useSlideIntoWindow } from "@/components/box-fit";
+import { CHROME_SCREEN_K } from "./ChromeMenu";
 
 /** The wheel's row; with "Scroll changes values" off the wheel only zooms. */
 const WHEEL_ROW = "Zoom; over a value, change it";
@@ -44,21 +46,24 @@ export function ControlsList({ onClose }: { onClose: () => void }) {
   useEffect(() => ref.current?.focus(), []);
   // Hung from the Help key's right edge, as its menu is: the items column sits at the window's right edge now, and a
   // panel pinned to the window would slide under it.
-  const scale = getUiScale();
+  // The panel wears the bar's extra zoom (chrome.css .mm): its offsets are in those pixels. It slides left when the
+  // room right of the key's edge leaves it hanging off the window's left, and its rows scroll below the window's foot.
+  const scale = getUiScale() * CHROME_SCREEN_K;
   const helpKey = typeof document === "undefined" ? null : document.querySelector(".mb-key[data-mb='help']");
   const right = helpKey ? Math.max(2, (window.innerWidth - helpKey.getBoundingClientRect().right) / scale) : 8;
+  const slide = useSlideIntoWindow(ref, scale);
   return createPortal(
     <div
       ref={ref}
       role="dialog"
       aria-label="How the board works"
       tabIndex={-1}
-      className="mm mc-controls ui-zoom nodrag nowheel"
-      style={{ top: 24, right }}
+      className={`mm mc-controls ${BOX_FIT_GUI} ui-zoom nodrag nowheel`}
+      style={{ top: 24, right: right - slide, maxHeight: window.innerHeight / scale - 24 - 8 }}
       onPointerDown={(event) => event.stopPropagation()}
     >
       <div className="mm-title">HOW THE BOARD WORKS</div>
-      <div className="mc-controls-grid">
+      <div className="mc-controls-grid mm-scroll">
         {CONTROLS.map(([gesture, effect]) => (
           <div key={gesture} className="mc-controls-row">
             <span className="mc-controls-key">{gesture}</span>

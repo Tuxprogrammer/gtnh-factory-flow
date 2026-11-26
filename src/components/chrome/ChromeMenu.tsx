@@ -2,11 +2,13 @@
 
 import "./chrome.css";
 
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useDropdownDismiss } from "@/lib/hooks/use-dropdown-dismiss";
 import { activateOnKey } from "@/lib/hooks/button-keys";
 import { getUiScale } from "@/lib/ui-scale";
+import { placeMenu } from "@/components/flow/clean/menus/menu-place";
+import { BOX_FIT_GUI, useSlideIntoWindow } from "@/components/box-fit";
 
 /**
  * The mod draws its bar, tabs and menus in GUI pixels at GUI scale 2: two screen pixels each. This file's sizes are
@@ -105,28 +107,24 @@ export function ChromeMenu({
   const scale = getUiScale() * CHROME_SCREEN_K;
   const shell = (px: number) => px / scale;
   const vw = shell(window.innerWidth);
-  const spaceBelow = shell(window.innerHeight - anchor.bottom) - 8;
+  // Below the key when the whole menu fits there (rows are 20 high, a rule 5, the title 14), else on the side with
+  // more room, the rest scrolling: the board's menus' rule (menu-place.ts), so no menu runs off the window.
+  const natural = 8 + (title ? 14 : 0) + entries.reduce((sum, entry) => sum + 20 + (entry.ruleAbove ? 5 : 0), 0);
+  // The estimate only picks the side; the cap is all the room on that side, so a menu a little taller than the
+  // estimate is never clipped.
+  const place = placeMenu(anchor, window.innerHeight, scale, natural);
+  const room = place.below
+    ? shell(window.innerHeight - Math.min(anchor.bottom, window.innerHeight)) - 12
+    : shell(Math.max(anchor.top, 0)) - 12;
   const style: React.CSSProperties = {
     minWidth: minWidth ?? 100,
-    maxHeight: Math.max(80, spaceBelow),
-    top: shell(anchor.bottom) + 2,
+    maxHeight: Math.max(place.maxHeight, room),
+    ...(place.below ? { top: place.top } : { bottom: place.bottom }),
     ...(zIndex === undefined ? {} : { zIndex }),
   };
-  // The menu's width is only known once it is drawn, so one wider than the room on its side (a right-hung menu
-  // near the window's left edge, as the items column's is) is slid back inside the window before it paints.
-  const [slide, setSlide] = useState(0);
-  useLayoutEffect(() => {
-    const box = ref.current?.getBoundingClientRect();
-    if (!box) return;
-    const margin = 2 * scale;
-    if (box.left < margin) {
-      setSlide(shell(margin - box.left));
-    } else if (box.right > window.innerWidth - margin) {
-      setSlide(-Math.min(shell(box.right - (window.innerWidth - margin)), shell(box.left - margin)));
-    }
-    // Measured once as it opens: a menu closes on a scroll or a camera move, so its anchor does not move under it.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // A menu wider than the room on its side (a right-hung menu near the window's left edge, as the items column's is)
+  // slides back inside the window before it paints.
+  const slide = useSlideIntoWindow(ref, scale, 2, `${title ?? ""}|${entries.map((entry) => entry.label).join("|")}`);
   if (align === "right" && anchor.right !== undefined) {
     style.right = Math.max(2, vw - shell(anchor.right)) - slide;
   } else {
@@ -138,7 +136,7 @@ export function ChromeMenu({
       role="menu"
       aria-label={label}
       data-mod-menu=""
-      className="mm ui-zoom nodrag nowheel"
+      className={`mm ${BOX_FIT_GUI} ui-zoom nodrag nowheel`}
       style={style}
       onClick={(event) => event.stopPropagation()}
       onPointerDown={(event) => event.stopPropagation()}

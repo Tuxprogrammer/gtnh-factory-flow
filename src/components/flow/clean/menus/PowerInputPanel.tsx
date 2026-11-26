@@ -191,7 +191,7 @@ export const PowerInputPanel = forwardRef<HTMLDivElement, { nodeId: string; part
     }, [node, recipe, result]);
     if (!facts) return null;
     return (
-      <div ref={ref} className="pw-wrap ui-zoom" data-clean-tip="" data-tip-panel="power" style={style}>
+      <div ref={ref} className="pw-wrap box-fit ui-zoom" data-clean-tip="" data-tip-panel="power" style={style}>
         <PowerFactsPanel facts={facts} />
         <PowerGuide part={part} />
       </div>

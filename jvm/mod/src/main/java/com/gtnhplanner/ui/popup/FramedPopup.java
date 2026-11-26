@@ -7,14 +7,16 @@ import com.cleanroommc.modularui.widget.Widget;
 /**
  * A box whose content can grow past the screen: a fixed header, a {@link ScrollBody} and a fixed footer stacked in that
  * order. As it opens it takes the height its room allows ({@link BoxFit#frame}): when everything fits it is exactly
- * header, content and footer; else the body scrolls and the header and footer, with the box's keys, stay in view.
+ * header, content and footer; else the body scrolls and the header and footer, with the box's keys, stay in view. A
+ * box whose content changes while it is open is fitted again the same way ({@link #reshape}), so it never grows past
+ * the screen after it opened.
  */
 public class FramedPopup extends Popup {
 
     @Nullable
     private final Widget<?> header, footer;
     private final ScrollBody body;
-    private final int headerH, footerH;
+    private int headerH, footerH;
     private BoxFit.Frame frame;
 
     /**
@@ -44,6 +46,31 @@ public class FramedPopup extends Popup {
     protected void fit(final int[] room, final int[] screen) {
         popupW = BoxFit.size(screen, popupW, 0)[0];
         layOut(BoxFit.frame(room[3], headerH, body.contentHeight(), footerH));
+    }
+
+    /**
+     * Lays the box out again for a new width or new header and footer heights, or because the body's content changed
+     * height: fitted to the room as it opened, its top left kept where the room and the screen allow.
+     */
+    public void reshape(final int width, final int headerH, final int footerH) {
+        this.headerH = header == null ? 0 : headerH;
+        this.footerH = footer == null ? 0 : footerH;
+        popupW = width;
+        if (!isOpen()) {
+            layOut(BoxFit.frame(Integer.MAX_VALUE / 2, this.headerH, body.contentHeight(), this.footerH));
+            return;
+        }
+        final int[] room = room(this), screen = screen();
+        fit(room, screen);
+        final int[] inRoom = BoxFit.place(room, getArea().x, getArea().y, popupW, popupH),
+            spot = BoxFit.place(screen, inRoom[0], inRoom[1], popupW, popupH);
+        pos(spot[0], spot[1]);
+        scheduleResize();
+    }
+
+    /** The body's content is no longer the height the box was laid out for. */
+    void contentChanged() {
+        reshape(popupW, headerH, footerH);
     }
 
     private void layOut(final BoxFit.Frame f) {

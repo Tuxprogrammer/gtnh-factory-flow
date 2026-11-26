@@ -37,7 +37,8 @@ class BoxBoundsTest {
         FIXED,
         /**
          * Content that can grow past the screen with no scroll: cut to the screen and placed on it by {@link Popup},
-         * so it never leaves it, but its lower part can be out of reach. Each one is a known gap, named in the reason.
+         * so it never leaves it, but its lower part can be out of reach. None is allowed
+         * ({@link #noBoxGrowsPastTheScreen}).
          */
         GROWS,
         /** The box classes themselves. */
@@ -85,9 +86,18 @@ class BoxBoundsTest {
         list("ui/popup/NumberPopup.java", new Listed(1, Bound.FIXED, 56, "number box"));
         list("ui/popup/TextPopup.java", new Listed(1, Bound.FIXED, 44, "text box"));
         list("ui/popup/FeedbackPanel.java", new Listed(1, Bound.FIXED, 235, "feedback"));
-        list("ui/popup/SettingsPanel.java", new Listed(1, Bound.GROWS, "settings: as tall as its tallest section"));
-        list("ui/card/SettingsSheet.java", new Listed(1, Bound.GROWS, "card settings: grows with the card's controls"));
-        list("ui/SparePopup.java", new Listed(1, Bound.GROWS, "spare split: a line per place the spare goes"));
+        list(
+            "ui/popup/SettingsPanel.java",
+            new Listed(
+                1,
+                Bound.ROOM,
+                "settings: no taller than the room, a section's settings scroll under the title"));
+        list(
+            "ui/card/SettingsSheet.java",
+            new Listed(1, Bound.FRAMED, "card settings: the settings scroll, the line on how it works kept"));
+        list(
+            "ui/SparePopup.java",
+            new Listed(1, Bound.FRAMED, "spare split: its places scroll, the drawer link kept under them"));
         list("ui/popup/Popup.java", new Listed(2, Bound.FRAMEWORK, "Popup and its toggled key"));
         list("ui/popup/FramedPopup.java", new Listed(1, Bound.FRAMEWORK, "FramedPopup"));
         list("ui/popup/PickList.java", new Listed(1, Bound.FRAMEWORK, "PickList's popup"));
@@ -178,7 +188,7 @@ class BoxBoundsTest {
     }
 
     @Test
-    void theKnownGapsAreTheOnesNamed() {
+    void noBoxGrowsPastTheScreen() {
         final List<String> grows = BOXES.entrySet()
             .stream()
             .filter(
@@ -186,8 +196,26 @@ class BoxBoundsTest {
                     .bound() == Bound.GROWS)
             .map(Map.Entry::getKey)
             .toList();
-        // Moving one of these onto FramedPopup takes it off this list.
-        assertEquals(List.of("ui/SparePopup.java", "ui/card/SettingsSheet.java", "ui/popup/SettingsPanel.java"), grows);
+        assertEquals(List.of(), grows, "a box whose lower part can be out of reach: put it on FramedPopup");
+    }
+
+    /** A box listed as framed or room-sized is built that way: its source uses the bound it is listed with. */
+    @Test
+    void eachBoxUsesTheBoundItIsListedWith() throws IOException {
+        for (final Map.Entry<String, Listed> e : BOXES.entrySet()) {
+            final String src = Files.readString(SRC.resolve(e.getKey()));
+            switch (e.getValue()
+                .bound()) {
+                case FRAMED -> assertTrue(src.contains("FramedPopup"), e.getKey() + " is listed as a FramedPopup");
+                case ROOM -> assertTrue(
+                    src.contains("room(") || src.contains("BoxFit."),
+                    e.getKey() + " is listed as sized from the room");
+                case LIST -> assertTrue(
+                    src.contains("PickList") || src.contains(".popup("),
+                    e.getKey() + " is listed as a list");
+                default -> {}
+            }
+        }
     }
 
     private static void assertInside(final int[] r, final int x, final int y, final int w, final int h) {

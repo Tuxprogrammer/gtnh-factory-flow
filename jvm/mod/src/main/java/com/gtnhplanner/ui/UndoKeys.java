@@ -21,6 +21,28 @@ final class UndoKeys {
         REDO
     }
 
+    /** Set once an NEI without {@code KeyManager.isHashDown(name, modifiers)} turned out to be the one loaded. */
+    private static boolean olderNei;
+
+    /**
+     * Which act the keys held now ask for, from NEI. The NEI of 2.9.0 beta-1 has no
+     * {@code KeyManager.isHashDown(name, modifiers)}: there the binds are read with NEI's own whole-bind check, as the
+     * board always read them.
+     */
+    static Act now() {
+        if (!olderNei) {
+            try {
+                return read(codechicken.nei.KeyManager::isHashDown);
+            } catch (final LinkageError e) {
+                olderNei = true;
+            }
+        }
+        if (codechicken.nei.NEIClientConfig.isKeyHashDown(NEIPlanConfig.ConfigUndoKey.KEY)) return Act.UNDO;
+        if (codechicken.nei.NEIClientConfig.isKeyHashDown(NEIPlanConfig.ConfigRedoKey.KEY)
+            || codechicken.nei.NEIClientConfig.isKeyHashDown(NEIPlanConfig.ConfigRedoAltKey.KEY)) return Act.REDO;
+        return Act.NONE;
+    }
+
     /**
      * Which act the keys held now ask for. {@code down} answers whether a binding's key is down with exactly these
      * modifiers held (NEI's {@code KeyManager.isHashDown(name, modifiers)}).

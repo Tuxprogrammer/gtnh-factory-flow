@@ -1030,7 +1030,7 @@ public final class BoardScreen extends ModularScreen {
 
     /** Undo and redo, on the keys Controls binds them to ({@link UndoKeys}): true when the key was one of them. */
     private boolean undoKeys() {
-        final UndoKeys.Act act = UndoKeys.read(codechicken.nei.KeyManager::isHashDown);
+        final UndoKeys.Act act = UndoKeys.now();
         if (act == UndoKeys.Act.NONE) return false;
         final boolean undo = act == UndoKeys.Act.UNDO;
         // ModularUI offers each key event twice (char and key paths); act once per event.

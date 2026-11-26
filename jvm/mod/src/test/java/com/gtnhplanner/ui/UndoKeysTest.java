@@ -1,6 +1,8 @@
 package com.gtnhplanner.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -92,5 +94,21 @@ class UndoKeysTest {
             wires,
             back.getEdges()
                 .size());
+    }
+
+    @Test
+    void theKeyComesFromThePressNotFromWhatIsDown() {
+        final int ctrl = NEIClientUtils.CTRL_HASH, shift = NEIClientUtils.SHIFT_HASH;
+        // Z pressed with Ctrl held: undo, also when NEI kept Ctrl hashed into the binding.
+        assertTrue(UndoKeys.pressed(Keyboard.KEY_Z, Keyboard.KEY_Z, ctrl, true, false, false));
+        assertTrue(UndoKeys.pressed(Keyboard.KEY_Z, Keyboard.KEY_Z | ctrl, ctrl, true, false, false));
+        // Ctrl's own press, read in the frame Z went down too: not a press of Z, so it does not undo a second time.
+        assertFalse(UndoKeys.pressed(Keyboard.KEY_LCONTROL, Keyboard.KEY_Z, ctrl, true, false, false));
+        // A bare Z, and Ctrl+Shift+Z for the undo binding: no.
+        assertFalse(UndoKeys.pressed(Keyboard.KEY_Z, Keyboard.KEY_Z, ctrl, false, false, false));
+        assertFalse(UndoKeys.pressed(Keyboard.KEY_Z, Keyboard.KEY_Z, ctrl, true, true, false));
+        // Ctrl+Shift+Z for the redo binding; a key event with no key never matches.
+        assertTrue(UndoKeys.pressed(Keyboard.KEY_Z, Keyboard.KEY_Z, ctrl | shift, true, true, false));
+        assertFalse(UndoKeys.pressed(0, 0, 0, false, false, false));
     }
 }

@@ -740,6 +740,15 @@ public final class SettingsPanel extends Widget<SettingsPanel> implements Intera
                 Hyb.rect(kx, c[1], 6, c[3], CardPaint.EDGE);
                 Hyb.rect(kx + 1, c[1] + 1, 4, c[3] - 2, hot ? 0xFFFFFFFF : Hyb.INK);
                 Hyb.textRight(row.value(), RIGHT, y + (ROW - 8) / 2f + 1, Hyb.INK);
+                com.gtnhplanner.dev.DevBars.slider(
+                    "setting " + row.label(),
+                    this,
+                    c[0] + 3,
+                    c[0] + c[2] - 3,
+                    c[1] + c[3] / 2f,
+                    f,
+                    row.names().length - 1,
+                    dragging == row);
             }
             case CORNER -> {
                 // A little screen with a key in each corner; the minimap's lit.

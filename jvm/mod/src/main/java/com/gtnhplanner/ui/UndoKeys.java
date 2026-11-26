@@ -25,14 +25,17 @@ final class UndoKeys {
     private static boolean olderNei;
 
     /**
-     * Which act the keys held now ask for, from NEI. The NEI of 2.9.0 beta-1 has no
+     * Which act the key just pressed ({@code key}, with the modifiers held) asks for, from NEI's bindings. The NEI of 2.9.0 beta-1 has no
      * {@code KeyManager.isHashDown(name, modifiers)}: there the binds are read with NEI's own whole-bind check, as the
      * board always read them.
      */
-    static Act now() {
+    static Act now(final int key) {
         if (!olderNei) {
             try {
-                return read(codechicken.nei.KeyManager::isHashDown);
+                final boolean ctrl = NEIClientUtils.controlKey(), shift = NEIClientUtils.shiftKey(),
+                    alt = NEIClientUtils.altKey();
+                return read(
+                    (name, mods) -> pressed(key, codechicken.nei.KeyManager.getKeyCode(name), mods, ctrl, shift, alt));
             } catch (final LinkageError e) {
                 olderNei = true;
             }
@@ -41,6 +44,21 @@ final class UndoKeys {
         if (codechicken.nei.NEIClientConfig.isKeyHashDown(NEIPlanConfig.ConfigRedoKey.KEY)
             || codechicken.nei.NEIClientConfig.isKeyHashDown(NEIPlanConfig.ConfigRedoAltKey.KEY)) return Act.REDO;
         return Act.NONE;
+    }
+
+    /**
+     * Whether the key just pressed, {@code key}, is a binding's ({@code bound}, any modifiers NEI hashed into it left
+     * out) with exactly the modifiers {@code mods} held. The key comes from the press itself, not from whether it is
+     * down now: the game reads key states once a frame, so a tap shorter than a frame reads as never down, and a
+     * modifier pressed in the same frame as the key would read the key as down and act twice.
+     */
+    static boolean pressed(final int key, final int bound, final int mods, final boolean ctrl, final boolean shift,
+        final boolean alt) {
+        final int plain = bound & ~(NEIClientUtils.CTRL_HASH | NEIClientUtils.SHIFT_HASH | NEIClientUtils.ALT_HASH);
+        return key != 0 && key == plain
+            && ctrl == ((mods & NEIClientUtils.CTRL_HASH) != 0)
+            && shift == ((mods & NEIClientUtils.SHIFT_HASH) != 0)
+            && alt == ((mods & NEIClientUtils.ALT_HASH) != 0);
     }
 
     /**

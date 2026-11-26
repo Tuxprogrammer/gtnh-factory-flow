@@ -682,6 +682,7 @@ final class OverviewRail extends ParentWidget<OverviewRail>
             keys.add(line.key());
             final SpareBar bar = spareBars.computeIfAbsent(line.key(), k -> new SpareBar());
             bar.barWidth(CONTROLS_W);
+            bar.devName("overview spare " + line.key(), this);
             final boolean mine = hover != null && hover.kind() == Kind.SPARE && hover.data() == line;
             final int h = SpareBar.height(line);
             Hyb.rect(0, y, w - 1, h, Hyb.seeThrough(SpareBar.tint(line)));

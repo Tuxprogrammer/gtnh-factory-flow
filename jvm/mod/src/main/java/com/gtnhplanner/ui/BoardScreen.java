@@ -972,7 +972,7 @@ public final class BoardScreen extends ModularScreen {
         }
         // The task board: only undo and redo of the board's keys, which act on the plan out of sight.
         if (session.showsTasks()) {
-            if (!textFocused(this) && undoKeys()) return true;
+            if (!textFocused(this) && undoKeys(keyCode)) return true;
             return super.onKeyPressed(typedChar, keyCode);
         }
         // Linking a machine from the world: Esc gives up and goes back to the world.
@@ -1037,14 +1037,14 @@ public final class BoardScreen extends ModularScreen {
                 else if (session.copySelection() && keyCode == org.lwjgl.input.Keyboard.KEY_X) session.deleteSelected();
                 return true;
             }
-            if (undoKeys()) return true;
+            if (undoKeys(keyCode)) return true;
         }
         return super.onKeyPressed(typedChar, keyCode);
     }
 
     /** Undo and redo, on the keys Controls binds them to ({@link UndoKeys}): true when the key was one of them. */
-    private boolean undoKeys() {
-        final UndoKeys.Act act = UndoKeys.now();
+    private boolean undoKeys(final int keyCode) {
+        final UndoKeys.Act act = UndoKeys.now(keyCode != 0 ? keyCode : org.lwjgl.input.Keyboard.getEventKey());
         if (act == UndoKeys.Act.NONE) return false;
         final boolean undo = act == UndoKeys.Act.UNDO;
         // ModularUI offers each key event twice (char and key paths); act once per event.

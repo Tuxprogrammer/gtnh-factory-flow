@@ -131,7 +131,7 @@ public class Popup extends ModularPanel {
         if (enter == null
             || keyCode != org.lwjgl.input.Keyboard.KEY_RETURN && keyCode != org.lwjgl.input.Keyboard.KEY_NUMPADENTER)
             return false;
-        return enter();
+        return enter("box");
     }
 
     /** Whether Enter does something in this box (a question it answers, a box it confirms). */
@@ -146,11 +146,19 @@ public class Popup extends ModularPanel {
      * in an order the GUI library decides, so the action runs once per key event whichever asks first.
      */
     public boolean enter() {
+        return enter("board");
+    }
+
+    /** As {@link #enter()}, {@code via} naming the path the key came by, for the dev game's log. */
+    private boolean enter(final String via) {
         if (enter == null) return false;
         // A field anywhere on the screen that is typing keeps its Enter.
         if (com.gtnhplanner.ui.BoardScreen.textFocused(getScreen())) return false;
         final long event = org.lwjgl.input.Keyboard.getEventNanoseconds();
-        if (event != lastEnterEvent) {
+        final boolean runs = event != lastEnterEvent;
+        if (com.gtnhplanner.dev.DevHarness.isEnabled()) com.gtnhplanner.GtnhPlanner.LOG
+            .info("Enter in {} via {} (event {}): {}", getName(), via, event, runs ? "runs" : "already ran");
+        if (runs) {
             lastEnterEvent = event;
             enter.run();
         }

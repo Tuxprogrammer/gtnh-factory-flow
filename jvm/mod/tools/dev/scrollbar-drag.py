@@ -136,10 +136,86 @@ def drag(bar, start, distance, steps, pause, away=0):
     return held
 
 
+def slider_run(name, pause):
+    """A slider dragged with the real mouse: its value must follow the mouse while held and stay where it was let go."""
+    failed = []
+
+    def get():
+        s = harness("sliders")
+        if name not in s:
+            print(f"no slider '{name}' on screen; drawn now: {', '.join(s) or 'none'}")
+            sys.exit(2)
+        return s[name]
+
+    s = get()
+    x0, x1, y, steps = s["x"][0], s["x"][1], s["y"], max(1, s["steps"])
+    start = s["value"]
+
+    def expect(x):
+        f = min(1.0, max(0.0, (x - x0) / max(1, x1 - x0)))
+        return round(f * steps) / steps
+
+    def at(v):
+        return round(x0 + v * (x1 - x0))
+
+    def check(what, ok, detail):
+        print(f"{'PASS' if ok else 'FAIL'} {name} {what}: {detail}")
+        if not ok:
+            failed.append(what)
+
+    def drag(frm, to, steps_=10, away=0):
+        xdo("mousemove", frm, y)
+        time.sleep(0.3)
+        xdo("mousedown", 1)
+        time.sleep(0.15)
+        for i in range(1, steps_ + 1):
+            xdo("mousemove", frm + (to - frm) * i // steps_, y)
+            time.sleep(pause)
+        if away:
+            for i in range(1, 6):
+                xdo("mousemove", to, y + away * i // 5)
+                time.sleep(pause)
+        time.sleep(0.3)
+        held = get()
+        xdo("mouseup", 1)
+        time.sleep(0.4)
+        return held
+
+    # One step's worth either way: the mouse and the value each round to a pixel and a step.
+    tol = 1.0 / steps + 0.03
+    for frac in (0.75, 0.25):
+        frm, to = at(get()["value"]), at(frac)
+        held = drag(frm, to)
+        after = get()
+        check(f"follow to {frac}", held["held"] and abs(held["value"] - expect(to)) <= tol,
+              f"mouse at {to} ({expect(to):.3f}), value {held['value']:.3f} while held")
+        check(f"let go at {frac}", not after["held"] and abs(after["value"] - held["value"]) <= 1e-6,
+              f"value {after['value']:.3f} after the release, {held['value']:.3f} while held")
+    held = drag(at(get()["value"]), x1 + 200)
+    check("end", abs(held["value"] - 1) <= 1e-6, f"dragged past the end: value {held['value']:.3f}")
+    held = drag(at(get()["value"]), x0 - 200)
+    check("start", abs(held["value"]) <= 1e-6, f"dragged past the start: value {held['value']:.3f}")
+    held = drag(at(get()["value"]), at(0.5), away=-150)
+    xdo("mousemove", x1 - 2, y)
+    time.sleep(0.3)
+    xdo("mousemove", x0 + 2, y)
+    time.sleep(0.3)
+    after = get()
+    check("outside", abs(after["value"] - held["value"]) <= 1e-6 and not after["held"],
+          f"let go away from it at {held['value']:.3f}, then {after['value']:.3f} with the mouse over it")
+    # Put it back where it was.
+    drag(at(get()["value"]), at(start))
+    print(f"{name}: {'FAIL ' + ','.join(failed) if failed else 'PASS'}")
+    return 1 if failed else 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("bar", nargs="?")
-    ap.add_argument("--list", action="store_true")
+    ap.add_argument("bar", nargs="?", help="a bar's name (--list), a slider's with --slider, or a scene: "
+                    + ", ".join(SCENES))
+    ap.add_argument("--list", action="store_true", help="the bars and sliders drawn now")
+    ap.add_argument("--slider", action="store_true", help="the name is a slider's (/sliders): drag it and check its "
+                    "value follows the mouse, stops at both ends and stays where it was let go")
     ap.add_argument("--distance", type=int, default=100, help="screen pixels to drag (default 100)")
     ap.add_argument("--steps", type=int, default=10)
     ap.add_argument("--pause", type=float, default=0.03, help="seconds between steps")
@@ -147,14 +223,29 @@ def main():
     ap.add_argument("--only", default="drag,end,outside,track,wheel")
     ap.add_argument("--park", help="X,Y: where the mouse rests between checks (a bar drawn only while the mouse is on "
                     "its strip, as the plan tabs', needs a spot on the strip off the bar)")
+    ap.add_argument("--card", help="pattern-box: the card's id, to open the box again for Esc, Cancel and Make")
+    ap.add_argument("--board-at", type=lambda v: tuple(int(x) for x in v.split(",")), default=(1000, 400),
+                    help="delete: X,Y on the empty board where the mouse rests for the keys")
+    ap.add_argument("--gui", type=int, default=2, help="the game's GUI scale (screen pixels per GUI pixel)")
     ap.add_argument("--geometry", help="axis,c0,c1,t0,t1 in screen px: the bar's place without the harness (a build "
                     "older than /scrollbars)")
     a = ap.parse_args()
     if a.list:
-        print(json.dumps(harness("scrollbars"), indent=1))
+        print(json.dumps({"bars": harness("scrollbars"), "sliders": harness("sliders")}, indent=1))
         return 0
     if not a.bar:
         ap.error("name a bar (--list shows them)")
+    global GUI
+    GUI = a.gui
+    if a.slider:
+        return slider_run(a.bar, a.pause)
+    if a.bar in SCENES:
+        return SCENES[a.bar](a)
+    return bar_run(a)
+
+
+def bar_run(a):
+    """The bar named a.bar pressed, dragged and let go with the real mouse; 0 when every check passes."""
     checks = a.only.split(",")
     failed = []
 
@@ -249,6 +340,235 @@ def main():
         check("wheel", after[0] > th[0], f"three wheel steps down: thumb {th} -> {after}")
     print(f"{a.bar}: {'FAIL ' + ','.join(failed) if failed else 'PASS'}")
     return 1 if failed else 0
+
+
+GUI = 2
+
+
+def gui_pt(p):
+    """A point in the game's GUI pixels (the harness's /click and /pattern), on the screen."""
+    return p[0] * GUI, p[1] * GUI
+
+
+def click_at(pt, button=1):
+    xdo("mousemove", *pt)
+    time.sleep(0.25)
+    xdo("click", button)
+    time.sleep(0.5)
+
+
+def key(*names):
+    """Key chords pressed through the X server and held as a person holds them (150 ms), modifiers first and let go
+    last (xdotool names: Return, Escape, ctrl+shift+z). A tap shorter than a frame or two can go unseen by the game."""
+    for n in names:
+        parts = n.split("+")
+        for k in parts:
+            xdo("keydown", k)
+            time.sleep(0.05)
+        time.sleep(0.15)
+        for k in reversed(parts):
+            xdo("keyup", k)
+            time.sleep(0.03)
+        time.sleep(0.6)
+
+
+def log_lines(since, word):
+    """Lines of the game's log after byte `since` that contain `word`."""
+    path = os.environ.get("PLANNH_LOG", "build/dev-client/client.log")
+    with open(path, "rb") as f:
+        f.seek(since)
+        return [l for l in f.read().decode("utf-8", "replace").splitlines() if word in l]
+
+
+def log_end():
+    path = os.environ.get("PLANNH_LOG", "build/dev-client/client.log")
+    return os.path.getsize(path)
+
+
+class Checks:
+    def __init__(self, scene):
+        self.scene, self.failed = scene, []
+
+    def __call__(self, what, ok, detail):
+        print(f"{'PASS' if ok else 'FAIL'} {self.scene} {what}: {detail}")
+        if not ok:
+            self.failed.append(what)
+
+    def done(self):
+        print(f"{self.scene}: {'FAIL ' + ','.join(self.failed) if self.failed else 'PASS'}")
+        return 1 if self.failed else 0
+
+
+def pattern_scene(a):
+    """The pattern box on a shared machine (open it first: /pattern?card=1&join=14...): its bar, the wheel over its
+    rows, a click on its footer off the keys, a click on a row's switch, then Enter (makes the patterns, once). Then it
+    is opened again (/pattern?pick=1&id=, --card) for Esc (cancels) and again for a click on Cancel after the rows are
+    dragged to the end."""
+    c = Checks("pattern box")
+
+    def box():
+        return harness("pattern?pickat=1")
+
+    def reopen():
+        harness(f"pattern?pick=1&id={a.card}")
+        time.sleep(0.8)
+        return box()
+
+    t = box()
+    if not t.get("open"):
+        print("open the pattern box first")
+        return 2
+    sub = argparse.Namespace(**{**vars(a), "bar": "pattern"})
+    c("bar", bar_run(sub) == 0, "pattern box's bar: drag, ends, release away, track click, wheel on the bar")
+    # The wheel over the rows themselves.
+    t = box()
+    row = next(p for p in t["switches"] if p)
+    over = gui_pt((row[0] - 120, row[1]))
+    xdo("mousemove", *over)
+    time.sleep(0.3)
+    before = box()["scroll"]
+    for _ in range(3):
+        xdo("click", 5)
+        time.sleep(0.15)
+    time.sleep(0.3)
+    down = box()["scroll"]
+    for _ in range(3):
+        xdo("click", 4)
+        time.sleep(0.15)
+    time.sleep(0.3)
+    up = box()["scroll"]
+    c("wheel on rows", down > before and up < down, f"scroll {before} -> {down} (3 down) -> {up} (3 up)")
+    # Cancel and Make pattern on the screen, under the rows.
+    t = box()
+    screen_h = SCREEN[1]
+    keys_ok = all(0 <= gui_pt(t[k])[1] < screen_h for k in ("cancel", "make"))
+    c("keys on screen", keys_ok and t["maxScroll"] > 0,
+      f"cancel {gui_pt(t['cancel'])}, make {gui_pt(t['make'])}, screen {SCREEN}, rows scroll up to {t['maxScroll']}")
+    # A click on the footer off the keys, with rows hidden under it: nothing changes, the box stays.
+    t = box()
+    hidden = sum(1 for p in t["switches"] if p is None)
+    click_at(gui_pt((t["cancel"][0] - 60, t["cancel"][1])))
+    after = box()
+    c("footer click", after["open"] and after["included"] == t["included"],
+      f"{hidden} rows hidden; box open {after['open']}, choices the same {after['included'] == t['included']}")
+    # A click on a row's switch flips it; a second flips it back.
+    t = box()
+    idx = next(i for i, p in enumerate(t["switches"]) if p)
+    click_at(gui_pt(t["switches"][idx]))
+    flipped = box()["included"]
+    click_at(gui_pt(t["switches"][idx]))
+    back = box()["included"]
+    c("row switch", flipped != t["included"] and back == t["included"], f"switch {idx} flipped and back")
+    # Enter makes the patterns, once.
+    made0 = len(harness("pattern?look=1")["encoded"])
+    mark = log_end()
+    key("Return")
+    time.sleep(2.5)
+    t = box()
+    made = len(harness("pattern?look=1")["encoded"]) - made0
+    lines = log_lines(mark, "Enter in ")
+    runs = [l for l in lines if l.endswith(": runs")]
+    c("enter", not t["open"] and made > 0 and len(runs) == 1,
+      f"box open {t['open']}, {made} patterns made; Enter heard: "
+      + "; ".join(l.split("Enter in ", 1)[1] for l in lines))
+    if not a.card:
+        return c.done()
+    # Esc cancels: nothing made.
+    t = reopen()
+    made0 = len(harness("pattern?look=1")["encoded"])
+    key("Escape")
+    time.sleep(1.5)
+    t = box()
+    made = len(harness("pattern?look=1")["encoded"]) - made0
+    c("esc", not t["open"] and made == 0, f"box open {t['open']}, {made} made")
+    # Rows dragged to the end with the thumb, then Cancel clicked: closed, nothing made.
+    t = reopen()
+    bar = find("pattern")
+    th = bar.thumb()
+    drag(bar, (th[0] + th[1]) // 2, bar.t1 - bar.t0, 10, a.pause)
+    t = box()
+    made0 = len(harness("pattern?look=1")["encoded"])
+    c("rows at the end", t["scroll"] == t["maxScroll"] and t["switches"][-1] is not None,
+      f"scroll {t['scroll']} of {t['maxScroll']}, last row shown {t['switches'][-1] is not None}")
+    click_at(gui_pt(t["cancel"]))
+    t = box()
+    made = len(harness("pattern?look=1")["encoded"]) - made0
+    c("cancel", not t["open"] and made == 0, f"box open {t['open']}, {made} made")
+    # And Make pattern clicked with the rows at the end makes them.
+    t = reopen()
+    bar = find("pattern")
+    th = bar.thumb()
+    drag(bar, (th[0] + th[1]) // 2, bar.t1 - bar.t0, 10, a.pause)
+    made0 = len(harness("pattern?look=1")["encoded"])
+    click_at(gui_pt(box()["make"]))
+    time.sleep(2.5)
+    t = box()
+    made = len(harness("pattern?look=1")["encoded"]) - made0
+    c("make", not t["open"] and made > 0, f"box open {t['open']}, {made} made")
+    return c.done()
+
+
+def cards():
+    return harness("board")["cards"]
+
+
+def delete_scene(a):
+    """The delete question on a board of several cards (all of them selected with Ctrl+A): Delete asks, Esc keeps them,
+    Enter deletes them (the action once), Ctrl+Z brings them back, Ctrl+Shift+Z and Ctrl+Y redo, and a bare Z does
+    nothing. All keys through the X server."""
+    c = Checks("delete question")
+    n0 = len(cards())
+    if n0 < 2:
+        print("put two or more cards on the board first")
+        return 2
+    # The mouse over the board, clear of the boxes.
+    xdo("mousemove", *a.board_at)
+    time.sleep(0.3)
+
+    def ask():
+        key("ctrl+a")
+        mark = log_end()
+        key("Delete")
+        return mark
+
+    def asking():
+        return any(p.startswith("gtnhplanner_delete_cards") for p in harness("status").get("panels", []))
+
+    ask()
+    n = len(cards())
+    c("asks", n == n0 and asking(), f"{n0} cards, {n} after Delete; question open {asking()}")
+    key("Escape")
+    n = len(cards())
+    c("esc keeps", n == n0 and not asking(), f"{n} cards after Esc; question open {asking()}")
+    mark = ask()
+    key("Return")
+    time.sleep(1)
+    n = len(cards())
+    lines = log_lines(mark, "Enter in ")
+    runs = [l for l in lines if l.endswith(": runs")]
+    c("enter deletes", n == 0 and len(runs) == 1,
+      f"{n} cards after Enter; Enter heard: " + "; ".join(l.split("Enter in ", 1)[1] for l in lines))
+    key("ctrl+z")
+    time.sleep(1)
+    c("ctrl+z", len(cards()) == n0, f"{len(cards())} cards after Ctrl+Z")
+    key("ctrl+shift+z")
+    time.sleep(1)
+    c("ctrl+shift+z", len(cards()) == 0, f"{len(cards())} cards after Ctrl+Shift+Z")
+    key("ctrl+z")
+    time.sleep(1)
+    key("ctrl+y")
+    time.sleep(1)
+    c("ctrl+y", len(cards()) == 0, f"{len(cards())} cards after Ctrl+Z, Ctrl+Y")
+    key("ctrl+z")
+    time.sleep(1)
+    key("z")
+    time.sleep(1)
+    n = len(cards())
+    c("bare z", n == n0, f"{n} cards after Ctrl+Z then a bare Z ({n0} before)")
+    return c.done()
+
+
+SCENES = {"pattern-box": pattern_scene, "delete": delete_scene}
 
 
 if __name__ == "__main__":

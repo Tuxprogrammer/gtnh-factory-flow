@@ -20,6 +20,15 @@ public final class DevBars {
 
     static final Map<String, Bar> BARS = new ConcurrentHashMap<>();
 
+    /**
+     * A slider in its widget's pixels: the mouse's {@code x0} to {@code x1} span the values from 0 to 1 in
+     * {@code steps}; {@code y} its middle; {@code value} where it stands, {@code held} whether it is in hand.
+     */
+    public record Slider(IWidget widget, float x0, float x1, float y, double value, int steps, boolean held,
+        long at) {}
+
+    static final Map<String, Slider> SLIDERS = new ConcurrentHashMap<>();
+
     private DevBars() {}
 
     /** A bar drawn this frame (nothing outside a dev game). */
@@ -27,5 +36,12 @@ public final class DevBars {
         final int cross, final int crossW, final int scroll) {
         if (!DevHarness.isEnabled()) return;
         BARS.put(name, new Bar(widget, thumb, across, cross, crossW, scroll, System.currentTimeMillis()));
+    }
+
+    /** A slider drawn this frame (nothing outside a dev game). */
+    public static void slider(final String name, final IWidget widget, final float x0, final float x1, final float y,
+        final double value, final int steps, final boolean held) {
+        if (!DevHarness.isEnabled()) return;
+        SLIDERS.put(name, new Slider(widget, x0, x1, y, value, steps, held, System.currentTimeMillis()));
     }
 }

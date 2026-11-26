@@ -86,6 +86,7 @@ public final class SparePopup extends Widget<SparePopup> implements Interactable
                 : line.bearers()
                     .get(place));
         Hyb.rect(-PAD + 1, -2, SLIDER_W + 2 * PAD - 2, SpareBar.height(line) + 4, SpareBar.tint(line));
+        bar.devName("spare box", this);
         final int h = bar.draw(session, line, 0, 0, SLIDER_W, context.getCurrentDrawingZ(), hover, here);
         linkY = h + 3;
         // The labels take more rows or fewer as the spare moves: the popup grows or shrinks to fit them.

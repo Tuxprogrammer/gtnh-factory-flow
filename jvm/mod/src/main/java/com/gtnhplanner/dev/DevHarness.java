@@ -345,6 +345,8 @@ public final class DevHarness {
                 return onClient(this::widgets);
             case "/scrollbars":
                 return onClient(DevHarness::scrollbars);
+            case "/sliders":
+                return onClient(DevHarness::sliders);
             case "/move":
                 return input(List.of(() -> moveTo(intArg(q, "x"), intArg(q, "y"))));
             case "/click":
@@ -1651,6 +1653,34 @@ public final class DevHarness {
             m.put("cross", List.of(c0, c1));
             m.put("track", List.of(t0, t1));
             m.put("thumb", List.of(h0, h1));
+            out.put(e.getKey(), m);
+        }
+        return out;
+    }
+
+    /**
+     * Every slider drawn in the last second, by name: the screen x span that runs its value from 0 to 1, the screen y
+     * of its middle, its value (0 to 1), how many steps it has, and whether it is held.
+     */
+    private static Object sliders() {
+        final Minecraft mc = Minecraft.getMinecraft();
+        final int k = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight).getScaleFactor();
+        final boolean planner = com.gtnhplanner.ui.Planner.isPlanner(mc.currentScreen);
+        final long now = System.currentTimeMillis();
+        final int per = planner ? com.gtnhplanner.ui.PlannerScale.board() : k;
+        final java.util.function.DoubleUnaryOperator px = v -> v * per;
+        final Map<String, Object> out = new LinkedHashMap<>();
+        for (final Map.Entry<String, DevBars.Slider> e : new java.util.TreeMap<>(DevBars.SLIDERS).entrySet()) {
+            final DevBars.Slider s = e.getValue();
+            if (now - s.at() > 1000) continue;
+            final Area a = s.widget()
+                .getArea();
+            final Map<String, Object> m = new LinkedHashMap<>();
+            m.put("x", List.of(Math.round(px.applyAsDouble(a.x() + s.x0())), Math.round(px.applyAsDouble(a.x() + s.x1()))));
+            m.put("y", Math.round(px.applyAsDouble(a.y() + s.y())));
+            m.put("value", s.value());
+            m.put("steps", s.steps());
+            m.put("held", s.held());
             out.put(e.getKey(), m);
         }
         return out;

@@ -19,4 +19,15 @@ public final class BarDrag {
         }
         return thumb.to(pos);
     }
+
+    /**
+     * Whether a drag that is not a thumb's (a slider's knob) goes on this frame, to be followed from the mouse itself
+     * for the same reasons; once the left button is up, wherever it was let go, {@code release} ends it and this is
+     * false.
+     */
+    public static boolean held(final Runnable release) {
+        if (org.lwjgl.input.Mouse.isButtonDown(0)) return true;
+        release.run();
+        return false;
+    }
 }

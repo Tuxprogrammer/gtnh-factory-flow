@@ -704,6 +704,11 @@ public final class SettingsPanel extends Widget<SettingsPanel> implements Intera
         // Over the title or the box's edge, the mouse is over no setting.
         final int rowMy = inRows(mx, my) ? my : -1;
         final List<Row> rows = section().rows();
+        // The slider in hand follows the mouse every frame, until the button is up (BarDrag).
+        if (dragging != null && com.gtnhplanner.ui.theme.BarDrag.held(() -> dragging = null)) {
+            final int i = rows.indexOf(dragging);
+            if (i >= 0) slide(controlRect(dragging, rowY(i)));
+        }
 
         // The title, and the key that closes the box.
         Hyb.text("Settings", 10, (TITLE - 8) / 2f + 1, Hyb.INK);
@@ -922,10 +927,7 @@ public final class SettingsPanel extends Widget<SettingsPanel> implements Intera
     @Override
     public void onMouseDrag(final int mouseButton, final long timeSinceClick) {
         if (bar.dragging()) scroll = rowsFrame().clamp(bar.drag(mouseY()));
-        if (dragging == null) return;
-        final List<Row> rows = section().rows();
-        final int i = rows.indexOf(dragging);
-        if (i >= 0) slide(controlRect(dragging, rowY(i)));
+        // A slider in hand moves in draw: a drag event reads the mouse as the last frame left it.
     }
 
     @Override

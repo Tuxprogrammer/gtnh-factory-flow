@@ -1276,110 +1276,18 @@ public final class BoardSession {
 
     // region Copy and paste
 
-    /** A copied card: its recipe and settings, and where it sat from the copy's top-left. */
-    private record ClipNode(codechicken.nei.recipe.Recipe.RecipeId recipe, Map<String, Object> settings,
-        String machineName, boolean fixed, boolean exact, int dx, int dy, String powerSource,
-        Map<String, String> powerSettings, Map<Integer, String> picks) {}
+    /** The last copy, shared by every plan, so a group copied from one plan pastes into another. */
+    private static BoardClip.Clip clipboard;
 
     /**
-     * A copied drawer, the copied cards' ports it was linked to as {card index in the copy, port}, and each link's dots
-     * from the copy's top-left.
+     * Copies the selected cards, drawers and notes with the wires among them, a shared machine with every recipe on
+     * its card ({@link BoardClip}); false when nothing is selected.
      */
-    private record ClipDrawer(Drawer.Kind kind, String key, String label, Drawer.Rule rule, double rate, int dx, int dy,
-        List<int[]> links, List<List<int[]>> linkWaypoints) {}
-
-    /** A wire between two copied cards, by their index in the copy, and its dots from the copy's top-left. */
-    private record ClipEdge(int from, int output, int to, int input, List<int[]> waypoints) {}
-
-    /** A copied sticky note, and where it sat from the copy's top-left. */
-    private record ClipNote(com.gtnhplanner.data.flowchart.Note note, int dx, int dy) {}
-
-    private record Clip(List<ClipNode> nodes, List<ClipDrawer> drawers, List<ClipEdge> edges, List<ClipNote> notes) {}
-
-    /** The last copy, shared by every plan, so a group copied from one plan pastes into another. */
-    private static Clip clipboard;
-
-    /** Copies the selected cards, drawers and notes with the wires among them; false when nothing is selected. */
     public boolean copySelection() {
-        int x0 = Integer.MAX_VALUE, y0 = Integer.MAX_VALUE;
-        final List<Node> nodes = new ArrayList<>();
-        final List<Drawer> drawers = new ArrayList<>();
-        final List<com.gtnhplanner.data.flowchart.Note> notes = new ArrayList<>();
-        for (final Uuid id : selection) {
-            final Node n = graph.nodes.get(id);
-            if (n != null) {
-                nodes.add(n);
-                x0 = Math.min(x0, n.x);
-                y0 = Math.min(y0, n.y);
-            }
-            final Drawer d = graph.getDrawer(id);
-            if (d != null) {
-                drawers.add(d);
-                x0 = Math.min(x0, d.getX());
-                y0 = Math.min(y0, d.getY());
-            }
-            final com.gtnhplanner.data.flowchart.Note note = graph.notes.get(id);
-            if (note != null) {
-                notes.add(note);
-                x0 = Math.min(x0, note.getX());
-                y0 = Math.min(y0, note.getY());
-            }
-        }
-        if (nodes.isEmpty() && drawers.isEmpty() && notes.isEmpty()) return false;
-        final List<ClipNote> clipNotes = new ArrayList<>();
-        for (final com.gtnhplanner.data.flowchart.Note note : notes)
-            clipNotes.add(new ClipNote(note.copy(), note.getX() - x0, note.getY() - y0));
-        final Map<Uuid, Integer> index = new HashMap<>();
-        final List<ClipNode> clipNodes = new ArrayList<>();
-        for (final Node n : nodes) {
-            index.put(n.id, clipNodes.size());
-            clipNodes.add(
-                new ClipNode(
-                    com.gtnhplanner.nei.NeiRecipes.id(n),
-                    new HashMap<>(n.machineConfig.settings),
-                    n.machineName,
-                    n.isMachineCountFixed(),
-                    n.isMachineCountExact(),
-                    n.x - x0,
-                    n.y - y0,
-                    n.powerSource,
-                    new LinkedHashMap<>(n.powerSettings),
-                    new HashMap<>(n.inputPicks)));
-        }
-        final List<ClipEdge> edges = new ArrayList<>();
-        for (final Edge e : graph.getEdges()) {
-            final Integer from = index.get(e.sourceNodeId), to = index.get(e.targetNodeId);
-            if (from != null && to != null) edges.add(
-                new ClipEdge(
-                    from,
-                    e.sourceOutputIndex,
-                    to,
-                    e.targetInputIndex,
-                    Waypoints.shifted(e.waypoints, -x0, -y0)));
-        }
-        final List<ClipDrawer> clipDrawers = new ArrayList<>();
-        for (final Drawer d : drawers) {
-            final List<int[]> links = new ArrayList<>();
-            final List<List<int[]>> linkWaypoints = new ArrayList<>();
-            for (final Drawer.Link l : d.getLinks()) {
-                final Integer at = index.get(l.nodeId());
-                if (at == null) continue;
-                links.add(new int[] { at, l.portIndex() });
-                linkWaypoints.add(Waypoints.shifted(l.waypoints(), -x0, -y0));
-            }
-            clipDrawers.add(
-                new ClipDrawer(
-                    d.getKind(),
-                    d.getResourceKey(),
-                    d.getLabel(),
-                    d.getRule(),
-                    d.getRate(),
-                    d.getX() - x0,
-                    d.getY() - y0,
-                    links,
-                    linkWaypoints));
-        }
-        clipboard = new Clip(clipNodes, clipDrawers, edges, clipNotes);
+        final BoardClip.Clip clip = BoardClip
+            .copy(graph, selection, this::sectionsOf, com.gtnhplanner.nei.NeiRecipes::id);
+        if (clip == null) return false;
+        clipboard = clip;
         return true;
     }
 
@@ -1396,91 +1304,21 @@ public final class BoardSession {
      * plan this way), and selects and returns what it made.
      */
     public List<Uuid> pasteAt(final List<int[]> origins) {
-        final Clip clip = clipboard;
+        final BoardClip.Clip clip = clipboard;
         if (clip == null || origins.isEmpty()) return List.of();
-        final List<Runnable> adds = new ArrayList<>();
+        final List<java.util.function.Supplier<List<Uuid>>> adds = new ArrayList<>();
         selection.clear();
-        for (final int[] origin : origins) adds.add(pasteOnce(clip, origin[0], origin[1]));
-        edit(() -> { for (final Runnable add : adds) add.run(); });
+        for (final int[] origin : origins)
+            adds.add(BoardClip.pasting(graph, clip, origin[0], origin[1], BoardSession::pastedCard, v -> snap(v)));
+        edit(() -> { for (final java.util.function.Supplier<List<Uuid>> add : adds) selection.addAll(add.get()); });
         (selection.size() > 1 ? Sfx.SWEEP : Sfx.PLACE).play();
         return List.copyOf(selection);
     }
 
-    /** One copy of the clip at a board point: its cards made now, the returned step adds everything to the graph. */
-    private Runnable pasteOnce(final Clip clip, final int worldX, final int worldY) {
-        final List<Node> made = new ArrayList<>();
-        for (final ClipNode c : clip.nodes()) {
-            if (c.powerSource() != null) {
-                final Node n = Node
-                    .power(c.powerSource(), c.powerSettings(), snap(worldX + c.dx()), snap(worldY + c.dy()));
-                n.setMachineCountFixed(c.fixed());
-                n.setMachineCountExact(c.exact());
-                made.add(n);
-                continue;
-            }
-            final RecipeHandlerRef ref = com.gtnhplanner.nei.RecipeRefs.of(c.recipe());
-            if (ref == null) {
-                made.add(null);
-                continue;
-            }
-            final Node n = com.gtnhplanner.nei.NeiRecipes
-                .node(ref.handler, ref.recipeIndex, snap(worldX + c.dx()), snap(worldY + c.dy()));
-            n.machineConfig.settings.clear();
-            n.machineConfig.settings.putAll(c.settings());
-            n.machineName = c.machineName();
-            n.setMachineCountFixed(c.fixed());
-            n.setMachineCountExact(c.exact());
-            n.inputPicks.putAll(c.picks());
-            n.applyPicks();
-            made.add(n);
-        }
-        final List<Drawer> madeDrawers = new ArrayList<>();
-        final List<Uuid> madeNotes = new ArrayList<>();
-        return () -> {
-            for (final Node n : made) if (n != null) graph.addNode(n);
-            for (final ClipEdge e : clip.edges()) {
-                final Node from = made.get(e.from()), to = made.get(e.to());
-                if (from == null || to == null) continue;
-                final Edge edge = new Edge(Uuid.randomUUID(), from.id, to.id, e.output(), e.input());
-                // Its dots ride along with the copy, as on the website.
-                edge.waypoints = Waypoints.shifted(e.waypoints(), snap(worldX), snap(worldY));
-                graph.addEdge(edge);
-            }
-            for (final ClipDrawer c : clip.drawers()) {
-                final Drawer d = new Drawer(c.kind(), c.key());
-                d.setLabel(c.label());
-                d.setX(snap(worldX + c.dx()));
-                d.setY(snap(worldY + c.dy()));
-                d.setTarget(c.rule(), c.rate());
-                graph.addDrawer(d);
-                for (int k = 0; k < c.links()
-                    .size(); k++) {
-                    final int[] l = c.links()
-                        .get(k);
-                    final Node n = made.get(l[0]);
-                    if (n != null) graph.linkDrawer(
-                        d.getId(),
-                        new Drawer.Link(n.id, l[1]).withWaypoints(
-                            Waypoints.shifted(
-                                c.linkWaypoints()
-                                    .get(k),
-                                snap(worldX),
-                                snap(worldY))));
-                }
-                madeDrawers.add(d);
-            }
-            for (final ClipNote c : clip.notes()) {
-                final com.gtnhplanner.data.flowchart.Note note = c.note()
-                    .copy();
-                note.setX(snap(worldX + c.dx()));
-                note.setY(snap(worldY + c.dy()));
-                graph.notes.put(note.getId(), note);
-                madeNotes.add(note.getId());
-            }
-            for (final Node n : made) if (n != null) selection.add(n.id);
-            for (final Drawer d : madeDrawers) selection.add(d.getId());
-            selection.addAll(madeNotes);
-        };
+    /** A copied recipe card made again from NEI, or null when NEI no longer has its recipe. */
+    private static Node pastedCard(final Object recipe, final int x, final int y) {
+        final RecipeHandlerRef ref = com.gtnhplanner.nei.RecipeRefs.of((codechicken.nei.recipe.Recipe.RecipeId) recipe);
+        return ref == null ? null : com.gtnhplanner.nei.NeiRecipes.node(ref.handler, ref.recipeIndex, x, y);
     }
 
     // endregion

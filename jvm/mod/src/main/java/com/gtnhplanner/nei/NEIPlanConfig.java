@@ -9,7 +9,6 @@ import com.gtnhplanner.Compat;
 import com.gtnhplanner.GtnhPlanner;
 import com.gtnhplanner.Tags;
 
-import codechicken.nei.NEIClientUtils;
 import codechicken.nei.api.API;
 import codechicken.nei.api.IConfigureNEI;
 import codechicken.nei.config.OptionCycled;
@@ -41,24 +40,24 @@ public class NEIPlanConfig implements IConfigureNEI {
         public static int ON = 1;
     }
 
-    // Hash binds carry their modifiers in the stored int and compare exactly, so every accepted
-    // combination needs its own ident.
+    // NEI keeps each bind as a plain key binding (Controls can move it) and drops the modifiers; the board asks for
+    // the modifiers each one needs (ui/UndoKeys: Ctrl+Z, Ctrl+Shift+Z, Ctrl+Y).
     public static class ConfigUndoKey {
 
         public static String KEY = "gtnhplanner.undo";
-        public static int defVal = Keyboard.KEY_Z + NEIClientUtils.CTRL_HASH;
+        public static int defVal = Keyboard.KEY_Z;
     }
 
     public static class ConfigRedoKey {
 
         public static String KEY = "gtnhplanner.redo";
-        public static int defVal = Keyboard.KEY_Z + NEIClientUtils.CTRL_HASH + NEIClientUtils.SHIFT_HASH;
+        public static int defVal = Keyboard.KEY_Z;
     }
 
     public static class ConfigRedoAltKey {
 
         public static String KEY = "gtnhplanner.redo_alt";
-        public static int defVal = Keyboard.KEY_Y + NEIClientUtils.CTRL_HASH;
+        public static int defVal = Keyboard.KEY_Y;
     }
 
     private static final PlanOverlayHandler HANDLER = new PlanOverlayHandler();

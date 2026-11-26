@@ -16,7 +16,6 @@ import com.cleanroommc.modularui.screen.UISettings;
 import com.cleanroommc.modularui.widgets.ButtonWidget;
 import com.cleanroommc.modularui.widgets.layout.Flow;
 import com.gtnhplanner.GtnhPlanner;
-import com.gtnhplanner.nei.NEIPlanConfig;
 import com.gtnhplanner.nei.PlanBookmarks;
 import com.gtnhplanner.ui.canvas.BoardCanvas;
 import com.gtnhplanner.ui.card.CardModel;
@@ -32,7 +31,6 @@ import com.gtnhplanner.ui.theme.Hyb;
 import com.gtnhplanner.ui.theme.Icons;
 
 import codechicken.nei.LayoutManager;
-import codechicken.nei.NEIClientConfig;
 import codechicken.nei.guihook.GuiContainerManager;
 
 /**
@@ -1030,11 +1028,11 @@ public final class BoardScreen extends ModularScreen {
         return super.onKeyPressed(typedChar, keyCode);
     }
 
-    /** Undo and redo, as NEI's settings bind them: true when the key was one of them. */
+    /** Undo and redo, on the keys Controls binds them to ({@link UndoKeys}): true when the key was one of them. */
     private boolean undoKeys() {
-        final boolean undo = NEIClientConfig.isKeyHashDown(NEIPlanConfig.ConfigUndoKey.KEY);
-        if (!undo && !NEIClientConfig.isKeyHashDown(NEIPlanConfig.ConfigRedoKey.KEY)
-            && !NEIClientConfig.isKeyHashDown(NEIPlanConfig.ConfigRedoAltKey.KEY)) return false;
+        final UndoKeys.Act act = UndoKeys.read(codechicken.nei.KeyManager::isHashDown);
+        if (act == UndoKeys.Act.NONE) return false;
+        final boolean undo = act == UndoKeys.Act.UNDO;
         // ModularUI offers each key event twice (char and key paths); act once per event.
         final long event = org.lwjgl.input.Keyboard.getEventNanoseconds();
         if (event != lastKeyEvent) {

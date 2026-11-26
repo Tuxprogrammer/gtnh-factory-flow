@@ -43,6 +43,11 @@ public final class IncomingOffer extends Widget<IncomingOffer> implements Intera
             public boolean closeOnOutOfBoundsClick() {
                 return false;
             }
+
+            @Override
+            public boolean holdsBoard() {
+                return true;
+            }
         };
         popup.child(new IncomingOffer(pending).pos(0, 0));
         Popup.openCentred(board, popup, 1 / 3f);

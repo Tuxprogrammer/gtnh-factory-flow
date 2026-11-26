@@ -22,6 +22,11 @@ public final class SparePopup extends ScrollBody {
     private static final int SLIDER_W = 190, PAD = 6, LINK_H = 9;
     private static final float SMALL = 0.75f;
     private static final String DRAWER = "or put a drawer here";
+    /**
+     * Wide enough that the share bars, and their one pixel of reach, end left of the body's scroll bar and its grab
+     * strip when the places scroll: a share at its whole was otherwise taken by the bar and could not be dragged back.
+     */
+    private static final int WIDTH = PAD + SLIDER_W + com.gtnhplanner.ui.theme.ScrollBar.W + 5;
 
     private final BoardSession session;
     /** The leftover, by key: the solve gives it a new object each time, so it is looked up on every draw. */
@@ -39,21 +44,14 @@ public final class SparePopup extends ScrollBody {
     }
 
     /**
-     * Opens the popup for {@code line} at a screen point, {@code here} being the key of the place whose row was
-     * clicked, {@code drawer} what the drawer link does.
+     * Opens the popup for {@code line} from a screen point (the press on the row), clear of it, {@code here} being
+     * the key of the place whose row was clicked, {@code drawer} what the drawer link does.
      */
     public static void open(final com.cleanroommc.modularui.screen.ModularPanel parent, final BoardSession session,
         final BoardSession.SpareLine line, final String here, final Runnable drawer, final int x, final int y) {
         final SparePopup lines = new SparePopup(session, line, here);
-        final Popup popup = new FramedPopup(
-            "gtnhplanner_spare",
-            SLIDER_W + 2 * PAD,
-            null,
-            0,
-            lines,
-            new Link(drawer),
-            LINK_H + PAD);
-        Popup.open(parent, popup, x, y);
+        final Popup popup = new FramedPopup("gtnhplanner_spare", WIDTH, null, 0, lines, new Link(drawer), LINK_H + PAD);
+        Popup.openBeside(parent, popup, x, y);
     }
 
     /** The lines: a gap, the slider with its labels, and the gap before the link. */
@@ -80,6 +78,7 @@ public final class SparePopup extends ScrollBody {
                 : line.bearers()
                     .get(place));
         Hyb.rect(1, PAD - 2, SLIDER_W + 2 * PAD - 2, SpareBar.height(line) + 4, SpareBar.tint(line));
+        bar.follow(session, getContext().getAbsMouseX() - getArea().x, PAD, SLIDER_W);
         bar.devName("spare box", this, -scroll());
         bar.draw(session, line, PAD, PAD, SLIDER_W, context.getCurrentDrawingZ(), hover, here);
     }

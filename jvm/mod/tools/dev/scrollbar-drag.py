@@ -192,9 +192,11 @@ def slider_run(name, pause):
 
     # One step's worth either way: the mouse and the value each round to a pixel and a step.
     tol = 1.0 / steps + 0.03
-    for frac in (0.75, 0.25):
+    # Long drags in many moves, then short ones in three: a slider that reads the mouse a move late stops short of the
+    # mouse by a whole move, which only a drag of few moves shows. Every one after a re-solve of the one before.
+    for frac, moves in ((0.75, 10), (0.25, 10), (0.6, 3), (0.05, 3), (0.95, 3), (0.4, 3)):
         frm, to = at(get()["value"]), at(frac)
-        held = drag(frm, to)
+        held = drag(frm, to, moves)
         after = get()
         check(f"follow to {frac}", held["held"] and abs(held["value"] - expect(to)) <= tol,
               f"mouse at {to} ({expect(to):.3f}), value {held['value']:.3f} while held")
@@ -202,6 +204,9 @@ def slider_run(name, pause):
               f"value {after['value']:.3f} after the release, {held['value']:.3f} while held")
     held = drag(at(get()["value"]), x1 + 200)
     check("end", abs(held["value"] - 1) <= 1e-6, f"dragged past the end: value {held['value']:.3f}")
+    # From the end (all of a leftover at one place), taken again and moved, then past the start.
+    held = drag(at(get()["value"]), at(0.3), 3)
+    check("from the end", abs(held["value"] - expect(at(0.3))) <= tol, f"from 1 to 0.3: value {held['value']:.3f}")
     held = drag(at(get()["value"]), x0 - 200)
     check("start", abs(held["value"]) <= 1e-6, f"dragged past the start: value {held['value']:.3f}")
     held = drag(at(get()["value"]), at(0.5), away=-150)
@@ -702,7 +707,139 @@ def box_scene(a):
     return c.done()
 
 
-SCENES = {"pattern-box": pattern_scene, "delete": delete_scene, "card-chips": chips_scene, "box": box_scene}
+def plan_digest(tag):
+    """The open plan as the website's project (/exportff), without what changes on every export, hashed."""
+    import hashlib
+    import tempfile
+    f = os.path.join(tempfile.gettempdir(), f"spare-open-{os.getpid()}-{tag}.json")
+    harness(f"exportff?file={f}")
+    with open(f) as fh:
+        d = json.load(fh)
+    os.remove(f)
+    for k in ("id", "metadata", "updatedAt", "createdAt"):
+        d.pop(k, None)
+    return hashlib.sha1(json.dumps(d, sort_keys=True).encode()).hexdigest()
+
+
+def extra_row():
+    """The first card's leftover row (its extra row, XOUT0 / XIN1...) on the board, as a GUI point; None for none."""
+    for card in harness("board")["cards"]:
+        for name, r in card.get("parts", {}).items():
+            if name.startswith("XOUT") or name.startswith("XIN"):
+                return r["cx"], r["cy"]
+    return None
+
+
+def spare_box():
+    return next((u for u in popups() if u["name"].startswith("gtnhplanner_spare")), None)
+
+
+def spare_open_scene(a):
+    """A card's leftover row (a plan whose leftover has several places, such as the fixture spare-places.json) pressed
+    and let go with the real mouse, held from 20 ms to 400 ms: every press opens the spare box, the plan does not
+    change, the box is wholly on the screen and clear of the pointer (the next click is not taken by the box), nothing
+    holds a button, and Esc closes it. Then the box's drawer link puts a drawer there (the plan changes and the box
+    closes) and one Ctrl+Z gives back exactly the plan before it, its leftover row with it."""
+    c = Checks("spare open")
+    st = harness("status")
+    gw, gh = st["guiWidth"], st["guiHeight"]
+    at = extra_row()
+    if at is None:
+        print("no card shows a leftover row; open a plan whose leftover has somewhere else to go")
+        return 2
+    base = plan_digest("base")
+    for ms in (20, 60, 100, 120, 150, 200, 300, 400):
+        at = extra_row()
+        pt = gui_pt(at)
+        xdo("mousemove", *pt)
+        time.sleep(0.3)
+        xdo("mousedown", 1)
+        time.sleep(ms / 1000)
+        xdo("mouseup", 1)
+        time.sleep(1.0)
+        box = spare_box()
+        c(f"{ms} ms opens", box is not None, "spare box open" if box else "no spare box")
+        same = plan_digest(f"p{ms}") == base
+        c(f"{ms} ms plan kept", same, "plan unchanged" if same else "the press changed the plan")
+        if box is None:
+            continue
+        mx, my = at
+        clear = not (box["x"] <= mx < box["x"] + box["w"] and box["y"] <= my < box["y"] + box["h"])
+        c(f"{ms} ms clear of the pointer", clear, f"box {box['x']},{box['y']} {box['w']}x{box['h']}, pointer {mx},{my}")
+        off = box["x"] < 0 or box["y"] < 0 or box["x"] + box["w"] > gw or box["y"] + box["h"] > gh
+        c(f"{ms} ms on screen", not off, f"box past the {gw}x{gh} screen" if off else "wholly on screen")
+        c(f"{ms} ms no hold", not holds(), f"held {holds()}")
+        key("Escape")
+        c(f"{ms} ms esc closes", spare_box() is None and plan_digest(f"e{ms}") == base, "closed, plan unchanged")
+    # The drawer link, then one Ctrl+Z.
+    xdo("mousemove", *gui_pt(extra_row()))
+    time.sleep(0.3)
+    xdo("click", 1)
+    time.sleep(1.0)
+    box = spare_box()
+    link = next((ch for ch in (box or {}).get("children", []) if ch.get("type") == "Link"), None)
+    c("drawer link shown", link is not None, "the box's drawer link" if link else "no link in the box")
+    if link is None:
+        return c.done()
+    # Its words sit at the box's right end.
+    click_at(gui_pt((link["x"] + link["w"] - 20, link["y"] + 4)))
+    time.sleep(1.0)
+    changed = plan_digest("drawer") != base
+    c("drawer link acts", changed and spare_box() is None, "a drawer added, box closed" if changed else "no change")
+    xdo("mousemove", *gui_pt((at[0], max(0, at[1] - 40))))
+    key("ctrl+z")
+    time.sleep(2.0)
+    back = plan_digest("undo") == base
+    c("ctrl+z gives back the plan", back, "the exact plan before the drawer" if back else "the plan differs")
+    c("leftover row back", extra_row() is not None, "the card shows its leftover row again")
+    return c.done()
+
+
+def offer_showing():
+    """The offer standing over the board now: the tour's (a TourOffer widget) or an offer box; None for none."""
+    def walk(n):
+        if isinstance(n, dict):
+            if n.get("type") == "TourOffer" and n.get("w", 0) > 0:
+                return "tour"
+            for ch in n.get("children", []):
+                r = walk(ch)
+                if r:
+                    return r
+        return None
+    w = harness("widgets")
+    for u in w.get("popups") or []:
+        if u.get("name", "").split("_")[1:3] in (["update", "offer"], ["crash", "offer"], ["incoming", "offer"]):
+            return u["name"]
+    return walk(w)
+
+
+def offer_scene(a):
+    """With an offer over the board (the tour's: /touroffer; an update's: /update?latest=v9 then reopen), the board's
+    keys and mouse do nothing to the plan or the view: Ctrl+A, Delete, Enter, Ctrl+X, Backspace, Ctrl+Z, Ctrl+V, +, the
+    wheel and a click on the board, all through the X server; the offer is still there afterwards."""
+    c = Checks("offer keys")
+    which = offer_showing()
+    if not which:
+        print("no offer over the board; /touroffer, or /update?latest=v9 and open the planner again")
+        return 2
+    base, n0, zoom0 = plan_digest("offer"), len(cards()), harness("board")["zoom"]
+    xdo("mousemove", *gui_pt(a.board_at))
+    time.sleep(0.3)
+    key("ctrl+a", "Delete", "Return", "ctrl+x", "BackSpace", "ctrl+z", "ctrl+v", "plus")
+    for _ in range(3):
+        xdo("click", 4)
+        time.sleep(0.15)
+    xdo("click", 1)
+    time.sleep(1.0)
+    same = plan_digest("offer-after") == base
+    c("plan kept", same and len(cards()) == n0, f"{len(cards())} cards ({n0} before), plan {'same' if same else 'changed'}")
+    zoom = harness("board")["zoom"]
+    c("view kept", abs(zoom - zoom0) < 1e-6, f"zoom {zoom0} then {zoom}")
+    c("offer stays", offer_showing() == which, f"{which} then {offer_showing()}")
+    return c.done()
+
+
+SCENES = {"pattern-box": pattern_scene, "delete": delete_scene, "card-chips": chips_scene, "box": box_scene, "spare-open": spare_open_scene, "offer": offer_scene}
 
 
 if __name__ == "__main__":

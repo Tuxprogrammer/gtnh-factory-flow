@@ -1845,7 +1845,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
                         b.key(),
                         () -> drawerFor(node, output, port),
                         getContext().getAbsMouseX(),
-                        getContext().getAbsMouseY() + 4);
+                        getContext().getAbsMouseY());
                     return;
                 }
             }

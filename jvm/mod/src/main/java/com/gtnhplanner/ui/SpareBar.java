@@ -285,6 +285,21 @@ final class SpareBar {
         session.previewSpareShares(dragLine, dragShares, dragBefore);
     }
 
+    /**
+     * The bar in hand follows the mouse every frame, read from the mouse itself as a scroll bar's thumb is
+     * ({@link com.gtnhplanner.ui.theme.BarDrag}): ModularUI's drag events read the mouse as the last frame left it, so
+     * a bar moved only on them runs one move behind and stops short of where the mouse stops; and a release the panel
+     * never hears ends the drag here. {@code mouseX} is the mouse in the coordinates the lines were drawn in.
+     */
+    void follow(final BoardSession session, final float mouseX, final float x, final int w) {
+        if (dragLine == null) return;
+        if (!org.lwjgl.input.Mouse.isButtonDown(0)) {
+            release(session);
+            return;
+        }
+        drag(session, mouseX, x, w);
+    }
+
     /** Lets go of the bar: the split it ends on is one undoable edit, made from what was stored before. */
     void release(final BoardSession session) {
         if (dragLine == null) return;

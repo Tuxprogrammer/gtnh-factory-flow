@@ -51,6 +51,11 @@ public final class UpdateOffer extends Widget<UpdateOffer> implements Interactab
             public boolean closeOnOutOfBoundsClick() {
                 return false;
             }
+
+            @Override
+            public boolean holdsBoard() {
+                return true;
+            }
         };
         popup.child(new UpdateOffer(release).pos(0, 0));
         Popup.openCentred(board, popup, 1 / 3f);

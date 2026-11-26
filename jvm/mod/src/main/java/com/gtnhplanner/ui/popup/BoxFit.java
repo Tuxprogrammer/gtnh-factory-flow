@@ -30,6 +30,22 @@ public final class BoxFit {
             Math.max(room[1] + MARGIN, Math.min(y, room[1] + room[3] - h - MARGIN)) };
     }
 
+    /** The gap between a point a box opens from and the box. */
+    public static final int CLEAR = 4;
+
+    /**
+     * The top-left for a box {@code w} by {@code h} opened from the point {@code ax, ay}, wholly inside the room and
+     * clear of the point: under it, else over it, else right of it, else left of it, whichever the room keeps clear
+     * first. A box opened under the pointer would take the next click meant for what was under it (on a short screen
+     * the spare box landed with its drawer link under the pointer). Only when no side has room does it cover the point.
+     */
+    public static int[] beside(final int[] room, final int ax, final int ay, final int w, final int h) {
+        final int[][] tries = { place(room, ax, ay + CLEAR, w, h), place(room, ax, ay - CLEAR - h, w, h),
+            place(room, ax + CLEAR, ay - h / 2, w, h), place(room, ax - CLEAR - w, ay - h / 2, w, h) };
+        for (final int[] t : tries) if (ax < t[0] || ax >= t[0] + w || ay < t[1] || ay >= t[1] + h) return t;
+        return tries[0];
+    }
+
     /**
      * A box of a fixed header, a body {@code content} tall and a fixed footer, in a room {@code roomH} tall: the body
      * window ({@code view}) is the content when it fits, else what is left of the room once the header and footer are

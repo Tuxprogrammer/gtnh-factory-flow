@@ -70,6 +70,19 @@ public class Popup extends ModularPanel {
     }
 
     /**
+     * Opens {@code popup} from a screen point (the press that asked for it), placed clear of that point
+     * ({@link BoxFit#beside}): the pointer is left on what it pressed, never on the box's own controls.
+     */
+    public static void openBeside(final ModularPanel parent, final Popup popup, final int screenX, final int screenY) {
+        open(parent, popup, () -> {
+            final int[] r = room(parent), screen = screen(),
+                inRoom = BoxFit.beside(r, screenX, screenY, popup.popupW, popup.popupH);
+            // The room is inside the screen, so this only moves a box the room could not hold.
+            return BoxFit.place(screen, inRoom[0], inRoom[1], popup.popupW, popup.popupH);
+        });
+    }
+
+    /**
      * Opens {@code popup} centred in the planner's room, {@code down} of the way down (a half centres it). The room is
      * measured as it opens: a box offered as the planner opens finds the planner laid out by then.
      */
@@ -225,9 +238,17 @@ public class Popup extends ModularPanel {
         return false;
     }
 
+    /**
+     * Whether this box holds the board while it is open (the tour's, update's, crash report's and incoming plan's
+     * offers): the topmost such box takes the input, so the board's keys and mouse wait until it is answered.
+     */
+    public boolean holdsBoard() {
+        return false;
+    }
+
     @Override
     public boolean disablePanelsBelow() {
-        return false;
+        return holdsBoard();
     }
 
     @Override

@@ -56,4 +56,38 @@ class BoxFitTest {
         assertEquals(0, f.view());
         assertEquals(50, f.height());
     }
+
+    /** Whether a box at {@code at}, {@code w} by {@code h}, covers the point. */
+    private static boolean covers(final int[] at, final int w, final int h, final int x, final int y) {
+        return x >= at[0] && x < at[0] + w && y >= at[1] && y < at[1] + h;
+    }
+
+    @Test
+    void aBoxOpensUnderThePointWhenThereIsRoom() {
+        assertArrayEquals(new int[] { 100, 104 }, BoxFit.beside(ROOM, 100, 100, 200, 100));
+    }
+
+    @Test
+    void aBoxOpensOverThePointNearTheRoomsFoot() {
+        final int[] at = BoxFit.beside(ROOM, 100, 350, 200, 100);
+        assertArrayEquals(new int[] { 100, 350 - 4 - 100 }, at);
+    }
+
+    @Test
+    void onAShortRoomTheBoxGoesBesideThePointNeverUnderThePointer() {
+        // The spare box on a 150 px screen: 202 by 124 in a room 560 by 150. Neither over nor under has room.
+        final int[] room = { 0, 0, 560, 150 };
+        for (int y = 0; y < 150; y += 7) for (int x = 0; x < 560; x += 13) {
+            final int[] at = BoxFit.beside(room, x, y, 202, 124);
+            assertFalse(covers(at, 202, 124, x, y), "box at " + at[0] + "," + at[1] + " covers " + x + "," + y);
+            assertArrayEquals(at, BoxFit.place(room, at[0], at[1], 202, 124), "box off the room");
+        }
+    }
+
+    @Test
+    void aBoxWithNoRoomOnAnySideStillOpensInTheRoom() {
+        final int[] room = { 0, 0, 210, 130 };
+        final int[] at = BoxFit.beside(room, 105, 65, 202, 124);
+        assertArrayEquals(BoxFit.place(room, 105, 69, 202, 124), at);
+    }
 }

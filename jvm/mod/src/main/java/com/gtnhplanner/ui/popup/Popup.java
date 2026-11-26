@@ -12,11 +12,14 @@ import com.gtnhplanner.ui.theme.Hyb;
 
 /**
  * A floating panel in Factory Flow's menu style (bevelled #3c3e45 with a hard drop shadow) that closes on any click
- * outside it. Opened at a screen position, kept on screen.
+ * outside it. Opened at a screen position, kept on screen: as it opens it is cut to the screen and placed in the
+ * planner's room, and wholly on the screen when it is bigger than the room ({@link BoxFit}). A box whose content can
+ * grow is a {@link FramedPopup}, which takes the room's height and scrolls its body instead.
  */
 public class Popup extends ModularPanel {
 
-    protected final int popupW, popupH;
+    /** The box's size: as asked, then as fitted to its room when it opens ({@link #fit}). */
+    protected int popupW, popupH;
 
     /**
      * ModularUI keeps one handler per panel name for the life of the screen and re-opens the old panel when a name
@@ -79,11 +82,11 @@ public class Popup extends ModularPanel {
         if (parent == null) return;
         PENDING.add(() -> {
             if (!parent.isOpen()) return;
-            final int w = popup.popupW, h = popup.popupH;
-            final int[] r = room(parent), want = at.get();
-            popup.pos(
-                Math.max(r[0] + 2, Math.min(want[0], r[0] + r[2] - w - 2)),
-                Math.max(r[1] + 2, Math.min(want[1], r[1] + r[3] - h - 2)));
+            final int[] r = room(parent), screen = screen();
+            popup.fit(r, screen);
+            final int[] want = at.get(), inRoom = BoxFit.place(r, want[0], want[1], popup.popupW, popup.popupH),
+                spot = BoxFit.place(screen, inRoom[0], inRoom[1], popup.popupW, popup.popupH);
+            popup.pos(spot[0], spot[1]);
             popup.shown = true;
             IPanelHandler.simple(parent, (p, player) -> popup, true)
                 .openPanel();
@@ -92,6 +95,47 @@ public class Popup extends ModularPanel {
     }
 
     private static final List<Runnable> PENDING = new ArrayList<>();
+
+    /** The whole screen, {x, y, w, h} in the board's pixels. */
+    public static int[] screen() {
+        return new int[] { 0, 0, PlannerScale.width(), PlannerScale.height() };
+    }
+
+    /**
+     * Fits the box before it is placed: never wider or taller than the screen shows ({@code room} is the planner's
+     * part of it, {@link #room}). A box that lays out its own parts to the room overrides this.
+     */
+    protected void fit(final int[] room, final int[] screen) {
+        final int[] s = BoxFit.size(screen, popupW, popupH);
+        if (s[0] == popupW && s[1] == popupH) return;
+        popupW = s[0];
+        popupH = s[1];
+        size(popupW, popupH);
+    }
+
+    /** What Enter does in this box when no field in it takes the key; null for nothing. */
+    @org.jetbrains.annotations.Nullable
+    private Runnable enter;
+
+    /** Enter runs {@code action} unless a field in the box has the key (Esc already closes every popup). */
+    public <P extends Popup> P onEnter(final Runnable action) {
+        enter = action;
+        @SuppressWarnings("unchecked")
+        final P self = (P) this;
+        return self;
+    }
+
+    @Override
+    public boolean onKeyPressed(final char typedChar, final int keyCode) {
+        if (super.onKeyPressed(typedChar, keyCode)) return true;
+        if (enter == null
+            || keyCode != org.lwjgl.input.Keyboard.KEY_RETURN && keyCode != org.lwjgl.input.Keyboard.KEY_NUMPADENTER)
+            return false;
+        // A field anywhere on the screen that is typing keeps its Enter.
+        if (com.gtnhplanner.ui.BoardScreen.textFocused(getScreen())) return false;
+        enter.run();
+        return true;
+    }
 
     /** Boxes opened from a key that toggles, by key name: that key again closes the box, and it never opens twice. */
     private static final java.util.Map<String, Popup> TOGGLED = new java.util.HashMap<>();

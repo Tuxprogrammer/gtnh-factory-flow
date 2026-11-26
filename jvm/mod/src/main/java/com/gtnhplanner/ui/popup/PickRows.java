@@ -50,6 +50,17 @@ final class PickRows {
         return s;
     }
 
+    /**
+     * The scroll whose first row starts nearest {@code px} down the whole list, kept in range: what a dragged scroll
+     * thumb, which moves in pixels, means for a list that scrolls by rows.
+     */
+    static int scrollAt(final int[] heights, final int px, final int view) {
+        final int max = maxScroll(heights, view);
+        int s = 0, top = 0;
+        while (s < max && top + heights[s] / 2 < px) top += heights[s++];
+        return s;
+    }
+
     /** The scroll that shows row {@code index} with the least movement from {@code scroll}. */
     static int reveal(final int[] heights, final int scroll, final int index, final int view) {
         if (index < scroll) return index;

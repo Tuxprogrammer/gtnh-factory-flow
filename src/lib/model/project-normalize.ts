@@ -15,6 +15,7 @@ import { repairWiredInputOverrides } from "./edge-input-overrides";
 import { openAsPlan, type PlanConversionNotice } from "@/lib/solver/plan/to-plan";
 import { convertLooseCellWires } from "./cell-wires";
 import { keepUsedRecipes } from "./embedded-recipes";
+import { dropSectionsWithoutRecipes } from "./section-recipes";
 
 /**
  * Everything a project must go through on its way in, whether it arrives from
@@ -102,6 +103,7 @@ function withCellWireNotice(
 
 function normalizeLegacyProject(project: FactoryProject): FactoryProject {
   project = pinMagicApiaryDefault(project);
+  project = dropSectionsWithoutRecipes(project);
   project = normalizeProductionGroups(project);
   project = repairWiredInputOverrides(project);
   project = dropSelfLoopInputOverrides(project);

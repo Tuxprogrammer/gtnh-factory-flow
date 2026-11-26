@@ -1799,7 +1799,13 @@ public final class BoardSession {
             com.gtnhplanner.ui.popup.PickList.Entry.of("Cancel", () -> {}));
         final com.gtnhplanner.ui.popup.Popup ask = com.gtnhplanner.ui.popup.PickList
             .popup("gtnhplanner_delete_cards", DeleteAsk.question(cards), rows, false, 150);
-        com.gtnhplanner.ui.popup.Popup.openCentred(panel(), ask.onEnter(delete), 0.4f);
+        // Enter answers Delete as a click on that row would: the box closes, then the cards go.
+        ask.onEnter(() -> {
+            ask.closeIfOpen();
+            Hyb.click();
+            delete.run();
+        });
+        com.gtnhplanner.ui.popup.Popup.openCentred(panel(), ask, 0.4f);
     }
 
     /** Deletes every selected card, drawer and note as one undoable step. */

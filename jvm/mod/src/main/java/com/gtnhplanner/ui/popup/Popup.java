@@ -131,9 +131,29 @@ public class Popup extends ModularPanel {
         if (enter == null
             || keyCode != org.lwjgl.input.Keyboard.KEY_RETURN && keyCode != org.lwjgl.input.Keyboard.KEY_NUMPADENTER)
             return false;
+        return enter();
+    }
+
+    /** Whether Enter does something in this box (a question it answers, a box it confirms). */
+    public boolean asks() {
+        return enter != null;
+    }
+
+    private long lastEnterEvent = -1;
+
+    /**
+     * Enter in this box: true when the box took the key. The key reaches a box by its own key path and by the board's,
+     * in an order the GUI library decides, so the action runs once per key event whichever asks first.
+     */
+    public boolean enter() {
+        if (enter == null) return false;
         // A field anywhere on the screen that is typing keeps its Enter.
         if (com.gtnhplanner.ui.BoardScreen.textFocused(getScreen())) return false;
-        enter.run();
+        final long event = org.lwjgl.input.Keyboard.getEventNanoseconds();
+        if (event != lastEnterEvent) {
+            lastEnterEvent = event;
+            enter.run();
+        }
         return true;
     }
 
@@ -142,30 +162,6 @@ public class Popup extends ModularPanel {
     private static final java.util.Map<String, Long> CLICKED_OFF = new java.util.HashMap<>();
     private String toggleKey;
     private boolean shown;
-
-    /** What Enter does in this box (null: nothing); the board's keys call {@link #enter}. */
-    @org.jetbrains.annotations.Nullable
-    private Runnable onEnter;
-
-    /** Sets what Enter does: closes the box and runs {@code action}, as picking that row would. */
-    public Popup onEnter(final Runnable action) {
-        onEnter = action;
-        return this;
-    }
-
-    /** Whether this box is a question Enter answers. */
-    public boolean asks() {
-        return onEnter != null;
-    }
-
-    /** Enter in this box: true when it had something to do, done and the box closed. */
-    public boolean enter() {
-        if (onEnter == null) return false;
-        closeIfOpen();
-        com.gtnhplanner.ui.theme.Hyb.click();
-        onEnter.run();
-        return true;
-    }
 
     /** Marks this box as the one {@code key} opens (see {@link #toggled}). */
     public <P extends Popup> P toggledBy(final String key) {

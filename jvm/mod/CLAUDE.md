@@ -46,7 +46,9 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   and Sign in show only their pictures beside feedback, settings and help, then the gaps tighten; the open tab and +
   always stay. The overview gives way too (`RailFit`): the board keeps its toolbar on one row (`BoardToolbar.leastOneRow`),
   so the overview shrinks toward 160 and then folds (at Large it is folded), never over the player's own fold. Popups open inside the planner's own panel, never under NEI's list (`Popup.room`, `openCentred`); a box taller
-  than it scrolls inside (`TaskPanel`'s page), the task board scrolls sideways past four 112 px columns, notices wrap.
+  than it scrolls inside (`TaskPanel`'s page; a box whose content grows is a `ui/popup/FramedPopup`, its header and
+  keys kept and its body scrolling, fitted again whenever the content changes; `BoxBoundsTest` lists every box with its
+  bound and allows none that grows past the screen), the task board scrolls sideways past four 112 px columns, notices wrap.
   Text gives way by shortening, never by cutting a word.
 - `docs/design/card-redesign.md` is the clean card now on the board, the minimap and the world (`CardLayout`,
   `CardPaint`, `CardChips`, `RecipeCard`, `CleanCardView`): what is settled, where every control and setting went,

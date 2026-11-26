@@ -163,17 +163,26 @@ def slider_run(name, pause):
         if not ok:
             failed.append(what)
 
+    def mv(px, py):
+        # Kept on the screen: the X server stops the pointer at its edge too (a slider near the edge of a small
+        # window is dragged past its end by reaching the edge).
+        xdo("mousemove", min(max(px, 0), SCREEN[0] - 1), min(max(py, 0), SCREEN[1] - 1))
+
     def drag(frm, to, steps_=10, away=0):
-        xdo("mousemove", frm, y)
+        # Where the slider is now: a list can move it once let go (the overview glides back from past its end after
+        # keeping a held slider still while lines above it came or went).
+        nonlocal y
+        y = get()["y"]
+        mv(frm, y)
         time.sleep(0.3)
         xdo("mousedown", 1)
         time.sleep(0.15)
         for i in range(1, steps_ + 1):
-            xdo("mousemove", frm + (to - frm) * i // steps_, y)
+            mv(frm + (to - frm) * i // steps_, y)
             time.sleep(pause)
         if away:
             for i in range(1, 6):
-                xdo("mousemove", to, y + away * i // 5)
+                mv(to, y + away * i // 5)
                 time.sleep(pause)
         time.sleep(0.3)
         held = get()
@@ -196,6 +205,7 @@ def slider_run(name, pause):
     held = drag(at(get()["value"]), x0 - 200)
     check("start", abs(held["value"]) <= 1e-6, f"dragged past the start: value {held['value']:.3f}")
     held = drag(at(get()["value"]), at(0.5), away=-150)
+    y = get()["y"]
     xdo("mousemove", x1 - 2, y)
     time.sleep(0.3)
     xdo("mousemove", x0 + 2, y)
@@ -226,6 +236,9 @@ def main():
     ap.add_argument("--card", help="pattern-box: the card's id, to open the box again for Esc, Cancel and Make")
     ap.add_argument("--board-at", type=lambda v: tuple(int(x) for x in v.split(",")), default=(1000, 400),
                     help="delete: X,Y on the empty board where the mouse rests for the keys")
+    ap.add_argument("--open", help="box: GUI X,Y the real click that opens the box lands on")
+    ap.add_argument("--box-bar", help="box: the name of the box's scroll bar (/scrollbars)")
+    ap.add_argument("--keep", action="store_true", help="box: leave it open afterwards (no Esc)")
     ap.add_argument("--gui", type=int, default=2, help="the game's GUI scale (screen pixels per GUI pixel)")
     ap.add_argument("--geometry", help="axis,c0,c1,t0,t1 in screen px: the bar's place without the harness (a build "
                     "older than /scrollbars)")
@@ -658,7 +671,38 @@ def chips_scene(a):
     return c.done()
 
 
-SCENES = {"pattern-box": pattern_scene, "delete": delete_scene, "card-chips": chips_scene}
+def box_scene(a):
+    """A box that can hold more than the screen (the settings, a card's settings, a spare's places), opened with a real
+    click at --open (GUI x,y) with oversized content and a short window: it opens wholly on the screen, its body scrolls
+    (its bar, --box-bar, is drawn), the bar passes every check above with the real mouse, nothing holds a mouse button
+    afterwards, and Esc closes it."""
+    c = Checks(f"box {a.box_bar}")
+    st = harness("status")
+    gw, gh = st["guiWidth"], st["guiHeight"]
+    n0 = len(popups())
+    if a.open:
+        click_at(gui_pt(tuple(int(v) for v in a.open.split(","))))
+        time.sleep(0.6)
+    new = popups()[n0:]
+    c("opens", bool(new), ", ".join(f"{u['name']} {u['x']},{u['y']} {u['w']}x{u['h']}" for u in new) or "no box")
+    if not new:
+        return c.done()
+    off = [u for u in new if u["x"] < 0 or u["y"] < 0 or u["x"] + u["w"] > gw or u["y"] + u["h"] > gh]
+    c("on screen", not off, f"{len(off)} of {len(new)} boxes past the {gw}x{gh} screen")
+    bars = harness("scrollbars")
+    c("scrolls", a.box_bar in bars, f"bars drawn: {', '.join(bars) or 'none'}")
+    if a.box_bar in bars:
+        a.bar = a.box_bar
+        c("bar", bar_run(a) == 0, "the bar's own checks above")
+    c("no hold", not holds(), f"held {holds()}")
+    if a.keep:
+        return c.done()
+    key("Escape")
+    c("esc closes", len(popups()) == n0, f"{len(popups()) - n0} boxes left open")
+    return c.done()
+
+
+SCENES = {"pattern-box": pattern_scene, "delete": delete_scene, "card-chips": chips_scene, "box": box_scene}
 
 
 if __name__ == "__main__":

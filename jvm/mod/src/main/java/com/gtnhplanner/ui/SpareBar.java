@@ -53,11 +53,19 @@ final class SpareBar {
     /** What the dev harness lists this bar's sliders as, and the widget whose pixels it is drawn in; null for none. */
     private String devName;
     private com.cleanroommc.modularui.api.widget.IWidget devOwner;
+    /** How far {@code devOwner}'s content is moved from its pixels (a scrolled body's content is drawn higher). */
+    private float devDy;
 
     /** Lists this bar's sliders in the dev harness as {@code name}, drawn in {@code owner}'s pixels. */
     void devName(final String name, final com.cleanroommc.modularui.api.widget.IWidget owner) {
+        devName(name, owner, 0);
+    }
+
+    /** As above, the content drawn {@code dy} down from the owner's pixels. */
+    void devName(final String name, final com.cleanroommc.modularui.api.widget.IWidget owner, final float dy) {
         devName = name;
         devOwner = owner;
+        devDy = dy;
     }
 
     /** Sets how wide each line's bar is. */
@@ -171,7 +179,7 @@ final class SpareBar {
                 devOwner,
                 mini,
                 mini + barW,
-                y + ROW / 2f,
+                y + ROW / 2f + devDy,
                 share,
                 50,
                 held(line) && dragRow == i);

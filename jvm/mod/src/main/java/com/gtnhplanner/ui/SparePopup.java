@@ -4,7 +4,9 @@ import com.cleanroommc.modularui.api.widget.Interactable;
 import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
 import com.cleanroommc.modularui.theme.WidgetThemeEntry;
 import com.cleanroommc.modularui.widget.Widget;
+import com.gtnhplanner.ui.popup.FramedPopup;
 import com.gtnhplanner.ui.popup.Popup;
+import com.gtnhplanner.ui.popup.ScrollBody;
 import com.gtnhplanner.ui.theme.Hyb;
 
 /**
@@ -12,9 +14,10 @@ import com.gtnhplanner.ui.theme.Hyb;
  * as the overview's Spare section ({@link SpareBar}), the place clicked marked "here", and under it a small link for a
  * drawer to take it at that port instead. Nothing else: no title, no list. Hovering a place rings its card on the
  * board;
- * the slider is handled as in the overview.
+ * the slider is handled as in the overview. A leftover with more places than the screen shows scrolls its lines, the
+ * drawer link kept under them ({@link FramedPopup}).
  */
-public final class SparePopup extends Widget<SparePopup> implements Interactable {
+public final class SparePopup extends ScrollBody {
 
     private static final int SLIDER_W = 190, PAD = 6, LINK_H = 9;
     private static final float SMALL = 0.75f;
@@ -24,17 +27,14 @@ public final class SparePopup extends Widget<SparePopup> implements Interactable
     /** The leftover, by key: the solve gives it a new object each time, so it is looked up on every draw. */
     private final String key;
     private final String here;
-    private final Runnable drawer;
     private final SpareBar bar = new SpareBar();
     private BoardSession.SpareLine line;
-    private float linkY;
 
-    private SparePopup(final BoardSession session, final BoardSession.SpareLine line, final String here,
-        final Runnable drawer) {
+    private SparePopup(final BoardSession session, final BoardSession.SpareLine line, final String here) {
+        super("spare");
         this.session = session;
         this.key = line.key();
         this.here = here;
-        this.drawer = drawer;
         this.line = line;
     }
 
@@ -44,87 +44,99 @@ public final class SparePopup extends Widget<SparePopup> implements Interactable
      */
     public static void open(final com.cleanroommc.modularui.screen.ModularPanel parent, final BoardSession session,
         final BoardSession.SpareLine line, final String here, final Runnable drawer, final int x, final int y) {
-        final int h = PAD + SpareBar.height(line) + 3 + LINK_H + PAD;
-        final Popup popup = new Popup("gtnhplanner_spare", SLIDER_W + 2 * PAD, h);
-        popup.child(
-            new SparePopup(session, line, here, drawer).pos(PAD, PAD)
-                .size(SLIDER_W, h - 2 * PAD));
+        final SparePopup lines = new SparePopup(session, line, here);
+        final Popup popup = new FramedPopup(
+            "gtnhplanner_spare",
+            SLIDER_W + 2 * PAD,
+            null,
+            0,
+            lines,
+            new Link(drawer),
+            LINK_H + PAD);
         Popup.open(parent, popup, x, y);
     }
 
+    /** The lines: a gap, the slider with its labels, and the gap before the link. */
     @Override
-    public boolean canHover() {
-        return true;
-    }
-
-    private float mx() {
-        return getContext().getAbsMouseX() - getArea().x;
-    }
-
-    private float my() {
-        return getContext().getAbsMouseY() - getArea().y;
-    }
-
-    private SpareBar.Hit hover() {
-        return isHovering() ? bar.hitAt(mx(), my()) : null;
-    }
-
-    private boolean overLink() {
-        final float w = Hyb.width(DRAWER) * SMALL;
-        return isHovering() && my() >= linkY && my() < linkY + LINK_H && mx() >= SLIDER_W - w;
+    public int contentHeight() {
+        return PAD + SpareBar.height(line) + 3;
     }
 
     @Override
     public void draw(final ModularGuiContext context, final WidgetThemeEntry<?> widgetTheme) {
+        // The labels take more rows or fewer as the spare moves: the box is fitted again when they do.
         for (final BoardSession.SpareLine l : session.spares()) if (l.key()
             .equals(key)) line = l;
-        final SpareBar.Hit hover = hover();
+        super.draw(context, widgetTheme);
+    }
+
+    @Override
+    protected void drawContent(final ModularGuiContext context, final int mx, final int my) {
+        final SpareBar.Hit hover = mx < 0 ? null : bar.hitAt(mx, my);
         final int place = SpareBar.place(hover);
         session.setSpareMenuHover(
             place < 0 ? null : line,
             place < 0 ? null
                 : line.bearers()
                     .get(place));
-        Hyb.rect(-PAD + 1, -2, SLIDER_W + 2 * PAD - 2, SpareBar.height(line) + 4, SpareBar.tint(line));
-        bar.devName("spare box", this);
-        final int h = bar.draw(session, line, 0, 0, SLIDER_W, context.getCurrentDrawingZ(), hover, here);
-        linkY = h + 3;
-        // The labels take more rows or fewer as the spare moves: the popup grows or shrinks to fit them.
-        final int panelH = PAD + h + 3 + LINK_H + PAD;
-        if (getPanel().getArea().height != panelH) {
-            getPanel().size(SLIDER_W + 2 * PAD, panelH);
-            getPanel().scheduleResize();
-            size(SLIDER_W, panelH - 2 * PAD);
-            scheduleResize();
-        }
-        final float w = Hyb.width(DRAWER) * SMALL;
-        Hyb.text(DRAWER, SLIDER_W - w, linkY + 1, SMALL, overLink() ? Hyb.GOLD : 0xFF9A9DA6);
+        Hyb.rect(1, PAD - 2, SLIDER_W + 2 * PAD - 2, SpareBar.height(line) + 4, SpareBar.tint(line));
+        bar.devName("spare box", this, -scroll());
+        bar.draw(session, line, PAD, PAD, SLIDER_W, context.getCurrentDrawingZ(), hover, here);
     }
 
     @Override
-    public Result onMousePressed(final int mouseButton) {
+    protected Result pressContent(final int mouseButton, final int mx, final int my) {
         if (mouseButton != 0) return Result.ACCEPT;
-        if (overLink()) {
-            Hyb.click();
-            getPanel().closeIfOpen();
-            drawer.run();
-            return Result.SUCCESS;
-        }
-        final SpareBar.Hit hit = bar.hitAt(mx(), my());
-        if (!bar.press(session, line, hit, mx(), 0, SLIDER_W) && bar.click(session, line, hit)) Hyb.click();
+        final SpareBar.Hit hit = bar.hitAt(mx, my);
+        if (!bar.press(session, line, hit, mx, PAD, SLIDER_W) && bar.click(session, line, hit)) Hyb.click();
         return Result.SUCCESS;
     }
 
     @Override
-    public void onMouseDrag(final int mouseButton, final long timeSinceClick) {
-        if (bar.dragging()) bar.drag(session, mx(), 0, SLIDER_W);
+    protected void dragContent(final int mouseButton, final int mx, final int my) {
+        if (bar.dragging()) bar.drag(session, mx, PAD, SLIDER_W);
     }
 
     @Override
-    public boolean onMouseRelease(final int mouseButton) {
+    protected boolean releaseContent(final int mouseButton) {
         if (!bar.dragging()) return false;
         bar.release(session);
         return true;
     }
 
+    /** The drawer link under the lines, at the box's right. */
+    private static final class Link extends Widget<Link> implements Interactable {
+
+        private final Runnable drawer;
+
+        Link(final Runnable drawer) {
+            this.drawer = drawer;
+        }
+
+        @Override
+        public boolean canHover() {
+            return true;
+        }
+
+        private boolean over() {
+            final float w = Hyb.width(DRAWER) * SMALL;
+            final int mx = getContext().getAbsMouseX() - getArea().x, my = getContext().getAbsMouseY() - getArea().y;
+            return isHovering() && my >= 0 && my < LINK_H && mx >= PAD + SLIDER_W - w && mx < PAD + SLIDER_W;
+        }
+
+        @Override
+        public void draw(final ModularGuiContext context, final WidgetThemeEntry<?> widgetTheme) {
+            final float w = Hyb.width(DRAWER) * SMALL;
+            Hyb.text(DRAWER, PAD + SLIDER_W - w, 1, SMALL, over() ? Hyb.GOLD : 0xFF9A9DA6);
+        }
+
+        @Override
+        public Result onMousePressed(final int mouseButton) {
+            if (mouseButton != 0 || !over()) return Result.ACCEPT;
+            Hyb.click();
+            getPanel().closeIfOpen();
+            drawer.run();
+            return Result.SUCCESS;
+        }
+    }
 }

@@ -6,14 +6,15 @@ import java.util.List;
 import org.jetbrains.annotations.Nullable;
 
 import com.cleanroommc.modularui.api.UpOrDown;
-import com.cleanroommc.modularui.api.widget.Interactable;
 import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
 import com.cleanroommc.modularui.theme.WidgetThemeEntry;
 import com.cleanroommc.modularui.widget.Widget;
 import com.gtnhplanner.core.base.Uuid;
 import com.gtnhplanner.ui.BoardSession;
 import com.gtnhplanner.ui.canvas.BoardCanvas;
+import com.gtnhplanner.ui.popup.FramedPopup;
 import com.gtnhplanner.ui.popup.Popup;
+import com.gtnhplanner.ui.popup.ScrollBody;
 import com.gtnhplanner.ui.theme.Hyb;
 
 /**
@@ -21,9 +22,10 @@ import com.gtnhplanner.ui.theme.Hyb;
  * column, or two side by side when there are many (a machine with worked formulas has them as the second, titled
  * Formulas; one with nothing to set says so), each a row with a pin, its name and its control (a
  * switch, a number with arrows, or a list), and a line on how it works. Pinned settings show on the card as chips, on
- * every card of the machine. It stays open while settings change, and reads them afresh every frame.
+ * every card of the machine. It stays open while settings change, and reads them afresh every frame. A sheet taller
+ * than the screen scrolls, the line on how it works kept under it ({@link FramedPopup}).
  */
-public final class SettingsSheet extends Popup {
+public final class SettingsSheet extends FramedPopup {
 
     static final int COL = 236, HEAD = 4, HEADING = 16, ROW = 18, FOOT = 16;
     /** A section's title: the same for every section, settings or formulas. */
@@ -34,8 +36,12 @@ public final class SettingsSheet extends Popup {
     private static final int ONE_COLUMN = 7;
 
     private SettingsSheet(@Nullable final BoardCanvas board, final RecipeCard card, final Sheet sheet) {
-        super("gtnhplanner_card_settings", sheet.w, sheet.h);
-        child(new Body(board, card, this, sheet).pos(0, 0));
+        this(new Body(board, card, sheet));
+    }
+
+    private SettingsSheet(final Body body) {
+        super("gtnhplanner_card_settings", body.sheet.w, null, 0, body, new Foot(body), body.sheet.footH());
+        body.popup = this;
     }
 
     /**
@@ -153,9 +159,41 @@ public final class SettingsSheet extends Popup {
         static int foot(final int columns) {
             return columns == 1 ? FOOT + 10 : FOOT;
         }
+
+        /** A machine with nothing to set: no line on how to set it. */
+        boolean none() {
+            return lines.isEmpty() && !formulas.isEmpty();
+        }
+
+        /** The footer under the settings: its hairline and the line on how it works; none for nothing to set. */
+        int footH() {
+            return none() ? 0 : foot(columns) + 2;
+        }
     }
 
-    private static final class Body extends Widget<Body> implements Interactable {
+    /** The line on how it works, under the settings and kept in view when they scroll. */
+    private static final class Foot extends Widget<Foot> {
+
+        private final Body body;
+
+        Foot(final Body body) {
+            this.body = body;
+        }
+
+        @Override
+        public void draw(final ModularGuiContext context, final WidgetThemeEntry<?> widgetTheme) {
+            final Sheet sheet = body.sheet;
+            if (sheet.none()) return;
+            Hyb.rect(1, 0, sheet.w - 2, 1, CardPaint.HAIR);
+            if (sheet.columns == 1) {
+                Hyb.text("Pinned settings show on the card.", 8, 5, 0xFF6E7179);
+                Hyb.text("Click, right-click or scroll to change.", 8, 15, 0xFF6E7179);
+            } else
+                Hyb.text("Pinned settings show on the card. Click, right-click or scroll to change.", 8, 5, 0xFF6E7179);
+        }
+    }
+
+    private static final class Body extends ScrollBody {
 
         @Nullable
         private final BoardCanvas board;
@@ -163,17 +201,23 @@ public final class SettingsSheet extends Popup {
         private final RecipeCard opened;
         private final Uuid cardId;
         private final BoardSession session;
-        private final SettingsSheet popup;
         private Sheet sheet;
+        /** The sheet's own box (never the board's panel: the card's widget can be on none, issue 492). */
+        private SettingsSheet popup;
 
-        Body(@Nullable final BoardCanvas board, final RecipeCard card, final SettingsSheet popup, final Sheet sheet) {
+        Body(@Nullable final BoardCanvas board, final RecipeCard card, final Sheet sheet) {
+            super("card settings");
             this.board = board;
             this.opened = card;
             this.cardId = card.nodeId;
             this.session = card.session();
-            this.popup = popup;
             this.sheet = sheet;
-            size(sheet.w, sheet.h);
+        }
+
+        /** The settings and formulas, above the footer. */
+        @Override
+        public int contentHeight() {
+            return sheet.h - sheet.footH();
         }
 
         /**
@@ -203,13 +247,10 @@ public final class SettingsSheet extends Popup {
             }
             final CardModel m = card.model();
             if (m == null) return;
-            final Sheet next = Sheet.of(m);
-            if (next.w != sheet.w || next.h != sheet.h) {
-                size(next.w, next.h);
-                popup.size(next.w, next.h);
-                popup.scheduleResize();
-            }
-            sheet = next;
+            final Sheet was = sheet;
+            sheet = Sheet.of(m);
+            if (sheet.w != was.w || sheet.h != was.h || sheet.footH() != was.footH())
+                popup.reshape(sheet.w, 0, sheet.footH());
         }
 
         @Override
@@ -217,18 +258,9 @@ public final class SettingsSheet extends Popup {
             return true;
         }
 
-        private int mouseX() {
-            return getContext().getAbsMouseX() - getArea().x;
-        }
-
-        private int mouseY() {
-            return getContext().getAbsMouseY() - getArea().y;
-        }
-
-        /** The setting's line under the mouse, or null. */
-        private Line lineAtMouse() {
-            if (!isHovering()) return null;
-            final int mx = mouseX(), my = mouseY();
+        /** The setting's line at {@code mx, my} (content coordinates), or null. */
+        private Line lineAt(final int mx, final int my) {
+            if (mx < 0) return null;
             for (final Line l : sheet.lines) {
                 if (l.control() != null && mx >= l.x() && mx < l.x() + COL && my >= l.y() && my < l.y() + ROW) return l;
             }
@@ -238,14 +270,13 @@ public final class SettingsSheet extends Popup {
         // region Drawing
 
         @Override
-        public void draw(final ModularGuiContext context, final WidgetThemeEntry<?> widgetTheme) {
+        protected void drawContent(final ModularGuiContext context, final int mx, final int my) {
             final RecipeCard card = card();
             final CardModel m = card == null ? null : card.model();
             if (m == null) return;
-            final Line hot = lineAtMouse();
-            final int mx = mouseX();
-            final boolean none = sheet.lines.isEmpty() && !sheet.formulas.isEmpty();
-            final int fy = none ? sheet.h - 2 : sheet.h - Sheet.foot(sheet.columns) - 2;
+            final Line hot = lineAt(mx, my);
+            final boolean none = sheet.none();
+            final int fy = none ? contentHeight() - 2 : contentHeight();
             if (sheet.columns > 1) {
                 final int divider = sheet.formulas.isEmpty() ? COL : sheet.formulasX - 1;
                 Hyb.rect(divider, HEAD + 2, 1, fy - HEAD - 4, CardPaint.HAIR);
@@ -259,17 +290,7 @@ public final class SettingsSheet extends Popup {
                 // Nothing to set: the section says so, and there is nothing to say about setting it.
                 title("Settings", 0, HEAD, sheet.formulasX);
                 Hyb.text(NONE, 8, HEAD + HEADING + 3, Hyb.MUTED);
-                return;
             }
-            Hyb.rect(1, fy, sheet.w - 2, 1, CardPaint.HAIR);
-            if (sheet.columns == 1) {
-                Hyb.text("Pinned settings show on the card.", 8, fy + 5, 0xFF6E7179);
-                Hyb.text("Click, right-click or scroll to change.", 8, fy + 15, 0xFF6E7179);
-            } else Hyb.text(
-                "Pinned settings show on the card. Click, right-click or scroll to change.",
-                8,
-                fy + 5,
-                0xFF6E7179);
         }
 
         // region Formulas
@@ -586,13 +607,13 @@ public final class SettingsSheet extends Popup {
         // region Input
 
         @Override
-        public Result onMousePressed(final int mouseButton) {
-            final Line l = lineAtMouse();
+        protected Result pressContent(final int mouseButton, final int contentX, final int contentY) {
+            final Line l = lineAt(contentX, contentY);
             final RecipeCard card = card();
             final CardModel m = card == null ? null : card.model();
             if (l == null || m == null || mouseButton > 1) return Result.ACCEPT;
             final SettingControls.Control c = l.control();
-            final int mx = mouseX() - l.x();
+            final int mx = contentX - l.x();
             if (mx < 16) {
                 if (mouseButton == 0) {
                     SettingPins.toggle(session.graph(), m, c);
@@ -602,7 +623,7 @@ public final class SettingsSheet extends Popup {
             }
             if (!c.enabled() || c.type() == SettingControls.Type.READING) return Result.ACCEPT;
             final int[] box = controlBox(c);
-            final int sx = getArea().x + l.x() + box[0], sy = getArea().y + l.y() + ROW;
+            final int sx = getArea().x + l.x() + box[0], sy = getArea().y + l.y() - scroll() + ROW;
             if (c.type() == SettingControls.Type.NUMBER && mouseButton == 0) {
                 if (mx >= box[0] && mx < box[0] + 11) card.stepSetting(c, -1);
                 else if (mx >= box[0] + box[1] - 11 && mx < box[0] + box[1]) card.stepSetting(c, 1);
@@ -612,13 +633,15 @@ public final class SettingsSheet extends Popup {
             return Result.SUCCESS;
         }
 
+        /** The wheel over a setting steps it; when the sheet scrolls, only over its control, the rest scrolling. */
         @Override
-        public boolean onMouseScroll(final UpOrDown direction, final int amount) {
-            final Line l = lineAtMouse();
+        protected boolean wheelContent(final UpOrDown direction, final int mx, final int my) {
+            final Line l = lineAt(mx, my);
             final RecipeCard card = card();
             if (l == null || card == null || !com.gtnhplanner.ui.PlannerSettings.scrollChangesValues()) return false;
             final SettingControls.Control c = l.control();
             if (!c.enabled() || c.type() == SettingControls.Type.READING) return false;
+            if (frame().scrolls() && mx - l.x() < controlBox(c)[0]) return false;
             card.stepSetting(c, direction == UpOrDown.UP ? 1 : -1);
             return true;
         }

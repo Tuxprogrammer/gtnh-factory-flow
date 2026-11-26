@@ -27,7 +27,10 @@ public abstract class ScrollBody extends Widget<ScrollBody> implements Interacta
         bar = new ScrollBar(name, this);
     }
 
-    /** The content's whole height, read as the box opens; it stays the same while the box is open. */
+    /**
+     * The content's whole height. Read as the box opens and on every frame after: when it changes, the box is fitted to
+     * the room again ({@link FramedPopup#reshape}).
+     */
     public abstract int contentHeight();
 
     /**
@@ -38,6 +41,22 @@ public abstract class ScrollBody extends Widget<ScrollBody> implements Interacta
 
     /** A press on the content at {@code mx, my} (content coordinates, always inside the window). */
     protected abstract Result pressContent(int mouseButton, int mx, int my);
+
+    /** A drag that began with a press on the content, the mouse at {@code mx, my} in content coordinates. */
+    protected void dragContent(final int mouseButton, final int mx, final int my) {}
+
+    /** The button let go after a press on the content; true when the content took it. */
+    protected boolean releaseContent(final int mouseButton) {
+        return false;
+    }
+
+    /**
+     * The wheel over the content at {@code mx, my} (content coordinates); true when the content took it (a control it
+     * steps), else the body scrolls.
+     */
+    protected boolean wheelContent(final UpOrDown direction, final int mx, final int my) {
+        return false;
+    }
 
     /** How far one notch of the wheel moves the content. */
     protected int wheelStep() {
@@ -79,6 +98,8 @@ public abstract class ScrollBody extends Widget<ScrollBody> implements Interacta
 
     @Override
     public void draw(final ModularGuiContext context, final WidgetThemeEntry<?> widgetTheme) {
+        if (frame != null && frame.content() != contentHeight() && getPanel() instanceof final FramedPopup box)
+            box.contentChanged();
         final BoxFit.Frame f = frame();
         scroll = f.clamp(scroll);
         final boolean over = mouseInWindow() && !bar.dragging() && !(f.scrolls() && bar.contains(localX(), localY()));
@@ -110,15 +131,18 @@ public abstract class ScrollBody extends Widget<ScrollBody> implements Interacta
     @Override
     public void onMouseDrag(final int mouseButton, final long timeSinceClick) {
         if (bar.dragging()) scroll = frame().clamp(bar.drag(localY()));
+        else dragContent(mouseButton, localX(), localY() + scroll());
     }
 
     @Override
     public boolean onMouseRelease(final int mouseButton) {
-        return bar.release();
+        final boolean bar = this.bar.release();
+        return releaseContent(mouseButton) || bar;
     }
 
     @Override
     public boolean onMouseScroll(final UpOrDown direction, final int amount) {
+        if (mouseInWindow() && wheelContent(direction, localX(), localY() + scroll())) return true;
         final BoxFit.Frame f = frame();
         if (!f.scrolls()) return false;
         scroll = f.clamp(scroll + (direction == UpOrDown.UP ? -1 : 1) * wheelStep());

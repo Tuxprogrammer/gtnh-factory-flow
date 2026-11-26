@@ -1,0 +1,776 @@
+{
+ "schemaVersion": 1,
+ "id": "spare-places",
+ "name": "Spare places",
+ "targetRate": 1,
+ "recipes": [
+  {
+   "id": "r-alpha-f",
+   "name": "Alpha Furnace",
+   "machineType": "Alpha Furnace",
+   "minimumTier": "DEMO",
+   "durationTicks": 20,
+   "eut": 30,
+   "inputs": [
+    {
+     "kind": "item",
+     "id": "alpha dust",
+     "displayName": "Alpha Dust",
+     "amount": 10
+    }
+   ],
+   "outputs": [
+    {
+     "kind": "item",
+     "id": "alpha ingot",
+     "displayName": "Alpha Ingot",
+     "amount": 10
+    }
+   ],
+   "isDemo": true
+  },
+  {
+   "id": "r-alpha-b",
+   "name": "Alpha Bender",
+   "machineType": "Alpha Bender",
+   "minimumTier": "DEMO",
+   "durationTicks": 20,
+   "eut": 30,
+   "inputs": [
+    {
+     "kind": "item",
+     "id": "alpha ingot",
+     "displayName": "Alpha Ingot",
+     "amount": 10
+    }
+   ],
+   "outputs": [
+    {
+     "kind": "item",
+     "id": "plate",
+     "displayName": "Plate",
+     "amount": 10
+    }
+   ],
+   "isDemo": true
+  },
+  {
+   "id": "r-beta-f",
+   "name": "Beta Furnace",
+   "machineType": "Beta Furnace",
+   "minimumTier": "DEMO",
+   "durationTicks": 20,
+   "eut": 30,
+   "inputs": [
+    {
+     "kind": "item",
+     "id": "beta dust",
+     "displayName": "Beta Dust",
+     "amount": 10
+    }
+   ],
+   "outputs": [
+    {
+     "kind": "item",
+     "id": "beta ingot",
+     "displayName": "Beta Ingot",
+     "amount": 10
+    }
+   ],
+   "isDemo": true
+  },
+  {
+   "id": "r-beta-b",
+   "name": "Beta Bender",
+   "machineType": "Beta Bender",
+   "minimumTier": "DEMO",
+   "durationTicks": 20,
+   "eut": 30,
+   "inputs": [
+    {
+     "kind": "item",
+     "id": "beta ingot",
+     "displayName": "Beta Ingot",
+     "amount": 10
+    }
+   ],
+   "outputs": [
+    {
+     "kind": "item",
+     "id": "plate",
+     "displayName": "Plate",
+     "amount": 10
+    }
+   ],
+   "isDemo": true
+  },
+  {
+   "id": "r-gamma-f",
+   "name": "Gamma Furnace",
+   "machineType": "Gamma Furnace",
+   "minimumTier": "DEMO",
+   "durationTicks": 20,
+   "eut": 30,
+   "inputs": [
+    {
+     "kind": "item",
+     "id": "gamma dust",
+     "displayName": "Gamma Dust",
+     "amount": 10
+    }
+   ],
+   "outputs": [
+    {
+     "kind": "item",
+     "id": "gamma ingot",
+     "displayName": "Gamma Ingot",
+     "amount": 10
+    }
+   ],
+   "isDemo": true
+  },
+  {
+   "id": "r-gamma-b",
+   "name": "Gamma Bender",
+   "machineType": "Gamma Bender",
+   "minimumTier": "DEMO",
+   "durationTicks": 20,
+   "eut": 30,
+   "inputs": [
+    {
+     "kind": "item",
+     "id": "gamma ingot",
+     "displayName": "Gamma Ingot",
+     "amount": 10
+    }
+   ],
+   "outputs": [
+    {
+     "kind": "item",
+     "id": "plate",
+     "displayName": "Plate",
+     "amount": 10
+    }
+   ],
+   "isDemo": true
+  },
+  {
+   "id": "r-delta-f",
+   "name": "Delta Furnace",
+   "machineType": "Delta Furnace",
+   "minimumTier": "DEMO",
+   "durationTicks": 20,
+   "eut": 30,
+   "inputs": [
+    {
+     "kind": "item",
+     "id": "delta dust",
+     "displayName": "Delta Dust",
+     "amount": 10
+    }
+   ],
+   "outputs": [
+    {
+     "kind": "item",
+     "id": "delta ingot",
+     "displayName": "Delta Ingot",
+     "amount": 10
+    }
+   ],
+   "isDemo": true
+  },
+  {
+   "id": "r-delta-b",
+   "name": "Delta Bender",
+   "machineType": "Delta Bender",
+   "minimumTier": "DEMO",
+   "durationTicks": 20,
+   "eut": 30,
+   "inputs": [
+    {
+     "kind": "item",
+     "id": "delta ingot",
+     "displayName": "Delta Ingot",
+     "amount": 10
+    }
+   ],
+   "outputs": [
+    {
+     "kind": "item",
+     "id": "plate",
+     "displayName": "Plate",
+     "amount": 10
+    }
+   ],
+   "isDemo": true
+  },
+  {
+   "id": "r-epsilon-f",
+   "name": "Epsilon Furnace",
+   "machineType": "Epsilon Furnace",
+   "minimumTier": "DEMO",
+   "durationTicks": 20,
+   "eut": 30,
+   "inputs": [
+    {
+     "kind": "item",
+     "id": "epsilon dust",
+     "displayName": "Epsilon Dust",
+     "amount": 10
+    }
+   ],
+   "outputs": [
+    {
+     "kind": "item",
+     "id": "epsilon ingot",
+     "displayName": "Epsilon Ingot",
+     "amount": 10
+    }
+   ],
+   "isDemo": true
+  },
+  {
+   "id": "r-epsilon-b",
+   "name": "Epsilon Bender",
+   "machineType": "Epsilon Bender",
+   "minimumTier": "DEMO",
+   "durationTicks": 20,
+   "eut": 30,
+   "inputs": [
+    {
+     "kind": "item",
+     "id": "epsilon ingot",
+     "displayName": "Epsilon Ingot",
+     "amount": 10
+    }
+   ],
+   "outputs": [
+    {
+     "kind": "item",
+     "id": "plate",
+     "displayName": "Plate",
+     "amount": 10
+    }
+   ],
+   "isDemo": true
+  },
+  {
+   "id": "r-zeta-f",
+   "name": "Zeta Furnace",
+   "machineType": "Zeta Furnace",
+   "minimumTier": "DEMO",
+   "durationTicks": 20,
+   "eut": 30,
+   "inputs": [
+    {
+     "kind": "item",
+     "id": "zeta dust",
+     "displayName": "Zeta Dust",
+     "amount": 10
+    }
+   ],
+   "outputs": [
+    {
+     "kind": "item",
+     "id": "zeta ingot",
+     "displayName": "Zeta Ingot",
+     "amount": 10
+    }
+   ],
+   "isDemo": true
+  },
+  {
+   "id": "r-zeta-b",
+   "name": "Zeta Bender",
+   "machineType": "Zeta Bender",
+   "minimumTier": "DEMO",
+   "durationTicks": 20,
+   "eut": 30,
+   "inputs": [
+    {
+     "kind": "item",
+     "id": "zeta ingot",
+     "displayName": "Zeta Ingot",
+     "amount": 10
+    }
+   ],
+   "outputs": [
+    {
+     "kind": "item",
+     "id": "plate",
+     "displayName": "Plate",
+     "amount": 10
+    }
+   ],
+   "isDemo": true
+  },
+  {
+   "id": "r-eta-f",
+   "name": "Eta Furnace",
+   "machineType": "Eta Furnace",
+   "minimumTier": "DEMO",
+   "durationTicks": 20,
+   "eut": 30,
+   "inputs": [
+    {
+     "kind": "item",
+     "id": "eta dust",
+     "displayName": "Eta Dust",
+     "amount": 10
+    }
+   ],
+   "outputs": [
+    {
+     "kind": "item",
+     "id": "eta ingot",
+     "displayName": "Eta Ingot",
+     "amount": 10
+    }
+   ],
+   "isDemo": true
+  },
+  {
+   "id": "r-eta-b",
+   "name": "Eta Bender",
+   "machineType": "Eta Bender",
+   "minimumTier": "DEMO",
+   "durationTicks": 20,
+   "eut": 30,
+   "inputs": [
+    {
+     "kind": "item",
+     "id": "eta ingot",
+     "displayName": "Eta Ingot",
+     "amount": 10
+    }
+   ],
+   "outputs": [
+    {
+     "kind": "item",
+     "id": "plate",
+     "displayName": "Plate",
+     "amount": 10
+    }
+   ],
+   "isDemo": true
+  },
+  {
+   "id": "r-theta-f",
+   "name": "Theta Furnace",
+   "machineType": "Theta Furnace",
+   "minimumTier": "DEMO",
+   "durationTicks": 20,
+   "eut": 30,
+   "inputs": [
+    {
+     "kind": "item",
+     "id": "theta dust",
+     "displayName": "Theta Dust",
+     "amount": 10
+    }
+   ],
+   "outputs": [
+    {
+     "kind": "item",
+     "id": "theta ingot",
+     "displayName": "Theta Ingot",
+     "amount": 10
+    }
+   ],
+   "isDemo": true
+  },
+  {
+   "id": "r-theta-b",
+   "name": "Theta Bender",
+   "machineType": "Theta Bender",
+   "minimumTier": "DEMO",
+   "durationTicks": 20,
+   "eut": 30,
+   "inputs": [
+    {
+     "kind": "item",
+     "id": "theta ingot",
+     "displayName": "Theta Ingot",
+     "amount": 10
+    }
+   ],
+   "outputs": [
+    {
+     "kind": "item",
+     "id": "plate",
+     "displayName": "Plate",
+     "amount": 10
+    }
+   ],
+   "isDemo": true
+  },
+  {
+   "id": "r-as",
+   "name": "Final Assembler",
+   "machineType": "Final Assembler",
+   "minimumTier": "DEMO",
+   "durationTicks": 20,
+   "eut": 30,
+   "inputs": [
+    {
+     "kind": "item",
+     "id": "plate",
+     "displayName": "Plate",
+     "amount": 75
+    }
+   ],
+   "outputs": [
+    {
+     "kind": "item",
+     "id": "casing",
+     "displayName": "Casing",
+     "amount": 1
+    }
+   ],
+   "isDemo": true
+  }
+ ],
+ "nodes": [
+  {
+   "id": "alpha-f",
+   "recipeId": "r-alpha-f",
+   "machineCount": 1,
+   "parallel": 1,
+   "overclockTier": "DEMO",
+   "enabled": true,
+   "position": {
+    "x": -800,
+    "y": 0
+   },
+   "solvePin": 1,
+   "solvePinExact": true
+  },
+  {
+   "id": "alpha-b",
+   "recipeId": "r-alpha-b",
+   "machineCount": 1,
+   "parallel": 1,
+   "overclockTier": "DEMO",
+   "enabled": true,
+   "position": {
+    "x": -400,
+    "y": 0
+   }
+  },
+  {
+   "id": "beta-f",
+   "recipeId": "r-beta-f",
+   "machineCount": 1,
+   "parallel": 1,
+   "overclockTier": "DEMO",
+   "enabled": true,
+   "position": {
+    "x": -800,
+    "y": 240
+   },
+   "solvePin": 1,
+   "solvePinExact": true
+  },
+  {
+   "id": "beta-b",
+   "recipeId": "r-beta-b",
+   "machineCount": 1,
+   "parallel": 1,
+   "overclockTier": "DEMO",
+   "enabled": true,
+   "position": {
+    "x": -400,
+    "y": 240
+   }
+  },
+  {
+   "id": "gamma-f",
+   "recipeId": "r-gamma-f",
+   "machineCount": 1,
+   "parallel": 1,
+   "overclockTier": "DEMO",
+   "enabled": true,
+   "position": {
+    "x": -800,
+    "y": 480
+   },
+   "solvePin": 1,
+   "solvePinExact": true
+  },
+  {
+   "id": "gamma-b",
+   "recipeId": "r-gamma-b",
+   "machineCount": 1,
+   "parallel": 1,
+   "overclockTier": "DEMO",
+   "enabled": true,
+   "position": {
+    "x": -400,
+    "y": 480
+   }
+  },
+  {
+   "id": "delta-f",
+   "recipeId": "r-delta-f",
+   "machineCount": 1,
+   "parallel": 1,
+   "overclockTier": "DEMO",
+   "enabled": true,
+   "position": {
+    "x": -800,
+    "y": 720
+   },
+   "solvePin": 1,
+   "solvePinExact": true
+  },
+  {
+   "id": "delta-b",
+   "recipeId": "r-delta-b",
+   "machineCount": 1,
+   "parallel": 1,
+   "overclockTier": "DEMO",
+   "enabled": true,
+   "position": {
+    "x": -400,
+    "y": 720
+   }
+  },
+  {
+   "id": "epsilon-f",
+   "recipeId": "r-epsilon-f",
+   "machineCount": 1,
+   "parallel": 1,
+   "overclockTier": "DEMO",
+   "enabled": true,
+   "position": {
+    "x": -800,
+    "y": 960
+   },
+   "solvePin": 1,
+   "solvePinExact": true
+  },
+  {
+   "id": "epsilon-b",
+   "recipeId": "r-epsilon-b",
+   "machineCount": 1,
+   "parallel": 1,
+   "overclockTier": "DEMO",
+   "enabled": true,
+   "position": {
+    "x": -400,
+    "y": 960
+   }
+  },
+  {
+   "id": "zeta-f",
+   "recipeId": "r-zeta-f",
+   "machineCount": 1,
+   "parallel": 1,
+   "overclockTier": "DEMO",
+   "enabled": true,
+   "position": {
+    "x": -800,
+    "y": 1200
+   },
+   "solvePin": 1,
+   "solvePinExact": true
+  },
+  {
+   "id": "zeta-b",
+   "recipeId": "r-zeta-b",
+   "machineCount": 1,
+   "parallel": 1,
+   "overclockTier": "DEMO",
+   "enabled": true,
+   "position": {
+    "x": -400,
+    "y": 1200
+   }
+  },
+  {
+   "id": "eta-f",
+   "recipeId": "r-eta-f",
+   "machineCount": 1,
+   "parallel": 1,
+   "overclockTier": "DEMO",
+   "enabled": true,
+   "position": {
+    "x": -800,
+    "y": 1440
+   },
+   "solvePin": 1,
+   "solvePinExact": true
+  },
+  {
+   "id": "eta-b",
+   "recipeId": "r-eta-b",
+   "machineCount": 1,
+   "parallel": 1,
+   "overclockTier": "DEMO",
+   "enabled": true,
+   "position": {
+    "x": -400,
+    "y": 1440
+   }
+  },
+  {
+   "id": "theta-f",
+   "recipeId": "r-theta-f",
+   "machineCount": 1,
+   "parallel": 1,
+   "overclockTier": "DEMO",
+   "enabled": true,
+   "position": {
+    "x": -800,
+    "y": 1680
+   },
+   "solvePin": 1,
+   "solvePinExact": true
+  },
+  {
+   "id": "theta-b",
+   "recipeId": "r-theta-b",
+   "machineCount": 1,
+   "parallel": 1,
+   "overclockTier": "DEMO",
+   "enabled": true,
+   "position": {
+    "x": -400,
+    "y": 1680
+   }
+  },
+  {
+   "id": "as",
+   "recipeId": "r-as",
+   "machineCount": 1,
+   "parallel": 1,
+   "overclockTier": "DEMO",
+   "enabled": true,
+   "position": {
+    "x": 0,
+    "y": 840
+   },
+   "solvePin": 1,
+   "solvePinExact": true
+  }
+ ],
+ "edges": [
+  {
+   "id": "e-alpha-1",
+   "source": "alpha-f",
+   "target": "alpha-b",
+   "resourceKind": "item",
+   "resourceId": "alpha ingot"
+  },
+  {
+   "id": "e-alpha-2",
+   "source": "alpha-b",
+   "target": "as",
+   "resourceKind": "item",
+   "resourceId": "plate"
+  },
+  {
+   "id": "e-beta-1",
+   "source": "beta-f",
+   "target": "beta-b",
+   "resourceKind": "item",
+   "resourceId": "beta ingot"
+  },
+  {
+   "id": "e-beta-2",
+   "source": "beta-b",
+   "target": "as",
+   "resourceKind": "item",
+   "resourceId": "plate"
+  },
+  {
+   "id": "e-gamma-1",
+   "source": "gamma-f",
+   "target": "gamma-b",
+   "resourceKind": "item",
+   "resourceId": "gamma ingot"
+  },
+  {
+   "id": "e-gamma-2",
+   "source": "gamma-b",
+   "target": "as",
+   "resourceKind": "item",
+   "resourceId": "plate"
+  },
+  {
+   "id": "e-delta-1",
+   "source": "delta-f",
+   "target": "delta-b",
+   "resourceKind": "item",
+   "resourceId": "delta ingot"
+  },
+  {
+   "id": "e-delta-2",
+   "source": "delta-b",
+   "target": "as",
+   "resourceKind": "item",
+   "resourceId": "plate"
+  },
+  {
+   "id": "e-epsilon-1",
+   "source": "epsilon-f",
+   "target": "epsilon-b",
+   "resourceKind": "item",
+   "resourceId": "epsilon ingot"
+  },
+  {
+   "id": "e-epsilon-2",
+   "source": "epsilon-b",
+   "target": "as",
+   "resourceKind": "item",
+   "resourceId": "plate"
+  },
+  {
+   "id": "e-zeta-1",
+   "source": "zeta-f",
+   "target": "zeta-b",
+   "resourceKind": "item",
+   "resourceId": "zeta ingot"
+  },
+  {
+   "id": "e-zeta-2",
+   "source": "zeta-b",
+   "target": "as",
+   "resourceKind": "item",
+   "resourceId": "plate"
+  },
+  {
+   "id": "e-eta-1",
+   "source": "eta-f",
+   "target": "eta-b",
+   "resourceKind": "item",
+   "resourceId": "eta ingot"
+  },
+  {
+   "id": "e-eta-2",
+   "source": "eta-b",
+   "target": "as",
+   "resourceKind": "item",
+   "resourceId": "plate"
+  },
+  {
+   "id": "e-theta-1",
+   "source": "theta-f",
+   "target": "theta-b",
+   "resourceKind": "item",
+   "resourceId": "theta ingot"
+  },
+  {
+   "id": "e-theta-2",
+   "source": "theta-b",
+   "target": "as",
+   "resourceKind": "item",
+   "resourceId": "plate"
+  }
+ ],
+ "solveMode": true,
+ "metadata": {
+  "isDemo": true,
+  "source": "Eight pinned furnaces make 80 ingots/s for benders feeding a pinned assembler that takes 75 plates/s: 5/s is spare at any furnace or at the plates."
+ }
+}

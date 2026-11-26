@@ -14,6 +14,7 @@ import net.minecraft.client.gui.GuiControls;
 
 import com.cleanroommc.modularui.api.UpOrDown;
 import com.cleanroommc.modularui.api.widget.Interactable;
+import com.cleanroommc.modularui.drawable.Stencil;
 import com.cleanroommc.modularui.screen.ModularPanel;
 import com.cleanroommc.modularui.screen.viewport.ModularGuiContext;
 import com.cleanroommc.modularui.theme.WidgetThemeEntry;
@@ -23,6 +24,7 @@ import com.gtnhplanner.ui.PlannerSettings;
 import com.gtnhplanner.ui.card.CardPaint;
 import com.gtnhplanner.ui.sound.Sfx;
 import com.gtnhplanner.ui.theme.Hyb;
+import com.gtnhplanner.ui.theme.ScrollBar;
 import com.gtnhplanner.ui.world.PlannerKeys;
 
 /**
@@ -107,6 +109,13 @@ public final class SettingsPanel extends Widget<SettingsPanel> implements Intera
 
     /** The box's height: room for its tallest section. */
     private final int h;
+    /**
+     * The box's height on the screen: {@link #h}, or the room's height when that is less. The showing section's
+     * settings then scroll under the title ({@link #rowsFrame}); the title, its close key and the sections stay put.
+     */
+    private int boxH;
+    private int scroll;
+    private final ScrollBar bar = new ScrollBar("settings", this);
 
     private SettingsPanel(final List<Section> sections) {
         this.sections = sections;
@@ -117,28 +126,75 @@ public final class SettingsPanel extends Widget<SettingsPanel> implements Intera
             most = Math.max(most, tall);
         }
         h = TITLE + PAD + most + PAD;
+        boxH = h;
         size(width(), h);
     }
 
-    /** Opens the settings in the middle of the screen. */
+    /** Fits the box to a room {@code roomH} tall: no taller than it, the settings scrolling when they need more. */
+    private void fitTo(final int roomH) {
+        boxH = BoxFit.frame(roomH, TITLE + 1, h - TITLE - 2, 1)
+            .height();
+        size(width(), boxH);
+    }
+
+    /** The showing section's settings: under the title, above the box's bottom edge, scrolling when taller. */
+    private BoxFit.Frame rowsFrame() {
+        final Section s = section();
+        int tall = introH(s);
+        for (final Row r : s.rows()) tall += rowH(r);
+        return BoxFit.frame(boxH + 2 * BoxFit.MARGIN, TITLE + 1, PAD + tall + PAD - 1, 1);
+    }
+
+    /** Whether a point is over the settings' window (not the title, the sections or the picture). */
+    private boolean inRows(final int mx, final int my) {
+        final BoxFit.Frame f = rowsFrame();
+        return mx > SIDE && mx < W - 1 && my >= f.bodyTop() && my < f.bodyBottom();
+    }
+
+    /** The settings box, fitted to the planner's room as it opens and when the planner's size changes. */
+    private static final class Box extends Popup {
+
+        private final SettingsPanel settings;
+
+        Box(final SettingsPanel settings) {
+            super(PANEL, settings.width(), settings.h);
+            this.settings = settings;
+            child(settings.pos(0, 0));
+        }
+
+        @Override
+        protected void fit(final int[] room, final int[] screen) {
+            settings.fitTo(room[3]);
+            popupW = Math.min(settings.width(), BoxFit.most(screen)[0]);
+            popupH = settings.boxH;
+            size(popupW, popupH);
+        }
+
+        /** Fitted again and centred in the planner's room as it now measures, as it opened. */
+        void refit() {
+            fit(room(this), screen());
+            final int[] at = centred(this, popupW, popupH, 0.5f);
+            final int[] spot = BoxFit.place(screen(), at[0], at[1], popupW, popupH);
+            pos(spot[0], spot[1]);
+            scheduleResize();
+        }
+
+        @Override
+        public void drawBackground(final ModularGuiContext context, final WidgetThemeEntry<?> widgetTheme) {
+            // The board behind dims a little; the box in the card's colours, with the card's shadow.
+            Hyb.rect(-getArea().x, -getArea().y, PlannerScale.width(), PlannerScale.height(), 0x60000000);
+            Hyb.dropShadow(0, 0, getArea().width, getArea().height);
+            CardPaint.surface(getArea().width, getArea().height);
+        }
+    }
+
+    /** Opens the settings in the middle of the planner's room. */
     public static void open(final ModularPanel parent) {
         if (Popup.toggled("settings")) return;
         final SettingsPanel settings = new SettingsPanel(sections());
-        final int H = settings.h;
-        final int wide = settings.width();
-        final Popup popup = new Popup(PANEL, wide, H) {
-
-            @Override
-            public void drawBackground(final ModularGuiContext context, final WidgetThemeEntry<?> widgetTheme) {
-                // The board behind dims a little; the box in the card's colours, with the card's shadow.
-                Hyb.rect(-getArea().x, -getArea().y, PlannerScale.width(), PlannerScale.height(), 0x60000000);
-                Hyb.dropShadow(0, 0, getArea().width, getArea().height);
-                CardPaint.surface(getArea().width, getArea().height);
-            }
-        };
+        final Box popup = new Box(settings);
         popup.toggledBy("settings");
-        popup.child(settings.pos(0, 0));
-        Popup.open(parent, popup, (PlannerScale.width() - wide) / 2, (PlannerScale.height() - H) / 2);
+        Popup.openCentred(parent, popup, 0.5f);
     }
 
     // region The settings
@@ -183,10 +239,7 @@ public final class SettingsPanel extends Widget<SettingsPanel> implements Intera
         // This box stays open, in the middle of the board as it now measures.
         for (final ModularPanel p : board.getPanelManager()
             .getOpenPanels()) {
-            if (p.getName() == null || !p.getName()
-                .startsWith(PANEL + "_")) continue;
-            p.pos((PlannerScale.width() - p.getArea().width) / 2, (PlannerScale.height() - p.getArea().height) / 2);
-            p.scheduleResize();
+            if (p instanceof final Box box) box.refit();
         }
     }
 
@@ -426,10 +479,13 @@ public final class SettingsPanel extends Widget<SettingsPanel> implements Intera
         return sections.get(shown);
     }
 
-    /** Where the showing section's {@code i}th setting starts: under its intro and the settings before it. */
+    /**
+     * Where the showing section's {@code i}th setting starts in the box: under its intro and the settings before it,
+     * less how far the settings are scrolled.
+     */
     private int rowY(final int i) {
         final Section s = section();
-        int y = TITLE + PAD + introH(s);
+        int y = TITLE + PAD + introH(s) - scroll;
         for (int k = 0; k < i; k++) y += rowH(
             s.rows()
                 .get(k));
@@ -500,16 +556,13 @@ public final class SettingsPanel extends Widget<SettingsPanel> implements Intera
         return W + (previewing() ? PREVIEW_W : 0);
     }
 
-    /** After the section changes: the box as wide as it now needs, in the middle of the board again. */
+    /** After the section changes: its settings from the top, the box as wide as it now needs, in the middle again. */
     private void relayout() {
+        scroll = 0;
         final int w = width();
         if (getArea().width == w) return;
-        size(w, h);
-        final ModularPanel p = getPanel();
-        if (p == null) return;
-        p.size(w, h);
-        p.pos((PlannerScale.width() - w) / 2, (PlannerScale.height() - h) / 2);
-        p.scheduleResize();
+        size(w, boxH);
+        if (getPanel() instanceof final Box box) box.refit();
     }
 
     /** The control's box in a row at {@code y}. */
@@ -575,9 +628,22 @@ public final class SettingsPanel extends Widget<SettingsPanel> implements Intera
         return -1;
     }
 
-    /** The GUI rectangle {x, y, w, h} of the showing setting whose name contains {@code label}; null for none. */
+    /**
+     * The GUI rectangle {x, y, w, h} of the showing setting whose name contains {@code label}; null for none. The
+     * setting is scrolled into view first: whoever asks is about to point at it or press it.
+     */
     public int[] rowRect(final String label) {
         final int i = rowIndex(label);
+        if (i >= 0) {
+            final BoxFit.Frame f = rowsFrame();
+            final int at = rowY(i) + scroll - f.bodyTop();
+            scroll = f.reveal(
+                at,
+                rowH(
+                    section().rows()
+                        .get(i)),
+                scroll);
+        }
         return i < 0 ? null
             : abs(
                 new int[] { SIDE + 1, rowY(i), W - SIDE - 2, rowH(
@@ -631,7 +697,12 @@ public final class SettingsPanel extends Widget<SettingsPanel> implements Intera
     @Override
     public void draw(final ModularGuiContext context, final WidgetThemeEntry<?> widgetTheme) {
         final boolean hovering = isHovering();
-        final int mx = hovering ? mouseX() : -1, my = hovering ? mouseY() : -1;
+        final BoxFit.Frame f = rowsFrame();
+        scroll = f.clamp(scroll);
+        final boolean onBar = hovering && f.scrolls() && bar.contains(mouseX(), mouseY());
+        final int mx = hovering && !onBar ? mouseX() : -1, my = hovering && !onBar ? mouseY() : -1;
+        // Over the title or the box's edge, the mouse is over no setting.
+        final int rowMy = inRows(mx, my) ? my : -1;
         final List<Row> rows = section().rows();
 
         // The title, and the key that closes the box.
@@ -643,17 +714,12 @@ public final class SettingsPanel extends Widget<SettingsPanel> implements Intera
         Hyb.rect(1, TITLE, width() - 2, 1, CardPaint.HAIR);
 
         // The sections, the one showing marked in gold.
-        Hyb.rect(1, TITLE + 1, SIDE - 1, h - TITLE - 2, SIDE_FILL);
-        Hyb.rect(SIDE, TITLE + 1, 1, h - TITLE - 2, CardPaint.HAIR);
-        // What the section is for, when it says.
-        final Section s = section();
-        if (s.intro() != null) {
-            final List<String> intro = introLines(s);
-            for (int i = 0; i < intro.size(); i++)
-                Hyb.text(intro.get(i), SIDE + 10, TITLE + PAD + 1 + i * INTRO_LINE, Hyb.MUTED);
-        }
+        Hyb.rect(1, TITLE + 1, SIDE - 1, boxH - TITLE - 2, SIDE_FILL);
+        Hyb.rect(SIDE, TITLE + 1, 1, boxH - TITLE - 2, CardPaint.HAIR);
         for (int i = 0; i < sections.size(); i++) {
             final int[] r = sideRect(i);
+            // On a screen too short for them all, the wheel over the sections still goes through every one.
+            if (r[1] + r[3] > boxH - 1) break;
             final boolean picked = i == shown, hot = !picked && in(r, mx, my);
             if (picked || hot) Hyb.rect(r[0], r[1], r[2], r[3], picked ? SIDE_PICKED : SIDE_HOVER);
             if (picked) Hyb.rect(r[0], r[1], 2, r[3], Hyb.GOLD);
@@ -665,12 +731,19 @@ public final class SettingsPanel extends Widget<SettingsPanel> implements Intera
                 picked || hot ? Hyb.INK : Hyb.MUTED);
         }
 
-        // The settings, a hairline between them.
+        // What the section is for, when it says, then the settings, a hairline between them: in their window.
+        if (f.scrolls()) Stencil.apply(SIDE + 1, f.bodyTop(), W - SIDE - 2, f.view(), context);
+        final Section s = section();
+        if (s.intro() != null) {
+            final List<String> intro = introLines(s);
+            for (int i = 0; i < intro.size(); i++)
+                Hyb.text(intro.get(i), SIDE + 10, TITLE + PAD + 1 + i * INTRO_LINE - scroll, Hyb.MUTED);
+        }
         for (int i = 0; i < rows.size(); i++) {
             final Row row = rows.get(i);
             final int y = rowY(i);
             final int rh = rowH(row);
-            final boolean rowHot = mx > SIDE && my >= y && my < y + rh && mx < W - 1;
+            final boolean rowHot = mx > SIDE && rowMy >= y && rowMy < y + rh && mx < W - 1;
             if (rowHot) Hyb.rect(SIDE + 1, y, W - SIDE - 2, rh, ROW_HOVER);
             if (i > 0 || s.intro() != null) Hyb.rect(SIDE + 8, y, W - SIDE - 16, 1, CardPaint.HAIR);
             if (row.about() != null) {
@@ -687,12 +760,16 @@ public final class SettingsPanel extends Widget<SettingsPanel> implements Intera
             if (row.hint() != null
                 && hintX + Hyb.width(row.hint()) + 6 <= (stacked(row) ? RIGHT : controlRect(row, y)[0]))
                 Hyb.text(row.hint(), hintX, y + (ROW - 8) / 2f + 1, Hyb.MUTED);
-            drawControl(row, y, rowHot, mx, my);
+            drawControl(row, y, rowHot, mx, rowMy);
+        }
+        if (f.scrolls()) {
+            Stencil.remove();
+            scroll = f.clamp(bar.draw(W - 1, f.bodyTop(), f.view(), f.content(), scroll, onBar || bar.dragging()));
         }
         // The picture of what the section changes, beside its settings.
         if (previewing()) {
-            Hyb.rect(W, TITLE + 1, 1, h - TITLE - 2, CardPaint.HAIR);
-            final int px = W + 8, py = TITLE + PAD + 2, pw = PREVIEW_W - 16, ph = h - TITLE - 2 * PAD - 4;
+            Hyb.rect(W, TITLE + 1, 1, boxH - TITLE - 2, CardPaint.HAIR);
+            final int px = W + 8, py = TITLE + PAD + 2, pw = PREVIEW_W - 16, ph = boxH - TITLE - 2 * PAD - 4;
             if (section().name()
                 .equals("Minimap")) SettingsPreview.minimap(px, py, pw, ph);
             else SettingsPreview.world(px, py, pw, ph);
@@ -791,14 +868,21 @@ public final class SettingsPanel extends Widget<SettingsPanel> implements Intera
             Sfx.CLOSE.play();
             return Result.SUCCESS;
         }
-        for (int i = 0; i < sections.size(); i++) if (in(sideRect(i), mx, my)) {
-            if (i != shown) {
-                shown = i;
-                relayout();
-                Hyb.click();
-            }
+        final BoxFit.Frame f = rowsFrame();
+        if (mouseButton == 0 && f.scrolls() && bar.contains(mx, my)) {
+            scroll = f.clamp(bar.press(my, scroll));
             return Result.SUCCESS;
         }
+        for (int i = 0; i < sections.size(); i++)
+            if (in(sideRect(i), mx, my) && sideRect(i)[1] + SIDE_ROW <= boxH - 1) {
+                if (i != shown) {
+                    shown = i;
+                    relayout();
+                    Hyb.click();
+                }
+                return Result.SUCCESS;
+            }
+        if (!inRows(mx, my)) return Result.SUCCESS;
         final List<Row> rows = section().rows();
         for (int i = 0; i < rows.size(); i++) {
             final Row row = rows.get(i);
@@ -837,6 +921,7 @@ public final class SettingsPanel extends Widget<SettingsPanel> implements Intera
 
     @Override
     public void onMouseDrag(final int mouseButton, final long timeSinceClick) {
+        if (bar.dragging()) scroll = rowsFrame().clamp(bar.drag(mouseY()));
         if (dragging == null) return;
         final List<Row> rows = section().rows();
         final int i = rows.indexOf(dragging);
@@ -845,6 +930,7 @@ public final class SettingsPanel extends Widget<SettingsPanel> implements Intera
 
     @Override
     public boolean onMouseRelease(final int mouseButton) {
+        bar.release();
         dragging = null;
         return true;
     }
@@ -869,9 +955,23 @@ public final class SettingsPanel extends Widget<SettingsPanel> implements Intera
             }
             return true;
         }
+        if (!inRows(mx, my)) return true;
+        // Settings taller than their window scroll, unless the wheel is over a control that it changes.
+        final BoxFit.Frame f = rowsFrame();
+        final List<Row> rows = section().rows();
+        int under = -1;
+        for (int i = 0; i < rows.size(); i++) {
+            final int y = rowY(i);
+            if (my >= y && my < y + rowH(rows.get(i))) under = i;
+        }
+        final boolean onControl = under >= 0 && PlannerSettings.scrollChangesValues()
+            && (!f.scrolls() || in(controlRect(rows.get(under), rowY(under)), mx, my));
+        if (f.scrolls() && !onControl) {
+            scroll = f.clamp(scroll - step * 20);
+            return true;
+        }
         // With "Scroll changes values" off a row takes no wheel.
         if (!PlannerSettings.scrollChangesValues()) return true;
-        final List<Row> rows = section().rows();
         for (int i = 0; i < rows.size(); i++) {
             final Row row = rows.get(i);
             final int y = rowY(i);

@@ -41,8 +41,9 @@ public class NEIPlanConfig implements IConfigureNEI {
         public static int ON = 1;
     }
 
-    // Hash binds carry their modifiers in the stored int and compare exactly, so every accepted
-    // combination needs its own ident.
+    // The pack's NEI keeps each bind as a plain key binding (Controls can move it) and drops the modifiers here; the
+    // board asks for the modifiers each one needs (ui/UndoKeys: Ctrl+Z, Ctrl+Shift+Z, Ctrl+Y). An older NEI keeps the
+    // modifiers in the stored int and compares it whole, so the defaults carry them.
     public static class ConfigUndoKey {
 
         public static String KEY = "gtnhplanner.undo";

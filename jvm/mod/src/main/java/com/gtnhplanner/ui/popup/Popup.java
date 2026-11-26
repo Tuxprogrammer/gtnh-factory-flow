@@ -143,6 +143,30 @@ public class Popup extends ModularPanel {
     private String toggleKey;
     private boolean shown;
 
+    /** What Enter does in this box (null: nothing); the board's keys call {@link #enter}. */
+    @org.jetbrains.annotations.Nullable
+    private Runnable onEnter;
+
+    /** Sets what Enter does: closes the box and runs {@code action}, as picking that row would. */
+    public Popup onEnter(final Runnable action) {
+        onEnter = action;
+        return this;
+    }
+
+    /** Whether this box is a question Enter answers. */
+    public boolean asks() {
+        return onEnter != null;
+    }
+
+    /** Enter in this box: true when it had something to do, done and the box closed. */
+    public boolean enter() {
+        if (onEnter == null) return false;
+        closeIfOpen();
+        com.gtnhplanner.ui.theme.Hyb.click();
+        onEnter.run();
+        return true;
+    }
+
     /** Marks this box as the one {@code key} opens (see {@link #toggled}). */
     public <P extends Popup> P toggledBy(final String key) {
         toggleKey = key;

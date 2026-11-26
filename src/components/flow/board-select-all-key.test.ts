@@ -144,8 +144,13 @@ describe("the board's Ctrl+A", () => {
     boardWithPlan();
     expect(pressCtrlA()).toBe(false);
     expect(selected().sort()).toEqual(ALL);
-    // The selection is the board's: Delete takes all of it, wires with it.
+    // The selection is the board's: Delete takes all of it, wires with it, once the player says so.
     press("Delete");
+    expect(document.querySelector("[data-mod-menu] .mm-title")?.textContent).toBe("Delete 6 cards?");
+    expect(cards()).toEqual(ALL);
+    act(() => {
+      document.activeElement?.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    });
     expect(cards()).toEqual([]);
     expect(useFactoryStore.getState().project.edges).toEqual([]);
   });

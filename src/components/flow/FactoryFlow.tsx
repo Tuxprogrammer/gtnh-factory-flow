@@ -157,6 +157,9 @@ import {
   type BoardCamera,
 } from "@/lib/designs/design-camera";
 import { isBoardCovered, isDialogKeyboardTarget, isEditableKeyboardTarget } from "./keyboard";
+import { cardsDeleteTakes, deleteAsks, deleteQuestion } from "./delete-ask";
+import { CHROME_SCREEN_K, ChromeMenu, type ChromeAnchor } from "../chrome/ChromeMenu";
+import { getUiScale } from "@/lib/ui-scale";
 import {
   didBoardTimelapseEndHeld,
   getBoardTimelapseCameraMode,
@@ -5018,20 +5021,60 @@ export function FactoryFlow() {
     return true;
   }, [project, selectedNodeIds]);
 
+  const deleteBoardItems = useCallback(
+    (nodeIds: string[], edgeIds: string[]) => {
+      deleteBoardSelection({
+        nodeIds,
+        edgeIds: expandChannelEdgeIds(edgeIds),
+      });
+      setSelectedNodeIds([]);
+      setSelectedEdgeIds([]);
+      selectNode(undefined);
+    },
+    [deleteBoardSelection, selectNode],
+  );
+
   const deleteSelectedBoardItems = useCallback((): boolean => {
     if (selectedNodeIds.length === 0 && selectedEdgeIds.length === 0) {
       return false;
     }
 
-    deleteBoardSelection({
-      nodeIds: selectedNodeIds,
-      edgeIds: expandChannelEdgeIds(selectedEdgeIds),
-    });
-    setSelectedNodeIds([]);
-    setSelectedEdgeIds([]);
-    selectNode(undefined);
+    deleteBoardItems(selectedNodeIds, selectedEdgeIds);
     return true;
-  }, [deleteBoardSelection, selectNode, selectedEdgeIds, selectedNodeIds]);
+  }, [deleteBoardItems, selectedEdgeIds, selectedNodeIds]);
+
+  /** The open "Delete N cards?" question: what was selected when it asked is what goes. */
+  const [deleteAsk, setDeleteAsk] = useState<{
+    nodeIds: string[];
+    edgeIds: string[];
+    cards: number;
+    anchor: ChromeAnchor;
+  }>();
+
+  /** Delete and Backspace: the selection goes, asking first when it holds more than one card (delete-ask.ts). */
+  const askDeleteSelectedBoardItems = useCallback((): boolean => {
+    if (selectedNodeIds.length === 0 && selectedEdgeIds.length === 0) {
+      return false;
+    }
+
+    const cards = cardsDeleteTakes(useFactoryStore.getState().project, selectedNodeIds);
+    if (!deleteAsks(cards)) {
+      deleteBoardItems(selectedNodeIds, selectedEdgeIds);
+      return true;
+    }
+    // The question hangs in the middle of the board, a little above centre, as the in-game planner's does.
+    const box = boardRef.current?.getBoundingClientRect();
+    const half = (150 * getUiScale() * CHROME_SCREEN_K) / 2;
+    const x = box ? box.left + box.width / 2 : window.innerWidth / 2;
+    const y = box ? box.top + box.height * 0.4 : window.innerHeight * 0.4;
+    setDeleteAsk({
+      nodeIds: selectedNodeIds,
+      edgeIds: selectedEdgeIds,
+      cards,
+      anchor: { left: x - half, top: y, bottom: y },
+    });
+    return true;
+  }, [deleteBoardItems, selectedEdgeIds, selectedNodeIds]);
 
   /** Escape lets go of the selection, as the controls list says: nothing stays armed for a later Delete. */
   const clearBoardSelection = useCallback(() => {
@@ -5233,11 +5276,17 @@ export function FactoryFlow() {
       // store's selectedNodeId is never drawn (a landing and every delete
       // point it at the first card), so a key on it deleted cards nobody saw.
       if (event.key === "Delete" || event.key === "Backspace") {
-        if (isEditableKeyboardTarget(event.target) || event.defaultPrevented || isBoardCovered()) {
+        // A dialog or menu with the keyboard (the delete's own question among them) keeps the key.
+        if (
+          isEditableKeyboardTarget(event.target) ||
+          isDialogKeyboardTarget(event.target) ||
+          event.defaultPrevented ||
+          isBoardCovered()
+        ) {
           return;
         }
 
-        if (deleteSelectedBoardItems()) {
+        if (askDeleteSelectedBoardItems()) {
           return;
         }
 
@@ -5283,6 +5332,7 @@ export function FactoryFlow() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [
     annotationTool,
+    askDeleteSelectedBoardItems,
     cancelResourceConnection,
     clearBoardSelection,
     copyBoardSelection,
@@ -6679,6 +6729,23 @@ export function FactoryFlow() {
       }}
     >
       {boardMenu && !isReadOnly ? <BoardContextMenu target={boardMenu} onClose={closeBoardMenu} /> : null}
+      {deleteAsk ? (
+        <ChromeMenu
+          anchor={deleteAsk.anchor}
+          entries={[
+            {
+              label: "Delete",
+              tone: "red",
+              onSelect: () => deleteBoardItems(deleteAsk.nodeIds, deleteAsk.edgeIds),
+            },
+            { label: "Cancel", onSelect: () => undefined },
+          ]}
+          label="Delete the selection"
+          title={deleteQuestion(deleteAsk.cards)}
+          minWidth={150}
+          onClose={() => setDeleteAsk(undefined)}
+        />
+      ) : null}
       <StorageRatioEditor />
       <ReactFlow
         nodes={mounted.nodes}

@@ -1,6 +1,7 @@
 import type { z } from "zod";
 import { makeResourceHandleId } from "@/components/flow/resource-handles";
 import { makeResourceKey } from "@/lib/model/resources";
+import { listNodeRecipeIds } from "@/lib/model/shared-machine";
 import type { FactoryNode, Recipe } from "@/lib/model/types";
 import { describeCard, planCard, type PlannedCard } from "./cards";
 import { agentDatasetVersion, loadRecipe, resolveResource, withDataset } from "./dataset";
@@ -223,7 +224,8 @@ export async function removeCards(
       draft.cut.delete(key);
     }
   }
-  const used = new Set(nodes.map((node) => node.recipeId));
+  // A shared machine keeps the recipes of all its sections.
+  const used = new Set(nodes.flatMap((node) => listNodeRecipeIds(node)));
   draft.project = {
     ...draft.project,
     nodes,

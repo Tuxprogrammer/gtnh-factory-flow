@@ -7,7 +7,7 @@ import {
   getSelectedMachineHandler,
   type MachineConfigTierControl,
 } from "@/lib/model/recipe-rules";
-import { getVoltageTierIndex, getVoltageTierMaxEuT } from "@/lib/model/tiers";
+import { getVoltageTierIndex, getVoltageTierMaxEuT, isVoltageTierName } from "@/lib/model/tiers";
 import type { FactoryNode, MachineHandler, MachineTier, Recipe } from "@/lib/model/types";
 import { carryMachineVoltage } from "@/lib/solver/hatch-input";
 import { getNodeRunTier, getPowerPoolEuT, isMultiblockRecipe } from "@/lib/solver/power";
@@ -71,6 +71,23 @@ const higherTier = (a: VoltageTier, b: VoltageTier): VoltageTier =>
 function settingRank(control: MachineConfigTierControl): number {
   if (control.numeric) return Number(control.current.key);
   return control.minimumIndex + control.tiers.findIndex((tier) => tier.key === control.current.key);
+}
+
+const NUMBER = /^-?\d+(\.\d+)?$/;
+
+/**
+ * Two stored settings no control reads, highest last: numbers by value (10 above 9), voltage tier names by tier (IV
+ * above EV), anything else by its text. Numbers rank below tier names, and those below the rest, so the order is the
+ * same whatever pairs are compared and the pick never follows card order.
+ */
+export function compareStoredSetting(a: string, b: string): number {
+  const kind = (key: string) => (NUMBER.test(key) ? 0 : isVoltageTierName(key) ? 1 : 2);
+  const ka = kind(a);
+  const kb = kind(b);
+  if (ka !== kb) return ka - kb;
+  if (ka === 0) return Number(a) - Number(b) || (a < b ? -1 : a > b ? 1 : 0);
+  if (ka === 1) return getVoltageTierIndex(a as VoltageTier) - getVoltageTierIndex(b as VoltageTier);
+  return a < b ? -1 : a > b ? 1 : 0;
 }
 
 /**
@@ -163,7 +180,7 @@ export function combinedMachineSettings(
       // A setting no control on this machine reads: the highest key, so
       // the pick does not follow card order either.
       const held = stored.get(id);
-      if (held === undefined || key > held) stored.set(id, key);
+      if (held === undefined || compareStoredSetting(key, held) > 0) stored.set(id, key);
     }
   }
   const machineConfigTiers: Record<string, string> = {};

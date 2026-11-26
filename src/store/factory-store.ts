@@ -23,6 +23,7 @@ import {
   sharedCombineHandlers,
   withCombinedSettings,
 } from "./combine-machine";
+import { dropSectionsWithoutRecipes } from "@/lib/model/section-recipes";
 import { keepUsedRecipes } from "@/lib/model/embedded-recipes";
 
 import { create, type StateCreator, type StoreApi } from "zustand";
@@ -3791,6 +3792,15 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
           addedRecipes.push(structuredClone(recipe));
           projectRecipeIds.add(recipe.id);
         }
+        // A shared machine's other recipes come along too: a cut has pruned them from this plan, and another plan
+        // may never have had them. Without them those sections have no ports and their wires point at nothing.
+        for (const extra of clone.extraRecipes ?? []) {
+          const carried = payloadRecipesById.get(extra.recipeId);
+          if (carried && !projectRecipeIds.has(extra.recipeId)) {
+            addedRecipes.push(structuredClone(carried));
+            projectRecipeIds.add(extra.recipeId);
+          }
+        }
         nodes.push(clone);
       }
       const storages = payload.storages.map((storage) => {
@@ -3843,7 +3853,8 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
         return state;
       }
 
-      const project = touchProject({
+      // A section whose recipe the clipboard lacks too (a blueprint saved from a plan that had lost it) goes, as on load.
+      const project = touchProject(dropSectionsWithoutRecipes({
         ...state.project,
         productionGroups: productionGroups.length ? [...(state.project.productionGroups ?? []), ...productionGroups] : state.project.productionGroups,
         recipes: addedRecipes.length
@@ -3860,7 +3871,7 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
           ? [...(state.project.pockets ?? []), ...pockets]
           : state.project.pockets,
         edges: edges.length ? [...state.project.edges, ...edges] : state.project.edges,
-      });
+      }, new Set(nodes.map((node) => node.id))));
       // Only what surfaces at the level the board is showing can be
       // selected; cards pasted deeper inside a pocket are reachable by
       // entering it.

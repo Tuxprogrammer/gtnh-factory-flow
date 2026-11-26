@@ -73,6 +73,8 @@ public class ClientProxy extends CommonProxy {
         MinecraftForge.EVENT_BUS.register(ChatShare.INSTANCE);
         // The planner's screens coming and going (its other sounds play where they happen: ui/sound/Sfx).
         MinecraftForge.EVENT_BUS.register(com.gtnhplanner.ui.sound.ScreenSounds.INSTANCE);
+        // The player's inventory stays the open container under the planner, so server slot updates land.
+        MinecraftForge.EVENT_BUS.register(com.gtnhplanner.ui.PlannerInventory.INSTANCE);
         // Every mouse release reaches the board's panels, the ones a card or the board took first too.
         MinecraftForge.EVENT_BUS.register(com.gtnhplanner.ui.PanelHolds.INSTANCE);
         ClientCommandHandler.instance.registerCommand(new ImportCommand());

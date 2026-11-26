@@ -207,6 +207,10 @@ export const VirtualizationController = memo(function VirtualizationController({
       }
     };
     boardVirtualizer.wake = schedule;
+    boardEdges.handleCountOf = (id) => {
+      const bounds = flowStore.getState().nodeLookup.get(id)?.internals.handleBounds;
+      return bounds ? (bounds.source?.length ?? 0) + (bounds.target?.length ?? 0) : undefined;
+    };
 
     let wasGlance = false;
     const feedView = () => {
@@ -370,6 +374,7 @@ export const VirtualizationController = memo(function VirtualizationController({
     return () => {
       cancelAnimationFrame(frame);
       boardVirtualizer.wake = undefined;
+      boardEdges.handleCountOf = undefined;
       unsubscribeStore();
       if (movingTimer !== undefined) clearTimeout(movingTimer);
       board.removeAttribute(CAMERA_MOVING_ATTRIBUTE);

@@ -119,6 +119,8 @@ export class CardVirtualizer {
   version = 0;
   /** Bumped whenever the published boxes change (a new set, or a different plan on the board). */
   geometryVersion = 0;
+  /** Bumped whenever a card is newly drawn. */
+  drawnVersion = 0;
   private dirty = true;
   /** Set by the controller: called when geometry or the camera changed and a step is wanted. */
   wake: (() => void) | undefined;
@@ -195,7 +197,12 @@ export class CardVirtualizer {
   /** The card's contents were drawn: its size and handles are measured for real. */
   markDrawn(id: string): void {
     const before = this.phase(id);
-    this.drawn.add(id);
+    if (!this.drawn.has(id)) {
+      this.drawn.add(id);
+      // Its wires may go to React Flow now (board-edges.ts): the next step picks them again.
+      this.drawnVersion += 1;
+      this.wake?.();
+    }
     if (this.phase(id) !== before) this.notify(id);
   }
 

@@ -314,8 +314,10 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   stand-in people); `PLANNH_LIBRARY_URL=http://localhost:3000 tools/dev/mc.sh start` points a dev game at a local site
   (a dev game with no address set contacts nothing). End to end: `npm run dev:local` at the repo root (site :3000,
   live ws://localhost:3001/live, local Postgres), `node tools/dev/mock-library.mjs`, which loads `tools/dev/mock-live.mjs`, without the website.
-- On the board a left press on anything (a card's keys and chips too, a drawer's, a note's) is a click when let go
-  within 6 GUI pixels (`BoardCanvas.DRAG_SLOP`; tabs and task cards too) and acts then; moved further, it carries the thing. Carried things
+- On the board a left press on anything (a card's keys and chips too, a drawer's, a note's, a port, a leftover row, a
+  wire's dot, a group's edge) is a click when let go within the slop, 6 GUI pixels or 8 screen pixels along either
+  axis, whichever is further (`ui/ClickSlop`, one rule for tabs and task cards too: a slow click that wobbles a few
+  pixels still clicks), and acts then; moved further, it carries the thing. Carried things
   glide (about 120 ms) between 10 px grid spots and never land on another card or drawer: each frame they go to the
   clear spot nearest the mouse (`BoardCanvas.nearestClear`, the website's ring search), so they hug what is in the way
   and come out its far side past its middle; notes pass over. Hovering a port, drawer or wire lights only it, its

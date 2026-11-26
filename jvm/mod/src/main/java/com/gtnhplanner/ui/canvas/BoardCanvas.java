@@ -85,6 +85,11 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
 
     private float panStartX, panStartY;
     private int panMouseX, panMouseY;
+    /**
+     * Whether the press on empty board has gone past the slop ({@link com.gtnhplanner.ui.ClickSlop}): a pan, not a
+     * click.
+     */
+    private boolean panMoved;
     private boolean panning;
 
     public BoardCanvas(final BoardSession session, final ModularPanel panel) {
@@ -761,11 +766,10 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
     private int moveMouseX, moveMouseY, moveDX, moveDY;
     private String moveUndo;
     /**
-     * Whether the press has gone far enough to be a move ({@value #DRAG_SLOP} GUI pixels); until then it is a click.
+     * Whether the press has gone far enough to be a move ({@link com.gtnhplanner.ui.ClickSlop}); until then it is a
+     * click.
      */
     private boolean moveStarted;
-    /** How far the mouse goes, in GUI pixels, before a press on a card, drawer or note moves it. */
-    private static final int DRAG_SLOP = 6;
     /** The grid moves snap to, in board pixels. */
     private static final int MOVE_STEP = 10;
     /** How far the clear spot is looked for around the mouse, in grid steps, before giving up and overlapping. */
@@ -1064,7 +1068,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
         final int rawX = getContext().getAbsMouseX() - moveMouseX, rawY = getContext().getAbsMouseY() - moveMouseY;
         if (!moveStarted) {
             // A press that has not gone anywhere yet is still a click.
-            if (Math.max(Math.abs(rawX), Math.abs(rawY)) < DRAG_SLOP) return;
+            if (!com.gtnhplanner.ui.ClickSlop.moved(rawX, rawY)) return;
             moveStarted = true;
             Sfx.LIFT.play();
         }
@@ -1470,7 +1474,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
         snappedTo = null;
         if (w == null) return false;
         final int mx = getContext().getAbsMouseX(), my = getContext().getAbsMouseY();
-        if (Math.abs(mx - w.startX()) + Math.abs(my - w.startY()) < 4) return true;
+        if (!com.gtnhplanner.ui.ClickSlop.moved(mx - w.startX(), my - w.startY())) return true;
         final Drawer d = graph().getDrawer(w.drawerId());
         if (!successful || d == null) return false;
         final float wx = worldX(mx), wy = worldY(my);
@@ -1546,7 +1550,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
         if (d == null) return;
         final int smx = getContext().getAbsMouseX(), smy = getContext().getAbsMouseY();
         if (!drawerWireHeard) {
-            if (Math.abs(smx - drawerWire.startX()) + Math.abs(smy - drawerWire.startY()) < 4) return;
+            if (!com.gtnhplanner.ui.ClickSlop.moved(smx - drawerWire.startX(), smy - drawerWire.startY())) return;
             drawerWireHeard = true;
             Sfx.WIRE_GRAB.play();
         }
@@ -1901,8 +1905,8 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
     private void drawSpareCarry() {
         final SpareCarry c = carry;
         if (!carryMoved) {
-            if (Math.abs(getContext().getAbsMouseX() - carryStartX)
-                + Math.abs(getContext().getAbsMouseY() - carryStartY) < 4) return;
+            if (!com.gtnhplanner.ui.ClickSlop
+                .moved(getContext().getAbsMouseX() - carryStartX, getContext().getAbsMouseY() - carryStartY)) return;
             carryMoved = true;
             Sfx.WIRE_GRAB.play();
         }
@@ -2236,7 +2240,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
         wires.phantom(null);
         if (drag == null) return;
         final int mx = getContext().getAbsMouseX(), my = getContext().getAbsMouseY();
-        if (Math.abs(mx - drag.startX()) + Math.abs(my - drag.startY()) < 4) {
+        if (!com.gtnhplanner.ui.ClickSlop.moved(mx - drag.startX(), my - drag.startY())) {
             // A (left) click, not a drag: on the port's rule key, Any or =; on its box, its rate; elsewhere NEI's
             // recipes for its resource (a socket has none).
             if (drag.socket()) return;
@@ -2549,8 +2553,8 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
         final boolean was = lifting;
         lifting = false;
         if (portDrag == null) return;
-        if (!dragHeard && Math.abs(getContext().getAbsMouseX() - portDrag.startX())
-            + Math.abs(getContext().getAbsMouseY() - portDrag.startY()) >= 4) {
+        if (!dragHeard && com.gtnhplanner.ui.ClickSlop
+            .moved(getContext().getAbsMouseX() - portDrag.startX(), getContext().getAbsMouseY() - portDrag.startY())) {
             dragHeard = true;
             Sfx.WIRE_GRAB.play();
         }
@@ -3623,6 +3627,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
         panStartY = graph().getPanY();
         panMouseX = getContext().getAbsMouseX();
         panMouseY = getContext().getAbsMouseY();
+        panMoved = false;
     }
 
     /**
@@ -3647,14 +3652,22 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
         if (!middlePan) return;
         stepMiddlePan();
         middlePan = false;
-        if (graph().getPanX() == panStartX && graph().getPanY() == panStartY) middleClick();
+        if (!panMoved) middleClick();
         else startPanGlide();
     }
 
     private void stepMiddlePan() {
         if (!middlePan) return;
-        graph().setPanX(panStartX + getContext().getAbsMouseX() - panMouseX);
-        graph().setPanY(panStartY + getContext().getAbsMouseY() - panMouseY);
+        stepPan();
+    }
+
+    /** The board follows the press once it has gone past the slop; a press within it is a click and pans nothing. */
+    private void stepPan() {
+        final int dx = getContext().getAbsMouseX() - panMouseX, dy = getContext().getAbsMouseY() - panMouseY;
+        if (!panMoved && !com.gtnhplanner.ui.ClickSlop.moved(dx, dy)) return;
+        panMoved = true;
+        graph().setPanX(panStartX + dx);
+        graph().setPanY(panStartY + dy);
     }
 
     @Override
@@ -3709,6 +3722,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
         panStartY = graph().getPanY();
         panMouseX = getContext().getAbsMouseX();
         panMouseY = getContext().getAbsMouseY();
+        panMoved = false;
         pressDot();
         return true;
     }
@@ -3734,7 +3748,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
 
     /**
      * A press on a wire's dot: pressed again soon after, it comes off (one undoable step); otherwise it is in hand, to
-     * be carried once the press goes further than {@value #DRAG_SLOP} GUI pixels.
+     * be carried once the press goes past the slop ({@link com.gtnhplanner.ui.ClickSlop}).
      */
     private void pressDot() {
         final int mx = getContext().getAbsMouseX(), my = getContext().getAbsMouseY();
@@ -3762,7 +3776,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
     private void dragDot() {
         final int mx = getContext().getAbsMouseX(), my = getContext().getAbsMouseY();
         if (!dotMoved) {
-            if (Math.max(Math.abs(mx - dotPress.mouseX()), Math.abs(my - dotPress.mouseY())) < DRAG_SLOP) return;
+            if (!com.gtnhplanner.ui.ClickSlop.moved(mx - dotPress.mouseX(), my - dotPress.mouseY())) return;
             dotMoved = true;
             Sfx.LIFT.play();
         }
@@ -3828,7 +3842,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
         }
         if (!wire.key()
             .equals(clickedWire) || now - clickedAt >= DOUBLE_MS
-            || Math.max(Math.abs(mx - clickedX), Math.abs(my - clickedY)) >= DRAG_SLOP) {
+            || com.gtnhplanner.ui.ClickSlop.moved(mx - clickedX, my - clickedY)) {
             clickedWire = wire.key();
             clickedAt = now;
             clickedX = mx;
@@ -3941,8 +3955,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
             boxY1 = worldY(getContext().getAbsMouseY());
             return;
         }
-        graph().setPanX(panStartX + getContext().getAbsMouseX() - panMouseX);
-        graph().setPanY(panStartY + getContext().getAbsMouseY() - panMouseY);
+        stepPan();
     }
 
     @Override
@@ -3962,7 +3975,7 @@ public final class BoardCanvas extends ParentWidget<BoardCanvas>
         }
         // A click on empty board (no pan) clears the selection, and twice on a wire pins a dot on it; a pan let go
         // while moving glides on.
-        if (graph().getPanX() == panStartX && graph().getPanY() == panStartY) {
+        if (!panMoved) {
             session.clearSelection();
             clickWire();
         } else startPanGlide();

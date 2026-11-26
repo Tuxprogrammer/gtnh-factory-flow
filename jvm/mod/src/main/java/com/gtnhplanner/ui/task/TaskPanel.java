@@ -63,7 +63,6 @@ public final class TaskPanel extends ParentWidget<TaskPanel> implements Interact
     static final int WELL = 0xFF16171A, CONTROL = 0xFF2A2C31, CONTROL_HOVER = 0xFF33363C, CYAN = 0xFF22D3EE,
         ROW_HOVER = 0xFF2A2C31, SIDE = 0xFF1D1F23, SIDE_EDGE = 0xFF2C2E34, DIM = 0xFF7E8089, FAINT = 0xFF6A6C74,
         QUEST_INK = 0xFFF2C14E;
-    private static final int DRAG_SLOP = 6;
     /** A row of the side column's lists of tasks. */
     private static final int LINK_H = 15;
     /** The side column's rhythm: the room under a label and between items; its labels' quiet ink. */
@@ -1576,11 +1575,11 @@ public final class TaskPanel extends ParentWidget<TaskPanel> implements Interact
             lift();
         }
 
-        /** A thing pressed and moved {@value #DRAG_SLOP} pixels is carried. */
+        /** A thing pressed and moved past the slop ({@link com.gtnhplanner.ui.ClickSlop}) is carried. */
         private void lift() {
             if (pressed == null || carrying) return;
             final int dx = getContext().getAbsMouseX() - pressX, dy = getContext().getAbsMouseY() - pressY;
-            if (Math.max(Math.abs(dx), Math.abs(dy)) < DRAG_SLOP) return;
+            if (!com.gtnhplanner.ui.ClickSlop.moved(dx, dy)) return;
             carrying = true;
             drop = findDrop();
             Sfx.LIFT.play();

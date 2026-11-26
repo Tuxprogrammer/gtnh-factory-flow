@@ -35,8 +35,8 @@ import com.gtnhplanner.ui.theme.Thumb;
 /**
  * The open plan's task board, in the board's place (the overview and the top bar stay): four columns, Blocked, To do,
  * Doing and Done, each a stack of task cards (its first screenshot, the title, who is on it, its things done of all
- * of them and how many comments). A card is carried by the board's rules: a press let go within {@value #DRAG_SLOP}
- * pixels is a click and
+ * of them and how many comments). A card is carried by the board's rules: a press let go within the slop
+ * ({@link com.gtnhplanner.ui.ClickSlop}) is a click and
  * opens
  * the task; moved further it lifts, the others glide apart where it would land, and letting go puts it there. The
  * wheel scrolls a column.
@@ -55,7 +55,6 @@ public final class TaskBoardView extends Widget<TaskBoardView> implements Intera
     private static final int MIN_COL = 112, BAR_H = 3;
     private static final int COLUMN_BG = 0xFF18191C, COLUMN_EDGE = 0xFF26282D, CARD_HOT = 0xFF2A2C32;
     /** How far the mouse goes before a press on a card carries it, as on the board. */
-    private static final int DRAG_SLOP = 6;
     /** How quickly cards glide to their places: about 120 ms, as on the board. */
     private static final float EASE_SECONDS = 0.035f;
 
@@ -677,11 +676,11 @@ public final class TaskBoardView extends Widget<TaskBoardView> implements Intera
         lift();
     }
 
-    /** A press that has gone {@value #DRAG_SLOP} pixels lifts its card. Checked as the mouse moves and every frame. */
+    /** A press that has gone past the slop lifts its card. Checked as the mouse moves and every frame. */
     private void lift() {
         if (pressed == null || carrying) return;
         final int dx = getContext().getAbsMouseX() - pressX, dy = getContext().getAbsMouseY() - pressY;
-        if (Math.max(Math.abs(dx), Math.abs(dy)) < DRAG_SLOP) return;
+        if (!com.gtnhplanner.ui.ClickSlop.moved(dx, dy)) return;
         final Tasks.Task t = TaskEdits.task(graph(), pressed);
         if (t == null) {
             pressed = null;

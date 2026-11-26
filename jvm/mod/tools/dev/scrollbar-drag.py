@@ -294,7 +294,10 @@ def bar_run(a):
         after = bar.thumb()
         moved = held[0] - th[0] if held else 0
         check("drag", abs(moved - want) <= tol, f"mouse {a.distance} px, thumb {moved} px while held (room {room})")
-        check("let go", after == held, f"thumb at {after} after the release, {held} while held")
+        # A list that scrolls by whole rows (the pick menu's) settles on the row the thumb shows once let go: a pixel
+        # or two, as the mouse and the thumb each round. A thumb that jumps back moves far more than that.
+        settled = after is not None and held is not None and all(abs(p - q) <= tol for p, q in zip(after, held))
+        check("let go", settled, f"thumb at {after} after the release, {held} while held")
     if "end" in checks:
         th = to_start()
         drag(bar, (th[0] + th[1]) // 2, bar.t1 - bar.t0 + 200, a.steps, a.pause)

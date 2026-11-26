@@ -91,7 +91,9 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   the website's 20 px grid (importer, `PlanExport.edge`, `cloud/map` with the game's own to the pixel).
 - `importer/` converts Factory Flow plans (JSON, plan codes, links) to graphs: a pure core plus `importer/game/`,
   the NEI and GregTech side. The "+" plan tab pastes one from the clipboard; `call 'importff?file=<path>'` does it
-  from the harness. Fixtures are in `src/test/resources/factory-flow/`. A card's machine is found by the website's
+  from the harness. Fixtures are in `src/test/resources/factory-flow/`. What an import makes gets ids in the order of
+  the plan's own ids, as the website hands them to the solver (`importer/SourceIds`, a random first half per import):
+  the solver breaks ties by id, so the same plan solves the same every time (`SameSolveEveryImportTest`). A card's machine is found by the website's
   handler id among the blocks `handlers.json` lists for it (`WebCards.handlerItems`; names alone never match a GT
   single block, named per tier), a single block at the card's tier (the nearest it comes in, reported). The website's
   board px are ours one to one (the owner's backport, 2026-10-15: its board draws our 320 card and 116x48 drawers),

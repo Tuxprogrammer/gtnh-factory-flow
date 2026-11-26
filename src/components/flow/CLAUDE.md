@@ -1,7 +1,8 @@
 # The board (src/components/flow)
 
-`FactoryFlow.tsx` hosts the React Flow canvas. `RecipeNode.tsx` is the machine card,
-`StorageNode.tsx` the drawer, `BoardNode.tsx` / `PocketNode.tsx` an open / minimized
+`FactoryFlow.tsx` hosts the React Flow canvas. `clean/` draws the machine cards and drawers
+(`clean/CLAUDE.md`); the classic `RecipeNode.tsx` and `StorageNode.tsx` keep the node data types and
+shared pieces but are not drawn on the board. `BoardNode.tsx` / `PocketNode.tsx` are an open / minimized
 board, `grid-edge-router.ts` the wire router. Auto-arrange lives in
 `src/lib/board-arrange*.ts`, the grid constants in `src/lib/board-grid.ts`.
 

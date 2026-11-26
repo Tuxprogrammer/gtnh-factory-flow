@@ -57,7 +57,7 @@ class BoxBoundsTest {
     static {
         list("pattern/PatternPick.java", new Listed(1, Bound.FRAMED, "products in the pattern"));
         list("ui/BoardScreen.java", new Listed(4, Bound.LIST, "account, share and help menus, the board's help"));
-        list("ui/BoardSession.java", new Listed(1, Bound.LIST, "delete or leave a plan"));
+        list("ui/BoardSession.java", new Listed(2, Bound.LIST, "delete or leave a plan; delete several cards"));
         list("ui/canvas/BoardCanvas.java", new Listed(6, Bound.LIST, "board, wire, drop, arrange and rule menus"));
         list("ui/card/RecipeCard.java", new Listed(8, Bound.LIST, "card menus and setting choices"));
         list("ui/card/RecipePicks.java", new Listed(2, Bound.LIST, "mob and crop picks"));

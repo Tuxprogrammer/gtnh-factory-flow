@@ -1776,16 +1776,36 @@ public final class BoardSession {
         Sfx.CLICK.play(Sfx.SELECT_VOLUME, Sfx.SELECT_PITCH);
     }
 
+    /**
+     * Deletes the selection, asking first when it takes more than one card ({@link DeleteAsk}): Delete answers it,
+     * as Enter does, and Cancel or Esc keeps everything. One card, notes and drawers go at once.
+     */
+    public void deleteSelectedAsking() {
+        if (selection.isEmpty()) return;
+        final int cards = DeleteAsk.cards(graph, DeleteAsk.takes(graph, selection, this::sectionsOf), this::hostOf);
+        if (!DeleteAsk.asks(cards)) {
+            deleteSelected();
+            return;
+        }
+        // What was selected when it asked is what goes, whatever the selection is by the answer.
+        final List<Uuid> asked = new ArrayList<>(selection);
+        final Runnable delete = () -> {
+            selection.clear();
+            selection.addAll(asked);
+            deleteSelected();
+        };
+        final List<com.gtnhplanner.ui.popup.PickList.Entry> rows = List.of(
+            new com.gtnhplanner.ui.popup.PickList.Entry(null, "Delete", "", Hyb.RED_INK, false, delete),
+            com.gtnhplanner.ui.popup.PickList.Entry.of("Cancel", () -> {}));
+        final com.gtnhplanner.ui.popup.Popup ask = com.gtnhplanner.ui.popup.PickList
+            .popup("gtnhplanner_delete_cards", DeleteAsk.question(cards), rows, false, 150);
+        com.gtnhplanner.ui.popup.Popup.openCentred(panel(), ask.onEnter(delete), 0.4f);
+    }
+
     /** Deletes every selected card, drawer and note as one undoable step. */
     public void deleteSelected() {
         if (selection.isEmpty()) return;
-        // A shared machine goes whole: every recipe on its card.
-        final List<Uuid> ids = new ArrayList<>();
-        for (final Uuid id : selection) for (final Uuid s : sectionsOf(id)) if (!ids.contains(s)) ids.add(s);
-        // A group goes with everything in it, as deleting a board always did.
-        for (final Uuid id : new ArrayList<>(ids)) if (graph.boardGroups.containsKey(id))
-            for (final Uuid inside : com.gtnhplanner.data.flowchart.Groups.descendants(graph, id))
-                if (!ids.contains(inside)) ids.add(inside);
+        final List<Uuid> ids = DeleteAsk.takes(graph, selection, this::sectionsOf);
         selection.clear();
         final boolean notesOnly = ids.stream()
             .allMatch(graph.notes::containsKey);

@@ -226,6 +226,146 @@ describe("Combine into one machine", () => {
   });
 });
 
+// Combine's result is a fact about the cards, never about which one hosts:
+// the same cards in any plan order and any selection order give the same
+// machine, tiers, amps, settings and solved power.
+describe("Combine is the same whichever card hosts", () => {
+  const permutations = <T,>(items: T[]): T[][] =>
+    items.length <= 1
+      ? [items]
+      : items.flatMap((item, index) =>
+          permutations([...items.slice(0, index), ...items.slice(index + 1)]).map((rest) => [
+            item,
+            ...rest,
+          ]),
+        );
+  const MACHINE_FIELDS = [
+    "machineHandlerId",
+    "overclockTier",
+    "hatchVoltageTier",
+    "hatchAmps",
+    "powerEuT",
+    "powerInputMode",
+    "energyHatchType",
+    "coilTier",
+    "machineConfigTiers",
+  ] as const;
+  const outcome = (recipes: Recipe[], nodes: FactoryNode[], ids: string[]) => {
+    useFactoryStore.getState().setProject(plan(recipes, nodes));
+    const { card: merged } = combine(ids);
+    return {
+      machine: Object.fromEntries(MACHINE_FIELDS.map((field) => [field, merged[field]])),
+      sections: [merged.recipeId, ...merged.extraRecipes!.map((extra) => extra.recipeId)].sort(),
+      totalEuT: useFactoryStore.getState().lastResult.totalEuT,
+    };
+  };
+  const everyOrder = (recipes: Recipe[], nodes: FactoryNode[]) => {
+    const results = permutations(nodes).flatMap((order) =>
+      permutations(nodes.map((node) => node.id)).map((ids) => outcome(recipes, order, ids)),
+    );
+    for (const result of results) expect(result).toEqual(results[0]);
+    return results[0]!;
+  };
+  const OTHER: MachineHandler = { ...MCR, id: "other-reactor", label: "Other Reactor" };
+  const casing = {
+    id: "casing",
+    label: "Casing",
+    minimumKey: "t1",
+    tiers: ["t1", "t2", "t3"].map((key) => ({
+      key,
+      label: key,
+      parallelMultiplier: Number(key.slice(1)),
+      resource: { kind: "item" as const, id: `casing-${key}`, amount: 1, displayName: key },
+    })),
+  };
+  const chem = (id: string, extra: Partial<Recipe> = {}) =>
+    recipe(id, "Large Chemical Reactor", {
+      machineHandlers: [LCR, MCR, OTHER],
+      machineConfigControls: [casing],
+      ...extra,
+    });
+
+  it("takes the highest tier and the largest supply any card had", () => {
+    const merged = everyOrder(
+      [chem("a"), chem("b"), chem("c")],
+      [
+        card("n-a", "a"),
+        card("n-b", "b", { hatchVoltageTier: "LuV", powerEuT: 32768 }),
+        card("n-c", "c", { hatchVoltageTier: "IV", hatchAmps: 8, powerEuT: 8 * 8192 }),
+      ],
+    );
+    expect(merged.machine).toMatchObject({
+      hatchVoltageTier: "LuV",
+      overclockTier: "LuV",
+      hatchAmps: 2,
+      powerEuT: 2 * 32768,
+    });
+  });
+
+  it("keeps a tier every card agrees on", () => {
+    const merged = everyOrder(
+      [chem("a"), chem("b")],
+      [
+        card("n-a", "a", { overclockTier: "HV", hatchVoltageTier: "IV" }),
+        card("n-b", "b", { overclockTier: "LV", hatchVoltageTier: "IV" }),
+      ],
+    );
+    expect(merged.machine).toMatchObject({ hatchVoltageTier: "IV", hatchAmps: 1, overclockTier: "IV" });
+  });
+
+  it("raises the tier for a recipe that needs more, in every order", () => {
+    const merged = everyOrder(
+      [chem("a"), chem("b"), chem("iv", {
+          minimumTier: "IV",
+          eut: 480,
+          machineHandlers: [{ ...LCR, minimumTier: "IV" }, MCR, OTHER],
+        })],
+      [card("n-a", "a", { hatchVoltageTier: "HV", powerEuT: 512 }), card("n-b", "b"), card("n-iv", "iv")],
+    );
+    expect(merged.machine).toMatchObject({ hatchVoltageTier: "IV", hatchAmps: 1 });
+    expect(merged.totalEuT).toBeGreaterThan(0);
+  });
+
+  it("runs the machine most cards name", () => {
+    const merged = everyOrder(
+      [chem("a"), chem("b"), chem("c")],
+      [
+        card("n-a", "a", { machineHandlerId: OTHER.id }),
+        card("n-b", "b", { machineHandlerId: MCR.id }),
+        card("n-c", "c", { machineHandlerId: MCR.id }),
+      ],
+    );
+    expect(merged.machine.machineHandlerId).toBe(MCR.id);
+  });
+
+  it("takes the highest machine setting any card had", () => {
+    const merged = everyOrder(
+      [chem("a"), chem("b"), chem("c")],
+      [
+        card("n-a", "a", { machineConfigTiers: { casing: "t2" } }),
+        card("n-b", "b", { machineConfigTiers: { casing: "t3" } }),
+        card("n-c", "c"),
+      ],
+    );
+    expect(merged.machine.machineConfigTiers).toEqual({ casing: "t3" });
+  });
+
+  it("runs a single block at the highest tier any card ran at", () => {
+    const single = (id: string, minimumTier: Recipe["minimumTier"] = "LV") =>
+      recipe(id, "Chemical Reactor", { minimumTier, eut: minimumTier === "MV" ? 120 : 30 });
+    const bare = { hatchVoltageTier: undefined, hatchAmps: undefined, powerEuT: undefined };
+    const merged = everyOrder(
+      [single("lv"), single("hv"), single("mv", "MV")],
+      [
+        card("n-lv", "lv", { ...bare, overclockTier: "LV" }),
+        card("n-hv", "hv", { ...bare, overclockTier: "HV" }),
+        card("n-mv", "mv", { ...bare, overclockTier: "MV" }),
+      ],
+    );
+    expect(merged.machine.overclockTier).toBe("HV");
+  });
+});
+
 // "Add another recipe" on a card fits the card the same way: a recipe the
 // card's tier cannot start raises the hatches, one parallel of it gets whole
 // amps, and a recipe no machine on the card runs is refused.

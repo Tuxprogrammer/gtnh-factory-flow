@@ -192,9 +192,11 @@ def slider_run(name, pause):
 
     # One step's worth either way: the mouse and the value each round to a pixel and a step.
     tol = 1.0 / steps + 0.03
-    for frac in (0.75, 0.25):
+    # Long drags in many moves, then short ones in three: a slider that reads the mouse a move late stops short of the
+    # mouse by a whole move, which only a drag of few moves shows. Every one after a re-solve of the one before.
+    for frac, moves in ((0.75, 10), (0.25, 10), (0.6, 3), (0.05, 3), (0.95, 3), (0.4, 3)):
         frm, to = at(get()["value"]), at(frac)
-        held = drag(frm, to)
+        held = drag(frm, to, moves)
         after = get()
         check(f"follow to {frac}", held["held"] and abs(held["value"] - expect(to)) <= tol,
               f"mouse at {to} ({expect(to):.3f}), value {held['value']:.3f} while held")
@@ -202,6 +204,9 @@ def slider_run(name, pause):
               f"value {after['value']:.3f} after the release, {held['value']:.3f} while held")
     held = drag(at(get()["value"]), x1 + 200)
     check("end", abs(held["value"] - 1) <= 1e-6, f"dragged past the end: value {held['value']:.3f}")
+    # From the end (all of a leftover at one place), taken again and moved, then past the start.
+    held = drag(at(get()["value"]), at(0.3), 3)
+    check("from the end", abs(held["value"] - expect(at(0.3))) <= tol, f"from 1 to 0.3: value {held['value']:.3f}")
     held = drag(at(get()["value"]), x0 - 200)
     check("start", abs(held["value"]) <= 1e-6, f"dragged past the start: value {held['value']:.3f}")
     held = drag(at(get()["value"]), at(0.5), away=-150)

@@ -321,6 +321,7 @@ final class OverviewRail extends ParentWidget<OverviewRail>
             hover != null && hover.kind() == Kind.RESOURCE ? ((BoardSession.TotalLine) hover.data()).key() : null);
         hoverSpare(hover, w);
         final SpareBar held = dragging();
+        if (held != null) held.follow(session, localX(), SPARE_X, sliderW(w));
         String keep = null;
         if (held != null) {
             for (final java.util.Map.Entry<String, SpareBar> e : spareBars.entrySet())
@@ -506,7 +507,15 @@ final class OverviewRail extends ParentWidget<OverviewRail>
     private Hit hitAtMouseFromLastFrame() {
         if (!isHovering()) return null;
         final int x = localX(), y = localY();
-        for (final Hit h : lastHits) if (h.contains(x, y)) return h;
+        for (final Hit h : lastHits) if (h.contains(x, y)) {
+            // A share bar wins over the scroll bar's grab strip beside it (the strip reaches past the drawn bar, over
+            // a bar's right end): a share at its whole was otherwise taken by the scroll bar and never dragged back.
+            if (h.kind() == Kind.SCROLLBAR) for (final Hit s : lastHits) {
+                final SpareBar.Hit on = s.contains(x, y) ? spareHitAt(s) : null;
+                if (on != null && on.kind() == SpareBar.Kind.FILL) return s;
+            }
+            return h;
+        }
         return null;
     }
 

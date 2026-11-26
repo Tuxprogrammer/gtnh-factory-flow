@@ -99,7 +99,12 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   posts say `planMode` with `solveMode`. A plan saved before the game renamed an item (Postea's simple replacements, read live:
   `read/postea/PosteaRenames.table`, `importer/game/GameRenames`) is read under the new ids (`importer/PlanRenames`, the
   website's `withRenamedProjectResources` rule) on paste and on a cloud read: a card the game matches as it is keeps its ids
-  everywhere. A live plan migrates once per load: `PlanRenames.Memo` rides on `CloudPlans.Read`, so a later read gets the
+  everywhere. A world's own save is read the same way (`nei/SavedRenames`, from `Serializer`'s graph read): a card NEI
+  cannot find by its saved id is looked for under the renamed items and takes that id only when NEI finds it; its picks,
+  and the plan's drawers, leftover splits and custom rate or fluid tank holdings, follow unless a card found as saved
+  still names the item, and a card's remembered pattern products match under either id. Card, wire and
+  drawer ids never move, so world links hold; the save is mapped on every load and written with the new ids only when
+  that plan is next saved after an edit (`SavedRenamesTest`). A live plan migrates once per load: `PlanRenames.Memo` rides on `CloudPlans.Read`, so a later read gets the
   same renamed objects (untouched cards are taken over, not read again), and `LiveDoc.commit` keeps the renamed view as
   the plan the board writes against, so a rename is never sent as an edit (`CloudRenamesTest`,
   `CloudSessionTest.anItemRenameIsReadOnceAndNeverSent`). The player's own batches come back from the room in new objects: `LiveDoc.catchUp` first

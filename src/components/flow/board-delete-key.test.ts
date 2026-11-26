@@ -85,6 +85,19 @@ function chainPlan(): FactoryProject {
 const ALL = ["m0", "m1", "m2", "m3", "m4", "m5"];
 const cards = () => useFactoryStore.getState().project.nodes.map((entry) => entry.id);
 
+/** The open delete question's words, or undefined when none is open. */
+function question(): string | undefined {
+  return document.querySelector("[data-mod-menu] .mm-title")?.textContent ?? undefined;
+}
+
+function row(label: string): HTMLElement {
+  const found = [...document.querySelectorAll<HTMLElement>("[data-mod-menu] [role='menuitem']")].find(
+    (entry) => entry.textContent?.trim() === label,
+  );
+  if (!found) throw new Error(`no ${label} row`);
+  return found;
+}
+
 function press(key: string) {
   act(() => {
     document.body.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
@@ -132,12 +145,51 @@ describe("the board's Delete and Backspace", () => {
     expect(useFactoryStore.getState().project.recipes).toHaveLength(5);
   });
 
-  it("take exactly what is selected on the board, with its wires", () => {
+  it("take exactly what is selected on the board, with its wires, once asked", () => {
     boardWithPlan();
     selectOnBoard(["m3", "m4"]);
     press("Delete");
+    expect(question()).toBe("Delete 2 cards?");
+    expect(cards()).toEqual(ALL);
+    act(() => row("Delete").click());
+    expect(question()).toBeUndefined();
     expect(cards()).toEqual(["m0", "m1", "m2", "m5"]);
     expect(useFactoryStore.getState().project.edges.map((edge) => edge.id)).toEqual(["w1", "w2"]);
+    // One undo brings both back, wires and all.
+    act(() => useFactoryStore.getState().undo());
+    expect(cards()).toEqual(ALL);
+    expect(useFactoryStore.getState().project.edges).toHaveLength(5);
+  });
+
+  it("delete one card at once, without asking", () => {
+    boardWithPlan();
+    selectOnBoard(["m2"]);
+    press("Backspace");
+    expect(question()).toBeUndefined();
+    expect(cards()).toEqual(["m0", "m1", "m3", "m4", "m5"]);
+  });
+
+  it("answer the question with Enter, and keep everything on Escape or Cancel", () => {
+    boardWithPlan();
+    selectOnBoard(ALL);
+    press("Delete");
+    expect(question()).toBe("Delete 6 cards?");
+    // Escape cancels; the selection stays for another try.
+    act(() => {
+      document.activeElement?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+    });
+    expect(question()).toBeUndefined();
+    expect(cards()).toEqual(ALL);
+    press("Delete");
+    act(() => row("Cancel").click());
+    expect(cards()).toEqual(ALL);
+    press("Delete");
+    // The first row, Delete, has the keyboard: Enter answers it.
+    expect(document.activeElement?.textContent).toContain("Delete");
+    act(() => {
+      document.activeElement?.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    });
+    expect(cards()).toEqual([]);
   });
 
   it("leave the board alone while the recipe search covers it, whose Backspace walks back", () => {

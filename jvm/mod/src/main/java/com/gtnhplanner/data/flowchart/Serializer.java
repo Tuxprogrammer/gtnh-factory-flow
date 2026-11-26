@@ -412,10 +412,12 @@ public final class Serializer {
         if (root.has("site") && root.get("site")
             .isJsonObject()) graph.site.putAll(GsonTrees.map(root.getAsJsonObject("site")));
 
+        // A plan saved before the game renamed some of its items is read under the new ids (nei/SavedRenames).
+        final com.gtnhplanner.nei.SavedRenames.Load renames = com.gtnhplanner.nei.SavedRenames.begin();
         final JsonArray nodesArray = root.getAsJsonArray("nodes");
         for (final JsonElement elem : nodesArray) {
             final JsonObject obj = elem.getAsJsonObject();
-            final Node node = obj.has("site") ? jsonToShown(obj, graph) : jsonToNode(obj);
+            final Node node = obj.has("site") ? jsonToShown(obj, graph) : jsonToNode(obj, renames);
             if (node != null) graph.addNode(node);
         }
         showCarried(graph);
@@ -470,6 +472,7 @@ public final class Serializer {
                 if (g != null) graph.boardGroups.put(g.getId(), g);
             }
         }
+        renames.finish(graph);
         Groups.sanitize(graph);
 
         return graph;
@@ -716,6 +719,13 @@ public final class Serializer {
      */
     @Nonnull
     public static Node jsonToNode(final JsonObject obj) {
+        return jsonToNode(obj, null);
+    }
+
+    /** {@link #jsonToNode(JsonObject)} under a plan's item renames; null reads the recipe exactly as saved. */
+    @Nonnull
+    private static Node jsonToNode(final JsonObject obj,
+        @Nullable final com.gtnhplanner.nei.SavedRenames.Load renames) {
         final Uuid id = Uuid.fromString(
             obj.get("id")
                 .getAsString());
@@ -726,10 +736,13 @@ public final class Serializer {
         final Node node = new Node(id, x, y);
         node.machineName = obj.get("machine")
             .getAsString();
+        final JsonObject savedRecipe = obj.has("recipeId") ? obj.get("recipeId")
+            .getAsJsonObject() : null;
+        // A power card has no recipe to look for.
+        final JsonObject readRecipe = renames == null || obj.has("power") ? savedRecipe : renames.recipe(savedRecipe);
         com.gtnhplanner.nei.NeiRecipes.load(
             node,
-            obj.has("recipeId") ? obj.get("recipeId")
-                .getAsJsonObject() : null,
+            readRecipe,
             obj.has("handlerRecipeIndex") ? obj.get("handlerRecipeIndex")
                 .getAsInt() : 0,
             !obj.has("power"));
@@ -761,6 +774,8 @@ public final class Serializer {
                 }
             }
         }
+        // Picked under the card's old recipe: they follow it to the renamed items.
+        if (readRecipe != savedRecipe) renames.picks(node.inputPicks);
         node.refresh();
 
         if (obj.has("machineCount")) {

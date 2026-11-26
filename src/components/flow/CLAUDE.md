@@ -183,7 +183,10 @@ The board must stay smooth with 100+ cards on weak PCs.
   a card. Its outline selector costs one length check while nobody else has anything selected.
 - Delete and Backspace take React Flow's selection only, never the store's `selectedNodeId` (never drawn), and do
   nothing while the recipe search, Library, Welcome or a task board covers the board (`isBoardCovered`); the search
-  walks back on a bare Backspace. Escape lets go of the selection. Exam: `board-delete-key.test.ts`.
+  walks back on a bare Backspace. Escape lets go of the selection. A delete that takes more than one card asks
+  first ("Delete 6 cards?", a ChromeMenu: Delete, which has the keyboard so Enter answers it, and Cancel; Escape
+  cancels); one card, drawers and notes go at once (`delete-ask.ts`, the mod's `ui/DeleteAsk`). Ctrl+X does not
+  ask: the cards are on the clipboard. Exam: `board-delete-key.test.ts`.
 - Ctrl+A (or Cmd+A) selects every node the board shows (cards, drawers, groups, frames, notes; wires follow their
   cards). It leaves the key to typing fields, a dialog or menu with the keyboard, a covered board and an empty board.
   Exam: `board-select-all-key.test.ts`.

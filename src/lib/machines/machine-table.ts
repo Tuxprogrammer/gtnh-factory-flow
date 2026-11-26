@@ -694,7 +694,7 @@ const STEAM_MULTIBLOCK: MachineBehaviour = {
   controls: [STEAM_PRESSURE_CONTROL],
   // The Steam Blender's handler inherited the mixer map's scraped pipe knob.
   // Its pipes are bronze or steel with the rest of the build: the pressure.
-  hidesControls: [PIPE],
+  hidesControls: [PIPE, ITEM_PIPE],
 };
 
 /** checkMachine accepts any pipe height >= 4; it never imposes a top rung. */
@@ -958,6 +958,8 @@ const MACHINES: Record<string, MachineBehaviour> = {
     power: (c) => row(SAWBLADES, c.tier(SAWBLADE)).power,
     parallels: (c) => row(SAWBLADES, c.tier(SAWBLADE)).parallels * c.voltageTier,
     controls: [SAWBLADE_CONTROL],
+    // The dataset's own sawblade knob: the same blade, read by nothing.
+    hidesControls: ["cuttingSawblade"],
   },
   "Magnetic Flux Exhibitor": {
     overclock: OVERCLOCK.normal(),
@@ -965,6 +967,8 @@ const MACHINES: Record<string, MachineBehaviour> = {
     power: (c) => row(ELECTROMAGNETS, c.tier(ELECTROMAGNET)).power,
     parallels: (c) => row(ELECTROMAGNETS, c.tier(ELECTROMAGNET)).parallels,
     controls: [ELECTROMAGNET_CONTROL],
+    // The dataset's own electromagnet knob: the same magnet, read by nothing.
+    hidesControls: ["fluxElectromagnet"],
   },
   "Industrial Autoclave": {
     overclock: OVERCLOCK.normal(),
@@ -978,6 +982,8 @@ const MACHINES: Record<string, MachineBehaviour> = {
     overclock: OVERCLOCK.normal(),
     parallels: (c) => Math.pow(4, c.tier(CONTAINMENT)),
     controls: [CONTAINMENT_CONTROL],
+    // The dataset's own containment block knob: the same blocks, read by nothing.
+    hidesControls: ["parallel-containment-block-tier"],
   },
   "Dissection Apparatus": {
     overclock: OVERCLOCK.normal(),
@@ -1102,6 +1108,8 @@ const MACHINES: Record<string, MachineBehaviour> = {
     power: 1,
     parallels: (c) => 16 * 2 ** c.tier("preciseCasing"),
     controls: [PRASS_NORMAL_CASING, PRASS_MACHINE_CASING],
+    // The dataset's own unit casing knob: the same casings, read by nothing.
+    hidesControls: ["parallel-precise-casing-tier"],
     inputVoltageTierLimit: prassInputVoltageLimit,
     note: "Normal Assembler mode. Requires EV+ glass. Unit casings set parallels; machine casings limit working voltage, with UHV unlocking all tiers.",
   },
@@ -1111,6 +1119,8 @@ const MACHINES: Record<string, MachineBehaviour> = {
     power: 1,
     parallels: 1,
     controls: [PRASS_PRECISE_CASING, PRASS_MACHINE_CASING],
+    // The dataset's own unit casing knob: the same casings, read by nothing.
+    hidesControls: ["parallel-precise-casing-tier"],
     inputVoltageTierLimit: prassInputVoltageLimit,
     recipeGate: (c) => (c.recipeSpecialValue ?? 0) > c.tier("preciseCasing") + 1
       ? "This precise recipe requires a higher unit casing tier."

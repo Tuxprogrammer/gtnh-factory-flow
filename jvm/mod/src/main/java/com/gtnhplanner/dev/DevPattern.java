@@ -76,7 +76,10 @@ final class DevPattern {
             com.gtnhplanner.pattern.PatternThis.card(session(), node(q));
             return Map.<String, Object>of("ok", true);
         });
-        if (q.containsKey("pickat")) return client.run(DevPattern::pickAt);
+        if (q.containsKey("pickat")) return client.run(() -> {
+            if (q.containsKey("reveal")) com.gtnhplanner.pattern.PatternPick.reveal(Integer.parseInt(q.get("reveal")));
+            return pickAt();
+        });
         if (q.containsKey("remember")) return client.run(() -> remember(q));
         return compare(q, client);
     }
@@ -405,13 +408,16 @@ final class DevPattern {
         return Map.of("products", products, "remembered", PatternThis.remembered(session().graph(), node));
     }
 
-    /** Where the open box's switches and keys are, in the game's GUI pixels (what {@code /click} takes). */
+    /**
+     * Where the open box's switches and keys are, in the game's GUI pixels (what {@code /click} takes): a switch
+     * scrolled out of view is null ({@code pickat=1&reveal=N} scrolls row N into view first).
+     */
     private static Map<String, Object> pickAt() {
         final Map<String, Object> t = com.gtnhplanner.pattern.PatternPick.targets();
         if (t == null) throw new IllegalStateException("no box opened");
         final Map<String, Object> out = new LinkedHashMap<>(t);
         final List<int[]> switches = new ArrayList<>();
-        for (final Object o : (List<?>) t.get("switches")) switches.add(game((int[]) o));
+        for (final Object o : (List<?>) t.get("switches")) switches.add(o == null ? null : game((int[]) o));
         out.put("switches", switches);
         out.put("cancel", game((int[]) t.get("cancel")));
         out.put("make", game((int[]) t.get("make")));

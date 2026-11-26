@@ -144,7 +144,7 @@ public final class PickList extends Widget<PickList> implements Interactable {
         final int[] room = Popup.room(null);
         width = Math.min(width, Math.min(360, room[2] - 4));
         final int above = 8 + (title == null ? 0 : 14) + (filterable ? 18 : 0);
-        final int fits = Math.max(2, (room[3] - 4 - above) / ROW);
+        final int fits = PickRows.rowsInRoom(room[3], above, ROW);
         final PickList list = new PickList(entries, width - 8, Math.min(maxRows, fits));
         list.hover = onHover;
         int y = 4;

@@ -8,6 +8,14 @@ final class PickRows {
 
     private PickRows() {}
 
+    /**
+     * How many rows of {@code row} px a list shows in a room {@code roomH} tall under {@code above} px of title and
+     * filter, inside the popup's 4 px edge: never fewer than two.
+     */
+    static int rowsInRoom(final int roomH, final int above, final int row) {
+        return Math.max(2, (roomH - 4 - above) / row);
+    }
+
     /** The height of the first {@code count} rows: the popup is exactly this tall. */
     static int total(final int[] heights, final int from, final int count) {
         int sum = 0;

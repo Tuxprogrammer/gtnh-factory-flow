@@ -548,15 +548,29 @@ public final class BoardScreen extends ModularScreen {
         rows.add(com.gtnhplanner.ui.popup.PickList.Entry.of("Export plan file", session::exportPlanFile));
         rows.add(com.gtnhplanner.ui.popup.PickList.Entry.of("Bookmark recipes", () -> PlanBookmarks.recipes(session)));
         rows.add(com.gtnhplanner.ui.popup.PickList.Entry.of("Bookmark as chain", () -> PlanBookmarks.chain(session)));
-        // An AE2 pattern of every recipe from blanks in the inventory, as the card's "Pattern this" makes one.
-        if (com.gtnhplanner.pattern.PatternThis.offered()) rows.add(
-            new com.gtnhplanner.ui.popup.PickList.Entry(
-                null,
-                "Pattern the plan",
-                java.util.Objects.requireNonNullElse(com.gtnhplanner.pattern.PatternThis.unavailable(), ""),
-                Hyb.INK,
-                false,
-                () -> com.gtnhplanner.pattern.PatternThis.plan(session)));
+        // An AE2 pattern of every recipe from blanks in the inventory, as the card's "Pattern this" makes one, as many
+        // as fit at a time; while a run is part made the row says where it is and a second row starts it over.
+        if (com.gtnhplanner.pattern.PatternThis.offered()) {
+            final String partMade = com.gtnhplanner.pattern.PatternThis.partMade(session);
+            final String why = java.util.Objects
+                .requireNonNullElse(com.gtnhplanner.pattern.PatternThis.unavailable(), "");
+            rows.add(
+                new com.gtnhplanner.ui.popup.PickList.Entry(
+                    null,
+                    partMade == null ? "Pattern the plan" : partMade,
+                    why,
+                    Hyb.INK,
+                    false,
+                    () -> com.gtnhplanner.pattern.PatternThis.plan(session)));
+            if (partMade != null) rows.add(
+                new com.gtnhplanner.ui.popup.PickList.Entry(
+                    null,
+                    com.gtnhplanner.pattern.PatternPages.FROM_START,
+                    why,
+                    Hyb.INK,
+                    false,
+                    () -> com.gtnhplanner.pattern.PatternThis.planFromStart(session)));
+        }
         rows.add(
             com.gtnhplanner.ui.popup.PickList.Entry
                 .of("Screenshot...", () -> com.gtnhplanner.ui.popup.ScreenshotPanel.open(panel, session, canvas)));

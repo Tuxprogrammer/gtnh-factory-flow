@@ -27,13 +27,43 @@ public final class PatternPlan {
         return BookmarkPlan.pick(cards, recipeOf, keyOf);
     }
 
-    /** "This plan needs 46 blank patterns and you have 12. Nothing was made." */
-    public static String tooFew(final int need, final int have) {
-        return "This plan needs " + need
-            + (need == 1 ? " blank pattern" : " blank patterns")
-            + " and you have "
-            + have
-            + ". Nothing was made.";
+    /**
+     * The sentence a page of the plan ends with ({@link PatternPages}): the page made recipes {@code from} up to
+     * {@code resume} (0-based, {@code resume} the first not made) of the run's {@code total}, and why it stopped. A
+     * plan
+     * made whole in one go reads as {@link #summary}.
+     */
+    public static String page(final PatternRules.Tally t, final int from, final int resume, final int total,
+        final boolean restarted, final int skipped) {
+        final StringBuilder s = new StringBuilder(
+            restarted ? "The plan's recipes changed, so this started again from the first. " : "");
+        if (from == 0 && resume >= total) return s.append(summary(t, skipped))
+            .toString();
+        if (resume > from) s.append(
+            resume - from == 1 ? "Made pattern " + resume + " of " + total + ". "
+                : "Made patterns " + (from + 1) + " to " + resume + " of " + total + ". ");
+        if (resume >= total) s.append("The plan is done.");
+        else if (t.noServer() > 0) s.append("This server cannot make patterns.");
+        else if (t.noBlank() > 0) s.append(
+            resume > from ? "Out of blank patterns for " + (total - resume) + " more."
+                : "No blank patterns in your inventory.");
+        else s.append(
+            resume > from ? "Free up slots and run it again for the next."
+                : "No free inventory slots. Nothing was made.");
+        if (t.cannot() > 0) s.append(' ')
+            .append(t.cannot())
+            .append(t.cannot() == 1 ? " recipe cannot" : " recipes cannot")
+            .append(" be patterned.");
+        if (t.dropped() > 0) s.append(' ')
+            .append(t.dropped())
+            .append(
+                t.dropped() == 1 ? " stack did not fit the terminal and was left out."
+                    : " stacks did not fit the terminal and were left out.");
+        if (skipped > 0) s.append(" Skipped ")
+            .append(skipped)
+            .append(skipped == 1 ? " card" : " cards")
+            .append(" with no game recipe.");
+        return s.toString();
     }
 
     /** "Made 46 patterns. Skipped 3 cards with no game recipe." */

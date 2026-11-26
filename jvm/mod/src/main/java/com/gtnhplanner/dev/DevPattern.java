@@ -67,6 +67,7 @@ final class DevPattern {
     static Map<String, Object> route(final Map<String, String> q, final OnClient client) throws Exception {
         if (q.containsKey("setup")) return setup();
         if (q.containsKey("noblank")) return noBlank();
+        if (q.containsKey("noroom")) return noRoom(q);
         if (q.containsKey("card")) return card(q, client);
         if (q.containsKey("look")) return client.run(DevPattern::look);
         if (q.containsKey("remote")) return remote(q, client);
@@ -129,6 +130,58 @@ final class DevPattern {
             m.put("blanksBack", blankCount(p));
             return m;
         });
+    }
+
+    /**
+     * The server with no free slot ({@code noroom=1}, creative unless {@code creative=0}, which holds a stack of 16
+     * blanks): it must answer no room, make nothing, take no blank and drop nothing. The inventory is filled with
+     * cobblestone for the call and emptied of it after.
+     */
+    private static Map<String, Object> noRoom(final Map<String, String> q) throws Exception {
+        final boolean creative = !"0".equals(q.getOrDefault("creative", "1"));
+        return server(() -> {
+            final EntityPlayerMP p = player();
+            final boolean was = p.capabilities.isCreativeMode;
+            p.setGameType(creative ? WorldSettings.GameType.CREATIVE : WorldSettings.GameType.SURVIVAL);
+            final ItemStack[] main = p.inventory.mainInventory;
+            final List<Integer> filled = new ArrayList<>();
+            if (!creative) for (int i = 0; i < main.length; i++) if (main[i] == null) {
+                main[i] = blanks(16);
+                filled.add(i);
+                break;
+            }
+            for (int i = 0; i < main.length; i++) if (main[i] == null) {
+                main[i] = new ItemStack(Blocks.cobblestone, 64);
+                filled.add(i);
+            }
+            final NBTTagCompound in = new NBTTagCompound();
+            in.setTag("#0", new ItemStack(Blocks.cobblestone).writeToNBT(new NBTTagCompound()));
+            final NBTTagCompound outs = new NBTTagCompound();
+            outs.setTag("Outputs0", new ItemStack(Blocks.gravel).writeToNBT(new NBTTagCompound()));
+            final int encodedBefore = encodedCount(p), blanksBefore = blankCount(p), groundBefore = onGround(p);
+            final PatternServer.Made made = PatternServer.make(p, in, outs, false);
+            final Map<String, Object> m = new LinkedHashMap<>();
+            m.put("creative", p.capabilities.isCreativeMode);
+            m.put("outcome", made.outcome());
+            m.put("noRoom", made.outcome() == PatternRules.NO_ROOM);
+            m.put("encodedMade", encodedCount(p) - encodedBefore);
+            m.put("blanksTaken", blanksBefore - blankCount(p));
+            m.put("droppedAtFeet", onGround(p) - groundBefore);
+            for (final int i : filled) main[i] = null;
+            p.setGameType(was ? WorldSettings.GameType.CREATIVE : WorldSettings.GameType.SURVIVAL);
+            p.sendContainerToPlayer(p.inventoryContainer);
+            return m;
+        });
+    }
+
+    /** Encoded patterns lying in the world near the player (the server's view). */
+    private static int onGround(final EntityPlayerMP p) {
+        int n = 0;
+        for (final Object o : p.worldObj.loadedEntityList)
+            if (o instanceof final net.minecraft.entity.item.EntityItem e && e.getDistanceToEntity(p) < 8
+                && e.getEntityItem() != null
+                && IPatternTerminal.isEncodedPattern(e.getEntityItem())) n++;
+        return n;
     }
 
     private static Map<String, Object> compare(final Map<String, String> q, final OnClient client) throws Exception {
@@ -431,7 +484,7 @@ final class DevPattern {
             final com.gtnhplanner.ui.BoardSession session = com.gtnhplanner.ui.BoardSession.current();
             if (session == null) throw new IllegalStateException("open the planner first");
             m.put("cards", session.graph().nodes.size());
-            PatternThis.plan(session.graph());
+            PatternThis.plan(session.graph(), false);
             return null;
         });
         Thread.sleep(Long.parseLong(q.getOrDefault("wait", "4000")));

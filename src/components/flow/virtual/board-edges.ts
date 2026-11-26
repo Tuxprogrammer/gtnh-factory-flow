@@ -26,6 +26,11 @@ class BoardEdges {
   shown: Edge[] = [];
   /** The router's route for a wire, once it has one (registered by FactoryFlow). */
   routeOf: ((edgeId: string) => RoutePoints | undefined) | undefined;
+  /**
+   * How many handle boxes React Flow holds for a card, undefined before it measured it (registered by the
+   * controller, which has React Flow's store).
+   */
+  handleCountOf: ((nodeId: string) => number | undefined) | undefined;
 
   setAll<E extends Edge>(edges: E[]): E[] {
     this.all = edges;
@@ -39,7 +44,7 @@ class BoardEdges {
     if (!virtualizationEnabled() || boardVirtualizer.holding()) return this.all;
     const view = boardVirtualizer.viewRect();
     if (!view) return [];
-    return selectVisibleEdges(this.all, view, {
+    const near = selectVisibleEdges(this.all, view, {
       margin: EDGE_MARGIN,
       keepMargin: EDGE_KEEP_MARGIN,
       kept: this.shownIds(),
@@ -47,7 +52,26 @@ class BoardEdges {
       boxOf: (id) => boardVirtualizer.boxOf(id),
       routeOf: this.routeOf,
     });
+    return near.every((edge) => this.endsReady(edge)) ? near : near.filter((edge) => this.endsReady(edge));
   }
+
+  /**
+   * A wire goes to React Flow only once both its cards have handles to draw it to. A card that first appears as a
+   * shell (the glance step, far from the camera) is measured with none, and React Flow then fails such a wire on
+   * every change of its store (a console warning each time in development) until the card is drawn. A card drawn
+   * once keeps its handles; drawers and special cards always have theirs.
+   */
+  private endsReady(edge: Edge): boolean {
+    return this.cardReady(edge.source) && this.cardReady(edge.target);
+  }
+
+  private cardReady(id: string): boolean {
+    if (!this.handleCountOf || !boardVirtualizer.isMember(id) || boardVirtualizer.isDrawn(id)) return true;
+    return (this.handleCountOf(id) ?? 0) > 0;
+  }
+
+  /** The cards drawn when the wires were last picked: a card drawn since then may complete a wire. */
+  private drawnSeen = -1;
 
   private shownIdSet: Set<string> | undefined;
   private shownIdsOf: Edge[] | undefined;
@@ -78,9 +102,11 @@ class BoardEdges {
   refresh(now = performance.now()): Edge[] | undefined {
     const view = boardVirtualizer.viewRect();
     const last = this.lastView;
+    const drawn = boardVirtualizer.drawnVersion;
     if (
       view &&
       last &&
+      drawn === this.drawnSeen &&
       now - this.lastAt < EDGE_REPICK_MS &&
       !boardVirtualizer.holding() &&
       Math.abs(view.x - last.x) < last.w * EDGE_STEP &&
@@ -91,6 +117,7 @@ class BoardEdges {
     }
     this.lastView = view ? { ...view } : undefined;
     this.lastAt = now;
+    this.drawnSeen = drawn;
     const next = this.compute();
     if (sameEdgeList(next, this.shown)) return undefined;
     this.shown = next;

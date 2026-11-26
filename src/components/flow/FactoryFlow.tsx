@@ -346,6 +346,7 @@ import { findUnwiredNodeIds } from "./node-verdict";
 import { useBoardPulseGate, useBoardPulseSync } from "./animation-phase";
 import { useSlicedMount } from "./sliced-mount";
 import { boardVirtualizer, virtualizationEnabled } from "./virtual/card-virtualizer";
+import { groupWireChannels } from "./wire-channels";
 import { boardEdges } from "./virtual/board-edges";
 import { VirtualizationController } from "./virtual/VirtualizationController";
 import { writeBoardZoom } from "./virtual/zoom-var";
@@ -1763,6 +1764,8 @@ const edgeObjectCache = new Map<string, ResourceFlowEdge>();
  * paths read it so removing the wire removes the whole channel.
  */
 const channelEdgeIdsByRepresentative = new Map<string, string[]>();
+/** Representative edge id → every member's port keys, lit together when the drawn wire is hovered. */
+const channelPortKeysByRepresentative = new Map<string, string[]>();
 
 /** Deleting a drawn wire deletes every flat edge it stands for. */
 function expandChannelEdgeIds(edgeIds: string[]): string[] {
@@ -3300,56 +3303,42 @@ export function FactoryFlow() {
       }
     }
 
-    // Channels (see `mergedEdgeIds`): flat edges carrying one resource between
-    // the same two visible cards draw as ONE wire. The first flat edge is the
-    // representative, the rest are skipped, the rates are summed.
-    const channelKeyFor = (edge: FactoryEdge, sourceRep: string, targetRep: string) =>
-      // Handles stay out of the key on purpose: two slots or two recipes of
-      // one material between two cards are still one wire on the board.
-      [sourceRep, targetRep, edge.resourceKind, edge.resourceId].join("|");
-
+    // Channels (wire-channels.ts, `mergedEdgeIds`): flat edges carrying one resource between the same two visible
+    // cards draw as ONE wire, the first flat edge standing for the rest with the rates summed.
+    // A map, not a linear find per grouped id, which is O(edges²) on a board
+    // of many same-resource channels with no solver results yet.
+    const projectRateByEdgeId = new Map(
+      project.edges.map((entry) => [entry.id, entry.ratePerSecond]),
+    );
+    const channels = groupWireChannels(
+      project.edges,
+      pocketView.representativeOf,
+      (id) => transferredById.get(id) ?? 0,
+      (entry) => result.edges[entry.id]?.demandPerSecond ?? projectRateByEdgeId.get(entry.id) ?? 0,
+    );
     channelEdgeIdsByRepresentative.clear();
-    const channelSkip = new Set<string>();
+    channelPortKeysByRepresentative.clear();
+    const channelSkip = channels.skip;
     // Representative id → summed rates for the one wire that stands in.
-    const channelTotals = new Map<string, { transferred: number; demand: number }>();
-    {
-      const groups = new Map<string, { representativeId: string; ids: string[] }>();
-      for (const edge of project.edges) {
-        const sourceRep = pocketView.representativeOf(edge.source);
-        const targetRep = pocketView.representativeOf(edge.target);
-        if (!sourceRep || !targetRep || sourceRep === targetRep) {
-          continue;
-        }
-        const key = channelKeyFor(edge, sourceRep, targetRep);
-        const group = groups.get(key);
-        if (group) {
-          group.ids.push(edge.id);
-        } else {
-          groups.set(key, { representativeId: edge.id, ids: [edge.id] });
-        }
-      }
-      // A map, not a linear find per grouped id, which is O(edges²) on a board
-      // of many same-resource channels with no solver results yet.
-      const projectRateByEdgeId = new Map(
-        project.edges.map((entry) => [entry.id, entry.ratePerSecond]),
+    const channelTotals = channels.totals;
+    for (const [id, ids] of channels.idsByRepresentative) {
+      channelEdgeIdsByRepresentative.set(id, ids);
+      channelPortKeysByRepresentative.set(id, channels.portKeysByRepresentative.get(id) ?? []);
+      // The drawn wire's weight is the channel's: it carries the sum.
+      const isFluidEdge = channelTotals.get(id)?.fluid === true;
+      const heat = anyLineMode
+        ? flowHeatFor(
+            channelTotals.get(id)?.transferred ?? 0,
+            isFluidEdge ? fluidMin : itemMin,
+            isFluidEdge ? fluidMax : itemMax,
+            isFluidEdge ? fluidRanks : itemRanks,
+          )
+        : 0;
+      flowHeatById.set(id, heat);
+      publishedEdgeStrokeWidths.set(
+        id,
+        boardView.fixedEdgeWidth ? FLOW_MODE_MIN_WIDTH : laneWidthForHeat(heat),
       );
-      for (const group of groups.values()) {
-        if (group.ids.length < 2) {
-          continue;
-        }
-        channelEdgeIdsByRepresentative.set(group.representativeId, group.ids);
-        let transferred = 0;
-        let demand = 0;
-        for (const id of group.ids) {
-          transferred += transferredById.get(id) ?? 0;
-          const edgeResult = result.edges[id];
-          demand += edgeResult?.demandPerSecond ?? projectRateByEdgeId.get(id) ?? 0;
-          if (id !== group.representativeId) {
-            channelSkip.add(id);
-          }
-        }
-        channelTotals.set(group.representativeId, { transferred, demand });
-      }
     }
 
     // Which open frames each wire may cross: the chain of open boards its
@@ -6579,7 +6568,7 @@ export function FactoryFlow() {
     if (!checklistMode) return visibleFlowEdges;
     const checked = new Set(project.checklist?.edges);
     return visibleFlowEdges.map((edge) => ({ ...edge,
-      className: [edge.className, (edge.data?.bundle?.edgeIds ?? [edge.id]).every((id) => checked.has(id)) ? "checklist-done" : ""].filter(Boolean).join(" ") }));
+      className: [edge.className, expandChannelEdgeIds(edge.data?.bundle?.edgeIds ?? [edge.id]).every((id) => checked.has(id)) ? "checklist-done" : ""].filter(Boolean).join(" ") }));
   }, [visibleFlowEdges, checklistMode, project.checklist]);
 
   // A plan of hundreds of cards reaches React Flow a slice at a time, nearest the
@@ -9209,10 +9198,14 @@ function ResourceEdgeComponent({
   // by the hover-anywhere line surface below.
   const applyEdgeFlowScope = () => {
     const scopeEdges: Record<string, true> = {};
-    for (const bundleEdgeId of data?.bundle?.edgeIds ?? [id]) {
+    for (const bundleEdgeId of expandChannelEdgeIds(data?.bundle?.edgeIds ?? [id])) {
       scopeEdges[bundleEdgeId] = true;
     }
     const scopePorts: Record<string, true> = {};
+    // A channel's wire lights every member's ports: a shared machine's sections each have their own.
+    for (const key of channelPortKeysByRepresentative.get(id) ?? []) {
+      scopePorts[key] = true;
+    }
     const sourcePortHandle = canonicalizeResourceHandleId(data?.sourceHandleId);
     const targetPortHandle = canonicalizeResourceHandleId(data?.targetHandleId);
     if (sourcePortHandle) {

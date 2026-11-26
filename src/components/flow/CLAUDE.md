@@ -1,7 +1,8 @@
 # The board (src/components/flow)
 
-`FactoryFlow.tsx` hosts the React Flow canvas. `RecipeNode.tsx` is the machine card,
-`StorageNode.tsx` the drawer, `BoardNode.tsx` / `PocketNode.tsx` an open / minimized
+`FactoryFlow.tsx` hosts the React Flow canvas. `clean/` draws the machine cards and drawers
+(`clean/CLAUDE.md`); the classic `RecipeNode.tsx` and `StorageNode.tsx` keep the node data types and
+shared pieces but are not drawn on the board. `BoardNode.tsx` / `PocketNode.tsx` are an open / minimized
 board, `grid-edge-router.ts` the wire router. Auto-arrange lives in
 `src/lib/board-arrange*.ts`, the grid constants in `src/lib/board-grid.ts`.
 
@@ -135,8 +136,10 @@ The board must stay smooth with 100+ cards on weak PCs.
   drawers and cards come in 10 px sizes and group members can sit half a cell off, and a dock inside the card
   loses the whole side or draws the wire from under it. Wire width follows flow
   (`laneWidthForHeat`) and wires sit under cards. No rate labels on wires, except
-  ratio-drawer percentages. One drawn wire per material between two cards
-  (`channelEdgeIdsByRepresentative`).
+  ratio-drawer percentages. One drawn wire per material between two cards (`wire-channels.ts`), even into
+  several recipes of one shared machine: the plan and the solve keep every flat edge, and the drawn wire stands for
+  all of them. Its rate and width are their sum, hovering lights every member's ports, a checklist tick covers every
+  member and deleting it deletes them all (`wire-channels.test.ts`).
 - Frames are routing obstacles but invisible to wire gestures. Wires inside a board pay to
   leave it (`costOutsideHome`); wires leaving pay per px spent inside (`costInsideExempt`).
 - Every dial is in `router-tuning.ts` (`DEFAULT_ROUTER_TUNING`), editable per device in the
@@ -235,7 +238,10 @@ contents. Read `virtual/card-virtualizer.ts` first (pure, tested); budgets and n
   hidden wrapper provokes when it is shown again reads them back instead of wiping the handles.
 - Wires: `board-edges.ts` hands React Flow only the wires whose box (the two cards, or the routed path once there
   is one) meets the camera grown by a third. The controller writes React Flow's store as the camera moves; the
-  `edges` prop only changes with the plan, and the memo in FactoryFlow applies the current choice.
+  `edges` prop only changes with the plan, and the memo in FactoryFlow applies the current choice. A wire goes over
+  only once both its cards hold handles (drawn, or measured with handles): a card first shown as a shell is measured
+  with none, and React Flow would fail its wires on every store change. A newly drawn card re-picks the wires.
+  Exam: `virtual/board-edges.test.ts`; probe: open a 50-card plan at 1000x700 and count console warnings.
 - `--board-zoom` is written on the board only at the glance step and on each sticky note directly (`zoom-var.ts`):
   an inherited property written per step restyles every element under it.
 - The prompts (a count's "Set" box, "Set rate") blink off one clock: `data-cc-blink` on the root, flipped twice a second

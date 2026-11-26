@@ -97,7 +97,7 @@ class CardControlsTest {
                                 .id());
         }
         assertTrue(cards.size() > 300, "every map's machines are walked: " + cards.size());
-        assertEquals(KNOWN_DOUBLED, doubled, "cards showing two settings with one label");
+        assertEquals(Set.of(), doubled, "cards showing two settings with one label");
     }
 
     @Test
@@ -121,12 +121,6 @@ class CardControlsTest {
             }
         }
         assertTrue(machines.size() > 100, "the table machines are walked: " + machines.size());
-        assertEquals(KNOWN_UNREAD, unread, "dataset settings a table machine's card shows and no formula reads");
+        assertEquals(Set.of(), unread, "dataset settings a table machine's card shows and no formula reads");
     }
-
-    /** None: the machine table hides every dataset setting it replaces ({@code hidesControls}). */
-    private static final Set<String> KNOWN_DOUBLED = Set.of();
-
-    /** None. */
-    private static final Set<String> KNOWN_UNREAD = Set.of();
 }

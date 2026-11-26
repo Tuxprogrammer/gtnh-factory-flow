@@ -161,6 +161,10 @@ public final class PatternPick {
     /** The recipes' heads and rows: the part that scrolls. */
     private final class Rows extends ScrollBody {
 
+        Rows() {
+            super("pattern");
+        }
+
         @Override
         public int contentHeight() {
             return layout.contentHeight();

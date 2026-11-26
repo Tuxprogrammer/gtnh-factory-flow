@@ -86,7 +86,7 @@ public final class PickList extends Widget<PickList> implements Interactable {
     private String filter = "";
     private List<Entry> shown;
     private int scroll;
-    private final com.gtnhplanner.ui.theme.ScrollBar bar = new com.gtnhplanner.ui.theme.ScrollBar();
+    private final com.gtnhplanner.ui.theme.ScrollBar bar = new com.gtnhplanner.ui.theme.ScrollBar("pick", this);
 
     private PickList(final List<Entry> entries, final int width, final int maxRows) {
         this.entries = entries;
@@ -285,7 +285,9 @@ public final class PickList extends Widget<PickList> implements Interactable {
             if (!detail.isEmpty()) Hyb.textRight(detail, right, y + 6, Hyb.MUTED);
         }
         // Drawn every frame, so a list the filter made short has no bar to press; it draws nothing when all fits.
-        bar.draw(w, 0, view, PickRows.total(heights, 0, heights.length), scrollPx(), onBar());
+        // While the thumb is held it follows the mouse every frame, so the rows come to the nearest one under it.
+        final int px = bar.draw(w, 0, view, PickRows.total(heights, 0, heights.length), scrollPx(), onBar());
+        if (bar.dragging()) scroll = PickRows.scrollAt(heights, px, view);
     }
 
     /** The scroll in pixels down the whole list, as the bar reads it. */

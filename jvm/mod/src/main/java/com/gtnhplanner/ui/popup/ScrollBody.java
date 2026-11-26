@@ -18,9 +18,14 @@ import com.gtnhplanner.ui.theme.ScrollBar;
  */
 public abstract class ScrollBody extends Widget<ScrollBody> implements Interactable {
 
-    private final ScrollBar bar = new ScrollBar();
+    private final ScrollBar bar;
     private BoxFit.Frame frame;
     private int scroll;
+
+    /** A body whose bar the dev harness lists as {@code name}. */
+    protected ScrollBody(final String name) {
+        bar = new ScrollBar(name, this);
+    }
 
     /** The content's whole height, read as the box opens; it stays the same while the box is open. */
     public abstract int contentHeight();

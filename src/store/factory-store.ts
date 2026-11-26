@@ -16,7 +16,13 @@ import { ownsItsRecipe } from "@/lib/model/owns-recipe";
 import { sameRecipeOr } from "@/lib/model/same-recipe";
 
 import { carryMachineVoltage, normalizeProjectHatchInputs } from "@/lib/solver/hatch-input";
-import { fitCombinedMachine, pickCombineHost } from "./combine-machine";
+import {
+  combinedMachineSettings,
+  fitCombinedMachine,
+  pickCombineHost,
+  sharedCombineHandlers,
+  withCombinedSettings,
+} from "./combine-machine";
 import { keepUsedRecipes } from "@/lib/model/embedded-recipes";
 
 import { create, type StateCreator, type StoreApi } from "zustand";
@@ -3899,11 +3905,8 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
         return state;
       }
       // One machine must run every recipe on every card.
-      let handlers = getSharedMachineHandlers(cards[0]!, recipesById);
-      for (const card of cards.slice(1)) {
-        const ids = new Set(getSharedMachineHandlers(card, recipesById).map((handler) => handler.id));
-        handlers = handlers.filter((handler) => ids.has(handler.id));
-      }
+      const lookup = (id: string) => recipesById.get(id);
+      const handlers = sharedCombineHandlers(cards, lookup);
       if (handlers.length === 0) {
         return state;
       }
@@ -3955,7 +3958,14 @@ export const useFactoryStore = create<FactoryStore>(withViewerGuard((set, get, w
             .filter((node) => node.id === host.id || !moved.has(node.id))
             .map((node) =>
               node.id === host.id
-                ? fitCombinedMachine({ ...node, extraRecipes }, handler, (id) => recipesById.get(id))
+                ? fitCombinedMachine(
+                    withCombinedSettings(
+                      { ...node, extraRecipes },
+                      combinedMachineSettings(cards, handler, lookup),
+                    ),
+                    handler,
+                    lookup,
+                  )
                 : node,
             ),
           edges: dedupeEdgeWires(edges),

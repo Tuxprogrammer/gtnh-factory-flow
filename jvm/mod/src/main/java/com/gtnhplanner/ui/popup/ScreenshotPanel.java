@@ -70,11 +70,12 @@ public final class ScreenshotPanel extends Widget<ScreenshotPanel> implements In
     private String problem, status;
     private boolean statusGood, keeping;
 
-    private ScreenshotPanel(final BoardSession session, final BoardCanvas canvas) {
+    /** A box in {@code room} ({@link Popup#room}): the planner's own panel, which every box is fitted to. */
+    private ScreenshotPanel(final BoardSession session, final BoardCanvas canvas, final int[] room) {
         this.session = session;
         this.canvas = canvas;
-        boxW = Math.min(MAX_W, PlannerScale.width() - 2 * MARGIN);
-        boxH = Math.min(MAX_H, PlannerScale.height() - 2 * MARGIN);
+        boxW = Math.min(MAX_W, room[2] - 2 * MARGIN);
+        boxH = Math.min(MAX_H, room[3] - 2 * MARGIN);
         wellW = boxW - 2 * PAD - 10 - COL_W;
         wellH = boxH - TITLE - 2 * PAD;
         col = PAD + wellW + 10;
@@ -82,9 +83,9 @@ public final class ScreenshotPanel extends Widget<ScreenshotPanel> implements In
         size(boxW, boxH);
     }
 
-    /** Opens the box in the middle of the screen, the picture on its way. */
+    /** Opens the box in the middle of the planner, the picture on its way. */
     public static void open(final ModularPanel parent, final BoardSession session, final BoardCanvas canvas) {
-        final ScreenshotPanel shot = new ScreenshotPanel(session, canvas);
+        final ScreenshotPanel shot = new ScreenshotPanel(session, canvas, Popup.room(parent));
         final int w = shot.boxW, h = shot.boxH;
         final Popup popup = new Popup("gtnhplanner_screenshot", w, h) {
 
@@ -96,7 +97,7 @@ public final class ScreenshotPanel extends Widget<ScreenshotPanel> implements In
             }
         };
         popup.child(shot.pos(0, 0));
-        Popup.open(parent, popup, (PlannerScale.width() - w) / 2, (PlannerScale.height() - h) / 2);
+        Popup.openCentred(parent, popup, 0.5f);
     }
 
     // region The picture

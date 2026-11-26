@@ -1236,9 +1236,11 @@ public final class BoardScreen extends ModularScreen {
             final Tip railTip = overview.hoverTip();
             if (railTip == null) return;
             // Beside the rail, so the tip never covers the row it is about.
+            final int th = railTip.shownHeight(bottom);
             railTip.draw(
                 overview.getArea().x + overview.getArea().width + 4,
-                Math.max(2, Math.min(my - 12, bottom - railTip.height())));
+                Math.max(2, Math.min(my - 12, bottom - th)),
+                th);
             return;
         } else if (hovered == null || hovered == canvas) {
             final Tip dot = canvas.dotTip();

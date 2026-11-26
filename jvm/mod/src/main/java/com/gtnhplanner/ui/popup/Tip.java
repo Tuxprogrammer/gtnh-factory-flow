@@ -383,31 +383,62 @@ public final class Tip {
      * {@code right} or {@code bottom}. Returns {x, y, w, h} of where it went.
      */
     public int[] drawNear(final int mouseX, final int mouseY, final int right, final int bottom) {
-        final int w = width(), h = height();
+        final int w = width(), h = shownHeight(bottom);
         int x = mouseX + 12, y = mouseY + 12;
         if (x + w > right) x = Math.max(2, mouseX - 12 - w);
         if (y + h > bottom) y = Math.max(2, bottom - h);
-        draw(x, y);
+        draw(x, y, h);
         return new int[] { x, y, w, h };
     }
 
+    /**
+     * How tall the tip is drawn on a screen ending at {@code bottom}: whole when it fits with 2 pixels to spare at
+     * each end, else cut to that, its lines read from the top and the last one an ellipsis (a tip cannot be scrolled).
+     */
+    public int shownHeight(final int bottom) {
+        return shown(height(), bottom);
+    }
+
+    /** {@link #shownHeight} for a tip {@code h} tall: never under one line. */
+    static int shown(final int h, final int bottom) {
+        return Math.min(h, Math.max(LINE + 2 * PAD_Y, bottom - 4));
+    }
+
     public void draw(final int x, final int y) {
-        final int w = width(), h = height(), cw = contentWidth();
+        draw(x, y, height());
+    }
+
+    /** Draws the tip {@code h} tall at {@code x, y}: shorter than it is, its lines stop with an ellipsis line. */
+    public void draw(final int x, final int y, final int h) {
+        final int w = width(), cw = contentWidth();
+        // A cut tip keeps a line for the ellipsis; a line that would cross it is not drawn.
+        final boolean cut = h < height();
+        final int limit = y + h - PAD_Y - (cut ? LINE : 0);
         Tip.beginPanel();
         chrome(x, y, w, h);
-        final int left = x + PAD_X, right = left + cw;
-        int ty = y + PAD_Y;
+        final int left = x + PAD_X;
+        lines(left, left + cw, y + PAD_Y, limit, cw);
+        if (cut) Hyb.text("...", left, limit, SUBTLE);
+        Tip.endPanel();
+    }
+
+    /** The tip's lines from {@code top}, stopping before one that would cross {@code limit}. */
+    private void lines(final int left, final int right, final int top, final int limit, final int cw) {
+        int ty = top;
         for (final String line : titleLines) {
+            if (ty + LINE > limit) return;
             Hyb.text(line, left, ty, titleColor);
             ty += LINE;
         }
         if (subtitle != null) {
+            if (ty + LINE > limit) return;
             Hyb.text(subtitle, left, ty, SUBTLE);
             ty += LINE;
         }
         if (!rows.isEmpty()) {
             ty += 3;
             for (final Row r : rows) {
+                if (ty + LINE > limit) return;
                 Hyb.text(r.label, left, ty, SUBTLE);
                 Hyb.textRight(r.value, right, ty, r.color);
                 ty += LINE;
@@ -416,6 +447,7 @@ public final class Tip {
         if (!notes.isEmpty()) {
             ty += 3;
             for (final Note n : notes) {
+                if (ty + n.height() > limit) return;
                 if (n.icon()) {
                     if (n.eu) com.gtnhplanner.ui.card.RecipeCard.euIcon(left + 1, ty, ICON);
                     else Hyb.icon(n.item, n.fluid, left + 1, ty, ICON, 0);
@@ -430,9 +462,11 @@ public final class Tip {
         }
         if (!actions.isEmpty()) {
             ty += 3;
+            if (ty + 5 + 10 > limit) return;
             Hyb.rect(left, ty, cw, 1, RULE);
             ty += 5;
             for (final List<Action> line : actionLines(cw)) {
+                if (ty + 10 > limit) return;
                 int ax = left;
                 for (final Action a : line) {
                     mouse(a.input, ax, ty);
@@ -442,7 +476,6 @@ public final class Tip {
                 ty += 12;
             }
         }
-        Tip.endPanel();
     }
 
     /** A mouse 7 by 10, the part that does the action lit; a key is a small keycap instead. */

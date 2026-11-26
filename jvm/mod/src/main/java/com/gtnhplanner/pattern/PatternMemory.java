@@ -41,7 +41,9 @@ final class PatternMemory {
     @Nullable
     static List<String> get(final Graph plan, final Node card) {
         load();
-        return choices.get(ids(plan), String.valueOf(card.id));
+        final List<String> got = choices.get(ids(plan), String.valueOf(card.id));
+        // Remembered before the game renamed an item: the renamed product is the card's now.
+        return got == null ? null : com.gtnhplanner.nei.SavedRenames.withRenamed(got);
     }
 
     /** Remembers the card's products in {@code plan} and saves at once. */

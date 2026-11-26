@@ -42,6 +42,9 @@ public final class NeiRecipes implements RecipeSource {
 
     private NeiRecipes() {}
 
+    /** NEI's id of a recipe as a save wrote it; tests stand one in (NEI reads its items from the running game). */
+    static java.util.function.Function<JsonObject, Recipe.RecipeId> ids = Recipe.RecipeId::of;
+
     /** What the mod holds of a card's recipe. Never saved; one per card. */
     public static final class Hold {
 
@@ -95,7 +98,7 @@ public final class NeiRecipes implements RecipeSource {
      * A recipe card ({@code reads}) is looked up in NEI now; one NEI cannot find reads nothing.
      */
     public static void load(final Node node, @Nullable final JsonObject saved, final int index, final boolean reads) {
-        final Recipe.RecipeId id = saved == null ? null : Recipe.RecipeId.of(saved);
+        final Recipe.RecipeId id = saved == null ? null : ids.apply(saved);
         node.recipe = RecipeRef.of(
             id == null ? null
                 : id.toJsonObject()

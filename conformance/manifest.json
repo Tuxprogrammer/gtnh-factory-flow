@@ -310,8 +310,8 @@
     },
     "machines/machine-goldens.jsonl.gz": {
       "area": "machines",
-      "bytes": 2879562,
-      "sha256": "e59b776e7d9ae227363ce59c3662c221eb447b0a6b3849c317d96d4be189557c"
+      "bytes": 2876529,
+      "sha256": "2522932d322bb889fdbe260d7a30c738308cb5c8e8a30e4cf44d2dcbe0f5280d"
     },
     "machines/reference-coefficients.json": {
       "area": "machines",

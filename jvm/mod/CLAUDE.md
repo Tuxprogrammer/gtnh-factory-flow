@@ -118,7 +118,13 @@ solved in the background (`data/flowchart/balancer/`, `SolveService`), auto-layo
   `library/PlanFiles`) lists `gtnhplanner/exports/` and the screenshots that carry a plan, newest first.
 - Shared machines (one card, several recipes time-sharing one machine; `docs/design/ff-shared-machine-spec.md`) are
   `MachineGroup`s with ordered `sections`: each recipe stays a node with its own ports and wires, the group draws as
-  one card, its machine settings are copied to every recipe, and a pinned count is an exact solver pool.
+  one card, its machine settings are copied to every recipe, and a pinned count is an exact solver pool. Combine
+  (`BoardSession.combine`, `ui/CombineCards`, the rule in core `machines.web.CombineMachine`, the website's
+  `store/combine-machine.ts`) never depends on which card is top-left or the order they come in: the machine most cards
+  name (ties by the summed order of the machines that run them all), its tier, supply, coil and settings the highest any
+  card had (numbers by value, voltage tiers by tier order, a control's options by the control's order, anything else
+  by text), raised until every recipe starts and gets one parallel. The top-left card keeps its place and id and its
+  set count becomes the machine's. `CombineMachineTest` combines its cards in every order.
 - Buffer drawers (`docs/buffer-drawers.md` at the repo root, the website's doc): `Drawer.Kind.BUFFER`, its `links` the outputs feeding it and its
   `takers` the inputs it feeds (`Drawer.held()` gives both with their side). An input dropped on a product, or an output
   on a source, makes one. The solver draws an edge from each maker to each user (`ModelData.buildBuffers`) and holds

@@ -2329,9 +2329,12 @@ public final class BoardSession {
 
     /**
      * Puts these cards' recipes on one machine, Factory Flow's "Combine N into one machine". The top-left card is the
-     * host: it stays where it is and keeps its machine and settings, which every recipe then takes; the other cards'
-     * recipes become its sections, their wires with them. A pinned count on the host becomes the machine's. One undo
-     * step. Returns the host, or null when they cannot share a machine.
+     * host: it stays where it is and the other cards' recipes become its sections, their wires with them. The machine
+     * and its settings come from every card, never from the host ({@link CombineCards}, the website's rule): the
+     * machine
+     * most cards name, and the highest tier, supply, coil and settings any card had, raised until every recipe starts
+     * and gets one parallel. A pinned count on the host becomes the machine's. One undo step. Returns the host, or null
+     * when they cannot share a machine.
      */
     public Uuid combine(final java.util.Collection<Uuid> ids) {
         if (!canCombine(ids)) {
@@ -2344,7 +2347,18 @@ public final class BoardSession {
                 .thenComparingInt(id -> graph.nodes.get(id).x));
         final Uuid hostId = cards.get(0);
         final List<Uuid> sections = allSections(cards);
-        final List<ItemStack> common = commonMachines(sections);
+        final List<List<String>> runs = new ArrayList<>();
+        final List<String> named = new ArrayList<>();
+        final Map<Uuid, List<Uuid>> own = new HashMap<>();
+        for (final Uuid card : cards) {
+            own.put(card, sectionsOf(card));
+            final List<String> keys = new ArrayList<>();
+            for (final ItemStack c : commonMachines(own.get(card))) keys.add(CardDefaults.itemKey(c));
+            runs.add(keys);
+            final CardModel m = models.get(card);
+            named.add(m != null && m.machineStack != null ? CardDefaults.itemKey(m.machineStack) : null);
+        }
+        final String machine = CombineCards.machine(runs, named);
         edit(() -> {
             final Node host = graph.nodes.get(hostId);
             com.gtnhplanner.data.flowchart.MachineGroup g = sharedOf(hostId);
@@ -2363,12 +2377,8 @@ public final class BoardSession {
             g.setPinned(pinned && capacity > 0);
             g.setExact(exact && g.isPinned());
             graph.groups.put(g.getId(), g);
-            // The host's machine when every recipe runs on it, else the first that runs them all.
-            final CardModel hostModel = models.get(hostId);
-            final boolean hostCommon = hostModel != null && hostModel.machineStack != null
-                && common.stream()
-                    .anyMatch(c -> ItemStack.areItemStacksEqual(c, hostModel.machineStack));
-            if (!hostCommon) host.machineName = CardDefaults.itemKey(common.get(0));
+            CombineCards.settle(graph, host, cards, own::get, machine);
+            host.machineName = machine;
             for (final Uuid s : sections) {
                 final Node n = graph.nodes.get(s);
                 n.setMachineCountFixed(false);

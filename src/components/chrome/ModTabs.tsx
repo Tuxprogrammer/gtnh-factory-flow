@@ -318,8 +318,22 @@ export function ModTabs({ onPaste, onShare }: ModTabsActions) {
 
   const openTabMenu = (event: React.MouseEvent<HTMLElement>, id: string, name: string) => {
     event.preventDefault();
-    const rect = event.currentTarget.getBoundingClientRect();
-    setMenu({ kind: "tab", id, name, anchor: { left: rect.left, top: rect.top, bottom: rect.bottom + 1 } });
+    const tab = event.currentTarget;
+    // A tab cut by the strip's edge comes into view, so the menu hangs from all of it. The menu opens a frame later:
+    // the browser hands out a scroll event with the next frame, so the strip's scroll (this one, or one made just
+    // before the press) would land on an open menu, read as the player scrolling, and close it at once.
+    const strip = stripRef.current;
+    if (strip) {
+      const left = tab.offsetLeft;
+      const right = left + tab.offsetWidth;
+      if (left < strip.scrollLeft) strip.scrollLeft = left;
+      else if (right > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = right - strip.clientWidth;
+    }
+    requestAnimationFrame(() => {
+      if (!tab.isConnected) return;
+      const rect = tab.getBoundingClientRect();
+      setMenu({ kind: "tab", id, name, anchor: { left: rect.left, top: rect.top, bottom: rect.bottom + 1 } });
+    });
   };
 
   const entries = (m: TabMenu): MenuEntry[] => {

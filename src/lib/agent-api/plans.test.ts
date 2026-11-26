@@ -517,6 +517,20 @@ describe("wires", () => {
     const got = await call(getPost, { planId }, plansGetResponse);
     expect(got.targets).toEqual([{ id: "ingot", kind: "item", name: "Titanium Ingot", rate: 1, cardId: "c3" }]);
   });
+
+  it("keeps the recipes of a shared machine's other sections when another card goes", async () => {
+    const planId = await create({ tierCap: "MV" });
+    await call(addCardsPost, { planId, cards: [{ recipeId: "r-dust" }, { recipeId: "r-ingot" }] }, plansAddCardsResponse);
+    const draft = getDraft(planId);
+    draft.project = {
+      ...draft.project,
+      nodes: draft.project.nodes.map((node) =>
+        node.id === "c1" ? { ...node, extraRecipes: [{ recipeId: "r-ingot" }] } : node,
+      ),
+    };
+    await call(removeCardsPost, { planId, cardIds: ["c2"] }, plansRemoveCardsResponse);
+    expect(getDraft(planId).project.recipes.map((entry) => entry.id).sort()).toEqual(["r-dust", "r-ingot"]);
+  });
 });
 
 describe("plans/set-targets and plans/get", () => {

@@ -47,6 +47,13 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 const props = { onPaste: vi.fn(), onShare: vi.fn() };
+/** A right-click on a tab: its menu opens on the next frame. */
+async function rightClick(name: string): Promise<void> {
+  fireEvent.contextMenu(screen.getByText(name));
+  await act(async () => {
+    await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
+  });
+}
 const rows = () => [...document.querySelectorAll('[role="menu"] [role="menuitem"]')].map((element) => element.textContent);
 
 describe("the plan tabs", () => {
@@ -80,9 +87,9 @@ describe("the plan tabs", () => {
     expect(screen.queryByLabelText("Close Benzene")).toBeNull();
   });
 
-  it("right-click opens the menu the mod's tab has, Delete plan last, in red", () => {
+  it("right-click opens the menu the mod's tab has, Delete plan last, in red", async () => {
     render(<ModTabs {...props} />);
-    fireEvent.contextMenu(screen.getByText("ref-chain"));
+    await rightClick("ref-chain");
     expect(rows()).toEqual([
       "Rename",
       "Copy plan codeto paste or share",
@@ -95,16 +102,16 @@ describe("the plan tabs", () => {
     expect(last[last.length - 1].getAttribute("data-tone")).toBe("red");
   });
 
-  it("Delete plan asks first and only Delete it deletes", () => {
+  it("Delete plan asks first and only Delete it deletes", async () => {
     render(<ModTabs {...props} />);
-    fireEvent.contextMenu(screen.getByText("ref-chain"));
+    await rightClick("ref-chain");
     fireEvent.click(screen.getByText("Delete plan"));
     expect(actions.removeDesign).not.toHaveBeenCalled();
     expect(document.querySelector(".mm-title")?.textContent).toBe("Delete 'ref-chain' for good?");
     expect(rows()).toEqual(["Delete it", "Keep it"]);
     fireEvent.click(screen.getByText("Keep it"));
     expect(actions.removeDesign).not.toHaveBeenCalled();
-    fireEvent.contextMenu(screen.getByText("ref-chain"));
+    await rightClick("ref-chain");
     fireEvent.click(screen.getByText("Delete plan"));
     fireEvent.click(screen.getByText("Delete it"));
     expect(actions.removeDesign).toHaveBeenCalledWith("b");
@@ -118,9 +125,9 @@ describe("the plan tabs", () => {
     expect(props.onPaste).toHaveBeenCalled();
   });
 
-  it("Rename edits the tab in place and Enter commits it", () => {
+  it("Rename edits the tab in place and Enter commits it", async () => {
     render(<ModTabs {...props} />);
-    fireEvent.contextMenu(screen.getByText("Benzene"));
+    await rightClick("Benzene");
     fireEvent.click(screen.getByText("Rename"));
     const field = screen.getByLabelText("Plan name") as HTMLInputElement;
     fireEvent.change(field, { target: { value: "Aniline" } });
@@ -176,6 +183,40 @@ describe("the plan tabs", () => {
       expect(strip.scrollLeft).toBe(364 - 300);
     } finally {
       vi.unstubAllGlobals();
+      vi.restoreAllMocks();
+    }
+  });
+
+  it("a right-click on a tab cut by the strip's edge brings it into view, and the strip's scroll leaves its menu open", async () => {
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockImplementation(function (this: HTMLElement) {
+      return this.classList.contains("mt-strip") ? 300 : 0;
+    });
+    vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockImplementation(function (this: HTMLElement) {
+      return this.classList.contains("mt-tab") ? 120 : 0;
+    });
+    vi.spyOn(HTMLElement.prototype, "offsetLeft", "get").mockImplementation(function (this: HTMLElement) {
+      return [...(this.parentElement?.children ?? [])].indexOf(this) * 122;
+    });
+    try {
+      useDesignStore.setState({ designs: [design("a", "Benzene"), design("b", "ref-chain"), design("c", "Toluene")], activeDesignId: "a" });
+      render(<ModTabs {...props} />);
+      const strip = document.querySelector<HTMLElement>(".mt-strip")!;
+      expect(strip.scrollLeft).toBe(0);
+      fireEvent.contextMenu(screen.getByText("Toluene"));
+      // The third tab spans 244 to 364: the strip of 300 scrolls to its right edge.
+      expect(strip.scrollLeft).toBe(364 - 300);
+      // The browser sends the strip's scroll with the next frame, before the menu is up.
+      strip.dispatchEvent(new Event("scroll"));
+      await act(async () => {
+        await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
+      });
+      expect(rows()).toContain("Rename");
+      // A scroll once the menu is up still closes it.
+      act(() => {
+        strip.dispatchEvent(new Event("scroll"));
+      });
+      expect(rows()).toEqual([]);
+    } finally {
       vi.restoreAllMocks();
     }
   });

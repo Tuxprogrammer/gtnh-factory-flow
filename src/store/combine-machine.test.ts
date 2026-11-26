@@ -350,6 +350,18 @@ describe("Combine is the same whichever card hosts", () => {
     expect(merged.machine.machineConfigTiers).toEqual({ casing: "t3" });
   });
 
+  it("ranks stored settings that are numbers by value and tier names by tier", () => {
+    const merged = everyOrder(
+      [chem("a"), chem("b"), chem("c")],
+      [
+        card("n-a", "a", { machineConfigTiers: { rings: "9", hatch: "MV", top: "ZPM" } }),
+        card("n-b", "b", { machineConfigTiers: { rings: "10", hatch: "HV", top: "UV" } }),
+        card("n-c", "c", { machineConfigTiers: { rings: "2", hatch: "LV" } }),
+      ],
+    );
+    expect(merged.machine.machineConfigTiers).toEqual({ rings: "10", hatch: "HV", top: "UV" });
+  });
+
   it("runs a single block at the highest tier any card ran at", () => {
     const single = (id: string, minimumTier: Recipe["minimumTier"] = "LV") =>
       recipe(id, "Chemical Reactor", { minimumTier, eut: minimumTier === "MV" ? 120 : 30 });

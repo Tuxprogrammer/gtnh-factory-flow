@@ -185,7 +185,7 @@ const emptyBoardSpot = async (p) => {
   });
 };
 
-// name, open(p) -> options for __bxRoots. `needs` lists conditions: "desktop" skips compact windows.
+// name, open(p) -> options for __bxRoots. `mustOpen`: a box that does not open fails the run.
 const SCENARIOS = [
   { name: "tab plus menu", open: (p) => click(p, ".mt-plus") },
   {
@@ -195,6 +195,31 @@ const SCENARIOS = [
       await tab.scrollIntoViewIfNeeded();
       await p.waitForTimeout(500);
       await tab.click({ button: "right", timeout: 4000 });
+    },
+  },
+  {
+    // A tab that is not the open one, cut by the strip's edge: the click scrolls it into view first, and the strip's
+    // scroll event arrives with the next frame. The menu must stay open, hanging from that tab.
+    name: "other tab menu",
+    mustOpen: true,
+    open: async (p) => {
+      const id = await p.evaluate(() => {
+        const strip = document.querySelector(".mt-strip");
+        const box = strip.getBoundingClientRect();
+        const tabs = [...strip.querySelectorAll("[role=tab][data-design-id]:not([aria-selected=true])")];
+        const cut = tabs.find((tab) => tab.getBoundingClientRect().left < box.right && tab.getBoundingClientRect().right > box.right);
+        return (cut ?? tabs.at(-1))?.dataset.designId;
+      });
+      if (!id) throw new Error("only one tab");
+      const tab = p.locator(`.mt-strip [data-design-id="${id}"]`);
+      await tab.click({ button: "right", timeout: 4000 });
+      await p.waitForTimeout(500);
+      const off = await tab.evaluate((el) => {
+        const menu = document.querySelector('[role=menu][aria-label^="Plan options"]');
+        return menu ? Math.abs(menu.getBoundingClientRect().left - el.getBoundingClientRect().left) : "closed";
+      });
+      if (off === "closed") throw new Error("the menu closed at once");
+      if (off > 40) throw new Error(`the menu is ${Math.round(off)} px from its tab`);
     },
   },
   {
@@ -368,7 +393,10 @@ for (const [w, h] of viewports) {
     try {
       await sc.open(p);
     } catch (error) {
-      notOpened.push(`${vp} ${sc.name}: ${String(error.message ?? error).split("\n")[0].slice(0, 110)}`);
+      const why = String(error.message ?? error).split("\n")[0].slice(0, 110);
+      // A box that must open and did not is a failure, not a box this window lacks.
+      if (sc.mustOpen) rows.push({ vp, name: sc.name, cls: "not open", rect: why, inBox: false, unreachable: [], hiddenActions: [], pass: false });
+      notOpened.push(`${vp} ${sc.name}: ${why}`);
       dirty = true;
       continue;
     }

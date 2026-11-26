@@ -136,8 +136,10 @@ The board must stay smooth with 100+ cards on weak PCs.
   drawers and cards come in 10 px sizes and group members can sit half a cell off, and a dock inside the card
   loses the whole side or draws the wire from under it. Wire width follows flow
   (`laneWidthForHeat`) and wires sit under cards. No rate labels on wires, except
-  ratio-drawer percentages. One drawn wire per material between two cards
-  (`channelEdgeIdsByRepresentative`).
+  ratio-drawer percentages. One drawn wire per material between two cards (`wire-channels.ts`), even into
+  several recipes of one shared machine: the plan and the solve keep every flat edge, and the drawn wire stands for
+  all of them. Its rate and width are their sum, hovering lights every member's ports, a checklist tick covers every
+  member and deleting it deletes them all (`wire-channels.test.ts`).
 - Frames are routing obstacles but invisible to wire gestures. Wires inside a board pay to
   leave it (`costOutsideHome`); wires leaving pay per px spent inside (`costInsideExempt`).
 - Every dial is in `router-tuning.ts` (`DEFAULT_ROUTER_TUNING`), editable per device in the

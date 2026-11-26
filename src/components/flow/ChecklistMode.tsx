@@ -11,6 +11,7 @@ import {
 import { ClipboardCheck, RotateCcw } from "lucide-react";
 import { useFactoryStore } from "@/store/factory-store";
 import { playBoardSound } from "@/lib/board-sounds";
+import { checklistWireIds, type ShownWire } from "./wire-channels";
 
 const cursor = `url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><path d="M3 2v21l5-6 5 10 4-2-5-10h8z" fill="#172922" stroke="#dcfce7" stroke-width="1.5"/><path d="m18 9 4 4 7-8" fill="none" stroke="#86efac" stroke-width="3" stroke-linecap="square"/></svg>')}") 3 2, crosshair`;
 const keyClass =
@@ -58,7 +59,7 @@ export function ChecklistKeys({ folded = false }: { folded?: boolean }) {
   );
 }
 
-type ShownEdge = { id: string; data?: { bundle?: { edgeIds: string[] } } };
+type ShownEdge = ShownWire;
 
 /** Capture before port controls and React Flow can turn a check into an edit. */
 export function useChecklistBoard(shownEdges: ShownEdge[]) {
@@ -103,7 +104,7 @@ export function useChecklistBoard(shownEdges: ShownEdge[]) {
             .getState()
             .toggleChecklist(
               edge ? "edges" : "cards",
-              edge ? (shownEdges.find((e) => e.id === id)?.data?.bundle?.edgeIds ?? [id]) : [id],
+              edge ? checklistWireIds(shownEdges, id) : [id],
             );
         }
       }

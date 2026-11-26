@@ -27,8 +27,10 @@ import com.gtnhplanner.ui.popup.PickList;
 import com.gtnhplanner.ui.popup.Popup;
 import com.gtnhplanner.ui.popup.Tip;
 import com.gtnhplanner.ui.sound.Sfx;
+import com.gtnhplanner.ui.theme.BarDrag;
 import com.gtnhplanner.ui.theme.Hyb;
 import com.gtnhplanner.ui.theme.Icons;
+import com.gtnhplanner.ui.theme.Thumb;
 
 /**
  * The open plan's task board, in the board's place (the overview and the top bar stay): four columns, Blocked, To do,
@@ -61,8 +63,7 @@ public final class TaskBoardView extends Widget<TaskBoardView> implements Intera
     private final int[] scroll = new int[4], contentH = new int[4];
     /** How far the columns are scrolled sideways, and the bar's thumb while it is dragged (where it was taken). */
     private int across;
-    private boolean draggingBar;
-    private int barGrab;
+    private final Thumb bar = new Thumb(16);
 
     /** Where each card is drawn, gliding to where it belongs: task id to {x, y}. */
     private final Map<String, float[]> shown = new HashMap<>();
@@ -288,6 +289,8 @@ public final class TaskBoardView extends Widget<TaskBoardView> implements Intera
             edgeScroll(dt);
             findDrop(localX(), localY());
         }
+        bar.layout(0, getArea().width, getArea().width + maxAcross());
+        across = BarDrag.follow(bar, localX(), across);
         across = Math.max(0, Math.min(maxAcross(), across));
         drawHeader(w, hover);
         if (chainShown()) {
@@ -417,25 +420,15 @@ public final class TaskBoardView extends Widget<TaskBoardView> implements Intera
     private void drawAcrossBar(final int w, final int h) {
         final int max = maxAcross();
         if (max <= 0) return;
-        final int thumb = thumbW(), tx = (w - thumb) * across / max, y = h - PAD / 2 - BAR_H / 2 - 1;
+        final int y = h - PAD / 2 - BAR_H / 2 - 1;
         Hyb.rect(0, y, w, BAR_H, 0x60000000);
-        Hyb.rect(tx, y, thumb, BAR_H, draggingBar || onAcrossBar() ? Hyb.INK : 0xFF6A6C74);
-    }
-
-    private int thumbW() {
-        final int w = getArea().width;
-        return Math.max(16, w * w / Math.max(1, w + maxAcross()));
+        Hyb.rect(bar.at(across), y, bar.size(), BAR_H, bar.dragging() || onAcrossBar() ? Hyb.INK : 0xFF6A6C74);
+        com.gtnhplanner.dev.DevBars.drawn("tasks", this, bar, true, y, BAR_H, across);
     }
 
     /** Whether the mouse is on the bar's band, in the bottom padding, while there is one. */
     private boolean onAcrossBar() {
         return maxAcross() > 0 && isHovering() && localY() >= bodyBottom();
-    }
-
-    /** Scrolls so the bar's thumb starts at {@code x}. */
-    private void acrossTo(final int x) {
-        final int room = getArea().width - thumbW();
-        if (room > 0) across = Math.max(0, Math.min(maxAcross(), Math.round((float) x * maxAcross() / room)));
     }
 
     /** A key in the header, right-aligned at {@code right}; returns its left edge. */
@@ -640,10 +633,7 @@ public final class TaskBoardView extends Widget<TaskBoardView> implements Intera
         }
         if (mouseButton == 0 && onAcrossBar()) {
             // On the thumb it is taken where it was grabbed; on the track the thumb jumps to centre on the mouse.
-            final int max = maxAcross(), thumb = thumbW(), tx = (getArea().width - thumb) * across / max, mx = localX();
-            barGrab = mx >= tx && mx < tx + thumb ? mx - tx : thumb / 2;
-            draggingBar = true;
-            acrossTo(mx - barGrab);
+            across = bar.press(localX(), across);
             return Result.SUCCESS;
         }
         final Hit hit = hitAt(lastHits);
@@ -683,7 +673,7 @@ public final class TaskBoardView extends Widget<TaskBoardView> implements Intera
     @Override
     public void onMouseDrag(final int mouseButton, final long timeSinceClick) {
         chain.drag();
-        if (draggingBar) acrossTo(localX() - barGrab);
+        if (bar.dragging()) across = bar.to(localX());
         lift();
     }
 
@@ -709,10 +699,7 @@ public final class TaskBoardView extends Widget<TaskBoardView> implements Intera
     @Override
     public boolean onMouseRelease(final int mouseButton) {
         if (chain.release(mouseButton)) return true;
-        if (draggingBar) {
-            draggingBar = false;
-            return true;
-        }
+        if (bar.release()) return true;
         if (mouseButton != 0 || pressed == null) return false;
         release();
         return true;
@@ -725,7 +712,7 @@ public final class TaskBoardView extends Widget<TaskBoardView> implements Intera
      */
     public void screenReleased(final int mouseButton) {
         chain.release(mouseButton);
-        if (mouseButton == 0) draggingBar = false;
+        if (mouseButton == 0) bar.release();
         if (mouseButton == 0 && pressed != null) release();
     }
 

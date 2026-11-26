@@ -972,7 +972,7 @@ public final class BoardScreen extends ModularScreen {
         }
         // The task board: only undo and redo of the board's keys, which act on the plan out of sight.
         if (session.showsTasks()) {
-            if (!textFocused(this) && undoKeys()) return true;
+            if (!textFocused(this) && undoKeys(keyCode)) return true;
             return super.onKeyPressed(typedChar, keyCode);
         }
         // Linking a machine from the world: Esc gives up and goes back to the world.
@@ -1037,14 +1037,14 @@ public final class BoardScreen extends ModularScreen {
                 else if (session.copySelection() && keyCode == org.lwjgl.input.Keyboard.KEY_X) session.deleteSelected();
                 return true;
             }
-            if (undoKeys()) return true;
+            if (undoKeys(keyCode)) return true;
         }
         return super.onKeyPressed(typedChar, keyCode);
     }
 
     /** Undo and redo, on the keys Controls binds them to ({@link UndoKeys}): true when the key was one of them. */
-    private boolean undoKeys() {
-        final UndoKeys.Act act = UndoKeys.now();
+    private boolean undoKeys(final int keyCode) {
+        final UndoKeys.Act act = UndoKeys.now(keyCode != 0 ? keyCode : org.lwjgl.input.Keyboard.getEventKey());
         if (act == UndoKeys.Act.NONE) return false;
         final boolean undo = act == UndoKeys.Act.UNDO;
         // ModularUI offers each key event twice (char and key paths); act once per event.
@@ -1093,6 +1093,8 @@ public final class BoardScreen extends ModularScreen {
     public boolean onMouseRelease(final int mouseButton) {
         if (mouseButton == 2) canvas.endMiddlePan();
         final boolean taken = super.onMouseRelease(mouseButton);
+        // No panel keeps holding a button that is up, or its next press leaves the drags with an old widget.
+        PanelHolds.released(getPanelManager().getOpenPanels(), mouseButton);
         // A task card or checklist line let go off its view: it is put down all the same.
         library.tasks.screenReleased(mouseButton);
         com.gtnhplanner.ui.task.TaskPanel.screenReleased(mouseButton);
@@ -1234,9 +1236,11 @@ public final class BoardScreen extends ModularScreen {
             final Tip railTip = overview.hoverTip();
             if (railTip == null) return;
             // Beside the rail, so the tip never covers the row it is about.
+            final int th = railTip.shownHeight(bottom);
             railTip.draw(
                 overview.getArea().x + overview.getArea().width + 4,
-                Math.max(2, Math.min(my - 12, bottom - railTip.height())));
+                Math.max(2, Math.min(my - 12, bottom - th)),
+                th);
             return;
         } else if (hovered == null || hovered == canvas) {
             final Tip dot = canvas.dotTip();

@@ -50,6 +50,16 @@ final class SpareBar {
     /** How wide each line's bar is: small in a popup, the drawer controls' width in the overview. */
     private int barW = MINI_W;
 
+    /** What the dev harness lists this bar's sliders as, and the widget whose pixels it is drawn in; null for none. */
+    private String devName;
+    private com.cleanroommc.modularui.api.widget.IWidget devOwner;
+
+    /** Lists this bar's sliders in the dev harness as {@code name}, drawn in {@code owner}'s pixels. */
+    void devName(final String name, final com.cleanroommc.modularui.api.widget.IWidget owner) {
+        devName = name;
+        devOwner = owner;
+    }
+
     /** Sets how wide each line's bar is. */
     void barWidth(final int w) {
         barW = w;
@@ -156,6 +166,15 @@ final class SpareBar {
                 Hyb.rect(mini, y + 2, fill, 1, Hyb.mix(ink, CardPaint.SURFACE, 0.7f));
             }
             rects.add(new Rect(Kind.FILL, i, mini - 2, y, right + 1, y + ROW));
+            if (devOwner != null) com.gtnhplanner.dev.DevBars.slider(
+                devName + ":" + i,
+                devOwner,
+                mini,
+                mini + barW,
+                y + ROW / 2f,
+                share,
+                50,
+                held(line) && dragRow == i);
         }
         rects.add(new Rect(Kind.ROW, i, x - 2, y, right + 1, y + ROW));
     }

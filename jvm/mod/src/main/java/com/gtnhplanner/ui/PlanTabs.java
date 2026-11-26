@@ -20,7 +20,9 @@ import com.gtnhplanner.ui.popup.Popup;
 import com.gtnhplanner.ui.popup.TextPopup;
 import com.gtnhplanner.ui.sound.Sfx;
 import com.gtnhplanner.ui.task.TaskLook;
+import com.gtnhplanner.ui.theme.BarDrag;
 import com.gtnhplanner.ui.theme.Hyb;
+import com.gtnhplanner.ui.theme.Thumb;
 
 /**
  * The plan tabs on the top bar: one per open plan, then "+". A tab is only a plan that is open; closing it (its x,
@@ -58,8 +60,8 @@ final class PlanTabs extends Widget<PlanTabs> implements Interactable {
      * one, and so does a strip that narrows (the top bar laid out again).
      */
     private int shownActive = -1, shownStrip;
-    private boolean draggingBar;
-    private int barGrab;
+    /** The scroll bar's thumb along the strip's bottom. */
+    private final Thumb bar = new Thumb(16);
 
     /** Pressed slop in GUI pixels before a tab is carried, as the board's. */
     private static final int DRAG_SLOP = 6;
@@ -396,9 +398,11 @@ final class PlanTabs extends Widget<PlanTabs> implements Interactable {
     public void draw(final ModularGuiContext context, final WidgetThemeEntry<?> widgetTheme) {
         final List<Tab> tabs = tabs();
         follow(tabs);
+        bar.layout(0, stripW(), contentW(tabs));
+        scroll = bar.clamp(BarDrag.follow(bar, mouseX(), scroll));
         final List<Graph> slots = session.slots();
         final int h = getArea().height, strip = stripW(), max = maxScroll(tabs);
-        final Tab hover = isHovering() && !draggingBar && !lifted ? tabAtMouse() : null;
+        final Tab hover = isHovering() && !bar.dragging() && !lifted ? tabAtMouse() : null;
         final float dt = frameTime();
         carry(tabs, slots, dt);
         Stencil.apply(0, 0, strip, h, context);
@@ -420,12 +424,11 @@ final class PlanTabs extends Widget<PlanTabs> implements Interactable {
         // More beyond an edge: the tabs fade out into the bar there.
         if (scroll > 0) fade(0, h, true);
         if (scroll < max) fade(strip - FADE, h, false);
-        if (max > 0 && (isHovering() || draggingBar)) {
-            final int thumb = Math.max(16, strip * strip / Math.max(1, contentW(tabs)));
-            final int tx = (strip - thumb) * scroll / max;
-            final boolean hot = draggingBar || onBar();
+        if (max > 0 && (isHovering() || bar.dragging())) {
+            final boolean hot = bar.dragging() || onBar();
             Hyb.rect(0, h - BAR_H, strip, BAR_H, 0x60000000);
-            Hyb.rect(tx, h - BAR_H, thumb, BAR_H, hot ? Hyb.INK : 0xFF6A6C74);
+            Hyb.rect(bar.at(scroll), h - BAR_H, bar.size(), BAR_H, hot ? Hyb.INK : 0xFF6A6C74);
+            com.gtnhplanner.dev.DevBars.drawn("tabs", this, bar, true, h - BAR_H, BAR_H, scroll);
         }
         final Tab plus = plus(tabs);
         drawTab(-1, plus.x(), plus.w(), h, slots, hover != null && hover.slot() < 0 ? hover : null);
@@ -593,26 +596,14 @@ final class PlanTabs extends Widget<PlanTabs> implements Interactable {
         return true;
     }
 
-    /** Scrolls so the scroll bar's thumb starts at {@code x}. */
-    private void scrollBarTo(final int x) {
-        final List<Tab> tabs = tabs();
-        final int strip = stripW(), max = maxScroll(tabs);
-        final int thumb = Math.max(16, strip * strip / Math.max(1, contentW(tabs)));
-        if (strip - thumb <= 0) return;
-        scroll = Math.max(0, Math.min(max, Math.round((float) Math.max(0, x) * max / (strip - thumb))));
-    }
-
     @Override
     public void onMouseDrag(final int mouseButton, final long timeSinceClick) {
-        if (draggingBar) scrollBarTo(mouseX() - barGrab);
+        if (bar.dragging()) scroll = bar.to(mouseX());
     }
 
     @Override
     public boolean onMouseRelease(final int mouseButton) {
-        if (draggingBar) {
-            draggingBar = false;
-            return true;
-        }
+        if (bar.release()) return true;
         if (mouseButton != 0 || pressed < 0) return false;
         final int slot = pressed;
         final boolean wasLifted = lifted;
@@ -638,13 +629,7 @@ final class PlanTabs extends Widget<PlanTabs> implements Interactable {
     public Result onMousePressed(final int mouseButton) {
         if (mouseButton == 0 && onBar()) {
             // On the thumb it is taken where it was grabbed; on the track the thumb jumps to centre on the mouse.
-            final List<Tab> tabs = tabs();
-            final int strip = stripW(), max = maxScroll(tabs);
-            final int thumb = Math.max(16, strip * strip / Math.max(1, contentW(tabs)));
-            final int tx = max <= 0 ? 0 : (strip - thumb) * scroll / max, mx = mouseX();
-            barGrab = mx >= tx && mx < tx + thumb ? mx - tx : thumb / 2;
-            draggingBar = true;
-            scrollBarTo(mx - barGrab);
+            scroll = bar.press(mouseX(), scroll);
             return Result.SUCCESS;
         }
         final Tab t = tabAtMouse();
@@ -744,7 +729,7 @@ final class PlanTabs extends Widget<PlanTabs> implements Interactable {
 
     /** Tooltip lines for the tab under the mouse. */
     List<String> hoverLines() {
-        if (!isHovering() || draggingBar || onBar() || pressed >= 0) return null;
+        if (!isHovering() || bar.dragging() || onBar() || pressed >= 0) return null;
         final CloudSession cloud = cloud();
         if (cloud != null && onStatus()) return List.of(statusText(cloud), "§7" + statusTip(cloud));
         final List<String> face = faceLines();

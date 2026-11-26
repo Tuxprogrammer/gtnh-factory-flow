@@ -55,6 +55,7 @@ import { getSetupRules } from "../model/setup-rules";
 import { solveEquationsCore } from "./equations-core";
 import { solveSolveMode } from "./solve-mode";
 import { planSolve, type PlanUnit } from "./plan";
+import { withPlanNameplateCounts } from "./plan/nameplate-count";
 
 const EPSILON = 0.000001;
 
@@ -78,6 +79,9 @@ export function calculateThroughput(
   // virtual drawer on every slot of that side, never reaching the board and
   // spent by the LP only after every real wire.
   const rules = getSetupRules(project);
+  // PLAN COUNTS (plan/nameplate-count.ts): a plan card stored at 0 machines is read at 1, since the solve chooses its
+  // count. First, so shared sections and the nameplate loop below read the same count.
+  project = withPlanNameplateCounts(project);
   // SHARED MACHINES (shared-machine.ts): a card running several recipes is
   // solved as one hidden node per recipe, coupled by one time row in the
   // books. The sections stay in the result under their own ids so the card

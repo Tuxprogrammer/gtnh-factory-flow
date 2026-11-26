@@ -8,6 +8,14 @@ final class PickRows {
 
     private PickRows() {}
 
+    /**
+     * How many rows of {@code row} px a list shows in a room {@code roomH} tall under {@code above} px of title and
+     * filter, inside the popup's 4 px edge: never fewer than two.
+     */
+    static int rowsInRoom(final int roomH, final int above, final int row) {
+        return Math.max(2, (roomH - 4 - above) / row);
+    }
+
     /** The height of the first {@code count} rows: the popup is exactly this tall. */
     static int total(final int[] heights, final int from, final int count) {
         int sum = 0;
@@ -47,6 +55,17 @@ final class PickRows {
     static int maxScroll(final int[] heights, final int view) {
         int s = 0;
         while (s < heights.length && total(heights, s, heights.length - s) > view) s++;
+        return s;
+    }
+
+    /**
+     * The scroll whose first row starts nearest {@code px} down the whole list, kept in range: what a dragged scroll
+     * thumb, which moves in pixels, means for a list that scrolls by rows.
+     */
+    static int scrollAt(final int[] heights, final int px, final int view) {
+        final int max = maxScroll(heights, view);
+        int s = 0, top = 0;
+        while (s < max && top + heights[s] / 2 < px) top += heights[s++];
         return s;
     }
 

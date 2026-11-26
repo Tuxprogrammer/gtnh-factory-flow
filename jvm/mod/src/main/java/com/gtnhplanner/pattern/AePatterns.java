@@ -31,8 +31,8 @@ import appeng.util.item.AEItemStack;
  * The AE2 half of "Pattern this", on the server's tick. It fills a real AE2 pattern terminal the way Not Enough
  * Energistics fills one from an NEI transfer (its own packet handler's {@code processRecipe} and {@code craftingRecipe}
  * loops, with that handler's {@code getMatrix} and {@code getAEStack}), then runs the terminal's own {@code encode} and
- * hands the pattern over by AE2's rule for an encode to the inventory: into the inventory, else dropped at the player's
- * feet. Only the slot-filling loop is written here; everything that decides what the pattern holds is AE2's or NEE's.
+ * puts the pattern in an empty slot of the player's main inventory; with none, nothing is made. Only the slot-filling
+ * loop is written here; everything that decides what the pattern holds is AE2's or NEE's.
  *
  * <p>
  * Processing recipes go through the processing pattern terminal (32 inputs, 32 outputs, not inverted, as a fresh one
@@ -83,6 +83,11 @@ public final class AePatterns {
         final boolean creative = player.capabilities.isCreativeMode;
         final int blankSlot = creative ? -1 : blankSlot(player);
         if (!creative && blankSlot < 0) return PatternServer.Made.not(PatternRules.NO_BLANK);
+        // Room is checked before anything is made or taken, in creative as in survival.
+        final ItemStack[] main = player.inventory.mainInventory;
+        final int target = PatternRules
+            .slotFor(player.inventory.getFirstEmptyStack(), blankSlot, blankSlot < 0 ? 0 : main[blankSlot].stackSize);
+        if (target < 0) return PatternServer.Made.not(PatternRules.NO_ROOM);
 
         final PartPatternTerminal part = crafting || regular ? new Term(terminal(false)) : new TermEx(terminal(true));
         part.setCraftingRecipe(crafting);
@@ -128,8 +133,11 @@ public final class AePatterns {
 
         if (!creative) player.inventory.decrStackSize(blankSlot, 1);
         final ItemStack given = made.copy();
-        // AE2's hand-over for an encode to the inventory (ContainerPatternTerm.encodeAndMoveToInventory).
-        if (!player.inventory.addItemStackToInventory(made)) player.entityDropItem(made, 0);
+        // Straight into the slot found above. Not AE2's hand-over (add to the inventory, else drop at the feet): the
+        // game's add destroys the stack for a creative player with no room and says it was added, and a creative
+        // player picking up the dropped one with a full inventory destroys it the same way.
+        made.animationsToGo = 5;
+        player.inventory.setInventorySlotContents(target, made);
         player.inventoryContainer.detectAndSendChanges();
         // The button is pressed on the planner's board, a screen of the client's own: while it is open the client puts
         // slot updates outside the hotbar into the board's container, so the pattern and the blank taken would not
@@ -138,12 +146,20 @@ public final class AePatterns {
         return new PatternServer.Made(PatternRules.MADE, dropped, given);
     }
 
-    /** Blank patterns in the player's own inventory, by the rule {@link #make} takes them by (either side's player). */
-    static int blanks(final EntityPlayer player) {
-        int n = 0;
-        for (final ItemStack s : player.inventory.mainInventory)
-            if (s != null && s.stackSize > 0 && IPatternTerminal.isBlankPattern(s)) n += s.stackSize;
-        return n;
+    /**
+     * How many of {@code need} patterns the server can give {@code player} now ({@link PatternRules#room}), read from
+     * the player's own main inventory by the rule {@link #make} places them by (either side's player).
+     */
+    static PatternRules.Room room(final EntityPlayer player, final int need) {
+        int empty = 0;
+        final java.util.List<Integer> stacks = new java.util.ArrayList<>();
+        for (final ItemStack s : player.inventory.mainInventory) {
+            if (s == null) empty++;
+            else if (s.stackSize > 0 && IPatternTerminal.isBlankPattern(s)) stacks.add(s.stackSize);
+        }
+        final int[] blankStacks = new int[stacks.size()];
+        for (int i = 0; i < blankStacks.length; i++) blankStacks[i] = stacks.get(i);
+        return PatternRules.room(empty, blankStacks, player.capabilities.isCreativeMode, need);
     }
 
     /** The first slot of the player's own inventory holding a blank pattern, or -1. */

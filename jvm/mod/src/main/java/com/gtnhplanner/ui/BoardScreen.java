@@ -16,7 +16,6 @@ import com.cleanroommc.modularui.screen.UISettings;
 import com.cleanroommc.modularui.widgets.ButtonWidget;
 import com.cleanroommc.modularui.widgets.layout.Flow;
 import com.gtnhplanner.GtnhPlanner;
-import com.gtnhplanner.nei.NEIPlanConfig;
 import com.gtnhplanner.nei.PlanBookmarks;
 import com.gtnhplanner.ui.canvas.BoardCanvas;
 import com.gtnhplanner.ui.card.CardModel;
@@ -32,7 +31,6 @@ import com.gtnhplanner.ui.theme.Hyb;
 import com.gtnhplanner.ui.theme.Icons;
 
 import codechicken.nei.LayoutManager;
-import codechicken.nei.NEIClientConfig;
 import codechicken.nei.guihook.GuiContainerManager;
 
 /**
@@ -548,15 +546,29 @@ public final class BoardScreen extends ModularScreen {
         rows.add(com.gtnhplanner.ui.popup.PickList.Entry.of("Export plan file", session::exportPlanFile));
         rows.add(com.gtnhplanner.ui.popup.PickList.Entry.of("Bookmark recipes", () -> PlanBookmarks.recipes(session)));
         rows.add(com.gtnhplanner.ui.popup.PickList.Entry.of("Bookmark as chain", () -> PlanBookmarks.chain(session)));
-        // An AE2 pattern of every recipe from blanks in the inventory, as the card's "Pattern this" makes one.
-        if (com.gtnhplanner.pattern.PatternThis.offered()) rows.add(
-            new com.gtnhplanner.ui.popup.PickList.Entry(
-                null,
-                "Pattern the plan",
-                java.util.Objects.requireNonNullElse(com.gtnhplanner.pattern.PatternThis.unavailable(), ""),
-                Hyb.INK,
-                false,
-                () -> com.gtnhplanner.pattern.PatternThis.plan(session)));
+        // An AE2 pattern of every recipe from blanks in the inventory, as the card's "Pattern this" makes one, as many
+        // as fit at a time; while a run is part made the row says where it is and a second row starts it over.
+        if (com.gtnhplanner.pattern.PatternThis.offered()) {
+            final String partMade = com.gtnhplanner.pattern.PatternThis.partMade(session);
+            final String why = java.util.Objects
+                .requireNonNullElse(com.gtnhplanner.pattern.PatternThis.unavailable(), "");
+            rows.add(
+                new com.gtnhplanner.ui.popup.PickList.Entry(
+                    null,
+                    partMade == null ? "Pattern the plan" : partMade,
+                    why,
+                    Hyb.INK,
+                    false,
+                    () -> com.gtnhplanner.pattern.PatternThis.plan(session)));
+            if (partMade != null) rows.add(
+                new com.gtnhplanner.ui.popup.PickList.Entry(
+                    null,
+                    com.gtnhplanner.pattern.PatternPages.FROM_START,
+                    why,
+                    Hyb.INK,
+                    false,
+                    () -> com.gtnhplanner.pattern.PatternThis.planFromStart(session)));
+        }
         rows.add(
             com.gtnhplanner.ui.popup.PickList.Entry
                 .of("Screenshot...", () -> com.gtnhplanner.ui.popup.ScreenshotPanel.open(panel, session, canvas)));
@@ -937,6 +949,10 @@ public final class BoardScreen extends ModularScreen {
             com.gtnhplanner.ui.sound.Sfx.CLOSE.play();
             return true;
         }
+        // Enter answers an open question (Delete 46 cards?) as its first row would.
+        if ((keyCode == org.lwjgl.input.Keyboard.KEY_RETURN || keyCode == org.lwjgl.input.Keyboard.KEY_NUMPADENTER)
+            && getPanelManager().getTopMostPanel() instanceof Popup popup
+            && popup.enter()) return true;
         // The non-recipe machines: Esc closes them, even from the search; the board's keys wait meanwhile.
         if (picker.isEnabled()) {
             if (keyCode == org.lwjgl.input.Keyboard.KEY_ESCAPE) {
@@ -966,11 +982,16 @@ public final class BoardScreen extends ModularScreen {
             return super.onKeyPressed(typedChar, keyCode);
         }
         if (!textFocused(this)) {
-            // Delete or Backspace removes the selection; Esc clears it (and only closes the planner when nothing is
-            // selected).
+            // Delete or Backspace removes the selection, asking first when it is more than one card; Esc clears it
+            // (and only closes the planner when nothing is selected).
             if ((keyCode == org.lwjgl.input.Keyboard.KEY_DELETE || keyCode == org.lwjgl.input.Keyboard.KEY_BACK)
                 && session.hasSelection()) {
-                session.deleteSelected();
+                // Once per key event (ModularUI offers each twice), and not again while the question is open.
+                final long event = org.lwjgl.input.Keyboard.getEventNanoseconds();
+                if (event == lastKeyEvent || getPanelManager().getTopMostPanel() instanceof Popup open && open.asks())
+                    return true;
+                lastKeyEvent = event;
+                session.deleteSelectedAsking();
                 return true;
             }
             if (keyCode == org.lwjgl.input.Keyboard.KEY_A && net.minecraft.client.gui.GuiScreen.isCtrlKeyDown()) {
@@ -1021,11 +1042,11 @@ public final class BoardScreen extends ModularScreen {
         return super.onKeyPressed(typedChar, keyCode);
     }
 
-    /** Undo and redo, as NEI's settings bind them: true when the key was one of them. */
+    /** Undo and redo, on the keys Controls binds them to ({@link UndoKeys}): true when the key was one of them. */
     private boolean undoKeys() {
-        final boolean undo = NEIClientConfig.isKeyHashDown(NEIPlanConfig.ConfigUndoKey.KEY);
-        if (!undo && !NEIClientConfig.isKeyHashDown(NEIPlanConfig.ConfigRedoKey.KEY)
-            && !NEIClientConfig.isKeyHashDown(NEIPlanConfig.ConfigRedoAltKey.KEY)) return false;
+        final UndoKeys.Act act = UndoKeys.now();
+        if (act == UndoKeys.Act.NONE) return false;
+        final boolean undo = act == UndoKeys.Act.UNDO;
         // ModularUI offers each key event twice (char and key paths); act once per event.
         final long event = org.lwjgl.input.Keyboard.getEventNanoseconds();
         if (event != lastKeyEvent) {

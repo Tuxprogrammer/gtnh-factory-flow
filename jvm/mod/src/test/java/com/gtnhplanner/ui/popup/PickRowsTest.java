@@ -82,4 +82,17 @@ class PickRowsTest {
         assertEquals(3, PickRows.reveal(list, 0, 5, view));
         assertEquals(1, PickRows.reveal(list, 4, 1, view));
     }
+
+    @Test
+    void aDraggedThumbScrollsToTheNearestRowAndNoFurther() {
+        final int[] list = { W, W, W, R, W, W, W, W };
+        final int view = 4 * W;
+        assertEquals(0, PickRows.scrollAt(list, 0, view));
+        assertEquals(0, PickRows.scrollAt(list, W / 2, view));
+        assertEquals(1, PickRows.scrollAt(list, W / 2 + 1, view));
+        assertEquals(3, PickRows.scrollAt(list, 3 * W, view));
+        // Past the end it stops where the last rows fit.
+        assertEquals(PickRows.maxScroll(list, view), PickRows.scrollAt(list, 10_000, view));
+        assertEquals(0, PickRows.scrollAt(new int[] { W, W }, 500, 2 * W));
+    }
 }

@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +68,24 @@ public final class PatternThis {
     private static PatternRules.Tally tally = PatternRules.NONE;
     private static long sentAt;
     private static String lastSummary = "";
+
+    /** Each ask of the batch's place in it (in the plan's run order for a plan's page). */
+    private static final Map<Integer, Integer> atOf = new HashMap<>();
+    /** Places that came back unmade for a reason that can pass (no room, no blank, no server). */
+    private static final List<Integer> notMade = new ArrayList<>();
+    /** Places that cannot be patterned, so a page that stops early tells only of those before where it stopped. */
+    private static final List<Integer> cannotAt = new ArrayList<>();
+    /** The plan's page being made, null for a card's batch. */
+    @Nullable
+    private static Page page;
+    /**
+     * Where each plan's run got to, by plan id, for this game: kept when the board closes (the player closes it to
+     * free inventory slots), never saved, shown on the Share menu's row with a row that starts over.
+     */
+    private static final Map<String, PatternPages.Position<Object>> positions = new HashMap<>();
+
+    /** A plan's page: the plan, the run's order and where the page starts and ends. */
+    private record Page(String plan, PatternPages.Start<Object> start, int end) {}
 
     private PatternThis() {}
 
@@ -167,57 +186,117 @@ public final class PatternThis {
 
     /** The Share menu's "Pattern the plan" on the open plan. */
     public static void plan(final BoardSession session) {
-        plan(session.graph());
+        plan(session.graph(), false);
+    }
+
+    /** The Share menu's "Pattern the plan from the start": the plan's run made again from its first recipe. */
+    public static void planFromStart(final BoardSession session) {
+        plan(session.graph(), true);
+    }
+
+    /** The Share menu's row while the open plan's run is part made ("Pattern the plan (28 to 55 of 55)"), else null. */
+    @Nullable
+    public static String partMade(final BoardSession session) {
+        final PatternPages.Position<Object> at = positions.get(
+            session.graph()
+                .planId());
+        return at == null ? null : PatternPages.row(at);
     }
 
     /**
      * "Pattern the plan": one pattern for each distinct recipe of {@code plan} ({@link PatternPlan#pick}), each made by
      * the server from one of the player's blank patterns exactly as for one card, and one sentence when the last one
-     * is answered (on the board, or in chat with no board open). Unless the player is in creative, nothing is asked
-     * for when they hold fewer blank patterns than the plan needs. Each pattern holds the products remembered for its
-     * card, else its first product alone; no box asks.
+     * is answered (on the board, or in chat with no board open). A plan is made a page at a time
+     * ({@link PatternPages}): as many as the player has free slots for now (and blank patterns, unless in creative), in
+     * a fixed order, and running it again goes on from there; {@code fromStart} starts the run over. Each pattern holds
+     * the products remembered for its card, else its first product alone; no box asks.
      */
-    public static void plan(final Graph plan) {
+    public static void plan(final Graph plan, final boolean fromStart) {
+        if (busy()) return;
         final BookmarkPlan.Pick<Job> pick = PatternPlan.pick(plan.nodes.values(), n -> {
             final RecipeHandlerRef ref = refOf(n);
             return ref == null ? null : new Job(ref, n, PatternMemory.get(plan, n));
         }, job -> keyOf(job.ref()));
-        start(pick.recipes(), 0, pick.skipped());
+        final Map<Object, Job> byKey = new LinkedHashMap<>();
+        for (final Job job : pick.recipes()) byKey.put(keyOf(job.ref()), job);
+        if (fromStart) positions.remove(plan.planId());
+        final PatternPages.Start<Object> at = PatternPages
+            .start(positions.get(plan.planId()), new ArrayList<>(byKey.keySet()));
+        final List<Job> jobs = new ArrayList<>();
+        for (final Object key : at.order()) jobs.add(byKey.get(key));
+        start(jobs, 0, pick.skipped(), plan.planId(), at);
+    }
+
+    /** Says so and is true while the last batch still waits for answers. */
+    private static boolean busy() {
+        if (waiting.isEmpty() && queued.isEmpty()) return false;
+        report(Severity.WARN, "Still making the last patterns");
+        return true;
     }
 
     private static void start(final List<Job> jobs, final int missing, final int skippedCards) {
-        if (!waiting.isEmpty() || !queued.isEmpty()) {
-            report(Severity.WARN, "Still making the last patterns");
-            return;
-        }
+        start(jobs, missing, skippedCards, null, null);
+    }
+
+    /**
+     * Asks for the jobs' patterns: as many as the player has room for now ({@link AePatterns#room}). A card's batch
+     * counts the rest as not made; a plan's page ({@code plan} and {@code at} given) ends there and the run remembers
+     * the first recipe not made.
+     */
+    private static void start(final List<Job> jobs, final int missing, final int skippedCards,
+        @Nullable final String plan, @Nullable final PatternPages.Start<Object> at) {
+        if (busy()) return;
         tally = PatternRules.NONE;
         skipped = skippedCards;
+        atOf.clear();
+        notMade.clear();
+        cannotAt.clear();
+        page = null;
         for (int i = 0; i < missing; i++) tally = tally.plus(PatternRules.CANNOT, 0);
+        final int from = at == null ? 0 : at.from();
         if (unavailable() != null) {
-            for (int i = 0; i < jobs.size(); i++) tally = tally.plus(PatternRules.NO_SERVER, 0);
+            for (int i = from; i < jobs.size(); i++) tally = tally.plus(PatternRules.NO_SERVER, 0);
+            if (at != null) {
+                page = new Page(plan, at, from);
+                notMade.add(from);
+            }
             done();
             return;
         }
+        final NBTTagCompound[][] packed = new NBTTagCompound[jobs.size()][];
+        for (int i = from; i < jobs.size(); i++) {
+            final Job job = jobs.get(i);
+            final NBTTagCompound[] p = pack(job.ref().handler, job.ref().recipeIndex);
+            packed[i] = p == null || p[0].hasNoTags() ? null : p;
+        }
+        int makeable = 0;
+        for (int i = from; i < jobs.size(); i++) if (packed[i] != null) makeable++;
+        final EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+        final PatternRules.Room room = player == null ? new PatternRules.Room(makeable, false)
+            : AePatterns.room(player, makeable);
+        final int end = at == null ? jobs.size()
+            : PatternPages.end(from, jobs.size(), room.fit(), i -> packed[i] == null);
+        if (at != null) page = new Page(plan, at, end);
+        final byte rest = room.blanksShort() ? PatternRules.NO_BLANK : PatternRules.NO_ROOM;
         final List<PatternNet.Ask> asks = new ArrayList<>();
-        for (final Job job : jobs) {
-            final NBTTagCompound[] packed = pack(job.ref().handler, job.ref().recipeIndex);
-            if (packed == null || packed[0].hasNoTags()) {
-                tally = tally.plus(PatternRules.CANNOT, 0);
+        for (int i = from; i < jobs.size(); i++) {
+            if (packed[i] == null) {
+                if (i < end) {
+                    tally = tally.plus(PatternRules.CANNOT, 0);
+                    cannotAt.add(i);
+                }
                 continue;
             }
-            asks.add(new PatternNet.Ask(++nextId, packed[0], packed[1] == null ? null : only(packed[1], job)));
-        }
-        // A whole plan is made in full or not at all: the blanks are counted before anything is asked for.
-        if (skippedCards >= 0 && !asks.isEmpty()) {
-            final EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-            if (player != null && !player.capabilities.isCreativeMode) {
-                final int have = AePatterns.blanks(player);
-                if (have < asks.size()) {
-                    lastSummary = PatternPlan.tooFew(asks.size(), have);
-                    report(Severity.WARN, lastSummary);
-                    return;
-                }
+            if (i >= end || asks.size() >= room.fit()) {
+                tally = tally.plus(rest, 0);
+                continue;
             }
+            final PatternNet.Ask ask = new PatternNet.Ask(
+                ++nextId,
+                packed[i][0],
+                packed[i][1] == null ? null : only(packed[i][1], jobs.get(i)));
+            atOf.put(ask.id, i);
+            asks.add(ask);
         }
         queued.addAll(asks);
         send();
@@ -259,14 +338,29 @@ public final class PatternThis {
     static void answered(final int id, final byte outcome, final int dropped) {
         if (waiting.remove(id) == null) return;
         tally = tally.plus(outcome, dropped);
+        if (outcome == PatternRules.NO_ROOM || outcome == PatternRules.NO_BLANK || outcome == PatternRules.NO_SERVER)
+            notMade(id);
+        else if (outcome != PatternRules.MADE && atOf.get(id) != null) cannotAt.add(atOf.get(id));
+        // With no room for one pattern there is none for the rest: they are not asked for and count as not made.
+        if (outcome == PatternRules.NO_ROOM) for (PatternNet.Ask ask; (ask = queued.poll()) != null;) {
+            tally = tally.plus(PatternRules.NO_ROOM, 0);
+            notMade(ask.id);
+        }
         send();
         if (waiting.isEmpty()) done();
+    }
+
+    private static void notMade(final int id) {
+        final Integer at = atOf.get(id);
+        if (at != null) notMade.add(at);
     }
 
     /** Each client tick: a batch the server stopped answering for {@link #TIMEOUT_MS} is reported as such. */
     static void tick() {
         if (waiting.isEmpty() || System.currentTimeMillis() - sentAt < TIMEOUT_MS) return;
         for (int i = waiting.size() + queued.size(); i > 0; i--) tally = tally.plus(PatternRules.NO_SERVER, 0);
+        for (final int id : waiting.keySet()) notMade(id);
+        for (final PatternNet.Ask ask : queued) notMade(ask.id);
         waiting.clear();
         queued.clear();
         done();
@@ -277,8 +371,36 @@ public final class PatternThis {
         return lastSummary;
     }
 
+    /**
+     * The batch's sentence; a plan's page also moves the plan's run on to the first recipe it did not make, or ends
+     * the run when the plan is done.
+     */
     private static void done() {
-        lastSummary = skipped < 0 ? PatternRules.summary(tally) : PatternPlan.summary(tally, skipped);
+        if (page != null) {
+            final List<Object> order = page.start()
+                .order();
+            final int resume = PatternPages.resume(page.end(), notMade);
+            final PatternPages.Position<Object> next = PatternPages.after(order, resume);
+            if (next == null) positions.remove(page.plan());
+            else positions.put(page.plan(), next);
+            final int cannot = PatternPages.before(cannotAt, resume);
+            final PatternRules.Tally told = new PatternRules.Tally(
+                tally.made(),
+                tally.noBlank(),
+                cannot,
+                tally.noServer(),
+                tally.noRoom(),
+                tally.dropped());
+            lastSummary = PatternPlan.page(
+                told,
+                page.start()
+                    .from(),
+                resume,
+                order.size(),
+                page.start()
+                    .restarted(),
+                skipped);
+        } else lastSummary = skipped < 0 ? PatternRules.summary(tally) : PatternPlan.summary(tally, skipped);
         report(tally.clean() ? Severity.INFO : Severity.WARN, lastSummary);
     }
 

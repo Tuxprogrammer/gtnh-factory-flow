@@ -20,8 +20,8 @@ import com.gtnhplanner.ui.theme.Hyb;
 
 /**
  * Rows of icon, label and detail; click one to pick it and close the popup. The current choice is shaded, the
- * hovered row lit; the wheel scrolls when there are more rows than fit. Used for the actions menu, the machine
- * switch and dropdowns such as coils.
+ * hovered row lit; when there are more rows than fit, the wheel and a scroll bar's thumb move them. Used for the
+ * actions menu, the machine switch and dropdowns such as coils.
  */
 public final class PickList extends Widget<PickList> implements Interactable {
 
@@ -86,6 +86,7 @@ public final class PickList extends Widget<PickList> implements Interactable {
     private String filter = "";
     private List<Entry> shown;
     private int scroll;
+    private final com.gtnhplanner.ui.theme.ScrollBar bar = new com.gtnhplanner.ui.theme.ScrollBar();
 
     private PickList(final List<Entry> entries, final int width, final int maxRows) {
         this.entries = entries;
@@ -143,7 +144,7 @@ public final class PickList extends Widget<PickList> implements Interactable {
         final int[] room = Popup.room(null);
         width = Math.min(width, Math.min(360, room[2] - 4));
         final int above = 8 + (title == null ? 0 : 14) + (filterable ? 18 : 0);
-        final int fits = Math.max(2, (room[3] - 4 - above) / ROW);
+        final int fits = PickRows.rowsInRoom(room[3], above, ROW);
         final PickList list = new PickList(entries, width - 8, Math.min(maxRows, fits));
         list.hover = onHover;
         int y = 4;
@@ -221,7 +222,7 @@ public final class PickList extends Widget<PickList> implements Interactable {
 
     /** The row under the mouse, rule or not. */
     private int rowUnderMouse() {
-        if (!isHovering()) return -1;
+        if (!isHovering() || bar.dragging() || onBar()) return -1;
         final int my = getContext().getAbsMouseY() - getArea().y;
         return PickRows.rowAt(heights, scroll, my, view);
     }
@@ -234,9 +235,24 @@ public final class PickList extends Widget<PickList> implements Interactable {
             .isRule() ? -1 : i;
     }
 
+    private int mouseX() {
+        return getContext().getAbsMouseX() - getArea().x;
+    }
+
+    private int mouseY() {
+        return getContext().getAbsMouseY() - getArea().y;
+    }
+
+    private boolean onBar() {
+        return isHovering() && bar.contains(mouseX(), mouseY());
+    }
+
     @Override
     public void draw(final ModularGuiContext context, final WidgetThemeEntry<?> widgetTheme) {
         final int w = getArea().width;
+        final int max = PickRows.maxScroll(heights, view);
+        // A detail stays clear of the scroll bar.
+        final int right = max > 0 ? w - com.gtnhplanner.ui.theme.ScrollBar.W - 2 : w - 4;
         final int hovered = hoveredRow();
         tellHover(hovered >= 0 && hovered < shown.size() ? entries.indexOf(shown.get(hovered)) : -1);
         final float z = context.getCurrentDrawingZ();
@@ -262,22 +278,27 @@ public final class PickList extends Widget<PickList> implements Interactable {
                 x += 14;
             }
             // The label says what the row does, so it is never cut for the detail: a detail with no room is left out.
-            final String label = Hyb.fit(e.label, w - x - 4);
-            final int room = w - 4 - (x + Hyb.width(label) + 8);
+            final String label = Hyb.fit(e.label, right - x);
+            final int room = right - (x + Hyb.width(label) + 8);
             final String detail = e.detail.isEmpty() || room < 30 ? "" : Hyb.fit(e.detail, room);
             Hyb.text(label, x, y + 6, e.labelColor);
-            if (!detail.isEmpty()) Hyb.textRight(detail, w - 4, y + 6, Hyb.MUTED);
+            if (!detail.isEmpty()) Hyb.textRight(detail, right, y + 6, Hyb.MUTED);
         }
-        final int max = PickRows.maxScroll(heights, view);
-        if (max > 0) {
-            final int barH = Math.max(8, view * view / PickRows.total(heights, 0, heights.length));
-            final int barY = (view - barH) * scroll / max;
-            Hyb.rect(w - 2, barY, 2, barH, Hyb.MUTED);
-        }
+        // Drawn every frame, so a list the filter made short has no bar to press; it draws nothing when all fits.
+        bar.draw(w, 0, view, PickRows.total(heights, 0, heights.length), scrollPx(), onBar());
+    }
+
+    /** The scroll in pixels down the whole list, as the bar reads it. */
+    private int scrollPx() {
+        return PickRows.total(heights, 0, scroll);
     }
 
     @Override
     public Result onMousePressed(final int mouseButton) {
+        if (mouseButton == 0 && onBar()) {
+            scroll = PickRows.scrollAt(heights, bar.press(mouseY(), scrollPx()), view);
+            return Result.SUCCESS;
+        }
         final int i = rowUnderMouse();
         if (mouseButton != 0 || i < 0 || i >= shown.size()) return Result.IGNORE;
         final Entry e = shown.get(i);
@@ -301,6 +322,16 @@ public final class PickList extends Widget<PickList> implements Interactable {
             return new int[] { a.x, a.y + PickRows.top(heights, scroll, i), a.width, ROW };
         }
         return null;
+    }
+
+    @Override
+    public void onMouseDrag(final int mouseButton, final long timeSinceClick) {
+        if (bar.dragging()) scroll = PickRows.scrollAt(heights, bar.drag(mouseY()), view);
+    }
+
+    @Override
+    public boolean onMouseRelease(final int mouseButton) {
+        return bar.release();
     }
 
     @Override

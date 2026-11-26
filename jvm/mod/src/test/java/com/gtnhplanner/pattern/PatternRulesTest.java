@@ -66,4 +66,64 @@ class PatternRulesTest {
         assertEquals("Made a pattern. 2 stacks did not fit the terminal and were left out", PatternRules.summary(cut));
         assertEquals("Nothing to pattern", PatternRules.summary(PatternRules.NONE));
     }
+
+    @Test
+    void aPatternGoesToAnEmptySlotOrNowhere() {
+        assertEquals(4, PatternRules.slotFor(4, 0, 5), "a free slot, the blank's stack kept");
+        assertEquals(-1, PatternRules.slotFor(-1, 0, 5), "a full inventory in survival: nowhere");
+        assertEquals(7, PatternRules.slotFor(-1, 7, 1), "the last blank of its stack leaves its slot for the pattern");
+        assertEquals(7, PatternRules.slotFor(3, 7, 1), "the blank's own slot even with others free");
+        assertEquals(-1, PatternRules.slotFor(-1, -1, 0), "a full inventory in creative: nowhere, nothing made");
+        assertEquals(2, PatternRules.slotFor(2, -1, 0), "creative with a free slot");
+    }
+
+    @Test
+    void roomCountsFreeSlotsAndTheSlotsBlanksLeave() {
+        final int[] none = {};
+        assertEquals(new PatternRules.Room(27, false), PatternRules.room(27, none, true, 55), "creative: free slots");
+        assertEquals(new PatternRules.Room(0, false), PatternRules.room(0, none, true, 55), "creative, full: none");
+        assertEquals(new PatternRules.Room(3, false), PatternRules.room(3, none, true, 3), "no more than needed");
+        assertEquals(
+            new PatternRules.Room(1, true),
+            PatternRules.room(0, new int[] { 1 }, false, 5),
+            "survival, full but for one blank alone: its slot takes the pattern, then no blank is left");
+        assertEquals(
+            new PatternRules.Room(0, false),
+            PatternRules.room(0, new int[] { 16 }, false, 5),
+            "survival, full, a stack of blanks: taking one frees nothing");
+        assertEquals(
+            new PatternRules.Room(4, true),
+            PatternRules.room(30, new int[] { 4 }, false, 55),
+            "survival with room for more: bounded by the blanks");
+        assertEquals(
+            new PatternRules.Room(2, false),
+            PatternRules.room(1, new int[] { 1, 5 }, false, 10),
+            "a stack used up frees its slot; then the room runs out first");
+        assertEquals(
+            new PatternRules.Room(4, true),
+            PatternRules.room(2, new int[] { 3, 1 }, false, 10),
+            "both stacks used up free their slots; then the blanks run out");
+    }
+
+    @Test
+    void noRoomSaysWhatWasMadeAndWhatWasNot() {
+        assertEquals(
+            "No free inventory slots. Nothing was made",
+            PatternRules.summary(PatternRules.NONE.plus(PatternRules.NO_ROOM, 0)));
+        PatternRules.Tally t = PatternRules.NONE;
+        for (int i = 0; i < 2; i++) t = t.plus(PatternRules.MADE, 0);
+        for (int i = 0; i < 3; i++) t = t.plus(PatternRules.NO_ROOM, 0);
+        assertFalse(t.clean());
+        assertEquals(5, t.total());
+        assertEquals("Made 2 patterns. No room in your inventory for 3 more", PatternRules.summary(t));
+    }
+
+    @Test
+    void anOutcomeThisSideDoesNotKnowIsNeverMade() {
+        final PatternRules.Tally t = PatternRules.NONE.plus((byte) 9, 0)
+            .plus((byte) -1, 0);
+        assertEquals(0, t.made());
+        assertEquals(2, t.cannot());
+        assertFalse(t.clean());
+    }
 }

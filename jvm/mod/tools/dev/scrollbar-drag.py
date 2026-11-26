@@ -702,7 +702,95 @@ def box_scene(a):
     return c.done()
 
 
-SCENES = {"pattern-box": pattern_scene, "delete": delete_scene, "card-chips": chips_scene, "box": box_scene}
+def plan_digest(tag):
+    """The open plan as the website's project (/exportff), without what changes on every export, hashed."""
+    import hashlib
+    import tempfile
+    f = os.path.join(tempfile.gettempdir(), f"spare-open-{os.getpid()}-{tag}.json")
+    harness(f"exportff?file={f}")
+    with open(f) as fh:
+        d = json.load(fh)
+    os.remove(f)
+    for k in ("id", "metadata", "updatedAt", "createdAt"):
+        d.pop(k, None)
+    return hashlib.sha1(json.dumps(d, sort_keys=True).encode()).hexdigest()
+
+
+def extra_row():
+    """The first card's leftover row (its extra row, XOUT0 / XIN1...) on the board, as a GUI point; None for none."""
+    for card in harness("board")["cards"]:
+        for name, r in card.get("parts", {}).items():
+            if name.startswith("XOUT") or name.startswith("XIN"):
+                return r["cx"], r["cy"]
+    return None
+
+
+def spare_box():
+    return next((u for u in popups() if u["name"].startswith("gtnhplanner_spare")), None)
+
+
+def spare_open_scene(a):
+    """A card's leftover row (a plan whose leftover has several places, such as the fixture spare-places.json) pressed
+    and let go with the real mouse, held from 20 ms to 400 ms: every press opens the spare box, the plan does not
+    change, the box is wholly on the screen and clear of the pointer (the next click is not taken by the box), nothing
+    holds a button, and Esc closes it. Then the box's drawer link puts a drawer there (the plan changes and the box
+    closes) and one Ctrl+Z gives back exactly the plan before it, its leftover row with it."""
+    c = Checks("spare open")
+    st = harness("status")
+    gw, gh = st["guiWidth"], st["guiHeight"]
+    at = extra_row()
+    if at is None:
+        print("no card shows a leftover row; open a plan whose leftover has somewhere else to go")
+        return 2
+    base = plan_digest("base")
+    for ms in (20, 60, 100, 120, 150, 200, 300, 400):
+        at = extra_row()
+        pt = gui_pt(at)
+        xdo("mousemove", *pt)
+        time.sleep(0.3)
+        xdo("mousedown", 1)
+        time.sleep(ms / 1000)
+        xdo("mouseup", 1)
+        time.sleep(1.0)
+        box = spare_box()
+        c(f"{ms} ms opens", box is not None, "spare box open" if box else "no spare box")
+        same = plan_digest(f"p{ms}") == base
+        c(f"{ms} ms plan kept", same, "plan unchanged" if same else "the press changed the plan")
+        if box is None:
+            continue
+        mx, my = at
+        clear = not (box["x"] <= mx < box["x"] + box["w"] and box["y"] <= my < box["y"] + box["h"])
+        c(f"{ms} ms clear of the pointer", clear, f"box {box['x']},{box['y']} {box['w']}x{box['h']}, pointer {mx},{my}")
+        off = box["x"] < 0 or box["y"] < 0 or box["x"] + box["w"] > gw or box["y"] + box["h"] > gh
+        c(f"{ms} ms on screen", not off, f"box past the {gw}x{gh} screen" if off else "wholly on screen")
+        c(f"{ms} ms no hold", not holds(), f"held {holds()}")
+        key("Escape")
+        c(f"{ms} ms esc closes", spare_box() is None and plan_digest(f"e{ms}") == base, "closed, plan unchanged")
+    # The drawer link, then one Ctrl+Z.
+    xdo("mousemove", *gui_pt(extra_row()))
+    time.sleep(0.3)
+    xdo("click", 1)
+    time.sleep(1.0)
+    box = spare_box()
+    link = next((ch for ch in (box or {}).get("children", []) if ch.get("type") == "Link"), None)
+    c("drawer link shown", link is not None, "the box's drawer link" if link else "no link in the box")
+    if link is None:
+        return c.done()
+    # Its words sit at the box's right end.
+    click_at(gui_pt((link["x"] + link["w"] - 20, link["y"] + 4)))
+    time.sleep(1.0)
+    changed = plan_digest("drawer") != base
+    c("drawer link acts", changed and spare_box() is None, "a drawer added, box closed" if changed else "no change")
+    xdo("mousemove", *gui_pt((at[0], max(0, at[1] - 40))))
+    key("ctrl+z")
+    time.sleep(2.0)
+    back = plan_digest("undo") == base
+    c("ctrl+z gives back the plan", back, "the exact plan before the drawer" if back else "the plan differs")
+    c("leftover row back", extra_row() is not None, "the card shows its leftover row again")
+    return c.done()
+
+
+SCENES = {"pattern-box": pattern_scene, "delete": delete_scene, "card-chips": chips_scene, "box": box_scene, "spare-open": spare_open_scene}
 
 
 if __name__ == "__main__":

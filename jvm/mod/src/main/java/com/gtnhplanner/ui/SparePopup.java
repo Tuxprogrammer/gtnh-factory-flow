@@ -39,8 +39,8 @@ public final class SparePopup extends ScrollBody {
     }
 
     /**
-     * Opens the popup for {@code line} at a screen point, {@code here} being the key of the place whose row was
-     * clicked, {@code drawer} what the drawer link does.
+     * Opens the popup for {@code line} from a screen point (the press on the row), clear of it, {@code here} being
+     * the key of the place whose row was clicked, {@code drawer} what the drawer link does.
      */
     public static void open(final com.cleanroommc.modularui.screen.ModularPanel parent, final BoardSession session,
         final BoardSession.SpareLine line, final String here, final Runnable drawer, final int x, final int y) {
@@ -53,7 +53,7 @@ public final class SparePopup extends ScrollBody {
             lines,
             new Link(drawer),
             LINK_H + PAD);
-        Popup.open(parent, popup, x, y);
+        Popup.openBeside(parent, popup, x, y);
     }
 
     /** The lines: a gap, the slider with its labels, and the gap before the link. */

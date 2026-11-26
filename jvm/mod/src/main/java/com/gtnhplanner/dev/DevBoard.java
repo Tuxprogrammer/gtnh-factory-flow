@@ -134,6 +134,23 @@ final class DevBoard {
                     .put("IN" + p.index(), slot(canvas, card.layout(), model.node.x, model.node.y, false, p.index()));
                 for (final CardModel.PortView p : model.outputs) parts
                     .put("OUT" + p.index(), slot(canvas, card.layout(), model.node.x, model.node.y, true, p.index()));
+                // A port's extra row (its leftover), the press that carries it or opens its spare box: XIN0, XOUT1...
+                for (final boolean output : new boolean[] { false, true })
+                    for (final CardModel.PortView p : output ? model.outputs : model.inputs) {
+                        if (!card.layout()
+                            .hasExtra(0, output, p.index())) continue;
+                        final int ry = card.layout()
+                            .rowY(output, p.index()) + CardLayout.ROW;
+                        final int rx = CardLayout.railX(output);
+                        final int x0 = canvas.screenX(model.node.x + rx), y0 = canvas.screenY(model.node.y + ry);
+                        parts.put(
+                            (output ? "XOUT" : "XIN") + p.index(),
+                            rect(
+                                x0,
+                                y0,
+                                canvas.screenX(model.node.x + rx + CardLayout.RAIL_W) - x0,
+                                canvas.screenY(model.node.y + ry + CardLayout.ROW) - y0));
+                    }
                 c.put("parts", parts);
             }
             cards.add(c);

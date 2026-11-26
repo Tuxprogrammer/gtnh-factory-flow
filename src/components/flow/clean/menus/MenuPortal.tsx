@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import { useDropdownDismiss } from "@/lib/hooks/use-dropdown-dismiss";
 import { getUiScale } from "@/lib/ui-scale";
 import { placeMenu } from "./menu-place";
+import { BOX_FIT } from "@/components/box-fit";
 
 /** Where a menu hangs from, in real (unzoomed) screen pixels. */
 export interface MenuAnchor {
@@ -66,7 +67,7 @@ export function MenuPortal({
       aria-label={label}
       data-cm=""
       {...{ [KEEP_ATTR]: "" }}
-      className={`ui-zoom nodrag nowheel cm ${className ?? ""}`}
+      className={`ui-zoom nodrag nowheel cm ${BOX_FIT} ${className ?? ""}`}
       style={{
         width: w,
         left: Math.max(8, Math.min(shell(anchor.left), vw - w - 8)),

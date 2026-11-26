@@ -51,9 +51,10 @@
   display: flex;
   flex-direction: column;
   width: 420px;
-  max-width: 100%;
-  max-height: calc(90 * var(--ui-vh, 1vh));
-  overflow-y: auto;
+  max-width: var(--box-max-w, 100%);
+  max-height: min(calc(90 * var(--ui-vh, 1vh)), var(--box-max-h, 100%));
+  /* The title stays put and the body scrolls (globals.css .box-fit); the keys stay at its foot. */
+  overflow: hidden;
   background: var(--pn-surface);
   border: 1px solid var(--pn-edge);
   box-shadow: 6px 8px 0 rgba(0, 0, 0, 0.45);
@@ -92,6 +93,10 @@
   flex-direction: column;
   gap: 8px;
   padding: 12px;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .pn-note {
   margin: 0;
@@ -105,6 +110,12 @@
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+  /* A long body scrolls under the keys: they stay on screen at the body's foot. */
+  position: sticky;
+  bottom: -12px;
+  margin-bottom: -12px;
+  padding: 8px 0 12px;
+  background: var(--pn-surface);
 }
 
 /* A field: the Feedback box's well. */

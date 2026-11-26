@@ -100,6 +100,23 @@ The board has its own notes in `flow/CLAUDE.md`, the Pool worksheet in `pool/CLA
 - Power display (EU/t or amps at a tier) and rate units are view dials read through
   `useRateDisplayUnits`; memoized rows subscribe to both themselves.
 
+## Boxes fit the window
+
+- No box (dialog, menu, popover, panel, sheet, tooltip) runs off the window, whatever it holds: a box caps itself to
+  the window less a margin, what does not fit scrolls inside it, its title and keys stay put. The rule is globals.css
+  `.box-fit` (`BOX_FIT` / `BOX_FIT_GUI` in `box-fit.ts`; `--box-zoom` is the zoom the box is drawn at, the mod-skinned
+  ones `.box-gui`) with `.box-body` for the scrolling part. The shells wear it: `ChromeMenu`, the board's `MenuPortal`
+  and `MenuShell`, the `.pn` dialog (its `.pn-keys` stick to the body's foot).
+- Anchored boxes flip to the side with room (`placeMenu`, `menu-place.ts`, for the board's menus and `ChromeMenu`) and
+  slide sideways into the window (`useSlideIntoWindow`, measured once as the box opens and when its content changes,
+  never per frame). A box whose rows run wide wraps them (settings rows, the power panel's guide).
+- Guard: `box-fit.test.ts` fails a file that opens a box without the shared rule unless it is listed with why its own
+  placement is measured. Adding a box: build it from a shell or wear `box-fit`, add a scenario to
+  `tools/browser-tests/box-bounds.mjs` and run it against `npm run dev:local` (`node
+  tools/browser-tests/box-bounds-plans.mjs` first): it opens every box at 1000x600, 1280x560 and 390x700 with oversized
+  plans and exits non-zero when a box is off screen, has content it cannot reach, or a key out of reach.
+- An edit to globals.css needs the dev server restarted: Turbopack does not reload it.
+
 ## Shared UI behaviour
 
 - Dropdowns dismiss through `useDropdownDismiss`: the mouse fade counts from the nearest
